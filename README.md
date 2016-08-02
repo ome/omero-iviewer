@@ -12,7 +12,7 @@ Run ```shell npm prod``` to build an uglified version.
 
 All builds will build into the build directory AND deploy to the plugin directory
 which can then be used like any django plugin.
-For further installation help have a look at the respective [plugin/viewer-ng/README.md](README).
+For further installation help have a look at the respective [README](plugin/viewer-ng/README.md).
 
 ##Development:
 

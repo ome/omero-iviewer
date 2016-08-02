@@ -15,14 +15,14 @@ Depending on your setup you might also have to make adjustments to your web serv
 
 More detailed resources on how to create a web app and development setup can be found here:
 
-1. https://www.openmicroscopy.org/site/support/omero5.2/developers/Web/CreateApp.html
-2. https://www.openmicroscopy.org/site/support/omero5.2/developers/Web/Deployment.html
+1. [CreateApp](https://www.openmicroscopy.org/site/support/omero5.2/developers/Web/CreateApp.html)
+2. [Deployment](https://www.openmicroscopy.org/site/support/omero5.2/developers/Web/Deployment.html)
 
 
 ##IMPORTANT
 
 You need to build the viewer beforehand and deploy to the plugin directory.
-Please consult the respective [../../README.md](README).
+Please consult the respective [README](../../README.md).
 
 
 Also, make sure you keep the omero.web plugin in sync with the build:
