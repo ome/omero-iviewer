@@ -22,7 +22,7 @@ More detailed resources on how to create a web app and development setup can be 
 ##IMPORTANT
 
 You need to build the viewer beforehand and deploy to the plugin directory.
-Please consult the respective README.
+Please consult the respective [../../README.md](README).
 
 
 Also, make sure you keep the omero.web plugin in sync with the build:
