@@ -27,4 +27,4 @@ Please consult the respective README.
 
 Also, make sure you keep the omero.web plugin in sync with the build:
 
-```shell $OMERO_SERVER/bin/omero websync```
+```$OMERO_SERVER/bin/omero websync```
