@@ -1,0 +1,15 @@
+<template>
+    <require from="../viewers/custom-viewer"></require>
+
+    <div id="center" class="block100 height100 block">
+        <div name="frame" if.bind="!context.useMDI" style="position: relative;"
+            show.bind="context.getImageConfig(id).image_info.ready"
+            repeat.for="[id, conf] of context.image_configs" class="block100 height100 block">
+
+            <custom-viewer config_id.bind="id" class="block100 height100 block"
+                style="position: relative;">
+            </custom-viewer>
+        </div>
+    </div>
+
+</template>
