@@ -1,12 +1,12 @@
 import {inject} from 'aurelia-framework';
-import AppContext from '../app/context';
+import Context from '../app/context';
 import {EVENTS, EventSubscriber} from '../events/events';
 import {customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {slider} from 'jquery-ui';
 
 @customElement('dimension-slider')
-@inject(AppContext, Element, BindingEngine)
-export default class CustomDimensionSlider extends EventSubscriber {
+@inject(Context, Element, BindingEngine)
+export default class DimensionSlider extends EventSubscriber {
     image_info = null;
     @bindable config_id = null;
     @bindable dim = 't';

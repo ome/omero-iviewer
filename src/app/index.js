@@ -1,31 +1,25 @@
 require('../css/pocketgrid.css');
 
 import {inject} from 'aurelia-framework';
-import AppContext from './context';
+import Context from './context';
 import {EVENTS} from '../events/events';
 
-@inject(AppContext)
+@inject(Context)
 export class Index  {
     constructor(context) {
         this.context = context;
     }
 
+    attached() {
+        window.onresize =
+        () => this.context.publish(EVENTS.VIEWER_RESIZE, {config_id: -1});
+    }
+
+    detached() {
+        window.onresize = null;
+    }
+
     unbind() {
         this.context = null;
-    }
-
-    selectImage(id=null) {
-        this.context.selectConfig(id);
-    }
-
-    showRegions() {
-        this.context.show_regions = $("#show_regions").prop("checked");
-
-        for (let [id,conf] of this.context.image_configs) {
-            conf.image_info.show_regions = this.context.show_regions;
-            if (this.context.useMDI) this.resetImage(id);
-        }
-
-        this.context.publish(EVENTS.SHOW_REGIONS, this.context.show_regions);
     }
 }

@@ -1,13 +1,13 @@
-import AppContext from '../app/context';
+import Context from '../app/context';
 import {EVENTS, EventSubscriber} from '../events/events';
 import {inject, customElement, bindable} from 'aurelia-framework';
 
 require('../css/viewer.css');
 import {ol3} from '../../libs/ome-viewer-1.0.js';
 
-@customElement('custom-viewer')
-@inject(AppContext, Element)
-export default class CustomViewer extends EventSubscriber {
+@customElement('ol3-viewer')
+@inject(Context, Element)
+export default class Ol3Viewer extends EventSubscriber {
     @bindable config_id=null;
     image_config = null;
     sub_list = [
@@ -28,7 +28,8 @@ export default class CustomViewer extends EventSubscriber {
             this.viewer.setDimensionIndex.apply(
                 this.viewer, [params.dim].concat(params.value));}],
         [EVENTS.VIEWER_RESIZE, (params={}) => {
-            if (params.config_id !== this.config_id) return;
+            if (params.config_id !== this.config_id &&
+                params.config_id !== -1) return;
             this.viewer.redraw();
         }]
     ];
