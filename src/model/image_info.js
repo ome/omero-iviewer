@@ -2,34 +2,88 @@ import {noView} from 'aurelia-framework';
 import {EVENTS} from '../events/events';
 import Misc from '../utils/misc';
 
+/**
+ * @classdesc
+ *
+ * Holds basic image information required for viewing:
+ * dimensions, channels, etc.
+ */
 @noView
 export default class ImageInfo {
+    /**
+     * a flag that signals whether we have successfully
+     * received all backend info or not
+     * @memberof Context
+     * @type boolean
+     */
     ready = false;
+    /**
+     * dimensions are initialized to defaults
+     * @memberof Context
+     * @type {Object}
+     */
     dimensions = {t: 0, max_t : 1,z: 0, max_z : 1};
+    /**
+     * @memberof Context
+     * @type {Array.<Object>}
+     */
     channels = null;
-    tiled = false;
-    show_regions = false;
+    /**
+     * the associated dataset id
+     * @memberof Context
+     * @type number
+     */
+    dataset_id = null;
 
+    /**
+     * @constructor
+     * @param {Context} context the application context
+     * @param {number} config_id the config id we belong to
+     * @param {number} image_id the image id to be queried
+     */
     constructor(context, config_id, image_id) {
         this.context = context;
         this.config_id = config_id;
         this.image_id = image_id;
-        this.show_regions = context.show_regions;
-        this.dataset_id = null;
     }
 
+    /**
+     * Even though we are not an Aurelia View we stick to Aurelia's lifecycle
+     * terminology and use the method bind for initialization purposes
+     *
+     * @memberof Context
+     */
     bind() {
         this.requestData();
     }
 
+    /**
+     * Even though we are not an Aurelia View we stick to Aurelia's lifecycle
+     * terminology and use the method unbind for cleanup purposes
+     *
+     * @memberof Context
+     */
     unbind() {
         this.dimensions = {t: 0, max_t : 1,z: 0, max_z : 1};
         this.channels = null;
-        this.tiled = false;
-        this.show_regions = false;
         this.context = null;
     }
 
+    /**
+     * Return flag whether we ought to show regions or not
+     *
+     * @memberof Context
+     * @return {boolean} show the regions or not
+     */
+    showRegions() {
+        return this.context.getImageConfig(this.config_id).show_regions;
+    }
+
+    /**
+     * Retrieves the data via ajax
+     *
+     * @memberof Context
+     */
     requestData() {
         let dataType = "json";
         if (Misc.useJsonp(this.context.server)) dataType += "p";
@@ -41,25 +95,35 @@ export default class ImageInfo {
             dataType : dataType,
             cache : false,
             success : (response) => {
+                // remember any associated dataset id
                 if (typeof response.meta === 'object' &&
                         typeof response.meta.datasetId === 'number')
                     this.dataset_id = response.meta.datasetId;
+
+                // store channels and dimensions
                 this.channels = response.channels;
                 this.dimensions = {
                     t: 0, max_t : response.size.t,
                     z: 0, max_z : response.size.z
                 };
-                this.context.publish(
-                    EVENTS.UPDATE_COMPONENT,
-                        {config_id: this.config_id,
-                        dataset_id: this.dataset_id});
+
+                // signal that we are ready and
+                // send out an image config update event
                 this.ready = true;
+                this.context.publish(
+                    EVENTS.IMAGE_CONFIG_UPDATE,
+                        {config_id: this.config_id,
+                        dataset_id: this.dataset_id,
+                        ready: this.ready});
             },
             error : (error) => {
                 this.ready = false;
-                this.context.publish(EVENTS.RESET_COMPONENT,
+                // send out an image config update event
+                // with a no ready flag to (potentially react to)
+                this.context.publish(EVENTS.IMAGE_CONFIG_UPDATE,
                     {config_id: this.config_id,
-                    dataset_id: this.dataset_id});
+                    dataset_id: this.dataset_id,
+                    ready: this.ready});
             }
         });
     }

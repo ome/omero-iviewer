@@ -2,136 +2,95 @@ import {noView} from 'aurelia-framework';
 import {EVENTS, EventSubscriber} from '../events/events';
 import Misc from '../utils/misc';
 
+/**
+ * @classdesc
+ * Holds region information
+ *
+ * @extends EventSubscriber
+ *
+ */
 @noView
 export default class RegionsInfo extends EventSubscriber {
-    image_info = null;
-    regions_image_id = null;
-    selectedShape = null;
+    /**
+     * a flag that signals whether we have successfully
+     * received all backend info or not
+     * @memberof Context
+     * @type boolean
+     */
+    ready = false;
+    /**
+     * our internal list of shape objects
+     * stored in a map and accessible by id
+     * @memberof Context
+     * @type Map
+     */
     data = new Map();
+    /**
+     * our list of events we subscribe to via the EventSubscriber
+     * @memberof Context
+     * @type Map
+     */
     sub_list = [
-        [EVENTS.RESET_COMPONENT, () => {
-            this.data = new Map(); this.regions_image_id = null;}],
-        [EVENTS.UPDATE_COMPONENT, (params={}) => {
-            if (params.config_id !== this.image_info.config_id) return;
-            this.requestData(true)}],
-        [EVENTS.REGION_DESELECTED, (params={}) => {
-            if (params.config_id !== this.image_info.config_id) return;
-            this.deselectShape(params.id);}],
-        [EVENTS.REGION_SELECTED, (params={}) => {
-            if (params.config_id !== this.image_info.config_id) return;
-            this.selectShape(params.id)}],
-        [EVENTS.SHAPES_ADDED, (params={}) => {
-            if (params.config_id !== this.image_info.config_id ||
-                !Misc.isArray(params.shapes)) return;
-            params.shapes.map((item) => {
-                let id = item.oldId;
-                this.data.set(id,
-                    Object.assign(
-                        {selected: false, visible: true, shape_id: id,
-                         deleted: false, modified: false},
-                        this.convertShapeObject(item)));
-            });}],
-        [EVENTS.SHAPES_DELETED, (params={}) => {
-            if (params.config_id !== this.image_info.config_id ||
-                !Misc.isArray(params.ids)) return;
-            params.ids.map((id) => {
-                let i = this.data.get(id);
-                if (i) i.deleted = true;
-            });}],
-        [EVENTS.SHAPES_MODIFIED, (params={}) => {
-            if (params.config_id !== this.image_info.config_id ||
-                !Misc.isArray(params.ids)) return;
-            params.ids.map((id) => {
-                let i = this.data.get(id);
-                if (i) i.modified = true;
-            });}],
-        [EVENTS.SHOW_REGIONS, () => this.requestData(false) ]];
+        [EVENTS.IMAGE_CONFIG_UPDATE,
+            (params={}) => {
+                if (params.config_id !== this.image_info.config_id) return;
+                this.handleImageConfigUpdate(params.ready)}]
+        ];
 
+    /**
+     * @constructor
+     * @param {ImageInfo} image_info the associated image
+     */
     constructor(image_info) {
         super(image_info.context.eventbus);
         this.image_info = image_info;
     }
 
+    /**
+     * Even though we are not an Aurelia View we stick to Aurelia's lifecycle
+     * terminology and use the method bind for initialization purposes
+     *
+     * @memberof Context
+     */
     bind() {
         this.subscribe();
     }
 
+    /**
+     * Even though we are not an Aurelia View we stick to Aurelia's lifecycle
+     * terminology and use the method unbind for cleanup purposes
+     *
+     * @memberof Context
+     */
     unbind() {
         this.unsubscribe();
         this.data.clear();
-        this.selectedShape = null;
         this.image_info = null;
     }
 
-    selectShape(roi) {
-        this.setRegionProperty(roi, "selected", true);
-        this.setSelected();
+    /**
+     * Handles received image config updates: EVENTS.IMAGE_CONFIG_UPDATE
+     *
+     * @memberof Context
+     * @param {boolean} ready flag if the image info is ready
+     */
+    handleImageConfigUpdate(ready = false) {
+        if (!ready) return;
+
+        this.requestData();
     }
 
-    deselectShape(roi) {
-        this.setRegionProperty(roi, "selected", false);
-        this.setSelected();
-    }
-
-    setSelected() {
-        this.selectedShape = null;
-        for (let [key, value] of this.data) {
-            if (value.selected) {
-                this.selectedShape = value;
-                break;
-            }
-        }
-    }
-
-    convertShapeObject(shape) {
-        if (typeof shape['@type'] === 'string') {
-            let hash = shape['@type'].lastIndexOf("#");
-            if (hash !== -1)
-                shape.type = shape['@type'].substring(hash+1);
-        }
-        if (typeof shape.FillColor === 'number') {
-            let fill = Misc.convertSignedIntegerToHexColor(shape.FillColor);
-            shape.fillColor = fill.hex;
-            shape.fillAlpha = fill.alpha;
-        }
-        if (typeof shape.StrokeWidth === 'object')
-            shape.strokeWidth = shape.StrokeWidth.Value;
-        if (typeof shape.StrokeColor === 'number') {
-            let stroke = Misc.convertSignedIntegerToHexColor(shape.StrokeColor);
-            shape.strokeColor = stroke.hex;
-            shape.strokeAlpha = stroke.alpha;
-        }
-        if (typeof shape.Text === 'string')
-            shape.textValue = shape.Text;
-        if (typeof shape.FontStyle === 'string')
-            shape.fontStyle = shape.FontStyle;
-        if (typeof shape.FontFamily === 'string')
-            shape.fontFamily = shape.FontFamily;
-        if (typeof shape.FontSize === 'object')
-            shape.fontSize = shape.FontSize.Value;
-
-        return shape;
-    }
-
-    setRegionProperty(roi, property, value = null) {
-        if (typeof roi !== 'string' || roi.indexOf(":") <1 ||
-            typeof property !== 'string' || value === null ||
-            typeof this.data.get(roi) === 'undefined') return;
-
-        this.data.get(roi)[property] = value;
-    }
-
+    /**
+     * Retrieves the regions information needed via ajax and stores it internally
+     *
+     * @memberof Context
+     * @param {boolean} forceUpdate if true we always request up-to-date data
+     */
     requestData(forceUpdate = false) {
-        if (forceUpdate) {
-            this.data.clear();
-            this.regions_image_id = null;
-        }
-        if (!this.image_info.show_regions ||
-            (!forceUpdate &&
-                 this.regions_image_id === this.image_info.image_id)) return;
+        if ((this.ready || !this.image_info.showRegions()) &&
+                !forceUpdate) return;
 
-        this.regions_image_id = this.image_info.image_id;
-
+        // assmeble url
         let url = this.image_info.context.server + "/webgateway/get_rois_json/" +
          this.image_info.image_id + '/';
         let dataType = "json";
@@ -142,26 +101,23 @@ export default class RegionsInfo extends EventSubscriber {
             dataType : dataType,
             cache : false,
             success : (response) => {
+                // we want an array
                 if (typeof response !== 'object' ||
                  typeof response.length !== 'number') return;
 
+                 // traverse results and stuff them into the map
                  response.map((item) => {
+                     // shapes have to be arrays as well
                      if (typeof item.shapes === 'object' &&
-                      typeof item.shapes.length === 'number')
-                      item.shapes.map((shape) => {
-                          shape.visible = true;
-                          shape.selected = false;
-                          shape.deleteted = false;
-                          shape.modified = false;
-                          shape.shape_id = "" + item.id + ":" + shape.id;
-                          this.data.set(
-                              shape.shape_id, Object.assign({}, shape));
-                          this.image_info.context.publish(
-                              EVENTS.VIEWER_RESIZE,
-                          {config_id: this.image_info.config_id});
-                      })});
-             },
-            error : (error) => this.data.clear()
+                      typeof item.shapes.length === 'number') {
+                          // set shape properties and store the object
+                          item.shapes.map((shape) => {
+                              shape.shape_id = "" + item.id + ":" + shape.id;
+                              this.data.set(
+                                  shape.shape_id, Object.assign({}, shape));
+                          });
+                      }});
+                }, error : (error) => this.ready = false
         });
     }
 }

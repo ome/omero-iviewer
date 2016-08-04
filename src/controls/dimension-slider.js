@@ -10,10 +10,7 @@ export default class DimensionSlider extends EventSubscriber {
     image_info = null;
     @bindable config_id = null;
     @bindable dim = 't';
-    sub_list = [[EVENTS.RESET_COMPONENT, (params = {}) => {
-        if (params.config_id !== this.config_id) return;
-        this.image_info = null; this.forceUpdate() }]];
-    sub_list = [[EVENTS.UPDATE_COMPONENT, (params = {}) => {
+    sub_list = [[EVENTS.IMAGE_CONFIG_UPDATE, (params = {}) => {
         if (params.config_id !== this.config_id) return;
         this.image_info =
             this.context.getImageConfig(this.config_id).image_info;

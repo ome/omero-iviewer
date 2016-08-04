@@ -1,31 +1,52 @@
+/**
+ * The list of available events
+ * @const
+ */
 export const EVENTS = {
-    IMAGE_INTERACTION : "IMAGE_INTERACTION",
-    UPDATE_COMPONENT : "UPDATE_COMPONENT",
-    RESET_COMPONENT : "RESET_COMPONENT",
-    SELECTED_CONFIG : "SELECTED_CONFIG",
-    DIMENSION_CHANGE : "DIMENSION_CHANGE",
-    CHANNEL_CHANGE : "CHANNEL_CHANGE",
-    SHOW_REGIONS : "SHOW_REGIONS",
-    REGIONS_VISIBILITY : "REGIONS_VISIBILITY",
-    REGION_SELECTED : "REGION_SELECTED",
-    REGION_DESELECTED : "REGION_DESELECTED",
-    SELECT_REGIONS : "SELECT_REGIONS",
-    MODIFY_REGIONS : "MODIFY_REGIONS",
-    DRAW_SHAPE : "DRAW_SHAPE",
-    SHAPES_ADDED : "SHAPES_ADDED",
-    SHAPES_MODIFIED : "SHAPES_MODIFIED",
-    SHAPES_DELETED : "SHAPES_DELETED",
-    VIEWER_RESIZE : "VIEWER_RESIZE"
+    IMAGE_CONFIG_UPDATE : "IMAGE_CONFIG_UPDATE",
+    IMAGE_CONFIG_SELECT : "IMAGE_CONFIG_SELECT"
 }
 
+/**
+ * @classdesc
+ *
+ * Facilitates recurring event subscription
+ * by providing subscribe and unsubscribe methods so that any class
+ * that wishes use the eventbus just needs to inherit from it and
+ * override/add to the sub_list array.
+ *
+ */
 export class EventSubscriber {
+    /**
+     * our internal subscription handles (for unsubscribe)
+     * @memberof EventSubscriber
+     * @type {Array.<Object>}
+     */
     subscriptions = [];
+    /**
+     * the list of events that we loop over to un/subscribe
+     * consisting of an array with 2 entries:
+     * the first one an EVENTS constant (see above) to denote the type
+     * the second is a function/handler to be called, e.g.
+     * [EVENTS.IMAGE_CONFIG_UPDATE, (params) => handleMe()]
+     *
+     * @memberof EventSubscriber
+     * @type {Array.<string,function>}
+     */
     sub_list = [];
 
+    /**
+     * @constructor
+     * @param {EventAggregator} eventbus the event aggregator
+     */
     constructor(eventbus) {
         this.eventbus = eventbus;
     }
 
+    /**
+     * Iterate over sub_list and subscribe to the given events
+     * @memberof EventSubscriber
+     */
     subscribe() {
         this.unsubscribe();
         this.sub_list.map(
@@ -34,6 +55,10 @@ export class EventSubscriber {
             ));
     }
 
+    /**
+     * Iterate over sub_list and unsubscribe from all subscriptions
+     * @memberof EventSubscriber
+     */
     unsubscribe() {
         if (this.subscriptions.length === 0) return;
         while (this.subscriptions.length > 0)

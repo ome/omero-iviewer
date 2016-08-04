@@ -2,42 +2,62 @@ import {noView} from 'aurelia-framework';
 import ImageInfo from '../model/image_info';
 import RegionsInfo from '../model/regions_info';
 
+/**
+ * @classdesc
+ *
+ * Holds the combined data/model that is relevant to working with an image:
+ * ImageInfo and RegionsInfo
+ */
 @noView
 export default class ImageConfig {
+    /**
+     * @memberof Context
+     * @type ImageInfo
+     */
     image_info = null;
+    /**
+     * @memberof Context
+     * @type RegionsInfo
+     */
     regions_info = null;
-    locked_dimensions = [];
-    locked_to_image_configs = [];
+    /**
+     * @memberof Context
+     * @type boolean
+     */
+    show_regions = false;
 
+    /**
+     * @constructor
+     * @param {Context} context the application context
+     * @param {number} image_id the image id to be queried
+     */
     constructor(context, image_id) {
+        // for now this should suffice, especially given js 1 threaded nature
         this.id = new Date().getTime();
+        // go create the data objects for an image and its associated region
         this.image_info = new ImageInfo(context, this.id, image_id);
         this.regions_info = new RegionsInfo(this.image_info)
     }
 
-    isLockedToImageConfig(image_config) {
-        if (typeof image_config !== 'number') return false;
-
-        return this.locked_to_image_configs.filter(
-                (entry) => image_config === entry).length > 0;
-    }
-
-    isLockedToDimension(dim) {
-        if (typeof dim !== 'string') return false;
-
-        return this.locked_dimensions.filter(
-                (entry) => dim === entry).length > 0;
-    }
-
+    /**
+     * Even though we are not an Aurelia View we stick to Aurelia's lifecycle
+     * terminology and use the method bind for initialization purposes
+     *
+     * @memberof Context
+     */
     bind() {
         this.image_info.bind();
         this.regions_info.bind();
     }
 
+    /**
+     * Even though we are not an Aurelia View we stick to Aurelia's lifecycle
+     * terminology and use the method unbind for cleanup purposes
+     *
+     * @memberof Context
+     */
     unbind() {
         this.image_info.unbind();
         this.regions_info.unbind();
-        this.locked_dimensions = [];
-        this.locked_to_image_configs = [];
     }
 }

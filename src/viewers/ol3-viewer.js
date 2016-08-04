@@ -11,27 +11,9 @@ export default class Ol3Viewer extends EventSubscriber {
     @bindable config_id=null;
     image_config = null;
     sub_list = [
-        [EVENTS.UPDATE_COMPONENT, (params={}) => {
+        [EVENTS.IMAGE_CONFIG_UPDATE, (params={}) => {
             if (params.config_id !== this.config_id) return;
-            this.forceUpdate(); this.viewer.redraw();}],
-        [EVENTS.SHOW_REGIONS, (flag) => {
-            this.showRegions(flag);this.viewer.redraw();}],
-        [EVENTS.SELECT_REGIONS, (params={}) => {
-            if (params.config_id !== this.config_id) return;
-            this.viewer.selectShapes(
-                params.ids, params.select, params.center)}],
-        [EVENTS.REGIONS_VISIBILITY, (params={}) => {
-            if (params.config_id !== this.config_id) return;
-            this.updateRegionsVisibility(params.flag, params.rois)}],
-        [EVENTS.DIMENSION_CHANGE, (params={}) => {
-            if (params.config_id !== this.config_id) return;
-            this.viewer.setDimensionIndex.apply(
-                this.viewer, [params.dim].concat(params.value));}],
-        [EVENTS.VIEWER_RESIZE, (params={}) => {
-            if (params.config_id !== this.config_id &&
-                params.config_id !== -1) return;
-            this.viewer.redraw();
-        }]
+            this.forceUpdate(); this.viewer.redraw();}]
     ];
 
     constructor(context, element) {
