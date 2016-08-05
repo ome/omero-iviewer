@@ -13,25 +13,25 @@ export default class ImageInfo {
     /**
      * a flag that signals whether we have successfully
      * received all backend info or not
-     * @memberof Context
-     * @type boolean
+     * @memberof ImageInfo
+     * @type {boolean}
      */
     ready = false;
     /**
      * dimensions are initialized to defaults
-     * @memberof Context
+     * @memberof ImageInfo
      * @type {Object}
      */
     dimensions = {t: 0, max_t : 1,z: 0, max_z : 1};
     /**
-     * @memberof Context
+     * @memberof ImageInfo
      * @type {Array.<Object>}
      */
     channels = null;
     /**
      * the associated dataset id
-     * @memberof Context
-     * @type number
+     * @memberof ImageInfo
+     * @type {number}
      */
     dataset_id = null;
 
@@ -51,7 +51,7 @@ export default class ImageInfo {
      * Even though we are not an Aurelia View we stick to Aurelia's lifecycle
      * terminology and use the method bind for initialization purposes
      *
-     * @memberof Context
+     * @memberof ImageInfo
      */
     bind() {
         this.requestData();
@@ -61,7 +61,7 @@ export default class ImageInfo {
      * Even though we are not an Aurelia View we stick to Aurelia's lifecycle
      * terminology and use the method unbind for cleanup purposes
      *
-     * @memberof Context
+     * @memberof ImageInfo
      */
     unbind() {
         this.dimensions = {t: 0, max_t : 1,z: 0, max_z : 1};
@@ -72,7 +72,7 @@ export default class ImageInfo {
     /**
      * Return flag whether we ought to show regions or not
      *
-     * @memberof Context
+     * @memberof ImageInfo
      * @return {boolean} show the regions or not
      */
     showRegions() {
@@ -82,7 +82,7 @@ export default class ImageInfo {
     /**
      * Retrieves the data via ajax
      *
-     * @memberof Context
+     * @memberof ImageInfo
      */
     requestData() {
         let dataType = "json";
@@ -126,5 +126,15 @@ export default class ImageInfo {
                     ready: this.ready});
             }
         });
+    }
+
+    getActiveChannels() {
+        if (this.channels === null) return null;
+
+        let activeChannels = [];
+        for (let i=0;i<this.channels.length;i++)
+            if (this.channels[i].active) activeChannels.push(i);
+
+        return activeChannels;
     }
 }

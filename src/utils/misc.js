@@ -1,7 +1,19 @@
 import {noView} from 'aurelia-framework';
 
+/**
+ * @classdesc
+ *
+ * A utility class with various helper methods
+ */
 @noView
 export default class Misc {
+
+    /**
+     * Checks if we have an arry on our hands, something we do quite frequently
+     *
+     * @static
+     * @return {boolean} true if something is an Array
+     */
     static isArray(something) {
         if (typeof something !== 'object' || something === null) return false;
 
@@ -12,26 +24,17 @@ export default class Misc {
         return false;
     }
 
-    static convertSignedIntegerToHexColor(color) {
-        if (typeof color !== 'number') return null;
-
-        let alpha = (color & 0xFF000000) >>> 24;
-        let red = (color & 0x00FF0000) >> 16;
-        let green = (color & 0x0000FF00) >> 8;
-        let blue = color & 0x000000FF;
-
-        return {
-            alpha: parseFloat(alpha) / 255,
-            hex: "#" +
-                ("00" + red.toString(16)).substr(-2) +
-                ("00" + green.toString(16)).substr(-2) +
-                ("00" + blue.toString(16)).substr(-2)};
-    }
-
+    /**
+     * A rudimentary check for when we send an ajax request using jsonp.
+     * In essence, anything that is not localhost or an empty string
+     * (relative assumed) should be handled via jsonp
+     *
+     * @static
+     * @return {boolean} true if we regard the server string not localhost
+     */
     static useJsonp(server="") {
-        if (typeof server !== 'string') {
-            return false;
-        }
+        if (typeof server !== 'string') return false;
+
         if (server.trim() === '' ||
                 server.indexOf("localhost") !== -1)
             return false;

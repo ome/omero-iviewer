@@ -23,7 +23,7 @@ export default class Context {
     /**
      * a map for a more convenient key based lookup of an ImageConfig instance
      * @memberof Context
-     * @type boolean
+     * @type {boolean}
      */
     image_configs = new Map();
     /**
@@ -37,7 +37,7 @@ export default class Context {
     /**
      * Are we allowed to open/view/interact with more than one image
      * @memberof Context
-     * @type boolean
+     * @type {boolean}
      */
     useMDI = false;
 

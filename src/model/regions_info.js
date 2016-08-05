@@ -14,28 +14,25 @@ export default class RegionsInfo extends EventSubscriber {
     /**
      * a flag that signals whether we have successfully
      * received all backend info or not
-     * @memberof Context
+     * @memberof RegionsInfo
      * @type boolean
      */
     ready = false;
     /**
      * our internal list of shape objects
      * stored in a map and accessible by id
-     * @memberof Context
+     * @memberof RegionsInfo
      * @type Map
      */
     data = new Map();
     /**
      * our list of events we subscribe to via the EventSubscriber
-     * @memberof Context
+     * @memberof RegionsInfo
      * @type Map
      */
     sub_list = [
         [EVENTS.IMAGE_CONFIG_UPDATE,
-            (params={}) => {
-                if (params.config_id !== this.image_info.config_id) return;
-                this.handleImageConfigUpdate(params.ready)}]
-        ];
+            (params={}) => this.handleImageConfigUpdate(params)]];
 
     /**
      * @constructor
@@ -50,7 +47,7 @@ export default class RegionsInfo extends EventSubscriber {
      * Even though we are not an Aurelia View we stick to Aurelia's lifecycle
      * terminology and use the method bind for initialization purposes
      *
-     * @memberof Context
+     * @memberof RegionsInfo
      */
     bind() {
         this.subscribe();
@@ -60,7 +57,7 @@ export default class RegionsInfo extends EventSubscriber {
      * Even though we are not an Aurelia View we stick to Aurelia's lifecycle
      * terminology and use the method unbind for cleanup purposes
      *
-     * @memberof Context
+     * @memberof RegionsInfo
      */
     unbind() {
         this.unsubscribe();
@@ -71,11 +68,13 @@ export default class RegionsInfo extends EventSubscriber {
     /**
      * Handles received image config updates: EVENTS.IMAGE_CONFIG_UPDATE
      *
-     * @memberof Context
-     * @param {boolean} ready flag if the image info is ready
+     * @memberof RegionsInfo
+     * @param {Object} params the event notification parameters
      */
-    handleImageConfigUpdate(ready = false) {
-        if (!ready) return;
+    handleImageConfigUpdate(params = {}) {
+        // we ignore notifications that don't concern us
+        if (params.config_id !== this.image_info.config_id ||
+            !params.ready) return;
 
         this.requestData();
     }
@@ -83,7 +82,7 @@ export default class RegionsInfo extends EventSubscriber {
     /**
      * Retrieves the regions information needed via ajax and stores it internally
      *
-     * @memberof Context
+     * @memberof RegionsInfo
      * @param {boolean} forceUpdate if true we always request up-to-date data
      */
     requestData(forceUpdate = false) {
@@ -102,14 +101,12 @@ export default class RegionsInfo extends EventSubscriber {
             cache : false,
             success : (response) => {
                 // we want an array
-                if (typeof response !== 'object' ||
-                 typeof response.length !== 'number') return;
+                if (!Misc.isArray(response)) return;
 
                  // traverse results and stuff them into the map
                  response.map((item) => {
                      // shapes have to be arrays as well
-                     if (typeof item.shapes === 'object' &&
-                      typeof item.shapes.length === 'number') {
+                     if (Misc.isArray(item.shapes)) {
                           // set shape properties and store the object
                           item.shapes.map((shape) => {
                               shape.shape_id = "" + item.id + ":" + shape.id;

@@ -11,17 +11,17 @@ import RegionsInfo from '../model/regions_info';
 @noView
 export default class ImageConfig {
     /**
-     * @memberof Context
+     * @memberof ImageConfig
      * @type ImageInfo
      */
     image_info = null;
     /**
-     * @memberof Context
+     * @memberof ImageConfig
      * @type RegionsInfo
      */
     regions_info = null;
     /**
-     * @memberof Context
+     * @memberof ImageConfig
      * @type boolean
      */
     show_regions = false;
@@ -43,7 +43,7 @@ export default class ImageConfig {
      * Even though we are not an Aurelia View we stick to Aurelia's lifecycle
      * terminology and use the method bind for initialization purposes
      *
-     * @memberof Context
+     * @memberof ImageConfig
      */
     bind() {
         this.image_info.bind();
@@ -54,7 +54,7 @@ export default class ImageConfig {
      * Even though we are not an Aurelia View we stick to Aurelia's lifecycle
      * terminology and use the method unbind for cleanup purposes
      *
-     * @memberof Context
+     * @memberof ImageConfig
      */
     unbind() {
         this.image_info.unbind();
