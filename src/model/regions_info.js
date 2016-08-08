@@ -1,12 +1,11 @@
 import {noView} from 'aurelia-framework';
-import {EVENTS, EventSubscriber} from '../events/events';
+import {IMAGE_CONFIG_UPDATE, EventSubscriber} from '../events/events';
 import Misc from '../utils/misc';
 
 /**
- * @classdesc
  * Holds region information
  *
- * @extends EventSubscriber
+ * @extends {EventSubscriber}
  *
  */
 @noView
@@ -31,7 +30,7 @@ export default class RegionsInfo extends EventSubscriber {
      * @type Map
      */
     sub_list = [
-        [EVENTS.IMAGE_CONFIG_UPDATE,
+        [IMAGE_CONFIG_UPDATE,
             (params={}) => this.handleImageConfigUpdate(params)]];
 
     /**
@@ -66,7 +65,7 @@ export default class RegionsInfo extends EventSubscriber {
     }
 
     /**
-     * Handles received image config updates: EVENTS.IMAGE_CONFIG_UPDATE
+     * Handles received image config updates (IMAGE_CONFIG_UPDATE)
      *
      * @memberof RegionsInfo
      * @param {Object} params the event notification parameters

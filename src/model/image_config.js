@@ -3,8 +3,6 @@ import ImageInfo from '../model/image_info';
 import RegionsInfo from '../model/regions_info';
 
 /**
- * @classdesc
- *
  * Holds the combined data/model that is relevant to working with an image:
  * ImageInfo and RegionsInfo
  */

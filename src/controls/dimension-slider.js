@@ -1,14 +1,16 @@
 import {inject} from 'aurelia-framework';
 import Context from '../app/context';
-import {EVENTS, EventSubscriber} from '../events/events';
 import {customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {slider} from 'jquery-ui';
 
+import {
+    IMAGE_CONFIG_UPDATE, IMAGE_DIMENSION_CHANGE,
+    EventSubscriber
+} from '../events/events';
+
 /**
- * @classdesc
- *
  * Represents a dimension slider using jquery slider
- * @extends EventSubscriber
+ * @extends {EventSubscriber}
  */
 
 @customElement('dimension-slider')
@@ -47,7 +49,7 @@ export default class DimensionSlider extends EventSubscriber {
      * @memberof DimensionSlider
      * @type {Array.<string,function>}
      */
-    sub_list = [[EVENTS.IMAGE_CONFIG_UPDATE,
+    sub_list = [[IMAGE_CONFIG_UPDATE,
                     (params = {}) => this.onImageConfigChange(params)]];
 
     /**
@@ -152,12 +154,10 @@ export default class DimensionSlider extends EventSubscriber {
     }
 
     /**
-     * Handles changes in the dimension model both via the UI or
-     * driven by the application/programmatically (see second param)
+     * Handles changes of the associated ImageConfig
      *
      * @memberof DimensionSlider
-     * @param {number|string} value the new dimension value
-     * @param {boolean} slider_interaction true if change was affected by UI
+     * @param {Object} params the event notification parameters
      */
      onImageConfigChange(params = {}) {
          // we ignore notifications that don't concern us
@@ -189,7 +189,7 @@ export default class DimensionSlider extends EventSubscriber {
         // send out a dimension change notification
         if (slider_interaction)
             this.context.publish(
-                EVENTS.IMAGE_DIMENSION_CHANGE,
+                IMAGE_DIMENSION_CHANGE,
                     {config_id: this.config_id,
                      dim: this.dim,
                      value: [this.image_info.dimensions[this.dim]]});

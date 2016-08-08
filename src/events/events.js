@@ -1,18 +1,15 @@
-/**
- * The list of available events
- * @const
- */
-export const EVENTS = {
-    IMAGE_CONFIG_UPDATE : "CONFIG_UPDATE",
-    IMAGE_CONFIG_SELECT : "CONFIG_SELECT",
-    IMAGE_VIEWER_RESIZE : "IMAGE_VIEWER_RESIZE",
-    IMAGE_DIMENSION_CHANGE : "IMAGE_DIMENSION_CHANGE",
-    IMAGE_REGIONS_VISIBILITY : "IMAGE_REGIONS_VISIBILITY"
-}
+/** whenever an image config has been updated */
+export const IMAGE_CONFIG_UPDATE = "IMAGE_CONFIG_UPDATE";
+/** whenever an image config has been selected */
+export const IMAGE_CONFIG_SELECT = "IMAGE_CONFIG_SELECT";
+/** whenever the image viewer needs to be resized */
+export const IMAGE_VIEWER_RESIZE = "IMAGE_VIEWER_RESIZE";
+/** whenever an image dimension (c,t,z) changes */
+export const IMAGE_DIMENSION_CHANGE = "IMAGE_DIMENSION_CHANGE";
+/** whenever an image/shape visibility changes */
+export const IMAGE_REGIONS_VISIBILITY = "IMAGE_REGIONS_VISIBILITY";
 
 /**
- * @classdesc
- *
  * Facilitates recurring event subscription
  * by providing subscribe and unsubscribe methods so that any class
  * that wishes use the eventbus just needs to inherit from it and

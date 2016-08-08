@@ -3,16 +3,19 @@ require('../css/viewer.css');
 
 // dependencies
 import Context from '../app/context';
-import {EVENTS, EventSubscriber} from '../events/events';
 import Misc from '../utils/misc';
 import {inject, customElement, bindable} from 'aurelia-framework';
 import {ol3} from '../../libs/ome-viewer-1.0.js';
+import {
+    IMAGE_CONFIG_UPDATE, IMAGE_VIEWER_RESIZE,
+    IMAGE_DIMENSION_CHANGE, IMAGE_REGIONS_VISIBILITY,
+    EventSubscriber
+} from '../events/events';
+
 
 /**
- * @classdesc
- *
  * The openlayers 3 viewer wrapped for better aurelia integration
- * @extends EventSubscriber
+ * @extends {EventSubscriber}
  */
 
 @customElement('ol3-viewer')
@@ -38,13 +41,13 @@ export default class Ol3Viewer extends EventSubscriber {
      * @type {Array.<string,function>}
      */
     sub_list = [
-        [EVENTS.IMAGE_CONFIG_UPDATE,
+        [IMAGE_CONFIG_UPDATE,
              (params={}) => this.updateViewer(params)],
-        [EVENTS.IMAGE_VIEWER_RESIZE,
+        [IMAGE_VIEWER_RESIZE,
             (params={}) => this.resizeViewer(params)],
-        [EVENTS.IMAGE_DIMENSION_CHANGE,
+        [IMAGE_DIMENSION_CHANGE,
             (params={}) => this.changeDimension(params)],
-        [EVENTS.IMAGE_REGIONS_VISIBILITY,
+        [IMAGE_REGIONS_VISIBILITY,
             (params={}) => this.changeRegionsVisibility(params)]];
 
     /**

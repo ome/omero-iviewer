@@ -1,9 +1,7 @@
 import {noView} from 'aurelia-framework';
 
 /**
- * @classdesc
- *
- * A utility class with various helper methods
+ * A utility class with various static helper methods
  */
 @noView
 export default class Misc {

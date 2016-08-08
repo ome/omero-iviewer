@@ -1,10 +1,8 @@
 import {noView} from 'aurelia-framework';
-import {EVENTS} from '../events/events';
+import {IMAGE_CONFIG_UPDATE} from '../events/events';
 import Misc from '../utils/misc';
 
 /**
- * @classdesc
- *
  * Holds basic image information required for viewing:
  * dimensions, channels, etc.
  */
@@ -111,7 +109,7 @@ export default class ImageInfo {
                 // send out an image config update event
                 this.ready = true;
                 this.context.publish(
-                    EVENTS.IMAGE_CONFIG_UPDATE,
+                    IMAGE_CONFIG_UPDATE,
                         {config_id: this.config_id,
                         dataset_id: this.dataset_id,
                         ready: this.ready});
@@ -120,10 +118,11 @@ export default class ImageInfo {
                 this.ready = false;
                 // send out an image config update event
                 // with a no ready flag to (potentially react to)
-                this.context.publish(EVENTS.IMAGE_CONFIG_UPDATE,
-                    {config_id: this.config_id,
-                    dataset_id: this.dataset_id,
-                    ready: this.ready});
+                this.context.publish(
+                    IMAGE_CONFIG_UPDATE,
+                        {config_id: this.config_id,
+                         dataset_id: this.dataset_id,
+                         ready: this.ready});
             }
         });
     }

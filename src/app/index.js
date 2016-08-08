@@ -4,7 +4,7 @@ require('../css/pocketgrid.css');
 // dependencies
 import {inject} from 'aurelia-framework';
 import Context from './context';
-import {EVENTS} from '../events/events';
+import {IMAGE_VIEWER_RESIZE} from '../events/events';
 
 /**
  * @classdesc
@@ -30,7 +30,7 @@ export class Index  {
      */
     attached() {
         window.onresize =
-        () => this.context.publish(EVENTS.IMAGE_VIEWER_RESIZE, {config_id: -1});
+        () => this.context.publish(IMAGE_VIEWER_RESIZE, {config_id: -1});
     }
 
     /**

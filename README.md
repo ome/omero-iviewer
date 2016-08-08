@@ -18,3 +18,7 @@ For further installation help have a look at the respective [README](plugin/view
 
 Run ```npm run dev``` to be able to run the webpack-dev server locally at:
 localhost:3000
+
+##Documentation:
+
+Run ```npm run docs``` to build the html in build/docs

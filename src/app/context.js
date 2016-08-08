@@ -1,12 +1,10 @@
 import {noView} from 'aurelia-framework';
 import {EventAggregator} from 'aurelia-event-aggregator';
-import {EVENTS} from '../events/events';
+import {IMAGE_CONFIG_SELECT} from '../events/events';
 import ImageConfig from '../model/image_config';
 
 /**
- * @classdesc
- *
- * This context provides all the information to the application that it shares
+ * Provides all the information to the application that it shares
  * among its components, in particular it holds ImageConfig instances
  * which represent the data object/model.
  *
@@ -21,22 +19,33 @@ import ImageConfig from '../model/image_config';
 @noView
 export default class Context {
     /**
+     * the aurelia event aggregator
+     * @type {EventAggregator}
+     */
+    eventbus = null;
+
+    /**
+     * server information (if not localhost)
+     * @type {string}
+     */
+    server = null;
+
+    /**
      * a map for a more convenient key based lookup of an ImageConfig instance
-     * @memberof Context
-     * @type {boolean}
+     * @type {Map}
      */
     image_configs = new Map();
+
     /**
      * the key of the presently selected/active ImageConfig
      * this setting gains only importance if useMDI is set to true
      * so that multiple images can be open but only one is active/interacted with
-     * @memberof Context
-     * @type number
+     * @type {number}
      */
     selected_config = null;
+
     /**
      * Are we allowed to open/view/interact with more than one image
-     * @memberof Context
      * @type {boolean}
      */
     useMDI = false;
@@ -48,6 +57,7 @@ export default class Context {
      * @param {string} a server url
      */
     constructor(eventbus = null, initial_image_id=null, server="") {
+        // event aggregator is mandatory
         if (typeof eventbus instanceof EventAggregator)
             throw "Invalid EventAggregator given!"
 
@@ -55,7 +65,6 @@ export default class Context {
             server = "";
             console.info("Invalid server value. Using relative paths...");
         }
-
         this.eventbus = eventbus;
         this.server = server;
 
@@ -141,8 +150,7 @@ export default class Context {
 
         if (this.useMDI)
             this.publish(
-                EVENTS.IMAGE_CONFIG_SELECT,
-                { image_config: this.selected_config});
+                IMAGE_CONFIG_SELECT, { image_config: this.selected_config});
     }
 
     /**
@@ -152,7 +160,8 @@ export default class Context {
      *
      * @memberof Context
      * @param {number} id the ImageConfig id
-     * @return {boolean} forceRequest if true an ajax request is forced to update the data
+     * @param {boolean} forceRequest if true an ajax request is forced to update the data
+     * @return {ImageConfig} the image config object or null
      */
     getImageConfig(id, forceRequest=false) {
         if (typeof id !== 'number' || id < 0)
