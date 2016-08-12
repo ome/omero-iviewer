@@ -1,6 +1,3 @@
-// css
-require('../css/pocketgrid.css');
-
 // dependencies
 import {inject} from 'aurelia-framework';
 import Context from './context';

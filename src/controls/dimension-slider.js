@@ -87,6 +87,7 @@ export default class DimensionSlider extends EventSubscriber {
      */
     attached() {
         // vertical sliders are stretched to full extent
+        // TODO: adjust once css layout has been chosen
         if (this.dim === 'z')
             $(this.elSelector).addClass("height100");
     }

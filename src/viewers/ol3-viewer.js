@@ -1,5 +1,5 @@
 // css
-require('../css/viewer.css');
+require('../css/ol3-viewer.css');
 
 // dependencies
 import Context from '../app/context';

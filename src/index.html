@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html>
   <head>
-      <link rel="stylesheet" type="text/css" href="{% static 'viewer-ng/css/pocketgrid.css' %}" />
       <link rel="stylesheet" type="text/css" href="http://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.min.css" />
-      <link rel="stylesheet" type="text/css" href="{% static 'viewer-ng/css/viewer.css' %}" />
+      <link rel="stylesheet" type="text/css" href="{% static 'viewer-ng/css/ol3-viewer.css' %}" />
 
       <script type="text/javascript">
         window.INITIAL_IMAGE_ID = {{ image_id }};
@@ -12,7 +11,7 @@
       <title>Viewer NG</title>
   </head>
 
-  <body class="block-group block100 height100">
+  <body>
       <script type="text/javascript" src="{% static 'viewer-ng/js/bundle1.0.0.js' %}"></script>
   </body>
 
