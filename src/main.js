@@ -1,4 +1,3 @@
-//var Promise = require('bluebird'); // Promise polyfill for IE11
 import { bootstrap } from 'aurelia-bootstrapper-webpack';
 import {EventAggregator} from 'aurelia-event-aggregator';
 import Context from './app/context';

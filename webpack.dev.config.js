@@ -25,7 +25,7 @@ module.exports = {
       filename: 'index.html'
   }),
     new ProvidePlugin({
-      //Promise: 'bluebird',
+      Promise: 'bluebird',
       $: 'jquery',
       jQuery: 'jquery',
       'window.jQuery': 'jquery'
