@@ -1,19 +1,25 @@
 <template>
     <require from="../controls/dimension-slider"></require>
 
-    <dimension-slider
-        config_id.bind="config_id"
-        dim="z">
-    </dimension-slider>
+    <div class="center-row1 row">
+        <dimension-slider
+            config_id.bind="config_id"
+            dim="z"
+            class="plane-slider col-xs-1">
+        </dimension-slider>
 
-    <div name="viewer">
-          <div id.bind="container" />
+        <div class="viewer col-xs-12">
+              <div id.bind="container" class="viewer-container"></div>
+        </div>
     </div>
 
-    <div></div>
+    <div class="center-row2 row">
+            <div class="slider-corner col-xs-1">&nbsp;</div>
 
-    <dimension-slider
-        config_id.bind="config_id"
-        dim="t">
-    </dimension-slider>
+            <dimension-slider
+                config_id.bind="config_id"
+                dim="t"
+                class="time-slider col-xs-12">
+            </dimension-slider>
+    </div>
 </template>

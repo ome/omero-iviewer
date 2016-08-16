@@ -1,0 +1,44 @@
+html, body, .frame, .center, ol3-viewer {
+    height: 100%;
+}
+
+.center-row1 {
+    height: 100%;
+    padding-bottom: 25px;
+}
+
+.center-row2 {
+    max-height: 25px;
+    margin-top: -25px
+}
+
+.slider-corner {
+    max-height: 25px;
+    max-width: 30px;
+}
+
+.time-slider {
+    max-height: 25px;
+    margin-left: -30px;
+    padding-left: 30px
+}
+
+.plane-slider {
+    max-width: 25px;
+    height:100%;
+    padding-bottom: 25px;
+}
+
+.viewer {
+    height: 100%;
+    padding-bottom: 25px;
+    padding-left: 30px;
+    padding-right: 0px;
+    margin-left: -30px;
+}
+
+.viewer-container {
+    width: 100%;
+    height: 100%;
+    background: #FFFFFF;
+}

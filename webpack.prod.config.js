@@ -15,7 +15,7 @@ module.exports = {
     publicPath: '/static/viewer-ng/js/'
   },
   plugins: [
-    new AureliaWebpackPlugin(),
+    new AureliaWebpackPlugin({}),
     new ProvidePlugin({
       Promise: 'bluebird',
       $: 'jquery',

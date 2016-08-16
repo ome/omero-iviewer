@@ -18,7 +18,8 @@ module.exports = {
     filename: 'bundle.js'
   },
   plugins: [
-    new AureliaWebpackPlugin(),
+    new AureliaWebpackPlugin({
+        nameExternalModules: false}),
     new HtmlWebpackPlugin({
       template : './src/index-dev.html',
       filename: 'index.html'

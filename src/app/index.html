@@ -1,12 +1,13 @@
 <template>
     <require from="../viewers/ol3-viewer"></require>
 
-    <div id="center">
-        <div name="frame" if.bind="!context.useMDI"
+    <div class="row center">
+        <div if.bind="!context.useMDI"
+            class="frame col-xs-12"
             show.bind="context.getImageConfig(id).image_info.ready"
             repeat.for="[id, conf] of context.image_configs">
 
-            <ol3-viewer config_id.bind="id" />
+            <ol3-viewer config_id.bind="id"></ol3-viewer>
         </div>
     </div>
 

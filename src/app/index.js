@@ -1,4 +1,8 @@
-// dependencies
+//css
+require('../../node_modules/bootstrap/dist/css/bootstrap.min.css');
+require('../css/app.css');
+
+// js
 import {inject} from 'aurelia-framework';
 import Context from './context';
 import {IMAGE_VIEWER_RESIZE} from '../events/events';
