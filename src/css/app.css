@@ -2,6 +2,17 @@ html, body, .frame, .center, ol3-viewer {
     height: 100%;
 }
 
+.fixed-header {
+    margin: 0px;
+    min-height: 40px;
+    max-height: 40px;
+}
+
+.center {
+    margin-top: 0px;
+    padding-top: 40px;
+}
+
 .center-row1 {
     height: 100%;
     padding-bottom: 25px;
@@ -20,12 +31,13 @@ html, body, .frame, .center, ol3-viewer {
 .time-slider {
     max-height: 25px;
     margin-left: -30px;
-    padding-left: 30px
+    padding-left: 50px
 }
 
 .plane-slider {
     max-width: 25px;
     height:100%;
+    padding-top: 15px;
     padding-bottom: 25px;
 }
 

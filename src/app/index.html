@@ -1,6 +1,16 @@
 <template>
     <require from="../viewers/ol3-viewer"></require>
 
+
+    <nav class="navbar navbar-default navbar-fixed-top fixed-header">
+        <div class="col-xs-4">&nbsp;</div>
+        <div class="checkbox col-xs-4">
+            <label><input id="toggle_regions" type="checkbox"
+              change.delegate="toggleRegions()">Show ROIs</label>
+        </div>
+        <div class="col-xs-4">&nbsp;</div>
+    </nav>
+
     <div class="row center">
         <div if.bind="!context.useMDI"
             class="frame col-xs-12"

@@ -16,22 +16,26 @@
 	min-width: 150px;
 	min-height: 20px;
 }
-#ome_context_menu .header {
+#ome_context_menu hr {
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+#ome_context_menu .context-head {
 	width: 95%;
 	height: 95%;
 }
-#ome_context_menu .title {
+#ome_context_menu .context-title {
 	font-weight: bold;
 	text-decoration: underline;
 }
-#ome_context_menu .close {
+#ome_context_menu .context-close {
 	color: black;
 	text-decoration: none;
 	position: absolute;
 	top: 0px;
 	right: 0px;
 }
-.selected {
+.context-selected {
 	background-color: gray;
 }
 /** CONTEXT MENU END **/

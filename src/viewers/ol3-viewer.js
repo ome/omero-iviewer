@@ -204,16 +204,20 @@ export default class Ol3Viewer extends EventSubscriber {
      * @memberof Ol3Viewer
      */
     changeRegionsVisibility(params = {}) {
+        let broadcast = typeof params.config_id !== 'number';
         // we ignore notifications that don't concern us
-        if (params.config_id !== this.config_id) return;
+        if (!broadcast && params.config_id !== this.config_id) return;
 
         // delegate to show regions,
         // this is not about individual shapes
-        if (!Misc.isArray(params) || params.length === 0) {
+        if (!Misc.isArray(params.shapes) || params.shapes.length === 0) {
             this.showRegions(params.visible);
             return;
         }
-        this.viewer.setRegionsVisibility(params.visible, params.shapes);
+
+        // this we do only if our image_config has been addressed specifically
+        if (!broadcast)
+            this.viewer.setRegionsVisibility(params.visible, params.shapes);
     }
 
     /**
@@ -227,16 +231,12 @@ export default class Ol3Viewer extends EventSubscriber {
             this.viewer.addRegions();
             // in case we are not visible and have no context menu enabled
             this.viewer.setRegionsVisibility(true, []);
-            this.viewer.setRegionsModes(
-                [ol3.REGIONS_MODE.TRANSLATE,
-                ol3.REGIONS_MODE.MODIFY]);
+            this.viewer.setRegionsModes([ol3.REGIONS_MODE.SELECT]);
             this.viewer.enableRegionsContextMenu(true);
         } else {
             this.viewer.setRegionsVisibility(false, []);
-            this.viewer.setRegionsModes(
-                [ol3.REGIONS_MODE.DEFAULT]);
+            this.viewer.setRegionsModes([ol3.REGIONS_MODE.DEFAULT]);
             this.viewer.enableRegionsContextMenu(false);
-            this.image_config.show_regions = false;
         }
     }
 

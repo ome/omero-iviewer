@@ -5,7 +5,7 @@ require('../css/app.css');
 // js
 import {inject} from 'aurelia-framework';
 import Context from './context';
-import {IMAGE_VIEWER_RESIZE} from '../events/events';
+import {IMAGE_VIEWER_RESIZE,IMAGE_REGIONS_VISIBILITY} from '../events/events';
 
 /**
  * @classdesc
@@ -43,6 +43,20 @@ export class Index  {
      */
     detached() {
         window.onresize = null;
+    }
+
+    /**
+     * Toggles regions visibility
+     *
+     * @memberof Index
+     */
+    toggleRegions() {
+        let val = $("#toggle_regions").prop("checked");
+
+        for (let [id,conf] of this.context.image_configs)
+            conf.show_regions = val;
+
+        this.context.publish(IMAGE_REGIONS_VISIBILITY, {visible: val});
     }
 
     /**
