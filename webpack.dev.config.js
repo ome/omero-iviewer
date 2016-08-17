@@ -18,8 +18,7 @@ module.exports = {
     filename: 'bundle.js'
   },
   plugins: [
-    new AureliaWebpackPlugin({
-        nameExternalModules: false}),
+    new AureliaWebpackPlugin({nameExternalModules: false}),
     new HtmlWebpackPlugin({
       template : './src/index-dev.html',
       filename: 'index.html'
@@ -38,8 +37,8 @@ module.exports = {
         query: { compact: false,
             presets: ['es2015-loose', 'stage-1'],
             plugins: ['transform-decorators-legacy'] } },
-      { test: /\.css?$/, loader: 'style!raw!' },
-      { test: /\.(png|gif|jpg|jpeg)$/, loader: 'file?name=images/[name].[ext]' },
+      { test: /\.css?$/, loader: 'file?name=css/[name].[ext]' },
+      { test: /\.(png|gif|jpg|jpeg)$/, loader: 'file?name=css/images/[name].[ext]' },
       { test: /\.html$/, loader: 'html' }
     ]
   }

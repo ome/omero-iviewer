@@ -1,6 +1,7 @@
 import { bootstrap } from 'aurelia-bootstrapper-webpack';
 import {EventAggregator} from 'aurelia-event-aggregator';
 import Context from './app/context';
+import Index from './app/index';
 
 bootstrap(function(aurelia) {
   aurelia.use
