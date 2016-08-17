@@ -34,8 +34,12 @@ module.exports = {
   module: {
     noParse: [/libs\/ome-viewer-1.0.js$/],
     loaders: [
-      { test: /\.js$/, loader: 'babel', exclude: /node_modules/, query: { compact: false, presets: ['es2015-loose', 'stage-1'], plugins: ['transform-decorators-legacy'] } },
+      { test: /\.js$/, loader: 'babel', exclude: /node_modules/,
+        query: { compact: false,
+            presets: ['es2015-loose', 'stage-1'],
+            plugins: ['transform-decorators-legacy'] } },
       { test: /\.css?$/, loader: 'style!raw!' },
+      { test: /\.(png|gif|jpg|jpeg)$/, loader: 'file?name=images/[name].[ext]' },
       { test: /\.html$/, loader: 'html' }
     ]
   }

@@ -232,11 +232,11 @@ export default class Ol3Viewer extends EventSubscriber {
             // in case we are not visible and have no context menu enabled
             this.viewer.setRegionsVisibility(true, []);
             this.viewer.setRegionsModes([ol3.REGIONS_MODE.SELECT]);
-            this.viewer.enableRegionsContextMenu(true);
+            //this.viewer.enableRegionsContextMenu(true);
         } else {
             this.viewer.setRegionsVisibility(false, []);
             this.viewer.setRegionsModes([ol3.REGIONS_MODE.DEFAULT]);
-            this.viewer.enableRegionsContextMenu(false);
+            //this.viewer.enableRegionsContextMenu(false);
         }
     }
 

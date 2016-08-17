@@ -33,6 +33,7 @@ module.exports = {
       { test: /\.js$/, loader: 'babel', exclude: /node_modules/,
         query: { compact: false, presets: ['es2015-loose', 'stage-1'], plugins: ['transform-decorators-legacy'] } },
       { test: /\.css?$/, loader: 'file?name=css/[name].[ext]' },
+      { test: /\.(png|gif|jpg|jpeg)$/, loader: 'file?name=css/images/[name].[ext]' },
       { test: /\.html$/, loader: 'html' }
     ]
   }
