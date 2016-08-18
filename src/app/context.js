@@ -63,7 +63,7 @@ export default class Context {
 
         if (typeof server !== 'string' || server.length === 0) {
             server = "";
-            console.info("Invalid server value. Using relative paths...");
+            console.info("Using relative paths for server requests...");
         }
         this.eventbus = eventbus;
         this.server = server;

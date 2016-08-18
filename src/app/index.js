@@ -32,6 +32,7 @@ export class Index  {
     attached() {
         window.onresize =
         () => this.context.publish(IMAGE_VIEWER_RESIZE, {config_id: -1});
+        this.registerSidebarResizeHandler();
     }
 
     /**
@@ -42,6 +43,7 @@ export class Index  {
      * @memberof Index
      */
     detached() {
+        $('.col-splitter').unbind("mousedown");
         window.onresize = null;
     }
 
@@ -57,6 +59,47 @@ export class Index  {
             conf.show_regions = val;
 
         this.context.publish(IMAGE_REGIONS_VISIBILITY, {visible: val});
+    }
+
+    /**
+     * Handles the resizing of the two side bars (thumbnail + right)
+     *
+     * @memberof Index
+     */
+    registerSidebarResizeHandler() {
+        $('.col-splitter').mousedown((e) => {
+            e.preventDefault();
+            var leftSplit = $(e.currentTarget).hasClass("left-split");
+
+            $(document).mousemove((e) => {
+                e.preventDefault();
+
+                let el = leftSplit ? $('.thumbnail-panel') : $('.right-hand-panel');
+                let x = leftSplit ? e.pageX - el.offset().left :
+                    $(window).width() - e.pageX;
+                let frameWidth = $(".frame").width();
+                let maxWith = parseInt(el.css("max-width"))
+                let rightBound = leftSplit ?
+                    ($(window).width() - frameWidth) : $(window).width();
+
+                if (x > 0 && x < maxWith && e.pageX < rightBound) {
+                      el.css("width", x);
+                      if (leftSplit)
+                          $('.frame').css(
+                              {"margin-left": '' + (-x-5) + 'px',
+                               "padding-left": '' + (x+10) + 'px'});
+                      else
+                          $('.frame').css(
+                              {"margin-right": '' + (-x-5) + 'px',
+                               "padding-right": '' + (x+15) + 'px'});
+                }
+            });
+        });
+
+        $(document).mouseup((e) => {
+            $(document).unbind('mousemove');
+            this.context.publish(IMAGE_VIEWER_RESIZE, {config_id: -1});
+        });
     }
 
     /**
