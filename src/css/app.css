@@ -13,10 +13,10 @@ html, body, .frame, .center, ol3-viewer {
 }
 
 .frame {
-    margin-left: -55px;
-    padding-left: 60px;
-    margin-right: -105px;
-    padding-right: 115px;
+    margin-left: -105px;
+    padding-left: 110px;
+    margin-right: -155px;
+    padding-right: 170px;
 }
 
 .center {
@@ -77,6 +77,22 @@ html, body, .frame, .center, ol3-viewer {
     z-index: 10;
 }
 
+.left-split img {
+    background-color:  #FFFFFF;
+    position: relative;
+    left: 0px;
+    top: 40%;
+    cursor: all-scroll;
+}
+
+.right-split img {
+    background-color: #FFFFFF;
+    position: relative;
+    left: 0px;
+    top: 40%;
+    cursor: all-scroll;
+}
+
 .viewer {
     height: 100%;
     padding-bottom: 25px;
@@ -92,11 +108,11 @@ html, body, .frame, .center, ol3-viewer {
 }
 
 .thumbnail-panel {
-    width: 50px;
-    max-width: 50px;
+    width: 100px;
+    max-width: 100px;
 }
 
 .right-hand-panel {
-    width: 100px;
-    max-width: 100px;
+    width: 150px;
+    max-width: 150px;
 }

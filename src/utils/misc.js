@@ -39,4 +39,19 @@ export default class Misc {
 
         return true;
     }
+
+    /**
+     * Prunes a given url to just preserve anything that is before the last /
+     *
+     * @static
+     * @return {string} the part of the url that is before the last dash
+     */
+    static pruneUrlToLastDash(url) {
+        if (typeof url !== 'string' || url.length < 1) return "";
+
+        let dash = url.lastIndexOf('/');
+        if (dash < 0) return url;
+
+        return url.substring(0,dash);
+    }
 }

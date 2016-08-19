@@ -12,7 +12,7 @@ module.exports = {
   output: {
     path: path.join(__dirname, 'build'),
     filename: 'bundle' + pkg.version + '.js',
-    publicPath: '/static/viewer-ng/js/'
+    publicPath: '/static/viewer-ng/'
   },
   plugins: [
     new AureliaWebpackPlugin({nameExternalModules: false}),
