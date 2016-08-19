@@ -10,17 +10,17 @@ import RegionsInfo from '../model/regions_info';
 export default class ImageConfig {
     /**
      * @memberof ImageConfig
-     * @type ImageInfo
+     * @type {ImageInfo}
      */
     image_info = null;
     /**
      * @memberof ImageConfig
-     * @type RegionsInfo
+     * @type {RegionsInfo}
      */
     regions_info = null;
     /**
      * @memberof ImageConfig
-     * @type boolean
+     * @type {boolean}
      */
     show_regions = false;
 

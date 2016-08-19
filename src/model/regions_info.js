@@ -14,20 +14,20 @@ export default class RegionsInfo extends EventSubscriber {
      * a flag that signals whether we have successfully
      * received all backend info or not
      * @memberof RegionsInfo
-     * @type boolean
+     * @type {boolean}
      */
     ready = false;
     /**
      * our internal list of shape objects
      * stored in a map and accessible by id
      * @memberof RegionsInfo
-     * @type Map
+     * @type {Map}
      */
     data = new Map();
     /**
      * our list of events we subscribe to via the EventSubscriber
      * @memberof RegionsInfo
-     * @type Map
+     * @type {Map}
      */
     sub_list = [
         [IMAGE_CONFIG_UPDATE,

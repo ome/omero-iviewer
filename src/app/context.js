@@ -119,7 +119,7 @@ export default class Context {
             conf = this.image_configs.get(image_config_or_id);
 
         // neither reference nor valid id
-        if (!(image_config_or_id instanceof ImageConfig)) return;
+        if (!(conf instanceof ImageConfig)) return;
 
         // take out of map
         this.image_configs.delete(conf.id);

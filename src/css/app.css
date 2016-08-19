@@ -42,6 +42,7 @@ html, body, .frame, .center, ol3-viewer {
 }
 
 .time-slider {
+    visibility: hidden;
     position: relative;
     z-index: 3;
     max-height: 25px;
@@ -50,6 +51,7 @@ html, body, .frame, .center, ol3-viewer {
 }
 
 .plane-slider {
+    visibility: hidden;
     position: relative;
     z-index: 3;
     max-width: 25px;
@@ -110,6 +112,16 @@ html, body, .frame, .center, ol3-viewer {
 .thumbnail-panel {
     width: 100px;
     max-width: 100px;
+}
+
+.thumbnail-slider {
+    text-align: center;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.thumbnail-slider img {
+    padding-top: 5px;
 }
 
 .right-hand-panel {

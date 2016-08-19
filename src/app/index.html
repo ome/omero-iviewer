@@ -1,5 +1,6 @@
 <template>
     <require from="../viewers/ol3-viewer"></require>
+    <require from="../controls/thumbnail-slider"></require>
 
     <nav class="navbar navbar-default navbar-fixed-top fixed-header">
         <div class="col-xs-4">&nbsp;</div>
@@ -11,9 +12,9 @@
     </nav>
 
     <div class="row center"
-        show.bind="context.getSelectedImageConfig() &&
+        show.bind="context.selected_config &&
             context.getSelectedImageConfig().image_info.ready">
-        <div class="thumbnail-panel sidebar">thumbs</div>
+        <thumbnail-slider class="thumbnail-panel sidebar"></thumbnail-slider>
 
         <div class="col-splitter left-split">
             <img src="../css/images/collapse-left.png"/>
