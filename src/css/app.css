@@ -121,10 +121,16 @@ html, body, .frame, .center, ol3-viewer {
 }
 
 .thumbnail-slider img {
-    padding-top: 5px;
+    margin-top: 10px;
+    cursor: pointer;
 }
 
 .right-hand-panel {
     width: 150px;
     max-width: 150px;
+}
+
+.left-hand-panel-hidden {
+    margin-left: 0px;
+    padding-left: 0px;
 }

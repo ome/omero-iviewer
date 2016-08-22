@@ -51,6 +51,12 @@ export default class Context {
     useMDI = false;
 
     /**
+     * the global flag for showing regions
+     * @type {boolean}
+     */
+    show_regions = false;
+
+    /**
      * @constructor
      * @param {EventAggregator} eventbus the aurelia event aggregator
      * @param {number} initial_image_id the initial image id
@@ -95,11 +101,11 @@ export default class Context {
                 this.removeImageConfig(id,conf)
 
         let image_config = new ImageConfig(this, image_id);
-        image_config.bind();
-
         // store the image config in the map and make it the selected one
         this.image_configs.set(image_config.id, image_config);
         this.selectConfig(image_config.id);
+        image_config.bind();
+
 
         return image_config;
     }

@@ -38,7 +38,7 @@ export default class DimensionSlider extends EventSubscriber {
     elSelector = null;
 
     /**
-     * which image config do we belong to (bound via template)
+     * which image config do we belong to (bound in template)
      * @memberof DimensionSlider
      * @type {number}
      */
@@ -80,10 +80,11 @@ export default class DimensionSlider extends EventSubscriber {
      * @memberof DimensionSlider
      */
     bind() {
-        // define the element selector and subscribe to events
+        // define the element selector, subscribe to events and register observer
+        this.subscribe();
         this.elSelector = "#" + this.config_id +
             " [dim='" + this.dim + "']" + " [name='dim']";
-        this.subscribe();
+        this.registerObserver();
     }
 
     /**
@@ -116,7 +117,7 @@ export default class DimensionSlider extends EventSubscriber {
      *
      * @memberof DimensionSlider
      * @param {boolean} use_display use css display instead of visibility
-\     */
+     */
     show(use_display=false) {
         if (use_display) $(this.element).show();
         else $(this.element).css('visibility', 'visible');
@@ -151,6 +152,7 @@ export default class DimensionSlider extends EventSubscriber {
      * @memberof DimensionSlider
      */
     registerObserver() {
+        if (this.image_info === null) return;
         this.unregisterObserver();
         this.observer =
             this.bindingEngine.propertyObserver(
@@ -166,14 +168,15 @@ export default class DimensionSlider extends EventSubscriber {
      * @param {Object} params the event notification parameters
      */
      onImageConfigChange(params = {}) {
-         // we ignore notifications that don't concern us
+         // if the event is for another config, forget it...
          if (params.config_id !== this.config_id) return;
 
-         // change image config and (re)register observer
+         // change image config and (re)bind
          // as well as update the slider (UI)
+         this.config_id = params.config_id;
          this.image_info =
-             this.context.getImageConfig(this.config_id).image_info;
-         this.registerObserver();
+             this.context.getImageConfig(params.config_id).image_info;
+         this.bind();
          this.updateSlider()
      }
 
@@ -222,6 +225,7 @@ export default class DimensionSlider extends EventSubscriber {
                 event.originalEvent ? true : false)
         });
 
+        this.attached();
         this.show();
     }
 

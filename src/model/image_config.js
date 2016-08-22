@@ -18,11 +18,6 @@ export default class ImageConfig {
      * @type {RegionsInfo}
      */
     regions_info = null;
-    /**
-     * @memberof ImageConfig
-     * @type {boolean}
-     */
-    show_regions = false;
 
     /**
      * @constructor

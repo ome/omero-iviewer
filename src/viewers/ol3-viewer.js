@@ -4,6 +4,7 @@ require('../css/ol3-viewer.css');
 // dependencies
 import Context from '../app/context';
 import Misc from '../utils/misc';
+import Ui from '../utils/ui';
 import {inject, customElement, bindable} from 'aurelia-framework';
 import {ol3} from '../../libs/ome-viewer-1.0.js';
 import {
@@ -63,6 +64,17 @@ export default class Ol3Viewer extends EventSubscriber {
 
     /**
      * Overridden aurelia lifecycle method:
+     * fired when PAL (dom abstraction) is ready for use
+     *
+     * @memberof Ol3Viewer
+     */
+    attached() {
+        // register resize and collapse handlers
+        Ui.registerSidePanelHandlers(this.context.eventbus);
+    }
+
+    /**
+     * Overridden aurelia lifecycle method:
      * called whenever the view is bound within aurelia
      * in other words an 'init' hook that happens before 'attached'
      *
@@ -110,10 +122,11 @@ export default class Ol3Viewer extends EventSubscriber {
      * @param {Object} params the event notification parameters
      */
     updateViewer(params = {}) {
-        // we don't want our own notifications
+        // the event doesn't concern us
         if (params.config_id !== this.config_id) return;
 
         this.initViewer();
+        this.viewer.redraw();
     }
 
     /**
@@ -140,7 +153,7 @@ export default class Ol3Viewer extends EventSubscriber {
      */
     initViewer()  {
         // whould we display regions...
-        this.showRegions(this.image_config.show_regions);
+        this.showRegions(this.context.show_regions);
 
         // init viewer with 'new' dimension settings
         let presentZ = this.viewer.getDimensionIndex('z');

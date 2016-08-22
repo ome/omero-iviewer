@@ -11,8 +11,15 @@ import {IMAGE_CONFIG_UPDATE,EventSubscriber} from '../events/events';
  * @extends {EventSubscriber}
  */
 @customElement('thumbnail-slider')
-@inject(Context)
+@inject(Context, Element)
 export default class ThumbnailSlider extends EventSubscriber {
+    /**
+     * the present dataset id to see if we need to reissue a request
+     * @memberof ThumbnailSlider
+     * @type {number}
+     */
+    dataset_id = null;
+
     /**
      * a list of thumbnails with a url and an id property each
      * @memberof ThumbnailSlider
@@ -27,15 +34,16 @@ export default class ThumbnailSlider extends EventSubscriber {
      */
     sub_list = [
         [IMAGE_CONFIG_UPDATE,
-            (params={}) => this.requestData(params.dataset_id)]];
+            (params={}) => this.init(params.dataset_id)]];
 
     /**
      * @constructor
      * @param {Context} context the application context (injected)
      */
-    constructor(context) {
+    constructor(context, element) {
         super(context.eventbus)
         this.context = context;
+        this.element = element;
     }
 
     /**
@@ -66,8 +74,19 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @memberof ThumbnailSlider
      * @param {number} dataset_id the dataset id needed for the request
      */
-    requestData(dataset_id) {
-        if (dataset_id == null) return;
+    init(dataset_id) {
+        // we don't have a dataset id => hide us
+        if (typeof dataset_id !== 'number') {
+            this.hideMe();
+            return;
+        }
+
+        // undo some hiding that might have been done prior
+        this.showMe();
+
+        // same id => we don't need to do anything...
+        if (dataset_id  === this.dataset_id) return;
+        this.dataset_id = dataset_id;
 
         let url =
             this.context.server +
@@ -90,9 +109,38 @@ export default class ThumbnailSlider extends EventSubscriber {
                         this.thumbnails.push(
                             {id : item.id, url : item.thumb_url});
                  });
+            },
+            error : (response) => {
+                this.dataset_id = null;
+                this.hideMe();
             }
         });
 
+    }
+
+    /**
+     * Hides thumbnail slider including resize bar
+     *
+     * @memberof ThumbnailSlider
+     */
+    hideMe() {
+        $(this.element).css('visibility', 'hidden');
+        $('.col-splitter.left-split').css('visibility', 'hidden');
+        $('.frame').addClass('left-hand-panel-hidden');
+    }
+
+    /**
+     * Shows thumbnail slider including resize bar
+     *
+     * @memberof ThumbnailSlider
+     */
+    showMe() {
+        $(this.element).css('visibility', 'visible');
+        $('.col-splitter.left-split').css('visibility', 'visible');
+        $('.frame').removeClass('left-hand-panel-hidden');
+        let w =  $(this.element).width();
+        $('.frame').css('margin-left', '' + (-w-5) + 'px');
+        $('.frame').css('padding-left', '' + (w+10) + 'px');
     }
 
     /**

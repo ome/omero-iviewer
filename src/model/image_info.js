@@ -9,6 +9,13 @@ import Misc from '../utils/misc';
 @noView
 export default class ImageInfo {
     /**
+     * the associated dataset id
+     * @memberof ImageConfig
+     * @type {number}
+     */
+    dataset_id = null;
+
+    /**
      * a flag that signals whether we have successfully
      * received all backend info or not
      * @memberof ImageInfo
@@ -26,12 +33,6 @@ export default class ImageInfo {
      * @type {Array.<Object>}
      */
     channels = null;
-    /**
-     * the associated dataset id
-     * @memberof ImageInfo
-     * @type {number}
-     */
-    dataset_id = null;
 
     /**
      * @constructor
@@ -74,7 +75,7 @@ export default class ImageInfo {
      * @return {boolean} show the regions or not
      */
     showRegions() {
-        return this.context.getImageConfig(this.config_id).show_regions;
+        return this.context.show_regions;
     }
 
     /**
@@ -121,7 +122,7 @@ export default class ImageInfo {
                 this.context.publish(
                     IMAGE_CONFIG_UPDATE,
                         {config_id: this.config_id,
-                         dataset_id: this.dataset_id,
+                         dataset_id: null,
                          ready: this.ready});
             }
         });
