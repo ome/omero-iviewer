@@ -112,15 +112,12 @@ html, body, .frame, .center, ol3-viewer {
 .thumbnail-panel {
     width: 100px;
     max-width: 100px;
-}
-
-.thumbnail-slider {
     text-align: center;
     overflow-x: hidden;
     overflow-y: auto;
 }
 
-.thumbnail-slider img {
+thumbnail-slider img {
     margin-top: 10px;
     cursor: pointer;
 }

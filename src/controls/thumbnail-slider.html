@@ -1,6 +1,6 @@
 <template>
-  <div class="thumbnail-slider" repeat.for="t of thumbnails">
-      <img src="${context.server}${t.url}"
+    <div class="thumbnail-scroll-panel">
+      <img repeat.for="t of thumbnails" src="${context.server}${t.url}"
         click.delegate="onClick(t.id)"/>
-  </div>
+    </div>
 </template>
