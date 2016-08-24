@@ -4,6 +4,8 @@ export const IMAGE_CONFIG_UPDATE = "IMAGE_CONFIG_UPDATE";
 export const IMAGE_CONFIG_SELECT = "IMAGE_CONFIG_SELECT";
 /** whenever the image viewer needs to be resized */
 export const IMAGE_VIEWER_RESIZE = "IMAGE_VIEWER_RESIZE";
+/** whenever the viewer scalebar status (show/hide) is toggled */
+export const IMAGE_VIEWER_SCALEBAR = "IMAGE_VIEWER_SCALEBAR";
 /** whenever an image dimension (c,t,z) changes */
 export const IMAGE_DIMENSION_CHANGE = "IMAGE_DIMENSION_CHANGE";
 /** whenever an image/shape visibility changes */

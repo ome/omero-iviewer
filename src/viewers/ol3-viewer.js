@@ -8,7 +8,7 @@ import Ui from '../utils/ui';
 import {inject, customElement, bindable} from 'aurelia-framework';
 import {ol3} from '../../libs/ome-viewer-1.0.js';
 import {
-    IMAGE_CONFIG_UPDATE, IMAGE_VIEWER_RESIZE,
+    IMAGE_CONFIG_UPDATE, IMAGE_VIEWER_RESIZE, IMAGE_VIEWER_SCALEBAR,
     IMAGE_DIMENSION_CHANGE, IMAGE_REGIONS_VISIBILITY,
     EventSubscriber
 } from '../events/events';
@@ -46,6 +46,8 @@ export default class Ol3Viewer extends EventSubscriber {
              (params={}) => this.updateViewer(params)],
         [IMAGE_VIEWER_RESIZE,
             (params={}) => this.resizeViewer(params)],
+        [IMAGE_VIEWER_SCALEBAR,
+            (params={}) => this.showScalebar(params.visible)],
         [IMAGE_DIMENSION_CHANGE,
             (params={}) => this.changeDimension(params)],
         [IMAGE_REGIONS_VISIBILITY,
@@ -152,6 +154,8 @@ export default class Ol3Viewer extends EventSubscriber {
      * @memberof Ol3Viewer
      */
     initViewer()  {
+        // should we display the scale bar
+        this.showScalebar(this.context.show_scalebar);
         // whould we display regions...
         this.showRegions(this.context.show_regions);
 
@@ -253,4 +257,16 @@ export default class Ol3Viewer extends EventSubscriber {
         }
     }
 
+    /**
+     * Toggles the scalebar status, i.e. shows/hides the scale bar
+     *
+     * @param {boolean} flag true if we want to show the scalebar, false otherwise
+     * @memberof Ol3Viewer
+     */
+    showScalebar(flag) {
+        let delayedCall = function() {
+            this.viewer.toggleScaleBar(flag);
+        }.bind(this);
+        setTimeout(delayedCall, 150);
+    }
 }

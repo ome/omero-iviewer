@@ -57,6 +57,12 @@ export default class Context {
     show_regions = false;
 
     /**
+     * the global flag for showing the scalebar
+     * @type {boolean}
+     */
+     show_scalebar = false;
+
+    /**
      * @constructor
      * @param {EventAggregator} eventbus the aurelia event aggregator
      * @param {number} initial_image_id the initial image id

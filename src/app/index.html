@@ -3,13 +3,17 @@
     <require from="../controls/thumbnail-slider"></require>
 
     <nav class="navbar navbar-default navbar-fixed-top fixed-header">
-        <div class="col-xs-4">&nbsp;</div>
-        <div class="checkbox col-xs-4">
+        <div class="col-xs-3">&nbsp;</div>
+        <div class="checkbox col-xs-6">
+            <label><input id="toggle_scalebar" type="checkbox"
+               checked.bind="context.show_scalebar"
+              change.delegate="toggleScalebar()">Show Scalebar</label>
+              <span>&nbsp;</span>
             <label><input id="toggle_regions" type="checkbox"
                checked.bind="context.show_regions"
               change.delegate="toggleRegions()">Show ROIs</label>
         </div>
-        <div class="col-xs-4">&nbsp;</div>
+        <div class="col-xs-3">&nbsp;</div>
     </nav>
 
     <div class="row center">
