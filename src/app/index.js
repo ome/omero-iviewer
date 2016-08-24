@@ -7,12 +7,7 @@ require('../css/images/collapse-right.png');
 // js
 import {inject} from 'aurelia-framework';
 import Context from './context';
-import Ui from '../utils/ui';
-import {
-    IMAGE_VIEWER_RESIZE,
-    IMAGE_VIEWER_SCALEBAR,
-    IMAGE_REGIONS_VISIBILITY
-} from '../events/events';
+import {IMAGE_VIEWER_RESIZE} from '../events/events';
 
 /**
  * @classdesc
@@ -50,26 +45,6 @@ export class Index  {
      */
     detached() {
         window.onresize = null;
-    }
-
-    /**
-     * Toggles regions visibility
-     *
-     * @memberof Index
-     */
-    toggleRegions() {
-        this.context.publish(IMAGE_REGIONS_VISIBILITY,
-            {visible: $("#toggle_regions").prop("checked")});
-    }
-
-    /**
-     * Toggles regions visibility
-     *
-     * @memberof Index
-     */
-    toggleScalebar() {
-        this.context.publish(IMAGE_VIEWER_SCALEBAR,
-            {visible: $("#toggle_scalebar").prop("checked")});
     }
 
     /**

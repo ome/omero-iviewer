@@ -8,6 +8,7 @@ html, body, .frame, .center, ol3-viewer {
 
 .fixed-header {
     margin: 0px;
+    overflow: hidden;
     min-height: 40px;
     max-height: 40px;
 }
@@ -125,6 +126,10 @@ thumbnail-slider img {
 .right-hand-panel {
     width: 150px;
     max-width: 150px;
+}
+
+.right-hand-panel li a {
+    padding: 0px 5px;
 }
 
 .left-hand-panel-hidden {

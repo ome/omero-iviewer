@@ -1,20 +1,10 @@
 <template>
+    <require from="./header"></require>
     <require from="../viewers/ol3-viewer"></require>
     <require from="../controls/thumbnail-slider"></require>
+    <require from="./right-hand-panel"></require>
 
-    <nav class="navbar navbar-default navbar-fixed-top fixed-header">
-        <div class="col-xs-3">&nbsp;</div>
-        <div class="checkbox col-xs-6">
-            <label><input id="toggle_scalebar" type="checkbox"
-               checked.bind="context.show_scalebar"
-              change.delegate="toggleScalebar()">Show Scalebar</label>
-              <span>&nbsp;</span>
-            <label><input id="toggle_regions" type="checkbox"
-               checked.bind="context.show_regions"
-              change.delegate="toggleRegions()">Show ROIs</label>
-        </div>
-        <div class="col-xs-3">&nbsp;</div>
-    </nav>
+    <header></header>
 
     <div class="row center">
         <thumbnail-slider
@@ -38,10 +28,10 @@
                 <img src="../css/images/collapse-right.png"/>
             </div>
 
-            <div show.bind="context.getImageConfig(id) &&
+            <right-hand-panel show.bind="context.getImageConfig(id) &&
                 context.getImageConfig(id).image_info.ready"
-                class="right-hand-panel sidebar">right panel
-            </div>
+                class="right-hand-panel sidebar">
+            </right-hand-panel>
         </span>
     </div>
 
