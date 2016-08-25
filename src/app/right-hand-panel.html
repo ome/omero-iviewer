@@ -1,16 +1,20 @@
 <template>
+    <require from="../controls/settings"></require>
+
     <ul class="nav nav-tabs" role="tablist">
         <li class="active">
             <a href="#setting" role="tab" data-toggle="tab">Settings</a>
         </li>
-        <li>
+        <!--li>
             <a href="#general" role="tab" data-toggle="tab">General</a>
-        </li>
+        </li-->
     </ul>
 
     <div class="tab-content">
-        <div role="tabpanel" class="tab-pane active" id="setting">TO COME</div>
-        <div role="tabpanel" class="tab-pane" id="general">MAYBE</div>
+        <div role="tabpanel" class="tab-pane active" id="setting">
+            <settings class="container-fluid" config_id.bind="config_id"></settings>
+        </div>
+        <!--div role="tabpanel" class="tab-pane" id="general"></div-->
     </div>
 
 </template>

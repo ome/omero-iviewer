@@ -16,8 +16,8 @@ html, body, .frame, .center, ol3-viewer {
 .frame {
     margin-left: -105px;
     padding-left: 110px;
-    margin-right: -155px;
-    padding-right: 170px;
+    margin-right: -305px;
+    padding-right: 320px;
 }
 
 .center {
@@ -124,12 +124,23 @@ thumbnail-slider img {
 }
 
 .right-hand-panel {
-    width: 150px;
-    max-width: 150px;
+    width: 300px;
+    max-width: 300px;
 }
 
 .right-hand-panel li a {
     padding: 0px 5px;
+}
+
+.right-hand-panel .row {
+    margin-left: 0px;
+    margin-right: 0px;
+    padding-left: 5px;
+}
+
+.right-hand-panel div {
+    padding-left: 0px;
+    padding-right: 0px;
 }
 
 .left-hand-panel-hidden {

@@ -29,7 +29,7 @@ export class Header  {
      */
     toggleRegions() {
         this.context.publish(IMAGE_REGIONS_VISIBILITY,
-            {visible: $("#toggle_regions").prop("checked")});
+            {visible: this.context.show_regions});
     }
 
     /**
@@ -39,7 +39,7 @@ export class Header  {
      */
     toggleScalebar() {
         this.context.publish(IMAGE_VIEWER_SCALEBAR,
-            {visible: $("#toggle_scalebar").prop("checked")});
+            {visible: this.context.show_scalebar});
     }
 
     /**

@@ -9,7 +9,8 @@ import {inject, customElement, bindable} from 'aurelia-framework';
 import {ol3} from '../../libs/ome-viewer-1.0.js';
 import {
     IMAGE_CONFIG_UPDATE, IMAGE_VIEWER_RESIZE, IMAGE_VIEWER_SCALEBAR,
-    IMAGE_DIMENSION_CHANGE, IMAGE_REGIONS_VISIBILITY,
+    IMAGE_DIMENSION_CHANGE, IMAGE_MODEL_CHANGE, IMAGE_CHANNEL_RANGE_CHANGE,
+    IMAGE_REGIONS_VISIBILITY,
     EventSubscriber
 } from '../events/events';
 
@@ -50,6 +51,10 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.showScalebar(params.visible)],
         [IMAGE_DIMENSION_CHANGE,
             (params={}) => this.changeDimension(params)],
+        [IMAGE_MODEL_CHANGE,
+            (params={}) => this.changeModelProjectionOrRange(params)],
+        [IMAGE_CHANNEL_RANGE_CHANGE,
+            (params={}) => this.changeModelProjectionOrRange(params)],
         [IMAGE_REGIONS_VISIBILITY,
             (params={}) => this.changeRegionsVisibility(params)]];
 
@@ -146,6 +151,30 @@ export default class Ol3Viewer extends EventSubscriber {
 
         this.viewer.setDimensionIndex.apply(
             this.viewer, [params.dim].concat(params.value));
+    }
+
+    /**
+     * Handles image model changes (color/grayscale), projection changes
+     * and channel range changes (start,end,color)
+     * which come in the form of an event notification
+     *
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     */
+    changeModelProjectionOrRange(params = {}) {
+        // we ignore notifications that don't concern us
+        // and don't have the model param
+        if (params.config_id !== this.config_id ||
+            (typeof params.model !== 'string' &&
+                typeof params.projection !== 'string' &&
+                !Misc.isArray(params.ranges))) return;
+
+        if (typeof params.model === 'string')
+            this.viewer.changeImageModel(params.model);
+        else if (typeof params.projection === 'string')
+            this.viewer.changeImageProjection(params.projection);
+        else if (Misc.isArray(params.ranges))
+            this.viewer.changeChannelRange(params.ranges);
     }
 
     /**

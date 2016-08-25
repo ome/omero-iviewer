@@ -1,5 +1,5 @@
 // js
-import {inject, customElement} from 'aurelia-framework';
+import {inject, bindable, customElement} from 'aurelia-framework';
 import Context from './context';
 import 'bootstrap';
 
@@ -12,6 +12,13 @@ import 'bootstrap';
 @customElement('right-hand-panel')
 @inject(Context, Element)
 export class RightHandPanel {
+    /**
+     * which image config do we belong to (bound via template)
+     * @memberof RightHandPanel
+     * @type {number}
+     */
+    @bindable config_id=null;
+
     /**
      * @constructor
      * @param {Context} context the application context

@@ -22,17 +22,33 @@ export default class ImageInfo {
      * @type {boolean}
      */
     ready = false;
+
     /**
      * dimensions are initialized to defaults
      * @memberof ImageInfo
      * @type {Object}
      */
     dimensions = {t: 0, max_t : 1,z: 0, max_z : 1};
+
     /**
      * @memberof ImageInfo
      * @type {Array.<Object>}
      */
     channels = null;
+
+    /**
+     * projection defaults to 'normal'
+     * @memberof ImageInfo
+     * @type {string}
+     */
+    projection = "normal";
+
+    /**
+     * model defaults to 'color'
+     * @memberof ImageInfo
+     * @type {string}
+     */
+    model = "color";
 
     /**
      * @constructor
@@ -102,9 +118,12 @@ export default class ImageInfo {
                 // store channels and dimensions
                 this.channels = response.channels;
                 this.dimensions = {
-                    t: 0, max_t : response.size.t,
-                    z: 0, max_z : response.size.z
+                    t: response.rdefs.defaultT, max_t : response.size.t,
+                    z: response.rdefs.defaultZ, max_z : response.size.z
                 };
+                // store projection and model
+                this.projection = response.rdefs.projection;
+                this.model = response.rdefs.model;
 
                 // signal that we are ready and
                 // send out an image config update event

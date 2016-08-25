@@ -1,0 +1,17 @@
+<template>
+    <require from="../utils/converters"></require>
+    <div class="row checkbox ">
+        <div class="col-xs-6" style="min-width: 100px">
+            <label><input type="checkbox"
+               checked.bind="image_info.model | imageModel"
+               change.delegate="toggleModel()">Grayscale</label>
+        </div>
+        <div class="col-xs-6">
+            <label><input type="checkbox"
+                change.delegate="toggleHistogram()">Show Histogram</label>
+        </div>
+    </div>
+    <div class="row">
+        color sliders to come
+    </div>
+</template>
