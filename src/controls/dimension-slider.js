@@ -154,11 +154,15 @@ export default class DimensionSlider extends EventSubscriber {
     registerObserver() {
         if (this.image_info === null) return;
         this.unregisterObserver();
+        // we do this in a bit of a roundabout way by setting the slider value
+        // which in turn triggers the onchange handler which is where
+        // both, programmatic and ui affected change converge
         this.observer =
             this.bindingEngine.propertyObserver(
                 this.image_info.dimensions, this.dim)
                     .subscribe(
-                        (newValue, oldValue) => this.onChange(newValue, false));
+                        (newValue, oldValue) =>
+                            $(this.elSelector).slider({value: newValue}))
     }
 
     /**
@@ -188,20 +192,22 @@ export default class DimensionSlider extends EventSubscriber {
      * @param {number|string} value the new dimension value
      * @param {boolean} slider_interaction true if change was affected by UI
      */
-    onChange(value, slider_interaction) {
-        //no need to change
-        if (value === this.image_info.dimensions[this.dim]) return;
-
-        // convert just in case
-        this.image_info.dimensions[this.dim] = parseInt(value);
+    onChange(value, slider_interaction = false) {
+        // no need to change for a the same value
+        if (slider_interaction &&
+            value === this.image_info.dimensions[this.dim]) return;
+        else if (slider_interaction) {
+            // this will trigger the observer who does the rest
+            this.image_info.dimensions[this.dim] = parseInt(value);
+            return;
+        }
 
         // send out a dimension change notification
-        if (slider_interaction)
-            this.context.publish(
-                IMAGE_DIMENSION_CHANGE,
-                    {config_id: this.config_id,
-                     dim: this.dim,
-                     value: [this.image_info.dimensions[this.dim]]});
+        this.context.publish(
+            IMAGE_DIMENSION_CHANGE,
+                {config_id: this.config_id,
+                 dim: this.dim,
+                 value: [this.image_info.dimensions[this.dim]]});
     }
 
     /**

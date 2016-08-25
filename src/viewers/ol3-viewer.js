@@ -296,6 +296,6 @@ export default class Ol3Viewer extends EventSubscriber {
         let delayedCall = function() {
             this.viewer.toggleScaleBar(flag);
         }.bind(this);
-        setTimeout(delayedCall, 150);
+        setTimeout(delayedCall, 200);
     }
 }
