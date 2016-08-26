@@ -1,10 +1,11 @@
 import {noView} from 'aurelia-framework';
 
 /**
- * A converter
+ * A converter class that maps strings to booleans and vice versa
  */
 @noView
 export class ImageModelValueConverter {
+
   toView(model) {
     let grayscale_flag = true;
     if (typeof model === 'string' && model.length > 0 &&

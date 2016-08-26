@@ -2,6 +2,10 @@ html, body, .frame, .center, ol3-viewer {
     height: 100%;
 }
 
+input[type=number]::-webkit-inner-spin-button {
+    opacity: 1
+}
+
 .container-fluid {
     padding: 0px;
 }
@@ -138,7 +142,7 @@ thumbnail-slider img {
     padding-left: 5px;
 }
 
-.right-hand-panel div {
+.right-hand-panel * {
     padding-left: 0px;
     padding-right: 0px;
 }
@@ -146,4 +150,33 @@ thumbnail-slider img {
 .left-hand-panel-hidden {
     margin-left: 0px;
     padding-left: 0px;
+}
+
+.channel-range {
+    margin-left: 3px;
+    margin-right: 3px;
+    min-width: 50px;
+    max-width: 50px;
+    font-size: 12px;
+}
+
+.channel-slider {
+    min-width: 100px;
+    max-width: 150px;
+}
+
+.channel-active button {
+    min-width: 50px;
+    max-width: 50px;
+    border-style: inset;
+    border-width: 2px;
+    border-radius: 0px;
+}
+
+.channel-passive button {
+    min-width: 50px;
+    max-width: 50px;
+    border-style: outset;
+    border-width: 2px;
+    border-radius: 0px;
 }

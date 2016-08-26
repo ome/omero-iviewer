@@ -4,35 +4,35 @@ import Context from '../app/context';
 import {customElement, bindable} from 'aurelia-framework';
 
 import {
-    IMAGE_CONFIG_UPDATE, IMAGE_MODEL_CHANGE, IMAGE_CHANNEL_RANGE_CHANGE,
+    IMAGE_CONFIG_UPDATE, IMAGE_DIMENSION_CHANGE, IMAGE_CHANNEL_RANGE_CHANGE,
     EventSubscriber
 } from '../events/events';
 
 /**
- * Represents the settings section in the right hand panel
+ * Represents a channel slider
  * @extends {EventSubscriber}
  */
 
-@customElement('settings')
+@customElement('channel-slider')
 @inject(Context)
-export default class Settings extends EventSubscriber {
+export default class ChannelSlider extends EventSubscriber {
     /**
      * which image config do we belong to (bound in template)
-     * @memberof Settings
+     * @memberof ChannelSlider
      * @type {number}
      */
     @bindable config_id = null;
 
     /**
      * a reference to the image info
-     * @memberof Settings
+     * @memberof ChannelSlider
      * @type {ImageInfo}
      */
     image_info = null;
 
     /**
      * events we subscribe to
-     * @memberof Settings
+     * @memberof ChannelSlider
      * @type {Array.<string,function>}
      */
     sub_list = [[IMAGE_CONFIG_UPDATE,
@@ -52,7 +52,7 @@ export default class Settings extends EventSubscriber {
      * called whenever the view is bound within aurelia
      * in other words an 'init' hook that happens before 'attached'
      *
-     * @memberof Settings
+     * @memberof ChannelSlider
      */
     bind() {
         this.subscribe();
@@ -61,7 +61,7 @@ export default class Settings extends EventSubscriber {
     /**
      * Handles changes of the associated ImageConfig
      *
-     * @memberof Settings
+     * @memberof ChannelSlider
      * @param {Object} params the event notification parameters
      */
      onImageConfigChange(params = {}) {
@@ -74,32 +74,12 @@ export default class Settings extends EventSubscriber {
              this.context.getImageConfig(params.config_id).image_info;
      }
 
-     /**
-     * Grayscale flag toggler (event handler)
-     *
-     * @memberof Settings
-     */
-    toggleModel() {
-        this.context.publish(
-            IMAGE_MODEL_CHANGE,
-            { config_id: this.config_id, model: this.image_info.model});
-    }
-
-    /**
-    * Shows and hides the histogram
-    *
-    * @memberof Settings
-    */
-    toggleHistogram() {
-        alert("Not implemented yet!");
-    }
-
     /**
      * Overridden aurelia lifecycle method:
      * called whenever the view is unbound within aurelia
      * in other words a 'destruction' hook that happens after 'detached'
      *
-     * @memberof Settings
+     * @memberof ChannelSlider
      */
     unbind() {
         this.unsubscribe()
