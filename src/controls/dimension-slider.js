@@ -5,9 +5,8 @@ require('../../node_modules/jquery-ui/themes/smoothness/images/ui-bg_glass_75_e6
 require('../../node_modules/jquery-ui/themes/smoothness/images/ui-bg_glass_75_dadada_1x400.png');
 require('../../node_modules/jquery-ui/themes/smoothness/images/ui-bg_glass_65_ffffff_1x400.png');
 
-import {inject} from 'aurelia-framework';
 import Context from '../app/context';
-import {customElement, bindable, BindingEngine} from 'aurelia-framework';
+import {inject,customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {slider} from 'jquery-ui';
 
 import {

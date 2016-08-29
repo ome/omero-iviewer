@@ -1,8 +1,8 @@
 <template>
-        <require from="./channel-slider"></require>
+        <require from="./channel-range"></require>
 
         <div repeat.for="channel of image_info.channels"
-            class="row ${channel.active ? 'channel-active' : 'channel-passive'}">
+            class="col-xs-12 row ${channel.active ? 'channel-active' : 'channel-passive'}">
 
             <button type="button"
                 css="background-color: #${channel.color}"
@@ -11,20 +11,8 @@
                 ${channel.label}
             </button>
 
-            <input type="number" class="channel-range col-xs-3"
-                index="${$index}"
-                min="${channel.window.min}"
-                max.bind="channel.window.end-1"
-                value="${channel.window.start}"
-                change.delegate="onChannelRangeChange($event, true)" />
-
-            <channel-slider class="channel-slider col-xs-4"></channel-slider>
-
-            <input type="number" class="channel-range col-xs-3"
-                index="${$index}"
-                min.bind="channel.window.start+1"
-                max="${channel.window.max}"
-                value="${channel.window.end}"
-                change.delegate="onChannelRangeChange($event, false)" />
+            <channel-range class="channel-range col-xs-10"
+                channel.bind="channel">
+            </channel-range>
         </div>
 </template>

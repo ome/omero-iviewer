@@ -156,13 +156,35 @@ thumbnail-slider img {
     margin-left: 3px;
     margin-right: 3px;
     min-width: 50px;
+    max-width: 230px;
+    font-size: 12px;
+}
+
+.channel-range span {
+    float: left;
+    margin: 0px;
+    min-width: 50px;
+    max-width: 50px;
+    font-size: 12px;
+}
+
+.channel-range span input {
+    margin: 0px;
+    min-width: 50px;
     max-width: 50px;
     font-size: 12px;
 }
 
 .channel-slider {
+    float: left;
     min-width: 100px;
     max-width: 150px;
+}
+
+.channel-color {
+    margin-left: 2px;
+    min-width: 28px;
+    max-width: 28px;
 }
 
 .channel-active button {

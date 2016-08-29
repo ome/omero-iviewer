@@ -1,10 +1,10 @@
 // js
-import {inject} from 'aurelia-framework';
 import Context from '../app/context';
-import {customElement, bindable} from 'aurelia-framework';
+import Misc from '../utils/misc';
+import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 
 import {
-    IMAGE_CONFIG_UPDATE, IMAGE_DIMENSION_CHANGE, IMAGE_CHANNEL_RANGE_CHANGE,
+    IMAGE_CONFIG_UPDATE, IMAGE_CHANNEL_RANGE_CHANGE,
     EventSubscriber
 } from '../events/events';
 
@@ -12,9 +12,8 @@ import {
  * Represents the settings section in the right hand panel
  * @extends {EventSubscriber}
  */
-
 @customElement('channel-settings')
-@inject(Context)
+@inject(Context, BindingEngine)
 export default class ChannelSettings extends EventSubscriber {
     /**
      * which image config do we belong to (bound in template)
@@ -31,6 +30,25 @@ export default class ChannelSettings extends EventSubscriber {
     image_info = null;
 
     /**
+     * property observers
+     * @memberof ChannelSettings
+     * @type {Array.<object>}
+     */
+    observers = [];
+
+    /**
+     * list of properties that ought to be observed
+     * @memberof ChannelSettings
+     * @type {Array.<string>}
+     */
+    observedProperties = [
+        {obj: null, prop: 'active'},
+        {obj: null, prop: 'color'},
+        {obj: 'window', prop: 'start'},
+        {obj: 'window', prop: 'end'}
+    ];
+
+    /**
      * events we subscribe to
      * @memberof ChannelSettings
      * @type {Array.<string,function>}
@@ -41,10 +59,12 @@ export default class ChannelSettings extends EventSubscriber {
     /**
      * @constructor
      * @param {Context} context the application context (injected)
+     * @param {BindingEngine} bindingEngine injected instance of BindingEngine
      */
-    constructor(context) {
+    constructor(context, bindingEngine) {
         super(context.eventbus);
         this.context = context;
+        this.bindingEngine = bindingEngine;
     }
 
     /**
@@ -56,6 +76,42 @@ export default class ChannelSettings extends EventSubscriber {
      */
     bind() {
         this.subscribe();
+        this.registerObservers();
+    }
+
+    /**
+     * Unregisters the property observers for model change
+     *
+     * @memberof ChannelSettings
+     */
+    unregisterObservers() {
+        this.observers.map((o) => o.dispose());
+        this.observers = [];
+    }
+
+    /**
+     * Registers property observers
+     *
+     * @memberof ChannelSettings
+     */
+    registerObservers() {
+        if (this.image_info === null ||
+            !Misc.isArray(this.image_info.channels)) return;
+        this.unregisterObservers();
+        for (let i=0;i<this.image_info.channels.length;i++)
+            for (let p=0;p<this.observedProperties.length;p++) {
+                let obsProp = this.observedProperties[p];
+
+                ((index, obsObj, prop) =>
+                    this.observers.push(
+                        this.bindingEngine.propertyObserver(
+                            obsObj ? this.image_info.channels[index][obsObj] :
+                            this.image_info.channels[index], prop)
+                            .subscribe(
+                                (newValue, oldValue) => {
+                                    this.propagateChannelChanges(index);}))
+                )(i, obsProp.obj, obsProp.prop);
+            }
     }
 
     /**
@@ -72,45 +128,7 @@ export default class ChannelSettings extends EventSubscriber {
          this.config_id = params.config_id;
          this.image_info =
              this.context.getImageConfig(params.config_id).image_info;
-     }
-
-     /**
-     * channel change handler
-     *
-     * @param {Event} event the event object
-     * @param {boolean=} start true if we are the start value, otherwise end
-     * @memberof ChannelSettings
-     */
-     onChannelRangeChange(event, start=false) {
-         let newVal = event.target.value;
-         if (newVal.length === 0) return;
-
-         newVal = parseInt(newVal);
-         if (isNaN(newVal)) return;
-
-         // get appropriate min/max for start/end
-         let index = parseInt(event.target.index);
-         let w = this.image_info.channels[index].window;
-         let min = start ? w.min : w.start+1;
-         let max = start ? w.end-1 : w.max;
-
-         // clamp
-         let exceededBounds = false;
-         if (newVal < min) {
-             newVal = min;
-             exceededBounds = true;
-         }
-         if (newVal > max) {
-             newVal = max;
-             exceededBounds = true;
-         }
-         // set new start/end
-         if (!exceededBounds) {
-             if (start) w.start = newVal; else w.end = newVal;
-             this.propagateChannelChanges(index);
-             return;
-        }
-        event.target.value = newVal;
+         this.bind();
      }
 
     /**
@@ -140,7 +158,6 @@ export default class ChannelSettings extends EventSubscriber {
             this.image_info.channels[index].active = false;
         else
             this.image_info.channels[index].active = true;
-        this.propagateChannelChanges(index);
     }
 
     /**
@@ -152,6 +169,7 @@ export default class ChannelSettings extends EventSubscriber {
      */
     unbind() {
         this.unsubscribe()
+        this.unregisterObservers();
         this.image_info = null;
     }
 }
