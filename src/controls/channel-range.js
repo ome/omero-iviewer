@@ -2,9 +2,11 @@
 require('../../node_modules/jquery-ui/themes/smoothness/jquery-ui.min.css');
 require('../../node_modules/jquery-ui/themes/smoothness/images/ui-icons_888888_256x240.png');
 require('../../node_modules/jquery-ui/themes/smoothness/images/ui-icons_454545_256x240.png');
+require('../../node_modules/jquery-ui/themes/smoothness/images/ui-bg_highlight-soft_75_cccccc_1x100.png');
 
 // js
 import Context from '../app/context';
+import Misc from '../utils/misc';
 import {inject, customElement, bindable} from 'aurelia-framework';
 import {spinner} from 'jquery-ui';
 
@@ -101,6 +103,24 @@ export default class ChannelRange extends EventSubscriber {
         $(this.element).find(".channel-start").spinner(
             "value", this.channel.window.start);
 
+        // channel range slider
+        $(this.element).find(".channel-slider").slider(
+            {min: this.channel.window.min-13,
+                max: this.channel.window.end+13,
+                range: true,
+                values: [
+                    this.channel.window.start-13, this.channel.window.end+13
+                ], change: (event, ui) =>
+                    this.onRangeChangeBoth(ui.values,
+                        event.originalEvent ? true : false),
+                slide: (event,ui) => {
+                    if (ui.values[0]+24 >= ui.values[1]) return false;}
+        });
+        $(this.element).find(".channel-slider").css(
+            "background", "white");
+        $(this.element).find(".channel-slider").find(".ui-slider-range").css(
+            "background", "#" + this.channel.color);
+
         //channel end
         $(this.element).find(".channel-end").spinner(
             {min: this.channel.window.start+1,
@@ -120,12 +140,42 @@ export default class ChannelRange extends EventSubscriber {
      */
      onColorChange(value) {
          this.channel.color = value.substring(1);
+         $(this.element).find(".channel-slider").find(".ui-slider-range").css(
+             "background", "#" + this.channel.color);
+
+     }
+
+     /**
+     * channel range change handler for changing start and end
+     *
+     * @param {Array.<number>} values the new value
+     * @param {boolean} ui_triggered was triggered by ui interaction
+     * @memberof ChannelRange
+     */
+     onRangeChangeBoth(values, ui_triggered=false) {
+         if (!ui_triggered || !Misc.isArray(values)) return;
+
+         values[0] += 13;
+         values[1] -= 13;
+         let startManipulated =
+            this.channel.window.start !== values[0];
+         if (startManipulated) {
+             if (values[0] >= values[1]) {
+                 values[0] = values[1]-1;
+             }
+             this.onRangeChange(values[0], true);
+         } else {
+             if (values[1] <= values[0]) {
+                 values[1] = values[0]+1;
+             }
+             this.onRangeChange(values[1], false);
+         }
      }
 
      /**
      * channel range change handler
      *
-     * @param {number} value the new value
+     * @param {Array.<number>} value the new value
      * @param {boolean} is_start was start of range or not
      * @memberof ChannelRange
      */
@@ -165,6 +215,9 @@ export default class ChannelRange extends EventSubscriber {
                     $(this.element).find(otherClazz).spinner("option", "min", value+1);
                  else
                     $(this.element).find(otherClazz).spinner("option", "max", value-1);
+                    $(this.element).find(".channel-slider").slider(
+                        "option", "values",
+                        [this.channel.window.start-13, this.channel.window.end+13]);
              } catch (ignored) {}
          } else $(this.element).find(clazz).parent().css("border-color", "rgb(255,0,0)");
      }
