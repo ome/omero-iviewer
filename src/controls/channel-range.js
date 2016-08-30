@@ -3,13 +3,15 @@ require('../../node_modules/jquery-ui/themes/smoothness/jquery-ui.min.css');
 require('../../node_modules/jquery-ui/themes/smoothness/images/ui-icons_888888_256x240.png');
 require('../../node_modules/jquery-ui/themes/smoothness/images/ui-icons_454545_256x240.png');
 require('../../node_modules/jquery-ui/themes/smoothness/images/ui-bg_highlight-soft_75_cccccc_1x100.png');
+require('../../node_modules/spectrum-colorpicker/spectrum.css');
+
 
 // js
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import {inject, customElement, bindable} from 'aurelia-framework';
 import {spinner} from 'jquery-ui';
-
+import {spectrum} from 'spectrum-colorpicker';
 import {
     IMAGE_CONFIG_UPDATE, EventSubscriber
 } from '../events/events';
@@ -78,8 +80,12 @@ export default class ChannelRange extends EventSubscriber {
      detached() {
          // tear down jquery elements
          try {
-             $(this.element).find("input").off("input spinstop");
-             $(this.element).spinner("destroy");
+             $(this.element).find(".channel-start").off("input");
+             $(this.element).find(".channel-start").spinner("destroy");
+             $(this.element).find(".channel-end").off("input");
+             $(this.element).find(".channel-end").spinner("destroy");
+             $(this.element).find(".channel-slider").slider("destroy");
+             $(this.element).find(".channel-color").spectrum("destroy");
          } catch (ignored) {}
      }
 
@@ -129,7 +135,17 @@ export default class ChannelRange extends EventSubscriber {
             (event) => this.onRangeChange(event.target.value));
        $(this.element).find(".channel-end").spinner(
            "value", this.channel.window.end);
-     }
+
+       //channel end
+       $(this.element).find(".channel-color input").spectrum({
+            color: "#" + this.channel.color,
+            showInput: true,
+            className: "full-spectrum",
+            showInitial: true,
+            preferredFormat: "hex",
+            appendTo: $(this.element),
+            change: (color) => this.onColorChange(color.toHexString())});
+}
 
      /**
      * channel color change handler
@@ -142,7 +158,6 @@ export default class ChannelRange extends EventSubscriber {
          this.channel.color = value.substring(1);
          $(this.element).find(".channel-slider").find(".ui-slider-range").css(
              "background", "#" + this.channel.color);
-
      }
 
      /**
