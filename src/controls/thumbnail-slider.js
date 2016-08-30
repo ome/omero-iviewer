@@ -1,6 +1,5 @@
-import {inject} from 'aurelia-framework';
-import {customElement} from 'aurelia-framework';
-
+// js
+import {inject,customElement} from 'aurelia-framework';
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import {IMAGE_CONFIG_UPDATE,EventSubscriber} from '../events/events';

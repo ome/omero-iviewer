@@ -1,7 +1,6 @@
 // js
-import {inject} from 'aurelia-framework';
 import Context from '../app/context';
-import {customElement, bindable} from 'aurelia-framework';
+import {inject, customElement, bindable} from 'aurelia-framework';
 
 import {
     IMAGE_CONFIG_UPDATE, IMAGE_MODEL_CHANGE, IMAGE_CHANNEL_RANGE_CHANGE,

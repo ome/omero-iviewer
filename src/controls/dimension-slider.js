@@ -1,13 +1,13 @@
 //css and images
-require('../../node_modules/jquery-ui/themes/smoothness/jquery-ui.min.css');
-require('../../node_modules/jquery-ui/themes/smoothness/images/ui-bg_flat_75_ffffff_40x100.png');
-require('../../node_modules/jquery-ui/themes/smoothness/images/ui-bg_glass_75_e6e6e6_1x400.png');
-require('../../node_modules/jquery-ui/themes/smoothness/images/ui-bg_glass_75_dadada_1x400.png');
-require('../../node_modules/jquery-ui/themes/smoothness/images/ui-bg_glass_65_ffffff_1x400.png');
+require('../../node_modules/jquery-ui/themes/base/slider.css');
+//require('../../node_modules/jquery-ui/themes/smoothness/images/ui-bg_flat_75_ffffff_40x100.png');
+//require('../../node_modules/jquery-ui/themes/smoothness/images/ui-bg_glass_75_e6e6e6_1x400.png');
+//require('../../node_modules/jquery-ui/themes/smoothness/images/ui-bg_glass_75_dadada_1x400.png');
+//require('../../node_modules/jquery-ui/themes/smoothness/images/ui-bg_glass_65_ffffff_1x400.png');
 
 import Context from '../app/context';
 import {inject,customElement, bindable, BindingEngine} from 'aurelia-framework';
-import {slider} from 'jquery-ui';
+import {slider} from 'jquery-ui/ui/widgets/slider';
 
 import {
     IMAGE_CONFIG_UPDATE, IMAGE_DIMENSION_CHANGE,

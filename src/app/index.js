@@ -1,4 +1,5 @@
 //css and images
+require('../../node_modules/jquery-ui/themes/base/theme.css');
 require('../../node_modules/bootstrap/dist/css/bootstrap.min.css');
 require('../css/app.css');
 require('../css/images/collapse-left.png');

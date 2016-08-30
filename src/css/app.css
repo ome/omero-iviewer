@@ -1,14 +1,82 @@
+/** BOOTSTRAP adjustments START **/
 html, body, .frame, .center, ol3-viewer {
     height: 100%;
 }
-
-input[type=number]::-webkit-inner-spin-button {
-    opacity: 1
-}
-
 .container-fluid {
     padding: 0px;
 }
+/** BOOTSTRAP adjustments END **/
+
+/** JQUERY UI adjustments START **/
+input[type=number]::-webkit-inner-spin-button {
+    opacity: 1
+}
+.ui-state-active,
+.ui-widget-content .ui-state-active,
+.ui-widget-header .ui-state-active,
+a.ui-button:active,
+.ui-button:active,
+.ui-button.ui-state-active:hover {
+	border: 1px solid #708090;
+	background: #778899;
+	font-weight: normal;
+	color: #ffffff;
+}
+.ui-spinner {
+    height: 100%;
+    float: left;
+    margin-left: 2px;
+    margin-right: 2px;
+    width: 50px;
+}
+.ui-spinner span {
+    position: relative;
+    left: -2px;
+    top: -2px;
+    width: 12px;
+    float: left;
+}
+.ui-spinner input {
+    padding-left: 2px;
+    height: 100%;
+    margin: 0px;
+    width: 40px;
+    font-size: 11px;
+}
+.ui-spinner a {
+    width: 12px;
+}
+.ui-icon-triangle-1-s,.ui-icon-triangle-1-n {
+    height: 100%;
+}
+/** JQUERY UI adjustments END **/
+
+/** SPECTRUM colorpicker adjustments START **/
+.full-spectrum {
+    width: 26px;
+    height: 100%;
+}
+.sp-preview {
+    position: absolute;
+    top: 2px;
+    right: 3px;
+    width: 20px;
+    height: 19px;
+    box-sizing: content-box;
+}
+.sp-preview-inner {
+    width: 20px;
+}
+.sp-dd {
+    display: none;
+}
+.sp-container {
+    width: 176px;
+    height: 220px;
+    right: 6px;
+    left: auto!important;
+}
+/** SPECTRUM colorpicker adjustments END **/
 
 .fixed-header {
     margin: 0px;
@@ -158,26 +226,11 @@ thumbnail-slider img {
     height: 100%;
 }
 
-.channel-range span {
-    height: 100%;
-    float: left;
-    margin-left: 2px;
-    margin-right: 2px;
-    width: 55px;
-}
-
-.channel-range span input {
-    height: 100%;
-    margin: 0px;
-    width: 55px;
-    font-size: 11px;
-}
-
 .channel-slider {
     margin-top: 7px;
     height: 10px;
     float: left;
-    min-width: 90px;
+    width: 100px;
     margin-left: 7px;
     margin-right: 1px;
 }
@@ -192,29 +245,6 @@ thumbnail-slider img {
     float: left;
     margin-left: 2px;
     width: 25px;
-}
-
-.full-spectrum {
-    width: 26px;
-    padding: 1px
-}
-.sp-preview {
-    margin: 0px;
-    width: 20px;
-    box-sizing: content-box;
-}
-.sp-preview-inner {
-    width: 20px;
-}
-
-.sp-dd {
-    display: none;
-}
-
-.sp-container {
-    width: 178px;
-    right: 6px;
-    left: auto!important;
 }
 
 .channel-active {

@@ -1,16 +1,18 @@
 //css and images
-require('../../node_modules/jquery-ui/themes/smoothness/jquery-ui.min.css');
-require('../../node_modules/jquery-ui/themes/smoothness/images/ui-icons_888888_256x240.png');
-require('../../node_modules/jquery-ui/themes/smoothness/images/ui-icons_454545_256x240.png');
-require('../../node_modules/jquery-ui/themes/smoothness/images/ui-bg_highlight-soft_75_cccccc_1x100.png');
+require('../../node_modules/jquery-ui/themes/base/spinner.css');
 require('../../node_modules/spectrum-colorpicker/spectrum.css');
-
+require('../../node_modules/jquery-ui/themes/base/images/ui-icons_777777_256x240.png');
+require('../../node_modules/jquery-ui/themes/base/images/ui-icons_555555_256x240.png');
+//require('../../node_modules/jquery-ui/themes/smoothness/images/ui-icons_888888_256x240.png');
+//require('../../node_modules/jquery-ui/themes/smoothness/images/ui-icons_454545_256x240.png');
+//require('../../node_modules/jquery-ui/themes/smoothness/images/ui-bg_highlight-soft_75_cccccc_1x100.png');
 
 // js
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import {inject, customElement, bindable} from 'aurelia-framework';
-import {spinner} from 'jquery-ui';
+import {spinner} from 'jquery-ui/ui/widgets/spinner';
+import {slider} from 'jquery-ui/ui/widgets/slider';
 import {spectrum} from 'spectrum-colorpicker';
 import {
     IMAGE_CONFIG_UPDATE, EventSubscriber
