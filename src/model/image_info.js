@@ -24,6 +24,13 @@ export default class ImageInfo {
     ready = false;
 
     /**
+     * a flag that signals whether we a pixe_size and hence a scalebar
+     * @memberof ImageInfo
+     * @type {boolean}
+     */
+    has_scalebar = false;
+
+    /**
      * dimensions are initialized to defaults
      * @memberof ImageInfo
      * @type {Object}
@@ -122,6 +129,11 @@ export default class ImageInfo {
                     t: response.rdefs.defaultT, max_t : response.size.t,
                     z: response.rdefs.defaultZ, max_z : response.size.z
                 };
+                // do we have a scalebar
+                if (typeof response.pixel_size === 'object' &&
+                    typeof response.pixel_size.x === 'number')
+                    this.has_scalebar = true;
+
                 // store projection and model
                 this.projection = response.rdefs.projection;
                 this.model = response.rdefs.model;

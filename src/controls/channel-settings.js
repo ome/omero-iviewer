@@ -108,7 +108,7 @@ export default class ChannelSettings extends EventSubscriber {
             if (c.window.start < c.window.min ||
                     c.window.end > c.window.max)
                 needsFullRangeMode = true;
-        })
+        });
         if (needsFullRangeMode)
             this.mode = CHANNEL_SETTINGS_MODE.FULL_RANGE;
         else

@@ -100,12 +100,17 @@ export default class Settings extends EventSubscriber {
     * @memberof Settings
     */
     saveImageSettings() {
+        if (Misc.useJsonp(this.context.server)) {
+            alert("Saving the rendering settings will not work for cross-domain!");
+            return;
+        }
+
         let url =
             this.context.server + "/webgateway/saveImgRDef/" +
             this.image_info.image_id + '/?m=' + this.image_info.model[0] +
             "&p=" + this.image_info.projection +
-            "&t=" + this.image_info.dimensions.t +
-            "&z=" + this.image_info.dimensions.z +
+            "&t=" + (this.image_info.dimensions.t+1) +
+            "&z=" + (this.image_info.dimensions.z+1) +
             "&q=0.9&ia=0&c=";
         let i=0;
         this.image_info.channels.map(
@@ -113,8 +118,7 @@ export default class Settings extends EventSubscriber {
                 url+= (i !== 0 ? ',' : '') + (!c.active ? '-' : '') + (++i) +
                  "|" + c.window.start + ":" + c.window.end + "$" + c.color
         );
-
-        // TODO: add csrf token
+        url += "&_token="
         $.ajax(
             {url : url,
              method: 'POST',

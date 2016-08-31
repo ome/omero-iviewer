@@ -11,17 +11,16 @@ import {spinner} from 'jquery-ui/ui/widgets/spinner';
 import {slider} from 'jquery-ui/ui/widgets/slider';
 import {spectrum} from 'spectrum-colorpicker';
 import {
-    IMAGE_CONFIG_UPDATE, EventSubscriber
+    IMAGE_CONFIG_UPDATE
 } from '../events/events';
 
 /**
  * A channel range widget
- * @extends {EventSubscriber}
  */
 
 @customElement('channel-range')
 @inject(Context, Element, BindingEngine)
-export default class ChannelRange extends EventSubscriber {
+export default class ChannelRange  {
     /**
      * which image config do we belong to (bound in template)
      * @memberof ChannelRange
@@ -55,7 +54,6 @@ export default class ChannelRange extends EventSubscriber {
      * @param {Context} context the application context (injected)
      */
     constructor(context, element, bindingEngine) {
-        super(context.eventbus);
         this.context = context;
         this.element = element;
         this.bindingEngine = bindingEngine;
@@ -69,7 +67,6 @@ export default class ChannelRange extends EventSubscriber {
      * @memberof ChannelRange
      */
     bind() {
-        this.subscribe();
         this.registerObserver();
         this.updateUI();
 
@@ -85,16 +82,13 @@ export default class ChannelRange extends EventSubscriber {
         this.observer =
             this.bindingEngine.propertyObserver(this, 'mode')
                 .subscribe((newValue, oldValue) => {
+                    // set appropriate start and end values
+                    let minMaxValues = this.getMinMaxValues(newValue);
+                      if (this.channel.window.start !== minMaxValues.start_val)
+                         this.channel.window.start = minMaxValues.start_val;
+                      if (this.channel.window.end !== minMaxValues.end_val)
+                        this.channel.window.end = minMaxValues.end_val;
                     this.updateUI();
-                    this.channel.window.start =
-                        parseInt(
-                            $(this.element).find(".channel-start").
-                                spinner("value"));
-                    this.channel.window.end =
-                        parseInt(
-                            $(this.element).find(".channel-end").
-                                spinner("value"));
-                    this.initial_values = false;
                 });
     }
 
@@ -152,83 +146,54 @@ export default class ChannelRange extends EventSubscriber {
       * @memberof ChannelRange
       */
      updateUI() {
-         // just in case
-         this.detached();
+     // just in case
+     this.detached();
 
-         if (this.channel === null) return;
+     if (this.channel === null) return;
 
-        let start_min,start_max,end_min,end_max,start_val,end_val;
-        switch(this.mode) {
-            case CHANNEL_SETTINGS_MODE.MIN_MAX:
-                start_min = this.channel.window.min;
-                start_max = this.channel.window.end-1;
-                end_min = this.channel.window.start+1;
-                end_max = this.channel.window.max;
-                start_val = this.initial_values ?
-                    this.channel.window.start : this.channel.window.min;
-                end_val = this.initial_values ?
-                    this.channel.window.end : this.channel.window.max;
-                break;
+    let minMaxValues = this.getMinMaxValues();
+     // channel start
+     $(this.element).find(".channel-start").spinner(
+         {min: minMaxValues.start_min, max: minMaxValues.start_max});
+     $(this.element).find(".channel-start").on("input spinstop",
+        (event) => this.onRangeChange(event.target.value, true));
+    $(this.element).find(".channel-start").spinner(
+        "value", minMaxValues.start_val);
 
-            case CHANNEL_SETTINGS_MODE.FULL_RANGE:
-                start_min = this.range[0];
-                start_max = this.channel.window.end-1;
-                end_min = this.channel.window.start+1;
-                end_max = this.range[1];
-                start_val = this.initial_values ?
-                     this.channel.window.start : this.range[0];
-                end_val =
-                    this.initial_values ?
-                         this.channel.window.end : this.range[1];
-                break;
+    // channel range slider
+    $(this.element).find(".channel-slider").slider(
+        {min: minMaxValues.start_min, max: minMaxValues.end_max,
+            range: true,
+            values: [minMaxValues.start_val, minMaxValues.end_val],
+            change: (event, ui) =>
+                this.onRangeChangeBoth(ui.values,
+                    event.originalEvent ? true : false),
+            slide: (event,ui) => {
+                if (ui.values[0] >= ui.values[1]) return false;}
+    });
+    $(this.element).find(".channel-slider").css(
+        "background", "white");
+    $(this.element).find(".channel-slider").find(".ui-slider-range").css(
+        "background", "#" + this.channel.color);
 
-            case CHANNEL_SETTINGS_MODE.ORIGINAL:
-            default:
-                start_min = this.channel.window.min;
-                start_max = this.channel.window.max-1;
-                end_min = this.channel.window.min+1;
-                end_max = this.channel.window.max;
-                start_val = this.channel.window.min;
-                end_val = this.channel.window.max;
-        }
+    //channel end
+    $(this.element).find(".channel-end").spinner(
+        {min: minMaxValues.end_min, max: minMaxValues.end_max});
+    $(this.element).find(".channel-end").on("input spinstop",
+        (event) => this.onRangeChange(event.target.value));
+   $(this.element).find(".channel-end").spinner(
+       "value",minMaxValues.end_val);
 
-         // channel start
-         $(this.element).find(".channel-start").spinner(
-             {min: start_min, max: start_max});
-         $(this.element).find(".channel-start").on("input spinstop",
-            (event) => this.onRangeChange(event.target.value, true));
-        $(this.element).find(".channel-start").spinner("value", start_val);
-
-        // channel range slider
-        $(this.element).find(".channel-slider").slider(
-            {min: start_min, max: end_max, range: true,
-                values: [start_val, end_val], change: (event, ui) =>
-                    this.onRangeChangeBoth(ui.values,
-                        event.originalEvent ? true : false),
-                slide: (event,ui) => {
-                    if (ui.values[0] >= ui.values[1]) return false;}
-        });
-        $(this.element).find(".channel-slider").css(
-            "background", "white");
-        $(this.element).find(".channel-slider").find(".ui-slider-range").css(
-            "background", "#" + this.channel.color);
-
-        //channel end
-        $(this.element).find(".channel-end").spinner(
-            {min: end_min, max: end_max});
-        $(this.element).find(".channel-end").on("input spinstop",
-            (event) => this.onRangeChange(event.target.value));
-       $(this.element).find(".channel-end").spinner("value",end_val);
-
-       //channel end
-       $(this.element).find(".channel-color input").spectrum({
-            color: "#" + this.channel.color,
-            showInput: true,
-            className: "full-spectrum",
-            showInitial: true,
-            preferredFormat: "hex",
-            appendTo: $(this.element),
-            change: (color) => this.onColorChange(color.toHexString())});
+   //channel end
+   $(this.element).find(".channel-color input").spectrum({
+        color: "#" + this.channel.color,
+        showInput: true,
+        className: "full-spectrum",
+        showInitial: true,
+        preferredFormat: "hex",
+        appendTo: $(this.element),
+        change: (color) => this.onColorChange(color.toHexString())});
+    this.initial_values = false; // reset flag
 }
 
      /**
@@ -270,6 +235,62 @@ export default class ChannelRange extends EventSubscriber {
      }
 
      /**
+     * Helper to determine min and max values for start and end based on channel
+     * settings mode
+     *
+     * @param {number} mode the channel setting mode
+     * @return {Object} returns object with the respective min,max properties
+     * @memberof ChannelRange
+     */
+     getMinMaxValues(mode=null) {
+         let start_min,start_max,end_min,end_max,start_val,end_val;
+         if (mode === null) mode=this.mode;
+         switch(mode) {
+             case CHANNEL_SETTINGS_MODE.MIN_MAX:
+                 start_min = this.channel.window.min;
+                 start_max = this.channel.window.end-1;
+                 end_min = this.channel.window.start+1;
+                 end_max = this.channel.window.max;
+                 start_val = this.initial_values ?
+                     this.channel.window.start : this.channel.window.min;
+                 end_val = this.initial_values ?
+                     this.channel.window.end : this.channel.window.max;
+                 break;
+
+             case CHANNEL_SETTINGS_MODE.FULL_RANGE:
+                 start_min = this.range[0];
+                 start_max = this.channel.window.end-1;
+                 end_min = this.channel.window.start+1;
+                 end_max = this.range[1];
+                 start_val = this.initial_values ?
+                      this.channel.window.start : this.range[0];
+                 end_val =
+                     this.initial_values ?
+                          this.channel.window.end : this.range[1];
+                 break;
+
+             case CHANNEL_SETTINGS_MODE.ORIGINAL:
+             default:
+                 start_min = this.channel.window.min;
+                 start_max = this.channel.window.max-1;
+                 end_min = this.channel.window.min+1;
+                 end_max = this.channel.window.max;
+                 start_val = this.channel.window.min;
+                 end_val = this.channel.window.max;
+         }
+
+         return {
+             start_min: start_min,
+             start_max: start_max,
+             end_min: end_min,
+             end_max: end_max,
+             start_val: start_val,
+             end_val: end_val
+         }
+     }
+
+
+     /**
      * channel range change handler
      *
      * @param {Array.<number>} value the new value
@@ -281,15 +302,9 @@ export default class ChannelRange extends EventSubscriber {
          if (isNaN(value)) return;
 
          // get appropriate min/max for start/end
-         let start_min = this.mode === CHANNEL_SETTINGS_MODE.MIN_MAX ?
-             this.channel.window.min : parseInt(this.range[0]);
-         let start_max = this.channel.window.end-1;
-         let end_min = this.channel.window.start+1
-         let end_max = this.mode === CHANNEL_SETTINGS_MODE.MIN_MAX ?
-             this.channel.window.max : parseInt(this.range[1]);
-
-         let min = is_start ? start_min : end_min;
-         let max = is_start ? start_max : end_max;
+         let minMaxValues = this.getMinMaxValues();
+         let min = is_start ? minMaxValues.start_min : minMaxValues.end_min;
+         let max = is_start ? minMaxValues.start_max : minMaxValues.end_max;
 
          // clamp
          let exceededBounds = false;
@@ -332,7 +347,6 @@ export default class ChannelRange extends EventSubscriber {
      * @memberof ChannelRange
      */
     unbind() {
-        this.unsubscribe()
         this.image_info = null;
     }
 }

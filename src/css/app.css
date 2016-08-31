@@ -78,7 +78,19 @@ a.ui-button:active,
 }
 /** SPECTRUM colorpicker adjustments END **/
 
+.disabled-color {
+    color: #dadada;
+}
+
+.link-url {
+    height: 40px;
+}
+.link-url button {
+    height: 40px;
+}
+
 .fixed-header {
+    position: fixed;
     margin: 0px;
     overflow: hidden;
     min-height: 40px;

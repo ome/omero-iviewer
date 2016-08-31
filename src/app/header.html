@@ -1,15 +1,25 @@
 <template>
     <nav class="navbar navbar-default navbar-fixed-top fixed-header">
-        <div class="col-xs-3">&nbsp;</div>
+
+        <div class="col-xs-3 link-url">
+            <button class="btn btn-link">
+                <img src="../css/images/link.png" />
+            </button>
+        </div>
+
         <div class="checkbox col-xs-6">
-            <label><input type="checkbox"
+
+            <label class="has_scalebar"><input type="checkbox"
                checked.bind="context.show_scalebar"
               change.delegate="toggleScalebar()">Show Scalebar</label>
               <span>&nbsp;</span>
+
             <label><input type="checkbox"
                checked.bind="context.show_regions"
               change.delegate="toggleRegions()">Show ROIs</label>
+
         </div>
+
         <div class="col-xs-3">&nbsp;</div>
     </nav>
 </template>
