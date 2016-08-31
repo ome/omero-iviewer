@@ -1,16 +1,12 @@
-//css and images
+//css
 require('../../node_modules/jquery-ui/themes/base/spinner.css');
 require('../../node_modules/spectrum-colorpicker/spectrum.css');
-require('../../node_modules/jquery-ui/themes/base/images/ui-icons_777777_256x240.png');
-require('../../node_modules/jquery-ui/themes/base/images/ui-icons_555555_256x240.png');
-//require('../../node_modules/jquery-ui/themes/smoothness/images/ui-icons_888888_256x240.png');
-//require('../../node_modules/jquery-ui/themes/smoothness/images/ui-icons_454545_256x240.png');
-//require('../../node_modules/jquery-ui/themes/smoothness/images/ui-bg_highlight-soft_75_cccccc_1x100.png');
 
 // js
 import Context from '../app/context';
 import Misc from '../utils/misc';
-import {inject, customElement, bindable} from 'aurelia-framework';
+import {CHANNEL_SETTINGS_MODE} from './channel-settings';
+import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {spinner} from 'jquery-ui/ui/widgets/spinner';
 import {slider} from 'jquery-ui/ui/widgets/slider';
 import {spectrum} from 'spectrum-colorpicker';
@@ -24,7 +20,7 @@ import {
  */
 
 @customElement('channel-range')
-@inject(Context, Element)
+@inject(Context, Element, BindingEngine)
 export default class ChannelRange extends EventSubscriber {
     /**
      * which image config do we belong to (bound in template)
@@ -34,13 +30,35 @@ export default class ChannelRange extends EventSubscriber {
     @bindable channel = null;
 
     /**
+     * the channel settings mode
+     * @memberof ChannelRange
+     * @type {number}
+     */
+    @bindable mode = null;
+
+    /**
+     * the absolute channel range limits
+     * @memberof ChannelRange
+     * @type {Array.<number>}
+     */
+    @bindable range = null;
+
+    /**
+     * a flag to remind us if these are the initial binding values
+     * which we need because the existing display rules are different then
+     * @type {boolean}
+     */
+    initial_values = true;
+
+    /**
      * @constructor
      * @param {Context} context the application context (injected)
      */
-    constructor(context, element) {
+    constructor(context, element, bindingEngine) {
         super(context.eventbus);
         this.context = context;
         this.element = element;
+        this.bindingEngine = bindingEngine;
     }
 
     /**
@@ -52,7 +70,44 @@ export default class ChannelRange extends EventSubscriber {
      */
     bind() {
         this.subscribe();
+        this.registerObserver();
         this.updateUI();
+
+    }
+
+    /**
+     * Registers property observer for mode changes
+     *
+     * @memberof ChannelRange
+     */
+    registerObserver() {
+        this.unregisterObserver();
+        this.observer =
+            this.bindingEngine.propertyObserver(this, 'mode')
+                .subscribe((newValue, oldValue) => {
+                    this.updateUI();
+                    this.channel.window.start =
+                        parseInt(
+                            $(this.element).find(".channel-start").
+                                spinner("value"));
+                    this.channel.window.end =
+                        parseInt(
+                            $(this.element).find(".channel-end").
+                                spinner("value"));
+                    this.initial_values = false;
+                });
+    }
+
+    /**
+     * Unregisters the observer for mode changes
+     *
+     * @memberof ChannelRange
+     */
+    unregisterObserver() {
+        if (this.observer) {
+            this.observer.dispose();
+            this.observer = null;
+        }
     }
 
     /**
@@ -102,27 +157,56 @@ export default class ChannelRange extends EventSubscriber {
 
          if (this.channel === null) return;
 
+        let start_min,start_max,end_min,end_max,start_val,end_val;
+        switch(this.mode) {
+            case CHANNEL_SETTINGS_MODE.MIN_MAX:
+                start_min = this.channel.window.min;
+                start_max = this.channel.window.end-1;
+                end_min = this.channel.window.start+1;
+                end_max = this.channel.window.max;
+                start_val = this.initial_values ?
+                    this.channel.window.start : this.channel.window.min;
+                end_val = this.initial_values ?
+                    this.channel.window.end : this.channel.window.max;
+                break;
+
+            case CHANNEL_SETTINGS_MODE.FULL_RANGE:
+                start_min = this.range[0];
+                start_max = this.channel.window.end-1;
+                end_min = this.channel.window.start+1;
+                end_max = this.range[1];
+                start_val = this.initial_values ?
+                     this.channel.window.start : this.range[0];
+                end_val =
+                    this.initial_values ?
+                         this.channel.window.end : this.range[1];
+                break;
+
+            case CHANNEL_SETTINGS_MODE.ORIGINAL:
+            default:
+                start_min = this.channel.window.min;
+                start_max = this.channel.window.max-1;
+                end_min = this.channel.window.min+1;
+                end_max = this.channel.window.max;
+                start_val = this.channel.window.min;
+                end_val = this.channel.window.max;
+        }
+
          // channel start
          $(this.element).find(".channel-start").spinner(
-             {min: this.channel.window.min,
-                 max: this.channel.window.end-1});
+             {min: start_min, max: start_max});
          $(this.element).find(".channel-start").on("input spinstop",
             (event) => this.onRangeChange(event.target.value, true));
-        $(this.element).find(".channel-start").spinner(
-            "value", this.channel.window.start);
+        $(this.element).find(".channel-start").spinner("value", start_val);
 
         // channel range slider
         $(this.element).find(".channel-slider").slider(
-            {min: this.channel.window.min-13,
-                max: this.channel.window.end+13,
-                range: true,
-                values: [
-                    this.channel.window.start-13, this.channel.window.end+13
-                ], change: (event, ui) =>
+            {min: start_min, max: end_max, range: true,
+                values: [start_val, end_val], change: (event, ui) =>
                     this.onRangeChangeBoth(ui.values,
                         event.originalEvent ? true : false),
                 slide: (event,ui) => {
-                    if (ui.values[0]+24 >= ui.values[1]) return false;}
+                    if (ui.values[0] >= ui.values[1]) return false;}
         });
         $(this.element).find(".channel-slider").css(
             "background", "white");
@@ -131,12 +215,10 @@ export default class ChannelRange extends EventSubscriber {
 
         //channel end
         $(this.element).find(".channel-end").spinner(
-            {min: this.channel.window.start+1,
-                max: this.channel.window.max});
+            {min: end_min, max: end_max});
         $(this.element).find(".channel-end").on("input spinstop",
             (event) => this.onRangeChange(event.target.value));
-       $(this.element).find(".channel-end").spinner(
-           "value", this.channel.window.end);
+       $(this.element).find(".channel-end").spinner("value",end_val);
 
        //channel end
        $(this.element).find(".channel-color input").spectrum({
@@ -172,8 +254,6 @@ export default class ChannelRange extends EventSubscriber {
      onRangeChangeBoth(values, ui_triggered=false) {
          if (!ui_triggered || !Misc.isArray(values)) return;
 
-         values[0] += 13;
-         values[1] -= 13;
          let startManipulated =
             this.channel.window.start !== values[0];
          if (startManipulated) {
@@ -201,10 +281,15 @@ export default class ChannelRange extends EventSubscriber {
          if (isNaN(value)) return;
 
          // get appropriate min/max for start/end
-         let min = is_start ?
-            this.channel.window.min : this.channel.window.start+1;
-         let max = is_start ?
-            this.channel.window.end-1 : this.channel.window.max;
+         let start_min = this.mode === CHANNEL_SETTINGS_MODE.MIN_MAX ?
+             this.channel.window.min : parseInt(this.range[0]);
+         let start_max = this.channel.window.end-1;
+         let end_min = this.channel.window.start+1
+         let end_max = this.mode === CHANNEL_SETTINGS_MODE.MIN_MAX ?
+             this.channel.window.max : parseInt(this.range[1]);
+
+         let min = is_start ? start_min : end_min;
+         let max = is_start ? start_max : end_max;
 
          // clamp
          let exceededBounds = false;
@@ -234,7 +319,7 @@ export default class ChannelRange extends EventSubscriber {
                     $(this.element).find(otherClazz).spinner("option", "max", value-1);
                     $(this.element).find(".channel-slider").slider(
                         "option", "values",
-                        [this.channel.window.start-13, this.channel.window.end+13]);
+                        [this.channel.window.start, this.channel.window.end]);
              } catch (ignored) {}
          } else $(this.element).find(clazz).parent().css("border-color", "rgb(255,0,0)");
      }

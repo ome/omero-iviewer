@@ -115,8 +115,9 @@ export default class ImageInfo {
                         typeof response.meta.datasetId === 'number')
                     this.dataset_id = response.meta.datasetId;
 
-                // store channels and dimensions
+                // store channels, pixel_range and dimensions
                 this.channels = response.channels;
+                this.range = response.pixel_range;
                 this.dimensions = {
                     t: response.rdefs.defaultT, max_t : response.size.t,
                     z: response.rdefs.defaultZ, max_z : response.size.z

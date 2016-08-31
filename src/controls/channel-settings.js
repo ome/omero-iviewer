@@ -9,6 +9,16 @@ import {
 } from '../events/events';
 
 /**
+ * the possible modes of channel settings
+ * @type {Object}
+ */
+export const CHANNEL_SETTINGS_MODE = {
+    MIN_MAX : 0,
+    FULL_RANGE : 1,
+    ORIGINAL : 2
+}
+
+/**
  * Represents the settings section in the right hand panel
  * @extends {EventSubscriber}
  */
@@ -28,6 +38,13 @@ export default class ChannelSettings extends EventSubscriber {
      * @type {ImageInfo}
      */
     image_info = null;
+
+    /**
+     * the present channel settings mode
+     * @memberof ChannelSettings
+     * @type {number}
+     */
+    mode = null;
 
     /**
      * property observers
@@ -77,6 +94,37 @@ export default class ChannelSettings extends EventSubscriber {
     bind() {
         this.subscribe();
         this.registerObservers();
+
+        // the mode click handler
+        $('.channel-mode').children().off("click");
+        $('.channel-mode').children().on("click",
+            (event) => this.changeChannelMode(event.target.value));
+
+        if (this.image_info === null) return;
+        // we select the mode based on the channel range values
+        // if they are outside min/max, we need the full range view
+        let needsFullRangeMode = false;
+        this.image_info.channels.map((c) => {
+            if (c.window.start < c.window.min ||
+                    c.window.end > c.window.max)
+                needsFullRangeMode = true;
+        })
+        if (needsFullRangeMode)
+            this.mode = CHANNEL_SETTINGS_MODE.FULL_RANGE;
+        else
+            this.mode = CHANNEL_SETTINGS_MODE.MIN_MAX;
+    }
+
+    /**
+     * Channel mode setter
+     *
+     * @param {number} mode the channel setting mode
+     * @memberof ChannelSettings
+     */
+    changeChannelMode(mode = CHANNEL_SETTINGS_MODE.ORIGINAL) {
+        $('.channel-mode').children().removeClass("active");
+        $('.channel-mode').children('[value=' + mode + ']').addClass('active');
+        this.mode = parseInt(mode);
     }
 
     /**

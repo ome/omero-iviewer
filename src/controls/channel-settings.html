@@ -14,7 +14,16 @@
             </button>
 
             <channel-range class="channel-range"
-                channel.bind="channel">
+                channel.bind="channel" mode.bind="mode"
+                range.bind="image_info.range">
             </channel-range>
+        </div>
+        <div class="channel-mode btn-group btn-group-sm" role="group" data-toggle="buttons">
+            <button value="0" type="button" class="btn btn-default
+                ${mode === 0 ? ' active' : ''}">Min/Max</button>
+            <button value="1" type="button" class="btn btn-default
+                ${mode === 1 ? ' active' : ''}">Full Range</button>
+            <button value="2" type="button" class="btn btn-default
+                ${mode === 2 ? ' active' : ''}">Imported</button>
         </div>
 </template>

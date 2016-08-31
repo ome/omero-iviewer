@@ -247,6 +247,14 @@ thumbnail-slider img {
     width: 25px;
 }
 
+.channel-mode {
+    margin-top: 2px;
+    width: 100%;
+}
+.channel-mode button {
+    width: 33%;
+}
+
 .channel-active {
     overflow-x: hidden;
     font-size: 10px;

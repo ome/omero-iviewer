@@ -1,5 +1,6 @@
 // js
 import Context from '../app/context';
+import Misc from '../utils/misc';
 import {inject, customElement, bindable} from 'aurelia-framework';
 
 import {
@@ -91,6 +92,35 @@ export default class Settings extends EventSubscriber {
     */
     toggleHistogram() {
         alert("Not implemented yet!");
+    }
+
+    /**
+    * Persists the rendering settings
+    *
+    * @memberof Settings
+    */
+    saveImageSettings() {
+        let url =
+            this.context.server + "/webgateway/saveImgRDef/" +
+            this.image_info.image_id + '/?m=' + this.image_info.model[0] +
+            "&p=" + this.image_info.projection +
+            "&t=" + this.image_info.dimensions.t +
+            "&z=" + this.image_info.dimensions.z +
+            "&q=0.9&ia=0&c=";
+        let i=0;
+        this.image_info.channels.map(
+            (c) =>
+                url+= (i !== 0 ? ',' : '') + (!c.active ? '-' : '') + (++i) +
+                 "|" + c.window.start + ":" + c.window.end + "$" + c.color
+        );
+
+        // TODO: add csrf token
+        $.ajax(
+            {url : url,
+             method: 'POST',
+            success : (response) => {},
+            error : (error) => {}
+        });
     }
 
     /**

@@ -4,6 +4,10 @@ require('../../node_modules/bootstrap/dist/css/bootstrap.min.css');
 require('../css/app.css');
 require('../css/images/collapse-left.png');
 require('../css/images/collapse-right.png');
+require('../../node_modules/jquery-ui/themes/base/images/ui-icons_777777_256x240.png');
+require('../../node_modules/jquery-ui/themes/base/images/ui-icons_555555_256x240.png');
+require('../../node_modules/jquery-ui/themes/base/images/ui-icons_ffffff_256x240.png');
+
 
 // js
 import {inject} from 'aurelia-framework';
