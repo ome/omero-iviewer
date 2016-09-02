@@ -78,6 +78,16 @@ export default class Ol3Viewer extends EventSubscriber {
     attached() {
         // register resize and collapse handlers
         Ui.registerSidePanelHandlers(this.context.eventbus);
+
+        // instantiate the viewer
+        this.viewer =
+            new ol3.Viewer(this.image_config.image_info.image_id,
+                { eventbus : this.context.eventbus,
+                  server : this.context.server,
+                  container: this.container
+                });
+        // subscribe
+        this.subscribe();
     }
 
     /**
@@ -94,17 +104,16 @@ export default class Ol3Viewer extends EventSubscriber {
         this.container = 'ol3_viewer_' + this.config_id;
         // we associate the image config with the present config id
         this.image_config = this.context.getImageConfig(this.config_id);
+    }
 
-        // instantiate the viewer
-        this.viewer =
-            new ol3.Viewer(this.image_config.image_info.image_id,
-                { eventbus : this.context.eventbus,
-                  server : this.context.server,
-                  container: this.container
-                });
-
-        // subscribe
-        this.subscribe();
+    /**
+     * Overridden aurelia lifecycle method:
+     * fired when PAL (dom abstraction) is unmounted
+     *
+     * @memberof Ol3Viewer
+     */
+    detached() {
+        if (this.viewer) this.viewer.destroyViewer();
     }
 
     /**
@@ -116,7 +125,6 @@ export default class Ol3Viewer extends EventSubscriber {
      */
     unbind() {
         this.unsubscribe();
-        if (this.viewer) this.viewer.destroyViewer();
         this.viewer = null;
         this.image_config = null;
     }
@@ -294,7 +302,7 @@ export default class Ol3Viewer extends EventSubscriber {
      */
     showScalebar(flag) {
         let delayedCall = function() {
-            this.viewer.toggleScaleBar(flag);
+            if (this.viewer) this.viewer.toggleScaleBar(flag);
         }.bind(this);
         setTimeout(delayedCall, 200);
     }

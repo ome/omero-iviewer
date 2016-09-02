@@ -141,11 +141,12 @@ export default class ImageInfo {
                 // signal that we are ready and
                 // send out an image config update event
                 this.ready = true;
-                this.context.publish(
-                    IMAGE_CONFIG_UPDATE,
-                        {config_id: this.config_id,
-                        dataset_id: this.dataset_id,
-                        ready: this.ready});
+                if (this.context)
+                    this.context.publish(
+                        IMAGE_CONFIG_UPDATE,
+                            {config_id: this.config_id,
+                            dataset_id: this.dataset_id,
+                            ready: this.ready});
             },
             error : (error) => {
                 this.ready = false;
