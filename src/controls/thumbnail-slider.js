@@ -123,7 +123,7 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @memberof ThumbnailSlider
      */
     hideMe() {
-        $(this.element).css('visibility', 'hidden');
+        $(this.element).hide();
         $('.col-splitter.left-split').css('visibility', 'hidden');
         $('.frame').addClass('left-hand-panel-hidden');
     }

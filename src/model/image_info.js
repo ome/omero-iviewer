@@ -121,6 +121,7 @@ export default class ImageInfo {
                 if (typeof response.meta === 'object' &&
                         typeof response.meta.datasetId === 'number')
                     this.dataset_id = response.meta.datasetId;
+                else this.dataset_id = null;
 
                 // store channels, pixel_range and dimensions
                 this.channels = response.channels;
@@ -145,7 +146,7 @@ export default class ImageInfo {
                     this.context.publish(
                         IMAGE_CONFIG_UPDATE,
                             {config_id: this.config_id,
-                            dataset_id: this.dataset_id,
+                                dataset_id: this.dataset_id,
                             ready: this.ready});
             },
             error : (error) => {

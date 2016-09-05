@@ -229,8 +229,8 @@ thumbnail-slider img {
 }
 
 .left-hand-panel-hidden {
-    margin-left: 0px;
-    padding-left: 0px;
+    margin-left: -5px;
+    padding-left: 5px;
 }
 
 .channel-range {
