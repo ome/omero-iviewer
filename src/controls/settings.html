@@ -2,14 +2,14 @@
     <require from="../utils/converters"></require>
     <require from="./channel-settings"></require>
 
-    <div class="row">
+    <div class="row save-settings">
         <button type="button"
         click.delegate="saveImageSettings()"
-        class="btn btn-default btn-sm active">Save</button>
+        class="btn btn-default btn-sm">Save</button>
     </div>
 
-    <div class="row checkbox ">
-        <div class="col-xs-6" style="min-width: 100px">
+    <div class="row checkbox checkbox-settings">
+        <div class="col-xs-6">
             <label><input type="checkbox"
                checked.bind="image_info.model | imageModel"
                change.delegate="toggleModel()">Grayscale</label>

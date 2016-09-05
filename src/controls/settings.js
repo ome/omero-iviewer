@@ -100,6 +100,7 @@ export default class Settings extends EventSubscriber {
     * @memberof Settings
     */
     saveImageSettings() {
+        $('.save-settings').children('button').blur();
         if (Misc.useJsonp(this.context.server)) {
             alert("Saving the rendering settings will not work for cross-domain!");
             return;
