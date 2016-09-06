@@ -4,6 +4,7 @@ require('../css/ol3-viewer.css');
 // dependencies
 import Context from '../app/context';
 import Misc from '../utils/misc';
+import {REQUEST_PARAMS} from '../utils/misc'
 import Ui from '../utils/ui';
 import {inject, customElement, bindable} from 'aurelia-framework';
 import {ol3} from '../../libs/ome-viewer-1.0.js';
@@ -84,6 +85,7 @@ export default class Ol3Viewer extends EventSubscriber {
             new ol3.Viewer(this.image_config.image_info.image_id,
                 { eventbus : this.context.eventbus,
                   server : this.context.server,
+                  initParams :  this.context.initParams,
                   container: this.container
                 });
         // subscribe
@@ -179,9 +181,9 @@ export default class Ol3Viewer extends EventSubscriber {
 
         if (typeof params.model === 'string')
             this.viewer.changeImageModel(params.model);
-        else if (typeof params.projection === 'string')
+        if (typeof params.projection === 'string')
             this.viewer.changeImageProjection(params.projection);
-        else if (Misc.isArray(params.ranges))
+        if (Misc.isArray(params.ranges))
             this.viewer.changeChannelRange(params.ranges);
     }
 
@@ -196,45 +198,33 @@ export default class Ol3Viewer extends EventSubscriber {
         // whould we display regions...
         this.showRegions(this.context.show_regions);
 
-        // init viewer with 'new' dimension settings
-        let presentZ = this.viewer.getDimensionIndex('z');
-        let presentT = this.viewer.getDimensionIndex('t');
-        let newZ = this.image_config.image_info.dimensions.z;
-        let newT = this.image_config.image_info.dimensions.t;
-
-        if (presentZ !== newZ)
-            this.viewer.setDimensionIndex.apply(
-                this.viewer, ['z'].concat([newZ]));
-
-        if (presentT !== newT)
-            this.viewer.setDimensionIndex.apply(
-                this.viewer, ['t'].concat([newT]))
-
         // init viewer with 'new' channel settings
         let presentChannels = this.viewer.getDimensionIndex('c');
+        if (!Misc.isArray(presentChannels)) presentChannels = [];
         let newCs = this.image_config.image_info.getActiveChannels();
-        if (!Misc.isArray(presentChannels) || !Misc.isArray(newCs)) return;
 
         // there is a difference for sure
-        if (presentChannels.length !== newCs.length) {
+        if (presentChannels.length !== newCs.length)
             this.viewer.setDimensionIndex.apply(
                 this.viewer, ['c'].concat(newCs))
-            return;
-        }
-
-        for (let nc in newCs) {
-            let newCisOldC = false;
-            for (let oc in presentChannels)
-                if (newCs[nc] === presentChannels[oc]) {
-                    newCisOldC = true;
+        else {
+            for (let nc in newCs) {
+                let newCisOldC = false;
+                for (let oc in presentChannels)
+                    if (newCs[nc] === presentChannels[oc]) {
+                        newCisOldC = true;
+                        break;
+                    }
+                if (!newCisOldC) {
+                    this.viewer.setDimensionIndex.apply(
+                        this.viewer, ['c'].concat(newCs))
                     break;
                 }
-            if (!newCisOldC) {
-                this.viewer.setDimensionIndex.apply(
-                    this.viewer, ['c'].concat(newCs))
-                return;
             }
         }
+
+        // only the first request should be affected
+        this.context.initParams = {};
     }
 
     /**

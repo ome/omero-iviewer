@@ -2,6 +2,7 @@ import {noView} from 'aurelia-framework';
 import {EventAggregator} from 'aurelia-event-aggregator';
 import {IMAGE_CONFIG_SELECT} from '../events/events';
 import ImageConfig from '../model/image_config';
+import {REQUEST_PARAMS} from '../utils/misc'
 
 /**
  * Provides all the information to the application that it shares
@@ -66,19 +67,22 @@ export default class Context {
      * @constructor
      * @param {EventAggregator} eventbus the aurelia event aggregator
      * @param {number} initial_image_id the initial image id
-     * @param {string} a server url
+     * @param {object} optParams an object containing optional req params
      */
-    constructor(eventbus = null, initial_image_id=null, server="") {
+    constructor(eventbus = null, initial_image_id=null, optParams={}) {
         // event aggregator is mandatory
         if (typeof eventbus instanceof EventAggregator)
             throw "Invalid EventAggregator given!"
 
+        let server = optParams[REQUEST_PARAMS.SERVER];
         if (typeof server !== 'string' || server.length === 0) {
             server = "";
             console.info("Using relative paths for server requests...");
         }
+        delete optParams[REQUEST_PARAMS.SERVER];
         this.eventbus = eventbus;
         this.server = server;
+        this.initParams = optParams;
 
         // we set the initial image as the default (if given)
         let initial_image_config = this.addImageConfig(initial_image_id);
@@ -111,7 +115,6 @@ export default class Context {
         this.image_configs.set(image_config.id, image_config);
         this.selectConfig(image_config.id);
         image_config.bind();
-
 
         return image_config;
     }
@@ -211,5 +214,23 @@ export default class Context {
      */
     publish() {
         this.eventbus.publish.apply(this.eventbus, arguments);
+    }
+
+    /**
+     * Retrieves initial request parameter by key
+     *
+     * @param {string} key the key
+     * @return {string|null} returns the value associated with the key or null
+     * @memberof Context
+     */
+    getInitialRequestParam(key) {
+        if (typeof key !== 'string' ||
+            typeof this.initParams !== 'object') return null;
+
+        key = key.toUpperCase();
+        if (typeof this.initParams[key] === 'undefined' ||
+            typeof this.initParams[key] === null) return null;
+
+        return this.initParams[key];
     }
 }

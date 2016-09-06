@@ -1,6 +1,7 @@
 import {noView} from 'aurelia-framework';
 import {IMAGE_CONFIG_UPDATE} from '../events/events';
 import Misc from '../utils/misc';
+import {REQUEST_PARAMS} from '../utils/misc'
 
 /**
  * Holds basic image information required for viewing:
@@ -123,12 +124,27 @@ export default class ImageInfo {
                     this.dataset_id = response.meta.datasetId;
                 else this.dataset_id = null;
 
+                // we might have some requested defaults
+                let initialTime =
+                    this.context.getInitialRequestParam(REQUEST_PARAMS.TIME);
+                let initialPlane =
+                    this.context.getInitialRequestParam(REQUEST_PARAMS.PLANE);
+                let initialProjection =
+                    this.context.getInitialRequestParam(REQUEST_PARAMS.PROJECTION);
+                let initialModel =
+                    this.context.getInitialRequestParam(REQUEST_PARAMS.MODEL);
+                // TODO: check/add channels request defaults
+
                 // store channels, pixel_range and dimensions
                 this.channels = response.channels;
                 this.range = response.pixel_range;
                 this.dimensions = {
-                    t: response.rdefs.defaultT, max_t : response.size.t,
-                    z: response.rdefs.defaultZ, max_z : response.size.z
+                    t: initialTime !== null ?
+                        parseInt(initialTime) : response.rdefs.defaultT,
+                    max_t : response.size.t,
+                    z: initialPlane !== null ?
+                        parseInt(initialPlane) : response.rdefs.defaultZ,
+                    max_z : response.size.z
                 };
                 // do we have a scalebar
                 if (typeof response.pixel_size === 'object' &&
@@ -136,8 +152,11 @@ export default class ImageInfo {
                     this.has_scalebar = true;
 
                 // store projection and model
-                this.projection = response.rdefs.projection;
-                this.model = response.rdefs.model;
+                this.projection =
+                    initialProjection !== null ?
+                        initialProjection.toLowerCase() : response.rdefs.projection;
+                this.model = initialModel !== null ?
+                    initialModel.toLowerCase() : response.rdefs.model;
 
                 // signal that we are ready and
                 // send out an image config update event

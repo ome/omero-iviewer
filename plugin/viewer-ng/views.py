@@ -5,6 +5,11 @@ from django.http import HttpResponse
 @login_required()
 def index(request, iid=None, conn=None, **kwargs):
     if iid is None:
-		return HttpResponse("Viewer needs an image id!")
+        return HttpResponse("Viewer needs an image id!")
 
-    return render(request, 'viewer-ng/index.html', {'image_id' : iid })
+    params = {'IMAGE_ID' : iid }
+    for key in request.GET:
+        if request.GET[key]:
+            params[str(key).upper()] = str(request.GET[key]);
+
+    return render(request, 'viewer-ng/index.html', {'params' : params})

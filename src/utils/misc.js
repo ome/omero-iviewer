@@ -1,6 +1,22 @@
 import {noView} from 'aurelia-framework';
 
 /**
+ * the possible request params that we accept
+ * @type {Object}
+ */
+export const REQUEST_PARAMS = {
+    SERVER : 'SERVER',
+    IMAGE_ID : 'IMAGE_ID',
+    CHANNELS : 'C',
+    PLANE : 'Z',
+    TIME : 'T',
+    PROJECTION : 'P',
+    MODEL : 'M',
+    CENTER_X : 'X',
+    CENTER_Y : 'Y'
+}
+
+/**
  * A utility class with various static helper methods
  */
 @noView

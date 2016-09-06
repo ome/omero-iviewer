@@ -10,7 +10,10 @@
       <link rel="stylesheet" type="text/css" href="{% static 'viewer-ng/css/ol3-viewer.css' %}" />
 
       <script type="text/javascript">
-        window.INITIAL_IMAGE_ID = {{ image_id }};
+        window.INITIAL_REQUEST_PARAMS = {};
+        {% for key, value in params.items %}
+            window.INITIAL_REQUEST_PARAMS['{{key}}'] = "{{value}}";
+        {% endfor %}
       </script>
 
       <title>Viewer NG</title>
