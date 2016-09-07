@@ -13,7 +13,8 @@ export const REQUEST_PARAMS = {
     PROJECTION : 'P',
     MODEL : 'M',
     CENTER_X : 'X',
-    CENTER_Y : 'Y'
+    CENTER_Y : 'Y',
+    ZOOM : 'ZM'
 }
 
 /**
@@ -81,9 +82,9 @@ export default class Misc {
     static getCookie(name="") {
         let  ret = null;
         if (document.cookie && document.cookie != '') {
-            var cookies = document.cookie.split(';');
-            for (var i = 0; i < cookies.length; i++) {
-                var cookie = jQuery.trim(cookies[i]);
+            let cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                let cookie = jQuery.trim(cookies[i]);
                 // Does this cookie string begin with the name we want?
                 if (cookie.substring(0, name.length + 1) == (name + '=')) {
                     ret = decodeURIComponent(cookie.substring(name.length + 1));
@@ -91,6 +92,67 @@ export default class Misc {
                 }
             }
         }
+        return ret;
+    }
+
+    /**
+     * Takes a string with channel information in the form:
+     * -1|111:343$808080,2|0:255$FF0000 and parses it into an object that contains
+     * the respective channel information/properties
+     *
+     * @static
+     * @param {string} some_string a string containing encoded channel info
+     * @return {Array|null} an array of channel objects or null
+     */
+    static parseChannelParameters(some_string="") {
+        if (typeof some_string !== 'string' || some_string.length === 0)
+            return null;
+
+        let ret = [];
+
+        // first remove any whitespace there may be
+        some_string = some_string.replace(/\s/g, "");
+
+        // split up into channels
+        let chans = some_string.split(',');
+        if (chans.length === 0) return null;
+
+        // iterate over channel tokens
+        for (let k in chans) {
+            // extract channel number
+            let c = chans[k];
+            let pos = c.indexOf('|');
+            if (pos === -1) continue;
+
+            let chanNum = parseInt(c.substring(0, pos));
+            if (isNaN(chanNum)) continue;
+
+            let tmp = {
+                'index' : chanNum < 0 ? (-chanNum)-1 : chanNum-1,
+                'active' : chanNum < 0 ? false : true
+            };
+
+            // extract range token
+            c = c.substring(pos+1); // shave off number info
+            pos = c.indexOf("$");
+            if (pos === -1) continue;
+            let rTok = c.substring(0, pos).split(':');
+            if (rTok.length !== 2) continue; // we need start and end
+            let rStart = parseInt(rTok[0]);
+            let rEnd = parseInt(rTok[1]);
+            if (isNaN(rStart) || isNaN(rEnd)) continue;
+            tmp['start'] = rStart;
+            tmp['end'] = rEnd;
+
+            // extract last bit: color tokens
+            c = c.substring(pos+1); // shave off range info
+            if (c.length !== 3 && c.length !== 6) continue; // we need hex notation length
+            tmp['color'] = c;
+
+            // add to return
+            ret.push(tmp);
+        }
+
         return ret;
     }
 }

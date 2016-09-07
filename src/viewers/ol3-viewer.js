@@ -198,31 +198,6 @@ export default class Ol3Viewer extends EventSubscriber {
         // whould we display regions...
         this.showRegions(this.context.show_regions);
 
-        // init viewer with 'new' channel settings
-        let presentChannels = this.viewer.getDimensionIndex('c');
-        if (!Misc.isArray(presentChannels)) presentChannels = [];
-        let newCs = this.image_config.image_info.getActiveChannels();
-
-        // there is a difference for sure
-        if (presentChannels.length !== newCs.length)
-            this.viewer.setDimensionIndex.apply(
-                this.viewer, ['c'].concat(newCs))
-        else {
-            for (let nc in newCs) {
-                let newCisOldC = false;
-                for (let oc in presentChannels)
-                    if (newCs[nc] === presentChannels[oc]) {
-                        newCisOldC = true;
-                        break;
-                    }
-                if (!newCisOldC) {
-                    this.viewer.setDimensionIndex.apply(
-                        this.viewer, ['c'].concat(newCs))
-                    break;
-                }
-            }
-        }
-
         // only the first request should be affected
         this.context.initParams = {};
     }

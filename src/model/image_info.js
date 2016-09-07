@@ -133,10 +133,14 @@ export default class ImageInfo {
                     this.context.getInitialRequestParam(REQUEST_PARAMS.PROJECTION);
                 let initialModel =
                     this.context.getInitialRequestParam(REQUEST_PARAMS.MODEL);
-                // TODO: check/add channels request defaults
+                let initialChannels =
+                    this.context.getInitialRequestParam(REQUEST_PARAMS.CHANNELS);
+                initialChannels = Misc.parseChannelParameters(initialChannels);
 
                 // store channels, pixel_range and dimensions
-                this.channels = response.channels;
+                this.channels =
+                    this.mixChannelsWithInitialSettings(
+                        response.channels, initialChannels);
                 this.range = response.pixel_range;
                 this.dimensions = {
                     t: initialTime !== null ?
@@ -189,5 +193,31 @@ export default class ImageInfo {
             if (this.channels[i].active) activeChannels.push(i);
 
         return activeChannels;
+    }
+
+    /**
+     * If there are initial settings they are integrated into the channel
+     * response
+     *
+     * @memberof ImageInfo
+     * @param {Array.<Object>} an array of existing channels (from response)
+     * @param {Array.<Object>} an array of initial settings per channel
+     * @return {Array.<Object>} an array of mixed-in channel objects
+     */
+    mixChannelsWithInitialSettings(channels, initialChannels) {
+        if (!Misc.isArray(channels) || !Misc.isArray(initialChannels))
+            return channels;
+
+        initialChannels.map((c) => {
+            if (typeof channels[c.index] === 'object') {
+                let chan = channels[c.index];
+                chan.active = c.active;
+                chan.window.start = c.start;
+                chan.window.end = c.end;
+                chan.color = c.color;
+            }
+        });
+
+        return channels;
     }
 }
