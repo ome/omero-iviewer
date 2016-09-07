@@ -1,7 +1,7 @@
 // js
 import Context from '../app/context';
 import Misc from '../utils/misc';
-import {inject, customElement, bindable} from 'aurelia-framework';
+import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 
 import {
     IMAGE_CONFIG_UPDATE, IMAGE_MODEL_CHANGE, IMAGE_CHANNEL_RANGE_CHANGE,
@@ -14,7 +14,7 @@ import {
  */
 
 @customElement('settings')
-@inject(Context)
+@inject(Context, BindingEngine)
 export default class Settings extends EventSubscriber {
     /**
      * which image config do we belong to (bound in template)
@@ -42,9 +42,10 @@ export default class Settings extends EventSubscriber {
      * @constructor
      * @param {Context} context the application context (injected)
      */
-    constructor(context) {
+    constructor(context, bindingEngine) {
         super(context.eventbus);
         this.context = context;
+        this.bindingEngine = bindingEngine;
     }
 
     /**
@@ -56,6 +57,7 @@ export default class Settings extends EventSubscriber {
      */
     bind() {
         this.subscribe();
+        this.registerObserver();
     }
 
     /**
@@ -72,18 +74,19 @@ export default class Settings extends EventSubscriber {
          this.config_id = params.config_id;
          this.image_info =
              this.context.getImageConfig(params.config_id).image_info;
+        this.bind();
      }
 
      /**
      * Grayscale flag toggler (event handler)
      *
      * @memberof Settings
-     */
+     *
     toggleModel() {
         this.context.publish(
             IMAGE_MODEL_CHANGE,
             { config_id: this.config_id, model: this.image_info.model});
-    }
+    }*/
 
     /**
     * Shows and hides the histogram
@@ -129,6 +132,36 @@ export default class Settings extends EventSubscriber {
     }
 
     /**
+     * Registers the model(color/greyscale) property listener for model change
+     *
+     * @memberof Settings
+     */
+    registerObserver() {
+        if (this.image_info === null) return;
+        this.unregisterObserver();
+        this.observer =
+            this.bindingEngine.propertyObserver(
+                this.image_info, 'model')
+                    .subscribe(
+                        (newValue, oldValue) =>
+                            this.context.publish(
+                                IMAGE_MODEL_CHANGE,
+                                { config_id: this.config_id, model: newValue}));
+    }
+
+    /**
+     * Unregisters the model(color/greyscale) property listener for model change
+     *
+     * @memberof Settings
+     */
+    unregisterObserver() {
+        if (this.observer) {
+            this.observer.dispose();
+            this.observer = null;
+        }
+    }
+
+    /**
      * Overridden aurelia lifecycle method:
      * called whenever the view is unbound within aurelia
      * in other words a 'destruction' hook that happens after 'detached'
@@ -136,6 +169,7 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     unbind() {
+        this.unregisterObserver();
         this.unsubscribe()
         this.image_info = null;
     }

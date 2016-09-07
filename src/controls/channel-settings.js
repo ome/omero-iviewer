@@ -15,7 +15,7 @@ import {
 export const CHANNEL_SETTINGS_MODE = {
     MIN_MAX : 0,
     FULL_RANGE : 1,
-    ORIGINAL : 2
+    IMPORTED : 2
 }
 
 /**
@@ -121,7 +121,7 @@ export default class ChannelSettings extends EventSubscriber {
      * @param {number} mode the channel setting mode
      * @memberof ChannelSettings
      */
-    changeChannelMode(mode = CHANNEL_SETTINGS_MODE.ORIGINAL) {
+    changeChannelMode(mode = CHANNEL_SETTINGS_MODE.IMPORTED) {
         $('.channel-mode').children().removeClass("active");
         $('.channel-mode').children('[value=' + mode + ']').addClass('active');
         this.mode = parseInt(mode);

@@ -29,6 +29,13 @@ export default class ChannelRange  {
     @bindable channel = null;
 
     /**
+     * the channel index
+     * @memberof ChannelRange
+     * @type {number}
+     */
+    @bindable index = null;
+
+    /**
      * the channel settings mode
      * @memberof ChannelRange
      * @type {number}
@@ -82,13 +89,36 @@ export default class ChannelRange  {
         this.observer =
             this.bindingEngine.propertyObserver(this, 'mode')
                 .subscribe((newValue, oldValue) => {
-                    // set appropriate start and end values
-                    let minMaxValues = this.getMinMaxValues(newValue);
-                      if (this.channel.window.start !== minMaxValues.start_val)
-                         this.channel.window.start = minMaxValues.start_val;
-                      if (this.channel.window.end !== minMaxValues.end_val)
-                        this.channel.window.end = minMaxValues.end_val;
-                    this.updateUI();
+                    let adjustRange = (() => {
+                        // set appropriate start and end values
+                        let minMaxValues = this.getMinMaxValues(newValue);
+                        if (this.channel.window.start !== minMaxValues.start_val)
+                             this.channel.window.start = minMaxValues.start_val;
+                        if (this.channel.window.end !== minMaxValues.end_val)
+                            this.channel.window.end = minMaxValues.end_val;
+                        // we have to also reset channel color, dimensions
+                        // model and projection
+                        if (newValue === CHANNEL_SETTINGS_MODE.IMPORTED) {
+                            let imgInfo =
+                                this.context.getSelectedImageConfig().image_info;
+                            let impImgData = imgInfo.imported_settings;
+                            // channel color reset
+                            this.channel.color =
+                                impImgData.c[this.index].color;
+                            // z,t dimension reset
+                            imgInfo.dimensions.t = impImgData.t;
+                            imgInfo.dimensions.z = impImgData.z;
+                            // model and projection
+                            imgInfo.model = impImgData.m;
+                            imgInfo.projection = impImgData.p;
+                        }
+                        this.updateUI();
+                    });
+                    // for imported we do this (potentilly) async
+                    if (newValue === CHANNEL_SETTINGS_MODE.IMPORTED)
+                        this.context.getSelectedImageConfig().image_info.
+                            requestImportedData(adjustRange);
+                    else adjustRange();
                 });
     }
 
@@ -269,14 +299,16 @@ export default class ChannelRange  {
                           this.channel.window.end : this.range[1];
                  break;
 
-             case CHANNEL_SETTINGS_MODE.ORIGINAL:
+             case CHANNEL_SETTINGS_MODE.IMPORTED:
              default:
-                 start_min = this.channel.window.min;
-                 start_max = this.channel.window.max-1;
-                 end_min = this.channel.window.min+1;
-                 end_max = this.channel.window.max;
-                 start_val = this.channel.window.min;
-                 end_val = this.channel.window.max;
+                let chan =
+                    this.context.getSelectedImageConfig().image_info.imported_settings.c;
+                 start_min = chan[this.index].window.min;
+                 start_max = chan[this.index].window.end-1;
+                 end_min = chan[this.index].window.start+1;
+                 end_max = chan[this.index].window.max;
+                 start_val = chan[this.index].window.start;
+                 end_val = chan[this.index].window.end;
          }
 
          return {

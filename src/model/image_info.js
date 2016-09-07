@@ -32,6 +32,13 @@ export default class ImageInfo {
     has_scalebar = false;
 
     /**
+     *  rendering settings as imported
+     * @memberof ImageInfo
+     * @type {Object}
+     */
+    imported_settings = null;
+
+    /**
      * dimensions are initialized to defaults
      * @memberof ImageInfo
      * @type {Object}
@@ -89,6 +96,7 @@ export default class ImageInfo {
     unbind() {
         this.dimensions = {t: 0, max_t : 1,z: 0, max_z : 1};
         this.channels = null;
+        this.imported_settings = null;
         this.context = null;
     }
 
@@ -171,6 +179,10 @@ export default class ImageInfo {
                             {config_id: this.config_id,
                                 dataset_id: this.dataset_id,
                             ready: this.ready});
+
+                // fire off the request for the imported data,
+                // can't hurt to have handy when we need it
+                this.requestImportedData();
             },
             error : (error) => {
                 this.ready = false;
@@ -185,6 +197,56 @@ export default class ImageInfo {
         });
     }
 
+    /**
+     * Retrieves the original image data as imported via ajax
+     *
+     * @param {function} callback a callback for success
+     * @memberof ImageInfo
+     */
+    requestImportedData(callback = null) {
+        if (this.imported_settings) {
+            if (typeof callback === 'function') callback();
+            return;
+        }
+
+        let dataType = "json";
+        if (Misc.useJsonp(this.context.server)) dataType += "p";
+
+        let url = this.context.server + "/webgateway/imgData/" +
+         this.image_id + '/?getDefaults=true';
+
+        $.ajax(
+            {url : url,
+            dataType : dataType,
+            cache : false,
+            success : (response) => {
+                if (typeof response !== 'object' || response === null ||
+                    !Misc.isArray(response.channels) ||
+                    typeof response.rdefs !== 'object' ||
+                    response.rdefs === null ||
+                    typeof response.rdefs.projection !== 'string' ||
+                    typeof response.rdefs.model !== 'string') return;
+
+                this.imported_settings = {
+                    c : response.channels,
+                    t: typeof response.rdefs.defaultT === 'number' ?
+                        response.rdefs.defaultT : 0,
+                    z: typeof response.rdefs.defaultZ === 'number' ?
+                        response.rdefs.defaultZ : 0,
+                    p: response.rdefs.projection,
+                    m: response.rdefs.model
+                }
+                if (typeof callback === 'function') callback();
+            }
+        });
+    }
+
+    /**
+     * Collects active channels
+     *
+     * @return {Array.<Object>} the active channel objects in an array
+     * @memberof ImageInfo
+     */
     getActiveChannels() {
         if (this.channels === null) return null;
 
