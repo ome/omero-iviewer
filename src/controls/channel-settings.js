@@ -179,6 +179,24 @@ export default class ChannelSettings extends EventSubscriber {
          this.bind();
      }
 
+     /**
+     * Deals with click event on mode buttons (min/max, full range, imported)
+     * only ever acts in cases where the observer won't act i.e. if mode has
+     * not changed but user wants a reset by clicking again.
+     *
+     * @param {number} mode the chosen mode
+     * @memberof ChannelSettings
+     */
+     onModeChange(mode) {
+            // observer will take care of this
+            if (typeof mode !== 'number' ||
+                mode < 0 || mode > 2 || this.mode !== mode) return;
+
+            // affect change
+            this.mode = null;
+            setTimeout(() => this.mode = mode, 0);
+     }
+
     /**
     * Publish channel active, range & color changes
     *

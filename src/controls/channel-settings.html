@@ -21,10 +21,16 @@
         </div>
         <div class="channel-mode btn-group btn-group-sm" role="group" data-toggle="buttons">
             <button value="0" type="button" class="btn btn-default
-                ${mode === 0 ? ' active' : ''}">Min/Max</button>
+                ${mode === 0 ? ' active' : ''}" click.delegate="onModeChange(0)">
+                Min/Max
+            </button>
             <button value="1" type="button" class="btn btn-default
-                ${mode === 1 ? ' active' : ''}">Full Range</button>
+                ${mode === 1 ? ' active' : ''}" click.delegate="onModeChange(1)">
+                Full Range
+            </button>
             <button value="2" type="button" class="btn btn-default
-                ${mode === 2 ? ' active' : ''}">Imported</button>
+                ${mode === 2 ? ' active' : ''}" click.delegate="onModeChange(2)">
+                Imported
+            </button>
         </div>
 </template>
