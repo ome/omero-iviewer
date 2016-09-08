@@ -1,12 +1,15 @@
 //css and images
 require('../css/images/link.png');
+require('../css/images/close.gif');
 // js
 import {inject,customElement} from 'aurelia-framework';
 import Context from './context';
+import Misc from '../utils/misc';
 import {
     IMAGE_CONFIG_UPDATE,
     IMAGE_VIEWER_SCALEBAR,
     IMAGE_REGIONS_VISIBILITY,
+    VIEWER_IMAGE_SETTINGS,
     EventSubscriber
 } from '../events/events';
 
@@ -74,6 +77,7 @@ export class Header extends EventSubscriber {
      * @param {Object} params the event notification parameters
      */
      onImageConfigChange(params = {}) {
+         if (this.context.getImageConfig(params.config_id) === null) return;
          let image_info =
              this.context.getImageConfig(params.config_id).image_info;
 
@@ -87,6 +91,40 @@ export class Header extends EventSubscriber {
         }
      }
 
+     /**
+      * Displays link to present image (with present settings)
+      *
+      * @memberof Header
+      */
+     displayLink() {
+         if (this.context.getSelectedImageConfig() === null) return;
+         let callback = ((settings) => {
+             let url =
+                Misc.assembleImageLink(
+                    this.context.server,
+                    this.context.getSelectedImageConfig().image_info.image_id,
+                    settings);
+                // show link and register close button
+                $('.link-url button').blur();
+                let linkDiv = $('.link-url div');
+                let linkInput = linkDiv.children('input').get(0);
+                linkInput.value = url;
+                linkDiv.show();
+                linkInput.focus();
+                if (linkInput && linkInput.setSelectionRange)
+                    linkInput.setSelectionRange(0, linkInput.value.length);
+                $('.link-url img').on("click",
+                    () => {linkDiv.hide(); $('.link-url img').off("click")});
+                linkDiv.show();
+         });
+
+         // fetch settings and execute callback once we have them
+         this.context.publish(
+             VIEWER_IMAGE_SETTINGS,
+            {config_id : this.context.selected_config,
+             callback :callback});
+     }
+
     /**
      * Overridden aurelia lifecycle method:
      * called whenever the view is unbound within aurelia
@@ -96,6 +134,5 @@ export class Header extends EventSubscriber {
      */
     unbind() {
         this.unsubscribe();
-        this.context = null;
     }
 }

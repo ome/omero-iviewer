@@ -6,16 +6,14 @@ export const IMAGE_CONFIG_SELECT = "IMAGE_CONFIG_SELECT";
 export const IMAGE_VIEWER_RESIZE = "IMAGE_VIEWER_RESIZE";
 /** whenever the viewer scalebar status (show/hide) is toggled */
 export const IMAGE_VIEWER_SCALEBAR = "IMAGE_VIEWER_SCALEBAR";
-/** whenever the image model (color/grayscale) is toggled */
-export const IMAGE_MODEL_CHANGE = "IMAGE_MODEL_CHANGE";
-/** whenever the image projection (normal,maxint) is changed */
-export const IMAGE_PROJECTION_CHANGE = "IMAGE_PROJECTION_CHANGE";
-/** whenever the image channel range (start,end, color) is changed */
-export const IMAGE_CHANNEL_RANGE_CHANGE = "IMAGE_CHANNEL_RANGE_CHANGE";
+/** whenever the image rendering settings change: channel, model, projection*/
+export const IMAGE_SETTINGS_CHANGE = "IMAGE_SETTINGS_CHANGE";
 /** whenever an image dimension (c,t,z) changes */
 export const IMAGE_DIMENSION_CHANGE = "IMAGE_DIMENSION_CHANGE";
 /** whenever an image/shape visibility changes */
 export const IMAGE_REGIONS_VISIBILITY = "IMAGE_REGIONS_VISIBILITY";
+/** Retrieves the viewer image settings */
+export const VIEWER_IMAGE_SETTINGS = "VIEWER_IMAGE_SETTINGS";
 
 /**
  * Facilitates recurring event subscription

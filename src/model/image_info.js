@@ -97,7 +97,6 @@ export default class ImageInfo {
         this.dimensions = {t: 0, max_t : 1,z: 0, max_z : 1};
         this.channels = null;
         this.imported_settings = null;
-        this.context = null;
     }
 
     /**
@@ -186,6 +185,9 @@ export default class ImageInfo {
             },
             error : (error) => {
                 this.ready = false;
+                // we wanted a new image info => remove old
+                if (typeof this.config_id === 'number')
+                    this.context.removeImageConfig(this.config_id);
                 // send out an image config update event
                 // with a no ready flag to (potentially react to)
                 this.context.publish(

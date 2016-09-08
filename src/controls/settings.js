@@ -4,8 +4,7 @@ import Misc from '../utils/misc';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 
 import {
-    IMAGE_CONFIG_UPDATE, IMAGE_MODEL_CHANGE, IMAGE_CHANNEL_RANGE_CHANGE,
-    EventSubscriber
+    IMAGE_CONFIG_UPDATE, IMAGE_SETTINGS_CHANGE, EventSubscriber
 } from '../events/events';
 
 /**
@@ -72,21 +71,11 @@ export default class Settings extends EventSubscriber {
 
          // change image config and update image info
          this.config_id = params.config_id;
+         if (this.context.getImageConfig(params.config_id) === null) return;
          this.image_info =
              this.context.getImageConfig(params.config_id).image_info;
         this.bind();
      }
-
-     /**
-     * Grayscale flag toggler (event handler)
-     *
-     * @memberof Settings
-     *
-    toggleModel() {
-        this.context.publish(
-            IMAGE_MODEL_CHANGE,
-            { config_id: this.config_id, model: this.image_info.model});
-    }*/
 
     /**
     * Shows and hides the histogram
@@ -145,7 +134,7 @@ export default class Settings extends EventSubscriber {
                     .subscribe(
                         (newValue, oldValue) =>
                             this.context.publish(
-                                IMAGE_MODEL_CHANGE,
+                                IMAGE_SETTINGS_CHANGE,
                                 { config_id: this.config_id, model: newValue}));
     }
 

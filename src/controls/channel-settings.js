@@ -4,8 +4,7 @@ import Misc from '../utils/misc';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 
 import {
-    IMAGE_CONFIG_UPDATE, IMAGE_CHANNEL_RANGE_CHANGE,
-    EventSubscriber
+    IMAGE_CONFIG_UPDATE, IMAGE_SETTINGS_CHANGE, EventSubscriber
 } from '../events/events';
 
 /**
@@ -174,6 +173,7 @@ export default class ChannelSettings extends EventSubscriber {
 
          // change image config and update image info
          this.config_id = params.config_id;
+         if (this.context.getImageConfig(params.config_id) === null) return;
          this.image_info =
              this.context.getImageConfig(params.config_id).image_info;
          this.bind();
@@ -189,7 +189,7 @@ export default class ChannelSettings extends EventSubscriber {
        let c = this.image_info.channels[index];
 
         this.context.publish(
-            IMAGE_CHANNEL_RANGE_CHANGE,
+            IMAGE_SETTINGS_CHANGE,
             { config_id: this.config_id, ranges:
                 [{index: index, start: c.window.start, end: c.window.end,
                      color: c.color, active: c.active}]});

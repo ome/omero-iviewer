@@ -88,6 +88,21 @@ a.ui-button:active,
 .link-url button {
     height: 40px;
 }
+.link-url div {
+    background-color: #F8F8F8;
+    opacity: 1;
+    position: absolute;
+    z-index: 1000;
+    top: 7px;
+    left: 10px;
+    display: none;
+    width: 400px;
+}
+.link-url input {
+    width: 380px;
+    background-color: #FFFFFF;
+    border: 1px solid #E7E7E7;
+}
 
 .fixed-header {
     position: fixed;
@@ -124,6 +139,10 @@ a.ui-button:active,
 .slider-corner {
     max-height: 25px;
     max-width: 30px;
+    margin-top: -20px;
+}
+.slider-corner span {
+    font-size: 14px;
 }
 
 .time-slider {
@@ -132,7 +151,7 @@ a.ui-button:active,
     z-index: 3;
     max-height: 25px;
     margin-left: -30px;
-    padding-left: 50px
+    padding-left: 75px
 }
 
 .plane-slider {
@@ -142,7 +161,7 @@ a.ui-button:active,
     max-width: 25px;
     height:100%;
     padding-top: 15px;
-    padding-bottom: 25px;
+    padding-bottom: 40px;
 }
 
 .sidebar {

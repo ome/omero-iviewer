@@ -10,9 +10,8 @@ import {inject, customElement, bindable} from 'aurelia-framework';
 import {ol3} from '../../libs/ome-viewer-1.0.js';
 import {
     IMAGE_CONFIG_UPDATE, IMAGE_VIEWER_RESIZE, IMAGE_VIEWER_SCALEBAR,
-    IMAGE_DIMENSION_CHANGE, IMAGE_MODEL_CHANGE, IMAGE_CHANNEL_RANGE_CHANGE,
-    IMAGE_REGIONS_VISIBILITY,
-    EventSubscriber
+    IMAGE_DIMENSION_CHANGE, IMAGE_SETTINGS_CHANGE, IMAGE_REGIONS_VISIBILITY,
+    VIEWER_IMAGE_SETTINGS, EventSubscriber
 } from '../events/events';
 
 
@@ -52,12 +51,12 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.showScalebar(params.visible)],
         [IMAGE_DIMENSION_CHANGE,
             (params={}) => this.changeDimension(params)],
-        [IMAGE_MODEL_CHANGE,
-            (params={}) => this.changeModelProjectionOrRange(params)],
-        [IMAGE_CHANNEL_RANGE_CHANGE,
+        [IMAGE_SETTINGS_CHANGE,
             (params={}) => this.changeModelProjectionOrRange(params)],
         [IMAGE_REGIONS_VISIBILITY,
-            (params={}) => this.changeRegionsVisibility(params)]];
+            (params={}) => this.changeRegionsVisibility(params)],
+        [VIEWER_IMAGE_SETTINGS,
+            (params={}) => this.getImageSettings(params)]];
 
     /**
      * @constructor
@@ -237,6 +236,21 @@ export default class Ol3Viewer extends EventSubscriber {
         // this we do only if our image_config has been addressed specifically
         if (!broadcast)
             this.viewer.setRegionsVisibility(params.visible, params.shapes);
+    }
+
+    /**
+     * Queries the present image settings of the viewer
+     *
+     * @param {Object} params the event notification parameters
+     * @memberof Ol3Viewer
+     */
+    getImageSettings(params = {}) {
+        // we ignore notifications that don't concern us
+        if (params.config_id !== this.config_id ||
+            typeof params.callback !== 'function') return;
+
+        params.callback(this.viewer.captureViewParameters());
+        this.viewer.redraw();
     }
 
     /**

@@ -173,6 +173,7 @@ export default class DimensionSlider extends EventSubscriber {
          // change image config and (re)bind
          // as well as update the slider (UI)
          this.config_id = params.config_id;
+         if (this.context.getImageConfig(params.config_id) === null) return;
          this.image_info =
              this.context.getImageConfig(params.config_id).image_info;
          this.bind();
@@ -188,10 +189,15 @@ export default class DimensionSlider extends EventSubscriber {
      * @param {boolean} slider_interaction true if change was affected by UI
      */
     onChange(value, slider_interaction = false) {
+        value = parseInt(value);
         // no need to change for a the same value
         if (slider_interaction &&
             value === this.image_info.dimensions[this.dim]) return;
-        else if (slider_interaction) {
+
+        $('.slider-corner .' + this.dim).text(
+            this.dim.toUpperCase() + ":" + (value+1) + "/" +
+            this.image_info.dimensions['max_' + this.dim]);
+        if (slider_interaction) {
             // this will trigger the observer who does the rest
             this.image_info.dimensions[this.dim] = parseInt(value);
             return;
@@ -225,7 +231,10 @@ export default class DimensionSlider extends EventSubscriber {
             change: (event, ui) => this.onChange(ui.value,
                 event.originalEvent ? true : false)
         });
-
+        $('.slider-corner .' + this.dim).text(
+            this.dim.toUpperCase() + ":" +
+            (this.image_info.dimensions[this.dim]+1) + "/" +
+            this.image_info.dimensions['max_' + this.dim]);
         this.attached();
         this.show();
     }

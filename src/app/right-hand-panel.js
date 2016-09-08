@@ -50,15 +50,4 @@ export class RightHandPanel {
     detached() {
         $(this.element).find("a").unbind("click");
     }
-
-    /**
-     * Overridden aurelia lifecycle method:
-     * called whenever the view is unbound within aurelia
-     * in other words a 'destruction' hook that happens after 'detached'
-     *
-     * @memberof RightHandPanel
-     */
-    unbind() {
-        this.context = null;
-    }
 }

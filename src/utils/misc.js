@@ -155,4 +155,66 @@ export default class Misc {
 
         return ret;
     }
+
+    /**
+     * Assembles link url from the image settings for openening with the viewer
+     *
+     * @static
+     * @param {string} server the server
+     * @param {number} image_id the image_idr
+     * @param {Object} settings the image settings
+     * @return {string} the url representing a link to the image
+     */
+    static assembleImageLink(server="", image_id, settings={}) {
+        // we have no server => we are relative
+        // therefore we are going to have to use the hostname
+        // at a minimum (localhost) or protocol plus hostname
+        if (typeof server !== 'string' || server.length === 0) {
+            // if we have the navigation info => use it
+            let prot = null;
+            if (window && window.location && window.location.protocol)
+                prot = window.location.protocol + "//";
+            server = "";
+            if (window && window.location && window.location.hostname) {
+                let hostname = window.location.hostname;
+                if (hostname !== 'localhost' && hostname !== '127.0.0.1')
+                    server = prot + hostname;
+                else server = hostname;
+            }
+        }
+        
+        // the base url
+        let url = server + "/webclient/img_detail/" + image_id + '/?';
+
+        // append channel info
+        if (Misc.isArray(settings.channels)) {
+            url += "c="
+            let count = 0;
+            settings.channels.map((chan) => {
+                if (count !== 0) url += ",";
+                url += (chan.active ? "" : "-") + (count+1) + "|" +
+                    chan.start + ":" + chan.end + "$" + chan.color;
+                count++;
+            });
+            url+= "&";
+        }
+        // append time and plane
+        if (typeof settings.plane === 'number')
+            url += "z=" + settings.plane + "&";
+        if (typeof settings.time === 'number')
+            url += "t=" + settings.time + "&";
+        // append projection and model
+        if (typeof settings.projection === 'string')
+            url += "p=" + settings.projection + "&";
+        if (typeof settings.model === 'string')
+            url += "m=" + settings.model + "&";
+        // append resolution and and center
+        if (typeof settings.resolution === 'number')
+            url += "zm=" + settings.resolution + "&";
+        if (Misc.isArray(settings.center))
+            url += "x=" + settings.center[0] + "&y=" + settings.center[1] + "&";
+
+        // take off trailing & for last param
+        return url.substring(0, url.length-1);
+    }
 }

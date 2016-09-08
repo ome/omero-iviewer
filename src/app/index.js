@@ -51,15 +51,4 @@ export class Index  {
     detached() {
         window.onresize = null;
     }
-
-    /**
-     * Overridden aurelia lifecycle method:
-     * called whenever the view is unbound within aurelia
-     * in other words a 'destruction' hook that happens after 'detached'
-     *
-     * @memberof Index
-     */
-    unbind() {
-        this.context = null;
-    }
 }
