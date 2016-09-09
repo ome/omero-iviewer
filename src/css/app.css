@@ -144,6 +144,12 @@ a.ui-button:active,
 .slider-corner span {
     font-size: 14px;
 }
+.slider-value {
+    position: relative;
+    font-size: 12px;
+    background-color: #FFFFFF;
+    display: none;
+}
 
 .time-slider {
     visibility: hidden;

@@ -227,7 +227,23 @@ export default class DimensionSlider extends EventSubscriber {
         $(this.elSelector).slider({
             orientation: this.dim === 'z' ? "vertical" : "horizontal",
             min: 0, max: this.image_info.dimensions['max_' + this.dim] - 1 ,
-            step: 1, value: this.image_info.dimensions[this.dim],
+            step: 0.1, value: this.image_info.dimensions[this.dim],
+            slide: (event, ui) => {
+                let sliderValueSpan = $(this.elSelector + ' .slider-value');
+                sliderValueSpan.text(
+                    this.dim.toUpperCase() + ":" + Math.round(ui.value+1));
+                if (this.dim === 'z')
+                    sliderValueSpan.css({left: "15px",top: "50%"})
+                else sliderValueSpan.css({left: "50%", top: "-20px"})
+                sliderValueSpan.show();
+            },
+            stop: (event, ui) => {
+                let sliderValueSpan = $(this.elSelector + ' .slider-value');
+                sliderValueSpan.text("");
+                sliderValueSpan.hide();
+                $(this.elSelector).slider('value',  Math.round(ui.value));
+
+            },
             change: (event, ui) => this.onChange(ui.value,
                 event.originalEvent ? true : false)
         });
