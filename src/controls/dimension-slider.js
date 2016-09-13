@@ -242,7 +242,6 @@ export default class DimensionSlider extends EventSubscriber {
                 sliderValueSpan.text("");
                 sliderValueSpan.hide();
                 $(this.elSelector).slider('value',  Math.round(ui.value));
-
             },
             change: (event, ui) => this.onChange(ui.value,
                 event.originalEvent ? true : false)

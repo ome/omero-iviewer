@@ -1,18 +1,34 @@
 import {noView} from 'aurelia-framework';
 import ImageInfo from '../model/image_info';
 import RegionsInfo from '../model/regions_info';
+import History from './history';
 
 /**
  * Holds the combined data/model that is relevant to working with an image:
  * ImageInfo and RegionsInfo
  */
 @noView
-export default class ImageConfig {
+export default class ImageConfig extends History {
+    /**
+     * revision for history
+     * @memberof ImageConfig
+     * @type {ImageInfo}
+     */
+    old_revision = 0;
+
+    /**
+     * revision for history
+     * @memberof ImageConfig
+     * @type {number}
+     */
+    revision = 0;
+
     /**
      * @memberof ImageConfig
      * @type {ImageInfo}
      */
     image_info = null;
+
     /**
      * @memberof ImageConfig
      * @type {RegionsInfo}
@@ -25,6 +41,7 @@ export default class ImageConfig {
      * @param {number} image_id the image id to be queried
      */
     constructor(context, image_id) {
+        super(); // for history
         // for now this should suffice, especially given js 1 threaded nature
         this.id = new Date().getTime();
         // go create the data objects for an image and its associated region
@@ -53,4 +70,22 @@ export default class ImageConfig {
         this.image_info.unbind();
         this.regions_info.unbind();
     }
+
+    /**
+     * Returns whether the revisions align or there has been a change
+     * @memberof ImageConfig
+     * @return {boolean} true if the revisions changed, i.e. if we need to save to history
+     */
+    hasChanged() {
+        return this.old_revision !== this.revision;
+    }
+
+    /**
+     * Marks a change, i.e. makes revision differ from old revision
+     * @memberof ImageConfig
+     */
+    changed() {
+        this.revision++;
+    }
+
 }

@@ -1,7 +1,7 @@
 <template>
         <require from="./channel-range"></require>
 
-        <div repeat.for="channel of image_info.channels"
+        <div repeat.for="channel of image_config.image_info.channels"
             class="col-xs-12 row">
 
             <button type="button"
@@ -15,8 +15,8 @@
 
             <channel-range class="channel-range"
                 index.bind="$index"
-                channel.bind="channel" mode.bind="mode"
-                range.bind="image_info.range">
+                channel.bind="channel"  revision.bind="image_config.revision" mode.bind="mode"  
+                range.bind="image_config.image_info.range">
             </channel-range>
         </div>
         <div class="channel-mode btn-group btn-group-sm" role="group" data-toggle="buttons">

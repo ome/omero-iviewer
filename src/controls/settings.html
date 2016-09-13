@@ -4,14 +4,35 @@
 
     <div class="row save-settings">
         <button type="button"
-        click.delegate="saveImageSettings()"
-        class="btn btn-default btn-sm">Save</button>
+        disabled="${image_config &&
+            (image_config.history.length === 0 || image_config.historyPointer < 0) ?
+             'disabled': ''}" class="${image_config &&
+            (image_config.history.length === 0 || image_config.historyPointer < 0) ?
+                'disabled-color': ''}"
+        click.delegate="saveImageSettings()">Save</button>
+    </div>
+
+    <div class="row history">
+        <button type="button" click.delegate="undo()"
+            disabled="${image_config && image_config.history.length > 0 &&
+                image_config.historyPointer >= 0 ? '' : 'disabled'}"
+            class="${image_config && image_config.history.length > 0 &&
+                image_config.historyPointer >= 0 ? '' : 'disabled-color'}">Undo</button>
+        <button type="button" click.delegate="redo()"
+            disabled="${image_config && image_config.history.length > 0 &&
+                image_config.historyPointer < image_config.history.length-1 ? '' :'disabled'}"
+            class="${image_config && image_config.history.length > 0 &&
+                image_config.historyPointer < image_config.history.length-1 ?
+                 '' : 'disabled-color'}">Redo</button>
+        <button type="button" click.delegate="copy()">Copy</button>
+        <button type="button" click.delegate="paste()">Paste</button>
     </div>
 
     <div class="row checkbox checkbox-settings">
         <div class="col-xs-6">
             <label><input type="checkbox"
-               checked.bind="image_info.model | imageModel">Grayscale</label>
+               checked.bind="image_config.image_info.model | imageModel"
+               change.delegate="onModelChange($event.target.checked)">Grayscale</label>
         </div>
         <div class="col-xs-6">
             <label><input type="checkbox"

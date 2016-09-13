@@ -23,11 +23,11 @@ export default class Settings extends EventSubscriber {
     @bindable config_id = null;
 
     /**
-     * a reference to the image info
+     * a reference to the image config
      * @memberof Settings
-     * @type {ImageInfo}
+     * @type {ImageConfig}
      */
-    image_info = null;
+    image_config = null;
 
     /**
      * events we subscribe to
@@ -72,8 +72,8 @@ export default class Settings extends EventSubscriber {
          // change image config and update image info
          this.config_id = params.config_id;
          if (this.context.getImageConfig(params.config_id) === null) return;
-         this.image_info =
-             this.context.getImageConfig(params.config_id).image_info;
+         this.image_config =
+             this.context.getImageConfig(params.config_id);
         this.bind();
      }
 
@@ -84,6 +84,19 @@ export default class Settings extends EventSubscriber {
     */
     toggleHistogram() {
         alert("Not implemented yet!");
+    }
+
+    /**
+    * on model change handler
+    *
+    * @memberof Settings
+    */
+    onModelChange(flag) {
+        // add history record
+        this.image_config.addHistory({
+            prop: ['image_info', 'model'],
+            old_val : !flag ? 'greyscale' : 'color',
+            new_val: flag ? 'greyscale' : 'color'});
     }
 
     /**
@@ -98,15 +111,16 @@ export default class Settings extends EventSubscriber {
             return;
         }
 
+        let image_info = this.image_config.image_info;
         let url =
             this.context.server + "/webgateway/saveImgRDef/" +
-            this.image_info.image_id + '/?m=' + this.image_info.model[0] +
-            "&p=" + this.image_info.projection +
-            "&t=" + (this.image_info.dimensions.t+1) +
-            "&z=" + (this.image_info.dimensions.z+1) +
+            image_info.image_id + '/?m=' + image_info.model[0] +
+            "&p=" + image_info.projection +
+            "&t=" + (image_info.dimensions.t+1) +
+            "&z=" + (image_info.dimensions.z+1) +
             "&q=0.9&ia=0&c=";
         let i=0;
-        this.image_info.channels.map(
+        image_info.channels.map(
             (c) =>
                 url+= (i !== 0 ? ',' : '') + (!c.active ? '-' : '') + (++i) +
                  "|" + c.window.start + ":" + c.window.end + "$" + c.color
@@ -115,9 +129,51 @@ export default class Settings extends EventSubscriber {
         $.ajax(
             {url : url,
              method: 'POST',
-            success : (response) => {},
+            success : (response) => this.image_config.resetHistory(),
             error : (error) => {}
         });
+    }
+
+    /**
+    * Undoes the last change
+    *
+    * @memberof Settings
+    */
+    undo() {
+        if (this.image_config) {
+            this.image_config.undoHistory();
+            this.image_config.changed();
+        }
+    }
+
+    /**
+    * Redoes the last change
+    *
+    * @memberof Settings
+    */
+    redo() {
+        if (this.image_config) {
+            this.image_config.redoHistory();
+            this.image_config.changed();
+        }
+    }
+
+    /**
+    * Copies the rendering settings
+    *
+    * @memberof Settings
+    */
+    copy() {
+        alert("not implemented yet");
+    }
+
+    /**
+    * Pastes the rendering settings
+    *
+    * @memberof Settings
+    */
+    paste() {
+        alert("not implemented yet");
     }
 
     /**
@@ -126,11 +182,12 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     registerObserver() {
-        if (this.image_info === null) return;
+        if (this.image_config === null ||
+            this.image_config.image_info === null) return;
         this.unregisterObserver();
         this.observer =
             this.bindingEngine.propertyObserver(
-                this.image_info, 'model')
+                this.image_config.image_info, 'model')
                     .subscribe(
                         (newValue, oldValue) =>
                             this.context.publish(
@@ -160,6 +217,6 @@ export default class Settings extends EventSubscriber {
     unbind() {
         this.unregisterObserver();
         this.unsubscribe()
-        this.image_info = null;
+        this.image_config = null;
     }
 }

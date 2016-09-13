@@ -43,6 +43,20 @@ export default class ChannelRange  {
     @bindable mode = null;
 
     /**
+     * the revision count (used for history)
+     * @memberof ChannelRange
+     * @type {number}
+     */
+    @bindable revision = 0;
+
+    /**
+     * property observers
+     * @memberof ChannelRange
+     * @type {Array.<object>}
+     */
+    observers = [];
+
+    /**
      * the absolute channel range limits
      * @memberof ChannelRange
      * @type {Array.<number>}
@@ -74,19 +88,18 @@ export default class ChannelRange  {
      * @memberof ChannelRange
      */
     bind() {
-        this.registerObserver();
+        this.registerObservers();
         this.updateUI();
 
     }
 
     /**
-     * Registers property observer for mode changes
-     *
+     * Registers property observers
      * @memberof ChannelRange
      */
-    registerObserver() {
-        this.unregisterObserver();
-        this.observer =
+    registerObservers() {
+        this.unregisterObservers();
+        this.observers.push(
             this.bindingEngine.propertyObserver(this, 'mode')
                 .subscribe((newValue, oldValue) => {
                     let adjustRange = (() => {
@@ -119,18 +132,23 @@ export default class ChannelRange  {
                         this.context.getSelectedImageConfig().image_info.
                             requestImportedData(adjustRange);
                     else adjustRange();
-                });
+                }));
+        this.observers.push(
+            this.bindingEngine.propertyObserver(this, 'revision')
+                .subscribe((newValue, oldValue) => {
+                    this.initial_values = true;
+                    this.updateUI();}));
     }
 
     /**
-     * Unregisters the observer for mode changes
+     * Unregisters the observers
      *
      * @memberof ChannelRange
      */
-    unregisterObserver() {
-        if (this.observer) {
-            this.observer.dispose();
-            this.observer = null;
+    unregisterObservers() {
+        if (this.observers) {
+            this.observers.map((obs) => obs.dispose());
+            this.observers = [];
         }
     }
 
@@ -176,54 +194,54 @@ export default class ChannelRange  {
       * @memberof ChannelRange
       */
      updateUI() {
-     // just in case
-     this.detached();
+         // just in case
+         this.detached();
 
-     if (this.channel === null) return;
+         if (this.channel === null) return;
 
-    let minMaxValues = this.getMinMaxValues();
-     // channel start
-     $(this.element).find(".channel-start").spinner(
-         {min: minMaxValues.start_min, max: minMaxValues.start_max});
-     $(this.element).find(".channel-start").on("input spinstop",
-        (event) => this.onRangeChange(event.target.value, true));
-    $(this.element).find(".channel-start").spinner(
-        "value", minMaxValues.start_val);
+        let minMaxValues = this.getMinMaxValues();
+         // channel start
+         $(this.element).find(".channel-start").spinner(
+             {min: minMaxValues.start_min, max: minMaxValues.start_max});
+         $(this.element).find(".channel-start").on("input spinstop",
+            (event, ui) => this.onRangeChange(event.target.value, true));
+        $(this.element).find(".channel-start").spinner(
+            "value", minMaxValues.start_val);
 
-    // channel range slider
-    $(this.element).find(".channel-slider").slider(
-        {min: minMaxValues.start_min, max: minMaxValues.end_max,
-            range: true,
-            values: [minMaxValues.start_val, minMaxValues.end_val],
-            change: (event, ui) =>
-                this.onRangeChangeBoth(ui.values,
-                    event.originalEvent ? true : false),
-            slide: (event,ui) => {
-                if (ui.values[0] >= ui.values[1]) return false;}
-    });
-    $(this.element).find(".channel-slider").css(
-        "background", "white");
-    $(this.element).find(".channel-slider").find(".ui-slider-range").css(
-        "background", "#" + this.channel.color);
+        // channel range slider
+        $(this.element).find(".channel-slider").slider(
+            {min: minMaxValues.start_min, max: minMaxValues.end_max,
+                range: true,
+                values: [minMaxValues.start_val, minMaxValues.end_val],
+                change: (event, ui) =>
+                    this.onRangeChangeBoth(ui.values,
+                        event.originalEvent ? true : false),
+                slide: (event,ui) => {
+                    if (ui.values[0] >= ui.values[1]) return false;}
+        });
+        $(this.element).find(".channel-slider").css(
+            "background", "white");
+        $(this.element).find(".channel-slider").find(".ui-slider-range").css(
+            "background", "#" + this.channel.color);
 
-    //channel end
-    $(this.element).find(".channel-end").spinner(
-        {min: minMaxValues.end_min, max: minMaxValues.end_max});
-    $(this.element).find(".channel-end").on("input spinstop",
-        (event) => this.onRangeChange(event.target.value));
-   $(this.element).find(".channel-end").spinner(
-       "value",minMaxValues.end_val);
+        //channel end
+        $(this.element).find(".channel-end").spinner(
+            {min: minMaxValues.end_min, max: minMaxValues.end_max});
+        $(this.element).find(".channel-end").on("input spinstop",
+            (event) => this.onRangeChange(event.target.value));
+       $(this.element).find(".channel-end").spinner(
+           "value",minMaxValues.end_val);
 
-   //channel end
-   $(this.element).find(".channel-color input").spectrum({
-        color: "#" + this.channel.color,
-        showInput: true,
-        className: "full-spectrum",
-        showInitial: true,
-        preferredFormat: "hex",
-        appendTo: $(this.element),
-        change: (color) => this.onColorChange(color.toHexString())});
-    this.initial_values = false; // reset flag
+       //channel end
+       $(this.element).find(".channel-color input").spectrum({
+            color: "#" + this.channel.color,
+            showInput: true,
+            className: "full-spectrum",
+            showInitial: true,
+            preferredFormat: "hex",
+            appendTo: $(this.element),
+            change: (color) => this.onColorChange(color.toHexString())});
+        this.initial_values = false; // reset flag
 }
 
      /**
@@ -234,9 +252,14 @@ export default class ChannelRange  {
      * @memberof ChannelRange
      */
      onColorChange(value) {
+         let oldValue = this.channel.color;
          this.channel.color = value.substring(1);
          $(this.element).find(".channel-slider").find(".ui-slider-range").css(
              "background", "#" + this.channel.color);
+         // add history record
+         this.context.getSelectedImageConfig().addHistory({
+             prop: ['image_info', 'channels', '' + this.index,'color'],
+             old_val : oldValue, new_val: this.channel.color});
      }
 
      /**
@@ -356,8 +379,14 @@ export default class ChannelRange  {
                   "border-color", "rgb(170,170,170)");
               if ((is_start && value === this.channel.window.start) ||
                 (!is_start && value === this.channel.window.end)) return;
-             if (is_start) this.channel.window.start = value;
-             else this.channel.window.end = value;
+            let oldValue = null;
+             if (is_start) {
+                 oldValue = this.channel.window.start;
+                 this.channel.window.start = value;
+             } else {
+                 oldValue = this.channel.window.end;
+                 this.channel.window.end = value;
+             }
              try {
                  $(this.element).find(clazz).spinner("value", value);
                  if (is_start)
@@ -367,6 +396,12 @@ export default class ChannelRange  {
                     $(this.element).find(".channel-slider").slider(
                         "option", "values",
                         [this.channel.window.start, this.channel.window.end]);
+                    // add history record
+                    this.context.getSelectedImageConfig().addHistory({
+                        prop:
+                            ['image_info', 'channels', '' + this.index,
+                            'window', is_start ? 'start' : 'end'],
+                            old_val : oldValue, new_val: value});
              } catch (ignored) {}
          } else $(this.element).find(clazz).parent().css("border-color", "rgb(255,0,0)");
      }

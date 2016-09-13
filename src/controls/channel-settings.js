@@ -32,11 +32,11 @@ export default class ChannelSettings extends EventSubscriber {
     @bindable config_id = null;
 
     /**
-     * a reference to the image info
+     * a reference to the image config
      * @memberof ChannelSettings
-     * @type {ImageInfo}
+     * @type {ImageConfig}
      */
-    image_info = null;
+    image_config = null;
 
     /**
      * the present channel settings mode
@@ -99,11 +99,12 @@ export default class ChannelSettings extends EventSubscriber {
         $('.channel-mode').children().on("click",
             (event) => this.changeChannelMode(event.target.value));
 
-        if (this.image_info === null) return;
+        if (this.image_config === null ||
+                this.image_config.image_info === null) return;
         // we select the mode based on the channel range values
         // if they are outside min/max, we need the full range view
         let needsFullRangeMode = false;
-        this.image_info.channels.map((c) => {
+        this.image_config.image_info.channels.map((c) => {
             if (c.window.start < c.window.min ||
                     c.window.end > c.window.max)
                 needsFullRangeMode = true;
@@ -142,21 +143,24 @@ export default class ChannelSettings extends EventSubscriber {
      * @memberof ChannelSettings
      */
     registerObservers() {
-        if (this.image_info === null ||
-            !Misc.isArray(this.image_info.channels)) return;
+        if (this.image_config === null ||
+            this.image_config.image_info === null ||
+            !Misc.isArray(this.image_config.image_info.channels)) return;
         this.unregisterObservers();
-        for (let i=0;i<this.image_info.channels.length;i++)
+        let image_info = this.image_config.image_info;
+        for (let i=0;i<image_info.channels.length;i++)
             for (let p=0;p<this.observedProperties.length;p++) {
                 let obsProp = this.observedProperties[p];
 
                 ((index, obsObj, prop) =>
                     this.observers.push(
                         this.bindingEngine.propertyObserver(
-                            obsObj ? this.image_info.channels[index][obsObj] :
-                            this.image_info.channels[index], prop)
+                            obsObj ? image_info.channels[index][obsObj] :
+                            image_info.channels[index], prop)
                             .subscribe(
-                                (newValue, oldValue) => {
-                                    this.propagateChannelChanges(index);}))
+                                (newValue, oldValue) =>
+                                    // propagate channel changes
+                                    this.propagateChannelChanges(index)))
                 )(i, obsProp.obj, obsProp.prop);
             }
     }
@@ -174,8 +178,7 @@ export default class ChannelSettings extends EventSubscriber {
          // change image config and update image info
          this.config_id = params.config_id;
          if (this.context.getImageConfig(params.config_id) === null) return;
-         this.image_info =
-             this.context.getImageConfig(params.config_id).image_info;
+         this.image_config = this.context.getImageConfig(params.config_id);
          this.bind();
      }
 
@@ -204,7 +207,7 @@ export default class ChannelSettings extends EventSubscriber {
     * @memberof ChannelSettings
     */
    propagateChannelChanges(index) {
-       let c = this.image_info.channels[index];
+       let c = this.image_config.image_info.channels[index];
 
         this.context.publish(
             IMAGE_SETTINGS_CHANGE,
@@ -220,10 +223,15 @@ export default class ChannelSettings extends EventSubscriber {
     * @memberof ChannelSettings
     */
    toggleChannel(index) {
-       if (this.image_info.channels[index].active)
-            this.image_info.channels[index].active = false;
+       if (this.image_config.image_info.channels[index].active)
+            this.image_config.image_info.channels[index].active = false;
         else
-            this.image_info.channels[index].active = true;
+            this.image_config.image_info.channels[index].active = true;
+        // add history record
+        this.image_config.addHistory({
+            prop: ['image_info', 'channels', '' + index, 'active'],
+            old_val : !this.image_config.image_info.channels[index].active,
+            new_val: this.image_config.image_info.channels[index].active});
     }
 
     /**
@@ -236,6 +244,6 @@ export default class ChannelSettings extends EventSubscriber {
     unbind() {
         this.unsubscribe()
         this.unregisterObservers();
-        this.image_info = null;
+        this.image_config = null;
     }
 }
