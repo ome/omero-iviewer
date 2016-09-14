@@ -2,7 +2,7 @@
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
-import {CHANNEL_SETTINGS_MODE} from '../model/image_info';
+import {CHANNEL_SETTINGS_MODE} from '../utils/constants';
 import {
     IMAGE_CONFIG_UPDATE, IMAGE_SETTINGS_CHANGE, EventSubscriber
 } from '../events/events';

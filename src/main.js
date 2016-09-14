@@ -3,7 +3,7 @@ import {EventAggregator} from 'aurelia-event-aggregator';
 import Context from './app/context';
 import Index from './app/index';
 import Misc from './utils/misc';
-import {REQUEST_PARAMS} from './utils/misc';
+import {REQUEST_PARAMS} from './utils/constants';
 
 bootstrap(function(aurelia) {
   aurelia.use

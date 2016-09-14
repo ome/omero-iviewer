@@ -5,7 +5,7 @@ require('../../node_modules/spectrum-colorpicker/spectrum.css');
 // js
 import Context from '../app/context';
 import Misc from '../utils/misc';
-import {CHANNEL_SETTINGS_MODE} from '../model/image_info';
+import {CHANNEL_SETTINGS_MODE} from '../utils/constants';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {spinner} from 'jquery-ui/ui/widgets/spinner';
 import {slider} from 'jquery-ui/ui/widgets/slider';

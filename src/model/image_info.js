@@ -1,17 +1,7 @@
 import {noView} from 'aurelia-framework';
 import {IMAGE_CONFIG_UPDATE} from '../events/events';
 import Misc from '../utils/misc';
-import {REQUEST_PARAMS} from '../utils/misc'
-
-/**
- * the possible modes of channel settings
- * @type {Object}
- */
-export const CHANNEL_SETTINGS_MODE = {
-    MIN_MAX : 0,
-    FULL_RANGE : 1,
-    IMPORTED : 2
-}
+import {REQUEST_PARAMS, CHANNEL_SETTINGS_MODE} from '../utils/constants'
 
 /**
  * Holds basic image information required for viewing:
@@ -238,9 +228,11 @@ export default class ImageInfo {
         if (this.dimensions.z < 0) this.dimensions.z = 0;
         if (this.dimensions.z >= this.dimensions.max_z)
             this.dimensions.z = this.dimensions.max_z-1;
-        if (this.model !== 'color' && this.model !== 'greyscale')
+        let lowerCaseModel = this.model.toLowerCase();
+        if (lowerCaseModel !== 'color' && lowerCaseModel !== 'greyscale')
             this.model = 'greyscale';
-        if (this.projection !== 'normal' && this.projection !== 'intmax')
+        let lowerCaseProjection = this.projection.toLowerCase();
+        if (lowerCaseProjection !== 'normal' && lowerCaseProjection !== 'intmax')
             this.projection = 'normal';
     }
 

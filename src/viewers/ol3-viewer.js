@@ -4,7 +4,6 @@ require('../css/ol3-viewer.css');
 // dependencies
 import Context from '../app/context';
 import Misc from '../utils/misc';
-import {REQUEST_PARAMS} from '../utils/misc'
 import Ui from '../utils/ui';
 import {inject, customElement, bindable} from 'aurelia-framework';
 import {ol3} from '../../libs/ome-viewer-1.0.js';

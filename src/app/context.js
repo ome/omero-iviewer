@@ -2,7 +2,7 @@ import {noView} from 'aurelia-framework';
 import {EventAggregator} from 'aurelia-event-aggregator';
 import {IMAGE_CONFIG_SELECT} from '../events/events';
 import ImageConfig from '../model/image_config';
-import {REQUEST_PARAMS} from '../utils/misc'
+import {REQUEST_PARAMS} from '../utils/constants'
 
 /**
  * Provides all the information to the application that it shares
