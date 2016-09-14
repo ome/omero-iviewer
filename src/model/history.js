@@ -39,38 +39,47 @@ export default class History {
      * actual instance, we fail silently or emit a debug message if the debug flag
      * is set to true
      *
-     * @param {Object} action an action object (see default value)
+     * @param {Object|Array.<Object>} record an object (see default value) or array of objects
      * @memberof History
      */
-     addHistory(action = {prop: ['null'], old_val: null, new_val: null, type: 'object'}) {
-         // we conduct some preliminary checks to see if we received
-         // what was expected and mandatory
-         if (typeof action !== 'object' || action === null ||
-                !Misc.isArray(action.prop) || action.prop.length === 0) {
-            if (this.debug) console.debug(
-                "History.record requires an action object pointing to a property!");
-            return;
-         }
+     addHistory(record =
+            {scope: null, prop: ['null'], old_val: null, new_val: null, type: 'object'}) {
+         let entries = [];
+         if (Misc.isArray(record)) entries = record;
+         else entries.push(record);
+         if (entries.length === 0) return;
 
-         // check old_val, new_val in regards to its type
-         let t =
-            typeof action.type === 'string' && action.type.length > 0 ?
-                action.type : 'undefined'
-         let actT = typeof action.old_val;
-         if ((t !== 'undefined' && actT !== t) ||
-                t === 'undefined' && actT === t) {
-            if (this.debug) console.debug(
-                "History.record requires an action object with old_val and new_val ");
-            return;
-         }
+         // loop over entries
+        entries.map((action) => {
+             // we conduct some preliminary checks to see if we received
+             // what was expected and mandatory
+             if (typeof action !== 'object' || action === null ||
+                    !Misc.isArray(action.prop) || action.prop.length === 0) {
+                if (this.debug) console.debug(
+                    "History.record requires an action object pointing to a property!");
+                return;
+             }
 
-         if (!this.checkProperty(action.prop)) {
-             if (this.debug) console.debug(
-                 "History.record: given property does not exist!");
-             return;
-         }
+             // check old_val, new_val in regards to its type
+             let t =
+                typeof action.type === 'string' && action.type.length > 0 ?
+                    action.type : 'undefined'
+             let actT = typeof action.old_val;
+             if ((t !== 'undefined' && actT !== t) ||
+                    t === 'undefined' && actT === t) {
+                if (this.debug) console.debug(
+                    "History.record requires an action object with old_val and new_val ");
+                return;
+             }
 
-         this.history.push(action);
+             if (!this.checkProperty(action.prop, action.scope)) {
+                 if (this.debug) console.debug(
+                     "History.record: given property does not exist!");
+                 return;
+             }
+         });
+         // add entries now
+         this.history.push(entries);
          this.historyPointer = this.history.length-1;
      }
 
@@ -80,14 +89,17 @@ export default class History {
      * it can be used to set the value of the property for instance (or do other stuff)
      * @private
      * @param {Array.<string>} path an array of strings determining the 'path' to the property
+     * @param {Object=} scope an optional scope, otherwise this is assumed
+     * @param {function=} callback an optional callback function
      *
      * @memberof History
      * @return {boolean} true if the property was found, false otherwise
     */
-    checkProperty(path = [], callback = null) {
+    checkProperty(path = [], scope = null, callback = null) {
         if (!Misc.isArray(path) || path.length === 0) return false;
 
-        let accPath = this;
+        scope = scope ? scope : this;
+        let accPath = scope;
         let lastBit = null;
         for (let i=0;i<path.length;i++) {
             // path is empty or not a string
@@ -97,7 +109,7 @@ export default class History {
             if (typeof accPath[path[i]] === 'undefined') return false;
             lastBit = path[i];
         }
-        if (typeof callback === 'function') callback(accPath, lastBit);
+        if (typeof callback === 'function') callback.call(scope, accPath, lastBit);
         return true;
     }
 
@@ -108,12 +120,13 @@ export default class History {
     undoHistory() {
         if (!this.canUndo()) return;
 
-        let action = this.history[this.historyPointer];
-        let undo = (path, lastBit) => path[lastBit] = action.old_val;
-        if (!this.checkProperty(action.prop, undo)) {
-            if (this.debug) console.debug("Failed to undo history");
-            return;
-        }
+        let entries = this.history[this.historyPointer];
+        entries.map(action => {
+            let undo = (path, lastBit) => path[lastBit] = action.old_val;
+            if (!this.checkProperty(action.prop, action.scope, undo)) {
+                if (this.debug) console.debug("Failed to undo history");
+                return;
+        }});
         //adjust pointer
         this.historyPointer--;
     }
@@ -125,12 +138,13 @@ export default class History {
      redoHistory() {
          if (!this.canRedo()) return;
 
-         let action = this.history[this.historyPointer+1];
-         let redo = (path, lastBit) => path[lastBit] = action.new_val;
-         if (!this.checkProperty(action.prop, redo)) {
-             if (this.debug) console.debug("Failed to redo history");
-             return;
-         }
+         let entries = this.history[this.historyPointer+1];
+         entries.map(action => {
+             let redo = (path, lastBit) => path[lastBit] = action.new_val;
+             if (!this.checkProperty(action.prop, action.scope, redo)) {
+                 if (this.debug) console.debug("Failed to redo history");
+                 return;
+         }});
          //adjust pointer
          this.historyPointer++;
      }

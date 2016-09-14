@@ -96,7 +96,8 @@ export default class Settings extends EventSubscriber {
         this.image_config.addHistory({
             prop: ['image_info', 'model'],
             old_val : !flag ? 'greyscale' : 'color',
-            new_val: flag ? 'greyscale' : 'color'});
+            new_val: flag ? 'greyscale' : 'color',
+            type: 'string'});
     }
 
     /**

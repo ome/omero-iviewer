@@ -19,11 +19,11 @@ import {
 @inject(Context, Element, BindingEngine)
 export default class DimensionSlider extends EventSubscriber {
     /**
-     * the image we belong to
+     * the image config we belong to
      * @memberof DimensionSlider
-     * @type {ImageInfo}
+     * @type {ImageConfig}
      */
-    image_info = null;
+    image_config = null;
 
     /**
      * a selector to conveniently access the dimension element slider
@@ -147,14 +147,15 @@ export default class DimensionSlider extends EventSubscriber {
      * @memberof DimensionSlider
      */
     registerObserver() {
-        if (this.image_info === null) return;
+        if (this.image_config === null ||
+                this.image_config.image_info === null) return;
         this.unregisterObserver();
         // we do this in a bit of a roundabout way by setting the slider value
         // which in turn triggers the onchange handler which is where
         // both, programmatic and ui affected change converge
         this.observer =
             this.bindingEngine.propertyObserver(
-                this.image_info.dimensions, this.dim)
+                this.image_config.image_info.dimensions, this.dim)
                     .subscribe(
                         (newValue, oldValue) =>
                             $(this.elSelector).slider({value: newValue}))
@@ -174,8 +175,7 @@ export default class DimensionSlider extends EventSubscriber {
          // as well as update the slider (UI)
          this.config_id = params.config_id;
          if (this.context.getImageConfig(params.config_id) === null) return;
-         this.image_info =
-             this.context.getImageConfig(params.config_id).image_info;
+         this.image_config = this.context.getImageConfig(params.config_id);
          this.bind();
          this.updateSlider()
      }
@@ -190,16 +190,21 @@ export default class DimensionSlider extends EventSubscriber {
      */
     onChange(value, slider_interaction = false) {
         value = parseInt(value);
+        let imgInf = this.image_config.image_info;
+        let oldValue = imgInf.dimensions[this.dim];
         // no need to change for a the same value
-        if (slider_interaction &&
-            value === this.image_info.dimensions[this.dim]) return;
+        if (slider_interaction && value === oldValue) return;
 
         $('.slider-corner .' + this.dim).text(
             this.dim.toUpperCase() + ":" + (value+1) + "/" +
-            this.image_info.dimensions['max_' + this.dim]);
+            imgInf.dimensions['max_' + this.dim]);
         if (slider_interaction) {
+            this.image_config.addHistory({
+               prop: ['image_info', 'dimensions', this.dim],
+               old_val : oldValue, new_val:  value, type : "number"});
+
             // this will trigger the observer who does the rest
-            this.image_info.dimensions[this.dim] = parseInt(value);
+            imgInf.dimensions[this.dim] = value;
             return;
         }
 
@@ -208,7 +213,7 @@ export default class DimensionSlider extends EventSubscriber {
             IMAGE_DIMENSION_CHANGE,
                 {config_id: this.config_id,
                  dim: this.dim,
-                 value: [this.image_info.dimensions[this.dim]]});
+                 value: [imgInf.dimensions[this.dim]]});
     }
 
     /**
@@ -220,14 +225,16 @@ export default class DimensionSlider extends EventSubscriber {
         // just in case
         this.detached();
 
+        let imgInf = this.image_config.image_info;
+
         // no slider for a 0 length dimension
-        if (this.image_info.dimensions['max_' + this.dim] <= 1) return;
+        if (imgInf.dimensions['max_' + this.dim] <= 1) return;
 
         // create jquery slider
         $(this.elSelector).slider({
             orientation: this.dim === 'z' ? "vertical" : "horizontal",
-            min: 0, max: this.image_info.dimensions['max_' + this.dim] - 1 ,
-            step: 0.1, value: this.image_info.dimensions[this.dim],
+            min: 0, max: imgInf.dimensions['max_' + this.dim] - 1 ,
+            step: 0.1, value: imgInf.dimensions[this.dim],
             slide: (event, ui) => {
                 let sliderValueSpan = $(this.elSelector + ' .slider-value');
                 sliderValueSpan.text(
@@ -248,8 +255,8 @@ export default class DimensionSlider extends EventSubscriber {
         });
         $('.slider-corner .' + this.dim).text(
             this.dim.toUpperCase() + ":" +
-            (this.image_info.dimensions[this.dim]+1) + "/" +
-            this.image_info.dimensions['max_' + this.dim]);
+            (imgInf.dimensions[this.dim]+1) + "/" +
+                imgInf.dimensions['max_' + this.dim]);
         this.attached();
         this.show();
     }
@@ -264,6 +271,6 @@ export default class DimensionSlider extends EventSubscriber {
     unbind() {
         this.unsubscribe()
         this.unregisterObserver();
-        this.image_info = null;
+        this.image_config = null;
     }
 }

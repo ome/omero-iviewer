@@ -122,8 +122,8 @@ export default class ChannelSettings extends EventSubscriber {
      * @memberof ChannelSettings
      */
     changeChannelMode(mode = CHANNEL_SETTINGS_MODE.IMPORTED) {
-        $('.channel-mode').children().removeClass("active");
-        $('.channel-mode').children('[value=' + mode + ']').addClass('active');
+        //$('.channel-mode').children().removeClass("active");
+        //$('.channel-mode').children('[value=' + mode + ']').addClass('active');
         this.mode = parseInt(mode);
     }
 
@@ -194,7 +194,6 @@ export default class ChannelSettings extends EventSubscriber {
             // observer will take care of this
             if (typeof mode !== 'number' ||
                 mode < 0 || mode > 2 || this.mode !== mode) return;
-
             // affect change
             this.mode = null;
             setTimeout(() => this.mode = mode, 0);
@@ -231,7 +230,8 @@ export default class ChannelSettings extends EventSubscriber {
         this.image_config.addHistory({
             prop: ['image_info', 'channels', '' + index, 'active'],
             old_val : !this.image_config.image_info.channels[index].active,
-            new_val: this.image_config.image_info.channels[index].active});
+            new_val: this.image_config.image_info.channels[index].active,
+            type: 'boolean'});
     }
 
     /**

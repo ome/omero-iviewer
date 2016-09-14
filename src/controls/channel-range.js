@@ -40,7 +40,16 @@ export default class ChannelRange  {
      * @memberof ChannelRange
      * @type {number}
      */
-    @bindable mode = null;
+    @bindable mode = 0;
+
+    /**
+     * flag to suppress history for mode change
+     * is only turned off in the special case of programmatic change
+     * to avoid another history entry from happening
+     * @memberof ChannelRange
+     * @type {number}
+     */
+    enable_mode_history = true;
 
     /**
      * the revision count (used for history)
@@ -101,43 +110,140 @@ export default class ChannelRange  {
         this.unregisterObservers();
         this.observers.push(
             this.bindingEngine.propertyObserver(this, 'mode')
-                .subscribe((newValue, oldValue) => {
-                    let adjustRange = (() => {
-                        // set appropriate start and end values
-                        let minMaxValues = this.getMinMaxValues(newValue);
-                        if (this.channel.window.start !== minMaxValues.start_val)
-                             this.channel.window.start = minMaxValues.start_val;
-                        if (this.channel.window.end !== minMaxValues.end_val)
-                            this.channel.window.end = minMaxValues.end_val;
-                        // we have to also reset channel color, dimensions
-                        // model and projection
-                        if (newValue === CHANNEL_SETTINGS_MODE.IMPORTED) {
-                            let imgInfo =
-                                this.context.getSelectedImageConfig().image_info;
-                            let impImgData = imgInfo.imported_settings;
-                            // channel color reset
-                            this.channel.color =
-                                impImgData.c[this.index].color;
-                            // z,t dimension reset
-                            imgInfo.dimensions.t = impImgData.t;
-                            imgInfo.dimensions.z = impImgData.z;
-                            // model and projection
-                            imgInfo.model = impImgData.m;
-                            imgInfo.projection = impImgData.p;
-                        }
-                        this.updateUI();
-                    });
-                    // for imported we do this (potentilly) async
-                    if (newValue === CHANNEL_SETTINGS_MODE.IMPORTED)
-                        this.context.getSelectedImageConfig().image_info.
-                            requestImportedData(adjustRange);
-                    else adjustRange();
-                }));
+                .subscribe((newValue, oldValue) =>
+                    this.changeMode(newValue, oldValue)));
         this.observers.push(
             this.bindingEngine.propertyObserver(this, 'revision')
                 .subscribe((newValue, oldValue) => {
                     this.initial_values = true;
                     this.updateUI();}));
+    }
+
+    /**
+     * Deals with the mode change triggered by the observer
+     *
+     * @memberof ChannelRange
+     */
+    changeMode(newValue, oldValue) {
+        if (newValue === null) return;
+        if (oldValue === null) oldValue = newValue;
+
+        let adjustRange = (() => {
+            // collect changes for history
+            let history = [];
+            if (this.enable_mode_history && newValue !== oldValue) {
+                // the order of these two is essential
+                history.push({
+                   scope: this, prop: ['enable_mode_history'],
+                   old_val : false,
+                   new_val:  false,
+                   type : "boolean"});
+                    history.push({
+                   scope: this, prop: ['mode'],
+                   old_val : oldValue,
+                   new_val:  newValue,
+                   type : "number"});
+             };
+             // reset flag
+             if (!this.enable_mode_history) {
+                 this.enable_mode_history = true;
+                 return;
+            }
+            // delegate for clarity and to break up code
+            this.changeMode0(newValue, history);
+            this.context.getSelectedImageConfig().addHistory(history);
+            this.updateUI();
+        });
+        // for imported we do this (potentilly) async
+        if (newValue === CHANNEL_SETTINGS_MODE.IMPORTED)
+            this.context.getSelectedImageConfig().image_info.
+                requestImportedData(adjustRange);
+        else adjustRange();
+    }
+
+    /**
+     * Deals with the mode change triggered by the observer.
+     * Should never be called by itself but by changeMode (see above)
+     *
+     * @private
+     * @param {number} newValue the new value for 'mode'
+     * @param {Array.<Object>} history the history for addition
+     * @memberof ChannelRange
+     */
+    changeMode0(newValue, history) {
+        // set appropriate start and end values
+        let minMaxValues = this.getMinMaxValues(newValue);
+        if (this.channel.window.start !== minMaxValues.start_val) {
+            history.push({
+               prop:
+                   ['image_info', 'channels', '' + this.index,
+                    'window', 'start'],
+               old_val : this.channel.window.start,
+               new_val:  minMaxValues.start_val,
+             type : "number"});
+             this.channel.window.start = minMaxValues.start_val;
+         }
+        if (this.channel.window.end !== minMaxValues.end_val) {
+            history.push({
+               prop:
+                   ['image_info', 'channels', '' + this.index,
+                    'window', 'end'],
+               old_val : this.channel.window.end,
+               new_val:  minMaxValues.end_val,
+             type : "number"});
+            this.channel.window.end = minMaxValues.end_val;
+        }
+        // we have to also reset channel color, dimensions
+        // model and projection
+        if (newValue === CHANNEL_SETTINGS_MODE.IMPORTED) {
+            let imgInfo =
+                this.context.getSelectedImageConfig().image_info;
+            let impImgData = imgInfo.imported_settings;
+            // channel color reset
+            if (this.channel.color !== impImgData.c[this.index].color) {
+                history.push({
+                   prop:
+                       ['image_info', 'channels', '' + this.index, 'color'],
+                   old_val : this.channel.color,
+                   new_val:  impImgData.c[this.index].color,
+                 type : "string"});
+                 this.channel.color = impImgData.c[this.index].color;
+            }
+            // z,t dimension reset
+            if (imgInfo.dimensions.t !== impImgData.t) {
+                history.push({
+                   prop: ['image_info', 'dimensions', 't'],
+                   old_val : imgInfo.dimensions.t,
+                   new_val:  impImgData.t,
+                 type : "number"});
+                imgInfo.dimensions.t = impImgData.t;
+            }
+            if (imgInfo.dimensions.z !== impImgData.z) {
+                history.push({
+                   prop: ['image_info', 'dimensions', 'z'],
+                   old_val : imgInfo.dimensions.z,
+                   new_val:  impImgData.z,
+                 type : "number"});
+                imgInfo.dimensions.z = impImgData.z;
+            }
+            // model and projection
+            if (imgInfo.model !== impImgData.m) {
+                history.push({
+                   prop: ['image_info', 'model'],
+                   old_val : imgInfo.model,
+                   new_val:  impImgData.m,
+                 type : "string"});
+                imgInfo.model = impImgData.m;
+            }
+            if (imgInfo.projection !== impImgData.p) {
+                history.push({
+                   prop: ['image_info', 'projection'],
+                   old_val : imgInfo.projection,
+                   new_val:  impImgData.p,
+                 type : "string"});
+                imgInfo.projection = impImgData.p;
+            }
+        }
     }
 
     /**
@@ -259,7 +365,7 @@ export default class ChannelRange  {
          // add history record
          this.context.getSelectedImageConfig().addHistory({
              prop: ['image_info', 'channels', '' + this.index,'color'],
-             old_val : oldValue, new_val: this.channel.color});
+             old_val : oldValue, new_val: this.channel.color, type: 'string'});
      }
 
      /**
@@ -401,7 +507,7 @@ export default class ChannelRange  {
                         prop:
                             ['image_info', 'channels', '' + this.index,
                             'window', is_start ? 'start' : 'end'],
-                            old_val : oldValue, new_val: value});
+                            old_val : oldValue, new_val: value, type : "number"});
              } catch (ignored) {}
          } else $(this.element).find(clazz).parent().css("border-color", "rgb(255,0,0)");
      }

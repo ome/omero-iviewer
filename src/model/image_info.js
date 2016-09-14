@@ -11,7 +11,7 @@ import {REQUEST_PARAMS} from '../utils/misc'
 export default class ImageInfo {
     /**
      * the associated dataset id
-     * @memberof ImageConfig
+     * @memberof ImageInfo
      * @type {number}
      */
     dataset_id = null;
