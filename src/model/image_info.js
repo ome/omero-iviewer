@@ -193,6 +193,8 @@ export default class ImageInfo {
                 this.model = initialModel !== null ?
                     initialModel.toLowerCase() : response.rdefs.model;
 
+                this.sanityCheckInitialValues();
+
                 // signal that we are ready and
                 // send out an image config update event
                 this.ready = true;
@@ -221,6 +223,25 @@ export default class ImageInfo {
                          ready: this.ready});
             }
         });
+    }
+
+    /**
+     * Performs some basic checks for model, dimensions and projection
+     * and corrects to reasonable defaults
+     *
+     * @memberof ImageInfo
+     */
+    sanityCheckInitialValues() {
+        if (this.dimensions.t < 0) this.dimensions.t = 0;
+        if (this.dimensions.t >= this.dimensions.max_t)
+            this.dimensions.t = this.dimensions.max_t-1;
+        if (this.dimensions.z < 0) this.dimensions.z = 0;
+        if (this.dimensions.z >= this.dimensions.max_z)
+            this.dimensions.z = this.dimensions.max_z-1;
+        if (this.model !== 'color' && this.model !== 'greyscale')
+            this.model = 'greyscale';
+        if (this.projection !== 'normal' && this.projection !== 'intmax')
+            this.projection = 'normal';
     }
 
     /**
