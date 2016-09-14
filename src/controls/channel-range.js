@@ -209,6 +209,17 @@ export default class ChannelRange  {
                  type : "string"});
                  this.channel.color = impImgData.c[this.index].color;
             }
+            // active
+            if (this.channel.active !== impImgData.c[this.index].active) {
+                history.push({
+                   prop:
+                       ['image_info', 'channels', '' + this.index, 'active'],
+                   old_val : this.channel.active,
+                   new_val:  impImgData.c[this.index].active,
+                 type : "boolean"});
+                 this.channel.active = impImgData.c[this.index].active;
+            }
+
             // z,t dimension reset
             if (imgInfo.dimensions.t !== impImgData.t) {
                 history.push({
