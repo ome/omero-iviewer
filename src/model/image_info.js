@@ -4,6 +4,16 @@ import Misc from '../utils/misc';
 import {REQUEST_PARAMS} from '../utils/misc'
 
 /**
+ * the possible modes of channel settings
+ * @type {Object}
+ */
+export const CHANNEL_SETTINGS_MODE = {
+    MIN_MAX : 0,
+    FULL_RANGE : 1,
+    IMPORTED : 2
+}
+
+/**
  * Holds basic image information required for viewing:
  * dimensions, channels, etc.
  */
@@ -39,6 +49,14 @@ export default class ImageInfo {
     imported_settings = null;
 
     /**
+     * a flag to remind us if these are the initial binding values
+     * which we need because the existing display rules are different then
+     * @memberof ImageInfo
+     * @type {boolean}
+     */
+    initial_values = true;
+
+    /**
      * dimensions are initialized to defaults
      * @memberof ImageInfo
      * @type {Object}
@@ -50,6 +68,12 @@ export default class ImageInfo {
      * @type {Array.<Object>}
      */
     channels = null;
+
+    /**
+     * @memberof ImageInfo
+     * @type {Array.<number>}
+     */
+    range = null;
 
     /**
      * projection defaults to 'normal'
@@ -283,5 +307,67 @@ export default class ImageInfo {
         });
 
         return channels;
+    }
+
+   /**
+    * Helper to determine min and max values for start and end based on channel
+    * settings mode
+    *
+    * @param {number} mode the channel setting mode
+    * @param {number} index the channel index
+    * @return {Object|null} returns object with the respective min,max properties or null
+    * @memberof ChannelRange
+    */
+    getChannelMinMaxValues(mode = 0, index=0) {
+        if (typeof mode !== 'number' || mode < 0 || mode > 2 ||
+                typeof index !== 'number' || index < 0 ||
+                index >= this.channels.length) return null;
+
+        let start_min,start_max,end_min,end_max,start_val,end_val;
+        let c = this.channels[index];
+        switch(mode) {
+            case CHANNEL_SETTINGS_MODE.MIN_MAX:
+                start_min = c.window.min;
+                start_max = c.window.end-1;
+                end_min = c.window.start+1;
+                end_max = c.window.max;
+                start_val = this.initial_values ?
+                    c.window.start : c.window.min;
+                end_val = this.initial_values ?
+                    c.window.end : c.window.max;
+                break;
+
+            case CHANNEL_SETTINGS_MODE.FULL_RANGE:
+                start_min = this.range[0];
+                start_max = c.window.end-1;
+                end_min = c.window.start+1;
+                end_max = this.range[1];
+                start_val = this.initial_values ?
+                     c.window.start : this.range[0];
+                end_val =
+                    this.initial_values ?
+                         c.window.end : this.range[1];
+                break;
+
+            case CHANNEL_SETTINGS_MODE.IMPORTED:
+            default:
+               let ch =
+                   this.context.getSelectedImageConfig().image_info.imported_settings.c;
+                start_min = ch[index].window.min;
+                start_max = ch[index].window.end-1;
+                end_min = ch[index].window.start+1;
+                end_max = ch[index].window.max;
+                start_val = ch[index].window.start;
+                end_val = ch[index].window.end;
+        }
+
+        return {
+            start_min: start_min,
+            start_max: start_max,
+            end_min: end_min,
+            end_max: end_max,
+            start_val: start_val,
+            end_val: end_val
+        }
     }
 }

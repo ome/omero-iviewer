@@ -2,20 +2,10 @@
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
-
+import {CHANNEL_SETTINGS_MODE} from '../model/image_info';
 import {
     IMAGE_CONFIG_UPDATE, IMAGE_SETTINGS_CHANGE, EventSubscriber
 } from '../events/events';
-
-/**
- * the possible modes of channel settings
- * @type {Object}
- */
-export const CHANNEL_SETTINGS_MODE = {
-    MIN_MAX : 0,
-    FULL_RANGE : 1,
-    IMPORTED : 2
-}
 
 /**
  * Represents the settings section in the right hand panel
@@ -44,6 +34,22 @@ export default class ChannelSettings extends EventSubscriber {
      * @type {number}
      */
     mode = null;
+
+    /**
+     * unfortunately necessary to detect transition in special circumstances
+     * @memberof ChannelSettings
+     * @type {number}
+     */
+    old_mode = null;
+
+    /**
+     * flag to suppress history for mode change
+     * is only turned off in the special case of programmatic change
+     * to avoid another history entry from happening
+     * @memberof ChannelSettings
+     * @type {number}
+     */
+    enable_mode_history = true;
 
     /**
      * property observers
@@ -94,11 +100,6 @@ export default class ChannelSettings extends EventSubscriber {
         this.subscribe();
         this.registerObservers();
 
-        // the mode click handler
-        $('.channel-mode').children().off("click");
-        $('.channel-mode').children().on("click",
-            (event) => this.changeChannelMode(event.target.value));
-
         if (this.image_config === null ||
                 this.image_config.image_info === null) return;
         // we select the mode based on the channel range values
@@ -113,18 +114,6 @@ export default class ChannelSettings extends EventSubscriber {
             this.mode = CHANNEL_SETTINGS_MODE.FULL_RANGE;
         else
             this.mode = CHANNEL_SETTINGS_MODE.MIN_MAX;
-    }
-
-    /**
-     * Channel mode setter
-     *
-     * @param {number} mode the channel setting mode
-     * @memberof ChannelSettings
-     */
-    changeChannelMode(mode = CHANNEL_SETTINGS_MODE.IMPORTED) {
-        //$('.channel-mode').children().removeClass("active");
-        //$('.channel-mode').children('[value=' + mode + ']').addClass('active');
-        this.mode = parseInt(mode);
     }
 
     /**
@@ -163,7 +152,136 @@ export default class ChannelSettings extends EventSubscriber {
                                     this.propagateChannelChanges(index)))
                 )(i, obsProp.obj, obsProp.prop);
             }
+        // this is for the history snapshot if we have a mode change
+        this.observers.push(
+            this.bindingEngine.propertyObserver(this, 'mode')
+                .subscribe(
+                    (newValue, oldValue) =>
+                        this.takeHistorySnapshot(newValue, oldValue)));
     }
+
+    /**
+     * Takes a snapshot of all the channel history
+     *
+     * @param {number} newValue the new mode
+     * @param {number} oldValue the old mode
+     * @memberof ChannelSettings
+     */
+    takeHistorySnapshot(newValue, oldValue) {
+        if (newValue === null) return;
+        if (oldValue === null) oldValue = newValue;
+
+        // collect changes for history
+        let history = [];
+        if (this.enable_mode_history && newValue !== oldValue) {
+            // the order of these is essential
+            //this is to force the initial values
+            history.push({
+               prop: ['image_info','initial_values'],
+               old_val : true,
+               new_val:  true,
+               type : "boolean"});
+            history.push({
+               scope: this, prop: ['enable_mode_history'],
+               old_val : false,
+               new_val:  false,
+               type : "boolean"});
+            history.push({
+               scope: this, prop: ['mode'],
+               old_val : oldValue,
+               new_val:  newValue,
+               type : "number"});
+         };
+         // reset flag
+         if (!this.enable_mode_history) {
+             this.enable_mode_history = true;
+             return;
+        }
+
+        let conf = this.image_config;
+        let imgInfo = conf.image_info;
+        let snapshotRange = (() => {
+            // iterate over channels
+            for (let i=0;i<imgInfo.channels.length;i++)
+                this.takeChannelSnapshot(newValue, i, history);
+            conf.addHistory(history);
+        });
+        // for imported we do this (potentially) async
+        if (newValue === CHANNEL_SETTINGS_MODE.IMPORTED)
+            imgInfo.requestImportedData(snapshotRange);
+        else snapshotRange();
+    }
+
+    /**
+     * Takes a snapshot of all the channel history
+     * @param {number} mode the mode
+     * @param {number} index the channel index
+     * @param {Array.<Object>} history the history log
+     * @memberof ChannelSettings
+     */
+     takeChannelSnapshot(mode, index, history) {
+         let imgInf = this.image_config.image_info;
+         let minMaxValues =
+             imgInf.getChannelMinMaxValues(mode, index);
+         let chan = imgInf.channels[index];
+         if (chan.window.start !== minMaxValues.start_val)
+             history.push({
+                 prop: ['image_info', 'channels', '' + index, 'window', 'start'],
+                 old_val : chan.window.start,
+                 new_val: minMaxValues.start_val,
+                 type: 'number'});
+         if (chan.window.end !== minMaxValues.end_val)
+             history.push({
+                 prop: ['image_info', 'channels', '' + index, 'window', 'end'],
+                 old_val : chan.window.end,
+                 new_val: minMaxValues.end_val,
+                 type: 'number'});
+         // we have to also reset channel color, dimensions
+         // model and projection
+         if (mode === CHANNEL_SETTINGS_MODE.IMPORTED) {
+             let impImgData = imgInf.imported_settings;
+             // log channel color
+             if (chan.color !== impImgData.c[index].color)
+                history.push({
+                    prop: ['image_info', 'channels', '' + index, 'color'],
+                    old_val : chan.color,
+                    new_val: impImgData.c[index].color,
+                    type: 'string'});
+             // remember active
+             if (chan.active !== impImgData.c[index].active)
+                 history.push({
+                     prop: ['image_info', 'channels', '' + index, 'active'],
+                     old_val : chan.active,
+                     new_val: impImgData.c[index].active,
+                     type: 'boolean'});
+             // log z and t
+             if (imgInf.dimensions.t !== impImgData.t)
+                 history.push({
+                     prop: ['image_info', 'dimensions', 't'],
+                     old_val : imgInf.dimensions.t,
+                     new_val: impImgData.t,
+                     type: 'number'});
+             if (imgInf.dimensions.z !== impImgData.z)
+                 history.push({
+                     prop: ['image_info', 'dimensions', 'z'],
+                     old_val : imgInf.dimensions.z,
+                     new_val: impImgData.z,
+                     type: 'number'});
+             // remember model and projection
+             if (imgInf.model !== impImgData.m)
+                 history.push({
+                     prop: ['image_info', 'model'],
+                     old_val : imgInf.model,
+                     new_val: impImgData.m,
+                     type: 'string'});
+             if (imgInf.projection !== impImgData.p)
+                 history.push({
+                     prop: ['image_info', 'projection'],
+                     old_val : imgInf.projection,
+                     new_val: impImgData.p,
+                     type: 'string'});
+         }
+     }
 
     /**
      * Handles changes of the associated ImageConfig
@@ -191,12 +309,16 @@ export default class ChannelSettings extends EventSubscriber {
      * @memberof ChannelSettings
      */
      onModeChange(mode) {
-            // observer will take care of this
-            if (typeof mode !== 'number' ||
-                mode < 0 || mode > 2 || this.mode !== mode) return;
-            // affect change
-            this.mode = null;
-            setTimeout(() => this.mode = mode, 0);
+        mode = parseInt(mode);
+        if (typeof mode !== 'number' || mode < 0 || mode > 2) return;
+        this.old_mode = this.mode;
+        this.mode = mode;
+        this.image_config.image_info.initial_values = false;
+        if (this.old_mode !== this.mode) return;
+
+        // affect change if mode was clicked more than once
+        this.mode = null;
+        setTimeout(() => this.mode = mode, 0);
      }
 
     /**

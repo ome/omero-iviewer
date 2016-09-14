@@ -14,7 +14,7 @@ export default class History {
      * @memberof History
      * @type {boolean}
      */
-    debug = false;
+    debug = true;
 
     /**
      * @memberof History

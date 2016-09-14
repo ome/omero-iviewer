@@ -5,7 +5,7 @@ require('../../node_modules/spectrum-colorpicker/spectrum.css');
 // js
 import Context from '../app/context';
 import Misc from '../utils/misc';
-import {CHANNEL_SETTINGS_MODE} from './channel-settings';
+import {CHANNEL_SETTINGS_MODE} from '../model/image_info';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {spinner} from 'jquery-ui/ui/widgets/spinner';
 import {slider} from 'jquery-ui/ui/widgets/slider';
@@ -43,15 +43,6 @@ export default class ChannelRange  {
     @bindable mode = 0;
 
     /**
-     * flag to suppress history for mode change
-     * is only turned off in the special case of programmatic change
-     * to avoid another history entry from happening
-     * @memberof ChannelRange
-     * @type {number}
-     */
-    enable_mode_history = true;
-
-    /**
      * the revision count (used for history)
      * @memberof ChannelRange
      * @type {number}
@@ -71,13 +62,6 @@ export default class ChannelRange  {
      * @type {Array.<number>}
      */
     @bindable range = null;
-
-    /**
-     * a flag to remind us if these are the initial binding values
-     * which we need because the existing display rules are different then
-     * @type {boolean}
-     */
-    initial_values = true;
 
     /**
      * @constructor
@@ -115,7 +99,8 @@ export default class ChannelRange  {
         this.observers.push(
             this.bindingEngine.propertyObserver(this, 'revision')
                 .subscribe((newValue, oldValue) => {
-                    this.initial_values = true;
+                    this.context.getSelectedImageConfig().
+                        image_info.initial_values = true;
                     this.updateUI();}));
     }
 
@@ -129,29 +114,8 @@ export default class ChannelRange  {
         if (oldValue === null) oldValue = newValue;
 
         let adjustRange = (() => {
-            // collect changes for history
-            let history = [];
-            if (this.enable_mode_history && newValue !== oldValue) {
-                // the order of these two is essential
-                history.push({
-                   scope: this, prop: ['enable_mode_history'],
-                   old_val : false,
-                   new_val:  false,
-                   type : "boolean"});
-                    history.push({
-                   scope: this, prop: ['mode'],
-                   old_val : oldValue,
-                   new_val:  newValue,
-                   type : "number"});
-             };
-             // reset flag
-             if (!this.enable_mode_history) {
-                 this.enable_mode_history = true;
-                 return;
-            }
             // delegate for clarity and to break up code
-            this.changeMode0(newValue, history);
-            this.context.getSelectedImageConfig().addHistory(history);
+            this.changeMode0(newValue);
             this.updateUI();
         });
         // for imported we do this (potentilly) async
@@ -167,93 +131,37 @@ export default class ChannelRange  {
      *
      * @private
      * @param {number} newValue the new value for 'mode'
-     * @param {Array.<Object>} history the history for addition
      * @memberof ChannelRange
      */
-    changeMode0(newValue, history) {
+    changeMode0(newValue) {
+        let imgInfo =  this.context.getSelectedImageConfig().image_info;
         // set appropriate start and end values
-        let minMaxValues = this.getMinMaxValues(newValue);
-        if (this.channel.window.start !== minMaxValues.start_val) {
-            history.push({
-               prop:
-                   ['image_info', 'channels', '' + this.index,
-                    'window', 'start'],
-               old_val : this.channel.window.start,
-               new_val:  minMaxValues.start_val,
-             type : "number"});
+        let minMaxValues =
+            imgInfo.getChannelMinMaxValues(newValue, this.index);
+        if (this.channel.window.start !== minMaxValues.start_val)
              this.channel.window.start = minMaxValues.start_val;
-         }
-        if (this.channel.window.end !== minMaxValues.end_val) {
-            history.push({
-               prop:
-                   ['image_info', 'channels', '' + this.index,
-                    'window', 'end'],
-               old_val : this.channel.window.end,
-               new_val:  minMaxValues.end_val,
-             type : "number"});
+        if (this.channel.window.end !== minMaxValues.end_val)
             this.channel.window.end = minMaxValues.end_val;
-        }
         // we have to also reset channel color, dimensions
         // model and projection
         if (newValue === CHANNEL_SETTINGS_MODE.IMPORTED) {
-            let imgInfo =
-                this.context.getSelectedImageConfig().image_info;
             let impImgData = imgInfo.imported_settings;
             // channel color reset
-            if (this.channel.color !== impImgData.c[this.index].color) {
-                history.push({
-                   prop:
-                       ['image_info', 'channels', '' + this.index, 'color'],
-                   old_val : this.channel.color,
-                   new_val:  impImgData.c[this.index].color,
-                 type : "string"});
-                 this.channel.color = impImgData.c[this.index].color;
-            }
-            // active
-            if (this.channel.active !== impImgData.c[this.index].active) {
-                history.push({
-                   prop:
-                       ['image_info', 'channels', '' + this.index, 'active'],
-                   old_val : this.channel.active,
-                   new_val:  impImgData.c[this.index].active,
-                 type : "boolean"});
+            if (this.channel.color !== impImgData.c[this.index].color)
+                this.channel.color = impImgData.c[this.index].color;
+            // active reset
+            if (this.channel.active !== impImgData.c[this.index].active)
                  this.channel.active = impImgData.c[this.index].active;
-            }
-
             // z,t dimension reset
-            if (imgInfo.dimensions.t !== impImgData.t) {
-                history.push({
-                   prop: ['image_info', 'dimensions', 't'],
-                   old_val : imgInfo.dimensions.t,
-                   new_val:  impImgData.t,
-                 type : "number"});
+            if (imgInfo.dimensions.t !== impImgData.t)
                 imgInfo.dimensions.t = impImgData.t;
-            }
-            if (imgInfo.dimensions.z !== impImgData.z) {
-                history.push({
-                   prop: ['image_info', 'dimensions', 'z'],
-                   old_val : imgInfo.dimensions.z,
-                   new_val:  impImgData.z,
-                 type : "number"});
+            if (imgInfo.dimensions.z !== impImgData.z)
                 imgInfo.dimensions.z = impImgData.z;
-            }
             // model and projection
-            if (imgInfo.model !== impImgData.m) {
-                history.push({
-                   prop: ['image_info', 'model'],
-                   old_val : imgInfo.model,
-                   new_val:  impImgData.m,
-                 type : "string"});
+            if (imgInfo.model !== impImgData.m)
                 imgInfo.model = impImgData.m;
-            }
-            if (imgInfo.projection !== impImgData.p) {
-                history.push({
-                   prop: ['image_info', 'projection'],
-                   old_val : imgInfo.projection,
-                   new_val:  impImgData.p,
-                 type : "string"});
+            if (imgInfo.projection !== impImgData.p)
                 imgInfo.projection = impImgData.p;
-            }
         }
     }
 
@@ -316,7 +224,9 @@ export default class ChannelRange  {
 
          if (this.channel === null) return;
 
-        let minMaxValues = this.getMinMaxValues();
+        let imgInf = this.context.getSelectedImageConfig().image_info;
+        let minMaxValues =
+            imgInf.getChannelMinMaxValues(this.mode,this.index);
          // channel start
          $(this.element).find(".channel-start").spinner(
              {min: minMaxValues.start_min, max: minMaxValues.start_max});
@@ -358,7 +268,6 @@ export default class ChannelRange  {
             preferredFormat: "hex",
             appendTo: $(this.element),
             change: (color) => this.onColorChange(color.toHexString())});
-        this.initial_values = false; // reset flag
 }
 
      /**
@@ -405,64 +314,6 @@ export default class ChannelRange  {
      }
 
      /**
-     * Helper to determine min and max values for start and end based on channel
-     * settings mode
-     *
-     * @param {number} mode the channel setting mode
-     * @return {Object} returns object with the respective min,max properties
-     * @memberof ChannelRange
-     */
-     getMinMaxValues(mode=null) {
-         let start_min,start_max,end_min,end_max,start_val,end_val;
-         if (mode === null) mode=this.mode;
-         switch(mode) {
-             case CHANNEL_SETTINGS_MODE.MIN_MAX:
-                 start_min = this.channel.window.min;
-                 start_max = this.channel.window.end-1;
-                 end_min = this.channel.window.start+1;
-                 end_max = this.channel.window.max;
-                 start_val = this.initial_values ?
-                     this.channel.window.start : this.channel.window.min;
-                 end_val = this.initial_values ?
-                     this.channel.window.end : this.channel.window.max;
-                 break;
-
-             case CHANNEL_SETTINGS_MODE.FULL_RANGE:
-                 start_min = this.range[0];
-                 start_max = this.channel.window.end-1;
-                 end_min = this.channel.window.start+1;
-                 end_max = this.range[1];
-                 start_val = this.initial_values ?
-                      this.channel.window.start : this.range[0];
-                 end_val =
-                     this.initial_values ?
-                          this.channel.window.end : this.range[1];
-                 break;
-
-             case CHANNEL_SETTINGS_MODE.IMPORTED:
-             default:
-                let chan =
-                    this.context.getSelectedImageConfig().image_info.imported_settings.c;
-                 start_min = chan[this.index].window.min;
-                 start_max = chan[this.index].window.end-1;
-                 end_min = chan[this.index].window.start+1;
-                 end_max = chan[this.index].window.max;
-                 start_val = chan[this.index].window.start;
-                 end_val = chan[this.index].window.end;
-         }
-
-         return {
-             start_min: start_min,
-             start_max: start_max,
-             end_min: end_min,
-             end_max: end_max,
-             start_val: start_val,
-             end_val: end_val
-         }
-     }
-
-
-     /**
      * channel range change handler
      *
      * @param {Array.<number>} value the new value
@@ -474,7 +325,9 @@ export default class ChannelRange  {
          if (isNaN(value)) return;
 
          // get appropriate min/max for start/end
-         let minMaxValues = this.getMinMaxValues();
+         let minMaxValues =
+            this.context.getSelectedImageConfig().
+                image_info.getChannelMinMaxValues(this.mode, this.index);
          let min = is_start ? minMaxValues.start_min : minMaxValues.end_min;
          let max = is_start ? minMaxValues.start_max : minMaxValues.end_max;
 
