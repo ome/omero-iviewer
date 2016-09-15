@@ -4,12 +4,23 @@
 
     <div class="row save-settings">
         <button type="button"
-        disabled="${image_config &&
-            (image_config.history.length === 0 || image_config.historyPointer < 0) ?
-             'disabled': ''}" class="${image_config &&
-            (image_config.history.length === 0 || image_config.historyPointer < 0) ?
-                'disabled-color': ''}"
-        click.delegate="saveImageSettings()">Save</button>
+            disabled="${image_config && image_config.image_info &&
+                image_config.image_info.can_save_settings &&
+                image_config.history.length > 0 && image_config.historyPointer >= 0 ?
+                '': 'disabled'}"
+            class="${image_config && image_config.image_info &&
+                image_config.image_info.can_save_settings &&
+                image_config.history.length > 0 && image_config.historyPointer >= 0 ?
+                '' : 'disabled-color'}"
+            click.delegate="saveImageSettings()">Save
+        </button>
+        <button type="button"
+            disabled="${image_config && image_config.image_info &&
+                image_config.image_info.can_save_settings ? '': 'disabled'}"
+            class="${image_config && image_config.image_info &&
+                image_config.image_info.can_save_settings ? '' : 'disabled-color'}"
+            click.delegate="saveImageSettingsToAll()">Save to All
+        </button>
     </div>
 
     <div class="row history">
@@ -44,13 +55,17 @@
                change.delegate="onModelChange($event.target.checked)">Grayscale</label>
         </div>
         <div class="col-xs-6">
-            <label><input type="checkbox"
-                change.delegate="toggleHistogram()">Show Histogram</label>
+            <!--label><input type="checkbox"
+                change.delegate="toggleHistogram()">Show Histogram</label-->
         </div>
     </div>
 
     <div class="row">
         <channel-settings class="col-xs-12" config_id.bind="config_id"></channel-settings>
+    </div>
+
+    <div class="row">
+
     </div>
 
 </template>

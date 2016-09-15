@@ -234,7 +234,7 @@ export default class DimensionSlider extends EventSubscriber {
         $(this.elSelector).slider({
             orientation: this.dim === 'z' ? "vertical" : "horizontal",
             min: 0, max: imgInf.dimensions['max_' + this.dim] - 1 ,
-            step: 0.1, value: imgInf.dimensions[this.dim],
+            step: 0.01, value: imgInf.dimensions[this.dim],
             slide: (event, ui) => {
                 let sliderValueSpan = $(this.elSelector + ' .slider-value');
                 sliderValueSpan.text(

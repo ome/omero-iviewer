@@ -136,6 +136,16 @@ export default class Settings extends EventSubscriber {
     }
 
     /**
+    * Tries to persists the rendering settings to all images in the dataset
+    *
+    * @memberof Settings
+    */
+    saveImageSettingsToAll() {
+        // we only delegate
+        this.copy(true);
+    }
+
+    /**
     * Undoes the last change
     *
     * @memberof Settings
@@ -162,30 +172,61 @@ export default class Settings extends EventSubscriber {
     /**
     * Copies the rendering settings
     *
+    * @param {boolean} to_all if true settings will be applied to all,
+    *  otherwise only the present one
     * @memberof Settings
     */
-    copy() {
+    copy(toAll=false) {
+        let dataType = Misc.useJsonp(this.context.server) ? 'jsonp' : 'json';
+
+        if (toAll && dataType === 'jsonp') {
+            alert("Saving to All will not work for cross-domain!");
+            return;
+        }
+
         let imgInf = this.image_config.image_info;
-        let url =
-            this.context.server + "/webgateway/copyImgRDef/?imageId=" +
-            imgInf.image_id + "&pixel_range=" + imgInf.range[0] + ":" +
-            imgInf.range[1] + '&m=' + imgInf.model[0] +
-            "&p=" + imgInf.projection + "&q=0.9&ia=0&c=";
+        let url = this.context.server + "/webgateway/copyImgRDef/?";
+        if (!toAll)
+            url += "imageId=" + imgInf.image_id + "&q=0.9&pixel_range=" +
+                    imgInf.range[0] + ":" + imgInf.range[1] +"&";
+        url +=  'm=' + imgInf.model[0] + "&p=" + imgInf.projection + "&ia=0&c=";
+
         let i=0;
         imgInf.channels.map(
             (c) =>
                 url+= (i !== 0 ? ',' : '') + (!c.active ? '-' : '') + (++i) +
-                 "|" + c.window.start + ":" + c.window.end + "$" + c.color
-        );
+                 "|" + c.window.start + ":" + c.window.end + "$" + c.color);
 
-        $.ajax(
-            {url : url,
-             method: 'GET',
-             cache: false,
-             dataType : Misc.useJsonp(this.context.server) ? 'jsonp' : 'json',
-            success : (response) => this.image_config.image_info.requestImgRDef(),
+        // save to all differs from copy in that it is a POST with data
+        // instead of a JSON(P) GET, as well as the success handler
+        let params = {
+            url : url,
+            method: toAll ? 'POST' : 'GET',
+            cache: false,
             error : (error) => {}
-        });
+        };
+
+        if (!toAll) {
+            params.dataType = dataType;
+            params.success =
+                (response) => this.image_config.image_info.requestImgRDef();
+        }else {
+            params.data={
+                toids: imgInf.dataset_id,
+                to_type: 'dataset',
+                imageId: imgInf.image_id
+            };
+            params.dataType = "json";
+            params.success =
+                (response) => {
+                    if (typeof response === 'object' && response !== null &&
+                        Misc.isArray(response.True)) {
+                            // TODO: update thumbnails
+                            console.info(response.True);
+                        }
+                }
+        }
+        $.ajax(params);
     }
 
     /**

@@ -32,6 +32,13 @@ export default class ImageInfo {
     has_scalebar = false;
 
     /**
+     * a flag for whether we are allowed to save the settings
+     * @memberof ImageInfo
+     * @type {boolean}
+     */
+    can_save_settings = false;
+
+    /**
      *  rendering settings as imported
      * @memberof ImageInfo
      * @type {Object}
@@ -152,61 +159,22 @@ export default class ImageInfo {
                     this.dataset_id = response.meta.datasetId;
                 else this.dataset_id = null;
 
-                // we might have some requested defaults
-                let initialTime =
-                    this.context.getInitialRequestParam(REQUEST_PARAMS.TIME);
-                let initialPlane =
-                    this.context.getInitialRequestParam(REQUEST_PARAMS.PLANE);
-                let initialProjection =
-                    this.context.getInitialRequestParam(REQUEST_PARAMS.PROJECTION);
-                let initialModel =
-                    this.context.getInitialRequestParam(REQUEST_PARAMS.MODEL);
-                let initialChannels =
-                    this.context.getInitialRequestParam(REQUEST_PARAMS.CHANNELS);
-                initialChannels = Misc.parseChannelParameters(initialChannels);
-
-                // store channels, pixel_range and dimensions
-                this.channels =
-                    this.mixChannelsWithInitialSettings(
-                        response.channels, initialChannels);
-                this.range = response.pixel_range;
-                this.dimensions = {
-                    t: initialTime !== null ?
-                        parseInt(initialTime) : response.rdefs.defaultT,
-                    max_t : response.size.t,
-                    z: initialPlane !== null ?
-                        parseInt(initialPlane) : response.rdefs.defaultZ,
-                    max_z : response.size.z
-                };
-                // do we have a scalebar
-                if (typeof response.pixel_size === 'object' &&
-                    typeof response.pixel_size.x === 'number')
-                    this.has_scalebar = true;
-
-                // store projection and model
-                this.projection =
-                    initialProjection !== null ?
-                        initialProjection.toLowerCase() : response.rdefs.projection;
-                this.model = initialModel !== null ?
-                    initialModel.toLowerCase() : response.rdefs.model;
-
-                this.sanityCheckInitialValues();
-
-                // signal that we are ready and
-                // send out an image config update event
-                this.ready = true;
-                if (this.context)
-                    this.context.publish(
-                        IMAGE_CONFIG_UPDATE,
-                            {config_id: this.config_id,
-                                dataset_id: this.dataset_id,
-                            ready: this.ready});
+                // delegate to break up code
+                this.initializeImageInfo(response);
 
                 // fire off the request for the imported data,
                 // can't hurt to have handy when we need it
                 this.requestImportedData();
                 // fetch copied img RDef
                 this.requestImgRDef();
+
+                // notify everyone that we are ready
+                if (this.context)
+                    this.context.publish(
+                        IMAGE_CONFIG_UPDATE,
+                            {config_id: this.config_id,
+                                dataset_id: this.dataset_id,
+                            ready: this.ready});
             },
             error : (error) => {
                 this.ready = false;
@@ -225,9 +193,67 @@ export default class ImageInfo {
     }
 
     /**
+     * Takes the response object and assigns the bits and pieces needed
+     * to the members
+     *
+     * @private
+     * @param {Object} response the response object
+     * @memberof ImageInfo
+     */
+    initializeImageInfo(response) {
+        // we might have some requested defaults
+        let initialTime =
+            this.context.getInitialRequestParam(REQUEST_PARAMS.TIME);
+        let initialPlane =
+            this.context.getInitialRequestParam(REQUEST_PARAMS.PLANE);
+        let initialProjection =
+            this.context.getInitialRequestParam(REQUEST_PARAMS.PROJECTION);
+        let initialModel =
+            this.context.getInitialRequestParam(REQUEST_PARAMS.MODEL);
+        let initialChannels =
+            this.context.getInitialRequestParam(REQUEST_PARAMS.CHANNELS);
+        initialChannels = Misc.parseChannelParameters(initialChannels);
+
+        // store channels, pixel_range and dimensions
+        this.channels =
+            this.mixChannelsWithInitialSettings(
+                response.channels, initialChannels);
+        this.range = response.pixel_range;
+        this.dimensions = {
+            t: initialTime !== null ?
+                parseInt(initialTime) : response.rdefs.defaultT,
+            max_t : response.size.t,
+            z: initialPlane !== null ?
+                parseInt(initialPlane) : response.rdefs.defaultZ,
+            max_z : response.size.z
+        };
+        // do we have a scalebar
+        if (typeof response.pixel_size === 'object' &&
+            typeof response.pixel_size.x === 'number')
+            this.has_scalebar = true;
+
+        // store projection and model
+        this.projection =
+            initialProjection !== null ?
+                initialProjection.toLowerCase() : response.rdefs.projection;
+        this.model = initialModel !== null ?
+            initialModel.toLowerCase() : response.rdefs.model;
+
+        // can Annotate means we are allowed to store
+        this.can_save_settings = response.perms.canAnnotate;
+
+        this.sanityCheckInitialValues();
+
+        // signal that we are ready and
+        // send out an image config update event
+        this.ready = true;
+    }
+
+    /**
      * Performs some basic checks for model, dimensions and projection
      * and corrects to reasonable defaults
      *
+     * @private
      * @memberof ImageInfo
      */
     sanityCheckInitialValues() {
