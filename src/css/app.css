@@ -94,7 +94,7 @@ a.ui-button:active,
     position: absolute;
     z-index: 1000;
     top: 7px;
-    left: 10px;
+    left: 60px;
     display: none;
     width: 400px;
 }

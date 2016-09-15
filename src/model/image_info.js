@@ -237,9 +237,12 @@ export default class ImageInfo {
         if (this.dimensions.z < 0) this.dimensions.z = 0;
         if (this.dimensions.z >= this.dimensions.max_z)
             this.dimensions.z = this.dimensions.max_z-1;
-        let lowerCaseModel = this.model.toLowerCase();
-        if (lowerCaseModel !== 'color' && lowerCaseModel !== 'greyscale')
-            this.model = 'greyscale';
+        let lowerCaseModel = this.model.toLowerCase()[0];
+        switch (lowerCaseModel) {
+            case 'c': this.model = 'color'; break;
+            case 'g': this.model = 'greyscale'; break;
+            default: this.model = 'color';
+        }
         let lowerCaseProjection = this.projection.toLowerCase();
         if (lowerCaseProjection !== 'normal' && lowerCaseProjection !== 'intmax')
             this.projection = 'normal';
