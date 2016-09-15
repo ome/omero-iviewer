@@ -99,8 +99,13 @@ export default class ChannelRange  {
         this.observers.push(
             this.bindingEngine.propertyObserver(this, 'revision')
                 .subscribe((newValue, oldValue) => {
-                    this.context.getSelectedImageConfig().
-                        image_info.initial_values = true;
+                    let imgInf =
+                        this.context.getSelectedImageConfig().image_info;
+                    imgInf.initial_values = true;
+                    if (this.mode === CHANNEL_SETTINGS_MODE.MIN_MAX &&
+                        imgInf.needsFullRange())
+                        this.mode = CHANNEL_SETTINGS_MODE.FULL_RANGE;
+                    else this.mode = CHANNEL_SETTINGS_MODE.MIN_MAX;
                     this.updateUI();}));
     }
 

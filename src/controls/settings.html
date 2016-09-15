@@ -25,7 +25,16 @@
                 image_config.historyPointer < image_config.history.length-1 ?
                  '' : 'disabled-color'}">Redo</button>
         <button type="button" click.delegate="copy()">Copy</button>
-        <button type="button" click.delegate="paste()">Paste</button>
+        <button type="button"
+            class="${image_config && image_config.image_info &&
+                image_config.image_info.copied_img_rdef &&
+                image_config.image_info.copied_img_rdef.imageId ===
+                image_config.image_info.image_id ? '' : 'disabled-color'}"
+            disabled="${image_config && image_config.image_info &&
+                image_config.image_info.copied_img_rdef &&
+                image_config.image_info.copied_img_rdef.imageId ===
+                image_config.image_info.image_id ? '' : 'disabled'}"
+            click.delegate="paste()">Paste</button>
     </div>
 
     <div class="row checkbox checkbox-settings">

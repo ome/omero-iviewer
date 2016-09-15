@@ -39,6 +39,13 @@ export default class ImageInfo {
     imported_settings = null;
 
     /**
+     *  copied rendering settings
+     * @memberof ImageInfo
+     * @type {Object}
+     */
+    copied_img_rdef = null;
+
+    /**
      * a flag to remind us if these are the initial binding values
      * which we need because the existing display rules are different then
      * @memberof ImageInfo
@@ -198,6 +205,8 @@ export default class ImageInfo {
                 // fire off the request for the imported data,
                 // can't hurt to have handy when we need it
                 this.requestImportedData();
+                // fetch copied img RDef
+                this.requestImgRDef();
             },
             error : (error) => {
                 this.ready = false;
@@ -234,6 +243,31 @@ export default class ImageInfo {
         let lowerCaseProjection = this.projection.toLowerCase();
         if (lowerCaseProjection !== 'normal' && lowerCaseProjection !== 'intmax')
             this.projection = 'normal';
+    }
+
+    /**
+     * Retrieves the copied rendering settings
+     *
+     * @param {function} callback a callback for success
+     * @memberof ImageInfo
+     */
+    requestImgRDef(callback = null) {
+        $.ajax({url : this.context.server + "/webgateway/getImgRDef/",
+            dataType : Misc.useJsonp(this.context.server) ? 'jsonp' : 'json',
+            cache : false,
+            success : (response) => {
+                if (typeof response !== 'object' || response === null ||
+                    typeof response.rdef !== 'object' ||
+                    typeof response.rdef.imageId !== 'number' ||
+                    response.rdef.imageId !== this.image_id)
+                        this.copied_img_rdef = null;
+                else this.copied_img_rdef = response.rdef;
+                if (typeof callback === 'function')
+                    callback(this.copied_img_rdef);},
+            error : () => {
+                this.copied_img_rdef = null;
+                callback(this.copied_img_rdef);}
+        });
     }
 
     /**
@@ -382,5 +416,22 @@ export default class ImageInfo {
             start_val: start_val,
             end_val: end_val
         }
+    }
+
+    /**
+     * Helper to determine if the present channel data might need the full range
+     * mode to be displayed, i.e. start/end are outsided of min/max
+     *
+     * @return {Object|null} returns object with the respective min,max properties or null
+     * @memberof ChannelRange
+     */
+    needsFullRange() {
+        let ret = false;
+
+        this.channels.map((c) => {
+            if (c.window.start < c.window.min || c.window.end > c.window.max)
+                ret = true;});
+
+        return ret;
     }
 }

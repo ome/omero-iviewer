@@ -1,6 +1,7 @@
 // js
 import Context from '../app/context';
 import Misc from '../utils/misc';
+import {CHANNEL_SETTINGS_MODE} from '../utils/constants';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 
 import {
@@ -126,7 +127,6 @@ export default class Settings extends EventSubscriber {
                 url+= (i !== 0 ? ',' : '') + (!c.active ? '-' : '') + (++i) +
                  "|" + c.window.start + ":" + c.window.end + "$" + c.color
         );
-        url += "&_token="
         $.ajax(
             {url : url,
              method: 'POST',
@@ -165,7 +165,27 @@ export default class Settings extends EventSubscriber {
     * @memberof Settings
     */
     copy() {
-        alert("not implemented yet");
+        let imgInf = this.image_config.image_info;
+        let url =
+            this.context.server + "/webgateway/copyImgRDef/?imageId=" +
+            imgInf.image_id + "&pixel_range=" + imgInf.range[0] + ":" +
+            imgInf.range[1] + '&m=' + imgInf.model[0] +
+            "&p=" + imgInf.projection + "&q=0.9&ia=0&c=";
+        let i=0;
+        imgInf.channels.map(
+            (c) =>
+                url+= (i !== 0 ? ',' : '') + (!c.active ? '-' : '') + (++i) +
+                 "|" + c.window.start + ":" + c.window.end + "$" + c.color
+        );
+
+        $.ajax(
+            {url : url,
+             method: 'GET',
+             cache: false,
+             dataType : Misc.useJsonp(this.context.server) ? 'jsonp' : 'json',
+            success : (response) => this.image_config.image_info.requestImgRDef(),
+            error : (error) => {}
+        });
     }
 
     /**
@@ -174,7 +194,82 @@ export default class Settings extends EventSubscriber {
     * @memberof Settings
     */
     paste() {
-        alert("not implemented yet");
+        let imgInfo = this.image_config.image_info;
+        // success handler after retrieving copy values
+        let handler = ((rdef) => {
+            if (rdef === null) return;
+
+            let history = [];
+            // model (color/greyscale)
+            if (typeof rdef.m === 'string' && rdef.m.length > 0) {
+                let model = rdef.m.toLowerCase();
+                if (model[0] === 'g' || model[0] === 'c') {
+                    let oldValue = imgInfo.model;
+                    imgInfo.model = model[0] === 'g' ? "greyscale" : "color";
+                    if (oldValue !== imgInfo.model)
+                       history.push({ // add to history if different
+                           prop: ['image_info', 'model'],
+                           old_val : oldValue,
+                           new_val: imgInfo.model,
+                           type: 'string'});
+                }
+            }
+
+            // copy channel values and add change to history
+            let channels = Misc.parseChannelParameters(rdef.c);
+            let mode = CHANNEL_SETTINGS_MODE.MIN_MAX;
+            if (channels)
+                for (let i=0;i<channels.length;i++) {
+                    if (typeof imgInfo.channels[i] !== 'object') continue;
+                    let actChannel = imgInfo.channels[i];
+                    let copiedChannel = channels[i];
+                    if (actChannel.active !== copiedChannel.active) {
+                       history.push({
+                           prop: ['image_info', 'channels', '' + i, 'active'],
+                           old_val : actChannel.active,
+                           new_val: copiedChannel.active,
+                           type: 'boolean'});
+                        actChannel.active = copiedChannel.active;
+                    }
+                    if (actChannel.window.start !== copiedChannel.start) {
+                        history.push({
+                            prop: ['image_info', 'channels',
+                                '' + i, 'window', 'start'],
+                            old_val : actChannel.window.start,
+                            new_val: copiedChannel.start,
+                            type: 'number'});
+                         actChannel.window.start = copiedChannel.start;
+                    }
+                    if (actChannel.window.end !== copiedChannel.end) {
+                        history.push({
+                            prop: ['image_info', 'channels',
+                                '' + i, 'window', 'end'],
+                            old_val : actChannel.window.end,
+                            new_val: copiedChannel.end,
+                            type: 'number'});
+                         actChannel.window.end = copiedChannel.end;
+                    }
+                    if (actChannel.color !== copiedChannel.color) {
+                       history.push({
+                           prop: ['image_info', 'channels', '' + i, 'color'],
+                           old_val : actChannel.color,
+                           new_val: copiedChannel.color,
+                           type: 'string'});
+                        actChannel.color = copiedChannel.color;
+                    }
+                };
+            if (history.length > 0) {
+                history.splice(0, 0,
+                    {   prop: ['image_info','initial_values'],
+                        old_val : true,
+                        new_val:  true,
+                        type : "boolean"});
+                this.image_config.addHistory(history);
+            }
+
+            this.image_config.changed();
+        });
+        imgInfo.requestImgRDef(handler);
     }
 
     /**
