@@ -2,6 +2,7 @@
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import {CHANNEL_SETTINGS_MODE} from '../utils/constants';
+import { THUMBNAILS_UPDATE } from '../events/events';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 
 import {
@@ -130,7 +131,12 @@ export default class Settings extends EventSubscriber {
         $.ajax(
             {url : url,
              method: 'POST',
-            success : (response) => this.image_config.resetHistory(),
+            success : (response) => {
+                this.image_config.resetHistory();
+                this.context.publish(
+                    THUMBNAILS_UPDATE,
+                    { config_id : this.config_id, ids: [image_info.image_id]});
+            },
             error : (error) => {}
         });
     }
@@ -209,7 +215,7 @@ export default class Settings extends EventSubscriber {
         if (!toAll) {
             params.dataType = dataType;
             params.success =
-                (response) => this.image_config.image_info.requestImgRDef();
+                (response) => imgInf.requestImgRDef();
         }else {
             params.data={
                 toids: imgInf.dataset_id,
@@ -219,12 +225,14 @@ export default class Settings extends EventSubscriber {
             params.dataType = "json";
             params.success =
                 (response) => {
+                    let thumbIds = [imgInf.image_id];
                     if (typeof response === 'object' && response !== null &&
-                        Misc.isArray(response.True)) {
-                            // TODO: update thumbnails
-                            console.info(response.True);
-                        }
-                }
+                        Misc.isArray(response.True))
+                        thumbIds = thumbIds.concat(response.True);
+                    // send out change notification
+                    this.context.publish(
+                        THUMBNAILS_UPDATE,
+                        { config_id : this.config_id, ids: thumbIds});}
         }
         $.ajax(params);
     }

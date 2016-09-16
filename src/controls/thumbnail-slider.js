@@ -2,7 +2,10 @@
 import {inject,customElement} from 'aurelia-framework';
 import Context from '../app/context';
 import Misc from '../utils/misc';
-import {IMAGE_CONFIG_UPDATE,EventSubscriber} from '../events/events';
+import {
+    IMAGE_CONFIG_UPDATE, THUMBNAILS_UPDATE,
+    EventSubscriber
+} from '../events/events';
 
 /**
  * Displays the image thumbnails
@@ -22,9 +25,16 @@ export default class ThumbnailSlider extends EventSubscriber {
     /**
      * a list of thumbnails with a url and an id property each
      * @memberof ThumbnailSlider
+     * @type {Map}
+     */
+    thumbnails = new Map();
+
+    /**
+     * the default thumbnail length
+     * @memberof ThumbnailSlider
      * @type {Array.<Object>}
      */
-    thumbnails = [];
+    thumbnail_length = 80;
 
     /**
      * our list of events we subscribe to via the EventSubscriber
@@ -33,7 +43,9 @@ export default class ThumbnailSlider extends EventSubscriber {
      */
     sub_list = [
         [IMAGE_CONFIG_UPDATE,
-            (params={}) => this.init(params.dataset_id)]];
+            (params={}) => this.init(params.dataset_id)],
+        [THUMBNAILS_UPDATE,
+            (params={}) => this.updateThumbnails(params)]];
 
     /**
      * @constructor
@@ -99,14 +111,16 @@ export default class ThumbnailSlider extends EventSubscriber {
                 if (!Misc.isArray(response)) return;
 
                 // empty what has been there
-                this.thumbnails = [];
+                this.thumbnails.clear();
                  // traverse results and store them internally
                  response.map((item) => {
                      if (typeof item.thumb_url === "string" &&
                             item.thumb_url.length> 0 &&
                             typeof item.id === "number")
-                        this.thumbnails.push(
-                            {id : item.id, url : item.thumb_url});
+                        this.thumbnails.set(
+                            item.id,
+                            {url : item.thumb_url + this.thumbnail_length + "/",
+                            revision : 0});
                  });
             },
             error : (response) => {
@@ -150,5 +164,22 @@ export default class ThumbnailSlider extends EventSubscriber {
      */
     onClick(image_id) {
         this.context.addImageConfig(image_id);
+    }
+
+    /**
+     * Updates one or more thumbnails
+     *
+     * @memberof ThumbnailSlider
+     * @param {Object} params the parameter object received by the event
+     */
+    updateThumbnails(params = {}) {
+        if (typeof params !== 'object' ||
+            !Misc.isArray(params.ids)) return;
+
+        params.ids.map((t) => {
+            let thumb = this.thumbnails.get(t);
+            if (thumb && typeof thumb.revision === 'number')
+                thumb.revision++;
+        });
     }
 }

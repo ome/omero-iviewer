@@ -14,6 +14,8 @@ export const IMAGE_DIMENSION_CHANGE = "IMAGE_DIMENSION_CHANGE";
 export const IMAGE_REGIONS_VISIBILITY = "IMAGE_REGIONS_VISIBILITY";
 /** Retrieves the viewer image settings */
 export const VIEWER_IMAGE_SETTINGS = "VIEWER_IMAGE_SETTINGS";
+/** whenever thumbnails are supposed to be updated */
+export const THUMBNAILS_UPDATE = "THUMBNAILS_UPDATE";
 
 /**
  * Facilitates recurring event subscription

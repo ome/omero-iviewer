@@ -287,6 +287,7 @@ export default class ImageInfo {
             success : (response) => {
                 if (typeof response !== 'object' || response === null ||
                     typeof response.rdef !== 'object' ||
+                    response.rdef === null ||
                     typeof response.rdef.imageId !== 'number' ||
                     response.rdef.imageId !== this.image_id)
                         this.copied_img_rdef = null;
