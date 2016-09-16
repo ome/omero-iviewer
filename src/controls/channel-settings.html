@@ -17,7 +17,8 @@
                 index.bind="$index"
                 channel.bind="channel" revision.bind="image_config.revision"
                 mode.bind="mode"
-                range.bind="image_config.image_info.range">
+                range.bind="image_config.image_info.range"
+                change_mode.call="onModeChange($event)">
             </channel-range>
         </div>
         <div class="channel-mode btn-group btn-group-sm" role="group" data-toggle="buttons">

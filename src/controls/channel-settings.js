@@ -165,27 +165,6 @@ export default class ChannelSettings extends EventSubscriber {
         if (newValue === null) return;
         if (oldValue === null) oldValue = newValue;
 
-        // collect changes for history
-        let history = [];
-        if (this.enable_mode_history && newValue !== oldValue) {
-            // the order of these is essential
-            //this is to force the initial values
-            history.push({
-               prop: ['image_info','initial_values'],
-               old_val : true,
-               new_val:  true,
-               type : "boolean"});
-            history.push({
-               scope: this, prop: ['enable_mode_history'],
-               old_val : false,
-               new_val:  false,
-               type : "boolean"});
-            history.push({
-               scope: this, prop: ['mode'],
-               old_val : oldValue,
-               new_val:  newValue,
-               type : "number"});
-         };
          // reset flag
          if (!this.enable_mode_history) {
              this.enable_mode_history = true;
@@ -195,9 +174,35 @@ export default class ChannelSettings extends EventSubscriber {
         let conf = this.image_config;
         let imgInfo = conf.image_info;
         let snapshotRange = (() => {
+            // collect changes for history
+            let history = [];
             // iterate over channels
             for (let i=0;i<imgInfo.channels.length;i++)
                 this.takeChannelSnapshot(newValue, i, history);
+
+                if (this.enable_mode_history && history.length > 0 &&
+                        newValue !== oldValue) {
+                    // the order of these is essential
+                    //this is to force the initial values
+                    let modeAdditions = [];
+                    modeAdditions.push({
+                       prop: ['image_info','initial_values'],
+                       old_val : true,
+                       new_val:  true,
+                       type : "boolean"});
+                    modeAdditions.push({
+                       scope: this, prop: ['enable_mode_history'],
+                       old_val : false,
+                       new_val:  false,
+                       type : "boolean"});
+                    modeAdditions.push({
+                       scope: this, prop: ['mode'],
+                       old_val : oldValue,
+                       new_val:  newValue,
+                       type : "number"});
+                    history = modeAdditions.concat(history);
+                 };
+
             conf.addHistory(history);
         });
         // for imported we do this (potentially) async
@@ -299,15 +304,20 @@ export default class ChannelSettings extends EventSubscriber {
      * only ever acts in cases where the observer won't act i.e. if mode has
      * not changed but user wants a reset by clicking again.
      *
-     * @param {number} mode the chosen mode
+     * @param {number|Object} mode the chosen mode
      * @memberof ChannelSettings
      */
      onModeChange(mode) {
-        mode = parseInt(mode);
+        let fullrange = false;
+        if (typeof mode === 'object' && mode !== null &&
+                typeof mode.mode === 'number' && typeof mode.fullrange) {
+            mode = parseInt(mode.mode);
+            fullrange = true;
+        } else mode = parseInt(mode);
         if (typeof mode !== 'number' || mode < 0 || mode > 2) return;
         this.old_mode = this.mode;
         this.mode = mode;
-        this.image_config.image_info.initial_values = false;
+        if (!fullrange) this.image_config.image_info.initial_values = false;
         if (this.old_mode !== this.mode) return;
 
         // affect change if mode was clicked more than once

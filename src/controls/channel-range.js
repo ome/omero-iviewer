@@ -43,6 +43,13 @@ export default class ChannelRange  {
     @bindable mode = 0;
 
     /**
+     * the channels settings change mode handler
+     * @memberof ChannelRange
+     * @type {function}
+     */
+    @bindable change_mode = null;
+
+    /**
      * the revision count (used for history)
      * @memberof ChannelRange
      * @type {number}
@@ -67,7 +74,7 @@ export default class ChannelRange  {
      * @constructor
      * @param {Context} context the application context (injected)
      */
-    constructor(context, element, bindingEngine) {
+    constructor(context, element, bindingEngine, bindingContext) {
         this.context = context;
         this.element = element;
         this.bindingEngine = bindingEngine;
@@ -83,7 +90,6 @@ export default class ChannelRange  {
     bind() {
         this.registerObservers();
         this.updateUI();
-
     }
 
     /**
@@ -102,10 +108,17 @@ export default class ChannelRange  {
                     let imgInf =
                         this.context.getSelectedImageConfig().image_info;
                     imgInf.initial_values = true;
-                    if (this.mode === CHANNEL_SETTINGS_MODE.MIN_MAX &&
-                        imgInf.needsFullRange())
+                    // we need to distinguish for cases that exceed the
+                    // min/max view
+                    let fRange = imgInf.needsFullRange();
+                    if (fRange) {
                         this.mode = CHANNEL_SETTINGS_MODE.FULL_RANGE;
-                    else this.mode = CHANNEL_SETTINGS_MODE.MIN_MAX;
+                        this.change_mode({mode: this.mode, fullrange: true});
+                    } else if (!fRange &&
+                        this.mode !== CHANNEL_SETTINGS_MODE.MIN_MAX) {
+                        this.mode = CHANNEL_SETTINGS_MODE.MIN_MAX;
+                        this.change_mode({mode: this.mode, fullrange: true});
+                    }
                     this.updateUI();}));
     }
 
