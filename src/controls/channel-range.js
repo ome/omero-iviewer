@@ -1,7 +1,8 @@
-//css
+//css & images
 require('../../node_modules/jquery-ui/themes/base/spinner.css');
 require('../../node_modules/spectrum-colorpicker/spectrum.css');
-
+require('../css/images/close.gif');
+require('../css/images/colorpicker.png');
 // js
 import Context from '../app/context';
 import Misc from '../utils/misc';
@@ -127,6 +128,18 @@ export default class ChannelRange  {
      *
      * @memberof ChannelRange
      */
+    showLuts(newValue, oldValue) {
+        let luts = $(this.element).find('.luts');
+        luts.show();
+        $(this.element).find('.luts-close').off("click");
+        $(this.element).find('.luts-close').on("click", () => luts.hide());
+    }
+
+    /**
+     * Deals with the mode change triggered by the observer
+     *
+     * @memberof ChannelRange
+     */
     changeMode(newValue, oldValue) {
         if (newValue === null) return;
         if (oldValue === null) oldValue = newValue;
@@ -227,7 +240,7 @@ export default class ChannelRange  {
              $(this.element).find(".channel-end").off("input");
              $(this.element).find(".channel-end").spinner("destroy");
              $(this.element).find(".channel-slider").slider("destroy");
-             $(this.element).find(".channel-color").spectrum("destroy");
+             $(this.element).find(".channel-color input").spectrum("destroy");
          } catch (ignored) {}
      }
 
@@ -277,14 +290,17 @@ export default class ChannelRange  {
        $(this.element).find(".channel-end").spinner(
            "value",minMaxValues.end_val);
 
-       //channel end
+       //channel color
        $(this.element).find(".channel-color input").spectrum({
             color: "#" + this.channel.color,
             showInput: true,
             className: "full-spectrum",
             showInitial: true,
             preferredFormat: "hex",
-            appendTo: $(this.element),
+            appendTo: $(this.element).find('.channel-color'),
+            beforeShow: () => {
+                $(this.element).find('.luts').hide();
+            },
             change: (color) => this.onColorChange(color.toHexString())});
 }
 

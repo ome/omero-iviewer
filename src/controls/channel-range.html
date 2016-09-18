@@ -2,5 +2,15 @@
     <input class="channel-start"/>
     <div class="channel-slider"></div>
     <input class="channel-end" type="text"/>
-    <div class="channel-color"><input/><div>
+    <div class="channel-color">
+        <img src="../css/images/colorpicker.png"
+            click.delegate="showLuts()"/>
+        <div class="luts">
+            <img class="luts-close" src="../css/images/close.gif"/>
+            <hr/>
+            <div>&nbsp;LUTS to come</div>
+            <hr/>
+            <div>&nbsp;Pick Color:&nbsp;<input/></div>
+        </div>
+    </div>
 </template>
