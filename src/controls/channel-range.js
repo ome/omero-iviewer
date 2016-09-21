@@ -3,6 +3,7 @@ require('../../node_modules/jquery-ui/themes/base/spinner.css');
 require('../../node_modules/spectrum-colorpicker/spectrum.css');
 require('../css/images/close.gif');
 require('../css/images/colorpicker.png');
+
 // js
 import Context from '../app/context';
 import Misc from '../utils/misc';
@@ -72,6 +73,13 @@ export default class ChannelRange  {
     @bindable range = null;
 
     /**
+     * the lookup tables (bound via channel-settings
+     * @memberof ChannelRange
+     * @type {Array.<Object>}
+     */
+    @bindable luts = null;
+
+    /**
      * @constructor
      * @param {Context} context the application context (injected)
      */
@@ -133,6 +141,15 @@ export default class ChannelRange  {
         luts.show();
         $(this.element).find('.luts-close').off("click");
         $(this.element).find('.luts-close').on("click", () => luts.hide());
+    }
+
+    /**
+     * click handler for lut
+     *
+     * @memberof ChannelRange
+     */
+    chooseLut(index) {
+        alert("yet to come");
     }
 
     /**
@@ -207,24 +224,6 @@ export default class ChannelRange  {
             this.observers = [];
         }
     }
-
-    /**
-     * Handles changes of the associated ImageConfig
-     *
-     * @memberof ChannelSettings
-     * @param {Object} params the event notification parameters
-     */
-     onImageConfigChange(params = {}) {
-         // if the event is for another config, forget it...
-         if (params.config_id !== this.config_id) return;
-
-         // change image config and update image info
-         this.config_id = params.config_id;
-         this.image_info =
-             this.context.getImageConfig(params.config_id).image_info;
-         this.bind();
-         this.updateUI();
-     }
 
      /**
       * Overridden aurelia lifecycle method:

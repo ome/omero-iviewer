@@ -8,7 +8,14 @@
         <div class="luts">
             <img class="luts-close" src="../css/images/close.gif"/>
             <hr/>
-            <div>&nbsp;LUTS to come</div>
+            <div class="luts-item" repeat.for="lut of luts"
+                click.delegate="chooseLut($index)">
+                <div class="luts-preview" css="background-image:
+                    url(${'\'' + context.server + '/static/webgateway/img/luts_10.png\''});
+                    background-position: 0 -${$index * 20}px;">
+                    <div class="luts-name">${lut.nice_name}</div>
+                </div>
+            </div>
             <hr/>
             <div>&nbsp;Pick Color:&nbsp;<input/></div>
         </div>

@@ -102,6 +102,10 @@ export default class ChannelSettings extends EventSubscriber {
 
         if (this.image_config === null ||
                 this.image_config.image_info === null) return;
+
+        // fetch lookup tables
+        this.image_config.requestLookupTables(() => {});
+
         // we select the mode based on the channel range values
         // if they are outside min/max, we need the full range view
         if (this.image_config.image_info.needsFullRange())

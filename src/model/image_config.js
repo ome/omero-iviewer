@@ -1,6 +1,7 @@
 import {noView} from 'aurelia-framework';
 import ImageInfo from '../model/image_info';
 import RegionsInfo from '../model/regions_info';
+import Misc from '../utils/misc';
 import History from './history';
 
 /**
@@ -34,6 +35,12 @@ export default class ImageConfig extends History {
      * @type {RegionsInfo}
      */
     regions_info = null;
+
+    /**
+     * @memberof ImageConfig
+     * @type {Array.<Object>}
+     */
+    luts = null;
 
     /**
      * @constructor
@@ -86,6 +93,36 @@ export default class ImageConfig extends History {
      */
     changed() {
         this.revision++;
+    }
+
+    /**
+     * Retrieves the lookup tables via ajax
+     *
+     * @param {function} callback a callback for success
+     * @memberof ImageConfig
+     */
+    requestLookupTables(callback = null) {
+        if (this.luts) {
+            if (typeof callback === 'function') callback(this.luts);
+            return;
+        }
+
+        let server = this.image_info.context.server;
+        $.ajax(
+            {url : server + "/webgateway/luts/",
+            dataType : Misc.useJsonp(server) ? "jsonp" : "json",
+            cache : false,
+            success : (response) => {
+                if (typeof response !== 'object' || response === null ||
+                    !Misc.isArray(response.luts)) return;
+
+                this.luts = response.luts;
+                this.luts.map(
+                    (l) => l.nice_name =
+                        l.name.replace(/.lut/g, "").replace(/_/g, " "));
+                if (typeof callback === 'function') callback(this.luts);
+            }
+        });
     }
 
 }

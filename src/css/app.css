@@ -53,14 +53,14 @@ a.ui-button:active,
 
 /** SPECTRUM colorpicker adjustments START **/
 .full-spectrum {
-    width: 120px;
+    width: 100px;
     height: 32px;
     margin-bottom: 2px;
 }
 .sp-preview {
     margin-left: 2px;
     height: 20px;
-    width: 95px;
+    width: 80px;
 }
 .sp-container {
     position: relative!important;
@@ -229,6 +229,7 @@ thumbnail-slider img {
 .right-hand-panel {
     width: 300px;
     max-width: 300px;
+    overflow-y: hidden;
 }
 
 .right-hand-panel li a {
@@ -280,7 +281,6 @@ thumbnail-slider img {
 }
 
 .channel-color {
-    height: 100%;
     float: left;
     margin-left: 2px;
     width: 25px;
@@ -293,13 +293,38 @@ thumbnail-slider img {
     z-index: 1000;
     top: 32px;
     right: 5px;
-    width: 200px;
+    max-height: 250px;
+    overflow-y: auto;
+    width: 250px;
+}
+.luts hr {
+    margin-top: 3px;
+    margin-bottom: 3px;
 }
 .luts-close {
     position: absolute;
     top: 2px;
     right: 3px;
 }
+.luts-item {
+    margin-left: 2px;
+    margin-bottom: 4px;
+}
+.luts-preview {
+    margin-right: 2px;
+    background-size: 100% 740px;
+    background-repeat: no-repeat;
+    background-clip:content-box;
+    height: 13px;
+    width: 100px;
+}
+.luts-name {
+    position: relative;
+    left: 105px;
+    line-height: 13px;
+    font-size: 13px;
+}
+
 .channel-mode {
     margin-top: 2px;
     width: 100%;
