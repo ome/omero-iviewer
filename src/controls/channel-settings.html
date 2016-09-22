@@ -6,8 +6,16 @@
 
             <button type="button"
                 title="${channel.label}"
-                css="background-color: #${channel.color};
-                    ${channel.active ? 'border-style: inset' : 'border-style: outset'}"
+                css="
+                    ${image_config.hasLookupTable(channel.color) ?
+                        'background-image: url(\'' + context.server +
+                            '/static/webgateway/img/luts_10.png\');
+                         background-size: 100% 1110px;
+                         background-repeat: no-repeat;
+                         background-position: 0 -' +
+                           (image_config.luts.get(channel.color).index*30) + 'px' :
+                        'background-color: #' + channel.color}
+                    ${channel.active ? ';border-style: inset' : ';border-style: outset'}"
                 class="btn btn-default btn-xs channel-active"
                 click.delegate="toggleChannel($index)">
                 ${channel.label}

@@ -129,7 +129,7 @@ export default class Misc {
 
             // extract last bit: color tokens
             c = c.substring(pos+1); // shave off range info
-            if (c.length !== 3 && c.length !== 6) continue; // we need hex notation length
+            //if (c.length !== 3 && c.length !== 6) continue; // we need hex notation length
             tmp['color'] = c;
 
             // add to return

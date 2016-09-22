@@ -314,7 +314,6 @@ thumbnail-slider img {
     margin-right: 2px;
     background-size: 100% 740px;
     background-repeat: no-repeat;
-    background-clip:content-box;
     height: 13px;
     width: 100px;
 }

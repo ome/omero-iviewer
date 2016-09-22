@@ -146,10 +146,12 @@ export default class ChannelRange  {
     /**
      * click handler for lut
      *
+     * @param {string} id the lookup name
      * @memberof ChannelRange
      */
-    chooseLut(index) {
-        alert("yet to come");
+    chooseLut(id) {
+        $(this.element).find('.luts').hide();
+        this.onColorChange(id);
     }
 
     /**
@@ -278,8 +280,10 @@ export default class ChannelRange  {
         });
         $(this.element).find(".channel-slider").css(
             "background", "white");
-        $(this.element).find(".channel-slider").find(".ui-slider-range").css(
-            "background", "#" + this.channel.color);
+        // change slider background
+        this.setSliderBackgroundAfterColorChange(
+            this.luts instanceof Map &&
+               typeof this.luts.get(this.channel.color) === 'object');
 
         //channel end
         $(this.element).find(".channel-end").spinner(
@@ -311,14 +315,48 @@ export default class ChannelRange  {
      * @memberof ChannelRange
      */
      onColorChange(value) {
+         let isLut = false;
+         if (this.luts instanceof Map &&
+                typeof this.luts.get(value) === 'object')
+            isLut = true;
          let oldValue = this.channel.color;
-         this.channel.color = value.substring(1);
-         $(this.element).find(".channel-slider").find(".ui-slider-range").css(
-             "background", "#" + this.channel.color);
+         this.channel.color = isLut ? value : value.substring(1);
+         // change slider background
+         this.setSliderBackgroundAfterColorChange(isLut);
          // add history record
          this.context.getSelectedImageConfig().addHistory({
              prop: ['image_info', 'channels', '' + this.index,'color'],
              old_val : oldValue, new_val: this.channel.color, type: 'string'});
+     }
+
+     /**
+     * Chnages slider looks after color/lut selection
+     *
+     * @param {boolean} ui_triggered was triggered by ui interaction
+     * @private
+     * @memberof ChannelRange
+     */
+     setSliderBackgroundAfterColorChange(isLut) {
+         if (isLut) {
+             $(this.element).find(".channel-slider").find(".ui-slider-range").css(
+             "background", "");
+             $(this.element).find(".channel-slider").find(".ui-slider-range").css(
+                 {"background-image" :
+                    "url('" + this.context.server +
+                    "/static/webgateway/img/luts_10.png'",
+                  "background-position" : "0 -" +
+                    (this.luts.get(this.channel.color).index*20) + "px",
+                  "background-size" : "100% 740px",
+                  "background-repeat": "no-repeat"});
+         } else {
+             $(this.element).find(".channel-slider").find(".ui-slider-range").css(
+                 {"background-image" :"",
+                  "background-position" : "",
+                  "background-size" : "",
+                  "background-repeat": ""});
+             $(this.element).find(".channel-slider").find(".ui-slider-range").css(
+             "background", "#" + this.channel.color);
+         }
      }
 
      /**

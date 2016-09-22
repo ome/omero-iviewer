@@ -38,7 +38,7 @@ export default class ImageConfig extends History {
 
     /**
      * @memberof ImageConfig
-     * @type {Array.<Object>}
+     * @type {Map}
      */
     luts = null;
 
@@ -63,6 +63,7 @@ export default class ImageConfig extends History {
      * @memberof ImageConfig
      */
     bind() {
+        this.requestLookupTables();
         this.image_info.bind();
         this.regions_info.bind();
     }
@@ -116,13 +117,33 @@ export default class ImageConfig extends History {
                 if (typeof response !== 'object' || response === null ||
                     !Misc.isArray(response.luts)) return;
 
-                this.luts = response.luts;
-                this.luts.map(
-                    (l) => l.nice_name =
-                        l.name.replace(/.lut/g, "").replace(/_/g, " "));
+                this.luts = new Map();
+                let i=0;
+                response.luts.map(
+                    (l) => {
+                        let mapValue =
+                            Object.assign({
+                                nice_name :
+                                    l.name.replace(/.lut/g, "").replace(/_/g, " "),
+                                index : i++
+                            }, l);
+                        this.luts.set(mapValue.name, mapValue);
+                    });
                 if (typeof callback === 'function') callback(this.luts);
             }
         });
     }
 
+    /**
+     * Queries whether a lut by the given name is in our map
+     *
+     * @param {string} name the lut name
+     * @memberof ImageConfig
+     */
+    hasLookupTable(name) {
+        if (this.luts === null || typeof name !== 'string') return false;
+
+        let lut = this.luts.get(name);
+        return typeof lut === 'object';
+    }
 }
