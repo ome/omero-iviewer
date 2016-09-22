@@ -2,6 +2,18 @@
 html, body, .frame, .center, ol3-viewer {
     height: 100%;
 }
+
+hr {
+    border-top-color: rgb(227, 230, 232);
+    border-top-style: solid;
+    border-top-width: 1px;
+    border-bottom-color: rgba(255, 255, 255, 0.8);
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+    margin-top: 3px;
+    margin-bottom: 3px;
+}
+
 .container-fluid {
     padding: 0px;
 }
@@ -297,10 +309,6 @@ thumbnail-slider img {
     overflow-y: auto;
     width: 250px;
 }
-.luts hr {
-    margin-top: 3px;
-    margin-bottom: 3px;
-}
 .luts-close {
     position: absolute;
     top: 2px;
@@ -309,6 +317,7 @@ thumbnail-slider img {
 .luts-item {
     margin-left: 2px;
     margin-bottom: 4px;
+    cursor: pointer;
 }
 .luts-preview {
     margin-right: 2px;
@@ -340,4 +349,20 @@ thumbnail-slider img {
     width: 50px;
     border-width: 2px;
     border-radius: 0px;
+}
+
+.user-settings {
+    border: 1px solid blue;
+    width: 95px;
+    margin: 2px;
+}
+
+.user-settings img {
+    max-width: 90px;
+    max-height: 90px;
+}
+.user-settings div {
+    text-align: center;
+    max-width: 90px;
+    color: blue;
 }

@@ -60,12 +60,17 @@
         </div>
     </div>
 
-    <div class="row">
+    <div class="row" style="height: 100%">
         <channel-settings class="col-xs-12" config_id.bind="config_id"></channel-settings>
     </div>
 
     <div class="row">
-
+        <hr />
+        <span>User Settings:</span>
+        <div class="user-settings">
+            <img src="${context.server}/webgateway/render_thumbnail/${image_config.image_info.image_id}/90" />
+            <div>${image_config.image_info.author}</div>
+        </div>
     </div>
 
 </template>

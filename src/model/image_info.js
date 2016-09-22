@@ -32,6 +32,13 @@ export default class ImageInfo {
     has_scalebar = false;
 
     /**
+     * the imageAuthor in the json response
+     * @memberof ImageInfo
+     * @type {string}
+     */
+    author = null;
+
+    /**
      * a flag for whether we are allowed to save the settings
      * @memberof ImageInfo
      * @type {boolean}
@@ -239,9 +246,10 @@ export default class ImageInfo {
         this.model = initialModel !== null ?
             initialModel.toLowerCase() : response.rdefs.model;
 
-        // can Annotate means we are allowed to store
+        // author and can Annotate means we are allowed to store
         this.can_save_settings = response.perms.canAnnotate;
-
+        if (typeof response.meta.imageAuthor === 'string')
+            this.author = response.meta.imageAuthor;
         this.sanityCheckInitialValues();
 
         // signal that we are ready and
