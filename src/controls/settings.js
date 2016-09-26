@@ -2,11 +2,11 @@
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import {CHANNEL_SETTINGS_MODE} from '../utils/constants';
-import { THUMBNAILS_UPDATE } from '../events/events';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 
 import {
-    IMAGE_CONFIG_UPDATE, IMAGE_SETTINGS_CHANGE, EventSubscriber
+    IMAGE_CONFIG_UPDATE, IMAGE_SETTINGS_CHANGE, THUMBNAILS_UPDATE,
+    EventSubscriber
 } from '../events/events';
 
 /**
@@ -32,12 +32,28 @@ export default class Settings extends EventSubscriber {
     image_config = null;
 
     /**
+     * a revision count that forces updates of user setting thumbs after save
+     * @memberof Settings
+     * @type {number}
+     */
+    revision = null;
+
+    /**
+     * all rendering definitions for the image
+     * @memberof Settings
+     * @type {Array.<Object>}
+     */
+    rdefs = null;
+
+    /**
      * events we subscribe to
      * @memberof Settings
      * @type {Array.<string,function>}
      */
     sub_list = [[IMAGE_CONFIG_UPDATE,
-                    (params = {}) => this.onImageConfigChange(params)]];
+                    (params = {}) => this.onImageConfigChange(params)],
+                [THUMBNAILS_UPDATE,
+                    (params={}) => this.revision++]];
 
     /**
      * @constructor
@@ -59,6 +75,44 @@ export default class Settings extends EventSubscriber {
     bind() {
         this.subscribe();
         this.registerObserver();
+        this.requestAllRenderingDefs();
+    }
+
+    /**
+     * Retrieves all rendering settings for the image
+     *
+     * @memberof Settings
+     */
+    requestAllRenderingDefs() {
+        if (this.image_config === null || this.image_config.image_info === null)
+            return;
+
+        let img_id = this.image_config.image_info.image_id;
+        $.ajax({url : //this.context.server + "/webgateway/get_all_rdefs/" + img_id, // TODO: adjustments
+                this.context.server + "/viewer-ng/get_all_rdefs/" + img_id,
+            dataType : Misc.useJsonp(this.context.server) ? 'jsonp' : 'json',
+            cache : false,
+            success : (response) => {
+                if (typeof response !== 'object' || response === null ||
+                     !Misc.isArray(response.rdefs)) return;
+
+                this.rdefs = response.rdefs;}});
+    }
+
+    /**
+     * Convenience method returning the url for the thumbnail
+     * (without the size and rdef param)
+     *
+     * @memberof Settings
+     * @return {string} an (incomplete) url
+     */
+    getRdefThumbUrl() {
+        if (this.image_config === null || this.image_config.image_info === null)
+            return;
+
+        let img_id = this.image_config.image_info.image_id;
+
+        return this.context.server + "/webgateway/render_thumbnail/" + img_id;
     }
 
     /**
@@ -319,6 +373,17 @@ export default class Settings extends EventSubscriber {
             this.image_config.changed();
         });
         imgInfo.requestImgRDef(handler);
+    }
+
+    /**
+    * Applies user settings from rdefs[index]
+    *
+    * @param {number} index the index in the rdefs array
+    * @memberof Settings
+    */
+    applyUserSetting(index) {
+        // TODO: merge with paste functionality to converge on common path
+        console.info(this.rdefs[index]);
     }
 
     /**

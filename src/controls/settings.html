@@ -66,10 +66,12 @@
 
     <div class="row">
         <hr />
-        <span>User Settings:</span>
-        <div class="user-settings">
-            <img src="${context.server}/webgateway/render_thumbnail/${image_config.image_info.image_id}/90" />
-            <div>${image_config.image_info.author}</div>
+        <div>User Settings:</div>
+        <div repeat.for="rdef of rdefs"
+            class="user-settings"
+            click.delegate="applyUserSetting($index)">
+            <img src="${getRdefThumbUrl()}/90/?rdefId=${rdef.id}&${revision}" />
+            <div>${rdef.owner.firstName + ' ' + rdef.owner.lastName}</div>
         </div>
     </div>
 

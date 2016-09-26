@@ -352,6 +352,8 @@ thumbnail-slider img {
 }
 
 .user-settings {
+    cursor: pointer;
+    float: left;
     border: 1px solid blue;
     width: 95px;
     margin: 2px;
