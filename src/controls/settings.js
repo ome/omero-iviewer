@@ -88,8 +88,8 @@ export default class Settings extends EventSubscriber {
             return;
 
         let img_id = this.image_config.image_info.image_id;
-        $.ajax({url : //this.context.server + "/webgateway/get_all_rdefs/" + img_id, // TODO: adjustments
-                this.context.server + "/viewer-ng/get_all_rdefs/" + img_id,
+        $.ajax({url :
+            this.context.server + "/webgateway/get_image_rdefs_json/" + img_id,
             dataType : Misc.useJsonp(this.context.server) ? 'jsonp' : 'json',
             cache : false,
             success : (response) => {
