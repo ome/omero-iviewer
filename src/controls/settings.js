@@ -81,9 +81,10 @@ export default class Settings extends EventSubscriber {
     /**
      * Retrieves all rendering settings for the image
      *
+     * @param {function} action a handler to be executed in both success/error case
      * @memberof Settings
      */
-    requestAllRenderingDefs() {
+    requestAllRenderingDefs(action) {
         if (this.image_config === null || this.image_config.image_info === null)
             return;
 
@@ -96,7 +97,12 @@ export default class Settings extends EventSubscriber {
                 if (typeof response !== 'object' || response === null ||
                      !Misc.isArray(response.rdefs)) return;
 
-                this.rdefs = response.rdefs;}});
+                this.rdefs = response.rdefs;
+                if (typeof action === 'function') action();
+            },
+            error : () => {
+                if (typeof action === 'function') action();
+            }});
     }
 
     /**
@@ -187,9 +193,14 @@ export default class Settings extends EventSubscriber {
              method: 'POST',
             success : (response) => {
                 this.image_config.resetHistory();
-                this.context.publish(
-                    THUMBNAILS_UPDATE,
-                    { config_id : this.config_id, ids: [image_info.image_id]});
+                // reissue get rendering requests, then
+                // force thumbnail update
+                let action =
+                    (() => this.context.publish(
+                            THUMBNAILS_UPDATE,
+                            { config_id : this.config_id,
+                              ids: [image_info.image_id]}));
+                this.requestAllRenderingDefs(action);
             },
             error : (error) => {}
         });
@@ -283,10 +294,14 @@ export default class Settings extends EventSubscriber {
                     if (typeof response === 'object' && response !== null &&
                         Misc.isArray(response.True))
                         thumbIds = thumbIds.concat(response.True);
-                    // send out change notification
-                    this.context.publish(
-                        THUMBNAILS_UPDATE,
-                        { config_id : this.config_id, ids: thumbIds});}
+                    // reissue get rendering requests, then
+                    // force thumbnail update
+                    let action =
+                        (() => this.context.publish(
+                                THUMBNAILS_UPDATE,
+                                { config_id : this.config_id, ids: thumbIds}));
+                    this.requestAllRenderingDefs(action);
+                }
         }
         $.ajax(params);
     }
