@@ -28,14 +28,15 @@ bootstrap(function(aurelia) {
     }
     delete req[REQUEST_PARAMS.IMAGE_ID]; // don't process it any more
 
-    aurelia.container.registerInstance(
-        Context,
-        new Context(
-            aurelia.container.get(EventAggregator), init_id, req));
+    let ctx = new Context(aurelia.container.get(EventAggregator), init_id, req);
+    aurelia.container.registerInstance(Context,ctx);
 
     $.ajaxSetup({
-        beforeSend: (xhr) =>
-            xhr.setRequestHeader("X-CSRFToken", Misc.getCookie('csrftoken'))
+        beforeSend: (xhr, settings) => {
+            if (!Misc.useJsonp(ctx.server) &&
+                !(/^(GET|HEAD|OPTIONS|TRACE)$/.test(settings.type)))
+                xhr.setRequestHeader("X-CSRFToken", Misc.getCookie('csrftoken'));
+        }
     });
 
     aurelia.start().then(() => aurelia.setRoot('app/index', document.body));
