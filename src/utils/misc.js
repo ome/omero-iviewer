@@ -33,9 +33,9 @@ export default class Misc {
     static useJsonp(server="") {
         if (typeof server !== 'string') return false;
 
+        let host = window.location.host.toLowerCase();
         if (server.trim() === '' ||
-                server.indexOf("localhost") !== -1)
-            return false;
+            host === server.toLowerCase()) return false;
 
         return true;
     }
