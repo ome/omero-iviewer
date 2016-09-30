@@ -90,14 +90,17 @@ export class Header extends EventSubscriber {
             $(".has_scalebar").removeClass("disabled-color");
             $(".has_scalebar input").prop('disabled', false);
         }
+        $(".split_channels").val("normal");
         if (!image_info.tiled &&
                 Misc.isArray(image_info.channels) &&
                 image_info.channels.length > 1) {
             $(".split_channels").removeClass("disabled-color");
             $(".split_channels").prop('disabled', false);
+            $(".split_channels").html("Split Channels");
         } else {
             $(".split_channels").addClass("disabled-color");
             $(".split_channels").prop('disabled', true);
+            $(".split_channels").html("Normal");
         }
      }
 
