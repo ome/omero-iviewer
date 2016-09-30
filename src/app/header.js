@@ -8,6 +8,7 @@ import Misc from '../utils/misc';
 import {
     IMAGE_CONFIG_UPDATE,
     IMAGE_VIEWER_SCALEBAR,
+    IMAGE_VIEWER_SPLIT_VIEW,
     IMAGE_REGIONS_VISIBILITY,
     VIEWER_IMAGE_SETTINGS,
     EventSubscriber
@@ -89,6 +90,15 @@ export class Header extends EventSubscriber {
             $(".has_scalebar").removeClass("disabled-color");
             $(".has_scalebar input").prop('disabled', false);
         }
+        if (!image_info.tiled &&
+                Misc.isArray(image_info.channels) &&
+                image_info.channels.length > 1) {
+            $(".split_channels").removeClass("disabled-color");
+            $(".split_channels").prop('disabled', false);
+        } else {
+            $(".split_channels").addClass("disabled-color");
+            $(".split_channels").prop('disabled', true);
+        }
      }
 
      /**
@@ -124,6 +134,24 @@ export class Header extends EventSubscriber {
             {config_id : this.context.selected_config,
              callback :callback});
      }
+
+     /**
+      * Toggles the view: split channels or normal
+      *
+      * @memberof Header
+      */
+      toggleSplitChannels() {
+          let value = $(".split_channels").val();
+          if (typeof value === 'string' &&
+                (value === 'split' || value === 'normal')) {
+               let makeSplit = (value === 'normal');
+               $(".split_channels").val(makeSplit ? "split" : "normal");
+               $(".split_channels").html(makeSplit ? "Normal" : "Split Channels");
+              this.context.publish(
+                  IMAGE_VIEWER_SPLIT_VIEW,
+                 {config_id : this.context.selected_config, split : makeSplit});
+          }
+      }
 
     /**
      * Overridden aurelia lifecycle method:

@@ -10,7 +10,7 @@ import {ol3} from '../../libs/ome-viewer-1.0.js';
 import {
     IMAGE_CONFIG_UPDATE, IMAGE_VIEWER_RESIZE, IMAGE_VIEWER_SCALEBAR,
     IMAGE_DIMENSION_CHANGE, IMAGE_SETTINGS_CHANGE, IMAGE_REGIONS_VISIBILITY,
-    VIEWER_IMAGE_SETTINGS, EventSubscriber
+    VIEWER_IMAGE_SETTINGS, IMAGE_VIEWER_SPLIT_VIEW, EventSubscriber
 } from '../events/events';
 
 
@@ -55,7 +55,9 @@ export default class Ol3Viewer extends EventSubscriber {
         [IMAGE_REGIONS_VISIBILITY,
             (params={}) => this.changeRegionsVisibility(params)],
         [VIEWER_IMAGE_SETTINGS,
-            (params={}) => this.getImageSettings(params)]];
+            (params={}) => this.getImageSettings(params)],
+        [IMAGE_VIEWER_SPLIT_VIEW,
+            (params={}) => this.toggleSplitChannels(params)]];
 
     /**
      * @constructor
@@ -283,5 +285,19 @@ export default class Ol3Viewer extends EventSubscriber {
             if (this.viewer) this.viewer.toggleScaleBar(flag);
         }.bind(this);
         setTimeout(delayedCall, 200);
+    }
+
+    /**
+     * Handles view changes between split and normal view (event notification)
+     *
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     */
+    toggleSplitChannels(params = {}) {
+        // the event doesn't concern us
+        if (params.config_id !== this.config_id ||
+                typeof params.split !== 'boolean') return;
+
+        this.viewer.toggleSplitView(params.split);
     }
 }

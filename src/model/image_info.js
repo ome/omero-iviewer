@@ -25,6 +25,13 @@ export default class ImageInfo {
     ready = false;
 
     /**
+     * is the image tiled
+     * @memberof ImageInfo
+     * @type {boolean}
+     */
+    tiled = false;
+
+    /**
      * a flag that signals whether we a pixe_size and hence a scalebar
      * @memberof ImageInfo
      * @type {boolean}
@@ -222,6 +229,7 @@ export default class ImageInfo {
         initialChannels = Misc.parseChannelParameters(initialChannels);
 
         // store channels, pixel_range and dimensions
+        if (typeof response.tiles === 'boolean') this.tiled = response.tiles;
         this.channels =
             this.mixChannelsWithInitialSettings(
                 response.channels, initialChannels);

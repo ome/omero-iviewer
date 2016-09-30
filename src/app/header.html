@@ -12,6 +12,12 @@
         </div>
 
         <div class="checkbox col-xs-6">
+            <button
+                disabled="disabled" class="split_channels disabled-color"
+                click.delegate="toggleSplitChannels()"
+                value="normal">
+                Split Channels
+            </button>
 
             <label class="has_scalebar"><input type="checkbox"
                checked.bind="context.show_scalebar"
