@@ -90,13 +90,14 @@ export class Header extends EventSubscriber {
             $(".has_scalebar").removeClass("disabled-color");
             $(".has_scalebar input").prop('disabled', false);
         }
-        $(".split_channels").val("normal");
+        $(".split_channels").val(image_info.projection);
         if (!image_info.tiled &&
                 Misc.isArray(image_info.channels) &&
                 image_info.channels.length > 1) {
             $(".split_channels").removeClass("disabled-color");
             $(".split_channels").prop('disabled', false);
-            $(".split_channels").html("Split Channels");
+            $(".split_channels").html(
+                image_info.projection === 'split' ? "Normal" :"Split Channels");
         } else {
             $(".split_channels").addClass("disabled-color");
             $(".split_channels").prop('disabled', true);
@@ -147,12 +148,15 @@ export class Header extends EventSubscriber {
           let value = $(".split_channels").val();
           if (typeof value === 'string' &&
                 (value === 'split' || value === 'normal')) {
-               let makeSplit = (value === 'normal');
-               $(".split_channels").val(makeSplit ? "split" : "normal");
-               $(".split_channels").html(makeSplit ? "Normal" : "Split Channels");
-              this.context.publish(
-                  IMAGE_VIEWER_SPLIT_VIEW,
-                 {config_id : this.context.selected_config, split : makeSplit});
+                let ctx = this.context.getSelectedImageConfig();
+                if (ctx === null) return;
+                let makeSplit = (value === 'normal');
+                $(".split_channels").val(makeSplit ? "split" : "normal");
+                $(".split_channels").html(makeSplit ? "Normal" : "Split Channels");
+                ctx.image_info.projection = makeSplit ? "split" : "normal";
+                this.context.publish(
+                    IMAGE_VIEWER_SPLIT_VIEW,
+                        {config_id : ctx.id, split : makeSplit});
           }
       }
 

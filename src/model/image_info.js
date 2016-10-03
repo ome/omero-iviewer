@@ -286,7 +286,9 @@ export default class ImageInfo {
             default: this.model = 'color';
         }
         let lowerCaseProjection = this.projection.toLowerCase();
-        if (lowerCaseProjection !== 'normal' && lowerCaseProjection !== 'intmax')
+        if (lowerCaseProjection !== 'normal' &&
+                lowerCaseProjection !== 'intmax' &&
+                lowerCaseProjection !== 'split')
             this.projection = 'normal';
     }
 
