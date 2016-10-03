@@ -231,7 +231,7 @@ export default class ImageInfo {
         // store channels, pixel_range and dimensions
         if (typeof response.tiles === 'boolean') this.tiled = response.tiles;
         this.channels =
-            this.mixChannelsWithInitialSettings(
+            this.initAndMixChannelsWithInitialSettings(
                 response.channels, initialChannels);
         this.range = response.pixel_range;
         this.dimensions = {
@@ -379,7 +379,8 @@ export default class ImageInfo {
     }
 
     /**
-     * If there are initial settings they are integrated into the channel
+     * Performs some more initialization (lut) AND
+     * if there are initial settings they are integrated into the channel
      * response
      *
      * @memberof ImageInfo
@@ -387,10 +388,17 @@ export default class ImageInfo {
      * @param {Array.<Object>} an array of initial settings per channel
      * @return {Array.<Object>} an array of mixed-in channel objects
      */
-    mixChannelsWithInitialSettings(channels, initialChannels) {
-        if (!Misc.isArray(channels) || !Misc.isArray(initialChannels))
-            return channels;
+    initAndMixChannelsWithInitialSettings(channels, initialChannels) {
+        if (!Misc.isArray(channels)) return channels;
 
+        // apply lut if exists
+        channels.map((c) => {
+            if (typeof c.lut  === 'string' && c.lut.length > 0)
+                c.color = c.lut;
+        });
+
+        // mix in initial channel settings if exist
+        if (!Misc.isArray(initialChannels)) return channels;
         initialChannels.map((c) => {
             if (typeof channels[c.index] === 'object') {
                 let chan = channels[c.index];

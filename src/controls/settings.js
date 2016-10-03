@@ -97,6 +97,13 @@ export default class Settings extends EventSubscriber {
                 if (typeof response !== 'object' || response === null ||
                      !Misc.isArray(response.rdefs)) return;
 
+                // merge in lut info
+                response.rdefs.map((rdef) => {
+                    rdef.c.map((chan) => {
+                        if (typeof chan.lut === 'string' && chan.lut.length > 0)
+                                chan.color = chan.lut;
+                    });
+                });
                 this.rdefs = response.rdefs;
                 if (typeof action === 'function') action();
             },
@@ -374,11 +381,15 @@ export default class Settings extends EventSubscriber {
                         type: 'number'});
                      actChannel.window.end = copiedChannel.end;
                 }
-                if (actChannel.color !== copiedChannel.color) {
+                let newColor =
+                    typeof copiedChannel.lut === 'string' &&
+                        copiedChannel.lut.length > 0 ?
+                            copiedChannel.lut : copiedChannel.color;
+                if (actChannel.color !== newColor) {
                    history.push({
                        prop: ['image_info', 'channels', '' + i, 'color'],
                        old_val : actChannel.color,
-                       new_val: copiedChannel.color,
+                       new_val: newColor,
                        type: 'string'});
                     actChannel.color = copiedChannel.color;
                 }
