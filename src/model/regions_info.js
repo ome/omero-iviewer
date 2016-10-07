@@ -75,7 +75,7 @@ export default class RegionsInfo extends EventSubscriber {
         if (params.config_id !== this.image_info.config_id ||
             !params.ready) return;
 
-        this.requestData();
+        this.requestData(true);
     }
 
     /**

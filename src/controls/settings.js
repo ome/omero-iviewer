@@ -4,7 +4,8 @@ import Misc from '../utils/misc';
 import {CHANNEL_SETTINGS_MODE} from '../utils/constants';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 
-import {IMAGE_SETTINGS_CHANGE, THUMBNAILS_UPDATE,
+import {
+    IMAGE_SETTINGS_CHANGE, THUMBNAILS_UPDATE,
     EventSubscriber
 } from '../events/events';
 

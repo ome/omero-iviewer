@@ -484,6 +484,8 @@ export default class ImageInfo {
     needsFullRange() {
         let ret = false;
 
+        if (!Misc.isArray(this.channels)) return false;
+
         this.channels.map((c) => {
             if (c.window.start < c.window.min || c.window.end > c.window.max)
                 ret = true;});
