@@ -57,8 +57,14 @@ export class Header extends EventSubscriber {
      * @memberof Header
      */
     toggleRegions() {
-        this.context.publish(IMAGE_REGIONS_VISIBILITY,
-            {visible: this.context.show_regions});
+        let flag = this.context.show_regions;
+        let selConfig = this.context.getSelectedImageConfig();
+        // should we have requested the regions data successfully before
+        // let's do it now
+        if (flag && selConfig && selConfig.regions_info.data === null)
+            selConfig.regions_info.requestData(true);
+
+        this.context.publish(IMAGE_REGIONS_VISIBILITY, {visible: flag});
     }
 
     /**

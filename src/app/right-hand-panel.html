@@ -1,20 +1,24 @@
 <template>
     <require from="../controls/settings"></require>
+    <require from="../controls/regions"></require>
 
     <ul class="nav nav-tabs" role="tablist">
         <li class="active">
-            <a href="#setting" role="tab" data-toggle="tab">Settings</a>
+            <a href="#setting" role="tab">Settings</a>
         </li>
-        <!--li>
-            <a href="#general" role="tab" data-toggle="tab">General</a>
-        </li-->
+        <li class="">
+            <a href="#rois" class="disabled-functionality ${ !context.show_regions ? 'disabled-color' : ''}"
+                role="tab">ROIs</a>
+        </li>
     </ul>
 
     <div class="tab-content">
         <div role="tabpanel" class="tab-pane active" id="setting">
             <settings class="container-fluid" config_id.bind="config_id"></settings>
         </div>
-        <!--div role="tabpanel" class="tab-pane" id="general"></div-->
+        <div role="tabpanel" class="disabled-functionality tab-pane" id="rois">
+            <regions class="container-fluid" config_id.bind="config_id"></regions>
+        </div>
     </div>
 
 </template>

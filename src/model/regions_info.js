@@ -23,7 +23,7 @@ export default class RegionsInfo extends EventSubscriber {
      * @memberof RegionsInfo
      * @type {Map}
      */
-    data = new Map();
+    data = null;
     /**
      * our list of events we subscribe to via the EventSubscriber
      * @memberof RegionsInfo
@@ -60,7 +60,7 @@ export default class RegionsInfo extends EventSubscriber {
      */
     unbind() {
         this.unsubscribe();
-        this.data.clear();
+        if (this.data instanceof Map) this.data.clear();
         this.image_info = null;
     }
 
@@ -102,6 +102,7 @@ export default class RegionsInfo extends EventSubscriber {
                 // we want an array
                 if (!Misc.isArray(response)) return;
 
+                this.data = new Map();
                  // traverse results and stuff them into the map
                  response.map((item) => {
                      // shapes have to be arrays as well

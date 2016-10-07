@@ -4,8 +4,7 @@ import Misc from '../utils/misc';
 import {CHANNEL_SETTINGS_MODE} from '../utils/constants';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 
-import {
-    IMAGE_CONFIG_UPDATE, IMAGE_SETTINGS_CHANGE, THUMBNAILS_UPDATE,
+import {IMAGE_SETTINGS_CHANGE, THUMBNAILS_UPDATE,
     EventSubscriber
 } from '../events/events';
 
@@ -50,9 +49,7 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      * @type {Array.<string,function>}
      */
-    sub_list = [[IMAGE_CONFIG_UPDATE,
-                    (params = {}) => this.onImageConfigChange(params)],
-                [THUMBNAILS_UPDATE,
+    sub_list = [[THUMBNAILS_UPDATE,
                     (params={}) => this.revision++]];
 
     /**
@@ -73,6 +70,8 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     bind() {
+        this.image_config =
+            this.context.getImageConfig(this.config_id);
         this.subscribe();
         this.registerObserver();
         this.requestAllRenderingDefs();
@@ -127,24 +126,6 @@ export default class Settings extends EventSubscriber {
 
         return this.context.server + "/webgateway/render_thumbnail/" + img_id;
     }
-
-    /**
-     * Handles changes of the associated ImageConfig
-     *
-     * @memberof Settings
-     * @param {Object} params the event notification parameters
-     */
-     onImageConfigChange(params = {}) {
-         // if the event is for another config, forget it...
-         if (params.config_id !== this.config_id) return;
-
-         // change image config and update image info
-         this.config_id = params.config_id;
-         if (this.context.getImageConfig(params.config_id) === null) return;
-         this.image_config =
-             this.context.getImageConfig(params.config_id);
-        this.bind();
-     }
 
     /**
     * Shows and hides the histogram

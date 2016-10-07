@@ -35,9 +35,20 @@ export class RightHandPanel {
      * @memberof RightHandPanel
      */
     attached() {
-        $(this.element).find("a").click(function (e) {
-          e.preventDefault()
-          $(e.currentTarget).tab('show');
+        $(this.element).find("a").click((e) => {
+            e.preventDefault();
+
+            let hash = e.currentTarget.hash;
+
+            // we don't allow clicking the regions if we don't show them
+            // or if the rgions info is not present
+            let img_conf = this.context.getImageConfig(this.config_id);
+            if (hash === '#rois' && (
+                !this.context.show_regions || img_conf === null ||
+                    img_conf.regions_info === null ||
+                    img_conf.regions_info.data === null)) return;
+
+            $(e.currentTarget).tab('show');
         });
     }
 

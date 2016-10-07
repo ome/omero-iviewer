@@ -85,7 +85,7 @@ a.ui-button:active,
 /** SPECTRUM colorpicker adjustments END **/
 
 .disabled-color {
-    color: #c0c0c0;
+    color: #c0c0c0!important;
 }
 
 .link-url {
@@ -367,4 +367,7 @@ thumbnail-slider img {
     text-align: center;
     max-width: 90px;
     color: blue;
+}
+.disabled-functionality {
+    display: none !important;
 }

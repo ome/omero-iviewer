@@ -12,9 +12,6 @@ import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework'
 import {spinner} from 'jquery-ui/ui/widgets/spinner';
 import {slider} from 'jquery-ui/ui/widgets/slider';
 import {spectrum} from 'spectrum-colorpicker';
-import {
-    IMAGE_CONFIG_UPDATE
-} from '../events/events';
 
 /**
  * A channel range widget
