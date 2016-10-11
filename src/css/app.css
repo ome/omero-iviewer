@@ -363,11 +363,46 @@ thumbnail-slider img {
     max-width: 90px;
     max-height: 90px;
 }
+
 .user-settings div {
     text-align: center;
     max-width: 90px;
     color: blue;
 }
+
+.regions-header {
+    min-width: 300px;
+}
+
+thead, tbody {
+    width:100%;
+    height:100%;
+    display: block
+}
+
+.regions-header tr {
+    border-bottom: solid 1px;
+}
+
+.regions-header th {
+    text-align: center;
+}
+
+.regions-table {
+    min-width:300px;
+    height:200px;
+    display: block;
+    overflow: scroll;
+}
+
+.regions-table tr {
+    display: block;
+}
+
+.regions-table td {
+    text-align: center;
+}
+
 .disabled-functionality {
     display: none !important;
 }

@@ -128,7 +128,6 @@ export default class ThumbnailSlider extends EventSubscriber {
                 this.hideMe();
             }
         });
-
     }
 
     /**

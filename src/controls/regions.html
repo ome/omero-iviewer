@@ -1,4 +1,27 @@
 <template>
-    <h3 if.bind="context.show_regions &&
-        regions_info !== null && regions_info.data !== null">TO COME</h3>
+    <div show.bind="context.show_regions &&
+        regions_info !== null && regions_info.data !== null">
+
+        <div class="row">
+            <input type="text" />
+        </div>
+        <div class="row">
+            <table class="regions-header">
+                <thead>
+                    <tr>
+                        <th style="width:100px;">id</th>
+                        <th style="width:200px;">shape</th>
+                    </tr>
+                </thead>
+            </table>
+            <table class="regions-table">
+                <tbody>
+                    <tr repeat.for="[id, shape] of regions_info.data">
+                        <td style="min-width:100px;">${id}</td>
+                        <td style="min-width:200px;">${shape.type}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </template>

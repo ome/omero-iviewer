@@ -1,15 +1,13 @@
 // js
 import Context from '../app/context';
 import Misc from '../utils/misc';
-import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
+import {inject, customElement, bindable} from 'aurelia-framework';
 
 /**
  * Represents the regions section in the right hand panel
-
  */
-
 @customElement('regions')
-@inject(Context, BindingEngine)
+@inject(Context, Element)
 export default class Regions {
     /**
      * which image config do we belong to (bound in template)
@@ -29,9 +27,34 @@ export default class Regions {
      * @constructor
      * @param {Context} context the application context (injected)
      */
-    constructor(context, bindingEngine) {
+    constructor(context, element) {
         this.context = context;
-        this.bindingEngine = bindingEngine;
+        this.element = element;
+    }
+
+    /**
+     * Overridden aurelia lifecycle method:
+     * fired when PAL (dom abstraction) is ready for use
+     *
+     * @memberof Regions
+     */
+    attached() {
+        $(".regions-table").on("scroll", (e) => {
+                $('.regions-header').css(
+                    "margin-left", "-" +
+                     e.currentTarget.scrollLeft + "px");
+        });
+    }
+
+    /**
+     * Overridden aurelia lifecycle method:
+     * called when the view and its elemetns are detached from the PAL
+     * (dom abstraction)
+     *
+     * @memberof Regions
+     */
+    detached() {
+        $(".regions-table").off("scroll");
     }
 
     /**
@@ -45,6 +68,7 @@ export default class Regions {
         let img_conf = this.context.getImageConfig(this.config_id);
         if (img_conf && img_conf.regions_info)
             this.regions_info = img_conf.regions_info;
+
     }
 
     /**

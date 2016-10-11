@@ -1,5 +1,6 @@
 import {noView} from 'aurelia-framework';
-import {IMAGE_CONFIG_UPDATE, EventSubscriber} from '../events/events';
+import {
+    IMAGE_CONFIG_UPDATE, EventSubscriber} from '../events/events';
 import Misc from '../utils/misc';
 
 /**
@@ -103,8 +104,8 @@ export default class RegionsInfo extends EventSubscriber {
                 if (!Misc.isArray(response)) return;
 
                 this.data = new Map();
-                 // traverse results and stuff them into the map
-                 response.map((item) => {
+                // traverse results and stuff them into the map
+                response.map((item) => {
                      // shapes have to be arrays as well
                      if (Misc.isArray(item.shapes)) {
                           // set shape properties and store the object
@@ -114,6 +115,7 @@ export default class RegionsInfo extends EventSubscriber {
                                   shape.shape_id, Object.assign({}, shape));
                           });
                       }});
+                this.ready = true;
                 }, error : (error) => this.ready = false
         });
     }
