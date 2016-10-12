@@ -2,6 +2,7 @@
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import {inject, customElement, bindable} from 'aurelia-framework';
+import { REGIONS_SET_PROPERTY} from '../events/events';
 
 /**
  * Represents the regions section in the right hand panel
@@ -80,5 +81,39 @@ export default class Regions {
      */
     unbind() {
         this.regions_info = null;
+    }
+
+    /**
+     * Select shapes handler
+     *
+     * @param {number} id the shape id
+     * @param {boolean} selected the selected state
+     * @memberof Regions
+     */
+    selectShape(id, selected, target) {
+        let t = $(target);
+        if (t.hasClass("shape-show") || t.parent().hasClass("shape-show"))
+            return true;
+
+        this.context.publish(
+           REGIONS_SET_PROPERTY, {
+               config_id: this.regions_info.image_info.config_id,
+               property: 'selected', shapes : [id], value : selected,
+               center : true});
+    }
+
+    /**
+     * shape visibility toggler
+     *
+     * @param {number} id the shape id
+     * @param {boolean} visible the visible state
+     * @memberof Regions
+     */
+    toggleShapeVisibility(id, visible) {
+        this.context.publish(
+           REGIONS_SET_PROPERTY, {
+               config_id: this.regions_info.image_info.config_id,
+               property : "visible",
+               shapes : [id], value : visible});
     }
 }

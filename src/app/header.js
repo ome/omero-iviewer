@@ -9,7 +9,7 @@ import {
     IMAGE_CONFIG_UPDATE,
     IMAGE_VIEWER_SCALEBAR,
     IMAGE_VIEWER_SPLIT_VIEW,
-    IMAGE_REGIONS_VISIBILITY,
+    REGIONS_SET_PROPERTY,
     VIEWER_IMAGE_SETTINGS,
     EventSubscriber
 } from '../events/events';
@@ -64,7 +64,8 @@ export class Header extends EventSubscriber {
         if (flag && selConfig && selConfig.regions_info.data === null)
             selConfig.regions_info.requestData(true);
 
-        this.context.publish(IMAGE_REGIONS_VISIBILITY, {visible: flag});
+        this.context.publish(
+            REGIONS_SET_PROPERTY, {property: "visible", value: flag});
     }
 
     /**

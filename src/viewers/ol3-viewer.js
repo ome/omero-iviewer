@@ -9,7 +9,8 @@ import {inject, customElement, bindable} from 'aurelia-framework';
 import {ol3} from '../../libs/ome-viewer-1.0.js';
 import {
     IMAGE_CONFIG_UPDATE, IMAGE_VIEWER_RESIZE, IMAGE_VIEWER_SCALEBAR,
-    IMAGE_DIMENSION_CHANGE, IMAGE_SETTINGS_CHANGE, IMAGE_REGIONS_VISIBILITY,
+    IMAGE_DIMENSION_CHANGE, IMAGE_SETTINGS_CHANGE,
+    REGIONS_SET_PROPERTY, REGIONS_PROPERTY_CHANGED,
     VIEWER_IMAGE_SETTINGS, IMAGE_VIEWER_SPLIT_VIEW, EventSubscriber
 } from '../events/events';
 
@@ -52,8 +53,10 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.changeDimension(params)],
         [IMAGE_SETTINGS_CHANGE,
             (params={}) => this.changeModelProjectionOrRange(params)],
-        [IMAGE_REGIONS_VISIBILITY,
-            (params={}) => this.changeRegionsVisibility(params)],
+        [REGIONS_PROPERTY_CHANGED,
+            (params={}) => this.getRegionsPropertyChange(params)],
+        [REGIONS_SET_PROPERTY,
+            (params={}) => this.setRegionsProperty(params)],
         [VIEWER_IMAGE_SETTINGS,
             (params={}) => this.getImageSettings(params)],
         [IMAGE_VIEWER_SPLIT_VIEW,
@@ -216,6 +219,60 @@ export default class Ol3Viewer extends EventSubscriber {
     }
 
     /**
+     * Handles regions property changes received from the ol3 viewer,e.g.
+     * selection, modification, deletetion
+     *
+     * @param {Object} params the event notification parameters
+     * @memberof Ol3Viewer
+     */
+     getRegionsPropertyChange(params = {}) {
+         // at a minimum we need params with the property it concers
+         if (typeof params !== 'object' ||
+            typeof params.property !== 'string') return
+
+        let prop = params.property.toLowerCase();
+        if (prop === 'selected' || prop === 'modified' || prop === 'deleted')
+            this.image_config.regions_info.setPropertyForShape(
+                params.shapes, prop, params.value);
+     }
+
+    /**
+     * Handles regions property changes such as visibility and selection
+     * by delegation to sub handlers
+     *
+     * @param {Object} params the event notification parameters
+     * @memberof Ol3Viewer
+     */
+     setRegionsProperty(params = {}) {
+         // at a minimum we need params with the property it concers
+         if (typeof params !== 'object' ||
+            typeof params.property !== 'string') return
+
+        // delegate to individual handler
+        let prop = params.property.toLowerCase();
+        if (prop === 'visible')
+            this.changeRegionsVisibility(params);
+        else if (prop === 'selected')
+            this.changeShapeSelection(params);
+     }
+
+     /**
+      * Changes the selected state of shapes
+      * by delegation to sub handlers
+      *
+      * @param {Object} params the event notification parameters
+      * @memberof Ol3Viewer
+      */
+      changeShapeSelection(params = {}) {
+          //we want only notifications that concern us
+          // and need at least one shape id in the array
+          if (params.config_id !== this.config_id ||
+            !Misc.isArray(params.shapes) || params.shapes.length === 0) return;
+
+         this.viewer.selectShapes(params.shapes, params.value, params.center);
+      }
+
+    /**
      * Handles Regions layer and shape visibility following event notification
      * delegating to showRegions for layer visibility
      *
@@ -230,13 +287,13 @@ export default class Ol3Viewer extends EventSubscriber {
         // delegate to show regions,
         // this is not about individual shapes
         if (!Misc.isArray(params.shapes) || params.shapes.length === 0) {
-            this.showRegions(params.visible);
+            this.showRegions(params.value);
             return;
         }
 
         // this we do only if our image_config has been addressed specifically
         if (!broadcast)
-            this.viewer.setRegionsVisibility(params.visible, params.shapes);
+            this.viewer.setRegionsVisibility(params.value, params.shapes);
     }
 
     /**

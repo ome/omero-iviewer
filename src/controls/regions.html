@@ -3,22 +3,37 @@
         regions_info !== null && regions_info.data !== null">
 
         <div class="row">
-            <input type="text" />
-        </div>
-        <div class="row">
             <table class="regions-header">
                 <thead>
                     <tr>
-                        <th style="width:100px;">id</th>
-                        <th style="width:200px;">shape</th>
+                        <th class="shape-id">ID</th>
+                        <th class="shape-z">Z</th>
+                        <th class="shape-t">T</th>
+                        <th class="shape-type">Type</th>
+                        <th class="shape-comment">Comment</th>
+                        <th class="shape-show">Show</th>
                     </tr>
                 </thead>
             </table>
             <table class="regions-table">
                 <tbody>
-                    <tr repeat.for="[id, shape] of regions_info.data">
-                        <td style="min-width:100px;">${id}</td>
-                        <td style="min-width:200px;">${shape.type}</td>
+                    <tr repeat.for="[id, shape] of regions_info.data"
+                        id="${'roi-' + id}"
+                        css="${shape.selected ?
+                                'background-color: #d0d0ff;' : ''}
+                                ${shape.deleted ? 'color: red;' :
+                                    (shape.modified ? 'color: blue;' : '')}"
+                        click.delegate="selectShape(id, shape.selected, $event.target)">
+                        <td class="shape-id">${shape.id}</td>
+                        <td class="shape-z">${shape.theZ}</td>
+                        <td class="shape-t">${shape.theT}</td>
+                        <td class="shape-type ${shape.type.toLowerCase()}-icon">&nbsp;</td>
+                        <td class="shape-comment">
+                            ${shape.textValue ? shape.textValue : '&nbsp;'}</td>
+                        <td class="shape-show">
+                            <input type="checkbox" checked.bind="shape.visible"
+                                change.delegate="toggleShapeVisibility(id, shape.visible)"/>
+                        </td>
                     </tr>
                 </tbody>
             </table>

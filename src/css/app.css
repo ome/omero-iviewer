@@ -371,6 +371,7 @@ thumbnail-slider img {
 }
 
 .regions-header {
+    table-layout: fixed;
     min-width: 300px;
 }
 
@@ -381,28 +382,88 @@ thead, tbody {
 }
 
 .regions-header tr {
+    display: block;
+    width: 150%;
     border-bottom: solid 1px;
 }
 
 .regions-header th {
     text-align: center;
+    white-space: nowrap;
 }
 
 .regions-table {
+    table-layout: fixed;
     min-width:300px;
-    height:200px;
+    max-width:300px;
+    height:400px;
     display: block;
     overflow: scroll;
 }
 
 .regions-table tr {
+    width: 150%;
     display: block;
 }
 
 .regions-table td {
+    white-space: nowrap;
     text-align: center;
 }
 
-.disabled-functionality {
+.shape-id {
+    min-width: 20px;
+    width: 75px;
+    max-width: 750x;
+}
+
+.shape-z, .shape-t, .shape-type {
+    min-width: 10px;
+    width: 20px;
+    max-width: 20px;
+}
+
+.shape-type {
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.shape-comment {
+    min-width: 10px;
+    width: 150px;
+    max-width: 150px;
+}
+
+.shape-show {
+    min-width: 10px;
+    width: 10px;
+    max-width: 10px;
+}
+
+.rectangle-icon {
+    background-image: url('images/rectangle.png');
+}
+
+.ellipse-icon {
+    background-image: url('images/ellipse.png');
+}
+
+.polygon-icon {
+    background-image: url('images/polygon.png');
+}
+
+.line-icon, .polyline-icon {
+    background-image: url('images/line.png');
+}
+
+.label-icon {
+    background-image: url('images/label.png');
+}
+
+.point-icon {
+    background-image: url('images/point.png');
+}
+
+.hidden-functionality {
     display: none !important;
 }

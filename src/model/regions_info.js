@@ -80,6 +80,31 @@ export default class RegionsInfo extends EventSubscriber {
     }
 
     /**
+     * Sets a property for shape(s) according to the new value
+     *
+     * @memberof RegionsInfo
+     * @param {Array.<number>} shapes an array with ids
+     * @param {string} property a property on the shape
+     * @param {Object|Array|boolean|string|number} value the new value
+     */
+    setPropertyForShape(shapes, property, value) {
+        // we need a non empty array of ids and a proper property name
+        // as well as a value that is not undefined
+        if (this.data === null || // no regions map is no good either
+                !Misc.isArray(shapes) || shapes.length === 0 ||
+                typeof property !== 'string' ||
+                typeof value === 'undefined') return;
+
+        for (let i in shapes) {
+            let s = this.data.get(shapes[i]);
+            if (typeof s !== 'object') continue; // couldn't find shape with id
+            // the property has to exist
+            if (typeof s[property] === 'undefined') continue;
+            s[property] = value;
+        }
+    }
+
+    /**
      * Retrieves the regions information needed via ajax and stores it internally
      *
      * @memberof RegionsInfo
@@ -110,9 +135,14 @@ export default class RegionsInfo extends EventSubscriber {
                      if (Misc.isArray(item.shapes)) {
                           // set shape properties and store the object
                           item.shapes.map((shape) => {
-                              shape.shape_id = "" + item.id + ":" + shape.id;
-                              this.data.set(
-                                  shape.shape_id, Object.assign({}, shape));
+                              let newShape = Object.assign({}, shape);
+                              newShape.shape_id = "" + item.id + ":" + shape.id;
+                              // we add some flags we are going to need
+                              newShape.visible = true;
+                              newShape.selected = false;
+                              newShape.deleted = false;
+                              newShape.modified = false;
+                              this.data.set(newShape.shape_id, newShape);
                           });
                       }});
                 this.ready = true;

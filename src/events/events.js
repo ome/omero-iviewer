@@ -12,8 +12,12 @@ export const IMAGE_VIEWER_SPLIT_VIEW = "IMAGE_VIEWER_SPLIT_VIEW";
 export const IMAGE_SETTINGS_CHANGE = "IMAGE_SETTINGS_CHANGE";
 /** whenever an image dimension (c,t,z) changes */
 export const IMAGE_DIMENSION_CHANGE = "IMAGE_DIMENSION_CHANGE";
-/** whenever an image/shape visibility changes */
-export const IMAGE_REGIONS_VISIBILITY = "IMAGE_REGIONS_VISIBILITY";
+/** to set rois/shape properties such as visibility and selection */
+export const REGIONS_SET_PROPERTY = "REGIONS_SET_PROPERTY";
+/** whenever a region property change is received, e.g. selection, modification */
+export const REGIONS_PROPERTY_CHANGED = "REGIONS_PROPERTY_CHANGED";
+/** whenever a new shape has been drawn */
+export const REGIONS_SHAPE_DRAWN = "REGIONS_SHAPE_DRAWN";
 /** Retrieves the viewer image settings */
 export const VIEWER_IMAGE_SETTINGS = "VIEWER_IMAGE_SETTINGS";
 /** whenever thumbnails are supposed to be updated */
