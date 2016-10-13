@@ -25,6 +25,20 @@ export default class Regions {
     regions_info = null;
 
     /**
+     * a flag for the regions list interaction
+     * @memberof Regions
+     * @type {boolean}
+     */
+    is_dragging = false;
+
+    /**
+     * the start position for regions list interaction
+     * @memberof Regions
+     * @type {number}
+     */
+    dragging_start = null;
+
+    /**
      * @constructor
      * @param {Context} context the application context (injected)
      */
@@ -40,11 +54,111 @@ export default class Regions {
      * @memberof Regions
      */
     attached() {
+        // this keeps the header aligned with the table on horizontal scroll
         $(".regions-table").on("scroll", (e) => {
                 $('.regions-header').css(
                     "margin-left", "-" +
                      e.currentTarget.scrollLeft + "px");
         });
+        // the hover detects the border and enables the column resize handling
+        // as well as changes the cursor symbol
+        // TODO: make it work in IE and FF
+        $('.regions-header th').hover((e) => {
+            let cell = $(e.target);
+
+            var border = parseInt(cell.css('border-width'));
+            if (isNaN(border)) return;
+
+            // we allow right hand border dragging
+            if(!this.is_dragging &&
+                e.offsetX > cell.innerWidth() &&
+                e.offsetX < cell.outerWidth() &&
+                e.offsetY > border &&
+                e.offsetY < cell.outerHeight()) {
+                    cell.css("cursor", "col-resize");
+                    this.enableColumnResize(cell);
+             } else if (!this.is_dragging) {
+                 cell.css("cursor", "default");
+                 cell.unbind('mousedown');
+                 $(".regions-header").unbind('mousemove');
+                 $(".regions-list").unbind('mouseup');
+             }
+        });
+        this.adjustColumnWidths();
+    }
+
+    /**
+     * Establishes and tears down the handlers for column resize
+     *
+     * @param {Object} the th cell that is being resized
+     * @memberof Regions
+     */
+    enableColumnResize(cell) {
+        // we need a mouse-down to start dragging
+        cell.mousedown((e) => {
+            e.preventDefault();
+
+            this.is_dragging = true;
+            this.dragging_start = e.pageX;
+
+            // we need a mouse-move while dragging
+            $(".regions-header").mousemove((e) => {
+                e.preventDefault();
+
+                let delta = e.pageX - this.dragging_start;
+                let minWidth = parseInt(cell.css("min-width"));
+                let newWidth = cell.width() + delta;
+                // each column has a minimum width and won't go below
+                if (isNaN(minWidth) ||
+                        newWidth < minWidth) {
+                    this.is_dragging = false;
+                    return;
+                }
+
+                // remember new start and set column widh
+                this.dragging_start = e.pageX;
+                let clazz = "." + cell.attr("class");
+                $(clazz).width(newWidth);
+                $(clazz + " *").width(newWidth);
+            });
+        });
+
+        // the mouse-up event determines the end of the dragging action
+        $(".regions-list").on(
+            'mouseup',(e) => {
+                // reset states and unbind handlers
+                this.is_dragging = false;
+                this.dragging_start = null;
+                cell.unbind('mousedown');
+                $(".regions-header").unbind('mousemove');
+                $(".regions-list").unbind('mouseup');
+                this.adjustColumnWidths();
+        });
+    }
+
+    /**
+     * Adjusts the combined column width after individual colum resizing
+     * we add some more so that we have room for dragging
+     *
+     * @memberof Regions
+     */
+    adjustColumnWidths() {
+        let combinedWidth = 0;
+        let hits = $(".regions-header th");
+
+        // we have to go through all header columns
+        for (let i=0;i<hits.length;i++){
+            let outW = parseInt($(hits[i]).outerWidth());
+            let border = parseInt($(hits[i]).css("border-width"));
+            if (!isNaN(outW) && !isNaN(border))
+                combinedWidth += (outW + border);
+
+        };
+
+        if (combinedWidth !== 0) {
+            combinedWidth += 150;
+            $(".regions-header tr, .regions-table tr").width(combinedWidth);
+        }
     }
 
     /**

@@ -370,6 +370,10 @@ thumbnail-slider img {
     color: blue;
 }
 
+.regions-list {
+    padding-top: 5px;
+}
+
 .regions-header {
     table-layout: fixed;
     min-width: 300px;
@@ -382,14 +386,24 @@ thead, tbody {
 }
 
 .regions-header tr {
+    height: 30px;
     display: block;
     width: 150%;
-    border-bottom: solid 1px;
 }
 
 .regions-header th {
-    text-align: center;
+    box-sizing: border-box;
     white-space: nowrap;
+    border: solid 3px;
+    border-collapse: collapse;
+}
+
+.regions-header th div {
+    line-height: 30px;
+    white-space: nowrap;
+    overflow: hidden;
+    font-size: 13px;
+    text-align: center;
 }
 
 .regions-table {
@@ -407,23 +421,36 @@ thead, tbody {
 }
 
 .regions-table td {
+    box-sizing: border-box;
     white-space: nowrap;
+    text-align: center;
+    border: solid 3px rgba(255,255,255,0);
+    border-collapse: collapse;
+}
+.regions-table td div {
+    white-space: nowrap;
+    overflow: hidden;
+    font-size: 13px;
     text-align: center;
 }
 
 .shape-id {
     min-width: 20px;
     width: 75px;
-    max-width: 750x;
 }
 
-.shape-z, .shape-t, .shape-type {
-    min-width: 10px;
-    width: 20px;
-    max-width: 20px;
+.shape-z {
+    min-width: 50px;
+    width: 50px;
+}
+.shape-t {
+    min-width: 50px;
+    width: 50px;
 }
 
 .shape-type {
+    min-width: 30px;
+    width: 35px;
     background-repeat: no-repeat;
     background-position: center;
 }
@@ -431,13 +458,11 @@ thead, tbody {
 .shape-comment {
     min-width: 10px;
     width: 150px;
-    max-width: 150px;
 }
 
 .shape-show {
-    min-width: 10px;
-    width: 10px;
-    max-width: 10px;
+    min-width: 40px;
+    width: 40px;
 }
 
 .rectangle-icon {
