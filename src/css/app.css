@@ -394,7 +394,7 @@ thead, tbody {
 .regions-header th {
     box-sizing: border-box;
     white-space: nowrap;
-    border: solid 3px;
+    border: solid 2px;
     border-collapse: collapse;
 }
 
@@ -407,6 +407,7 @@ thead, tbody {
 }
 
 .regions-table {
+    margin-top: 5px;
     table-layout: fixed;
     min-width:300px;
     max-width:300px;
@@ -421,10 +422,11 @@ thead, tbody {
 }
 
 .regions-table td {
+    min-width: 10px;
     box-sizing: border-box;
     white-space: nowrap;
     text-align: center;
-    border: solid 3px rgba(255,255,255,0);
+    border: solid 2px rgba(255,255,255,0);
     border-collapse: collapse;
 }
 .regions-table td div {
@@ -434,34 +436,34 @@ thead, tbody {
     text-align: center;
 }
 
+.regions-table td input {
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+
 .shape-id {
-    min-width: 20px;
     width: 75px;
 }
 
 .shape-z {
-    min-width: 50px;
     width: 50px;
 }
 .shape-t {
-    min-width: 50px;
     width: 50px;
 }
 
 .shape-type {
-    min-width: 30px;
     width: 35px;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 .shape-comment {
-    min-width: 10px;
     width: 150px;
 }
 
 .shape-show {
-    min-width: 40px;
     width: 40px;
 }
 

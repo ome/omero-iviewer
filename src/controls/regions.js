@@ -62,27 +62,40 @@ export default class Regions {
         });
         // the hover detects the border and enables the column resize handling
         // as well as changes the cursor symbol
-        // TODO: make it work in IE and FF
         $('.regions-header th').hover((e) => {
             let cell = $(e.target);
 
-            var border = parseInt(cell.css('border-width'));
+            let index = null;
+            try {
+                index =
+                    cell.prop("tagName").toLowerCase() === 'th' ?
+                        cell.attr("id").substring("reg-col-".length) :
+                        cell.parent().attr("id").substring("reg-col-".length);
+            } catch(noindex) {
+                index = -1;
+            }
+            var border = parseInt(cell.css('border-top-width'));
             if (isNaN(border)) return;
 
             // we allow right hand border dragging
             if(!this.is_dragging &&
-                e.offsetX > cell.innerWidth() &&
-                e.offsetX < cell.outerWidth() &&
-                e.offsetY > border &&
+                e.offsetX > 0 &&
+                e.offsetX <= border &&
+                e.offsetY > 0 &&
+                e.offsetY < cell.outerHeight()) {
+                    if (index > 0) {
+                        cell.css("cursor", "col-resize");
+                        cell = $("#reg-col-" + (index-1));
+                        this.enableColumnResize(cell);
+                    }
+            } else if(!this.is_dragging &&
+                e.offsetX >= cell.innerWidth() &&
+                e.offsetX <= cell.outerWidth() &&
+                e.offsetY > 0 &&
                 e.offsetY < cell.outerHeight()) {
                     cell.css("cursor", "col-resize");
                     this.enableColumnResize(cell);
-             } else if (!this.is_dragging) {
-                 cell.css("cursor", "default");
-                 cell.unbind('mousedown');
-                 $(".regions-header").unbind('mousemove');
-                 $(".regions-list").unbind('mouseup');
-             }
+             } else cell.css("cursor", "default");
         });
         this.adjustColumnWidths();
     }
@@ -97,6 +110,7 @@ export default class Regions {
         // we need a mouse-down to start dragging
         cell.mousedown((e) => {
             e.preventDefault();
+            cell.unbind('mousedown');
 
             this.is_dragging = true;
             this.dragging_start = e.pageX;
@@ -129,7 +143,7 @@ export default class Regions {
                 // reset states and unbind handlers
                 this.is_dragging = false;
                 this.dragging_start = null;
-                cell.unbind('mousedown');
+                cell.css("cursor", "default");
                 $(".regions-header").unbind('mousemove');
                 $(".regions-list").unbind('mouseup');
                 this.adjustColumnWidths();
@@ -149,14 +163,14 @@ export default class Regions {
         // we have to go through all header columns
         for (let i=0;i<hits.length;i++){
             let outW = parseInt($(hits[i]).outerWidth());
-            let border = parseInt($(hits[i]).css("border-width"));
+            let border = parseInt($(hits[i]).css("border-left-width"));
             if (!isNaN(outW) && !isNaN(border))
                 combinedWidth += (outW + border);
 
         };
 
         if (combinedWidth !== 0) {
-            combinedWidth += 150;
+            combinedWidth += 100;
             $(".regions-header tr, .regions-table tr").width(combinedWidth);
         }
     }
