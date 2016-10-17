@@ -1,0 +1,34 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+
+<head>
+     <title>Omero Open Layers 3 Viewer Plugin</title>
+		 {% if debug %}
+   		 <script type="text/javascript" src="{% static 'ol3-viewer/js/ol3-viewer-1.0-debug.js' %}"></script>
+		 {% else %}
+		   <script type="text/javascript" src="{% static 'ol3-viewer/js/ol3-viewer-1.0.js' %}" /></script>
+		 {% endif %}
+		 <link rel="stylesheet" type="text/css" href="{% static 'ol3-viewer/css/viewer.css' %}" />
+</head>
+
+<body>
+
+	<div id="ome_viewer"></div>
+
+	<script type="text/javascript">
+        var p = {};
+        {% for key, value in params.items %}
+            p['{{key}}'] = "{{value}}";
+        {% endfor %}
+		var viewer = ((function() {
+			var _viewerInstance = new ome.ol3.Viewer(
+                {{ image_id }},{initParams : p});
+			return function() {
+				return _viewerInstance;
+			}
+		})())();
+	</script>
+
+</body>
+</html>
