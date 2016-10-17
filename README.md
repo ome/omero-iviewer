@@ -14,6 +14,9 @@ All builds will build into the build directory AND deploy to the plugin director
 which can then be used like any django plugin.
 For further installation help have a look at the respective [README](plugin/viewer-ng/README.md).
 
+Note: Should you like or need to rebuild viewer-ng's internal ol3 viewer you
+      please have a look at the section *ol3-viewer* below!
+
 ##Development:
 
 Run ```npm run dev``` to be able to run the webpack-dev server locally at:
@@ -34,4 +37,7 @@ The following software has to be installed in order to compile the java script c
 2. apache ant (and therefore a java runtime)
 3. python (for closure's calcdeps.py)
 
-Use *ant -p* to list the options available.
+To build the open layers viewer for the viewer-ng (deploys into libs directory),
+simply run ```ant``` (default target).
+
+For further options type ```ant -p```.

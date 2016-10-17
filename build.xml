@@ -1,4 +1,9 @@
-<project name="ol3-viewer" default="build">
+<project name="ol3-viewer" default="build-for-viewer-ng">
+    <description>
+        #################################################
+        ####                OL3 VIEWER               ####
+        #################################################
+    </description>
 
 	<property name="version.major" value="1" />
 	<property name="version.minor" value="0" />
@@ -152,7 +157,7 @@
 	 </concat>
 	</target>
 
-	<target name="plugin" description="deploys js for plugin">
+    <target name="plugin">
 		<delete dir="${plugin.dir.static}/js" />
 		<delete dir="${plugin.dir.static}/css" />
 		<mkdir dir="${plugin.dir.static}/js" />
@@ -166,7 +171,11 @@
 		<copy file="${dist.name}" todir="${plugin.dir.static}/js" overwrite="true"/>
 	</target>
 
-	<target name="docs" depends="init" description="generates the docs from jsdocs">
+	<target name="copy-to-lib">
+		<copy file="${dist.name}" todir="libs" overwrite="true"/>
+	</target>
+
+	<target name="docs" depends="init" description="generates jsdocs">
 		<delete dir="${build.dir}/docs" />
 		<mkdir dir="${build.dir}/docs" />
 		<exec executable="${jsdoc.js}">
@@ -198,9 +207,10 @@
 		</exec>
 	</target>
 
-	<target name="build" depends="clean, init, compile" description="produces a compressed and optimized js" />
-	<target name="build-debug" depends="clean, init, compile-debug" description="produces an uncompressed js for debugging" />
-	<target name="build-all" depends="clean,init, compile,compile-debug" description="builds both, uncompressed and debug version" />
-	<target name="build-plugin" depends="build-all,plugin" description="builds plugin (compressed js and debug)" />
+	<target name="build" depends="clean, init, compile" description="builds production version" />
+    <target name="build-for-viewer-ng" depends="build, copy-to-lib" description="builds production version, copying it to viewer-ng's lib directory" />
+	<target name="build-debug" depends="clean, init, compile-debug" description="builds debug version" />
+	<target name="build-all" depends="clean,init, compile,compile-debug" description="builds both, production and debug version" />
+	<target name="build-plugin" depends="build-all,plugin" description="builds production version, deploying it into its respective plugin directory" />
 
 </project>
