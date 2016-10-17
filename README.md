@@ -37,7 +37,7 @@ The following software has to be installed in order to compile the java script c
 2. apache ant (and therefore a java runtime)
 3. python (for closure's calcdeps.py)
 
-To build the open layers viewer for the viewer-ng (deploys into libs directory),
+To build the open layers viewer for viewer-ng (deploys into libs directory),
 simply run ```ant``` (default target).
 
 For further options type ```ant -p```.
