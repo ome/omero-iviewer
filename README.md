@@ -14,7 +14,7 @@ All builds will build into the build directory AND deploy to the plugin director
 which can then be used like any django plugin.
 For further installation help have a look at the respective [README](plugin/viewer-ng/README.md).
 
-Note: Should you like or need to rebuild viewer-ng's internal ol3 viewer you
+Note: Should you like or need to rebuild viewer-ng's internal ol3 viewer,
       please have a look at the section *ol3-viewer* below!
 
 ##Development:
