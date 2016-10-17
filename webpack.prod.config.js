@@ -28,7 +28,7 @@ module.exports = {
     ]
   },
   module: {
-    noParse: [/libs\/ome-viewer-1.0.js$/],
+    noParse: [/libs\/ol3-viewer-1.0.js$/],
     loaders: [
       { test: /\.js$/, loader: 'babel', exclude: /node_modules/,
         query: { compact: false, presets: ['es2015-loose', 'stage-1'], plugins: ['transform-decorators-legacy'] } },

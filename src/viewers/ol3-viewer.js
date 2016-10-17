@@ -6,7 +6,7 @@ import Context from '../app/context';
 import Misc from '../utils/misc';
 import Ui from '../utils/ui';
 import {inject, customElement, bindable} from 'aurelia-framework';
-import {ol3} from '../../libs/ome-viewer-1.0.js';
+import {ol3} from '../../libs/ol3-viewer-1.0.js';
 import {
     IMAGE_CONFIG_UPDATE, IMAGE_VIEWER_RESIZE, IMAGE_VIEWER_SCALEBAR,
     IMAGE_DIMENSION_CHANGE, IMAGE_SETTINGS_CHANGE,

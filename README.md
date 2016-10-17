@@ -22,3 +22,16 @@ localhost:3000
 ##Documentation:
 
 Run ```npm run docs``` to build the html in build/docs
+
+
+
+# ol3-viewer
+Viewer NG's internal image viewer (based on open layers 3)
+
+The following software has to be installed in order to compile the java script code:
+
+1. npm (node package manager)
+2. apache ant (and therefore a java runtime)
+3. python (for closure's calcdeps.py)
+
+Use *ant -p* to list the options available.

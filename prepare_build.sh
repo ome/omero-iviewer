@@ -17,5 +17,4 @@ rm -rf plugin/viewer-ng/static plugin/viewer-ng/templates
 #recreate static and templates directories
 echo "Recreating build/deploy directories..."
 mkdir -p plugin/viewer-ng/static/viewer-ng/css/images
-mkdir -p plugin/viewer-ng/static/viewer-ng/js
 mkdir -p plugin/viewer-ng/templates/viewer-ng
