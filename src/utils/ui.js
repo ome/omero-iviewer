@@ -31,12 +31,17 @@ export default class Ui {
                 let x = leftSplit ? e.pageX - el.offset().left :
                     $(window).width() - e.pageX;
                 let frameWidth = $(".frame").width();
-                let minWith = leftSplit ? 25 : 50;
-                let maxWith = parseInt(el.css("max-width"))
+                let minWidth = leftSplit ? 25 : 50;
+                let maxWidth = parseInt(el.css("max-width"));
+                let tolerance =  $(window).width() -
+                        (leftSplit ? $('.right-hand-panel').width() :
+                            $('.thumbnail-panel').width())-200;
+                if (maxWidth > tolerance)
+                    maxWidth = tolerance;
                 let rightBound = leftSplit ?
                     ($(window).width() - frameWidth) : $(window).width();
 
-                if (x > minWith && x < maxWith && e.pageX < rightBound) {
+                if (x > minWidth && x < maxWidth && e.pageX < rightBound) {
                       el.width(x);
                       if (leftSplit)
                           $('.frame').css(
@@ -52,7 +57,8 @@ export default class Ui {
 
         $(document).mouseup((e) => {
             $(document).unbind('mousemove');
-            eventbus.publish(IMAGE_VIEWER_RESIZE, {config_id: -1});
+            eventbus.publish(IMAGE_VIEWER_RESIZE,
+                {config_id: -1, window_resize: false});
         });
     }
 
@@ -89,9 +95,25 @@ export default class Ui {
                 $(e.currentTarget).parent().hasClass("left-split");
             let el = leftSplit ? $('.thumbnail-panel') : $('.right-hand-panel');
 
-            let fullWidth = parseInt(el.css("max-width"));
+            let minWidth = leftSplit ? 20 : 50;
+            let oldWidth = parseInt(el.attr("old-width"));
             let width = el.width();
-            let newWidth = width === 0 ? fullWidth : 0;
+
+            let tolerance =  $(window).width() -
+                    (leftSplit ? $('.right-hand-panel').width() :
+                        $('.thumbnail-panel').width())-200;
+
+            let newWidth = width === 0 ?
+                (isNaN(oldWidth) || oldWidth <= 0 ? minWidth : oldWidth) : 0;
+
+            // we do not allow opening sidebars if there is not enough room
+            // we try to reduce it to above set minWidth but if that is
+            // not good enough, we don't open it
+            if (newWidth !== 0 && newWidth > tolerance) {
+                if (minWidth > tolerance) return;
+                newWidth = tolerance;
+            }
+            el.attr("old-width", width);
 
             let url = Misc.pruneUrlToLastDash($(e.currentTarget).attr("src"));
             $(e.currentTarget).attr(
@@ -127,5 +149,41 @@ export default class Ui {
         this.unbindCollapseHandlers();
         this.bindResizeHandlers(eventbus);
         this.bindCollapseHandlers();
+    }
+
+    /**
+     * Collapse
+     *
+     * @param {boolean} left flag if left sidebar
+     * @static
+     */
+    static adjustSideBarsOnWindowResize() {
+        // if we get too small we'll collaps the thumbnail sidebar
+        let sideBar = $('.thumbnail-panel');
+        let otherSideBar = $('.right-hand-panel');
+        let width = sideBar.width();
+        let toleranceWidth = 0, origin=null;
+        if (width > 0) {
+            toleranceWidth = $(window).width() - otherSideBar.width() - 200;
+            origin = $('.left-split img');
+            if (width > toleranceWidth)
+                origin.trigger('click', {currentTarget: origin});
+        }
+        // if we get even smaller, we'll either resize the right hand panel or
+        // collapse it as well
+        sideBar = $('.right-hand-panel');
+        width = sideBar.width();
+        toleranceWidth = $(window).width() - 200;
+        origin = $('.right-split img');
+        if (width > toleranceWidth) {
+            if (toleranceWidth < 50)
+                origin.trigger('click', {currentTarget: origin});
+            else {
+                 $('.right-hand-panel').width(toleranceWidth);
+                $('.frame').css(
+                    {"margin-right": '' + (-toleranceWidth-5) + 'px',
+                     "padding-right": '' + (toleranceWidth+15) + 'px'});
+            }
+        }
     }
 }

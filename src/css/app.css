@@ -1,6 +1,7 @@
 /** BOOTSTRAP adjustments START **/
 html, body, .frame, .center, ol3-viewer {
     height: 100%;
+    overflow: hidden;
 }
 
 hr {
@@ -240,7 +241,7 @@ thumbnail-slider img {
 
 .right-hand-panel {
     width: 300px;
-    max-width: 300px;
+    max-width: 800px;
     overflow-y: hidden;
 }
 
@@ -250,6 +251,7 @@ thumbnail-slider img {
 
 .right-hand-panel .row {
     min-width: 300px;
+    max-width: 800px;
     height: 30px;
     margin-left: 2px;
     margin-right: 0px;
@@ -275,7 +277,7 @@ thumbnail-slider img {
 }
 
 .channel-range {
-    float: left;
+    width: 100%;
     height: 100%;
 }
 
@@ -283,7 +285,7 @@ thumbnail-slider img {
     margin-top: 10px;
     height: 10px;
     float: left;
-    width: 100px;
+    width: 35%;
     margin-left: 7px;
     margin-right: 1px;
 }
@@ -376,6 +378,7 @@ thumbnail-slider img {
 
 .regions-header {
     table-layout: fixed;
+    width: 100%
     min-width: 300px;
 }
 
@@ -410,7 +413,7 @@ thead, tbody {
     margin-top: 5px;
     table-layout: fixed;
     min-width:300px;
-    max-width:300px;
+    max-width:800px;
     height:400px;
     display: block;
     overflow: scroll;

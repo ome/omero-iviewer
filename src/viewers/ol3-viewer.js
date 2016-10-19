@@ -146,7 +146,7 @@ export default class Ol3Viewer extends EventSubscriber {
         if (params.config_id !== this.config_id) return;
 
         this.initViewer();
-        this.viewer.redraw();
+        this.resizeViewer({window_resize: true});
     }
 
     /**
@@ -215,6 +215,10 @@ export default class Ol3Viewer extends EventSubscriber {
     resizeViewer(params={}) {
         if (this.viewer === null) return;
 
+        // check if we are way to small, then we collapse...
+        if (typeof params.window_resize === 'boolean' &&
+                params.window_resize)
+                Ui.adjustSideBarsOnWindowResize();
         this.viewer.redraw();
     }
 
