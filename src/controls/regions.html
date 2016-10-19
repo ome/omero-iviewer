@@ -23,7 +23,7 @@
                                 'background-color: #d0d0ff;' : ''}
                                 ${shape.deleted ? 'color: red;' :
                                     (shape.modified ? 'color: blue;' : '')}"
-                        click.delegate="selectShape(id, shape.selected, $event.target)">
+                        click.delegate="selectShape(id, shape.selected, $event)">
                         <td class="shape-id"><div>${shape.id}</div></td>
                         <td class="shape-z"><div>${shape.theZ}</div></td>
                         <td class="shape-t"><div>${shape.theT}</div></td>

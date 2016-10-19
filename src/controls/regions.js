@@ -216,18 +216,24 @@ export default class Regions {
      *
      * @param {number} id the shape id
      * @param {boolean} selected the selected state
+     * @param {Object} event event object with additional info
      * @memberof Regions
      */
-    selectShape(id, selected, target) {
-        let t = $(target);
+    selectShape(id, selected, event) {
+        let t = $(event.target);
         if (t.hasClass("shape-show") || t.parent().hasClass("shape-show"))
             return true;
+
+        let multipleSelection =
+            typeof event.ctrlKey === 'boolean' && event.ctrlKey;
+        let deselect = multipleSelection && selected;
 
         this.context.publish(
            REGIONS_SET_PROPERTY, {
                config_id: this.regions_info.image_info.config_id,
-               property: 'selected', shapes : [id], value : selected,
-               center : true});
+               property: 'selected',
+               shapes : [id], clear: !multipleSelection,
+               value : !deselect, center : !deselect});
     }
 
     /**

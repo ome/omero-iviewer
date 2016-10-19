@@ -697,13 +697,16 @@ ome.ol3.Viewer.prototype.setRegionsVisibility = function(visible, roi_shape_ids)
  *
  * @param {Array<string>} roi_shape_ids list in roi_id:shape_id notation
  * @param {boolean} selected flag whether we should (de)select the rois
+ * @param {boolean} clear flag whether we should clear existing selection beforehand
  * @param {boolean=} center centers map on the shape coordinates
  */
-ome.ol3.Viewer.prototype.selectShapes = function(roi_shape_ids, selected, center) {
+ome.ol3.Viewer.prototype.selectShapes = function(
+    roi_shape_ids, selected, clear, center) {
 	// without a regions layer there will be no select of regions ...
 	var regions = this.getRegions();
-	if (regions === null) return;
+	if (regions === null || regions.select_ === null) return;
 
+    if (typeof clear === 'boolean' && clear) regions.select_.clearSelection();
     regions.setProperty(roi_shape_ids, "selected", selected);
 
     if (roi_shape_ids.length === 1 && typeof center === 'boolean' && center)

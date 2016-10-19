@@ -269,7 +269,9 @@ export default class Ol3Viewer extends EventSubscriber {
           if (params.config_id !== this.config_id ||
             !Misc.isArray(params.shapes) || params.shapes.length === 0) return;
 
-         this.viewer.selectShapes(params.shapes, params.value, params.center);
+         this.viewer.selectShapes(
+             params.shapes, params.value,
+             params.clear, params.center);
       }
 
     /**
