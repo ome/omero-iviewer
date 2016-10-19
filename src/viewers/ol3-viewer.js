@@ -52,7 +52,7 @@ export default class Ol3Viewer extends EventSubscriber {
         [IMAGE_DIMENSION_CHANGE,
             (params={}) => this.changeDimension(params)],
         [IMAGE_SETTINGS_CHANGE,
-            (params={}) => this.changeModelProjectionOrRange(params)],
+            (params={}) => this.changeImageSettings(params)],
         [REGIONS_PROPERTY_CHANGED,
             (params={}) => this.getRegionsPropertyChange(params)],
         [REGIONS_SET_PROPERTY,
@@ -174,7 +174,7 @@ export default class Ol3Viewer extends EventSubscriber {
      * @memberof Ol3Viewer
      * @param {Object} params the event notification parameters
      */
-    changeModelProjectionOrRange(params = {}) {
+    changeImageSettings(params = {}) {
         // we ignore notifications that don't concern us
         // and don't have the model param
         if (params.config_id !== this.config_id ||

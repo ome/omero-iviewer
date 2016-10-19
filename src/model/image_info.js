@@ -391,10 +391,12 @@ export default class ImageInfo {
     initAndMixChannelsWithInitialSettings(channels, initialChannels) {
         if (!Misc.isArray(channels)) return channels;
 
-        // apply lut if exists
+        // apply lut if exists and set reverseIntensity flag
         channels.map((c) => {
             if (typeof c.lut  === 'string' && c.lut.length > 0)
                 c.color = c.lut;
+            if (typeof c.reverseIntensity !== 'boolean')
+                c.reverseIntensity = false;
         });
 
         // mix in initial channel settings if exist
@@ -406,6 +408,7 @@ export default class ImageInfo {
                 chan.window.start = c.start;
                 chan.window.end = c.end;
                 chan.color = c.color;
+                chan.reverseIntensity = c.reverseIntensity;
             }
         });
 

@@ -196,6 +196,11 @@ export default class ChannelRange  {
             // channel color reset
             if (this.channel.color !== impImgData.c[this.index].color)
                 this.channel.color = impImgData.c[this.index].color;
+            // reverse intensity
+            if (this.channel.reverseIntensity !==
+                    impImgData.c[this.index].reverseIntensity)
+                this.channel.reverseIntensity =
+                    impImgData.c[this.index].reverseIntensity;
             // active reset
             if (this.channel.active !== impImgData.c[this.index].active)
                  this.channel.active = impImgData.c[this.index].active;
@@ -238,7 +243,7 @@ export default class ChannelRange  {
              $(this.element).find(".channel-end").off("input");
              $(this.element).find(".channel-end").spinner("destroy");
              $(this.element).find(".channel-slider").slider("destroy");
-             $(this.element).find(".channel-color input").spectrum("destroy");
+             $(this.element).find(".spectrum-input").spectrum("destroy");
          } catch (ignored) {}
      }
 
@@ -291,7 +296,7 @@ export default class ChannelRange  {
            "value",minMaxValues.end_val);
 
        //channel color
-       $(this.element).find(".channel-color input").spectrum({
+       $(this.element).find(".spectrum-input").spectrum({
             color: "#" + this.channel.color,
             showInput: true,
             className: "full-spectrum",
@@ -324,6 +329,18 @@ export default class ChannelRange  {
          this.context.getSelectedImageConfig().addHistory({
              prop: ['image_info', 'channels', '' + this.index,'color'],
              old_val : oldValue, new_val: this.channel.color, type: 'string'});
+     }
+
+     /**
+     * reverse intensity toggle, adds only history entry
+     *
+     * @memberof ChannelRange
+     */
+     onReverseIntensityToggle() {
+         let value = this.channel.reverseIntensity;
+         this.context.getSelectedImageConfig().addHistory({
+             prop: ['image_info', 'channels', '' + this.index,'reverseIntensity'],
+             old_val : !value, new_val: value, type: 'boolean'});
      }
 
      /**

@@ -66,6 +66,7 @@ export default class ChannelSettings extends EventSubscriber {
     observedProperties = [
         {obj: null, prop: 'active'},
         {obj: null, prop: 'color'},
+        {obj: null, prop: 'reverseIntensity'},
         {obj: 'window', prop: 'start'},
         {obj: 'window', prop: 'end'}
     ];
@@ -247,6 +248,13 @@ export default class ChannelSettings extends EventSubscriber {
                     old_val : chan.color,
                     new_val: impImgData.c[index].color,
                     type: 'string'});
+            // log reverse intensity
+            if (chan.reverseIntensity !== impImgData.c[index].reverseIntensity)
+               history.push({
+                   prop: ['image_info', 'channels', '' + index, 'reverseIntensity'],
+                   old_val : chan.reverseIntensity,
+                   new_val: impImgData.c[index].reverseIntensity,
+                   type: 'boolean'});
              // remember active
              if (chan.active !== impImgData.c[index].active)
                  history.push({
@@ -339,7 +347,8 @@ export default class ChannelSettings extends EventSubscriber {
             IMAGE_SETTINGS_CHANGE,
             { config_id: this.config_id, ranges:
                 [{index: index, start: c.window.start, end: c.window.end,
-                     color: c.color, active: c.active}]});
+                     color: c.color, active: c.active,
+                     reverse: c.reverseIntensity}]});
     }
 
     /**

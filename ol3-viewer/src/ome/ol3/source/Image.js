@@ -213,6 +213,7 @@ ome.ol3.source.Image = function(options) {
                 // amend url with channel info
                 url += (!channelInfo['active'] ? "-" : "") + (c + 1);
                 url += "|" + channelInfo['start'] + ":" + channelInfo['end'];
+                url += (channelInfo['reverse'] ? "" : "-") + "r"; // reverse int.
                 url += "$" + channelInfo['color']; // color info
             }
             url += '&m=' + this.image_model_;
@@ -419,30 +420,20 @@ ome.ol3.source.Image.prototype.changeChannelRange = function(ranges, rerender) {
             typeof range['end'] !== 'number') continue;
 
         var channel_index = range['index'];
-        var start = range['start'];
-        var end = range['end'];
-        var color = null;
+        this.channels_info_[channel_index]['start'] = range['start'];
+		this.channels_info_[channel_index]['end'] = range['end'];
 
-        // second sanity check for optional color setting
+        // second sanity check for optional color and reverse setting
         // cannot do much more to accomodate lookup table strings
         if (typeof range['color'] === 'string' && range['color'].length !== 0)
-            color = range['color'];
+            this.channels_info_[channel_index]['color'] = range['color'];
+        if (typeof range['reverse'] === 'boolean')
+            this.channels_info_[channel_index]['reverse'] =
+                range['reverse'];
 
         // third sanity check for optional act setting
         if (typeof range['active'] === 'boolean')
             this.channels_info_[channel_index]['active'] = range['active'];
-
-        //Note: apparently this is allowed in the present web interface,
-        // so let's do it as well
-		// check if channel is not out of bounds and min/max do not under/overshoot
-		//if (channel_index < 0 || channel_index >= this.channels_info_.length ||
-		//		start > end || start < this.channels_info_[channel_index]['min'] ||
-		//		end > this.channels_info_[channel_index]['max'] )
-		//		return;
-
-        this.channels_info_[channel_index]['start'] = start;
-		this.channels_info_[channel_index]['end'] = end;
-        if (color) this.channels_info_[channel_index]['color'] = color;
     }
     rerender = typeof rerender !== 'boolean' ? true : rerender;
     if (rerender) this.forceRender();
@@ -468,6 +459,7 @@ ome.ol3.source.Image.prototype.captureImageSettings = function() {
             var chanSnap = {
                 "active" : chan['active'],
                 "color" : chan['color'],
+                "reverseIntensity" : chan['reverse'],
                 "min" : chan['min'],
                 "max" : chan['max'],
                 "start" : chan['start'],

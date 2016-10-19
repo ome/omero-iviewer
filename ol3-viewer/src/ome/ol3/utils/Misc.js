@@ -384,7 +384,15 @@ ome.ol3.utils.Misc.parseChannelParameters = function(some_string) {
         var rTok = c.substring(0, pos).split(':');
         if (rTok.length !== 2) continue; // we need start and end
         var rStart = parseInt(rTok[0]);
-        var rEnd = parseInt(rTok[1]);
+        var rEnd = rTok[1].toLowerCase();
+        // account for reverse flag
+        var rPos = rEnd.indexOf("r");
+        if (rPos != -1) {
+            tmp['reverse'] =
+                rEnd.substring(rPos-1, rPos) === '-' ? false : true;
+            rEnd =
+                parseInt(rEnd.substring(0, tmp['reverse'] ? rPos : rPos-1));
+        } else  rEnd = parseInt(rEnd);
         if (isNaN(rStart) || isNaN(rEnd)) continue;
         tmp['start'] = rStart;
         tmp['end'] = rEnd;

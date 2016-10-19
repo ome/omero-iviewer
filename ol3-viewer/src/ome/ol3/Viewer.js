@@ -352,6 +352,9 @@ ome.ol3.Viewer = function(id, options) {
                                 typeof oldC['lut'] === 'string' &&
                                 oldC['lut'].length > 0 ?
                                     oldC['lut'] : oldC['color'],
+                            "reverse" :
+                                typeof oldC['reverseIntensity'] === 'boolean' ?
+                                    oldC['reverseIntensity'] : false,
 							"min" : oldC['window']['min'],
 							"max" : oldC['window']['max'],
 							"start" : oldC['window']['start'],

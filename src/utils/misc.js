@@ -122,7 +122,15 @@ export default class Misc {
             let rTok = c.substring(0, pos).split(':');
             if (rTok.length !== 2) continue; // we need start and end
             let rStart = parseInt(rTok[0]);
-            let rEnd = parseInt(rTok[1]);
+            let rEnd = rTok[1].toLowerCase();
+            // account for reverse flag
+            let rPos = rEnd.indexOf("r");
+            if (rPos != -1) {
+                tmp['reverseIntensity'] =
+                    rEnd.substring(rPos-1, rPos) === '-' ? false : true;
+                rEnd =
+                    parseInt(rEnd.substring(0, tmp['reverseIntensity'] ? rPos : rPos-1));
+            } else rEnd = parseInt(rEnd);
             if (isNaN(rStart) || isNaN(rEnd)) continue;
             tmp['start'] = rStart;
             tmp['end'] = rEnd;
@@ -176,7 +184,10 @@ export default class Misc {
             settings.channels.map((chan) => {
                 if (count !== 0) url += ",";
                 url += (chan.active ? "" : "-") + (count+1) + "|" +
-                    chan.start + ":" + chan.end + "$" + chan.color;
+                    chan.start + ":" + chan.end +
+                    (typeof chan.reverseIntensity === 'boolean' ?
+                        (chan.reverseIntensity ? '' : '-r')  : '-') + "r$" +
+                chan.color;
                 count++;
             });
             url+= "&";

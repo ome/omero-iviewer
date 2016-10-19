@@ -8,6 +8,13 @@
         <div class="luts">
             <img class="luts-close" src="../css/images/close.gif"/>
             <div>Lookup Tables</div>
+            <hr/>
+            <div><input type="checkbox"
+                checked.bind="channel.reverseIntensity"
+                change.delegate="onReverseIntensityToggle()"/>
+                &nbsp;Reverse Intensity
+            </div>
+            <hr/>
             <div class="luts-item" repeat.for="[id, lut] of luts"
                 click.delegate="chooseLut(id)">
                 <div class="luts-preview" css="background-image:
@@ -17,7 +24,7 @@
                 </div>
             </div>
             <hr/>
-            <div>&nbsp;Pick Color:&nbsp;<input/></div>
+            <div>&nbsp;Pick Color:&nbsp;<input class="spectrum-input"/></div>
         </div>
     </div>
 </template>
