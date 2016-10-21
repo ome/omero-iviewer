@@ -242,7 +242,7 @@ thumbnail-slider img {
 .right-hand-panel {
     width: 300px;
     max-width: 800px;
-    overflow-y: hidden;
+    overflow-y: auto;
 }
 
 .right-hand-panel li a {
@@ -492,6 +492,15 @@ thead, tbody {
 
 .point-icon {
     background-image: url('images/point.png');
+}
+
+.histogram {
+    display: none;
+    height: 150px;
+}
+
+.histogram-line {
+  fill: none;
 }
 
 .hidden-functionality {

@@ -1,6 +1,7 @@
 // js
 import Context from '../app/context';
 import Misc from '../utils/misc';
+import Histogram from './histogram';
 import {CHANNEL_SETTINGS_MODE} from '../utils/constants';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 
@@ -46,6 +47,13 @@ export default class Settings extends EventSubscriber {
     rdefs = null;
 
     /**
+     * the histogram instance
+     * @memberof Settings
+     * @type {Histogram}
+     */
+     histogram = null;
+
+    /**
      * events we subscribe to
      * @memberof Settings
      * @type {Array.<string,function>}
@@ -73,9 +81,26 @@ export default class Settings extends EventSubscriber {
     bind() {
         this.image_config =
             this.context.getImageConfig(this.config_id);
+
+        // event subscriptions and property observation
         this.subscribe();
         this.registerObserver();
+
+        // fire off ajax request for rendering defs
         this.requestAllRenderingDefs();
+    }
+
+    /**
+     * Overridden aurelia lifecycle method:
+     * fired when PAL (dom abstraction) is ready for use
+     *
+     * @memberof Settings
+     */
+    attached() {
+        // create histogram instance (if not tiled)
+        if (this.image_config && this.image_config.image_info &&
+            !this.image_config.image_info.tiled)
+            this.histogram = new Histogram(this.image_config.image_info);
     }
 
     /**
@@ -94,8 +119,7 @@ export default class Settings extends EventSubscriber {
             dataType : Misc.useJsonp(this.context.server) ? 'jsonp' : 'json',
             cache : false,
             success : (response) => {
-                if (typeof response !== 'object' || response === null ||
-                     !Misc.isArray(response.rdefs)) return;
+                if (!Misc.isArray(response.rdefs)) return;
 
                 // merge in lut info
                 response.rdefs.map((rdef) => {
@@ -133,8 +157,10 @@ export default class Settings extends EventSubscriber {
     *
     * @memberof Settings
     */
-    toggleHistogram() {
-        alert("Not implemented yet!");
+    toggleHistogram(checked) {
+        if (this.histogram) {
+            this.histogram.toggleHistogramVisibilty(checked);
+        }
     }
 
     /**
@@ -448,7 +474,8 @@ export default class Settings extends EventSubscriber {
      */
     unbind() {
         this.unregisterObserver();
-        this.unsubscribe()
+        this.unsubscribe();
+        if (this.histogram) this.histogram.destroyHistogram();
         this.image_config = null;
     }
 }

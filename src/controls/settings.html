@@ -55,10 +55,24 @@
                change.delegate="onModelChange($event.target.checked)">Grayscale</label>
         </div>
         <div class="col-xs-6">
-            <!--label><input type="checkbox"
-                change.delegate="toggleHistogram()">Show Histogram</label-->
+            <label
+                class="${image_config && image_config.image_info &&
+                !image_config.image_info.tiled && histogram && histogram.enabled
+                    ? '' : 'disabled-color'}">
+                <input type="checkbox"
+                    class="${image_config && image_config.image_info &&
+                        !image_config.image_info.tiled && histogram && histogram.enabled
+                            ? '' : 'disabled-color'}"
+                    disabled="${image_config && image_config.image_info &&
+                        !image_config.image_info.tiled && histogram && histogram.enabled
+                            ? '' : 'disabled-color'}"
+                    change.delegate="toggleHistogram($event.target.checked)">
+                Show Histogram
+            </label>
         </div>
     </div>
+
+    <div class="row histogram" style="height: 100%"></div>
 
     <div class="row" style="height: 100%">
         <channel-settings class="col-xs-12" config_id.bind="config_id"></channel-settings>
