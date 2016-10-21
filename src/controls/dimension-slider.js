@@ -157,8 +157,16 @@ export default class DimensionSlider extends EventSubscriber {
             this.bindingEngine.propertyObserver(
                 this.image_config.image_info.dimensions, this.dim)
                     .subscribe(
-                        (newValue, oldValue) =>
-                            $(this.elSelector).slider({value: newValue}))
+                        (newValue, oldValue) => {
+                            $(this.elSelector).slider({value: newValue});
+
+                            // send out a dimension change notification
+                            this.context.publish(
+                                IMAGE_DIMENSION_CHANGE,
+                                    {config_id: this.config_id,
+                                     dim: this.dim,
+                                     value: [newValue]});
+                        })
     }
 
     /**
@@ -192,28 +200,23 @@ export default class DimensionSlider extends EventSubscriber {
         value = parseInt(value);
         let imgInf = this.image_config.image_info;
         let oldValue = imgInf.dimensions[this.dim];
-        // no need to change for a the same value
-        if (slider_interaction && value === oldValue) return;
 
+        // show new value
         $('.slider-corner .' + this.dim).text(
             this.dim.toUpperCase() + ":" + (value+1) + "/" +
             imgInf.dimensions['max_' + this.dim]);
-        if (slider_interaction) {
-            this.image_config.addHistory({
-               prop: ['image_info', 'dimensions', this.dim],
-               old_val : oldValue, new_val:  value, type : "number"});
 
-            // this will trigger the observer who does the rest
-            imgInf.dimensions[this.dim] = value;
-            return;
-        }
+        // no need to change for a the same value
+        if (slider_interaction ||
+                (!slider_interaction && value === oldValue)) return;
 
-        // send out a dimension change notification
-        this.context.publish(
-            IMAGE_DIMENSION_CHANGE,
-                {config_id: this.config_id,
-                 dim: this.dim,
-                 value: [imgInf.dimensions[this.dim]]});
+        // make history entry
+        this.image_config.addHistory({
+           prop: ['image_info', 'dimensions', this.dim],
+           old_val : oldValue, new_val:  value, type : "number"});
+
+        // this will trigger the observer who does the rest
+        imgInf.dimensions[this.dim] = value;
     }
 
     /**

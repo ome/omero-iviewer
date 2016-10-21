@@ -44,18 +44,12 @@ export default class Histogram extends EventSubscriber {
      * @type {Array.<string,function>}
      */
     sub_list = [[IMAGE_SETTINGS_CHANGE,
-                    (params={}) => {
-                        if (typeof params.prop !== 'string' ||
-                            params.prop === 'active' ||
-                            params.prop === 'color')
-                            this.plotHistogram();
-                        else this.plotHistogramLines();
-                    }],
+                    (params={}) => this.handleSettingsChanges(params)],
                 [IMAGE_DIMENSION_CHANGE,
-                    (params={}) => this.plotHistogram()]
-    ];
+                    (params={}) => this.handleSettingsChanges(params)]];
 
     /**
+     * TODO: make that more flexible for right panel resizing
      * the graph width/height
      * @memberof Histogram
      * @type {Array.<number>}
@@ -77,9 +71,8 @@ export default class Histogram extends EventSubscriber {
     graph_svg = null;
 
     /**
-     * last active channel which we have to remember because the event doesn't
-     * contain that info. it might be that toggling active affected unrelevant
-     * channels such as after the first active...
+     * last active channel which we have to remember
+     * because the event doesn't contain that info
      * @memberof Histogram
      * @type {Array.<number>}
      */
@@ -92,14 +85,18 @@ export default class Histogram extends EventSubscriber {
      */
     constructor(image_info=null, selector=".histogram") {
         super(image_info ? image_info.context.eventbus : null);
+
         // elementary check for image info existence and selector validity
         if (!(image_info instanceof ImageInfo) || $(selector).length === 0)
             return;
+
         // set members
         this.image_info = image_info;
         this.selector = selector;
+
         //subscribe to events that tell us whenever and what we need to re-plot
         this.subscribe();
+
         // we fire off a first request to check if backend supports histograms
         this.requestHistogramJson(0, ((data) => {
                 this.enabled = (data !== null);
@@ -141,40 +138,59 @@ export default class Histogram extends EventSubscriber {
               .attr("x", (d, i) => d * (this.graph_dims[1]/2));
 
          // plot histogram
-         if (data) this.plotHistogram(data);
+         if (data) this.plotHistogram(0, data);
     }
 
     /**
-     * @return the index first active channel or 0 otherwise
+     * Handles settings changes to affect plotting of the histogram/lines
+     * @params {object} params the event params
      * @memberof Histogram
      */
-    getFirstActiveChannel() {
-        if (!this.enabled || !Misc.isArray(this.image_info.channels)) return 0;
-
+    handleSettingsChanges(params = {}) {
+        // find first active channel
+        let channel = 0;
         if (Misc.isArray(this.image_info.channels))
             for (let i in this.image_info.channels)
-                if (this.image_info.channels[i].active) return parseInt(i);
+                if (this.image_info.channels[i].active) {
+                    channel = parseInt(i);
+                    break;
+                }
 
-        return 0;
+        // check whether we need to plot the entire histogram or just
+        // the lines, in specific active, color and non channel changes (no prop)
+        // such as time and plane changes are going to trigger the plotting
+        // of the entire histogram (incl. backend request)
+        let plotHistogram =
+            (typeof params.prop !== 'string' ||
+                params.prop === 'active' ||
+                params.prop === 'color');
+
+        // special case: active toggle that doesn't affect the first active channel
+        if (plotHistogram && params.prop === "active" &&
+                channel === this.last_active_channel) return;
+        // update last active channel
+        this.last_active_channel = channel;
+        if (plotHistogram) this.plotHistogram(channel);
+        else this.plotHistogramLines(channel);
     }
 
     /**
      * Plots the histogram
-     * @param {Array} data
+     * @param {number} channel the channel index
+     * @param {Array} data the data if it has already been requested
+     *                      (e.g. on createHistogramSVG)
      * @memberof Histogram
      */
-    plotHistogram(data) {
-        // we don't plot if we are not enabled or visible
-        if (!this.enabled || !this.visible) return;
-
-        // find first active channel
-        let channel = this.getFirstActiveChannel();
-        // there are cases where the channels active flag was toggled
-        // but we don't care because the first active one is still the same
-        if (channel === this.last_active_channel) return;
-        this.last_active_channel = channel; // set new first active channel
+    plotHistogram(channel, data) {
+        // we don't plot if we are not enabled or visible or haven't been
+        // given a channel
+        if (!this.enabled || !this.visible ||
+                typeof channel !== 'number') return;
 
         if (typeof this.image_info.channels[channel] !== 'object') return;
+
+        // color: if not valid, gray will be applied by default,
+        // for white we choose black
         let color = "#" + this.image_info.channels[channel].color;
         if (color === "#FFFFFF") color = "#000000";
 
@@ -225,23 +241,21 @@ export default class Histogram extends EventSubscriber {
 
     /**
      * Plots the lines only
-     * @param {number} activeChannel the active channel index(if called from plotHistogram)
+     * @param {number} channel the active channel index
      * @memberof Histogram
      */
-    plotHistogramLines(activeChannel = null) {
+    plotHistogramLines(channel) {
         // we don't plot if we are not enabled or visible
-        if (!this.enabled || !this.visible) return;
-
-        // find first active channel if we weren't given one
-        let channel =
-            (typeof this.image_info.channels[activeChannel] === 'object' &&
-                this.image_info.channels[activeChannel]) ?
-                    activeChannel : this.getFirstActiveChannel();
-        if (typeof this.image_info.channels[channel] !== 'object') return;
+        // or weren't given a channel
+        if (!this.enabled || !this.visible ||
+            typeof this.image_info.channels[channel] !== 'object') return;
 
         let c = this.image_info.channels[channel];
+        // color: if not valid, gray will be applied by default,
+        // for white we choose black
         let color = "#" + c.color;
         if (color === "#FFFFFF") color = "#000000";
+
         let delta = c.window.max - c.window.min;
         let s = ((c.window.start - c.window.min) / delta) * this.graph_cols;
         let e = ((c.window.end - c.window.min) / delta) * this.graph_cols;
@@ -263,7 +277,7 @@ export default class Histogram extends EventSubscriber {
             // if we were invisible => plot again with present settings
             if (!this.visible) {
                 this.visible = true;
-                this.plotHistogram();
+                this.handleSettingsChanges();
             }
             $(this.selector).show();
         }
