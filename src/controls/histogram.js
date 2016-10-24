@@ -2,7 +2,8 @@ import {noView} from 'aurelia-framework';
 import Misc from '../utils/misc';
 import ImageInfo from '../model/image_info';
 import {
-    IMAGE_SETTINGS_CHANGE, IMAGE_DIMENSION_CHANGE, EventSubscriber
+    IMAGE_SETTINGS_CHANGE, IMAGE_DIMENSION_CHANGE, HISTOGRAM_RANGE_UPDATE,
+    EventSubscriber
 } from '../events/events';
 import * as d3 from 'd3';
 
@@ -20,15 +21,6 @@ export default class Histogram extends EventSubscriber {
     image_info = null;
 
     /**
-     * a flag that can be used to disable the histogram Functionality
-     * useful if backend request is not implemented or
-     * constructor args are missing, just to list 2 examples
-     * @memberof Histogram
-     * @type {boolean}
-     */
-    enabled = false;
-
-    /**
      * a flag that prevents plotting when the histogram is not visible
      * i.e. checkbox is unchecked
      * @memberof Histogram
@@ -40,21 +32,23 @@ export default class Histogram extends EventSubscriber {
      * we piggyback onto image settings and dimensions changes
      * to get notified for channel property and dimension changes
      * that result in histogram/line plotting
+     * for line updates due to range change we have a separate event
      * @memberof Histogram
      * @type {Array.<string,function>}
      */
     sub_list = [[IMAGE_SETTINGS_CHANGE,
                     (params={}) => this.handleSettingsChanges(params)],
                 [IMAGE_DIMENSION_CHANGE,
+                    (params={}) => this.handleSettingsChanges(params)],
+                [HISTOGRAM_RANGE_UPDATE,
                     (params={}) => this.handleSettingsChanges(params)]];
 
     /**
-     * TODO: make that more flexible for right panel resizing
      * the graph width/height
      * @memberof Histogram
      * @type {Array.<number>}
      */
-    graph_dims = [256, 150];
+    graph_dims = [300, 125];
 
     /**
      * data column number
@@ -93,14 +87,18 @@ export default class Histogram extends EventSubscriber {
         // set members
         this.image_info = image_info;
         this.selector = selector;
+        // set dims
+        let el = $(this.selector);
+        this.graph_dims[0] = el.width();
+        this.graph_dims[1] = el.height();
 
         //subscribe to events that tell us whenever and what we need to re-plot
         this.subscribe();
 
         // we fire off a first request to check if backend supports histograms
         this.requestHistogramJson(0, ((data) => {
-                this.enabled = (data !== null);
-                if (this.enabled) this.createHistogramSVG(data);
+                this.image_info.has_histogram = (data !== null);
+                if (this.image_info.has_histogram) this.createHistogramSVG(data);
             }));
     }
 
@@ -110,7 +108,7 @@ export default class Histogram extends EventSubscriber {
      * @memberof Histogram
      */
     createHistogramSVG(data = null) {
-        if (!this.enabled) return;
+        if (!this.image_info.has_histogram) return;
 
         // 1px margin to right so slider marker not lost
         this.graph_svg = d3.select($(this.selector).get(0)).append("svg")
@@ -171,6 +169,12 @@ export default class Histogram extends EventSubscriber {
         // update last active channel
         this.last_active_channel = channel;
         if (plotHistogram) this.plotHistogram(channel);
+        else if (typeof params.channel === 'number' && // range change
+                    typeof params.start === 'number' &&
+                    typeof params.end === 'number' &&
+                    params.channel === this.last_active_channel)
+                this.plotHistogramLines(
+                    params.channel, params.start, params.end);
         else this.plotHistogramLines(channel);
     }
 
@@ -184,7 +188,7 @@ export default class Histogram extends EventSubscriber {
     plotHistogram(channel, data) {
         // we don't plot if we are not enabled or visible or haven't been
         // given a channel
-        if (!this.enabled || !this.visible ||
+        if (!this.image_info.has_histogram || !this.visible ||
                 typeof channel !== 'number') return;
 
         if (typeof this.image_info.channels[channel] !== 'object') return;
@@ -244,10 +248,10 @@ export default class Histogram extends EventSubscriber {
      * @param {number} channel the active channel index
      * @memberof Histogram
      */
-    plotHistogramLines(channel) {
+    plotHistogramLines(channel, start, end) {
         // we don't plot if we are not enabled or visible
         // or weren't given a channel
-        if (!this.enabled || !this.visible ||
+        if (!this.image_info.has_histogram || !this.visible ||
             typeof this.image_info.channels[channel] !== 'object') return;
 
         let c = this.image_info.channels[channel];
@@ -256,9 +260,15 @@ export default class Histogram extends EventSubscriber {
         let color = "#" + c.color;
         if (color === "#FFFFFF") color = "#000000";
 
-        let delta = c.window.max - c.window.min;
-        let s = ((c.window.start - c.window.min) / delta) * this.graph_cols;
-        let e = ((c.window.end - c.window.min) / delta) * this.graph_cols;
+        let min = this.image_info.needsFullRange() ?
+            this.image_info.range[0] : c.window.min;
+        let max = this.image_info.needsFullRange() ?
+            this.image_info.range[1] : c.window.max;
+        if (typeof start !== 'number') start = c.window.start;
+        if (typeof end !== 'number') end = c.window.end;
+        let delta = max - min;
+        let s = ((start - min) / delta) * this.graph_cols;
+        let e = ((end - min) / delta) * this.graph_cols;
 
         this.graph_svg.selectAll("rect")
             .data([s, e])
@@ -271,7 +281,7 @@ export default class Histogram extends EventSubscriber {
      * @memberof Histogram
      */
     toggleHistogramVisibilty(visible = false) {
-        if (!this.enabled || typeof visible !== 'boolean') return;
+        if (!this.image_info.has_histogram || typeof visible !== 'boolean') return;
 
         if (visible) {
             // if we were invisible => plot again with present settings

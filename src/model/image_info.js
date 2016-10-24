@@ -39,6 +39,15 @@ export default class ImageInfo {
     has_scalebar = false;
 
     /**
+     * a flag that signals whether the histogram is enabled or not
+     * this will be set accordingly by the histogram but due to its
+     * more global nature we want the flag here.
+     * @memberof ImageInfo
+     * @type {boolean}
+     */
+    has_histogram = false;
+
+    /**
      * the imageAuthor in the json response
      * @memberof ImageInfo
      * @type {string}

@@ -57,14 +57,14 @@
         <div class="col-xs-6">
             <label
                 class="${image_config && image_config.image_info &&
-                !image_config.image_info.tiled && histogram && histogram.enabled
-                    ? '' : 'disabled-color'}">
+                            image_config.image_info.has_histogram
+                                ? '' : 'disabled-color'}">
                 <input type="checkbox"
                     class="${image_config && image_config.image_info &&
-                        !image_config.image_info.tiled && histogram && histogram.enabled
+                        image_config.image_info.has_histogram
                             ? '' : 'disabled-color'}"
                     disabled="${image_config && image_config.image_info &&
-                        !image_config.image_info.tiled && histogram && histogram.enabled
+                        image_config.image_info.has_histogram
                             ? '' : 'disabled-color'}"
                     change.delegate="toggleHistogram($event.target.checked)">
                 Show Histogram
@@ -72,7 +72,7 @@
         </div>
     </div>
 
-    <div class="row histogram" style="height: 100%"></div>
+    <div class="row"><div class="histogram"></div></div>
 
     <div class="row" style="height: 100%">
         <channel-settings class="col-xs-12" config_id.bind="config_id"></channel-settings>

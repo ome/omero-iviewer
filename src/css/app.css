@@ -122,8 +122,8 @@ a.ui-button:active,
 .frame {
     margin-left: -105px;
     padding-left: 110px;
-    margin-right: -305px;
-    padding-right: 320px;
+    margin-right: -325px;
+    padding-right: 340px;
 }
 
 .center {
@@ -240,7 +240,7 @@ thumbnail-slider img {
 }
 
 .right-hand-panel {
-    width: 300px;
+    width: 320px;
     max-width: 800px;
     overflow-y: auto;
 }
@@ -250,7 +250,7 @@ thumbnail-slider img {
 }
 
 .right-hand-panel .row {
-    min-width: 300px;
+    min-width: 320px;
     max-width: 800px;
     height: 30px;
     margin-left: 2px;
@@ -379,7 +379,7 @@ thumbnail-slider img {
 .regions-header {
     table-layout: fixed;
     width: 100%
-    min-width: 300px;
+    min-width: 320px;
 }
 
 thead, tbody {
@@ -412,7 +412,7 @@ thead, tbody {
 .regions-table {
     margin-top: 5px;
     table-layout: fixed;
-    min-width:300px;
+    min-width:320px;
     max-width:800px;
     height:400px;
     display: block;
@@ -496,7 +496,12 @@ thead, tbody {
 
 .histogram {
     display: none;
-    height: 150px;
+    float: left;
+    background:white;
+    border: solid #ccc 1px;
+    margin-bottom: 5px;
+    height: 125px;
+    width: 300px;
 }
 
 .histogram-line {

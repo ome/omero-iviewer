@@ -20,6 +20,8 @@ export const REGIONS_PROPERTY_CHANGED = "REGIONS_PROPERTY_CHANGED";
 export const REGIONS_SHAPE_DRAWN = "REGIONS_SHAPE_DRAWN";
 /** Retrieves the viewer image settings */
 export const VIEWER_IMAGE_SETTINGS = "VIEWER_IMAGE_SETTINGS";
+/** whenever the histogram range was updated */
+export const HISTOGRAM_RANGE_UPDATE = "HISTOGRAM_RANGE_UPDATE";
 /** whenever thumbnails are supposed to be updated */
 export const THUMBNAILS_UPDATE = "THUMBNAILS_UPDATE";
 

@@ -8,6 +8,7 @@ require('../css/images/colorpicker.png');
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import {CHANNEL_SETTINGS_MODE} from '../utils/constants';
+import {HISTOGRAM_RANGE_UPDATE} from '../events/events';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {spinner} from 'jquery-ui/ui/widgets/spinner';
 import {slider} from 'jquery-ui/ui/widgets/slider';
@@ -21,9 +22,9 @@ import {spectrum} from 'spectrum-colorpicker';
 @inject(Context, Element, BindingEngine)
 export default class ChannelRange  {
     /**
-     * which image config do we belong to (bound in template)
+     * channel informetion (bound in template)
      * @memberof ChannelRange
-     * @type {number}
+     * @type {Object}
      */
     @bindable channel = null;
 
@@ -274,12 +275,37 @@ export default class ChannelRange  {
             {min: minMaxValues.start_min, max: minMaxValues.end_max,
                 range: true,
                 values: [minMaxValues.start_val, minMaxValues.end_val],
-                change: (event, ui) =>
+                change: (event, ui) => {
+                    // if slide update is pending => clear it
+                    if (this.lastUpdate) {
+                        clearTimeout(this.lastUpdate);
+                        this.lastUpdate = null;
+                    }
                     this.onRangeChangeBoth(ui.values,
-                        event.originalEvent ? true : false),
-                slide: (event,ui) => {
-                    if (ui.values[0] >= ui.values[1]) return false;}
-        });
+                        event.originalEvent ? true : false);
+                }, slide: (event,ui) => {
+                    if (ui.values[0] >= ui.values[1]) return false;
+
+                    let imgConf = this.context.getSelectedImageConfig();
+                    if (imgConf.image_info.has_histogram) return true;
+
+                    // we want to update the histogram on slide so we
+                    // need a separate event. we throttle so that
+                    // we send only the lastest slider value within a 100ms
+                    // window.
+                    this.lastDelayedTimeout = new Date().getTime();
+                    let delayedUpdate = (() => {
+                        if (new Date().getTime() < this.lastDelayedTimeout)
+                            return;
+                        this.context.publish(
+                            HISTOGRAM_RANGE_UPDATE,
+                                {config_id : imgConf.id,
+                                    prop: 'start',
+                                    channel: this.index,
+                                    start: ui.values[0],
+                                    end: ui.values[1]});}).bind(this);
+                    this.lastUpdate = setTimeout(delayedUpdate, 100);
+        }});
         $(this.element).find(".channel-slider").css(
             "background", "white");
         // change slider background
