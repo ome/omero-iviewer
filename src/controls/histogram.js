@@ -260,15 +260,11 @@ export default class Histogram extends EventSubscriber {
         let color = "#" + c.color;
         if (color === "#FFFFFF") color = "#000000";
 
-        let min = this.image_info.needsFullRange() ?
-            this.image_info.range[0] : c.window.min;
-        let max = this.image_info.needsFullRange() ?
-            this.image_info.range[1] : c.window.max;
         if (typeof start !== 'number') start = c.window.start;
         if (typeof end !== 'number') end = c.window.end;
-        let delta = max - min;
-        let s = ((start - min) / delta) * this.graph_cols;
-        let e = ((end - min) / delta) * this.graph_cols;
+        let delta = c.window.max - c.window.min;
+        let s = ((start - c.window.min) / delta) * this.graph_cols;
+        let e = ((end - c.window.min) / delta) * this.graph_cols;
 
         this.graph_svg.selectAll("rect")
             .data([s, e])
