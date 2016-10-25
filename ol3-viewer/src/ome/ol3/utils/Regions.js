@@ -516,9 +516,11 @@ ome.ol3.utils.Regions.clusterFeaturesRecursively = function(node, levels) {
  *
  * @private
  * @param {ome.ol3.source.Regions} regions an instance of the Regions
+ * @param {boolean=} include_new_features should new, unsaved features be included?
  * @return {Array.<ol.Feature>|null} an array of converted shapes or null
  */
-ome.ol3.utils.Regions.createFeaturesFromRegionsResponse = function(regions) {
+ome.ol3.utils.Regions.createFeaturesFromRegionsResponse =
+    function(regions, include_new_features) {
 	if (!(regions instanceof ome.ol3.source.Regions) ||
 			!ome.ol3.utils.Misc.isArray(regions.regions_info_)) return null;
 
@@ -609,6 +611,23 @@ ome.ol3.utils.Regions.createFeaturesFromRegionsResponse = function(regions) {
 			ret.push(actualFeature);
 		}
 	}
+
+    // we include any new, unsaved shapes if any exist and are for the present
+    // time and plane
+    if (typeof include_new_features === 'boolean' && include_new_features &&
+            typeof regions.new_unsaved_shapes_ === 'object')
+        for (var f in regions.new_unsaved_shapes_) {
+            var newUnsFeat = regions.new_unsaved_shapes_[f];
+            var newUnsFeatT =
+				typeof newUnsFeat['theT'] === 'number' ? newUnsFeat['theT'] : -1;
+            var newUnsFeatZ =
+				typeof newUnsFeat['theZ'] === 'number' ? newUnsFeat['theZ'] : -1;
+            if (newUnsFeatT === -1 || newUnsFeatZ === -1 ||
+                (regions.viewer_.getDimensionIndex('t') === newUnsFeatT &&
+                regions.viewer_.getDimensionIndex('z') === newUnsFeatZ))
+                ret.push(newUnsFeat);
+        }
+
 	return ret;
 }
 

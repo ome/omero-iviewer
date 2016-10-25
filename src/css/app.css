@@ -252,6 +252,7 @@ thumbnail-slider img {
 .right-hand-panel .row {
     min-width: 320px;
     max-width: 800px;
+    line-height: 30px;
     height: 30px;
     margin-left: 2px;
     margin-right: 0px;
@@ -492,6 +493,48 @@ thead, tbody {
 
 .point-icon {
     background-image: url('images/point.png');
+}
+
+.draw-icons {
+    height:100%;
+    float:left;
+    width: 25px;
+}
+
+.draw-active {
+    background-color: gray;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.draw-inactive {
+    background-color: transparent;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.draw-rectangle-icon {
+    background-image: url('images/draw_rectangle.png');
+}
+
+.draw-ellipse-icon {
+    background-image: url('images/draw_ellipse.png');
+}
+
+.draw-polygon-icon {
+    background-image: url('images/draw_polygon.png');
+}
+
+.draw-line-icon, .draw-polyline-icon {
+    background-image: url('images/draw_line.png');
+}
+
+.draw-label-icon {
+    background-image: url('images/draw_label.png');
+}
+
+.draw-point-icon {
+    background-image: url('images/draw_point.png');
 }
 
 .histogram {

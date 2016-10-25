@@ -123,6 +123,13 @@ ome.ol3.source.Regions = function(viewerReference, options) {
 	 */
 	 this.regions_info_ = null;
 
+     /**
+      * used as a lookup container for new, unsaved shapes
+ 	  * @type {Object}
+ 	  * @private
+ 	  */
+ 	 this.new_unsaved_shapes_ = {};
+
 	/**
 	 * the viewer reference
 	 *
@@ -203,6 +210,7 @@ ome.ol3.source.Regions = function(viewerReference, options) {
 
 			 // store response internally to be able to work with it later
 			 scope.regions_info_ = data;
+             scope.new_unsaved_shapes_ = {}; // reset
 			 var regionsAsFeatures =
 			 	ome.ol3.utils.Regions.createFeaturesFromRegionsResponse(scope);
 			 if (ome.ol3.utils.Misc.isArray(regionsAsFeatures) && regionsAsFeatures.length > 0) {
@@ -433,15 +441,14 @@ ome.ol3.source.Regions.prototype.updateRegions= function(request_info) {
 		this.select_.clearSelection();
 	this.viewer_.removeRegions(true); // removes masks only
 
-	// remember any features we added but don't belong to a specific plane
-	var orphanedNewFeatures = [];
+	// remember any features we added
 	var allFeatures = this.featuresRtree_.getAll();
-	for (var f in allFeatures)
-		if (allFeatures[f]['state'] === ome.ol3.REGIONS_STATE.ADDED &&
-				(typeof(allFeatures[f]['theZ']) !== 'number' || allFeatures[f]['theZ'] === -1) &&
-				(typeof(allFeatures[f]['theT']) !== 'number' || allFeatures[f]['theT'] === -1) &&
-				(typeof(allFeatures[f]['theC']) !== 'number' || allFeatures[f]['theC'] === -1))
-			orphanedNewFeatures.push(allFeatures[f]);
+	for (var f in allFeatures) {
+        var feat = allFeatures[f];
+		if (feat['state'] === ome.ol3.REGIONS_STATE.ADDED &&
+                typeof this.new_unsaved_shapes_[feat.getId()] !== 'object')
+			this.new_unsaved_shapes_[feat.getId()] = feat;
+    }
 
 	this.clear(); //wipe everything including objects/members used for clustering
 	if (makeServerRequest) {
@@ -451,10 +458,8 @@ ome.ol3.source.Regions.prototype.updateRegions= function(request_info) {
 
 	// just take the roi info that we had already (and include orphaned additions)
 	var regionsAsFeatures =
-		ome.ol3.utils.Regions.createFeaturesFromRegionsResponse(this);
-	if (!ome.ol3.utils.Misc.isArray(regionsAsFeatures))
-		regionsAsFeatures = [];
-	regionsAsFeatures = regionsAsFeatures.concat(orphanedNewFeatures);
+		ome.ol3.utils.Regions.createFeaturesFromRegionsResponse(this, true);
+	if (!ome.ol3.utils.Misc.isArray(regionsAsFeatures)) regionsAsFeatures = [];
 	if (regionsAsFeatures.length > 0)
 		this.addFeatures(regionsAsFeatures);
 }
@@ -947,6 +952,7 @@ ome.ol3.source.Regions.prototype.setProperty =
         typeof value === 'undefined' ||
         typeof this.idIndex_ !== 'object') return;
 
+    let changedFeatures = [];
     var eventProperty = null;
     for (var r in roi_shape_ids) {
         var s = roi_shape_ids[r];
@@ -984,6 +990,7 @@ ome.ol3.source.Regions.prototype.setProperty =
 
             // set new value
             this.idIndex_[s][property] = value;
+            changedFeatures.push(s);
         }
     }
     this.changed();
@@ -995,8 +1002,8 @@ ome.ol3.source.Regions.prototype.setProperty =
             eventbus.publish("REGIONS_PROPERTY_CHANGED",
                 {"config_id": config_id,
                     "property" : eventProperty,
-                    "shapes": roi_shape_ids, value: true});
-        },0);
+                    "shapes": changedFeatures, value: true});
+        },25);
 }
 
 /**

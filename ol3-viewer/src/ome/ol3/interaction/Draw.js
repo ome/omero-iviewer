@@ -74,6 +74,12 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
 			event.feature['state'] = ome.ol3.REGIONS_STATE.ADDED;
 			event.feature['type'] = shape_type;
 
+            // set t and z info
+            event.feature['theT'] =
+                this.regions_.viewer_.getDimensionIndex('t');
+            event.feature['theZ'] =
+                this.regions_.viewer_.getDimensionIndex('z');
+
 			// adjust if drawn in rotated state
 			var rot = this.regions_.viewer_.viewer_.getView().getRotation();
 			if (event.feature.getGeometry() instanceof ome.ol3.geom.Label &&
@@ -96,6 +102,7 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
 				text: text
 			}));
 			ome.ol3.utils.Style.updateStyleFunction(event.feature, this.regions_, true);
+            this.regions_.addFeature(event.feature);
 
             var eventbus = this.regions_.viewer_.eventbus_;
             var config_id = this.regions_.viewer_.getTargetId();
@@ -105,7 +112,8 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                         ome.ol3.utils.Conversion.toJsonObject(
                             new ol.Collection([event.feature]), true, true);
                     if (typeof newRegionsObject !== 'object' ||
-                            !ome.ol3.utils.Misc.isArray(newRegionsObject['rois'])) return;
+                        !ome.ol3.utils.Misc.isArray(newRegionsObject['rois']) ||
+                        newRegionsObject['rois'].length === 0) return;
                     eventbus.publish("REGIONS_SHAPE_DRAWN",
                         { "config_id": config_id,
                           "shapes": newRegionsObject['rois'] });
@@ -114,12 +122,7 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
 		// we don't want it selected after
 		//if (this.regions_.select_) this.regions_.select_.clearSelection();
 
-		// tidy up by removing the drawing stuff and reverting to the previous modes
-		if (this.ol_draw_) {
-			this.regions_.viewer_.viewer_.removeInteraction(this.ol_draw_);
-			this.ol_draw = null;
-			this.regions_.setModes(this.previous_modes_);
-		}
+        this.endDrawingInteraction();
 	};
 
 	// create a new draw interaction removing possible existing ones first
@@ -178,6 +181,17 @@ ome.ol3.interaction.Draw.prototype.drawShape = function(type) {
 	};
 	if (typeFunction)
 		typeFunction.call(this);
+};
+
+/**
+ * Ends an active drawing interaction
+ */
+ome.ol3.interaction.Draw.prototype.endDrawingInteraction = function() {
+    if (this.ol_draw_) {
+        this.regions_.viewer_.viewer_.removeInteraction(this.ol_draw_);
+        this.ol_draw = null;
+        this.regions_.setModes(this.previous_modes_);
+    }
 };
 
 /**

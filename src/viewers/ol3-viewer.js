@@ -11,7 +11,8 @@ import {
     IMAGE_CONFIG_UPDATE, IMAGE_VIEWER_RESIZE, IMAGE_VIEWER_SCALEBAR,
     IMAGE_DIMENSION_CHANGE, IMAGE_SETTINGS_CHANGE,
     REGIONS_SET_PROPERTY, REGIONS_PROPERTY_CHANGED,
-    VIEWER_IMAGE_SETTINGS, IMAGE_VIEWER_SPLIT_VIEW, EventSubscriber
+    VIEWER_IMAGE_SETTINGS, IMAGE_VIEWER_SPLIT_VIEW,
+    REGIONS_DRAW_SHAPE, EventSubscriber
 } from '../events/events';
 
 
@@ -60,7 +61,9 @@ export default class Ol3Viewer extends EventSubscriber {
         [VIEWER_IMAGE_SETTINGS,
             (params={}) => this.getImageSettings(params)],
         [IMAGE_VIEWER_SPLIT_VIEW,
-            (params={}) => this.toggleSplitChannels(params)]];
+            (params={}) => this.toggleSplitChannels(params)],
+        [REGIONS_DRAW_SHAPE,
+            (params={}) => this.drawShape(params)]];
 
     /**
      * @constructor
@@ -273,9 +276,29 @@ export default class Ol3Viewer extends EventSubscriber {
           if (params.config_id !== this.config_id ||
             !Misc.isArray(params.shapes) || params.shapes.length === 0) return;
 
-         this.viewer.selectShapes(
-             params.shapes, params.value,
-             params.clear, params.center);
+        let delay = 0;
+        if (params.clear) {
+            // switch to plane/time where the shape is
+            let viewerT = this.viewer.getDimensionIndex('t');
+            let viewerZ = this.viewer.getDimensionIndex('z');
+            let shape =
+                this.image_config.regions_info.data.get(params.shapes[0]);
+            let shapeT = typeof shape.theT === 'number' ? shape.theT : -1;
+            if (shapeT !== -1 && shapeT !== viewerT) {
+                this.image_config.image_info.dimensions.t = shapeT;
+                delay += 25;
+            }
+            let shapeZ = typeof shape.theZ === 'number' ? shape.theZ : -1;
+            if (shapeZ !== -1 && shapeZ !== viewerZ) {
+                this.image_config.image_info.dimensions.z = shapeZ;
+                delay += 25;
+            }
+        }
+
+        setTimeout(() =>
+            this.viewer.selectShapes(
+                params.shapes, params.value,
+                params.clear, params.center), delay);
       }
 
     /**
@@ -328,13 +351,9 @@ export default class Ol3Viewer extends EventSubscriber {
             this.viewer.addRegions();
             // in case we are not visible and have no context menu enabled
             this.viewer.setRegionsVisibility(true, []);
-            this.viewer.setRegionsModes([ol3.REGIONS_MODE.SELECT]);
-            //this.viewer.enableRegionsContextMenu(true);
-        } else {
-            this.viewer.setRegionsVisibility(false, []);
-            this.viewer.setRegionsModes([ol3.REGIONS_MODE.DEFAULT]);
-            //this.viewer.enableRegionsContextMenu(false);
-        }
+            this.viewer.setRegionsModes(
+                this.image_config.regions_info.present_modes);
+        } else this.viewer.setRegionsVisibility(false, []);
     }
 
     /**
@@ -362,5 +381,26 @@ export default class Ol3Viewer extends EventSubscriber {
                 typeof params.split !== 'boolean') return;
 
         this.viewer.toggleSplitView(params.split);
+    }
+
+    /**
+     * Handles drawing of shapes via event notification as well as cancellation
+     * of a chosen drawing interaction
+     *
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     */
+    drawShape(params = {}) {
+        // the event doesn't concern us
+        if (params.config_id !== this.config_id) return;
+
+        // we want to only abort
+        if (typeof params.abort === 'boolean' && params.abort) {
+            this.viewer.abortDrawing();
+            return;
+        }
+
+        // let's draw
+        this.viewer.drawShape(params.shape);
     }
 }

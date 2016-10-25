@@ -2,6 +2,7 @@ import {noView} from 'aurelia-framework';
 import {
     IMAGE_CONFIG_UPDATE, EventSubscriber} from '../events/events';
 import Misc from '../utils/misc';
+import {REGIONS_MODE} from '../utils/constants';
 
 /**
  * Holds region information
@@ -18,6 +19,7 @@ export default class RegionsInfo extends EventSubscriber {
      * @type {boolean}
      */
     ready = false;
+
     /**
      * our internal list of shape objects
      * stored in a map and accessible by id
@@ -25,6 +27,21 @@ export default class RegionsInfo extends EventSubscriber {
      * @type {Map}
      */
     data = null;
+
+    /**
+     * the presently used regions modes
+     * @memberof RegionsInfo
+     * @type {Array.<number>}
+     */
+    present_modes = [REGIONS_MODE.SELECT];
+
+    /**
+     * the previously used regions modes
+     * @memberof RegionsInfo
+     * @type {Array.<number>}
+     */
+    previous_modes = null;
+
     /**
      * our list of events we subscribe to via the EventSubscriber
      * @memberof RegionsInfo
@@ -63,6 +80,40 @@ export default class RegionsInfo extends EventSubscriber {
         this.unsubscribe();
         if (this.data instanceof Map) this.data.clear();
         this.image_info = null;
+    }
+
+    /**
+     * Reverts to previous regions mode
+     *
+     * @memberof RegionsInfo
+     */
+    changeRegionsModes(modes = []) {
+        if (!Misc.isArray(modes)) return;
+        if (modes.length === 0) modes = [REGIONS_MODE.DEFAULT];
+
+        // store present modes
+        this.previous_modes = this.present_modes.slice(0);
+        this.present_modes = [];
+        modes.map((m) => {
+            if (typeof m === 'number' && m >=0 && m <= 4)
+                this.present_modes.push(m);
+        });
+    }
+
+    /**
+     * Reverts to previous regions mode
+     *
+     * @memberof RegionsInfo
+     */
+    revertRegionsModes() {
+        if (!Misc.isArray(this.previous_modes)) return;
+        if (this.previous_modes.length === 0)
+            this.previous_modes.push(REGIONS_MODE.DEFAULT);
+
+        // go back to previous, swapping with present
+        let tmpModes = this.present_modes.slice(0);
+        this.present_modes = this.previous_modes.slice(0);
+        this.previous_modes = tmpModes;
     }
 
     /**

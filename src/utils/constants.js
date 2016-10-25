@@ -26,3 +26,15 @@ export const CHANNEL_SETTINGS_MODE = {
     FULL_RANGE : 1,
     IMPORTED : 2
 }
+
+/**
+ * the possible 'regions' modes
+ * @type {Object}
+ */
+export const REGIONS_MODE = {
+    DEFAULT : 0,
+    SELECT : 1,
+    TRANSLATE : 2,
+    MODIFY : 3,
+    DRAW : 4
+}

@@ -712,7 +712,8 @@ ome.ol3.Viewer.prototype.selectShapes = function(
     if (typeof clear === 'boolean' && clear) regions.select_.clearSelection();
     regions.setProperty(roi_shape_ids, "selected", selected);
 
-    if (roi_shape_ids.length === 1 && typeof center === 'boolean' && center)
+    if (roi_shape_ids.length === 1 && typeof center === 'boolean' && center &&
+            typeof regions.idIndex_[roi_shape_ids[0]] === 'object')
         this.fitRegionOrExtent(regions.idIndex_[roi_shape_ids[0]].getGeometry());
 }
 
@@ -1375,11 +1376,19 @@ ome.ol3.Viewer.prototype.drawShape = function(type) {
 	this.setRegionsModes([ome.ol3.REGIONS_MODE.DRAW]);
 	if (!(this.regions_.draw_ instanceof ome.ol3.interaction.Draw)) {
 		this.setRegionsModes(oldModes);
-		console.error("Could not get instance of Draw");
 		return;
 	}
 
 	this.regions_.draw_.drawShape(type);
+}
+
+/**
+ * Cancels any active drawing interactions
+ */
+ome.ol3.Viewer.prototype.abortDrawing = function() {
+    if (!(this.regions_ instanceof ome.ol3.source.Regions) ||
+            !(this.regions_.draw_ instanceof ome.ol3.interaction.Draw)) return;
+    this.regions_.draw_.endDrawingInteraction();
 }
 
 /**
@@ -1748,3 +1757,8 @@ goog.exportProperty(
 	ome.ol3.Viewer.prototype,
 	'toggleSplitView',
 	ome.ol3.Viewer.prototype.toggleSplitView);
+
+goog.exportProperty(
+	ome.ol3.Viewer.prototype,
+	'abortDrawing',
+	ome.ol3.Viewer.prototype.abortDrawing);
