@@ -6,7 +6,7 @@
         <li class="active">
             <a href="#setting" role="tab">Settings</a>
         </li>
-        <li class="">
+        <li class="hidden-functionality">
             <a href="#rois" class="${ !context.show_regions ? 'disabled-color' : ''}"
                 role="tab">ROIs</a>
         </li>
@@ -16,7 +16,7 @@
         <div role="tabpanel" class="tab-pane active" id="setting">
             <settings class="container-fluid" config_id.bind="config_id"></settings>
         </div>
-        <div role="tabpanel" class="tab-pane" id="rois">
+        <div role="tabpanel" class="hidden-functionality tab-pane" id="rois">
             <regions class="container-fluid" config_id.bind="config_id"></regions>
         </div>
     </div>

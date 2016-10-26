@@ -284,7 +284,8 @@ ome.ol3.utils.Misc.containsClass = function(element, className) {
  * @return {number} a good number to work with given a specific browser
  */
 ome.ol3.utils.Misc.getGoodShapeThresholdForUsedBrowser = function() {
-	if (goog.labs.userAgent.engine.isWebKit())
+    /*
+    if (goog.labs.userAgent.engine.isWebKit())
 		return 1000;
 	// both of these (present versions) should alrady have fallen into the above category
 	if (goog.labs.userAgent.browser.isOpera() ||
@@ -297,9 +298,9 @@ ome.ol3.utils.Misc.getGoodShapeThresholdForUsedBrowser = function() {
 				goog.labs.userAgent.engine.isEdge())
 			return 800;
 		return 500;
-	}
+	}*/
 
-	return 250; // the rest
+	return 1000; // the rest
 }
 
 /**

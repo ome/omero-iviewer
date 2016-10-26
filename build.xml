@@ -7,7 +7,7 @@
 
 	<property name="version.major" value="1" />
 	<property name="version.minor" value="0" />
-    <property name="ol3-version" value="3.18.2" />
+    <property name="ol3-version" value="3.19.0" />
 
 	<property name="closure-compiler.jar" value="${basedir}/closure/compiler.jar" />
 	<property name="closure-calcdeps.py" value="${basedir}/closure/calcdeps.py" />
@@ -36,13 +36,6 @@
 			    tmp = factory.call(root);
                 if (typeof root.ome !== 'object') root.ome = {};
                 root.ome = tmp;
-            }
-            if (tmp.isIE()) {
-                root.requestAnimationFrame =
-                root.requestAnimationFrame
-                || root.msRequestAnimationFrame
-                || function(callback) {
-                 return setTimeout(callback, 1000 / 60); };
             }
 		}(this, function () {
 			var OME = {};
@@ -103,16 +96,6 @@
 
 (function (root, factory) {
 	root.ome = factory(root);
-
-    // polyfill for IE 9
-    if (root &amp;&amp; ome.isIE()) {
-        root.requestAnimationFrame =
-        root.requestAnimationFrame
-        || root.msRequestAnimationFrame
-        || function(callback) {
-         return setTimeout(callback, 1000 / 60); };
-    }
-
 }(this, function (ctx) {
 		var OME = {};
 		if (typeof(ctx.ome) !== 'object' || Array.isArray(ctx.ome)

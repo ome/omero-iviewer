@@ -11,7 +11,7 @@ goog.require('ol.Feature');
  *
  * @constructor
  * @extends {ol.interaction.DragBox}
- * @fires ol.DragBoxEvent
+ * @fires ol.interaction.DragBox.Event
  * @param {ome.ol3.source.Regions} regions_reference a reference to get to all (selected) rois
  */
 ome.ol3.interaction.BoxSelect = function(regions_reference) {

@@ -434,7 +434,7 @@ ome.ol3.Viewer = function(id, options) {
 					logo: false,
 					controls: controls,
 					interactions:  interactions,
-					renderer: ol.RendererType.CANVAS,
+					renderer: ol.renderer.Type.CANVAS,
 					layers: [new ol.layer.Tile({source: source, preload: Infinity})],
 					target: scope.container_,
 					view: view
@@ -444,7 +444,7 @@ ome.ol3.Viewer = function(id, options) {
                 if (scope.eventbus_)
                     scope.onEndMoveListener =
                         ol.events.listen(
-                            scope.viewer_, ol.MapEventType.MOVEEND,
+                            scope.viewer_, ol.MapEvent.Type.MOVEEND,
                             function(event) {
                                 this.eventbus_.publish(
                                     "IMAGE_INTERACTION",

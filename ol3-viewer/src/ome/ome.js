@@ -4,9 +4,3 @@ if (typeof(ome) !== 'object') {
 	 */
 	goog.provide('ome');
 }
-
-ome.isIE = function() {
-    return goog.labs.userAgent.browser.isIE();
-}
-
-goog.exportSymbol('ome.isIE',ome.isIE,OME);

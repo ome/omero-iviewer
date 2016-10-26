@@ -45,7 +45,7 @@ ome.ol3.interaction.Translate = function(regions_reference) {
 	// a listener to react on translate end
 	ol.events.listen(
 		this,
-		ol.interaction.TranslateEventType.TRANSLATEEND,
+		ol.interaction.Translate.EventType.TRANSLATEEND,
 		ome.ol3.interaction.Translate.prototype.handleTranslateEnd,
 		this);
 };
@@ -53,7 +53,7 @@ goog.inherits(ome.ol3.interaction.Translate, ol.interaction.Translate);
 
 /**
  * We want to react to the end of translation for some features
- * @param {ol.interaction.TranslateEvent} event a translate event.
+ * @param {ol.interaction.Translate.Event} event a translate event.
  */
 ome.ol3.interaction.Translate.prototype.handleTranslateEnd = function(event) {
 	var featuresTranslated = event.features.array_;
@@ -92,8 +92,8 @@ ome.ol3.interaction.Translate.handleDownEvent_ = function(mapBrowserEvent) {
     this.lastCoordinate_ = mapBrowserEvent.coordinate;
     ome.ol3.interaction.Translate.handleMoveEvent_.call(this, mapBrowserEvent);
     this.dispatchEvent(
-        new ol.interaction.TranslateEvent(
-            ol.interaction.TranslateEventType.TRANSLATESTART, this.features_,
+        new ol.interaction.Translate.Event(
+            ol.interaction.Translate.EventType.TRANSLATESTART, this.features_,
             mapBrowserEvent.coordinate));
     return true;
   }
@@ -124,16 +124,14 @@ ome.ol3.interaction.Translate.handleMoveEvent_ = function(mapBrowserEvent) {
       isSelected = true;
     }
 
-    this.previousCursor_ =
-			typeof(elem.style.cursor) === 'string' ? elem.style.cursor : null;
+    this.previousCursor_ = elem.style.cursor;
+    // WebKit browsers don't support the grab icons without a prefix
+    elem.style.cursor = this.lastCoordinate_ ?
+        '-webkit-grabbing' : '-webkit-grab';
 
-		if (goog.labs.userAgent.engine.isWebKit())
-	    elem.style.cursor = this.lastCoordinate_ ?
-	        '-webkit-grabbing' : (isSelected ? '-webkit-grab' : 'pointer');
-		else
-		  elem.style.cursor = this.lastCoordinate_ ?
-		      'grabbing' : (isSelected ? 'grab' : 'pointer');
-
+       // Thankfully, attempting to set the standard ones will silently fail,
+       // keeping the prefixed icons
+       elem.style.cursor = this.lastCoordinate_ ?  'grabbing' : 'grab';
   } else {
     elem.style.cursor = this.previousCursor_ !== null ?
         this.previousCursor_ : '';
@@ -159,8 +157,8 @@ ome.ol3.interaction.Translate.handleUpEvent_ = function(mapBrowserEvent) {
     this.lastCoordinate_ = null;
     ome.ol3.interaction.Translate.handleMoveEvent_.call(this, mapBrowserEvent);
     this.dispatchEvent(
-        new ol.interaction.TranslateEvent(
-            ol.interaction.TranslateEventType.TRANSLATEEND, this.features_,
+        new ol.interaction.Translate.Event(
+            ol.interaction.Translate.EventType.TRANSLATEEND, this.features_,
             mapBrowserEvent.coordinate));
     return true;
   }

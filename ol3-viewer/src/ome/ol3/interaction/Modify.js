@@ -268,8 +268,8 @@ ome.ol3.interaction.Modify.handleUpEvent_ = function(mapBrowserEvent) {
     if (id) this.regions_.setProperty(
         [id], "state", ome.ol3.REGIONS_STATE.MODIFIED);
 	if (this.modified_) {
-		this.dispatchEvent(new ol.interaction.ModifyEvent(
-			ol.ModifyEventType.MODIFYEND, this.features_, mapBrowserEvent));
+		this.dispatchEvent(new ol.interaction.Modify.Event(
+			ol.interaction.Modify.EventType.MODIFYEND, this.features_, mapBrowserEvent));
 		this.modified_ = false;
 	}
 
@@ -315,8 +315,8 @@ ome.ol3.interaction.Modify.handleEvent = function(mapBrowserEvent) {
               console.error("geometry should be an ol.geom.Point!");
 	      this.willModifyFeatures_(mapBrowserEvent);
 	      handled = this.removeVertex_();
-	      this.dispatchEvent(new ol.interaction.ModifyEvent(
-	          ol.ModifyEventType.MODIFYEND, this.features_, mapBrowserEvent));
+	      this.dispatchEvent(new ol.interaction.Modify.Event(
+	          ol.interaction.Modify.EventType.MODIFYEND, this.features_, mapBrowserEvent));
 	      this.modified_ = false;
 			}
     } else {

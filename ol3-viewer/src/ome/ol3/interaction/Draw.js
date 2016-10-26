@@ -132,13 +132,14 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
 		geometryFunction: typeof(geometryFunction) === 'function' ?
 		 	geometryFunction : null
 	});
-	if (shape_type === 'point') this.ol_draw_.mode = this.mode = ol.interaction.DrawMode.POINT;
+	if (shape_type === 'point')
+        this.ol_draw_.mode = this.mode = ol.interaction.Draw.Mode.POINT;
 
 
 	// add the interaction to the viewer and register our after draw handler
 	this.regions_.viewer_.viewer_.addInteraction(this.ol_draw_);
 	this.ol_draw_.on(
-		ol.interaction.DrawEventType.DRAWEND, onDrawEndAction, this);
+		ol.interaction.Draw.EventType.DRAWEND, onDrawEndAction, this);
 }
 
 /**
@@ -148,8 +149,8 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
  */
 ome.ol3.interaction.Draw.prototype.drawShape = function(type) {
 	if (typeof(type) !== 'string' || type.length === 0) {
-        this.dispatchEvent(new ol.interaction.DrawEvent(
-             ol.interaction.DrawEventType.DRAWEND, null));
+        this.dispatchEvent(new ol.interaction.Draw.Event(
+             ol.interaction.Draw.EventType.DRAWEND, null));
         return;
     }
 
