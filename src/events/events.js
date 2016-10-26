@@ -20,6 +20,8 @@ export const REGIONS_PROPERTY_CHANGED = "REGIONS_PROPERTY_CHANGED";
 export const REGIONS_DRAW_SHAPE = "REGIONS_DRAW_SHAPE";
 /** whenever a new shape has been drawn */
 export const REGIONS_SHAPE_DRAWN = "REGIONS_SHAPE_DRAWN";
+/** whenever the modes ought to be changed */
+export const REGIONS_CHANGE_MODES = "REGIONS_CHANGE_MODES";
 /** Retrieves the viewer image settings */
 export const VIEWER_IMAGE_SETTINGS = "VIEWER_IMAGE_SETTINGS";
 /** whenever the histogram range was updated */

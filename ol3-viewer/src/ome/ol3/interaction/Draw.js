@@ -120,7 +120,7 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                 },0);
         }
 
-        this.endDrawingInteraction.call(this, event.feature);
+        this.endDrawingInteraction();
 	};
 
 	// create a new draw interaction removing possible existing ones first

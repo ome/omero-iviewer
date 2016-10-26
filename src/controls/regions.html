@@ -5,8 +5,42 @@
     <div show.bind="context.show_regions &&
         regions_info !== null && regions_info.data !== null">
 
+        <div class="row shapes-persistence">
+            <div>
+                <button type="button" class="btn-xs"
+                    click.delegate="saveShapes()">Save
+                </button>
+            </div>
+
+            <div class="dropdown rois-dropdown">
+                <button type="button" class="btn-xs dropdown-toggle"
+                        data-toggle="dropdown">Delete
+                </button>
+                <ul class="dropdown-menu">
+                    <li click.delegate="deleteShapes()"><a href="#">Delete</a></li>
+                    <li click.delegate="deleteShapes(true)"><a href="#">Delete All</a></li>
+                    <li click.delegate="deleteShapes(true, true)"><a href="#">Undo All Deletes</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <hr />
+        <div class="row shapes-edit">
+            <div class="dropdown rois-dropdown">
+                <button type="button" class="btn-xs dropdown-toggle"
+                        data-toggle="dropdown">Edit-Mode
+                </button>
+                <ul class="dropdown-menu">
+                    <li click.delegate="setEditMode()"><a href="#">Translate</a></li>
+                    <li click.delegate="setEditMode(true)"><a href="#">Modify</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <hr />
         <regions-drawing regions_info.bind="regions_info"></regions-drawing>
 
+        <hr />
         <regions-list regions_info.bind="regions_info"></regions-list>
 
     </div>

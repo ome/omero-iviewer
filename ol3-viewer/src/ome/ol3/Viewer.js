@@ -661,7 +661,9 @@ ome.ol3.Viewer.prototype.addRegions = function(options) {
 	if (this.regions_) {
 		this.viewer_.addLayer(new ol.layer.Vector({source : this.regions_}));
 		// enable roi selection by default
-		this.regions_.setModes([ome.ol3.REGIONS_MODE['SELECT']]);
+		this.regions_.setModes(
+            [ome.ol3.REGIONS_MODE['SELECT'],
+             ome.ol3.REGIONS_MODE['TRANSLATE']]);
 
 		this.onViewRotationListener =
 			ol.events.listen( // register a rerender action on rotation
@@ -715,6 +717,25 @@ ome.ol3.Viewer.prototype.selectShapes = function(
     if (roi_shape_ids.length === 1 && typeof center === 'boolean' && center &&
             typeof regions.idIndex_[roi_shape_ids[0]] === 'object')
         this.fitRegionOrExtent(regions.idIndex_[roi_shape_ids[0]].getGeometry());
+}
+
+/**
+ * Marks given shapes as selected. The center flag is only considered if we
+ * have a single shape only
+ *
+ * @param {Array<string>} roi_shape_ids list in roi_id:shape_id notation
+ * @param {boolean=} undo if true we roll back, default: false
+ */
+ome.ol3.Viewer.prototype.deleteShapes = function(
+    roi_shape_ids, undo) {
+	// without a regions layer there will be no select of regions ...
+	var regions = this.getRegions();
+	if (regions === null) return;
+
+    regions.setProperty(
+        roi_shape_ids, "state",
+        typeof undo === 'boolean' && undo ?
+            ome.ol3.REGIONS_STATE.ROLLBACK : ome.ol3.REGIONS_STATE.REMOVED);
 }
 
 /**
@@ -1170,11 +1191,16 @@ ome.ol3.Viewer.prototype.getServer = function() {
  * </p>
  *
  * @param {Array.<number>} modes an array of modes
+ * @return {Array.<number>} the present modes set
  */
 ome.ol3.Viewer.prototype.setRegionsModes = function(modes) {
 	// delegate
-	if (this.getRegionsLayer())
+	if (this.getRegionsLayer()) {
 		this.getRegions().setModes(modes);
+        return this.getRegions().present_modes_;
+    }
+
+    return [];
 }
 
 /**
@@ -1762,3 +1788,8 @@ goog.exportProperty(
 	ome.ol3.Viewer.prototype,
 	'abortDrawing',
 	ome.ol3.Viewer.prototype.abortDrawing);
+
+goog.exportProperty(
+	ome.ol3.Viewer.prototype,
+	'deleteShapes',
+	ome.ol3.Viewer.prototype.deleteShapes);

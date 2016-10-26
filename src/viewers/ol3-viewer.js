@@ -12,7 +12,8 @@ import {
     IMAGE_DIMENSION_CHANGE, IMAGE_SETTINGS_CHANGE,
     REGIONS_SET_PROPERTY, REGIONS_PROPERTY_CHANGED,
     VIEWER_IMAGE_SETTINGS, IMAGE_VIEWER_SPLIT_VIEW,
-    REGIONS_DRAW_SHAPE, EventSubscriber
+    REGIONS_DRAW_SHAPE, REGIONS_CHANGE_MODES,
+    EventSubscriber
 } from '../events/events';
 
 
@@ -62,6 +63,8 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.getImageSettings(params)],
         [IMAGE_VIEWER_SPLIT_VIEW,
             (params={}) => this.toggleSplitChannels(params)],
+        [REGIONS_CHANGE_MODES,
+            (params={}) => this.changeRegionsModes(params)],
         [REGIONS_DRAW_SHAPE,
             (params={}) => this.drawShape(params)]];
 
@@ -241,6 +244,9 @@ export default class Ol3Viewer extends EventSubscriber {
         if (prop === 'selected' || prop === 'modified' || prop === 'deleted')
             this.image_config.regions_info.setPropertyForShape(
                 params.shapes, prop, params.value);
+        else if (prop === 'rollback')
+            this.image_config.regions_info.setPropertyForShape(
+                params.shapes, 'deleted', false);
      }
 
     /**
@@ -261,7 +267,29 @@ export default class Ol3Viewer extends EventSubscriber {
             this.changeRegionsVisibility(params);
         else if (prop === 'selected')
             this.changeShapeSelection(params);
+        else if (prop === 'state')
+            this.deleteShapes(params);
      }
+
+     /**
+      * Changes the deleted state of shapes
+      *
+      * @param {Object} params the event notification parameters
+      * @memberof Ol3Viewer
+      */
+      deleteShapes(params = {}) {
+          //we want only notifications that concern us
+          // and need at least one shape id in the array as well as a value
+          // for the action, either delete or undo
+          if (params.config_id !== this.config_id ||
+              typeof params.value !== 'string' ||
+              !Misc.isArray(params.shapes) || params.shapes.length === 0) return;
+
+          if (params.value === 'delete')
+             this.viewer.deleteShapes(params.shapes);
+          else if (params.value === 'undo')
+            this.viewer.deleteShapes(params.shapes, true);
+      }
 
      /**
       * Changes the selected state of shapes
@@ -341,6 +369,24 @@ export default class Ol3Viewer extends EventSubscriber {
     }
 
     /**
+     * Changes the regions modes
+     *
+     * @param {Object} params the event notification parameters
+     * @memberof Ol3Viewer
+     */
+    changeRegionsModes(params={}) {
+        // we don't do this if it does not concern us
+        // or we don't have the right params
+        if (params.config_id !== this.config_id ||
+                typeof params !== 'object' ||
+                !Misc.isArray(params.modes)) return;
+
+        this.image_config.regions_info.regions_modes =
+            this.viewer.setRegionsModes(params.modes);
+
+    }
+
+    /**
      * Toggles show_regions adding/showing the regions layer or hidding it
      *
      * @param {boolean} flag true if we want to show regions, false otherwise
@@ -351,8 +397,8 @@ export default class Ol3Viewer extends EventSubscriber {
             this.viewer.addRegions();
             // in case we are not visible and have no context menu enabled
             this.viewer.setRegionsVisibility(true, []);
-            this.viewer.setRegionsModes(
-                this.image_config.regions_info.present_modes);
+            this.changeRegionsModes(
+                { modes: this.image_config.regions_info.regions_modes});
         } else this.viewer.setRegionsVisibility(false, []);
     }
 
@@ -403,4 +449,6 @@ export default class Ol3Viewer extends EventSubscriber {
         // let's draw
         this.viewer.drawShape(params.shape);
     }
+
+    REGIONS_CHANGE_MODES
 }

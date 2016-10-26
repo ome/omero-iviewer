@@ -203,7 +203,7 @@ ome.ol3.interaction.Select.handleEvent = function(mapBrowserEvent) {
 ome.ol3.interaction.Select.prototype.featuresAtCoords_ = function(coord) {
     if (!ome.ol3.utils.Misc.isArray(coord) || coord.length !== 2) return;
 
-    var extent = [coord[0]-2, coord[1]-2, coord[0]+2, coord[1]+2];
+    var extent = [coord[0]-1, coord[1]-1, coord[0]+1, coord[1]+1];
     var hits = [];
     if (this.regions_.useClusteredCollection_) // clustered mode hit detection
         this.regions_.clusteredRTrees_[this.regions_.currentRTreeLevel_].

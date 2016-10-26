@@ -551,6 +551,22 @@ thead, tbody {
   fill: none;
 }
 
+.delete-rois>.dropdown-menu {
+    background-color: #f8f8f8;
+}
+.rois-dropdown>.dropdown-menu>li>a:hover,
+.rois-dropdown>.dropdown-menu>li>a:focus,
+.rois-dropdown>.dropdown-menu>.active>a,
+.rois-dropdown>.dropdown-menu>.active>a:hover,
+.rois-dropdown>.dropdown-menu>.active>a:focus {
+    color: #333;
+    background-color: transparent;
+}
+
+.shapes-persistence div, .shapes-edit div {
+    float: left;
+}
+
 .hidden-functionality {
     display: none !important;
 }

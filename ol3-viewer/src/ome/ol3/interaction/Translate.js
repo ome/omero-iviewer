@@ -175,7 +175,7 @@ ome.ol3.interaction.Translate.handleUpEvent_ = function(mapBrowserEvent) {
 ome.ol3.interaction.Translate.prototype.featuresAtCoords_ = function(coord) {
     if (!ome.ol3.utils.Misc.isArray(coord) || coord.length !== 2) return;
 
-    var extent = [coord[0]-2, coord[1]-2, coord[0]+2, coord[1]+2];
+    var extent = [coord[0]-1, coord[1]-1, coord[0]+1, coord[1]+1];
     var hits = [];
     this.features_.forEach(function(feature) {
         if (feature.getGeometry() &&

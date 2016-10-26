@@ -338,7 +338,8 @@ ome.ol3.source.Regions.prototype.setModes = function(modes) {
 	}
 
 	// this section here does the interaction registration/deregistration
-	var removeModifyInteractions = function() {
+	var removeModifyInteractions = function(keep_select) {
+        if (typeof keep_select !== 'boolean') keep_select = false;
 		if (this.modify_) {
 			this.viewer_.viewer_.getInteractions().remove(this.modify_);
 			this.modify_.dispose();
@@ -351,7 +352,7 @@ ome.ol3.source.Regions.prototype.setModes = function(modes) {
                 this.viewer_.viewer_.getTargetElement().style.cursor = "";
 			this.translate_ = null;
 		}
-		if (this.select_) {
+		if (!keep_select && this.select_) {
 			// if multiple (box) select was on, we turn it off now
 			this.viewer_.removeInteractionOrControl("boxSelect");
 			this.select_.clearSelection();
@@ -396,6 +397,8 @@ ome.ol3.source.Regions.prototype.setModes = function(modes) {
 		return;
 	}
 
+    // this gets rid of any existing modifies but leaves select
+    removeModifyInteractions.call(this, true);
 	if (modifyMode) { // remove mutually exclusive interactions
 		removeDrawInteractions.call(this);
 		addSelectInteraction.call(this);
@@ -970,8 +973,8 @@ ome.ol3.source.Regions.prototype.setProperty =
                     this.select_.getFeatures().remove(this.idIndex_[s]);
                 } else if (property === 'state') {
                     if (value === ome.ol3.REGIONS_STATE.REMOVED) {
-                        this.idIndex_[s]['selected'] = false;
-                        this.select_.getFeatures().remove(this.idIndex_[s]);
+                        this.select_.toggleFeatureSelection(
+                            this.idIndex_[s], false);
                         this.idIndex_[s]["old_state"] =
                             this.idIndex_[s][property];
                         eventProperty = "deleted";
@@ -979,11 +982,10 @@ ome.ol3.source.Regions.prototype.setProperty =
                         eventProperty = "modified";
                     } else if (value === ome.ol3.REGIONS_STATE.ROLLBACK) {
                         eventProperty = "rollback";
-                        if (typeof this.idIndex_[s]["old_state"] === 'number')
-                            this.idIndex_[s][property] =
-                                this.idIndex_[s]["old_state"];
-                        else this.idIndex_[s][property] =
-                            ome.ol3.REGIONS_STATE.DEFAULT;
+                        value =
+                            typeof this.idIndex_[s]["old_state"] === 'number' ?
+                                this.idIndex_[s]["old_state"] :
+                                ome.ol3.REGIONS_STATE.DEFAULT;
                     }
                 }
             }
