@@ -449,6 +449,4 @@ export default class Ol3Viewer extends EventSubscriber {
         // let's draw
         this.viewer.drawShape(params.shape);
     }
-
-    REGIONS_CHANGE_MODES
 }
