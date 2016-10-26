@@ -66,8 +66,8 @@ ome.ol3.interaction.BoxSelect = function(regions_reference) {
                      (typeof feature['state'] !== 'number' ||
                         feature['state'] !== ome.ol3.REGIONS_STATE.REMOVED) &&
 						feature.getGeometry().intersectsExtent(extent)) {
-        					feature['selected'] = true;
-        					this.regions_.select_.getFeatures().push(feature);
+                            this.regions_.select_.toggleFeatureSelection(
+                                feature, true);
 				} else feature['selected'] = false;
 			 };
 
@@ -88,8 +88,8 @@ ome.ol3.interaction.BoxSelect = function(regions_reference) {
                             (typeof feat['state'] !== 'number' ||
                                 feat['state'] !== ome.ol3.REGIONS_STATE.REMOVED) &&
 							feat.getGeometry().intersectsExtent(extent)) {
-								feat['selected'] = true;
-								this.regions_.select_.getFeatures().push(feat);
+                                this.regions_.select_.toggleFeatureSelection(
+                                    feat, true);
 						}
 					 }
 				};

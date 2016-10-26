@@ -178,13 +178,7 @@ ome.ol3.interaction.Select.handleEvent = function(mapBrowserEvent) {
 		if (selected === null) return;
 	}
 
-	if (oldSelectedFlag) {
-		selected['selected'] = false;
-		this.getFeatures().remove(selected);
-	} else {
-		selected['selected'] = true;
-		this.getFeatures().push(selected);
-	}
+    this.toggleFeatureSelection(selected, !oldSelectedFlag);
 	// we don't allow features and their associated clusters to be select at the same
 	// time. this would not work well and we can do entire cluster operations
 	// in a different way anyhow
@@ -294,17 +288,10 @@ ome.ol3.interaction.Select.prototype.showContextMenu =
 				var toggledState = groupSelectState === true ? false : true;
 				feature['group_selected'] = toggledState;
 
-				feature['selected'] = false;
-				this.regions_.select_.getFeatures().remove(feature);
-
+                this.regions_.select_.toggleFeatureSelection(feature, false);
 				for (var f in feature.features_) {
-					feature.features_[f]['selected'] = toggledState;
-					if (toggledState) {
-						// first line makes sure we are not added twice
-						this.regions_.select_.getFeatures().remove(feature.features_[f]);
-						this.regions_.select_.getFeatures().push(feature.features_[f]);
-					} else
-						this.regions_.select_.getFeatures().remove(feature.features_[f]);
+                    this.regions_.select_.toggleFeatureSelection(
+                        feature.features_[f], toggledState, true);
 					this.regions_.changed();
 				}
 			}
@@ -441,6 +428,30 @@ ome.ol3.interaction.Select.prototype.enableContextMenu = function(flag) {
 		    this.regions_.viewer_.viewer_.getTargetElement().onmouseover = null;
         }
 	}
+}
+
+/**
+ * De/Selects a feature
+ *
+ * @param {ol.Feature} feature the feature to be (de)selected
+ * @param {boolean} select if true we want to select, otherwise deselect,
+ *                   the former being default
+ * @param {boolean=} remove_first on select we remove first to make sure that we
+ *                   don't add twice
+ */
+ ome.ol3.interaction.Select.prototype.toggleFeatureSelection =
+    function(feature, select, remove_first) {
+     if (!(feature instanceof ol.Feature)) return;
+
+     if (typeof select !== 'boolean' || select) {
+         if (typeof remove_first === 'boolean' && remove_first)
+            this.getFeatures().remove(feature);
+         feature['selected'] = true;
+         this.getFeatures().push(feature);
+     } else {
+         feature['selected'] = false;
+         this.getFeatures().remove(feature);
+     }
 }
 
 /**

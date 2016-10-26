@@ -83,7 +83,7 @@ export default class RegionsDrawing extends EventSubscriber {
                     newShape.theZ = shape.TheZ;
                     // we also want these flags
                     newShape.visible = true;
-                    newShape.selected = true;
+                    newShape.selected = false;
                     newShape.deleted = false;
                     newShape.modified = false;
                     this.regions_info.data.set(newShape.shape_id, newShape);

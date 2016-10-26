@@ -119,10 +119,8 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                           "shapes": newRegionsObject['rois'] });
                 },0);
         }
-		// we don't want it selected after
-		//if (this.regions_.select_) this.regions_.select_.clearSelection();
 
-        this.endDrawingInteraction();
+        this.endDrawingInteraction.call(this, event.feature);
 	};
 
 	// create a new draw interaction removing possible existing ones first
@@ -189,8 +187,10 @@ ome.ol3.interaction.Draw.prototype.drawShape = function(type) {
 ome.ol3.interaction.Draw.prototype.endDrawingInteraction = function() {
     if (this.ol_draw_) {
         this.regions_.viewer_.viewer_.removeInteraction(this.ol_draw_);
-        this.ol_draw = null;
-        this.regions_.setModes(this.previous_modes_);
+        this.ol_draw_ = null;
+        var revertToOldModes =
+            function() {this.regions_.setModes(this.previous_modes_);};
+        setTimeout(revertToOldModes.bind(this), 100);
     }
 };
 
@@ -307,7 +307,7 @@ ome.ol3.interaction.Draw.prototype.drawEllipse_ = function(event) {
 ome.ol3.interaction.Draw.prototype.dispose = function() {
 	if (this.ol_draw_) {
 		this.regions_.viewer_.viewer_.removeInteraction(this.ol_draw_);
-		this.ol_draw = null;
+		this.ol_draw_ = null;
 		this.previous_modes_ = null;
 	}
 	this.regions_ = null;
