@@ -641,6 +641,8 @@ ome.ol3.source.Regions.prototype.setProperty =
         typeof this.idIndex_ !== 'object') return;
 
     let changedFeatures = [];
+    let changedProperties = [];
+    let changedValues = [];
     var eventProperty = null;
     for (var r in roi_shape_ids) {
         var s = roi_shape_ids[r];
@@ -654,8 +656,8 @@ ome.ol3.source.Regions.prototype.setProperty =
                     this.select_.getFeatures().push(this.idIndex_[s]);
                 else if ((property === 'selected' || property === 'visible') &&
                     !value) {
-                    this.idIndex_[s]['selected'] = false;
-                    this.select_.getFeatures().remove(this.idIndex_[s]);
+                    this.select_.toggleFeatureSelection(
+                        this.idIndex_[s], false);
                 } else if (property === 'state') {
                     if (value === ome.ol3.REGIONS_STATE.REMOVED) {
                         this.select_.toggleFeatureSelection(
@@ -663,21 +665,28 @@ ome.ol3.source.Regions.prototype.setProperty =
                         this.idIndex_[s]["old_state"] =
                             this.idIndex_[s][property];
                         eventProperty = "deleted";
-                    } else if (value === ome.ol3.REGIONS_STATE.MODIFIED) {
+                    } else if (value === ome.ol3.REGIONS_STATE.MODIFIED)
                         eventProperty = "modified";
-                    } else if (value === ome.ol3.REGIONS_STATE.ROLLBACK) {
+                    else if (value === ome.ol3.REGIONS_STATE.ROLLBACK)
                         eventProperty = "rollback";
-                        value =
-                            typeof this.idIndex_[s]["old_state"] === 'number' ?
-                                this.idIndex_[s]["old_state"] :
-                                ome.ol3.REGIONS_STATE.DEFAULT;
-                    }
                 }
             }
 
             // set new value
-            this.idIndex_[s][property] = value;
+            this.idIndex_[s][property] =
+                (property === 'state' && value === ome.ol3.REGIONS_STATE.ROLLBACK) ?
+                    (typeof this.idIndex_[s]["old_state"] === 'number' ?
+                        this.idIndex_[s]["old_state"] :
+                        ome.ol3.REGIONS_STATE.DEFAULT) : value;
+            // gather info for event response
             changedFeatures.push(s);
+            let val = true;
+            if (eventProperty === 'rollback') {
+                eventProperty = 'deleted';
+                val = false;
+            }
+            changedProperties.push(eventProperty);
+            changedValues.push(val);
         }
     }
     this.changed();
@@ -688,8 +697,8 @@ ome.ol3.source.Regions.prototype.setProperty =
         setTimeout(function() {
             eventbus.publish("REGIONS_PROPERTY_CHANGED",
                 {"config_id": config_id,
-                    "property" : eventProperty,
-                    "shapes": changedFeatures, value: true});
+                    "properties" : changedProperties,
+                    "shapes": changedFeatures, values: changedValues});
         },25);
 }
 

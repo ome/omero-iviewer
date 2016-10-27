@@ -93,25 +93,20 @@ export default class RegionsInfo extends EventSubscriber {
      * Sets a property for shape(s) according to the new value
      *
      * @memberof RegionsInfo
-     * @param {Array.<number>} shapes an array with ids
+     * @param {string} id a shape id in format roi:shape-id
      * @param {string} property a property on the shape
      * @param {Object|Array|boolean|string|number} value the new value
      */
-    setPropertyForShape(shapes, property, value) {
-        // we need a non empty array of ids and a proper property name
-        // as well as a value that is not undefined
+    setPropertyForShape(id, property, value) {
+        // we need an id and a proper property name, as well as a value
         if (this.data === null || // no regions map is no good either
-                !Misc.isArray(shapes) || shapes.length === 0 ||
+                typeof id !== 'string' ||
                 typeof property !== 'string' ||
                 typeof value === 'undefined') return;
 
-        for (let i in shapes) {
-            let s = this.data.get(shapes[i]);
-            if (typeof s !== 'object') continue; // couldn't find shape with id
-            // the property has to exist
-            if (typeof s[property] === 'undefined') continue;
-            s[property] = value;
-        }
+        let shape = this.data.get(id);
+        if (typeof shape !== 'object') return;
+        if (typeof shape[property] !== 'undefined') shape[property] = value;
     }
 
     /**

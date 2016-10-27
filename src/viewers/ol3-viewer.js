@@ -236,17 +236,30 @@ export default class Ol3Viewer extends EventSubscriber {
      * @memberof Ol3Viewer
      */
      getRegionsPropertyChange(params = {}) {
-         // at a minimum we need params with the property it concers
+         // the shapes has to be an array.
+         // if the properties and values are an array they have to be in a 1:1
+         // relationship to the shapes, otherwise they have to be a simple string
+         // or at least not undefined in which case one property/value respectively
+         // belongs to multiple shapes
          if (typeof params !== 'object' ||
-            typeof params.property !== 'string') return
+            !Misc.isArray(params.shapes) || params.shapes.length === 0 ||
+            (!Misc.isArray(params.properties) && typeof params.properties !== 'string') ||
+            (Misc.isArray(params.properties) && params.properties.length !== params.shapes.length) ||
+            (!Misc.isArray(params.values) && typeof params.values === 'undefined') ||
+            (Misc.isArray(params.values) && params.values.length !== params.shapes.length)) return;
 
-        let prop = params.property.toLowerCase();
-        if (prop === 'selected' || prop === 'modified' || prop === 'deleted')
-            this.image_config.regions_info.setPropertyForShape(
-                params.shapes, prop, params.value);
-        else if (prop === 'rollback')
-            this.image_config.regions_info.setPropertyForShape(
-                params.shapes, 'deleted', false);
+            // loop over all shapes, trying to set the property
+            for (let i in params.shapes) {
+                let shape = params.shapes[i];
+                let prop = (Misc.isArray(params.properties) ?
+                                params.properties[i] : params.properties).toLowerCase();
+                let value = Misc.isArray(params.values) ?
+                                params.values[i] : params.values;
+                if (prop === 'selected' || prop === 'modified' ||
+                        prop === 'deleted')
+                    this.image_config.regions_info.setPropertyForShape(
+                        shape, prop, value);
+            }
      }
 
     /**

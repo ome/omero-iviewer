@@ -90,8 +90,8 @@ ome.ol3.interaction.Select = function(regions_reference) {
                     "REGIONS_PROPERTY_CHANGED",
                     { "config_id": config_id ,
                         "shapes": [event.element.getId()],
-                        "property" : "selected",
-                        "value" : event.type === "add"});
+                        "properties" : "selected",
+                        "values" : event.type === "add"});
         },25);
     }.bind(this);
 
