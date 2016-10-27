@@ -68,9 +68,6 @@ ome.ol3.interaction.Translate.prototype.handleTranslateEnd = function(event) {
 	}
     if (ids.length > 0) this.regions_.setProperty(
         ids, "state", ome.ol3.REGIONS_STATE.MODIFIED);
-
-	if (this.regions_.useClustering_)
-		this.regions_.clusterFeaturesAsynchronously();
 }
 
 /**

@@ -30,7 +30,7 @@ ome.ol3.interaction.Select = function(regions_reference) {
 	this.handleEvent = ome.ol3.interaction.Select.handleEvent;
 
 	/**
-	 * use different condition for clustered view
+	 * use click event
 	 * @private
 	 * @type {ol.events.ConditionType}
 	 */
@@ -179,15 +179,6 @@ ome.ol3.interaction.Select.handleEvent = function(mapBrowserEvent) {
 	}
 
     this.toggleFeatureSelection(selected, !oldSelectedFlag);
-	// we don't allow features and their associated clusters to be select at the same
-	// time. this would not work well and we can do entire cluster operations
-	// in a different way anyhow
-	if (!(selected instanceof ome.ol3.feature.Cluster) &&
-				selected['cluster'] instanceof ome.ol3.feature.Cluster) {
-		selected['cluster']['selected'] = false;
-		selected['cluster']['group_selected'] = false;
-		this.getFeatures().remove(selected['cluster']);
-	}
 	this.regions_.changed();
 
 	return ol.events.condition.pointerMove(mapBrowserEvent);
@@ -205,23 +196,11 @@ ome.ol3.interaction.Select.prototype.featuresAtCoords_ = function(coord) {
 
     var extent = [coord[0]-1, coord[1]-1, coord[0]+1, coord[1]+1];
     var hits = [];
-    if (this.regions_.useClusteredCollection_) // clustered mode hit detection
-        this.regions_.clusteredRTrees_[this.regions_.currentRTreeLevel_].
-            forEachInExtent(
-                extent,
-    		    function(feature) {
-                    if (feature.getGeometry() &&
-                        (typeof feature['visible'] !== 'boolean' || feature['visible']) &&
-                            (typeof feature['state'] !== 'number' ||
-                                feature['state'] !== ome.ol3.REGIONS_STATE.REMOVED) &&
-    					        feature.getGeometry().intersectsExtent(extent))
-    						hits.push(feature);});
-    else this.regions_.forEachFeatureInExtent(
-            extent, function(feat) {hits.push(feat);});
-    //hits = this.regions_.forEachFeatureInExtent(extent); // unclustered
 
-    return ome.ol3.utils.Misc.featuresAtCoords(
-        hits, this.regions_.useClusteredCollection_);
+    this.regions_.forEachFeatureInExtent(
+        extent, function(feat) {hits.push(feat);});
+
+    return ome.ol3.utils.Misc.featuresAtCoords(hits);
 };
 
 /**
@@ -256,10 +235,7 @@ ome.ol3.interaction.Select.prototype.showContextMenu =
 	// add header with selected information
 	var title = document.createElement('span');
     title.className = "context-title";
-    title.textContent =
-			feature instanceof ome.ol3.feature.Cluster ?
-				"Cluster: " + feature.features_.length :
-				"Feature: " + feature.getId();
+    title.textContent = "Feature: " + feature.getId();
 
 	var close = document.createElement('a');
     close.href = "#";
@@ -274,44 +250,17 @@ ome.ol3.interaction.Select.prototype.showContextMenu =
 
     contextMenu.appendChild(header);
 
-	// add select action for feature
-	if (feature  instanceof ome.ol3.feature.Cluster)
-		this.addItemToContextMenu(
-			contextMenu, "Toggle Cluster Selection",
-			function(event) {
-				if (!(feature instanceof ome.ol3.feature.Cluster))
-					return;
-
-				var groupSelectState = typeof(feature['group_selected']) === 'boolean' ?
-				 	feature['group_selected'] : false;
-
-				var toggledState = groupSelectState === true ? false : true;
-				feature['group_selected'] = toggledState;
-
-                this.regions_.select_.toggleFeatureSelection(feature, false);
-				for (var f in feature.features_) {
-                    this.regions_.select_.toggleFeatureSelection(
-                        feature.features_[f], toggledState, true);
-					this.regions_.changed();
-				}
-			}
-		);
-	else {
 		this.addItemToContextMenu(
 			contextMenu, "Toggle Shape Selection",
 			function(event) {
-				if (feature instanceof ome.ol3.feature.Cluster)
-					return;
                 this.regions_.setProperty(
                     [feature.getId()], "selected", !feature['selected']);});
+
         this.addItemToContextMenu(
 			contextMenu, "Delete Shape",
 			function(event) {
-                if (feature instanceof ome.ol3.feature.Cluster)
-					return;
                 this.regions_.setProperty(
                     [feature.getId()], "state", ome.ol3.REGIONS_STATE.REMOVED);});
-    }
 
 	this.contextMenuOverlay_.setElement(contextMenu);
 	this.contextMenuOverlay_.setPosition(coordinates);

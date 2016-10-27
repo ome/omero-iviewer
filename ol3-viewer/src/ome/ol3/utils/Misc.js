@@ -185,22 +185,15 @@ ome.ol3.utils.Misc.parseSvgStringForPolyShapes = function(svg_path) {
  *
  * @static
  * @param {Array.<ol.Feature>} features the features found under the coordinate
- * @param {boolean|undefined|null}  cluster_has_priority a flag whether a cluster needs to be returned first
  */
 ome.ol3.utils.Misc.featuresAtCoords =
-function(features, cluster_has_priority) {
+function(features) {
     if (!ome.ol3.utils.Misc.isArray(features) || features.length ===0) return null;
-
-    cluster_has_priority =
-        typeof(cluster_has_priority) === 'boolean' ? cluster_has_priority : false;
 
     // determine priority of whih feature ought to be returned
     var filteredIntersectingFeatures = [];
     for (var i in features)
-        if (cluster_has_priority && // clusteres have priority
-                features[i] instanceof ome.ol3.feature.Cluster)
-            filteredIntersectingFeatures.push(features[i]);
-        else if (filteredIntersectingFeatures.length > 0) {
+        if (filteredIntersectingFeatures.length > 0) {
             // this should ensure that if a feature is contained by another
             // it will be always ranked first
             var firstSuchGeometry= filteredIntersectingFeatures[0].getGeometry();
@@ -209,15 +202,6 @@ function(features, cluster_has_priority) {
                         features[i].getGeometry().getExtent()))
                 filteredIntersectingFeatures[0] = features[i]; // replace it
         } else filteredIntersectingFeatures.push(features[i]);
-
-    // we have to check for the rather implausible szenario of one cluster being
-    // fully covered by another
-    if (cluster_has_priority && filteredIntersectingFeatures.length > 1)
-        for (var i in filteredIntersectingFeatures)
-            if (ol.extent.containsExtent(
-                    filteredIntersectingFeatures[0].getGeometry().getExtent(),
-                    filteredIntersectingFeatures[i].getGeometry().getExtent()))
-                filteredIntersectingFeatures[0] = filteredIntersectingFeatures[1];
 
     return filteredIntersectingFeatures.length > 0 ?
         filteredIntersectingFeatures[0] : null;
@@ -269,38 +253,6 @@ ome.ol3.utils.Misc.containsClass = function(element, className) {
 	if (allClasses === null) return false;
 
 	return ol.array.includes(allClasses, className);
-}
-
-/**
- * Helps to find a suitable number of shapes per viewing extent before things get too slow
- * As general rule webkit based browsers perform pretty well and can easily
- * handle 1,000, up to 5,000 shapes drawn onto the canvas incl. redraws
- *
- * Firefox does not so well and we have to keep the number low.
- * IEs performance is variable depending on th version. Up to 9 they seem to be
- * in the same ballpark as firefox, then they get faster though never reaching webkit levels
- *
- * @static
- * @return {number} a good number to work with given a specific browser
- */
-ome.ol3.utils.Misc.getGoodShapeThresholdForUsedBrowser = function() {
-    /*
-    if (goog.labs.userAgent.engine.isWebKit())
-		return 1000;
-	// both of these (present versions) should alrady have fallen into the above category
-	if (goog.labs.userAgent.browser.isOpera() ||
-	 			goog.labs.userAgent.browser.isSafari())
-		return 1000;
-	if (goog.labs.userAgent.engine.isGecko()) // FF
-		return 800;
-	if (goog.labs.userAgent.browser.isIE()) { // IEs
-		if (goog.labs.userAgent.engine.isTrident() ||
-				goog.labs.userAgent.engine.isEdge())
-			return 800;
-		return 500;
-	}*/
-
-	return 1000; // the rest
 }
 
 /**

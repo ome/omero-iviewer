@@ -54,48 +54,25 @@ ome.ol3.interaction.BoxSelect = function(regions_reference) {
    * @private
    * @type {function}
    */
-	this.boxEndFunction_ =
-		function() {
-			 if (this.regions_.select_ === null) return;
+   this.boxEndFunction_ = function() {
+        if (this.regions_.select_ === null) return;
 
-			 var extent = this.getGeometry().getExtent();
+        var extent = this.getGeometry().getExtent();
 
-			 var callback = function(feature) { // unclustered version
-				 if (feature.getGeometry() &&
-                    (typeof feature['visible'] !== 'boolean' || feature['visible']) &&
-                     (typeof feature['state'] !== 'number' ||
+        var callback = function(feature) {
+            if (feature.getGeometry() &&
+                (typeof feature['visible'] !== 'boolean' ||
+                    feature['visible']) &&
+                        (typeof feature['state'] !== 'number' ||
                         feature['state'] !== ome.ol3.REGIONS_STATE.REMOVED) &&
-						feature.getGeometry().intersectsExtent(extent)) {
+                        feature.getGeometry().intersectsExtent(extent)) {
                             this.regions_.select_.toggleFeatureSelection(
                                 feature, true);
-				} else feature['selected'] = false;
-			 };
+            } else feature['selected'] = false;
+        };
 
-			 if (this.regions_.useClustering_) // clustered version
-				callback = function(feature) {
-				 var featureList = [feature];
-					if (!this.regions_.useClusteredCollection_ &&
-							feature instanceof ome.ol3.feature.Cluster) {
-								if (ol.extent.intersects(extent, feature.getBBox()))
-									featureList = feature.features_;
-								else featureList = [];
-					}
-
-					for (var f in featureList) {
-						var feat = featureList[f];
-						if (feat.getGeometry() &&
-                            (typeof feat['visible'] !== 'boolean' || feat['visible']) &&
-                            (typeof feat['state'] !== 'number' ||
-                                feat['state'] !== ome.ol3.REGIONS_STATE.REMOVED) &&
-							feat.getGeometry().intersectsExtent(extent)) {
-                                this.regions_.select_.toggleFeatureSelection(
-                                    feat, true);
-						}
-					 }
-				};
-
-				this.regions_.getFeatures().forEach(callback, this);
-				this.regions_.changed();
+        this.regions_.getFeatures().forEach(callback, this);
+        this.regions_.changed();
 	};
 	this.boxEndListener_ = null;
 

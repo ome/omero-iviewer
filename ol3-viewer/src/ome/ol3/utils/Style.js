@@ -163,8 +163,6 @@ ome.ol3.utils.Style.updateStyleFunction = function(feature, regions_reference, f
 			if (typeof(feature['oldScaleFlag']) === 'undefined')
 				feature['oldScaleFlag'] = regions_reference.scale_text_;
 		}
-		if (feature instanceof ome.ol3.feature.Cluster)
-			feature['oldRadius'] = feature.getGeometry().getRadius();
 
 		// replace style function
 		feature.setStyle(function(actual_resolution) {
@@ -179,12 +177,9 @@ ome.ol3.utils.Style.updateStyleFunction = function(feature, regions_reference, f
 			// get present rotation
 			var rotation = viewRef.getRotation();
 
-			if (feature instanceof ome.ol3.feature.Cluster)
-				feature.getGeometry().setRadius(feature['oldRadius'] * actual_resolution);
-
 			// is there a text style?
 			var textStyle = oldStyle.getText();
-			if (textStyle && !(feature instanceof ome.ol3.feature.Cluster)) {
+			if (textStyle) {
 				// seems we want to adjust text to resolution level
 				if (scale_text) {
 					var newScale = 1/actual_resolution;
@@ -414,9 +409,7 @@ ome.ol3.utils.Style.modifyStyles = function(shape_info, regions_reference, featu
     var ids = [];
 	features.forEach(
 		function(feature) {
-			if (feature instanceof ol.Feature &&
-						!(feature instanceof ome.ol3.feature.Cluster)) {
-
+			if (feature instanceof ol.Feature) {
 				var style = feature.getStyle();
 				if (typeof(style) === 'function')
 					style = style(
@@ -504,8 +497,8 @@ ome.ol3.utils.Style.modifyStyles = function(shape_info, regions_reference, featu
                         // add id to the list for state change
                         ids.push(feature.getId());
 					}
-			}
-		});
+			}});
+
         if (ids.length > 0) regions_reference.setProperty(
             ids, "state", ome.ol3.REGIONS_STATE.MODIFIED);
 }

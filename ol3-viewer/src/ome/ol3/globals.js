@@ -287,11 +287,3 @@ goog.exportSymbol(
 	'ome.ol3.REGIONS_MODE',
 	ome.ol3.REGIONS_MODE,
 	OME);
-
-/**
- * The default clustering threshold determining whether clustering is applied
- * to the present resolution/zoom.
- *
- * @const
- */
-ome.ol3.CLUSTERING_THRESHOLD = ome.ol3.utils.Misc.getGoodShapeThresholdForUsedBrowser();

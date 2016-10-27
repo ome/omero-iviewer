@@ -113,8 +113,6 @@
 			<fileset file="${src}/ome/ol3/geom/Ellipse.js"/>
 			<fileset file="${src}/ome/ol3/geom/LabelRectangle.js"/>
 			<fileset file="${src}/ome/ol3/geom/PolyLine.js"/>
-			<fileset file="${src}/ome/ol3/feature/feature.js"/>
-			<fileset file="${src}/ome/ol3/feature/Cluster.js"/>
 			<fileset file="${src}/ome/ol3/interaction/interaction.js"/>
 			<fileset file="${src}/ome/ol3/interaction/Rotate.js"/>
 			<fileset file="${src}/ome/ol3/interaction/BoxSelect.js"/>

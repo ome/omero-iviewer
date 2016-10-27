@@ -1276,41 +1276,6 @@ ome.ol3.Viewer.prototype.getViewExtent = function() {
 }
 
 /**
- * Activates clustering. Whether you are going to get a clustered view depends on:
- * {@link ome.ol3.source.Regions#useClusteredCollection_} and
- * {@link ome.ol3.source.Regions#needsClustering}
- *
- * @param {boolen} flag true/false flag
- */
-ome.ol3.Viewer.prototype.activateClustering = function(flag) {
-	if (this.getRegions() === null)
-		this.addRegions();
-
-	if (typeof(flag) !== 'boolean')
-		flag = false;
-	if (flag === this.regions_.useClustering_) return; // nothing has changed
-
-	this.regions_.useClustering_ = flag;
-
-	// delesect anything before switch
-	if (this.regions_.select_) {
-		this.regions_.select_.clearSelection();
-		if (typeof this.viewerState_["boxSelect"] === 'object') // reset box select listeners
-			this.viewerState_["boxSelect"]['ref'].resetListeners();
-	}
-	this.viewer_.getTargetElement().style = "";
-
-	if (this.regions_.useClustering_)
-		this.regions_.clusterFeaturesAsynchronously(); // kick off clustering
-	else {// reset collection and clustered rtrees
-			this.previouslyClustered_ = null;
-			this.regions_.featuresCollection_ = null;
-			this.regions_.clusteredRTrees_ = null;
-			this.regions_.currentRTreeLevel_ = 0;
-		}
-};
-
-/**
  * Modifies the selected shapes with the given shape info, e.g.
  * <pre>
  * {"type" : "label", textValue: 'changed', fontSize: 15, fontStyle: 'italic'}
@@ -1708,11 +1673,6 @@ goog.exportProperty(
 	ome.ol3.Viewer.prototype,
 	'generateShapes',
 	ome.ol3.Viewer.prototype.generateShapes);
-
-goog.exportProperty(
-	ome.ol3.Viewer.prototype,
-	'activateClustering',
-	ome.ol3.Viewer.prototype.activateClustering);
 
 goog.exportProperty(
 	ome.ol3.Viewer.prototype,

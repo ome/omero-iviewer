@@ -600,10 +600,12 @@ ome.ol3.utils.Conversion.integrateMiscInfoIntoJsonObject  = function(feature, js
  */
 ome.ol3.utils.Conversion.toJsonObject = function(
     features, storeNewShapesInSeparateRois,returnFlattenedArray) {
-	if (!(features instanceof ol.Collection) || features.getLength() === 0) return null;
+	if (!(features instanceof ol.Collection) ||
+            features.getLength() === 0) return null;
 
 	var newRoisForEachNewShape =
-		typeof(storeNewShapesInSeparateRois) === 'boolean' ? storeNewShapesInSeparateRois : false;
+		typeof(storeNewShapesInSeparateRois) === 'boolean' ?
+            storeNewShapesInSeparateRois : false;
 
     if (typeof returnFlattenedArray !== 'boolean') returnFlattenedArray = false;
 
@@ -611,88 +613,78 @@ ome.ol3.utils.Conversion.toJsonObject = function(
 	var roisToBeStored = {"count" : 0};
     var rois = {};
 
-	features.forEach(
-		function(feature) {
-			var feats = []; // multiples features for clusters
-			if (feature instanceof ome.ol3.feature.Cluster)
-			  	feats = feats.concat(feature.features_);
-			else feats.push(feature);
+    var feats = features.getArray();
+    for (var i=0;i<feats.length;i++) {
+        var feature = feats[i];
 
-			// loop over feature(s)
-			for (var f in feats) {
-				var feat = feats[f];
-
-				// we skip if we are not a feature or have no geometry (sanity check)
-				// OR if we haven't a state or the state is unchanged
-				if (!(feat instanceof ol.Feature) || feat.getGeometry() === null ||
-							typeof(feat['state']) !== 'number' || // no state info or unchanged
-							feat['state'] === ome.ol3.REGIONS_STATE.DEFAULT)
-							continue;
-
-				var roiId = -1;
-				var shapeId = -1;
-
-				// dissect id which comes in the form roiId:shapeId
-				if (typeof(feat.getId()) !== 'string' || feat.getId().length < 3)
-					continue; // we skip it, we must have at least x:x for instance
-
-				var colon = feat.getId().indexOf(":");
-				if (colon < 1) // colon cannot be before 2nd position
+		// we skip if we are not a feature or have no geometry (sanity check)
+		// OR if we haven't a state or the state is unchanged
+		if (!(feature instanceof ol.Feature) || feature.getGeometry() === null ||
+					typeof(feature['state']) !== 'number' || // no state info or unchanged
+					feature['state'] === ome.ol3.REGIONS_STATE.DEFAULT)
 					continue;
 
-				roiId = feat.getId().substring(0,colon);
-				shapeId = feat.getId().substring(colon+1)
-				try {
-					roiId = parseInt(roiId);
-					shapeId = parseInt(shapeId);
-				} catch(notAnumber) {
-					continue; // we are not a number
-				}
+		var roiId = -1;
+		var shapeId = -1;
 
-				// now that we have the roi and shape id we check whether we have them in
-				// our associative array already or we need to create it yet
-				var roiIdToBeUsed = roiId; // unless we are new we'd like to use the original roi id
-				// new shapes have by default a -1 for the roi id,
-				// we'd like to use that unless the flag is set that want to store each
-				// new shape in a roi of its own
-				if (feat['state'] === ome.ol3.REGIONS_STATE.ADDED && newRoisForEachNewShape)
-						roiIdToBeUsed = currentNewId--;
+		// dissect id which comes in the form roiId:shapeId
+		if (typeof(feature.getId()) !== 'string' || feature.getId().length < 3)
+			continue; // we skip it, we must have at least x:x for instance
 
-				var roiContainer = null;
-				// we exist already in our associative array, so lets add more to it
-				if (typeof(rois[roiIdToBeUsed]) === 'object')
-					roiContainer = rois[roiIdToBeUsed];
-				else {// we need to be created
-					rois[roiIdToBeUsed] = {
-						"@type" : 'http://www.openmicroscopy.org/Schemas/ROI/2015-01#ROI',
-						 "shapes" : []};
-					roiContainer = rois[roiIdToBeUsed];
-				}
-				var type = feat['type'];
-				try {
-					var jsonObject = // retrieve object with 'geometry' type of properties
-						ome.ol3.utils.Conversion.LOOKUP[type].call(
-							this, feat.getGeometry(),
-							feat['state'] === ome.ol3.REGIONS_STATE.ADDED ? -1 : shapeId);
-					ome.ol3.utils.Conversion.integrateStyleIntoJsonObject( // add 'style' properties
-						feat, jsonObject);
-					// add any additional information related to the shape that needs storing
-					ome.ol3.utils.Conversion.integrateMiscInfoIntoJsonObject(feat, jsonObject);
-					// we like to keep the old id for later synchronization
-					jsonObject['oldId'] = feat.getId();
-					roiContainer['shapes'].push(jsonObject);
-				} catch(conversion_error) {
-					console.error("Failed to turn feature " + type + "(" + feat.getId() +
-						") into json => " + conversion_error);
-					continue;
-				}
-				roisToBeStored['count']++;
-			}
+		var colon = feature.getId().indexOf(":");
+		if (colon < 1) // colon cannot be before 2nd position
+			continue;
+
+		roiId = feature.getId().substring(0,colon);
+		shapeId = feature.getId().substring(colon+1)
+		try {
+			roiId = parseInt(roiId);
+			shapeId = parseInt(shapeId);
+		} catch(notAnumber) {
+			continue; // we are not a number
 		}
-	);
 
-	if (roisToBeStored['count'] === 0)
-		return null;
+		// now that we have the roi and shape id we check whether we have them in
+		// our associative array already or we need to create it yet
+		var roiIdToBeUsed = roiId; // unless we are new we'd like to use the original roi id
+		// new shapes have by default a -1 for the roi id,
+		// we'd like to use that unless the flag is set that want to store each
+		// new shape in a roi of its own
+		if (feature['state'] === ome.ol3.REGIONS_STATE.ADDED && newRoisForEachNewShape)
+				roiIdToBeUsed = currentNewId--;
+
+		var roiContainer = null;
+		// we exist already in our associative array, so lets add more to it
+		if (typeof(rois[roiIdToBeUsed]) === 'object')
+			roiContainer = rois[roiIdToBeUsed];
+		else {// we need to be created
+			rois[roiIdToBeUsed] = {
+				"@type" : 'http://www.openmicroscopy.org/Schemas/ROI/2015-01#ROI',
+				 "shapes" : []};
+			roiContainer = rois[roiIdToBeUsed];
+		}
+		var type = feature['type'];
+		try {
+			var jsonObject = // retrieve object with 'geometry' type of properties
+				ome.ol3.utils.Conversion.LOOKUP[type].call(
+					null, feature.getGeometry(),
+					feature['state'] === ome.ol3.REGIONS_STATE.ADDED ? -1 : shapeId);
+			ome.ol3.utils.Conversion.integrateStyleIntoJsonObject( // add 'style' properties
+				feature, jsonObject);
+			// add any additional information related to the shape that needs storing
+			ome.ol3.utils.Conversion.integrateMiscInfoIntoJsonObject(feature, jsonObject);
+			// we like to keep the old id for later synchronization
+			jsonObject['oldId'] = feature.getId();
+			roiContainer['shapes'].push(jsonObject);
+		} catch(conversion_error) {
+			console.error("Failed to turn feature " + type + "(" + feature.getId() +
+				") into json => " + conversion_error);
+			continue;
+		}
+		roisToBeStored['count']++;
+	};
+
+	if (roisToBeStored['count'] === 0) return null;
 
     if (returnFlattenedArray) {
         var flattenedArray = [];

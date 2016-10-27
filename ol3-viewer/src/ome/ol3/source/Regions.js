@@ -75,47 +75,6 @@ ome.ol3.source.Regions = function(viewerReference, options) {
 		this.rotate_text_ = opts['rotateText'];
 
 	/**
-	 * A boolean that activates clustering
-	 * If set to false, clustering will never be used.
-	 * If set to true, the flag {@link ome.ol3.source.Regions#useClusteredCollection_}
-	 * will determine whether the viewed extent will be clustered
-	 * @type {boolean}
-	 * @private
-	 */
-	 this.useClustering_ = false;
-	/**
-	 * Given that {ome.ol3.source.Regions#useClustering_} is set to true,
-	 * this flag is what determines eventually whether the viewed extent is shown clustered
-	 * The flag is set in the method {@link ome.ol3.source.Regions#needsClustering}
-	 * using among other things the threshold {@link ome.ol3.CLUSTERING_THRESHOLD}
-	 *
-	 * @type {boolean}
- 	 * @private
- 	 */
- 	 this.useClusteredCollection_ = false;
-
-	/**
- 	 * Flag that is used to determine transitions to/fro clustered state
- 	 * @type {boolean}
-   * @private
-   */
- 	this.previouslyClustered_ = null;
-
-	/**
-	 * clustered RTrees arrangend in levels
-	 * @type {Array.<Array.<ome.ol3.feature.Cluster>>}
-	 * @private
-	 */
-	 this.clusteredRTrees_ = null;
-
-	/**
-	 * the presently used clustered RTrees level
-	 * @type {number}
-	 * @private
-	 */
-	this.currentRTreeLevel_ = 0;
-
-	/**
 	 * the associated regions information
 	 * as retrieved from the omero server
 	 * @type {Object}
@@ -453,7 +412,7 @@ ome.ol3.source.Regions.prototype.updateRegions= function(request_info) {
 			this.new_unsaved_shapes_[feat.getId()] = feat;
     }
 
-	this.clear(); //wipe everything including objects/members used for clustering
+	this.clear();
 	if (makeServerRequest) {
 		this.initialize_(this); // simply reinitialize
 		return;
@@ -494,300 +453,26 @@ ome.ol3.source.Regions.prototype.setRotateText = function(rotateText) {
 }
 
 /**
- * Finds the features within the present view extent. For internal use.
- *
- * @private
- * @param {ol.Extent} extent the extent
- * @param {number} level a level to use for level rtree search or -1 to use the feature rtree
- * @return {Array.<Array.<ol.Extent, ol.Feature>>|null}
- *	returns the rbush interections with the view or null if no rbush is present
- */
-ome.ol3.source.Regions.prototype.findFeaturesInViewExtent = function(extent, level) {
-	if (ome.ol3.utils.Misc.isArray(this.clusteredRTrees_) &&
-				level >= 0 && level < this.clusteredRTrees_.length)
-			return this.clusteredRTrees_[level].getInExtent(extent);
-
-	if (this.featuresRtree_ && this.featuresRtree_.rbush_)
-		return this.featuresRtree_.getInExtent(extent);
-
-	return null;
-}
-
-/**
- * Internal Method to kick of reclustering asynchroniously.
- *
- * @private
- */
-ome.ol3.source.Regions.prototype.clusterFeaturesAsynchronously = function() {
-	setTimeout(
-		function() {
-			this.clusterFeatures();
-		}.bind(this), 0);
-}
-
-/**
- * Internal Method to kick of reclustering.
- *
- * @private
- */
-ome.ol3.source.Regions.prototype.clusterFeatures = function() {
-	if (!this.useClustering_) return;
-
-	this.clusteredRTrees_ =
-		ome.ol3.utils.Regions.clusterFeatures(
-			this.featuresRtree_,
-			ome.ol3.CLUSTERING_THRESHOLD);
-
-	if (!ome.ol3.utils.Misc.isArray(this.clusteredRTrees_) || // something went wrong during clustering
-				this.clusteredRTrees_.length === 0) return;
-
-	for (var l in this.clusteredRTrees_)
-		this.clusteredRTrees_[l].forEach(
-			function(feature) {
-				if (feature instanceof ome.ol3.feature.Cluster) {
-					ome.ol3.utils.Style.updateStyleFunction(feature, this, true);
-					feature['group_selected'] = false;
-				}
-		}, this);
-	this.changed();
-};
-
-/**
- * Overridden method calls clustering after insertion
- * @param {Array.<ol.Feature>} features Features to add.
- */
-ome.ol3.source.Regions.prototype.addFeatures = function(features) {
-	if (!this.useClustering_) {
-		ol.source.Vector.prototype.addFeatures.call(this,features);
-		return;
-	}
-
-	this.addFeaturesInternal(features);
-	this.clusterFeatures();
-};
-
-/**
- * Overridden method calls clustering after insertion
- *
- * @param {ol.Feature} feature Feature to add.
- */
-ome.ol3.source.Regions.prototype.addFeature = function(feature) {
-	if (!this.useClustering_) {
-		ol.source.Vector.prototype.addFeature.call(this,feature);
-		return;
-	}
-
-	this.addFeatureInternal(feature);
-	this.clusterFeaturesAsynchronously();
-};
-
-/**
- * Overridden method calls clustering after deletion
- *
- * @param {ol.Feature} feature Feature to remove.
- */
-ome.ol3.source.Regions.prototype.removeFeature = function(feature) {
-	if (!this.useClustering_) {
-		ol.source.Vector.prototype.removeFeature.call(this, feature);
-		return;
-	}
-
-	var featureKey = ol.getUid(feature).toString();
-  if (featureKey in this.nullGeometryFeatures_) {
-    delete this.nullGeometryFeatures_[featureKey];
-  } else {
-    if (this.featuresRtree_) {
-      this.featuresRtree_.remove(feature);
-    }
-  }
-  this.removeFeatureInternal(feature);
-	this.clusterFeaturesAsynchronously();
-};
-
-/**
- * Remove all features from the source.
- */
-ome.ol3.source.Regions.prototype.clear = function() {
-	if (ome.ol3.utils.Misc.isArray(this.clusteredRTrees_)) {
-		for (var l in this.clusteredRTrees_)
-			if (this.clusteredRTrees_[l] instanceof ol.structs.RBush)
-				this.clusteredRTrees_[l].clear();
-				delete this.clusteredRTrees_[l];
-	}
-
-	// delegate
-	ol.source.Vector.prototype.clear.call(this, true);
-
-	// reset
-	this.featureChangeKeys_ = {};
-	this.idIndex_ = {};
-	this.undefIdIndex_ = {};
-	this.featuresCollection_ = null;
-	this.useClusteredCollection_ = false;
- 	this.previouslyClustered_ = null;
-	this.clusteredRTrees_ = null;
- 	this.currentRTreeLevel_ = 0;
-}
-
-/**
- * This method is called within the rendering workflow and is overridden
- * to take clustering into account. If there is a non-empty collection of
- * containing a filtered/clustered set of features we return it
+ * This method determines which features are seen. We overrided the standard
+ * implementation to cater for t,p,c visible and removed constraints
  *
  * @param {ol.Extent} extent Extent.
- * @param {function(this: T, ol.Feature): S} callback Called with each feature
- *     whose bounding box intersects the provided extent.
- * @param {T=} opt_this The object to use as `this` in the callback.
+ * @param {function} callback for each feature in extent
+ * @param {object=} opt_this The object to use as `this` in the callback.
  * @return {S|undefined} The return value from the last call to the callback.
- * @template T,S
  */
-ome.ol3.source.Regions.prototype.forEachFeatureInExtent = function(extent, callback, opt_this) {
-	if (typeof(opt_this) === 'undefined' || opt_this === null)
-		opt_this = this;
+ome.ol3.source.Regions.prototype.forEachFeatureInExtent =
+    function(extent, callback, opt_this) {
+    if (typeof(opt_this) === 'undefined' || opt_this === null) opt_this = this;
 
-	// do we need to show the clusters
-	var useClusteredCollection = this.needsClustering();
-
-    // determine if we had a transition change from clustered -> unclustered
-    // set previously clustered state if not already set
-    var fromClusterToUnclustered =
-        (this.previouslyClustered_ !== null &&
-                this.previouslyClustered_ !== useClusteredCollection &&
-                this.previouslyClustered_ && !useClusteredCollection);
-    this.previouslyClustered_ = useClusteredCollection; // remember new state
-
-    // check out which tree fits our purpose best
-    var indexToUse = 0;
-	if (useClusteredCollection)
-		for (var c=0;c<this.clusteredRTrees_.length;c++)
-			if (!this.needsClustering(null, c)) {
-				indexToUse = c;
-				break;
-			}
-    var rTreeLevelChanged = this.currentRTreeLevel_ != indexToUse;
-	this.currentRTreeLevel_ = indexToUse;
-
-    // unselect clusters on level changes,
-    // individually selected features can stay
-    if (this.select_) {
-        var selArray = this.select_.getFeatures().getArray();
-        var len = selArray.length-1;
-        while (len >= 0) {
-            var selItem = selArray[len];
-            if ((rTreeLevelChanged || fromClusterToUnclustered) &&
-                    selItem instanceof  ome.ol3.feature.Cluster) {
-                selItem['selected'] = false;
-                this.select_.getFeatures().removeAt(len);
-            }
-            if (!(selItem instanceof ome.ol3.feature.Cluster) &&
-                    useClusteredCollection &&
-                        selItem.getGeometry().intersectsExtent(extent))
-                callback.call(opt_this, selItem);
-            len--;
-        }
-    }
-
-    // simplest scenario: no clustering, select individual features in extent => bye
-	if (!useClusteredCollection || !ome.ol3.utils.Misc.isArray(this.clusteredRTrees_) ||
-				this.clusteredRTrees_.length === 0) // no clustering
-		return this.featuresRtree_.forEachInExtent(
-			extent,
-			function(feature) {
-				if ((typeof(feature['visible']) === 'boolean' &&
-                    !feature['visible']) ||
-                    (typeof feature['state'] === 'number' &&
-                        feature['state'] === ome.ol3.REGIONS_STATE.REMOVED))
-					return;
-				callback.call(opt_this, feature);
-			}, opt_this);
-
-
-    // display cluster features in extent
-	var ret = this.clusteredRTrees_[indexToUse].forEachInExtent(
-		extent,
-		function(feature) {
-			if (fromClusterToUnclustered && feature instanceof ome.ol3.feature.Cluster)
-				feature['selected'] = false;
-
-			if (feature instanceof ome.ol3.feature.Cluster
-				&& (!useClusteredCollection || feature['selected']) &&
-				ol.extent.intersects(extent, feature.getBBox())) {
-					if (useClusteredCollection && feature['visible'])
-							callback.call(opt_this, feature);
-						for (var f in feature.features_) {// unclustered
-							var visible = true;
-							if ((typeof feature['visible'] === 'boolean' &&
-                                !feature['visible']) ||
-                                    (typeof feature['state'] === 'number' &&
-                                    feature['state'] === ome.ol3.REGIONS_STATE.REMOVED))
-								visible = false;
-							var geometry = feature.features_[f].getGeometry();
-							if (visible && geometry && geometry.intersectsExtent(extent))
-								callback.call(opt_this, feature.features_[f]);
-						}
-			} else if (feature.getGeometry() &&
-                    (typeof feature['visible'] !== 'boolean' || feature['visible']) &&
-                        (typeof feature['state'] !== 'number' ||
-                            feature['state'] !== ome.ol3.REGIONS_STATE.REMOVED) &&
-					        feature.getGeometry().intersectsExtent(extent))
-						callback.call(opt_this, feature);
-		}, opt_this);
-
-		return ret;
+    return this.featuresRtree_.forEachInExtent(extent, function(feature) {
+        if ((typeof(feature['visible']) === 'boolean' &&
+                !feature['visible']) ||
+                (typeof feature['state'] === 'number' &&
+                    feature['state'] === ome.ol3.REGIONS_STATE.REMOVED))
+                        return;
+        callback.call(opt_this, feature);}, opt_this);
 };
-
-/**
- * Get all features on the source.
- * @return {Array.<ol.Feature>} Features.
- */
-ome.ol3.source.Regions.prototype.getFeatures = function() {
-	if (!this.useClustering_ ||
-			!ome.ol3.utils.Misc.isArray(this.clusteredRTrees_) ||
-			this.clusteredRTrees_.length === 0) // no clustering
-		return this.featuresRtree_.getAll();
-
-	var presentlyUsedRTreeLevel = this.currentRTreeLevel_;
-	if (presentlyUsedRTreeLevel < 0 ||
-		presentlyUsedRTreeLevel >= this.clusteredRTrees_.length)
-		presentlyUsedRTreeLevel = 0;
-  return this.clusteredRTrees_[presentlyUsedRTreeLevel].getAll();
-};
-
-/**
- * Assesses whether we want to apply clustering or not
- *
- * @private
- * @param {ol.Extent=} extent the extent we are viewing.
- * @param {number=} level count using the level rtrees.
- * @return {boolean} clustering true or false
- */
-ome.ol3.source.Regions.prototype.needsClustering = function(extent, level) {
-	if (!this.useClustering_) {
-		this.useClusteredCollection_ = false;
-		return false;
-	}
-
-	var ret = false;
-
-	if (!ome.ol3.utils.Misc.isArray(extent) || extent.length !== 4)
-		extent = this.viewer_.getViewExtent();
-
-	level = typeof(level) === 'number' ? level : -1;
-
-	// find all features within the present extent
-	var hits = this.findFeaturesInViewExtent(extent, level);
-
-	// use the clustered collection if we are above the threshold or
-	// have reached the minumum resolution
-	if (ome.ol3.utils.Misc.isArray(hits) && (
-				hits.length > ome.ol3.CLUSTERING_THRESHOLD &&
-					this.viewer_.viewer_.getView().getResolution() !==
-					this.viewer_.viewer_.getView().minResolution_))
-		ret = true;
-
-	if (level === -1) this.useClusteredCollection_ = ret;
-	return ret;
-}
 
 /**
  * Persists modified/added shapes
@@ -1012,10 +697,10 @@ ome.ol3.source.Regions.prototype.setProperty =
  * Clean up
  */
 ome.ol3.source.Regions.prototype.disposeInternal = function() {
-	this.clear();
-	this.featuresRtree_ = null;
-	this.loadedExtentsRtree_ = null;
-  this.nullGeometryFeatures_ = null;
+    this.clear();
+    this.featuresRtree_ = null;
+    this.loadedExtentsRtree_ = null;
+    this.nullGeometryFeatures_ = null;
 	this.regions_info_ = null;
 	this.viewer_ = null;
 };
