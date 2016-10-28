@@ -12,7 +12,7 @@ import {
     IMAGE_DIMENSION_CHANGE, IMAGE_SETTINGS_CHANGE,
     REGIONS_SET_PROPERTY, REGIONS_PROPERTY_CHANGED,
     VIEWER_IMAGE_SETTINGS, IMAGE_VIEWER_SPLIT_VIEW,
-    REGIONS_DRAW_SHAPE, REGIONS_CHANGE_MODES,
+    REGIONS_DRAW_SHAPE, REGIONS_CHANGE_MODES, REGIONS_SHOW_COMMENTS,
     EventSubscriber
 } from '../events/events';
 
@@ -66,7 +66,9 @@ export default class Ol3Viewer extends EventSubscriber {
         [REGIONS_CHANGE_MODES,
             (params={}) => this.changeRegionsModes(params)],
         [REGIONS_DRAW_SHAPE,
-            (params={}) => this.drawShape(params)]];
+            (params={}) => this.drawShape(params)],
+        [REGIONS_SHOW_COMMENTS,
+            (params={}) => this.showComments(params)]];
 
     /**
      * @constructor
@@ -461,5 +463,18 @@ export default class Ol3Viewer extends EventSubscriber {
 
         // let's draw
         this.viewer.drawShape(params.shape);
+    }
+
+    /**
+     * Shows/hides comments on shapes
+     *
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     */
+    showComments(params = {}) {
+        // the event doesn't concern us
+        if (params.config_id !== this.config_id) return;
+
+        this.viewer.showShapeComments(params.value);
     }
 }

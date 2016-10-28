@@ -697,6 +697,22 @@ ome.ol3.Viewer.prototype.setRegionsVisibility = function(visible, roi_shape_ids)
 }
 
 /**
+ * Toggles the visibility of the regions/layer.
+ * If a non-empty array of rois is handed in, only the listed regions will be affected,
+ * otherwise the entire layer
+ *
+ * @param {boolean} flag if true we are displaying the text (if there), otherwise no
+ */
+ome.ol3.Viewer.prototype.showShapeComments = function(flag) {
+	// without a regions layer there will be no regions to hide...
+	var regions = this.getRegions();
+	if (regions && typeof flag === 'boolean') {
+        regions.show_comments_ = flag;
+        regions.changed();
+    }
+}
+
+/**
  * Marks given shapes as selected. The center flag is only considered if we
  * have a single shape only
  *
@@ -1753,3 +1769,8 @@ goog.exportProperty(
 	ome.ol3.Viewer.prototype,
 	'deleteShapes',
 	ome.ol3.Viewer.prototype.deleteShapes);
+
+goog.exportProperty(
+	ome.ol3.Viewer.prototype,
+	'showShapeComments',
+	ome.ol3.Viewer.prototype.showShapeComments);

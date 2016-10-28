@@ -22,6 +22,14 @@
                     <li click.delegate="deleteShapes(true, true)"><a href="#">Undo All Deletes</a></li>
                 </ul>
             </div>
+
+            <div class="checkbox checkbox-settings">
+                <label><input type="checkbox"
+                    change.delegate="showComments($event.target.checked)">
+                    Show Comments
+                </label>
+            </div>
+
         </div>
 
         <hr />

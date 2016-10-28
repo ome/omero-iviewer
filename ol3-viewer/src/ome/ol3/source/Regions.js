@@ -74,6 +74,14 @@ ome.ol3.source.Regions = function(viewerReference, options) {
 	if (typeof(opts['rotateText']) === 'boolean')
 		this.rotate_text_ = opts['rotateText'];
 
+    /**
+	 * this flag determines whether text is displayed for shapes other than labels
+	 * Defauls to false
+	 * @type {boolean}
+	 * @private
+	 */
+     this.show_comments_ = false;
+
 	/**
 	 * the associated regions information
 	 * as retrieved from the omero server
@@ -647,10 +655,9 @@ ome.ol3.source.Regions.prototype.setProperty =
     for (var r in roi_shape_ids) {
         var s = roi_shape_ids[r];
 
-        if (this.idIndex_[s] instanceof ol.Feature && // we have to be a feature
-            this.idIndex_[s][property] !== value) { // prop has to have changed
-
-            // some special cases
+        if (this.idIndex_[s] instanceof ol.Feature) {
+            // we allow to toggle the selected state
+            // as well as the state for removed, modified and rollback deletes
             if (this.select_ instanceof ome.ol3.interaction.Select) {
                 if (property === 'selected' && value)
                     this.select_.getFeatures().push(this.idIndex_[s]);
@@ -659,15 +666,24 @@ ome.ol3.source.Regions.prototype.setProperty =
                     this.select_.toggleFeatureSelection(
                         this.idIndex_[s], false);
                 } else if (property === 'state') {
+                    var presentState = this.idIndex_[s][property];
                     if (value === ome.ol3.REGIONS_STATE.REMOVED) {
                         this.select_.toggleFeatureSelection(
                             this.idIndex_[s], false);
-                        this.idIndex_[s]["old_state"] =
-                            this.idIndex_[s][property];
+                        // we have already done this
+                        if (presentState !== ome.ol3.REGIONS_STATE.REMOVED)
+                            this.idIndex_[s]["old_state"] = presentState;
                         eventProperty = "deleted";
-                    } else if (value === ome.ol3.REGIONS_STATE.MODIFIED)
+                    } else if (value === ome.ol3.REGIONS_STATE.MODIFIED) {
+                        // we are presently deleted
+                        // so all we do is remember the modification as the
+                        // 'old_state' in case of a rollback
+                        if (presentState === ome.ol3.REGIONS_STATE.REMOVED) {
+                            this.idIndex_[s]["old_state"] = value;
+                            continue;
+                        }
                         eventProperty = "modified";
-                    else if (value === ome.ol3.REGIONS_STATE.ROLLBACK)
+                    } else if (value === ome.ol3.REGIONS_STATE.ROLLBACK)
                         eventProperty = "rollback";
                 }
             }

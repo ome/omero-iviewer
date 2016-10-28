@@ -1,7 +1,9 @@
 // js
 import Context from '../app/context';
 import {REGIONS_MODE} from '../utils/constants';
-import {REGIONS_CHANGE_MODES, REGIONS_SET_PROPERTY} from '../events/events';
+import {
+    REGIONS_CHANGE_MODES, REGIONS_SET_PROPERTY,
+    REGIONS_SHOW_COMMENTS} from '../events/events';
 import {inject, customElement, bindable} from 'aurelia-framework';
 
 /**
@@ -93,6 +95,18 @@ export default class Regions {
             REGIONS_SET_PROPERTY,
         {config_id : this.regions_info.image_info.config_id,
             property: 'state', shapes : ids, value: undo ? 'undo' : 'delete'});
+    }
+
+    /**
+     * Show/Hide Text Labels
+     *
+     * @param {boolean} flag show comments if true, otherwise false
+     * @memberof Regions
+     */
+    showComments(flag = false) {
+        this.context.publish(
+            REGIONS_SHOW_COMMENTS,
+        {config_id : this.regions_info.image_info.config_id, value: flag});
     }
 
     /**

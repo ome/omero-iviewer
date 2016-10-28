@@ -13,6 +13,7 @@ hr {
     border-bottom-width: 1px;
     margin-top: 3px;
     margin-bottom: 3px;
+    width: 100%;
 }
 
 .container-fluid {
@@ -273,6 +274,7 @@ thumbnail-slider img {
 }
 
 .checkbox-settings {
+    margin-left: 2px;
     margin-top: 5px;
     margin-bottom: 0px;
 }
