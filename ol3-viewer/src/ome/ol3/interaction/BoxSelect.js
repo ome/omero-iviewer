@@ -58,20 +58,10 @@ ome.ol3.interaction.BoxSelect = function(regions_reference) {
         if (this.regions_.select_ === null) return;
 
         var extent = this.getGeometry().getExtent();
-
-        var callback = function(feature) {
-            if (feature.getGeometry() &&
-                (typeof feature['visible'] !== 'boolean' ||
-                    feature['visible']) &&
-                        (typeof feature['state'] !== 'number' ||
-                        feature['state'] !== ome.ol3.REGIONS_STATE.REMOVED) &&
-                        feature.getGeometry().intersectsExtent(extent)) {
-                            this.regions_.select_.toggleFeatureSelection(
-                                feature, true);
-            } else feature['selected'] = false;
-        };
-
-        this.regions_.getFeatures().forEach(callback, this);
+        this.regions_.forEachFeatureInExtent(
+            extent, function(feature) {
+                this.select_.toggleFeatureSelection(feature, true);
+            });
         this.regions_.changed();
 	};
 	this.boxEndListener_ = null;

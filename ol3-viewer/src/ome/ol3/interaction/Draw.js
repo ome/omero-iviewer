@@ -79,6 +79,7 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                 this.regions_.viewer_.getDimensionIndex('t');
             event.feature['theZ'] =
                 this.regions_.viewer_.getDimensionIndex('z');
+            event.feature['theC'] = -1;
 
 			// adjust if drawn in rotated state
 			var rot = this.regions_.viewer_.viewer_.getView().getRotation();

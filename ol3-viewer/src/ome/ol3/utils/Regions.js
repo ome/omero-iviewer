@@ -8,7 +8,6 @@ goog.require('ol.geom.Circle');
 goog.require('ol.geom.LineString');
 goog.require('ol.geom.Polygon');
 goog.require('ol.extent');
-goog.require('ol.structs.RBush');
 
 /**
  * The feature factory lookup table.
@@ -438,14 +437,9 @@ ome.ol3.utils.Regions.createFeaturesFromRegionsResponse =
 			var shapeZindex =
 				typeof(regions.regions_info_[roi]['shapes'][shape]['theZ']) === 'number' ?
 				regions.regions_info_[roi]['shapes'][shape]['theZ'] : -1;
-
-			// we only display shapes meant for the present T and Z index
-			// we also need a type to be able to continue
-			if (regions.viewer_ === null ||
-				typeof(shapeType) !== 'string' ||
-				(shapeTindex !== -1 && regions.viewer_.getDimensionIndex('t') !== shapeTindex) ||
-				(shapeZindex !== -1 && regions.viewer_.getDimensionIndex('z') !== shapeZindex))
-				continue;
+            var shapeCindex =
+				typeof(regions.regions_info_[roi]['shapes'][shape]['theC']) === 'number' ?
+				regions.regions_info_[roi]['shapes'][shape]['theC'] : -1;
 
 			// set state
 			regions.regions_info_[roi]['shapes'][shape]['state'] = ome.ol3.REGIONS_STATE.DEFAULT;
@@ -493,10 +487,9 @@ ome.ol3.utils.Regions.createFeaturesFromRegionsResponse =
 			// interactions to quickly pinpoint the feature in question.
 			// the foramat is: 'rois_id:shape_id', e.g.: '1:4'
 			actualFeature.setId(combinedId);
-			if (shapeTindex != -1)
-				actualFeature['theT'] = shapeTindex;
-			if (shapeZindex != -1)
-				actualFeature['theZ'] = shapeZindex;
+			actualFeature['theT'] = shapeTindex;
+			actualFeature['theZ'] = shapeZindex;
+            actualFeature['theC'] = shapeCindex;
 			actualFeature['state'] = ome.ol3.REGIONS_STATE.DEFAULT;
 			// add us to the return array
 			ret.push(actualFeature);

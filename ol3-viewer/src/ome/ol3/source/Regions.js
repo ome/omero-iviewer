@@ -471,15 +471,35 @@ ome.ol3.source.Regions.prototype.setRotateText = function(rotateText) {
  */
 ome.ol3.source.Regions.prototype.forEachFeatureInExtent =
     function(extent, callback, opt_this) {
-    if (typeof(opt_this) === 'undefined' || opt_this === null) opt_this = this;
 
     return this.featuresRtree_.forEachInExtent(extent, function(feature) {
-        if ((typeof(feature['visible']) === 'boolean' &&
-                !feature['visible']) ||
-                (typeof feature['state'] === 'number' &&
-                    feature['state'] === ome.ol3.REGIONS_STATE.REMOVED))
-                        return;
-        callback.call(opt_this, feature);}, opt_this);
+        // here we filter for t,z and c (if applicable)
+        // and deleted flag or whether wie are invisible
+        var visible =
+            typeof(feature['visible']) !== 'boolean' || feature['visible'];
+        var deleted =
+            typeof feature['state'] === 'number' &&
+                feature['state'] === ome.ol3.REGIONS_STATE.REMOVED;
+        var belongsToDimension = true;
+
+        var viewerT = this.viewer_.getDimensionIndex('t');
+        var viewerZ = this.viewer_.getDimensionIndex('z');
+        var viewerCs = this.viewer_.getDimensionIndex('c');
+        var shapeT = feature['theT'];
+        var shapeZ = feature['theZ'];
+        var shapeC = feature['theC'];
+
+        // whenever we have a dimension that the shape belongs but doesn't
+        // correspond with the viewer's present settings
+        // we will not include it in the results
+        if ((shapeC !== -1 && viewerCs.indexOf(shapeC) === -1) ||
+                (shapeT !== -1 && shapeT !== viewerT) ||
+                (shapeZ !== -1 && shapeZ !== viewerZ))
+                    belongsToDimension = false;
+
+        if (visible && !deleted && belongsToDimension)
+            callback.call(this, feature);
+    }, this);
 };
 
 /**
