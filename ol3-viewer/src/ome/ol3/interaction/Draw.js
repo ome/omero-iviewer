@@ -43,6 +43,51 @@ ome.ol3.interaction.Draw = function(previous_modes, regions_reference) {
 	 * @private
 	 */
 	this.ol_draw_ = null;
+
+    /**
+	 * default styling for drawing
+	 *
+	 * @type {function}
+	 * @private
+	 */
+	this.default_style_function_ = function(feature, resolution) {
+        var optSketchFeature = this.ol_draw_.sketchFeature_;
+        var geom = optSketchFeature ?
+                    optSketchFeature.getGeometry() : feature.getGeometry();
+
+        var transWhite = [255,255,255,0.5];
+        var blue = [0, 153, 255, 0.7];
+        var isLabel = geom instanceof ome.ol3.geom.Label;
+        var defaultStyle = new ol.style.Style({
+            image: !isLabel ? new ol.style.Circle({radius: 6,
+                    fill: new ol.style.Fill({color: blue}),
+                    stroke: new ol.style.Stroke(
+                                {color: "#FFFFFF",width: 3 / 2})}) : null,
+            fill: !isLabel ?
+                    new ol.style.Fill({color: transWhite}) : null,
+            stroke: new ol.style.Stroke({color: blue, width: 1})});
+
+        // we don't have a sketch feature to style
+        if (optSketchFeature === null) return defaultStyle;
+
+        // we show the text when 'drawing' the label
+        var text = isLabel ?
+            new ol.style.Text(
+                { text: "TEXT",
+                  font: "normal " + geom.getHeight() + "px sans-serif",
+                  fill: new ol.style.Fill({color: transWhite, width: 1}),
+                  stroke: new ol.style.Stroke({color: blue, width: 1})}) :
+            null;
+        if (text) {
+            //adjust scale and rotation
+            var rot = this.regions_.viewer_.viewer_.getView().getRotation();
+            if (rot !== 0 && !this.regions_.rotate_text_) text.setRotation(rot);
+            text.setScale(1/resolution);
+            optSketchFeature.setStyle(new ol.style.Style({ "text" : text}));
+        }
+
+        return defaultStyle;
+    }.bind(this);
 };
 goog.inherits(ome.ol3.interaction.Draw, ome.ol3.interaction);
 
@@ -81,28 +126,33 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                 this.regions_.viewer_.getDimensionIndex('z');
             event.feature['theC'] = -1;
 
-			// adjust if drawn in rotated state
-			var rot = this.regions_.viewer_.viewer_.getView().getRotation();
-			if (event.feature.getGeometry() instanceof ome.ol3.geom.Label &&
-			 	rot !== 0 && !this.regions_.rotate_text_)
-					event.feature.getGeometry().rotate(-rot);
-			var text = (shape_type === 'label') ?
-				new ol.style.Text(
-					{ text: "new label",
-					  font: "normal 10px sans-serif",
-                      fill: new ol.style.Fill({color: 'rgba(255, 255, 255, 0.5)', width: 1}),
-					  stroke: new ol.style.Stroke({color: 'rgba(51, 153, 204, 0.9)', width: 1})}) :
-				null;
+            var geom = event.feature.getGeometry();
+            var text = null;
+            var white = [255,255,255,0.5];
+            var blue = [0, 153, 255, 0.9];
 
-			// apply style function after setting a default style
-			event.feature.setStyle(new ol.style.Style({
-     		fill: text === null ?
-					new ol.style.Fill({color: 'rgba(255,255,255,0.5)'}) : null,
-     		stroke: text === null ?
-					new ol.style.Stroke({color: 'rgba(51, 153, 204, 0.9)', width: 1}) : null,
-				text: text
-			}));
-			ome.ol3.utils.Style.updateStyleFunction(event.feature, this.regions_, true);
+            // adjust if drawn in rotated state
+			var rot = this.regions_.viewer_.viewer_.getView().getRotation();
+			if (geom instanceof ome.ol3.geom.Label) {
+                if (rot !== 0 && !this.regions_.rotate_text_) geom.rotate(-rot);
+
+                text = new ol.style.Text(
+                    { text: "TEXT",
+                      font: "normal " + geom.getHeight() + "px sans-serif",
+                      fill: new ol.style.Fill({color: white, width: 1}),
+                      stroke: new ol.style.Stroke({color: blue, width: 1})});
+            }
+
+            // apply style function after setting a default style
+            event.feature.setStyle(new ol.style.Style({
+                fill: text === null ?
+                        new ol.style.Fill({color: white}) : null,
+                stroke: text === null ?
+                        new ol.style.Stroke({color: blue, width: 1}) : null,
+                text: text}));
+            ome.ol3.utils.Style.updateStyleFunction(
+                event.feature, this.regions_, true);
+
             this.regions_.addFeature(event.feature);
 
             var eventbus = this.regions_.viewer_.eventbus_;
@@ -129,10 +179,12 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
 		this.regions_.viewer_.viewer_.removeInteraction(this.ol_draw_);
 	this.ol_draw_ = new ol.interaction.Draw({
 		source: this.regions_,
+        style: this.default_style_function_,
 		type: ol_shape,
 		geometryFunction: typeof(geometryFunction) === 'function' ?
 		 	geometryFunction : null
 	});
+
 	if (shape_type === 'point')
         this.ol_draw_.mode = this.mode = ol.interaction.Draw.Mode.POINT;
 
@@ -269,13 +321,33 @@ ome.ol3.interaction.Draw.prototype.drawRectangle_ = function(event) {
  * @param {Object} event the event object for the drawing interaction
  */
 ome.ol3.interaction.Draw.prototype.drawLabel_ = function(event) {
+    var height = this.regions_.viewer_.getDimensionIndex('y');
+
 	this.drawShapeCommonCode_('Circle', "label",
 		function(coordinates, opt_geometry) {
 
-			var fontDims =
-				ome.ol3.utils.Style.measureTextDimensions('new label', "normal 10px sans-serif");
+            var supposedTopLeft = coordinates[0];
+			var end = coordinates[1];
+			var h = Math.abs(supposedTopLeft[1] - end[1]);
+			if (h === 0) h = 1;
+			var topLeftX = end[0] < supposedTopLeft[0] ?
+			 	end[0] : supposedTopLeft[0];
+			var topLeftY = end[1] > supposedTopLeft[1] ?
+			 	end[1]: supposedTopLeft[1];
 
-			return new ome.ol3.geom.Label(coordinates[0][0], coordinates[0][1], fontDims);
+            var fontDims =
+                ome.ol3.utils.Style.measureTextDimensions(
+                    "TEXT", "normal " + parseInt(h) + "px sans-serif");
+			var geometry = new ome.ol3.geom.Label(topLeftX, topLeftY, fontDims);
+
+			if (opt_geometry) {
+				opt_geometry.setUpperLeftCorner(
+					geometry.getUpperLeftCorner());
+				opt_geometry.setWidth(geometry.getWidth());
+				opt_geometry.setHeight(geometry.getHeight());
+			}
+
+			return geometry;
 	});
 };
 

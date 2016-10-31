@@ -17,8 +17,7 @@ goog.provide('ome.ol3.utils.Conversion');
  * @function
  * @param {string} rgba the color in rgb(a) string notation
  * @param {number=} alpha an optional alpha channel for rgb strings
- * @return {object|null} returns the color as an object or n
- ull if parse errors
+ * @return {object|null} returns the color as an object or null if parse errors
  */
  ome.ol3.utils.Conversion.convertRgbaColorFormatToObject = function(rgba, alpha) {
 		if (typeof(rgba) !== 'string' || rgba.length === 0) return null;
@@ -51,6 +50,33 @@ goog.provide('ome.ol3.utils.Conversion');
 			console.error('Alpha values need to range in between 0 and 1!');
 
 		return ret;
+}
+
+/**
+ * Converts a color given as a rgb(a) array, e.g. [244,112,444, 0.5]
+ * into an internal color object looking like this:
+ *<pre>
+ * { red: 255, green: 255, blue: 255, alpha: 0.75 }
+ *</pre>
+ *
+ * If the string is only rgb, you can either hand in an alpha value as a
+ * second (optional) argument, otherwise it will default to : 1.0
+ *
+ * @static
+ * @function
+ * @param {Array.<number>} rgba the colors in an array of length 3 (rgb) or 4 (rgba)
+ * @param {number=} alpha an optional alpha channel for rgb strings
+ * @return {object|null} returns the color as an object or null if parse errors
+ */
+ ome.ol3.utils.Conversion.convertColorArrayToObject = function(rgba, alpha) {
+     if (!ome.ol3.utils.Misc.isArray(rgba) || rgba.length < 3) return null;
+
+     if (rgba.length === 3 && typeof(alpha) !== 'number') alpha = 1.0;
+     else alpha = rgba[3];
+
+     return {
+         "red" : rgba[0], "green" : rgba[1], "blue" : rgba[2], "alpha" : alpha
+     }
 }
 
 /**
@@ -189,6 +215,7 @@ ome.ol3.utils.Conversion.checkColorObjectCorrectness = function(color) {
  * <ul>
  * <li>{@link ome.ol3.utils.Conversion.convertRgbaColorFormatToObject}</li>
  * <li>{@link ome.ol3.utils.Conversion.convertHexColorFormatToObject}</li>
+ * <li>{@link ome.ol3.utils.Conversion.convertColorArrayToObject}</li>
  * </ul>
  * Alternatively it also accepts color information in internal object notation
  * (such as the aboved functions will convert it into):
@@ -216,7 +243,9 @@ ome.ol3.utils.Conversion.convertColorToSignedInteger = function(color, alpha) {
 			color = ome.ol3.utils.Conversion.convertRgbaColorFormatToObject(color, alpha);
 		else
 			color = ome.ol3.utils.Conversion.convertHexColorFormatToObject(color, alpha);
-	}
+	} else if (ome.ol3.utils.Misc.isArray(color))
+        color = ome.ol3.utils.Conversion.convertColorArrayToObject(color, alpha);
+
 	if ((typeof(color) !== 'object') || // last check of correctness
 		typeof((color = ome.ol3.utils.Conversion.checkColorObjectCorrectness(color))) !== 'object') {
 		return null;
