@@ -55,7 +55,7 @@ describe("Regions", function() {
 	it('featureFactory', function() {
 		var feature = ome.ol3.utils.Regions.featureFactory(polyline_info);
 		assert.instanceOf(feature, ol.Feature);
-		assert.instanceOf(feature.getGeometry(), ome.ol3.geom.PolyLine);
+		assert.instanceOf(feature.getGeometry(), ome.ol3.geom.Line);
 		expect(feature.getGeometry().getFlatCoordinates()).to.eql(
 			[4897,-2756,4885,-2786,4826,-2904]);
 
@@ -67,7 +67,7 @@ describe("Regions", function() {
 
 		feature = ome.ol3.utils.Regions.featureFactory(line_info);
 		assert.instanceOf(feature, ol.Feature);
-		assert.instanceOf(feature.getGeometry(),  ol.geom.LineString);
+		assert.instanceOf(feature.getGeometry(),  ome.ol3.geom.Line);
 		expect(feature.getGeometry().getFlatCoordinates()).to.eql([10,-100,25,-20]);
 
 		feature = ome.ol3.utils.Regions.featureFactory(point_info);
