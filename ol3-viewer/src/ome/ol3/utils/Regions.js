@@ -5,7 +5,6 @@ goog.provide('ome.ol3.utils.Regions');
 
 goog.require('ol.Feature');
 goog.require('ol.geom.Circle');
-goog.require('ol.geom.LineString');
 goog.require('ol.geom.Polygon');
 goog.require('ol.extent');
 
@@ -57,7 +56,7 @@ ome.ol3.utils.Regions.FEATURE_FACTORY_LOOKUP_TABLE = {
             typeof shape['markerEnd'] === 'string' &&
                 shape['markerEnd'] === 'Arrow';
 		var feat = new ol.Feature({"geometry" :
-			new ol.geom.LineString(
+			new ome.ol3.geom.Line(
                 [[shape['x1'], -shape['y1']], [shape['x2'], -shape['y2']]],
                 drawStartArrow, drawEndArrow)});
 		feat['type'] = "line";

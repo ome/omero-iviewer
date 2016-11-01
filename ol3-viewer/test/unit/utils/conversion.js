@@ -117,7 +117,7 @@ describe("Conversion", function() {
 		});
 
 		var lineFeature = new ol.Feature({
-					geometry: new ol.geom.LineString([[0,0],[10,-10]])
+					geometry: ome.ol3.geom.Line([[0,0],[10,-10]])
 		});
 
 		it('lineToJsonObject', function() {
@@ -134,7 +134,7 @@ describe("Conversion", function() {
 		});
 
 		var polylineFeature = new ol.Feature({
-					geometry: new ol.geom.LineString([[0,0],[10,-10], [0,-100]])
+					geometry: new ome.ol3.geom.Line([[0,0],[10,-10], [0,-100]])
 		});
 
 		it('polylineToJsonObject', function() {

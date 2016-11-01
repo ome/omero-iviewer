@@ -362,17 +362,17 @@ ome.ol3.utils.Conversion.rectangleToJsonObject = function(geometry, shape_id) {
 }
 
 /**
- * Turns a shape of type line (ol.geom.LineString) into a json object
+ * Turns a shape of type line (ome.ol3.geom.Line) into a json object
  *
  * @static
  * @function
- * @param {ol.geom.LineString} geometry the line instance
+ * @param {ome.ol3.geom.Line} geometry the line instance
  * @param {number=} shape_id the shape it. if shape is new, it's: -1
  * @return {Object} returns an object ready to be turned into json
  */
 ome.ol3.utils.Conversion.lineToJsonObject = function(geometry, shape_id) {
-	if (!(geometry instanceof ol.geom.LineString))
-		throw "shape type line must be of instance ol.geom.LineString!";
+	if (!(geometry instanceof ome.ol3.geom.Line))
+		throw "shape type line must be of instance ome.ol3.geom.Line!";
 
 	var shapeId = typeof(shape_id) === 'number' ? shape_id : -1;
 
@@ -382,7 +382,7 @@ ome.ol3.utils.Conversion.lineToJsonObject = function(geometry, shape_id) {
 
 	var flatCoords = geometry.getFlatCoordinates();
 	//delegate if we happen to have turned into a polyline
-	if (flatCoords.length > 4)
+	if (geom.isPolyline())
 		return ome.ol3.utils.Conversion.polylineToJson.call(null, geometry, shape_id);
 
 	ret['@type'] = "http://www.openmicroscopy.org/Schemas/ROI/2015-01#Line";
@@ -397,17 +397,17 @@ ome.ol3.utils.Conversion.lineToJsonObject = function(geometry, shape_id) {
 }
 
 /**
- * Turns a shape of type polyline (ol.geom.LineString) into a json object
+ * Turns a shape of type polyline (ome.ol3.geom.Line) into a json object
  *
  * @static
  * @function
- * @param {ol.geom.LineString} geometry the polyline instance
+ * @param {ome.ol3.geom.Line} geometry the polyline instance
  * @param {number=} shape_id the shape it. if shape is new, it's: -1
  * @return {Object} returns an object ready to be turned into json
  */
 ome.ol3.utils.Conversion.polylineToJsonObject = function(geometry, shape_id) {
-	if (!(geometry instanceof ol.geom.LineString))
-		throw "shape type polyline must be of instance ol.geom.LineString!";
+	if (!(geometry instanceof ome.ol3.geom.Line))
+		throw "shape type polyline must be of instance ome.ol3.geom.Line!";
 
 	var shapeId = typeof(shape_id) === 'number' ? shape_id : -1;
 
