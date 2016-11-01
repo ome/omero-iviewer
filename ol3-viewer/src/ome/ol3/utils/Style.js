@@ -7,6 +7,7 @@ goog.require('ol.style.Style');
 goog.require('ol.style.Fill');
 goog.require('ol.style.Stroke');
 goog.require('ol.style.Text');
+goog.require('ol.style.RegularShape');
 
 /**
  * Creates an open layers style object based on the handed in roi shapes info
@@ -129,9 +130,13 @@ ome.ol3.utils.Style.updateStyleFunction = function(feature, regions_reference, f
 		if (oldStyle == null) return;
 		var viewRef = regions_reference.viewer_.viewer_.getView();
 
-		// if we are a function, give us the style now
+		// three possibilities:
+        // we are a style, an array of styles (arrow),
+        // or a style function...
 		if (typeof(oldStyle) === 'function')
 			oldStyle = oldStyle.call(feature, viewRef.getResolution());
+        if (ome.ol3.utils.Misc.isArray(oldStyle))
+            oldStyle = oldStyle[0]; // we want the first one only
 
 		// keep regions reference handy
 		feature['regions'] = regions_reference;
@@ -171,6 +176,7 @@ ome.ol3.utils.Style.updateStyleFunction = function(feature, regions_reference, f
 				return oldStyle; // we are screwed, return old setStyle
 
 			var regions = feature['regions'];
+            var geom = feature.getGeometry();
 			// find present flags for scaling/rotating text
 			var scale_text = regions.scale_text_;
 			var rotate_text = regions.rotate_text_;
@@ -180,7 +186,7 @@ ome.ol3.utils.Style.updateStyleFunction = function(feature, regions_reference, f
 			// is there a text style?
 			var textStyle = oldStyle.getText();
             // if show_comments flag is to false, we only set the text for labels
-            var isLabel = (feature.getGeometry() instanceof ome.ol3.geom.Label);
+            var isLabel = (geom instanceof ome.ol3.geom.Label);
             if (!isLabel && !regions.show_comments_ &&
                     (textStyle instanceof ol.style.Text)) {
                 feature['oldText'] = textStyle.clone();
@@ -225,7 +231,7 @@ ome.ol3.utils.Style.updateStyleFunction = function(feature, regions_reference, f
 								textStyle.getText(), textStyle.getFont(),
 								scale_text ? null : actual_resolution);
 						var newRot = rotate_text ? 0 : 0-rotation;
-						feature.getGeometry().adjustCoordinates(newRot, newDims);
+						geom.adjustCoordinates(newRot, newDims);
 				}
 			}
 
@@ -249,7 +255,43 @@ ome.ol3.utils.Style.updateStyleFunction = function(feature, regions_reference, f
 					oldStyle.stroke_ = null;
 			}
 
-			return oldStyle;
+            var ret = [oldStyle];
+            // arrow heads/tails for lines
+            if (geom instanceof ome.ol3.geom.Line &&
+                    (geom.has_start_arrow_ || geom.has_end_arrow_)) {
+                // get coords for head and tail
+                var coords = geom.getCoordinates();
+                var len = coords.length;
+                var arrowsToDo = [];
+                if (geom.has_start_arrow_)
+                    arrowsToDo.push(
+                        {'start' : coords[len-2], 'end' : coords[len-1]});
+                if (geom.has_end_arrow_)
+                    arrowsToDo.push(
+                        {'start' : coords[1], 'end' : coords[0]});
+
+                for (var a in arrowsToDo) {
+                    var l = arrowsToDo[a];
+                    var dx = l['end'][0] - l['start'][0];
+                    var dy = l['end'][1] - l['start'][1];
+                    var arrowRotation = -Math.atan2(dy, dx) + Math.PI / 2;
+
+                    var arrow = new ol.style.RegularShape(
+                        {
+                          points : 3, radius: 10,
+                          rotateWithView: true,
+                          rotation: arrowRotation,
+                          stroke : oldStyle.getStroke(),
+                          fill : new ol.style.Fill(
+                              { color : oldStyle.getStroke().getColor()})});
+                    var arrowStyle =
+                        new ol.style.Style({
+                            geometry: new ol.geom.Point(l['end']), image: arrow});
+                    ret.push(arrowStyle);
+                };
+            }
+
+            return ret;
 		});
 }
 

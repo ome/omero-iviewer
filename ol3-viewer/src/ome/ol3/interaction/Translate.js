@@ -170,19 +170,7 @@ ome.ol3.interaction.Translate.handleUpEvent_ = function(mapBrowserEvent) {
  * @private
  */
 ome.ol3.interaction.Translate.prototype.featuresAtCoords_ = function(coord) {
-    if (!ome.ol3.utils.Misc.isArray(coord) || coord.length !== 2) return;
-
-    var extent = [coord[0]-1, coord[1]-1, coord[0]+1, coord[1]+1];
-    var hits = [];
-    this.features_.forEach(function(feature) {
-        if (feature.getGeometry() &&
-            (typeof feature['visible'] !== 'boolean' || feature['visible']) &&
-                (typeof feature['state'] !== 'number' ||
-                    feature['state'] !== ome.ol3.REGIONS_STATE.REMOVED) &&
-                    feature.getGeometry().intersectsExtent(extent))
-            hits.push(feature);
-    });
-    var found = ome.ol3.utils.Misc.featuresAtCoords(hits);
+    var found = this.regions_.select_.featuresAtCoords_(coord);
 
     if (this.features_ &&
         ol.array.includes(this.features_.getArray(), found)) return found;

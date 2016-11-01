@@ -221,6 +221,9 @@ ome.ol3.interaction.Draw.prototype.drawShape = function(type) {
 		case "line" :
 			typeFunction = ome.ol3.interaction.Draw.prototype.drawLine_;
 			break;
+        case "arrow":
+			typeFunction = ome.ol3.interaction.Draw.prototype.drawArrow_;
+			break;
 		case "rectangle" :
 			typeFunction = ome.ol3.interaction.Draw.prototype.drawRectangle_;
 			break;
@@ -265,7 +268,35 @@ ome.ol3.interaction.Draw.prototype.drawPolygon_ = function(event) {
  * @param {Object} event the event object for the drawing interaction
  */
 ome.ol3.interaction.Draw.prototype.drawLine_ = function(event) {
-	this.drawShapeCommonCode_('LineString', 'polyline');
+	this.drawShapeCommonCode_('LineString', 'polyline',
+        function(coordinates, opt_geometry) {
+            var geometry = new ome.ol3.geom.Line(coordinates);
+
+            if (opt_geometry) {
+                opt_geometry.setCoordinates(geometry.getCoordinates());
+            }
+
+            return geometry;
+        });
+};
+
+/**
+ * Drawing interaction for (Poly)Lines with arrow heads
+ *
+ * @private
+ * @param {Object} event the event object for the drawing interaction
+ */
+ome.ol3.interaction.Draw.prototype.drawArrow_ = function(event) {
+	this.drawShapeCommonCode_('LineString', 'polyline',
+        function(coordinates, opt_geometry) {
+            var geometry = new ome.ol3.geom.Line(coordinates, true, false);
+
+            if (opt_geometry) {
+                opt_geometry.setCoordinates(geometry.getCoordinates());
+            }
+
+            return geometry;
+        });
 };
 
 /**
@@ -277,7 +308,7 @@ ome.ol3.interaction.Draw.prototype.drawLine_ = function(event) {
 ome.ol3.interaction.Draw.prototype.drawPoint_ = function(event) {
 	this.drawShapeCommonCode_('Point', "point",
 		function(coordinates, opt_geometry) {
-			return new ol.geom.Circle(coordinates, 2);
+			return new ol.geom.Circle(coordinates, 5);
 	});
 };
 

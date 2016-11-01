@@ -61,9 +61,9 @@ describe("Geometries", function() {
 
 	it('createPolyline', function() {
 		var polyline =
-			new ome.ol3.geom.PolyLine([[0,0], [500,400], [600,300]]);
+			new ome.ol3.geom.Line([[0,0], [500,400], [600,300]]);
 
-		assert.instanceOf(polyline, ome.ol3.geom.PolyLine);
+		assert.instanceOf(polyline, ome.ol3.geom.Line);
 		expect(polyline.getFlatCoordinates()).to.eql([0,0,500,400,600,300]);
 
 		// test translation

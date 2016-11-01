@@ -50,8 +50,16 @@ ome.ol3.utils.Regions.FEATURE_FACTORY_LOOKUP_TABLE = {
 		feat.setStyle(ome.ol3.utils.Style.createFeatureStyle(shape));
 		return feat;
 	}, "line" : function(shape) {
+        var drawStartArrow =
+            typeof shape['markerStart'] === 'string' &&
+                shape['markerStart'] === 'Arrow';
+        var drawEndArrow =
+            typeof shape['markerEnd'] === 'string' &&
+                shape['markerEnd'] === 'Arrow';
 		var feat = new ol.Feature({"geometry" :
-			new ol.geom.LineString([[shape['x1'], -shape['y1']], [shape['x2'], -shape['y2']]])});
+			new ol.geom.LineString(
+                [[shape['x1'], -shape['y1']], [shape['x2'], -shape['y2']]],
+                drawStartArrow, drawEndArrow)});
 		feat['type'] = "line";
 		feat.setStyle(ome.ol3.utils.Style.createFeatureStyle(shape));
 		return feat;
@@ -62,7 +70,16 @@ ome.ol3.utils.Regions.FEATURE_FACTORY_LOOKUP_TABLE = {
 		var coords = ome.ol3.utils.Misc.parseSvgStringForPolyShapes(shape['points']);
 		if (coords === null) return null;
 
-		var feat = new ol.Feature({"geometry" : new ome.ol3.geom.PolyLine(coords)});
+        var drawStartArrow =
+            typeof shape['markerStart'] === 'string' &&
+                shape['markerStart'] === 'Arrow';
+        var drawEndArrow =
+            typeof shape['markerEnd'] === 'string' &&
+                shape['markerEnd'] === 'Arrow';
+
+		var feat = new ol.Feature(
+            {"geometry" : new ome.ol3.geom.Line(
+                coords, drawStartArrow, drawEndArrow)});
 		feat['type'] = "polyline";
 		feat.setStyle(ome.ol3.utils.Style.createFeatureStyle(shape));
 		return feat;

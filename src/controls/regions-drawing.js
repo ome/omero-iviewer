@@ -25,6 +25,7 @@ export default class RegionsDrawing extends EventSubscriber {
      * @type {RegionsInfo}
      */
     supported_shapes = [
+        "arrow",
         "rectangle",
         "ellipse",
         "point",
