@@ -240,7 +240,12 @@ ome.ol3.utils.Style.updateStyleFunction = function(feature, regions_reference, f
 			if (selected) {
 				var selStyle = new ol.style.Stroke();
 				selStyle.setColor("rgba(255,255,255,1)");
-				selStyle.setWidth(3);
+                // we use width from old style if (exists)
+                var w =
+                    feature['oldStrokeStyle'] &&
+                        typeof feature['oldStrokeStyle']['width'] === 'number' ?
+                            feature['oldStrokeStyle']['width'] : 3;
+				selStyle.setWidth(w);
 				selStyle.setLineDash([0.1, 5]);
 				oldStyle.stroke_ = selStyle;
 			} else if (feature['oldStrokeStyle']) {
@@ -259,34 +264,29 @@ ome.ol3.utils.Style.updateStyleFunction = function(feature, regions_reference, f
             // arrow heads/tails for lines
             if (geom instanceof ome.ol3.geom.Line &&
                     (geom.has_start_arrow_ || geom.has_end_arrow_)) {
-                // get coords for head and tail
-                var coords = geom.getCoordinates();
-                var len = coords.length;
+
+                var lineStroke = oldStyle.getStroke();
+                var strokeWidth = lineStroke.getWidth() || 1;
+                var arrowBaseWidth =
+                    (strokeWidth * 6 + 9) * actual_resolution;
+
+                // determine which arrows we need
                 var arrowsToDo = [];
-                if (geom.has_start_arrow_)
-                    arrowsToDo.push(
-                        {'start' : coords[len-2], 'end' : coords[len-1]});
-                if (geom.has_end_arrow_)
-                    arrowsToDo.push(
-                        {'start' : coords[1], 'end' : coords[0]});
+                if (geom.has_start_arrow_) arrowsToDo.push(true);
+                if (geom.has_end_arrow_) arrowsToDo.push(false);
 
+                // create arrow head with styling
                 for (var a in arrowsToDo) {
-                    var l = arrowsToDo[a];
-                    var dx = l['end'][0] - l['start'][0];
-                    var dy = l['end'][1] - l['start'][1];
-                    var arrowRotation = -Math.atan2(dy, dx) + Math.PI / 2;
-
-                    var arrow = new ol.style.RegularShape(
-                        {
-                          points : 3, radius: 10,
-                          rotateWithView: true,
-                          rotation: arrowRotation,
-                          stroke : oldStyle.getStroke(),
-                          fill : new ol.style.Fill(
-                              { color : oldStyle.getStroke().getColor()})});
+                    var isHeadArrow = arrowsToDo[a];
+                    var arrow =
+                        geom.getArrowGeometry(
+                            isHeadArrow, arrowBaseWidth, arrowBaseWidth);
                     var arrowStyle =
                         new ol.style.Style({
-                            geometry: new ol.geom.Point(l['end']), image: arrow});
+                            geometry: arrow,
+                            fill: new ol.style.Fill(
+                                    {color: lineStroke.getColor()}),
+                            stroke: lineStroke});
                     ret.push(arrowStyle);
                 };
             }

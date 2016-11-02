@@ -1,6 +1,7 @@
 goog.provide('ome.ol3.geom.Line');
 
 goog.require('ol.geom.LineString');
+goog.require('ol.geom.Polygon');
 
 /**
  * @classdesc
@@ -52,6 +53,55 @@ ome.ol3.geom.Line.prototype.isPolyline = function() {
     if (coords.length > 2) return true;
 
     return false;
+};
+
+/**
+ * Generated the arrow geometry (triangle) for a given direction, base width
+ * and height
+ *
+ * @param {boolean} head true will create a head arrow, false a tail one
+ * @param {number} width the base with of the arrow
+ * @param {number} height the height/length of the arrow
+ * @return {ol.geom.Polygon} the arrowhead triangle
+ * @api stable
+ */
+ome.ol3.geom.Line.prototype.getArrowGeometry = function(head, width, height) {
+    // check params , using reasonable defaults
+    if (typeof head !== 'boolean') head = true;
+    if (typeof width !== 'number' || width <= 0) width = 10;
+    if (typeof height !== 'number' || height <= 0) height = 2* width;
+
+    // we need to half width
+    width /= 2;
+
+    // get coordinates
+    var coords = this.getCoordinates();
+    var coordsLength = coords.length;
+
+    // grab last line segment
+    var index = head ? coordsLength-1 : 1;
+    var line = [coords[index][0] - coords[index-1][0],
+                coords[index][1] - coords[index-1][1]];
+    if (!head) index = 0;
+    var tip = [coords[index][0],coords[index][1]];
+
+    // get unit vector and perpendicular unit vector
+    var magnitude =
+        Math.sqrt(line[0]*line[0] + line[1]*line[1]);
+    var unitLine = [line[0]/magnitude,line[1]/magnitude];
+    var perpLine = [-unitLine[1], unitLine[0]];
+
+    // calculate base points and tip
+    var direction = head ? 1 : -1;
+    var point1 = [tip[0] - direction*height*unitLine[0] - width*perpLine[0],
+                  tip[1] - direction*height*unitLine[1] - width*perpLine[1]];
+    var point2 = [tip[0] - direction*height*unitLine[0] + width*perpLine[0],
+                  tip[1] - direction*height*unitLine[1] + width*perpLine[1]];
+    //var direction = head ? 1 : -1;
+    //tip = [tip[0] + direction*height*unitLine[0],
+    //       tip[1] + direction*height*unitLine[1]];
+
+    return new ol.geom.Polygon([[tip, point1, point2]]);
 };
 
 
