@@ -117,7 +117,7 @@ describe("Conversion", function() {
 		});
 
 		var lineFeature = new ol.Feature({
-					geometry: ome.ol3.geom.Line([[0,0],[10,-10]])
+					geometry: new ome.ol3.geom.Line([[0,0],[10,-10]])
 		});
 
 		it('lineToJsonObject', function() {
