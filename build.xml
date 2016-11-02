@@ -172,17 +172,17 @@
         </exec>
 	</target>
 
-  <target name="prepare-unit-tests">
+  <target name="prepare-unit-tests" depends="clean, compile-debug">
 		<exec dir="${basedir}" executable="npm">
 			<arg line="install mocha chai mocha-phantomjs"/>
 		</exec>
+        <copy file="${debug.name}" tofile="${build.dir}/ol3-viewer-test.js"/>
 	</target>
 
-	<target name="unit-tests" depends="clean, prepare-unit-tests, compile-debug" description="runs unit tests" >
+	<target name="unit-tests" depends="prepare-unit-tests" description="runs unit tests" >
 		<echo>************************************************************************************</echo>
 		<echo>IF PHANTOM.JS or MOCHA.JS or CHAI.JS CANNOT BE FOUND, RUN: 'ant prepare-unit-tests' </echo>
 		<echo>************************************************************************************</echo>
-		<copy file="${debug.name}" tofile="${build.dir}/ol3-viewer-test.js"/>
 		<exec dir="${basedir}/${ant.project.name}/test/unit" executable="${mocha-phantomjs}" >
 			<arg line="suite.html"/>
 		</exec>
