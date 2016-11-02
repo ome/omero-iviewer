@@ -382,7 +382,7 @@ ome.ol3.utils.Conversion.lineToJsonObject = function(geometry, shape_id) {
 
 	var flatCoords = geometry.getFlatCoordinates();
 	//delegate if we happen to have turned into a polyline
-	if (geom.isPolyline())
+	if (geometry.isPolyline())
 		return ome.ol3.utils.Conversion.polylineToJson.call(null, geometry, shape_id);
 
 	ret['@type'] = "http://www.openmicroscopy.org/Schemas/ROI/2015-01#Line";
@@ -417,7 +417,7 @@ ome.ol3.utils.Conversion.polylineToJsonObject = function(geometry, shape_id) {
 
 	var flatCoords = geometry.getFlatCoordinates();
 	//delegate if we happen to have turned into a line
-	if (flatCoords.length < 5)
+	if (!geometry.isPolyline())
 		return ome.ol3.utils.Conversion.lineToJsonObject.call(null, geometry, shape_id);
 
 	ret['@type'] = "http://www.openmicroscopy.org/Schemas/ROI/2015-01#Polyline";

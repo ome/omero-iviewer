@@ -97,6 +97,7 @@ export default class Histogram extends EventSubscriber {
 
         // we fire off a first request to check if backend supports histograms
         this.requestHistogramJson(0, ((data) => {
+            if (this.image_info === null) return;
                 this.image_info.has_histogram = (data !== null);
                 if (this.image_info.has_histogram) this.createHistogramSVG(data);
             }));

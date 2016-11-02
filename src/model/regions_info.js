@@ -29,6 +29,21 @@ export default class RegionsInfo extends EventSubscriber {
     data = null;
 
     /**
+     * a helper array to avoid data iteration. holds ids of selsected shapes
+     * @memberof RegionsInfo
+     * @type {Array.<string>}
+     */
+    selected_shapes = [];
+
+    /**
+     * the json of the copied shapes
+     * (which uses also local storage -if supported)
+     * @memberof RegionsInfo
+     * @type {Array.<objects>}
+     */
+    copied_shapes = null;
+
+    /**
      * the presently used regions modes
      * @memberof RegionsInfo
      * @type {Array.<number>}
@@ -51,6 +66,13 @@ export default class RegionsInfo extends EventSubscriber {
     constructor(image_info) {
         super(image_info.context.eventbus);
         this.image_info = image_info;
+
+        // try to restore localstorage copied shapes
+        try {
+            this.copied_shapes =
+                JSON.parse(
+                    window.localStorage.getItem("viewer-ng.copied_shapes"));
+        } catch(ignored) {}
     }
 
     /**
@@ -107,6 +129,12 @@ export default class RegionsInfo extends EventSubscriber {
         let shape = this.data.get(id);
         if (typeof shape !== 'object') return;
         if (typeof shape[property] !== 'undefined') shape[property] = value;
+        if (property === 'selected' && value) this.selected_shapes.push(id);
+        else if ((property === 'selected' && !value) ||
+                    (property === 'deleted' && value)) {
+            let i = this.selected_shapes.indexOf(id);
+            if (i !== -1) this.selected_shapes.splice(i, 1);
+        }
     }
 
     /**
