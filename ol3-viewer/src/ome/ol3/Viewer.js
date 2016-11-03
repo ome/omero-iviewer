@@ -1245,8 +1245,14 @@ ome.ol3.Viewer.prototype.generateShapes =
 	if (this.getRegionsLayer()) {
 		// we run updateStyle over the shapes
 		for (var s in generatedShapes) {
+            var f = generatedShapes[s];
+            // and associate them to the present z/t
+            var theT = this.getDimensionIndex('t');
+            var theZ = this.getDimensionIndex('z');
+            f['theT'] = theT;
+            f['theZ'] = theZ;
+            f['theC'] = -1;
 			// in case we got created in a rotated view
-			var f = generatedShapes[s];
 			var res = this.viewer_.getView().getResolution();
 			var rot = this.viewer_.getView().getRotation();
 			if (f.getGeometry() instanceof ome.ol3.geom.Label && rot !== 0 &&
@@ -1255,6 +1261,23 @@ ome.ol3.Viewer.prototype.generateShapes =
 				ome.ol3.utils.Style.updateStyleFunction(f, this.regions_, true);
 		}
 		this.getRegions().addFeatures(generatedShapes);
+
+        // notify about generation
+        var eventbus = this.eventbus_;
+        var config_id = this.getTargetId();
+        if (eventbus)
+            setTimeout(function() {
+                var newRegionsObject =
+                    ome.ol3.utils.Conversion.toJsonObject(
+                        new ol.Collection(generatedShapes), true, true);
+                if (typeof newRegionsObject !== 'object' ||
+                    !ome.ol3.utils.Misc.isArray(newRegionsObject['rois']) ||
+                    newRegionsObject['rois'].length === 0) return;
+                eventbus.publish("REGIONS_SHAPE_DRAWN",
+                    { "config_id": config_id,
+                      "shapes": newRegionsObject['rois'] });
+            },25);
+
 	} else this.addRegions({"features" : generatedShapes});
 };
 

@@ -2,7 +2,8 @@
 import Context from '../app/context';
 import {REGIONS_MODE} from '../utils/constants';
 import {
-    REGIONS_CHANGE_MODES, REGIONS_SET_PROPERTY} from '../events/events';
+    REGIONS_CHANGE_MODES, REGIONS_SET_PROPERTY, REGIONS_PASTE_SHAPES
+} from '../events/events';
 import {inject, customElement, bindable} from 'aurelia-framework';
 
 /**
@@ -126,7 +127,9 @@ export default class RegionsEdit {
      * @memberof RegionsEdit
      */
     pasteShapes() {
-        this.regions_info.copied_shapes.map((def) => console.info(def));
-        alert("not implemented yet");
+        this.context.publish(
+            REGIONS_PASTE_SHAPES,
+            {config_id : this.regions_info.image_info.config_id,
+                shapes : this.regions_info.copied_shapes});
     }
 }

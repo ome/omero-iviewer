@@ -485,9 +485,9 @@ ome.ol3.source.Regions.prototype.forEachFeatureInExtent =
         var viewerT = this.viewer_.getDimensionIndex('t');
         var viewerZ = this.viewer_.getDimensionIndex('z');
         var viewerCs = this.viewer_.getDimensionIndex('c');
-        var shapeT = feature['theT'];
-        var shapeZ = feature['theZ'];
-        var shapeC = feature['theC'];
+        var shapeT = typeof feature['theT'] === 'number' ? feature['theT'] : -1;
+        var shapeZ = typeof feature['theZ'] === 'number' ? feature['theZ'] : -1;
+        var shapeC = typeof feature['theC'] === 'number' ? feature['theC'] : -1;
 
         // whenever we have a dimension that the shape belongs but doesn't
         // correspond with the viewer's present settings

@@ -256,8 +256,16 @@ ome.ol3.utils.Regions.generateRegions =
 	var availableHeight = ol.extent.getHeight(extent);
 	if (availableWidth === 0 || availableHeight === 0 ||
 		 bboxWidth > availableWidth || bboxHeight > availableHeight) {
-		console.error("the protoype shape to be generated does not fit into the given extent!");
-		return null;
+		var deltaWidth = bboxWidth - availableWidth;
+        var deltaHeight = bboxHeight - availableHeight;
+        var higherOfTheTwo =
+            deltaWidth > deltaHeight ? deltaWidth : deltaHeight;
+        var scaleFactor =
+            deltaWidth === higherOfTheTwo ?
+                availableWidth / bboxWidth : availableHeight / bboxHeight;
+        prototypeFeature.getGeometry().scale(scaleFactor);
+        bboxWidth = parseInt(bboxWidth * scaleFactor) - 1;
+        bboxHeight = parseInt(bboxHeight * scaleFactor) - 1;
 	}
 
 	var ret = []; // our return array

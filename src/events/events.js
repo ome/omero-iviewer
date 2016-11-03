@@ -24,6 +24,8 @@ export const REGIONS_SHAPE_DRAWN = "REGIONS_SHAPE_DRAWN";
 export const REGIONS_CHANGE_MODES = "REGIONS_CHANGE_MODES";
 /** whenever comments ought to be shown/hidden */
 export const REGIONS_SHOW_COMMENTS = "REGIONS_SHOW_COMMENTS";
+/** whenever shape definitions get copied */
+export const REGIONS_PASTE_SHAPES = "REGIONS_PASTE_SHAPES";
 /** Retrieves the viewer image settings */
 export const VIEWER_IMAGE_SETTINGS = "VIEWER_IMAGE_SETTINGS";
 /** whenever the histogram range was updated */

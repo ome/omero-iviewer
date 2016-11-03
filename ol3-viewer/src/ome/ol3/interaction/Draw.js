@@ -168,7 +168,7 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                     eventbus.publish("REGIONS_SHAPE_DRAWN",
                         { "config_id": config_id,
                           "shapes": newRegionsObject['rois'] });
-                },0);
+                },25);
         }
 
         this.endDrawingInteraction();

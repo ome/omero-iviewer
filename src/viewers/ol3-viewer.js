@@ -13,8 +13,7 @@ import {
     REGIONS_SET_PROPERTY, REGIONS_PROPERTY_CHANGED,
     VIEWER_IMAGE_SETTINGS, IMAGE_VIEWER_SPLIT_VIEW,
     REGIONS_DRAW_SHAPE, REGIONS_CHANGE_MODES, REGIONS_SHOW_COMMENTS,
-    EventSubscriber
-} from '../events/events';
+    REGIONS_PASTE_SHAPES, EventSubscriber } from '../events/events';
 
 
 /**
@@ -67,6 +66,8 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.changeRegionsModes(params)],
         [REGIONS_DRAW_SHAPE,
             (params={}) => this.drawShape(params)],
+        [REGIONS_PASTE_SHAPES,
+                (params={}) => this.pasteShapes(params)],
         [REGIONS_SHOW_COMMENTS,
             (params={}) => this.showComments(params)]];
 
@@ -285,6 +286,26 @@ export default class Ol3Viewer extends EventSubscriber {
         else if (prop === 'state')
             this.deleteShapes(params);
      }
+
+     /**
+      * 'Pastes' copied shapes by generating new ones from given shape json
+      *
+      * @param {Object} params the event notification parameters
+      * @memberof Ol3Viewer
+      */
+      pasteShapes(params = {}) {
+          //we want only notifications that concern us
+          // and need at least one shape definition in an array
+          if (params.config_id !== this.config_id ||
+              !Misc.isArray(params.shapes) || params.shapes.length === 0) return;
+
+          params.shapes.map(
+              (def) => {
+                  try {
+                      this.viewer.generateShapes(
+                          Object.assign({},def),1, true);
+                  } catch(ignored) {}});
+      }
 
      /**
       * Changes the deleted state of shapes

@@ -328,6 +328,23 @@ ome.ol3.geom.Ellipse.prototype.translate = function(deltaX, deltaY) {
 };
 
 /**
+ * First scale then store the newly scaled coords
+ *
+ * @private
+ */
+ome.ol3.geom.Ellipse.prototype.scale = function(factor) {
+	// delegate
+    if (this.transform_) {
+        // Note: do this when needed for generation
+        this.setCoordinates([this.getPolygonCoords()]);
+    } else {
+        ol.geom.SimpleGeometry.prototype.scale.call(this, factor);
+        var radius = this.getRadius();
+        this.setRadius([radius[0] * factor, radius[1] * factor])
+    }
+};
+
+/**
  * Make a complete copy of the geometry.
  * @return {ome.ol3.geom.Ellipse} Clone.
  */

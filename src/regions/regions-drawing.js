@@ -86,7 +86,7 @@ export default class RegionsDrawing extends EventSubscriber {
                     newShape.visible = true;
                     newShape.selected = false;
                     newShape.deleted = false;
-                    newShape.modified = false;
+                    newShape.modified = true;
                     this.regions_info.data.set(newShape.shape_id, newShape);
                 });
     }
