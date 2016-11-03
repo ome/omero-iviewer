@@ -182,4 +182,43 @@ export default class RegionsInfo extends EventSubscriber {
                 }, error : (error) => this.ready = false
         });
     }
+
+    /**
+     * A very simple filtering based on properties and their
+     * supposed, corresponding values using an implicit logical AND to chain them
+     * If a pre-selected id list is supplied
+     * only shapes within that list are considered
+     * If no params are given all ids are returned
+     *
+     * @memberof RegionsInfo
+     * @param {Array.<string>} properties an array of property names
+     * @param {number|string|Array|boolean|Object} values the values to filter for
+     * @param {Array.<ids>|null} an optional array of ids of the form: roi:shape-id
+     * @return {Array.<ids>} an array of ids for shapes that satisfy the filter
+     */
+    unsophisticatedShapeFilter(properties=[], values=[], ids=null) {
+        let ret = [];
+        if (!Misc.isArray(properties) || !Misc.isArray(values) ||
+                properties.length !== values.length) return ret;
+
+        let filter = (value) => {
+            for (let i=0;i<properties.length;i++) {
+                if (typeof value[properties[i]] === 'undefined') continue;
+                if (value[properties[i]] !== values[i]) return false;
+            }
+            return true;
+        };
+
+        let hasIdsForFilter = Misc.isArray(ids);
+        // iterate over all shapes
+        this.data.forEach(
+            (value, key) => {
+                if (hasIdsForFilter && ids.indexOf(key) !== -1 && filter(value))
+                    ret.push(key);
+                else if (!hasIdsForFilter && filter(value)) ret.push(key);
+        });
+
+        return ret;
+    }
+
 }

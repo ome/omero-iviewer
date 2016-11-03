@@ -13,14 +13,14 @@ import {REGIONS_DRAW_SHAPE, REGIONS_SHAPE_DRAWN,
 @inject(Context)
 export default class RegionsDrawing extends EventSubscriber {
     /**
-     * a reference to the image config
+     * a bound reference to regions_info
      * @memberof RegionsDrawing
      * @type {RegionsInfo}
      */
     @bindable regions_info = null;
 
     /**
-     * a reference to the image config
+     * a list of supported shapes for iteration
      * @memberof RegionsDrawing
      * @type {RegionsInfo}
      */

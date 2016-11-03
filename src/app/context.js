@@ -63,6 +63,17 @@ export default class Context {
      */
      show_scalebar = false;
 
+     /**
+      * application wide keyhandlers.
+      * see addKeyListener/removeKeyListener
+      * entries in the map are of the following format
+      * e.g.: key: 65, value: {func: this.selectAllShapes, args: [true]}
+      *
+      * @memberof Context
+      * @type {Map}
+      */
+     key_listeners = new Map();
+
     /**
      * @constructor
      * @param {EventAggregator} eventbus the aurelia event aggregator
@@ -98,6 +109,56 @@ export default class Context {
         // we set the initial image as the default (if given)
         let initial_image_config = this.addImageConfig(initial_image_id);
         this.selected_config = initial_image_config.id;
+        // set up key listener
+        this.establishKeyDownListener();
+    }
+
+    /**
+     * Creates an app wide key down listener
+     * that will listen for key presses registered via addKeyListener
+     *
+     * @memberof Context
+     */
+    establishKeyDownListener() {
+        // we do this only once
+        if (window.onkeydown === null)
+            window.onkeydown = (event) => {
+                try {
+                    let keyHandler =
+                        this.key_listeners.get(event.keyCode);
+                    if (keyHandler) {
+                        keyHandler(event);
+                        // important: prevents browser specific handlers
+                        return false;
+                    }
+                } catch(whatever) {}
+            };
+    }
+
+    /**
+     * Registers an app wide key handler for individual keys for onkeydown
+     *
+     * @memberof Context
+     * @param {number} key the numeric key code to listen for
+     * @param {function} action a function
+     */
+    addKeyListener(key, action) {
+        // some basic checks as to validity of key and key_handler_def
+        // we need a numeric key and a function at a minimum
+        if (typeof key !== 'number' || typeof action !== 'function') return;
+
+        this.key_listeners.set(key, action);
+    }
+
+    /**
+     * Unregisters a keydown handler for a particular key
+     *
+     * @param {number} key the key code associated with the listener
+     * @memberof Context
+     */
+    removeKeyListener(key) {
+        if (typeof key !== 'number') return;
+        this.key_listeners.delete(key);
     }
 
     /**
