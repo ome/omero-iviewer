@@ -432,6 +432,10 @@ ome.ol3.utils.Conversion.polylineToJsonObject = function(geometry, shape_id) {
 			ret['Points'] += " ";
 		ret['Points'] += flatCoords[i] + "," + (-flatCoords[i+1]);
 	}
+
+    if (geometry.has_start_arrow_) ret['MarkerStart'] = "Arrow";
+    if (geometry.has_end_arrow_) ret['MarkerEnd'] = "Arrow";
+
 	return ret;
 }
 

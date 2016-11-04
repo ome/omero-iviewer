@@ -31,12 +31,6 @@ ome.ol3.interaction.Translate = function(regions_reference) {
 	this.handleUpEvent_ = ome.ol3.interaction.Translate.handleUpEvent_;
 
 	/**
-   * @type {string|null}
-   * @private
-   */
-  this.previousCursor_ = null;
-
-	/**
    * @type {ol.Collection.<ol.Feature>}
    * @private
    */
@@ -109,24 +103,6 @@ ome.ol3.interaction.Translate.handleMoveEvent_ = function(mapBrowserEvent) {
 				typeof(mapBrowserEvent.originalEvent.which) === 'number' &&
 				mapBrowserEvent.originalEvent.which === 3))
 		return;
-
-  var elem = mapBrowserEvent.map.getTargetElement();
-  var intersectingFeature = this.featuresAtCoords_(mapBrowserEvent.pixel);
-
-  if (intersectingFeature) {
-    this.previousCursor_ = elem.style.cursor;
-    // WebKit browsers don't support the grab icons without a prefix
-    elem.style.cursor = this.lastCoordinate_ ?
-        '-webkit-grabbing' : '-webkit-grab';
-
-       // Thankfully, attempting to set the standard ones will silently fail,
-       // keeping the prefixed icons
-       elem.style.cursor = this.lastCoordinate_ ?  'grabbing' : 'grab';
-  } else {
-    elem.style.cursor = this.previousCursor_ !== null ?
-        this.previousCursor_ : '';
-    this.previousCursor_ = null;
-  }
 };
 
 /**

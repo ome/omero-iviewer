@@ -111,5 +111,7 @@ ome.ol3.geom.Line.prototype.getArrowGeometry = function(head, width, height) {
  * @api stable
  */
 ome.ol3.geom.Line.prototype.clone = function() {
-  return new ome.ol3.geom.Line(this.getCoordinates().slice());
+  return new ome.ol3.geom.Line(
+      this.getCoordinates().slice(),
+        this.has_start_arrow_, this.has_end_arrow_);
 };
