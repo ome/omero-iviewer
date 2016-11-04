@@ -266,6 +266,7 @@ ome.ol3.utils.Regions.generateRegions =
         prototypeFeature.getGeometry().scale(scaleFactor);
         bboxWidth = parseInt(bboxWidth * scaleFactor) - 1;
         bboxHeight = parseInt(bboxHeight * scaleFactor) - 1;
+        bboxPrototype = prototypeFeature.getGeometry().getExtent();
 	}
 
 	var ret = []; // our return array
@@ -274,12 +275,9 @@ ome.ol3.utils.Regions.generateRegions =
 	// this facilitates matters even for randomized placement
 	// bear in mind that internally our y axes is inverterted while the handed
 	// in extent will be strictly positive!
-	var upperLeftCorner = ol.extent.getTopLeft(extent);
-	var bottomRightCorner = ol.extent.getBottomRight(extent);
 	var upperLeftCornerOfPrototype = ol.extent.getTopLeft(bboxPrototype);
-	prototypeFeature.getGeometry().translate(
-		-(upperLeftCornerOfPrototype[0]-upperLeftCorner[0]),
-		-(upperLeftCornerOfPrototype[1]+bottomRightCorner[1]));
+    prototypeFeature.getGeometry().translate(
+        -upperLeftCornerOfPrototype[0], -upperLeftCornerOfPrototype[1]);
 
 	// this if deals with randomized placement
 	if (random_placement) {
