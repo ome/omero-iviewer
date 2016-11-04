@@ -84,7 +84,7 @@ ome.ol3.interaction.Translate.handleDownEvent_ = function(mapBrowserEvent) {
 				mapBrowserEvent.originalEvent.which === 3))
 		return false;
 
-  this.lastFeature_ = this.featuresAtCoords_(mapBrowserEvent.coordinate);
+  this.lastFeature_ = this.featuresAtCoords_(mapBrowserEvent.pixel);
   if (!this.lastCoordinate_ && this.lastFeature_) {
     this.lastCoordinate_ = mapBrowserEvent.coordinate;
     ome.ol3.interaction.Translate.handleMoveEvent_.call(this, mapBrowserEvent);
@@ -111,16 +111,9 @@ ome.ol3.interaction.Translate.handleMoveEvent_ = function(mapBrowserEvent) {
 		return;
 
   var elem = mapBrowserEvent.map.getTargetElement();
-  var intersectingFeature = this.featuresAtCoords_(mapBrowserEvent.coordinate);
+  var intersectingFeature = this.featuresAtCoords_(mapBrowserEvent.pixel);
 
   if (intersectingFeature) {
-    var isSelected = false;
-
-    if (this.features_ &&
-        ol.array.includes(this.features_.getArray(), intersectingFeature)) {
-      isSelected = true;
-    }
-
     this.previousCursor_ = elem.style.cursor;
     // WebKit browsers don't support the grab icons without a prefix
     elem.style.cursor = this.lastCoordinate_ ?

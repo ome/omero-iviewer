@@ -141,9 +141,8 @@ ome.ol3.interaction.Select.prototype.clearSelection = function() {
  */
 ome.ol3.interaction.Select.prototype.handleRightClick = function(event) {
 
-	var position = [event.offsetX,event.offsetY];
-    var coord = this.viewer_.viewer_.getCoordinateFromPixel(position);
-    var selected = this.select_.featuresAtCoords_(coord);
+	var pixel = [event.offsetX,event.offsetY];
+    var selected = this.select_.featuresAtCoords_(pixel);
 
 	this.select_.showContextMenu(position, selected);
 };
@@ -168,7 +167,7 @@ ome.ol3.interaction.Select.handleEvent = function(mapBrowserEvent) {
 				mapBrowserEvent.originalEvent.which === 3)
 		return true;
 
-	var selected = this.featuresAtCoords_(mapBrowserEvent.coordinate);
+	var selected = this.featuresAtCoords_(mapBrowserEvent.pixel);
 
 	var oldSelectedFlag =
         selected && typeof selected['selected'] === 'boolean' ?
@@ -186,19 +185,27 @@ ome.ol3.interaction.Select.handleEvent = function(mapBrowserEvent) {
 
 /**
  * Tests to see if the given coordinates intersects any of our features.
- * @param {ol.Coordinate} coord coordinate to test for intersection.
+ * @param {Array.<number>} pixel pixel coordinate to test for intersection.
  * @return {ol.Feature} Returns the feature found at the specified pixel
  * coordinates.
  * @private
  */
-ome.ol3.interaction.Select.prototype.featuresAtCoords_ = function(coord) {
-    if (!ome.ol3.utils.Misc.isArray(coord) || coord.length !== 2) return;
+ome.ol3.interaction.Select.prototype.featuresAtCoords_ = function(pixel) {
+    if (!ome.ol3.utils.Misc.isArray(pixel) || pixel.length !== 2) return;
 
-    var extent = [coord[0]-5, coord[1]-5, coord[0]+5, coord[1]+5];
+    var tolerance = 5; // 5 pixel buffer
+    var v = this.regions_.viewer_.viewer_;
+    var min = v.getCoordinateFromPixel(
+                [pixel[0]-tolerance, pixel[1]+tolerance]);
+    var max = v.getCoordinateFromPixel(
+            [pixel[0]+tolerance, pixel[1]-tolerance]);
+    var extent = [min[0], min[1], max[0], max[1]];
     var hits = [];
 
     this.regions_.forEachFeatureInExtent(
-        extent, function(feat) {hits.push(feat);});
+        extent, function(feat) {
+            if (feat.getGeometry().intersectsExtent(extent))
+                hits.push(feat);});
 
     return ome.ol3.utils.Misc.featuresAtCoords(hits);
 };
