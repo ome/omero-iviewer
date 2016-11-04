@@ -144,7 +144,7 @@ ome.ol3.interaction.Select.prototype.handleRightClick = function(event) {
 	var pixel = [event.offsetX,event.offsetY];
     var selected = this.select_.featuresAtCoords_(pixel);
 
-	this.select_.showContextMenu(position, selected);
+	this.select_.showContextMenu(pixel, selected);
 };
 
 /**
