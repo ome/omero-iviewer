@@ -65,19 +65,31 @@ def updateOrSaveRois(request, conn=None, **kwargs):
 	try:
 		for r in rois:
 			roi = rois.get(r)
-			#marshal, associate with image and save
+
+			#marshal,associate with image and save/update
 			decoder = omero_marshal.get_decoder(roi.get("@type"))
 			decodedRoi = decoder.decode(roi);
 			decodedRoi.setImage(image._obj)
 			decodedRoi = updateService.saveAndReturnObject(decodedRoi)
-			if decodedRoi is None:
-				return JsonResponse({ "error" : "Failed to save roi!"})
+
 			i = 0
+			hasDeletedShapes = False
 			for s in decodedRoi.copyShapes():
 				oldId = roi['shapes'][i].get('oldId', None)
+				delete = roi['shapes'][i].get('markedForDeletion', None)
+				# we delete in here so as to not create another loop
+				if delete is not None:
+					hasDeletedShapes = True
+					decodedRoi.removeShape(s);
 				if oldId is not None:
 					retIds[oldId] = str(decodedRoi.getId().val) + ":" + str(s.getId().val);
 				i += 1
+			# update if we removed shapes
+			if hasDeletedShapes:
+				decodedRoi = updateService.saveAndReturnObject(decodedRoi)
+				#if roi is empty => delete it as well
+				if len(decodedRoi.copyShapes()) == 0:
+					conn.deleteObjects("Roi", [decodedRoi.id.val], wait=False)
 			count += 1
 		return JsonResponse({"ids": retIds})
 	except Exception as marshalOrPersistenceException:

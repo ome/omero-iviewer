@@ -126,15 +126,23 @@ export default class RegionsInfo extends EventSubscriber {
                 typeof property !== 'string' ||
                 typeof value === 'undefined') return;
 
+        // if we do not find a matching shape for the id => bye
         let shape = this.data.get(id);
         if (typeof shape !== 'object') return;
+
+        // if the shape shape has a property of that given name
+        // set its new value
         if (typeof shape[property] !== 'undefined') shape[property] = value;
+        // modify the selected set for actions that influence it
         if (property === 'selected' && value) this.selected_shapes.push(id);
         else if ((property === 'selected' && !value) ||
                     (property === 'deleted' && value)) {
             let i = this.selected_shapes.indexOf(id);
             if (i !== -1) this.selected_shapes.splice(i, 1);
         }
+        // for deleted shapes that were new, we remove them instantly
+        if (property === 'deleted' && value &&
+                typeof shape.is_new !== 'undefined') this.data.delete(id);
     }
 
     /**

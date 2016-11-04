@@ -77,7 +77,7 @@ describe("Conversion", function() {
 					pointFeature.getGeometry(),255);
 			assert(jsonObject['@id'] === 255);
 			assert(jsonObject['@type'] ===
-			 	"http://www.openmicroscopy.org/Schemas/ROI/2015-01#Point");
+			 	"http://www.openmicroscopy.org/Schemas/OME/2016-06#Point");
 			assert(jsonObject['X'] === 10);
 			assert(jsonObject['Y'] === 10);
 		});
@@ -92,7 +92,7 @@ describe("Conversion", function() {
 					ellipseFeature.getGeometry(),333);
 			assert(jsonObject['@id'] === 333);
 			assert(jsonObject['@type'] ===
-			 	"http://www.openmicroscopy.org/Schemas/ROI/2015-01#Ellipse");
+			 	"http://www.openmicroscopy.org/Schemas/OME/2016-06#Ellipse");
 			assert(jsonObject['X'] === 100);
 			assert(jsonObject['Y'] === 100);
 			assert(jsonObject['RadiusX'] === 20);
@@ -109,7 +109,7 @@ describe("Conversion", function() {
 					rectangleFeature.getGeometry(),123);
 			assert(jsonObject['@id'] === 123);
 			assert(jsonObject['@type'] ===
-			 	"http://www.openmicroscopy.org/Schemas/ROI/2015-01#Rectangle");
+			 	"http://www.openmicroscopy.org/Schemas/OME/2016-06#Rectangle");
 			assert(jsonObject['X'] === 33);
 			assert(jsonObject['Y'] === 77);
 			assert(jsonObject['Width'] === 20);
@@ -126,7 +126,7 @@ describe("Conversion", function() {
 					lineFeature.getGeometry(),673);
 			assert(jsonObject['@id'] === 673);
 			assert(jsonObject['@type'] ===
-			 	"http://www.openmicroscopy.org/Schemas/ROI/2015-01#Line");
+			 	"http://www.openmicroscopy.org/Schemas/OME/2016-06#Line");
 			assert(jsonObject['X1'] === 0);
 			assert(jsonObject['Y1'] === 0);
 			assert(jsonObject['X2'] === 10);
@@ -143,7 +143,7 @@ describe("Conversion", function() {
 					polylineFeature.getGeometry(),342);
 			assert(jsonObject['@id'] === 342);
 			assert(jsonObject['@type'] ===
-			 	"http://www.openmicroscopy.org/Schemas/ROI/2015-01#Polyline");
+			 	"http://www.openmicroscopy.org/Schemas/OME/2016-06#Polyline");
 			assert(jsonObject['Points'] === '0,0 10,10 0,100');
 		});
 
@@ -157,7 +157,7 @@ describe("Conversion", function() {
 					labelFeature.getGeometry(),99);
 			assert(jsonObject['@id'] === 99);
 			assert(jsonObject['@type'] ===
-			 	"http://www.openmicroscopy.org/Schemas/ROI/2015-01#Label");
+			 	"http://www.openmicroscopy.org/Schemas/OME/2016-06#Label");
 			assert(jsonObject['X'] === 500);
 			assert(jsonObject['Y'] === 66);
 		});
@@ -173,7 +173,7 @@ describe("Conversion", function() {
 					polygonFeature.getGeometry(),4332);
 			assert(jsonObject['@id'] === 4332);
 			assert(jsonObject['@type'] ===
-			 	"http://www.openmicroscopy.org/Schemas/ROI/2015-01#Polygon");
+			 	"http://www.openmicroscopy.org/Schemas/OME/2016-06#Polygon");
 			assert(jsonObject['Points'] === '0,0 10,10 0,100 0,0');
 		});
 
@@ -203,7 +203,7 @@ describe("Conversion", function() {
 				labelFeature, jsonObject);
 			assert(jsonObject['@id'] === 6);
 			assert(jsonObject['@type'] ===
-			 	"http://www.openmicroscopy.org/Schemas/ROI/2015-01#Label");
+			 	"http://www.openmicroscopy.org/Schemas/OME/2016-06#Label");
 			assert(jsonObject['X'] === 500);
 			assert(jsonObject['Y'] === 66);
 			assert(jsonObject['Text'] === "unit test");
@@ -229,7 +229,7 @@ describe("Conversion", function() {
 
 			assert(jsonObject['@id'] === 3);
 			assert(jsonObject['@type'] ===
-			 	"http://www.openmicroscopy.org/Schemas/ROI/2015-01#Rectangle");
+			 	"http://www.openmicroscopy.org/Schemas/OME/2016-06#Rectangle");
 			assert(jsonObject['X'] === 33);
 			assert(jsonObject['Y'] === 77);
 			assert(jsonObject['Width'] === 20);
@@ -276,16 +276,16 @@ describe("Conversion", function() {
 
 			assert(jsonObject['count'] === 3);
 			assert(jsonObject['rois']['1']['@type'] ===
-				"http://www.openmicroscopy.org/Schemas/ROI/2015-01#ROI");
+				"http://www.openmicroscopy.org/Schemas/OME/2016-06#ROI");
 			assert(jsonObject['rois']['1']['shapes'][0]['@id'] === 1);
 			assert(jsonObject['rois']['1']['shapes'][0]['@type'] ===
-				"http://www.openmicroscopy.org/Schemas/ROI/2015-01#Label");
+				"http://www.openmicroscopy.org/Schemas/OME/2016-06#Label");
 			assert(jsonObject['rois']['-1']['@type'] ===
-				"http://www.openmicroscopy.org/Schemas/ROI/2015-01#ROI");
+				"http://www.openmicroscopy.org/Schemas/OME/2016-06#ROI");
 			assert(jsonObject['rois']['-1']['shapes'][0]['@type'] ===
-				"http://www.openmicroscopy.org/Schemas/ROI/2015-01#Rectangle");
+				"http://www.openmicroscopy.org/Schemas/OME/2016-06#Rectangle");
 			assert(jsonObject['rois']['-1']['shapes'][1]['@type'] ===
-				"http://www.openmicroscopy.org/Schemas/ROI/2015-01#Point");
+				"http://www.openmicroscopy.org/Schemas/OME/2016-06#Point");
 
 			// test variation: each shape gets its own roi
 			var jsonObject =
@@ -293,17 +293,17 @@ describe("Conversion", function() {
 
 			assert(jsonObject['count'] === 3);
 			assert(jsonObject['rois']['1']['@type'] ===
-				"http://www.openmicroscopy.org/Schemas/ROI/2015-01#ROI");
+				"http://www.openmicroscopy.org/Schemas/OME/2016-06#ROI");
 			assert(jsonObject['rois']['1']['shapes'][0]['@id'] === 1);
 			assert(jsonObject['rois']['1']['shapes'][0]['@type'] ===
-				"http://www.openmicroscopy.org/Schemas/ROI/2015-01#Label");
+				"http://www.openmicroscopy.org/Schemas/OME/2016-06#Label");
 			assert(jsonObject['rois']['-1']['@type'] ===
-				"http://www.openmicroscopy.org/Schemas/ROI/2015-01#ROI");
+				"http://www.openmicroscopy.org/Schemas/OME/2016-06#ROI");
 			assert(jsonObject['rois']['-1']['shapes'][0]['@type'] ===
-				"http://www.openmicroscopy.org/Schemas/ROI/2015-01#Rectangle");
+				"http://www.openmicroscopy.org/Schemas/OME/2016-06#Rectangle");
 			assert(jsonObject['rois']['-2']['@type'] ===
-				"http://www.openmicroscopy.org/Schemas/ROI/2015-01#ROI");
+				"http://www.openmicroscopy.org/Schemas/OME/2016-06#ROI");
 			assert(jsonObject['rois']['-2']['shapes'][0]['@type'] ===
-				"http://www.openmicroscopy.org/Schemas/ROI/2015-01#Point");
+				"http://www.openmicroscopy.org/Schemas/OME/2016-06#Point");
 		});
 });

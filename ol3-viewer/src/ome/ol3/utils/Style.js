@@ -239,13 +239,13 @@ ome.ol3.utils.Style.updateStyleFunction = function(feature, regions_reference, f
 				typeof(feature['selected'] === 'boolean') ? feature['selected'] : false;
 			if (selected) {
 				var selStyle = new ol.style.Stroke();
-				selStyle.setColor("rgba(255,255,255,1)");
+				selStyle.setColor("rgba(255,0,0,1)");
                 // we use width from old style if (exists)
                 var w =
                     feature['oldStrokeStyle'] &&
                         typeof feature['oldStrokeStyle']['width'] === 'number' ?
                             feature['oldStrokeStyle']['width'] : 3;
-				selStyle.setWidth(w);
+				selStyle.setWidth(w+1);
 				selStyle.setLineDash([0.1, 5]);
 				oldStyle.stroke_ = selStyle;
 			} else if (feature['oldStrokeStyle']) {

@@ -289,7 +289,7 @@ ome.ol3.utils.Conversion.pointToJsonObject = function(geometry, shape_id) {
 	if (shapeId >= 0)
 		ret['@id'] = shapeId;
 
-	ret['@type'] = "http://www.openmicroscopy.org/Schemas/ROI/2015-01#Point";
+	ret['@type'] = "http://www.openmicroscopy.org/Schemas/OME/2016-06#Point";
 
 	var center = geometry.getCenter();
 	ret['X'] = center[0];
@@ -317,7 +317,7 @@ ome.ol3.utils.Conversion.ellipseToJsonObject = function(geometry, shape_id) {
 	if (shapeId >= 0)
 		ret['@id'] = shapeId;
 
-	ret['@type'] = "http://www.openmicroscopy.org/Schemas/ROI/2015-01#Ellipse";
+	ret['@type'] = "http://www.openmicroscopy.org/Schemas/OME/2016-06#Ellipse";
 
 	var center = geometry.getCenter();
 	ret['X'] = center[0];
@@ -349,7 +349,7 @@ ome.ol3.utils.Conversion.rectangleToJsonObject = function(geometry, shape_id) {
 	if (shapeId >= 0)
 		ret['@id'] = shapeId;
 
-	ret['@type'] = "http://www.openmicroscopy.org/Schemas/ROI/2015-01#Rectangle";
+	ret['@type'] = "http://www.openmicroscopy.org/Schemas/OME/2016-06#Rectangle";
 
 	var topLeftCorner = geometry.getUpperLeftCorner();
 	ret['X'] = topLeftCorner[0];
@@ -383,15 +383,19 @@ ome.ol3.utils.Conversion.lineToJsonObject = function(geometry, shape_id) {
 	var flatCoords = geometry.getFlatCoordinates();
 	//delegate if we happen to have turned into a polyline
 	if (geometry.isPolyline())
-		return ome.ol3.utils.Conversion.polylineToJson.call(null, geometry, shape_id);
+		return ome.ol3.utils.Conversion.polylineToJsonObject.call(
+            null, geometry, shape_id);
 
-	ret['@type'] = "http://www.openmicroscopy.org/Schemas/ROI/2015-01#Line";
+	ret['@type'] = "http://www.openmicroscopy.org/Schemas/OME/2016-06#Line";
 
 	ret['X1'] = flatCoords[0];
 	ret['X2'] = flatCoords[2];
 
 	ret['Y1'] = -flatCoords[1];
 	ret['Y2'] = -flatCoords[3];
+
+    if (geometry.has_start_arrow_) ret['MarkerStart'] = "Arrow";
+    if (geometry.has_end_arrow_) ret['MarkerEnd'] = "Arrow";
 
 	return ret;
 }
@@ -420,7 +424,7 @@ ome.ol3.utils.Conversion.polylineToJsonObject = function(geometry, shape_id) {
 	if (!geometry.isPolyline())
 		return ome.ol3.utils.Conversion.lineToJsonObject.call(null, geometry, shape_id);
 
-	ret['@type'] = "http://www.openmicroscopy.org/Schemas/ROI/2015-01#Polyline";
+	ret['@type'] = "http://www.openmicroscopy.org/Schemas/OME/2016-06#Polyline";
 
 	ret['Points'] = "";
 	for (var i=0; i<flatCoords.length;i+= 2) {
@@ -450,7 +454,7 @@ ome.ol3.utils.Conversion.labelToJsonObject = function(geometry, shape_id) {
 	if (shapeId >= 0)
 		ret['@id'] = shapeId;
 
-	ret['@type'] = "http://www.openmicroscopy.org/Schemas/ROI/2015-01#Label";
+	ret['@type'] = "http://www.openmicroscopy.org/Schemas/OME/2016-06#Label";
 
 	var topLeftCorner = geometry.getUpperLeftCorner();
 	ret['X'] = topLeftCorner[0];
@@ -478,7 +482,7 @@ ome.ol3.utils.Conversion.polygonToJsonObject = function(geometry, shape_id) {
 	if (shapeId >= 0)
 		ret['@id'] = shapeId;
 
-	ret['@type'] = "http://www.openmicroscopy.org/Schemas/ROI/2015-01#Polygon";
+	ret['@type'] = "http://www.openmicroscopy.org/Schemas/OME/2016-06#Polygon";
 
 	var flatCoords = geometry.getFlatCoordinates();
 
@@ -526,16 +530,18 @@ ome.ol3.utils.Conversion.integrateStyleIntoJsonObject = function(feature, jsonOb
 				 	typeof(feature.getStyle()) !== 'function'))
 		return;
 
+    // we now have an array of styles (due to arrows)
 	var presentStyle = feature.getStyle();
 	if (typeof(presentStyle) === 'function')
 		presentStyle = presentStyle(1);
-
+    if (ome.ol3.utils.Misc.isArray(presentStyle))
+        presentStyle = presentStyle[0];
 	if (!(presentStyle instanceof ol.style.Style))
 		return;
 
 	var isLabel =
 		jsonObject['@type'] ===
-	 		'http://www.openmicroscopy.org/Schemas/ROI/2015-01#Label';
+	 		'http://www.openmicroscopy.org/Schemas/OME/2016-06#Label';
     var presentFillColor =
         isLabel && presentStyle.getText() && presentStyle.getText().getFill() ?
             presentStyle.getText().getFill().getColor() :
@@ -548,7 +554,7 @@ ome.ol3.utils.Conversion.integrateStyleIntoJsonObject = function(feature, jsonOb
 		isLabel && presentStyle.getText() && presentStyle.getText().getStroke() ?
 			presentStyle.getText().getStroke().getColor() :
 				((typeof(feature['oldStrokeStyle']) === 'object' &&
-					typeof(feature['oldStrokeStyle']['color']) === 'string') ?
+					typeof(feature['oldStrokeStyle']['color']) !== 'undefined') ?
 						feature['oldStrokeStyle']['color'] : null);
 
 	if (presentStrokeStyle) { // STROKE
@@ -614,6 +620,9 @@ ome.ol3.utils.Conversion.integrateMiscInfoIntoJsonObject  = function(feature, js
 		jsonObject['TheZ'] = feature['theZ'];
 	if (typeof(feature['theC']) === 'number' && feature['theC'] !== -1)
 		jsonObject['TheC'] = feature['theC'];
+
+    if (feature['state'] === ome.ol3.REGIONS_STATE.REMOVED)
+        jsonObject['markedForDeletion'] = true;
 }
 
 /**
@@ -673,9 +682,14 @@ ome.ol3.utils.Conversion.toJsonObject = function(
 			continue; // we are not a number
 		}
 
+        // we don't want newly added but immediately deleted shapes
+        if (feature['state'] === ome.ol3.REGIONS_STATE.REMOVED &&
+                shapeId === -1) continue;
+
 		// now that we have the roi and shape id we check whether we have them in
 		// our associative array already or we need to create it yet
-		var roiIdToBeUsed = roiId; // unless we are new we'd like to use the original roi id
+		var roiIdToBeUsed = roiId;
+        // unless we are new we'd like to use the original roi id
 		// new shapes have by default a -1 for the roi id,
 		// we'd like to use that unless the flag is set that want to store each
 		// new shape in a roi of its own
@@ -688,7 +702,7 @@ ome.ol3.utils.Conversion.toJsonObject = function(
 			roiContainer = rois[roiIdToBeUsed];
 		else {// we need to be created
 			rois[roiIdToBeUsed] = {
-				"@type" : 'http://www.openmicroscopy.org/Schemas/ROI/2015-01#ROI',
+				"@type" : 'http://www.openmicroscopy.org/Schemas/OME/2016-06#ROI',
 				 "shapes" : []};
 			roiContainer = rois[roiIdToBeUsed];
 		}

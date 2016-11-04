@@ -127,6 +127,8 @@ export default class Context {
                     let keyHandler =
                         this.key_listeners.get(event.keyCode);
                     if (keyHandler) {
+                        // prevents IE standard key handler
+                        event.preventDefault();
                         keyHandler(event);
                         // important: prevents browser specific handlers
                         return false;

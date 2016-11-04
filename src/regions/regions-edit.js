@@ -27,7 +27,7 @@ export default class RegionsEdit {
     key_actions = [
         { key: 65, func: this.selectAllShapes},                     // ctrl - a
         { key: 67, func: this.copyShapes},                          // ctrl - c
-        { key: 80, func: this.pasteShapes}                          // ctrl - p
+        { key: 86, func: this.pasteShapes}                          // ctrl - v
     ];
 
     /**

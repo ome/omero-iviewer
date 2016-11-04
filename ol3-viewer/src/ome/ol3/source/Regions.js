@@ -550,11 +550,14 @@ ome.ol3.source.Regions.prototype.storeRegions = function(roisAsJsonObject) {
 				}
 
 				// else add roi/shape
-				if (typeof(rois[r]) !== 'object')
-					rois[r] = {
-						"@id" : parseInt(r),
-						"@type" : "http://www.openmicroscopy.org/Schemas/ROI/2015-01#ROI",
+				if (typeof(rois[r]) !== 'object') {
+                    var newRois = {
+						"@type" : "http://www.openmicroscopy.org/Schemas/OME/2016-06#ROI",
 						"shapes" : []};
+                    var roisId = parseInt(r);
+                    if (roisId !== -1) newRois['@id'] = roisId;
+                    rois[r] = newRois;
+                }
 				rois[r]['shapes'].push(roisAsJsonObject['rois'][r]['shapes'][s]);
 				++counter;
 			}
@@ -679,6 +682,7 @@ ome.ol3.source.Regions.prototype.setProperty =
             // we allow to toggle the selected state
             // as well as the state for removed, modified and rollback deletes
             if (this.select_ instanceof ome.ol3.interaction.Select) {
+                var presentState = null;
                 if (property === 'selected' && value)
                     this.select_.getFeatures().push(this.idIndex_[s]);
                 else if ((property === 'selected' || property === 'visible') &&
@@ -686,7 +690,7 @@ ome.ol3.source.Regions.prototype.setProperty =
                     this.select_.toggleFeatureSelection(
                         this.idIndex_[s], false);
                 } else if (property === 'state') {
-                    var presentState = this.idIndex_[s][property];
+                    presentState = this.idIndex_[s][property];
                     if (value === ome.ol3.REGIONS_STATE.REMOVED) {
                         this.select_.toggleFeatureSelection(
                             this.idIndex_[s], false);
@@ -708,12 +712,25 @@ ome.ol3.source.Regions.prototype.setProperty =
                 }
             }
 
+            // in the case where we are deleting a newly added shape
+            // we remove it altogether
+            if (property === 'state' &&
+                presentState === ome.ol3.REGIONS_STATE.ADDED &&
+                value === ome.ol3.REGIONS_STATE.REMOVED) {
+                    this.removeFeature(this.idIndex_[s]);
+                    changedFeatures.push(s);
+                    changedProperties.push("deleted");
+                    changedValues.push(true);
+                    continue;
+            }
+
             // set new value
             this.idIndex_[s][property] =
                 (property === 'state' && value === ome.ol3.REGIONS_STATE.ROLLBACK) ?
                     (typeof this.idIndex_[s]["old_state"] === 'number' ?
                         this.idIndex_[s]["old_state"] :
                         ome.ol3.REGIONS_STATE.DEFAULT) : value;
+
             // gather info for event response
             changedFeatures.push(s);
             let val = true;
