@@ -506,8 +506,9 @@ ome.ol3.source.Regions.prototype.forEachFeatureInExtent =
  * Persists modified/added shapes
  *
  * @param {Object} roisAsJsonObject a populated object for json serialization
+ * @param {string} uri a uri to post to for persistance
  */
-ome.ol3.source.Regions.prototype.storeRegions = function(roisAsJsonObject) {
+ome.ol3.source.Regions.prototype.storeRegions = function(roisAsJsonObject, uri) {
 	// we need the csrftoken for posting...
 	var csrftoken  = ome.ol3.utils.Misc.getCookie("csrftoken");
 	if (csrftoken === "") return; // post won't be accepted without csrftoken
@@ -587,7 +588,7 @@ ome.ol3.source.Regions.prototype.storeRegions = function(roisAsJsonObject) {
 	// set post properties and handlers
 	var properties = {
 		"server" : this.viewer_.getServer(),
-		"uri" : '/ol3-viewer/postrois', // TODO: would be nice if this became webgateway
+		"uri" : uri,
 		"method" : 'POST',
 		"content" : postContent,
 		"headers" : {"X-CSRFToken" : csrftoken},
@@ -617,8 +618,13 @@ ome.ol3.source.Regions.prototype.storeRegions = function(roisAsJsonObject) {
 				 // synchronize ids and states
 				 for (var id in data['ids']) {
 					 try {
-						 capturedRegionsReference.idIndex_[id]['state'] = ome.ol3.REGIONS_STATE.DEFAULT;
-						 capturedRegionsReference.idIndex_[id].setId(data['ids'][id]);
+                         var f = capturedRegionsReference.idIndex_[id];
+                         if (f['state'] === ome.ol3.REGIONS_STATE.REMOVED)
+                            capturedRegionsReference.removeFeature(f);
+						 else {
+                            f['state'] = ome.ol3.REGIONS_STATE.DEFAULT;
+						    f.setId(data['ids'][id]);
+                        }
 						 batch['storedCount']++;
 					 } catch(wrongIndex) {}
 				 }
@@ -636,12 +642,18 @@ ome.ol3.source.Regions.prototype.storeRegions = function(roisAsJsonObject) {
 						// send request
 						ome.ol3.utils.Net.sendRequest(properties, this);
 				 }
-				 if (batch['storedCount'] !== roisAsJsonObject['count'])
-				 	console.error("Not all added/modified rois were stored: "
-					+ batch['storedCount'] + "/" + roisAsJsonObject['count']);
-				 return;
+
+                 // send out notification with shape ids
+                 var v = capturedRegionsReference.viewer_;
+                 var config_id = v.getTargetId();
+                 var eventbus = v.eventbus_;
+                 if (config_id && eventbus) // publish
+                     setTimeout(function() {
+                         eventbus.publish("REGIONS_STORED_SHAPES",
+                             {"config_id": config_id,
+                                 "shapes": data['ids']});
+                     },25);
 			 }
-			 console.error("Received unexpected data after regions post");
 		};
 
 	if (postContent === null) {
@@ -746,7 +758,7 @@ ome.ol3.source.Regions.prototype.setProperty =
 
     var config_id = this.viewer_.getTargetId();
     var eventbus = this.viewer_.eventbus_;
-    if (eventProperty && eventbus) // publish
+    if (config_id && eventbus) // publish
         setTimeout(function() {
             eventbus.publish("REGIONS_PROPERTY_CHANGED",
                 {"config_id": config_id,

@@ -2,7 +2,7 @@
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import {inject, customElement, bindable} from 'aurelia-framework';
-import { REGIONS_SET_PROPERTY} from '../events/events';
+import { REGIONS_SET_PROPERTY, REGIONS_STORED_SHAPES} from '../events/events';
 
 /**
  * Represents the regions list/table in the regions settings/tab

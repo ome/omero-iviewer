@@ -28,7 +28,7 @@ def plugin_debug(request, iid=None, conn=None, **kwargs):
 	return plugin(request, iid=iid, conn=conn, debug=True)
 
 @login_required()
-def updateOrSaveRois(request, conn=None, **kwargs):
+def persistRois(request, conn=None, **kwargs):
 	if not request.method == 'POST':
 		return JsonResponse({ "error" : "Use HTTP POST to send data!"})
 

@@ -26,6 +26,10 @@ export const REGIONS_CHANGE_MODES = "REGIONS_CHANGE_MODES";
 export const REGIONS_SHOW_COMMENTS = "REGIONS_SHOW_COMMENTS";
 /** whenever shape definitions get copied */
 export const REGIONS_PASTE_SHAPES = "REGIONS_PASTE_SHAPES";
+/** whenever shapes are stored */
+export const REGIONS_STORE_SHAPES = "REGIONS_STORE_SHAPES";
+/** after modified/new/deleted shapes were stored */
+export const REGIONS_STORED_SHAPES = "REGIONS_STORED_SHAPES";
 /** Retrieves the viewer image settings */
 export const VIEWER_IMAGE_SETTINGS = "VIEWER_IMAGE_SETTINGS";
 /** whenever the histogram range was updated */

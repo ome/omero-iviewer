@@ -13,7 +13,9 @@ import {
     REGIONS_SET_PROPERTY, REGIONS_PROPERTY_CHANGED,
     VIEWER_IMAGE_SETTINGS, IMAGE_VIEWER_SPLIT_VIEW,
     REGIONS_DRAW_SHAPE, REGIONS_CHANGE_MODES, REGIONS_SHOW_COMMENTS,
-    REGIONS_PASTE_SHAPES, EventSubscriber } from '../events/events';
+    REGIONS_PASTE_SHAPES, REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES,
+    EventSubscriber }
+from '../events/events';
 
 
 /**
@@ -67,7 +69,11 @@ export default class Ol3Viewer extends EventSubscriber {
         [REGIONS_DRAW_SHAPE,
             (params={}) => this.drawShape(params)],
         [REGIONS_PASTE_SHAPES,
-                (params={}) => this.pasteShapes(params)],
+            (params={}) => this.pasteShapes(params)],
+        [REGIONS_STORE_SHAPES,
+            (params={}) => this.storeShapes(params)],
+        [REGIONS_STORED_SHAPES,
+            (params={}) => this.aftersShapeStorage(params)],
         [REGIONS_SHOW_COMMENTS,
             (params={}) => this.showComments(params)]];
 
@@ -254,8 +260,8 @@ export default class Ol3Viewer extends EventSubscriber {
             // loop over all shapes, trying to set the property
             for (let i in params.shapes) {
                 let shape = params.shapes[i];
-                let prop = (Misc.isArray(params.properties) ?
-                                params.properties[i] : params.properties).toLowerCase();
+                let prop = Misc.isArray(params.properties) ?
+                                params.properties[i] : params.properties;
                 let value = Misc.isArray(params.values) ?
                                 params.values[i] : params.values;
                 if (prop === 'selected' || prop === 'modified' ||
@@ -485,6 +491,65 @@ export default class Ol3Viewer extends EventSubscriber {
 
         // let's draw
         this.viewer.drawShape(params.shape);
+    }
+
+    /**
+     * Stores shapes
+     *
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     */
+    storeShapes(params = {}) {
+        // the event doesn't concern us
+        if (params.config_id !== this.config_id) return;
+
+        // should we only persist the selected ones
+        let selectedOnly =
+            typeof params.selected === 'boolean' && params.selected;
+
+        // TODO: adjust url
+        this.viewer.storeRegions(
+            selectedOnly, true, '/viewer-ng/persist_rois');
+    }
+
+    /**
+     * Handling of 'synchronization' after storage
+     *
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     */
+    aftersShapeStorage(params = {}) {
+        // the event doesn't concern us
+        if (params.config_id !== this.config_id ||
+                typeof params.shapes !== 'object' ||
+                params.shapes === null) return;
+
+        // make deep copy to work with
+        let ids = Object.assign({}, params.shapes);
+        params.shapes = null;
+        // we iterate over the ids given and reset states accordingly
+        for (let id in ids) {
+            let shape = this.image_config.regions_info.data.get(id);
+            if (shape) {
+                // we reset modifed
+                shape.modified = false;
+                // new ones are stored under their newly created ids
+                if (typeof shape.is_new === 'boolean') {
+                    delete shape['is_new'];
+                    let newShape = Object.assign({}, shape);
+                    newShape.shape_id = ids[id];
+                    newShape.id =
+                      parseInt(newShape.shape_id.substring(
+                                newShape.shape_id.indexOf(":") + 1));
+                    this.image_config.regions_info.data.set(
+                        newShape.shape_id, newShape);
+                    shape.deleted = true; // take out old entry
+                }
+                // we remove deleted
+                if (shape.deleted)
+                    this.image_config.regions_info.data.delete(id);
+            }
+        }
     }
 
     /**

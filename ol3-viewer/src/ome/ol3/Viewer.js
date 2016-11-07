@@ -1357,9 +1357,10 @@ ome.ol3.Viewer.prototype.getSmallestViewExtent = function() {
  *
  * @param {boolean} selectedOnly if true only selected regions are considered
  * @param {boolean} useSeparateRoiForEachNewShape if false all new shapes are combined within one roi
+ * @param {string} uri a server uri to post to for persistance
  */
 ome.ol3.Viewer.prototype.storeRegions =
-	function(selectedOnly,useSeparateRoiForEachNewShape) {
+	function(selectedOnly,useSeparateRoiForEachNewShape, uri) {
 
 	if (!(this.regions_ instanceof ome.ol3.source.Regions))
 		return; // no regions, nothing to persist...
@@ -1368,6 +1369,7 @@ ome.ol3.Viewer.prototype.storeRegions =
 	useSeparateRoiForEachNewShape =
 		typeof(useSeparateRoiForEachNewShape) === 'boolean' ?
 			useSeparateRoiForEachNewShape : true;
+    if (typeof uri !== 'string' || uri.length === 0) uri = '/persist_rois';
 
 	var collectionOfFeatures =
 		(selectedOnly && this.regions_.select_) ? this.regions_.select_.getFeatures() :
@@ -1381,7 +1383,7 @@ ome.ol3.Viewer.prototype.storeRegions =
 	if (roisAsJsonObject === null || roisAsJsonObject['count'] === 0)
 		return;
 
-	this.regions_.storeRegions(roisAsJsonObject);
+	this.regions_.storeRegions(roisAsJsonObject, uri);
 }
 
 /**

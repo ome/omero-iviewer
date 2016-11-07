@@ -185,7 +185,7 @@ export default class Settings extends EventSubscriber {
     saveImageSettings() {
         $('.save-settings').children('button').blur();
         if (Misc.useJsonp(this.context.server)) {
-            alert("Saving the rendering settings will not work for cross-domain!");
+            alert("Saving the rendering settings will not work cross-domain!");
             return;
         }
 
@@ -266,7 +266,7 @@ export default class Settings extends EventSubscriber {
         let dataType = Misc.useJsonp(this.context.server) ? 'jsonp' : 'json';
 
         if (toAll && dataType === 'jsonp') {
-            alert("Saving to All will not work for cross-domain!");
+            alert("Saving to All will not work cross-domain!");
             return;
         }
 

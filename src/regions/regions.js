@@ -1,7 +1,9 @@
 // js
 import Context from '../app/context';
+import Misc from '../utils/misc';
 import {
-    REGIONS_SET_PROPERTY, REGIONS_SHOW_COMMENTS} from '../events/events';
+    REGIONS_SET_PROPERTY, REGIONS_STORE_SHAPES,REGIONS_SHOW_COMMENTS
+} from '../events/events';
 import {inject, customElement, bindable} from 'aurelia-framework';
 
 /**
@@ -93,7 +95,15 @@ export default class Regions {
      * @memberof Regions
      */
     saveShapes() {
-        alert("not implemented yet");
+        if (Misc.useJsonp(this.context.server)) {
+            alert("Saving the regions will not work cross-domain!");
+            return;
+        }
+
+        this.context.publish(
+            REGIONS_STORE_SHAPES,
+            {config_id : this.regions_info.image_info.config_id,
+                selected: false});
     }
 
     /**
