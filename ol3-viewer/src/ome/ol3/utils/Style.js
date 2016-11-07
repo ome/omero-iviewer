@@ -596,9 +596,11 @@ ome.ol3.utils.Style.remedyShapeInfoIfNecessary =
 
 		var type = shape_info['type'].toLowerCase();
 		if (type === 'point') {
-			if (typeof(shape_info['cx']) !== 'number')
+			if (typeof(shape_info['cx']) !== 'number' &&
+                typeof(shape_info['x']) !== 'number')
 				shape_info['cx'] = 6;
-			if (typeof(shape_info['cy']) !== 'number')
+			if (typeof(shape_info['cy']) !== 'number' &&
+                typeof(shape_info['x']) !== 'number')
 				shape_info['cy'] = 6;
 		} else if (type === 'line') {
 			if (typeof(shape_info['x1']) !== 'number')
@@ -630,13 +632,17 @@ ome.ol3.utils.Style.remedyShapeInfoIfNecessary =
 			if (typeof(shape_info['height']) !== 'number')
 				shape_info['height'] = 15;
 		 } else if (type === 'ellipse') {
-				if (typeof(shape_info['cx']) !== 'number')
+				if (typeof(shape_info['cx']) !== 'number' &&
+                    typeof(shape_info['x']) !== 'number')
 				 shape_info['cx'] = 20;
-				if (typeof(shape_info['cy']) !== 'number')
+				if (typeof(shape_info['cy']) !== 'number' &&
+                    typeof(shape_info['y']) !== 'number')
 					shape_info['cy'] = 15;
-				if (typeof(shape_info['rx']) !== 'number')
+				if (typeof(shape_info['rx']) !== 'number' &&
+                    typeof(shape_info['radiusX']) !== 'number')
 				 shape_info['rx'] = 8;
-				if (typeof(shape_info['ry']) !== 'number')
+				if (typeof(shape_info['ry']) !== 'number' &&
+                    typeof(shape_info['radiusY']) !== 'number')
 					shape_info['ry'] = 5;
  		 } else if (type === 'label') {
  				if (typeof(shape_info['fontFamily']) !== 'string')

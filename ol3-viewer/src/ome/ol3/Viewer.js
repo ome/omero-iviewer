@@ -1289,28 +1289,41 @@ ome.ol3.Viewer.prototype.generateShapes =
  * @return {ol.Extent|null} an array like this: [minX, minY, maxX, maxY] or null (if no viewer)
  */
 ome.ol3.Viewer.prototype.getViewExtent = function() {
-	if (!(this.viewer_ instanceof ol.Map)) return null;
+    if (!(this.viewer_ instanceof ol.Map ||
+            this.viewer_.getView() === null)) return null;
 
-	if (this.viewer_ && this.viewer_.getView() &&
-		this.viewer_.getView().getState()) {
-			var viewState = this.viewer_.getView().getState();
+    return this.viewer_.getView().calculateExtent(this.viewer_.getSize());
+}
 
-			return ol.extent.getForViewAndSize(
-				this.viewer_.getView().getCenter(),
-				this.viewer_.getView().getResolution(),
-				this.viewer_.getView().getRotation(),
-				this.viewer_.getSize());
-	}
+/**
+ * Will take the viewport but reduce it to the image extent
+ * if the former exceeds either width or height of the latter
+ * An example of this is when we are zoomed out and see more than the actual
+ * image but want an extent that does not exceed the image boundaries
+ * this is useful for pasting
+ * @return {ol.Extent|null} an array like this: [minX, minY, maxX, maxY] or null (if no viewer)
+ */
+ome.ol3.Viewer.prototype.getSmallestViewExtent = function() {
+    var viewport = this.getViewExtent();
+    if (viewport === null) return;
 
-	// in case no frame state/extent is present (should not happen really)
-	// we return the projection's extent in internal format (negative y)
-	// should the projection also not be present, we return null
-	if (this.viewer_.getView() && this.viewer_.getView().getProjection()) {
-		var extent = this.viewer_.getView().getProjection().getExtent();
-		return [extent[0], -extent[3], extent[2], -extent[1]];
-	}
+    var smallestExtent = viewport.slice();
 
-	return null;
+    var image_extent = this.viewer_.getView().getProjection().getExtent();
+    var viewport_width = ol.extent.getWidth(viewport);
+    var image_width = ol.extent.getWidth(image_extent);
+    if (viewport_width > image_width) {
+        smallestExtent[0] = image_extent[0];
+        smallestExtent[2] = image_extent[2];
+    }
+    var viewport_height = Math.abs(ol.extent.getHeight(viewport));
+    var image_height = Math.abs(ol.extent.getHeight(image_extent));
+    if (viewport_height > image_height) {
+        smallestExtent[1] = image_extent[1];
+        smallestExtent[3] = image_extent[3];
+    }
+
+    return smallestExtent;
 }
 
 /**
@@ -1796,3 +1809,8 @@ goog.exportProperty(
 	ome.ol3.Viewer.prototype,
 	'showShapeComments',
 	ome.ol3.Viewer.prototype.showShapeComments);
+
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
+    'getSmallestViewExtent',
+    ome.ol3.Viewer.prototype.getSmallestViewExtent);

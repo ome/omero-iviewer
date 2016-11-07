@@ -299,11 +299,12 @@ export default class Ol3Viewer extends EventSubscriber {
           if (params.config_id !== this.config_id ||
               !Misc.isArray(params.shapes) || params.shapes.length === 0) return;
 
+          let extent = this.viewer.getSmallestViewExtent();
           params.shapes.map(
               (def) => {
                   try {
                       this.viewer.generateShapes(
-                          Object.assign({},def),1, true);
+                          Object.assign({},def),1, true, extent);
                   } catch(ignored) {}});
       }
 

@@ -335,7 +335,10 @@ ome.ol3.geom.Ellipse.prototype.translate = function(deltaX, deltaY) {
 ome.ol3.geom.Ellipse.prototype.scale = function(factor) {
 	// delegate
     if (this.transform_) {
-        // Note: do this when needed for generation
+        this.transform_[0] *= factor;
+        this.transform_[1] *= factor;
+        this.transform_[2] *= factor;
+        this.transform_[3] *= factor;
         this.setCoordinates([this.getPolygonCoords()]);
     } else {
         ol.geom.SimpleGeometry.prototype.scale.call(this, factor);
