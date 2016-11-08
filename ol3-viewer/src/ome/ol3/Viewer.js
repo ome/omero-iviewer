@@ -1333,9 +1333,11 @@ ome.ol3.Viewer.prototype.getSmallestViewExtent = function() {
  * </pre>
  *
  * @param {Object} shape_info the shape info as received from the json
- * @param {Array<string>=} ids an optional array of ids (roi_id:shape_id)
+ * @param {Array<string>} ids an optional array of ids (roi_id:shape_id)
+ * @param {function=} callback a success handler
  */
- ome.ol3.Viewer.prototype.modifyRegionsStyle = function(shape_info, ids) {
+ ome.ol3.Viewer.prototype.modifyRegionsStyle =
+    function(shape_info, ids, callback) {
 	 if (!(this.regions_ instanceof ome.ol3.source.Regions) ||
 	  	typeof(shape_info) !== 'object' || shape_info === null)
 	 	return;
@@ -1348,7 +1350,8 @@ ome.ol3.Viewer.prototype.getSmallestViewExtent = function() {
                 col.push(this.regions_.idIndex_[ids[id]]);
     }
 
-	 ome.ol3.utils.Style.modifyStyles(shape_info, this.regions_, col);
+	 ome.ol3.utils.Style.modifyStyles(
+         shape_info, this.regions_, col, callback);
  }
 
 /**

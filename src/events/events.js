@@ -30,6 +30,8 @@ export const REGIONS_PASTE_SHAPES = "REGIONS_PASTE_SHAPES";
 export const REGIONS_STORE_SHAPES = "REGIONS_STORE_SHAPES";
 /** after modified/new/deleted shapes were stored */
 export const REGIONS_STORED_SHAPES = "REGIONS_STORED_SHAPES";
+/** whenever the styling of shapes is to be changed */
+export const REGIONS_MODIFY_SHAPES = "REGIONS_MODIFY_SHAPES";
 /** Retrieves the viewer image settings */
 export const VIEWER_IMAGE_SETTINGS = "VIEWER_IMAGE_SETTINGS";
 /** whenever the histogram range was updated */

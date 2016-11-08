@@ -14,7 +14,7 @@ import {
     VIEWER_IMAGE_SETTINGS, IMAGE_VIEWER_SPLIT_VIEW,
     REGIONS_DRAW_SHAPE, REGIONS_CHANGE_MODES, REGIONS_SHOW_COMMENTS,
     REGIONS_PASTE_SHAPES, REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES,
-    EventSubscriber }
+    REGIONS_MODIFY_SHAPES, EventSubscriber }
 from '../events/events';
 
 
@@ -74,6 +74,8 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.storeShapes(params)],
         [REGIONS_STORED_SHAPES,
             (params={}) => this.aftersShapeStorage(params)],
+        [REGIONS_MODIFY_SHAPES,
+            (params={}) => this.modifyShapes(params)],
         [REGIONS_SHOW_COMMENTS,
             (params={}) => this.showComments(params)]];
 
@@ -268,6 +270,9 @@ export default class Ol3Viewer extends EventSubscriber {
                         prop === 'deleted')
                     this.image_config.regions_info.setPropertyForShape(
                         shape, prop, value);
+                if (typeof params.callback === 'function')
+                    params.callback(
+                        this.image_config.regions_info.data.get(shape));
             }
      }
 
@@ -507,9 +512,27 @@ export default class Ol3Viewer extends EventSubscriber {
         let selectedOnly =
             typeof params.selected === 'boolean' && params.selected;
 
-        // TODO: adjust url
         this.viewer.storeRegions(
             selectedOnly, true, '/viewer-ng/persist_rois');
+    }
+
+    /**
+     * Modifies shape definition
+     *
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     */
+    modifyShapes(params = {}) {
+        // the event doesn't concern us
+        // or does not have all the params required
+        if (params.config_id !== this.config_id ||
+            !Misc.isArray(params.shapes) || params.shapes.length === 0 ||
+            typeof params.definition !== 'object' || params.definition === null)
+                return;
+
+        this.viewer.modifyRegionsStyle(
+            params.definition, params.shapes.slice(),
+                typeof params.callback === 'function' ? params.callback : null);
     }
 
     /**

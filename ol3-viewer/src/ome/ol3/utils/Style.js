@@ -445,9 +445,11 @@ ome.ol3.utils.Style.cloneStyle = function(style) {
  * @function
  * @param {Object} shape_info the shape info containing style among other things
  * @param {ome.ol3.source.Regions} regions_reference a reference to the regions instance
- * @param {ol.Collection=} feats a collection of features
+ * @param {ol.Collection} feats a collection of features
+ * @param {function=} callback a success handler
  */
-ome.ol3.utils.Style.modifyStyles = function(shape_info, regions_reference, feats) {
+ome.ol3.utils.Style.modifyStyles =
+    function(shape_info, regions_reference, feats, callback) {
 	if (!(regions_reference instanceof ome.ol3.source.Regions) ||
 			 typeof(shape_info) !== 'object') return;
 
@@ -474,6 +476,7 @@ ome.ol3.utils.Style.modifyStyles = function(shape_info, regions_reference, feats
 			if (typeof(style) === 'function')
 				style = style(
 					regions_reference.viewer_.viewer_.getView().getResolution());
+                if (ome.ol3.utils.Misc.isArray(style)) style = style[0];
 
 				if (newStyle) {
 					var newFillStyle =
@@ -558,8 +561,9 @@ ome.ol3.utils.Style.modifyStyles = function(shape_info, regions_reference, feats
                     ids.push(feature.getId());
 				}}};
 
-        if (ids.length > 0) regions_reference.setProperty(
-            ids, "state", ome.ol3.REGIONS_STATE.MODIFIED);
+        if (ids.length > 0)
+            regions_reference.setProperty(
+                ids, "state", ome.ol3.REGIONS_STATE.MODIFIED, callback);
 }
 
 /**

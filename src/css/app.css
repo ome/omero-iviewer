@@ -66,23 +66,45 @@ a.ui-button:active,
 /** JQUERY UI adjustments END **/
 
 /** SPECTRUM colorpicker adjustments START **/
-.full-spectrum {
-    width: 100px;
-    height: 32px;
-    margin-bottom: 2px;
-}
-.sp-preview {
+.color-range-replacer .sp-preview {
+    background-image: none;
     margin-left: 2px;
     height: 20px;
     width: 80px;
 }
-.sp-container {
+.color-range-spectrum-container {
     position: relative!important;
     width: 176px;
     height: 220px;
     right: 100px;
     top: 12px!important;
     left: -150px!important;
+}
+.shape-fill-color-replacer .sp-preview {
+    margin-left: 2px;
+    background-image: none;
+}
+.shape-stroke-color-replacer .sp-preview {
+    margin-left: 2px;
+    background-image: url('images/line.png');
+    background-repeat: no-repeat;
+    background-position: center;
+}
+.color-spectrum-container {
+    position: relative!important;
+    width: 186px;
+    height: 270px;
+    top: 0px!important;
+    left: 0px!important;
+    line-height: 30px;
+}
+.color-spectrum-container span {
+    background-image: none;
+}
+.sp-alpha {
+    background-image: none;
+    height: 20px;
+    top: 25px;
 }
 /** SPECTRUM colorpicker adjustments END **/
 
@@ -569,8 +591,15 @@ thead, tbody {
     background-color: transparent;
 }
 
-.shapes-persistence div, .shapes-edit div {
+.shapes-persistence div {
     float: left;
+}
+
+.shape-fill-color, .shape-stroke-color {
+    float: left;
+    width: 50px;
+    height: 32px;
+    margin-bottom: 2px;
 }
 
 .hidden-functionality {

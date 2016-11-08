@@ -674,9 +674,10 @@ ome.ol3.source.Regions.prototype.storeRegions = function(roisAsJsonObject, uri) 
  * @param {Array<string>} roi_shape_ids a list of string ids of the form: roi_id:shape_id
  * @param {string} property the property to be set
  * @param {Object} value the new value for the property
+ * @param {function=} callback an (optional) success handler
  */
 ome.ol3.source.Regions.prototype.setProperty =
-    function(roi_shape_ids, property, value) {
+    function(roi_shape_ids, property, value, callback) {
 
 	if (!ome.ol3.utils.Misc.isArray(roi_shape_ids) ||
         typeof property !== 'string' ||
@@ -763,7 +764,9 @@ ome.ol3.source.Regions.prototype.setProperty =
             eventbus.publish("REGIONS_PROPERTY_CHANGED",
                 {"config_id": config_id,
                     "properties" : changedProperties,
-                    "shapes": changedFeatures, values: changedValues});
+                    "shapes": changedFeatures,
+                    "values": changedValues,
+                    "callback": callback });
         },25);
 }
 

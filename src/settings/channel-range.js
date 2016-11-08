@@ -325,7 +325,8 @@ export default class ChannelRange  {
        $(this.element).find(".spectrum-input").spectrum({
             color: "#" + this.channel.color,
             showInput: true,
-            className: "full-spectrum",
+            containerClassName: 'color-range-spectrum-container',
+            replacerClassName: 'color-range-replacer',
             showInitial: true,
             preferredFormat: "hex",
             appendTo: $(this.element).find('.channel-color'),

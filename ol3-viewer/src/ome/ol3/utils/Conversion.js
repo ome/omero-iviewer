@@ -103,7 +103,12 @@ goog.provide('ome.ol3.utils.Conversion');
 		try {
 			// strip white space and #
 			var strippedHex = hex.replace(/#|\s/g, "");
-			if (strippedHex.length != 6) return null; // we must have 6 characters
+            if (strippedHex.length === 3)
+                strippedHex = '' +
+                    strippedHex[0] + strippedHex[0] +
+                    strippedHex[1] + strippedHex[1] +
+                    strippedHex[2] + strippedHex[2];
+			if (strippedHex.length != 6) return null;
 
 			// prepare return object
 			var ret = {'red' : 255, 'green' : 255, 'blue' : 255, 'alpha' : alpha};
