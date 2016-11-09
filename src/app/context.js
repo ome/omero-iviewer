@@ -124,6 +124,8 @@ export default class Context {
         if (window.onkeydown === null)
             window.onkeydown = (event) => {
                 try {
+                    // only process CTRL+KEY combinations
+                    if (!event.ctrlKey) return;
                     let keyHandler =
                         this.key_listeners.get(event.keyCode);
                     if (keyHandler) {

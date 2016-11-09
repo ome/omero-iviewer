@@ -14,13 +14,15 @@ goog.require('ol.style.RegularShape');
  *
  * @private
  * @param {Object} shape_info the roi shape information
- * @param {boolean=} is_label a flag that tells us if we are a label (default: false)
+ * @param {boolean} is_label a flag that tells us if we are a label (default: false)
+ * @param {boolean=} fill_in_defaults use defaults for missing info (default: true)
  * @return {ol.style.Style|null} a style object or null if something went wrong
  */
-ome.ol3.utils.Style.createFeatureStyle = function(shape_info, is_label) {
+ome.ol3.utils.Style.createFeatureStyle = function(shape_info, is_label, fill_in_defaults) {
 	// preliminary checks
 	if (typeof(shape_info) != 'object') return null;
 	var forLabel = (typeof(is_label) === 'boolean') ? is_label : false;
+    if (typeof fill_in_defaults !== 'boolean') fill_in_defaults = true;
 
 	// that way we know whether at least one style property for stroke/fill was given
 	var stroke = {'count' : 0};
@@ -62,37 +64,34 @@ ome.ol3.utils.Style.createFeatureStyle = function(shape_info, is_label) {
 
 	// contains style information
 	var style = {};
-	/* check whether we have a text label. Note that we do need to distinguish
-	 *	- for our purposes and within open layers styling - between text for
-	 * shapes and mere labels, i.e. without an associated shape.
-	 * The reason is simply that open layers does not offer labels without shapes
-	 * The workaround is to use an invisible shape for the purpose!
-	 */
-	if (typeof(shape_info['textValue']) === 'string') {
-		var text = {'text' : shape_info['textValue']};
-		var font = "";
-		if (typeof(shape_info['fontStyle']) === 'string')
-			font += (shape_info['fontStyle'] + " ");
-		else font += "normal ";
-		if (typeof(shape_info['fontSize']) === 'number')
-			font += (shape_info['fontSize'] + "px ");
-		else font += "10px ";
-		if (typeof(shape_info['fontFamily']) === 'string')
-			font += shape_info['fontFamily'];
-		else font += "sans-serif";
-		text['font'] = font;
-		if (strokeStyle) {
-			// we don't want spikes
-			stroke['lineCap'] = "round";
-			stroke['lineJoin'] = "round";
-			text['fill'] = new ol.style.Fill(stroke);
-                //forLabel && fillStyle ? fillStyle : new ol.style.Fill(stroke);
-			text['stroke'] = new ol.style.Stroke(stroke);
-			//if (!forLabel) text['stroke'].setWidth(1);
-            text['stroke'].setWidth(1);
-		}
-		style['text'] = new ol.style.Text(text);
+	var text = {};
+    if (typeof shape_info['textValue'] === 'string')
+        text['text'] = shape_info['textValue'];
+	var font = "";
+	if (typeof(shape_info['fontStyle']) === 'string')
+		font += (shape_info['fontStyle'] + " ");
+	else if (fill_in_defaults) font += "normal ";
+	if (typeof(shape_info['fontSize']) === 'number')
+		font += (shape_info['fontSize'] + "px ");
+	else if (fill_in_defaults) font += "10px ";
+	if (typeof(shape_info['fontFamily']) === 'string')
+		font += shape_info['fontFamily'];
+	else if (fill_in_defaults) font += "sans-serif";
+	if (font.length > 0) text['font'] = font;
+	if (strokeStyle) {
+		// we don't want spikes
+		stroke['lineCap'] = "round";
+		stroke['lineJoin'] = "round";
+		text['fill'] = new ol.style.Fill(stroke);
+            //forLabel && fillStyle ? fillStyle : new ol.style.Fill(stroke);
+		text['stroke'] = new ol.style.Stroke(stroke);
+		//if (!forLabel) text['stroke'].setWidth(1);
+        text['stroke'].setWidth(1);
 	}
+	style['text'] = new ol.style.Text(text);
+    // we do not wish for defaults (ol creates default fill color)
+    if (!fill_in_defaults && typeof shape_info['fillColor'] !== 'string')
+        style['text'].fill_ = null;
 
 	if (strokeStyle) style['stroke'] = strokeStyle;
 	if (fillStyle) style['fill'] = fillStyle;
@@ -469,7 +468,7 @@ ome.ol3.utils.Style.modifyStyles =
             var type = feature['type'].toLowerCase();
             shape_info['type'] = type;
             var newStyle = ome.ol3.utils.Style.createFeatureStyle(
-                shape_info, (type === 'label'));
+                shape_info, (type === 'label'), false);
             if (newStyle === null) continue;
 
 			var style = feature.getStyle();
@@ -478,88 +477,87 @@ ome.ol3.utils.Style.modifyStyles =
 					regions_reference.viewer_.viewer_.getView().getResolution());
                 if (ome.ol3.utils.Misc.isArray(style)) style = style[0];
 
-				if (newStyle) {
-					var newFillStyle =
-						newStyle.getFill() ? newStyle.getFill() : style.getFill();
+				var newFillStyle =
+					newStyle.getFill() ? newStyle.getFill() : style.getFill();
 
-					var newStrokeStyle = null;
-					// first restore the old stroke style before selection
-					if (typeof(feature['oldStrokeStyle']) === 'object' &&
-								feature['oldStrokeStyle'] !== null) {
+				var newStrokeStyle = null;
+				// first restore the old stroke style before selection
+				if (typeof(feature['oldStrokeStyle']) === 'object' &&
+							feature['oldStrokeStyle'] !== null) {
+					newStrokeStyle = new ol.style.Stroke();
+					newStrokeStyle.setColor(
+						feature['oldStrokeStyle']['color']);
+					newStrokeStyle.setWidth(
+						feature['oldStrokeStyle']['width']);
+					newStrokeStyle.setLineDash(
+						feature['oldStrokeStyle']['lineDash']);
+					newStrokeStyle.setLineCap(
+						feature['oldStrokeStyle']['lineCap']);
+					newStrokeStyle.setLineJoin(
+						feature['oldStrokeStyle']['lineJoin']);
+					newStrokeStyle.setMiterLimit(
+						feature['oldStrokeStyle']['miterLimit']);
+				}
+				if (newStyle.getStroke()) {
+					if (newStrokeStyle === null)
 						newStrokeStyle = new ol.style.Stroke();
-						newStrokeStyle.setColor(
-							feature['oldStrokeStyle']['color']);
-						newStrokeStyle.setWidth(
-							feature['oldStrokeStyle']['width']);
-						newStrokeStyle.setLineDash(
-							feature['oldStrokeStyle']['lineDash']);
-						newStrokeStyle.setLineCap(
-							feature['oldStrokeStyle']['lineCap']);
-						newStrokeStyle.setLineJoin(
-							feature['oldStrokeStyle']['lineJoin']);
-						newStrokeStyle.setMiterLimit(
-							feature['oldStrokeStyle']['miterLimit']);
-					}
-					if (newStyle.getStroke()) {
-						if (newStrokeStyle === null)
-							newStrokeStyle = new ol.style.Stroke();
-						// mix in new properties
-						if (newStyle.getStroke().getColor())
-							newStrokeStyle.setColor(newStyle.getStroke().getColor());
-						if (newStyle.getStroke().getLineCap())
-							newStrokeStyle.setLineCap(newStyle.getStroke().getLineCap());
-						if (newStyle.getStroke().getLineDash())
-							newStrokeStyle.setLineDash(newStyle.getStroke().getLineDash());
-						if (newStyle.getStroke().getLineJoin())
-							newStrokeStyle.setLineJoin(newStyle.getStroke().getLineJoin());
-						if (newStyle.getStroke().getMiterLimit())
-							newStrokeStyle.setMiterLimit(newStyle.getStroke().getMiterLimit());
-						if (newStyle.getStroke().getWidth())
-							newStrokeStyle.setWidth(newStyle.getStroke().getWidth());
-					}
-					var newTextStyle = style.getText();
-					if (newTextStyle === null)
-						newTextStyle = newStyle.getText();
-					else if (newStyle.getText()) {
-						// mix in new properties
-						if (newStyle.getText().getFont())
-							newTextStyle.setFont(newStyle.getText().getFont());
-						if (newStyle.getText().getOffsetX())
-							newTextStyle.setOffsetX(newStyle.getText().getOffsetX());
-						if (newStyle.getText().getOffsetY())
-							newTextStyle.setOffsetY(newStyle.getText().getOffsetY());
-						if (newStyle.getText().getFill())
-							newTextStyle.setFill(newStyle.getText().getFill());
-						if (newStyle.getText().getRotation())
-							newTextStyle.setRotation(newStyle.getText().getRotation());
-						if (newStyle.getText().getScale())
-							newTextStyle.setScale(newStyle.getText().getScale());
-						if (newStyle.getText().getStroke())
-							newTextStyle.setStroke(newStyle.getText().getStroke());
-						if (newStyle.getText().getText())
-							newTextStyle.setText(newStyle.getText().getText());
-						if (newStyle.getText().getTextAlign())
-							newTextStyle.setTextAlign(newStyle.getText().getTextAlign());
-						if (newStyle.getText().getTextBaseline())
-							newTextStyle.setTextBaseline(newStyle.getText().getTextBaseline());
-					}
-					var newMixedStyle = new ol.style.Style({
-						"fill" : newFillStyle,
-						"stroke" : newStrokeStyle,
-						"text" : newTextStyle
-					});
+					// mix in new properties
+					if (newStyle.getStroke().getColor())
+						newStrokeStyle.setColor(newStyle.getStroke().getColor());
+					if (newStyle.getStroke().getLineCap())
+						newStrokeStyle.setLineCap(newStyle.getStroke().getLineCap());
+					if (newStyle.getStroke().getLineDash())
+						newStrokeStyle.setLineDash(newStyle.getStroke().getLineDash());
+					if (newStyle.getStroke().getLineJoin())
+						newStrokeStyle.setLineJoin(newStyle.getStroke().getLineJoin());
+					if (newStyle.getStroke().getMiterLimit())
+						newStrokeStyle.setMiterLimit(newStyle.getStroke().getMiterLimit());
+					if (newStyle.getStroke().getWidth())
+						newStrokeStyle.setWidth(newStyle.getStroke().getWidth());
+				}
+				var newTextStyle = style.getText();
+				if (newTextStyle === null)
+					newTextStyle = newStyle.getText();
+				else if (newStyle.getText()) {
+					// mix in new properties
+					if (newStyle.getText().getFont())
+						newTextStyle.setFont(newStyle.getText().getFont());
+					if (newStyle.getText().getOffsetX())
+						newTextStyle.setOffsetX(newStyle.getText().getOffsetX());
+					if (newStyle.getText().getOffsetY())
+						newTextStyle.setOffsetY(newStyle.getText().getOffsetY());
+					if (newStyle.getText().getFill())
+						newTextStyle.setFill(newStyle.getText().getFill());
+					if (newStyle.getText().getRotation())
+						newTextStyle.setRotation(newStyle.getText().getRotation());
+					if (newStyle.getText().getScale())
+						newTextStyle.setScale(newStyle.getText().getScale());
+					if (newStyle.getText().getStroke())
+						newTextStyle.setStroke(newStyle.getText().getStroke());
+					if (typeof newStyle.getText().getText() === 'string')
+						newTextStyle.setText(newStyle.getText().getText());
+					if (newStyle.getText().getTextAlign())
+						newTextStyle.setTextAlign(newStyle.getText().getTextAlign());
+					if (newStyle.getText().getTextBaseline())
+						newTextStyle.setTextBaseline(newStyle.getText().getTextBaseline());
+				}
+				var newMixedStyle = new ol.style.Style({
+					"fill" : newFillStyle,
+					"stroke" : newStrokeStyle,
+					"text" : newTextStyle
+				});
 
-					// reset oldStrokeStyle so that it is set with the new one
-					delete feature['oldStrokeStyle'];
-					feature.setStyle(newMixedStyle);
-					ome.ol3.utils.Style.updateStyleFunction(
-						feature,
-						regions_reference,
-						true);
+				// reset oldStrokeStyle so that it is set with the new one
+				delete feature['oldStrokeStyle'];
+				feature.setStyle(newMixedStyle);
+				ome.ol3.utils.Style.updateStyleFunction(
+					feature,
+					regions_reference,
+					true);
 
-                    // add id to the list for state change
-                    ids.push(feature.getId());
-				}}};
+                // add id to the list for state change
+                ids.push(feature.getId());
+		}};
 
         if (ids.length > 0)
             regions_reference.setProperty(

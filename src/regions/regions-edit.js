@@ -45,11 +45,34 @@ export default class RegionsEdit {
 
     /**
      * Overridden aurelia lifecycle method:
+     * called whenever the view is bound within aurelia
+     * in other words an 'init' hook that happens before 'attached'
+     *
+     * @memberof RegionsEdit
+     */
+    bind() {
+        this.registerObserver();
+    }
+
+    /**
+     * Overridden aurelia lifecycle method:
+     * called whenever the view is unbound within aurelia
+     * in other words a 'destruction' hook that happens after 'detached'
+     *
+     * @memberof RegionsEdit
+     */
+    unbind() {
+        this.unregisterObserver();
+    }
+
+    /**
+     * Overridden aurelia lifecycle method:
      * fired when PAL (dom abstraction) is ready for use
      *
      * @memberof RegionsEdit
      */
     attached() {
+        // register key listeners
         this.key_actions.map(
             (action) =>
                 this.context.addKeyListener(
@@ -60,7 +83,7 @@ export default class RegionsEdit {
                             action.func.apply(this, action.args);
                         }));
 
-
+        // set up ui widgets such as color pickers and spinners
         let strokeOptions = this.getColorPickerOptions(false);
         let strokeSpectrum =
             $(this.element).find(".shape-stroke-color .spectrum-input");
@@ -69,21 +92,21 @@ export default class RegionsEdit {
         let fillSpectrum =
             $(this.element).find(".shape-fill-color .spectrum-input");
         fillSpectrum.spectrum(fillOptions);
-        /*
-        $(this.element).find(".spectrum-input").spectrum({
-             color: 'rgba(255,255,255,0)',
-             disabled: true,
-             showInput: true,
-             showAlpha: true,
-             showInitial: true,
-             preferredFormat: "rgb",
-             containerClassName: 'fill-color-spectrum-container',
-             replacerClassName: 'shape-color-replacer',
-             appendTo: $(this.element).find('.shape-fill-color'),
-             change: (color) => this.onColorChange(
-                 color.toRgbString())});
-        */
-        this.registerObserver();
+
+        let strokeWidthSpinner =
+            $(this.element).find(".shape-stroke-width input");
+        strokeWidthSpinner.spinner({
+            min: 1, max: 10, disabled: true});
+        strokeWidthSpinner.spinner("value", 10);
+
+        let editComment = $(this.element).find(".shape-edit-comment input");
+        editComment.prop("disabled", true);
+        editComment.addClass("disabled-color");
+        let fontSizeSpinner =
+            $(this.element).find(".shape-font-size input");
+        fontSizeSpinner.spinner({
+            min: 1, max: 1000, disabled: true});
+        fontSizeSpinner.spinner("value", 10);
     }
 
     /**
@@ -106,40 +129,99 @@ export default class RegionsEdit {
 
             for (let i=0;i<properties.length;i++) {
                 let prop = properties[i];
-                if (typeof shape[prop] !== 'undefined') shape[prop] = values[i];
+                shape[prop] = values[i];
             };
         }
 
         return callback;
      }
 
+     /**
+      * Handles fill/stroke color changes
+      *
+      * @param {string} color a color in rgba notation
+      * @param {boolean} fill the fill color if true, the stroke color otherwise
+      * @param {Object} shape the primary shape that the change was invoked on
+      * @memberof RegionsEdit
+      */
+     onColorChange(color, fill=true, shape=null) {
+         if (typeof shape !== 'object' || shape === null) return;
+         if (typeof fill !== 'boolean') fill = true;
+
+         let deltaProps = {type: shape.type};
+         let properties =
+             fill ? ['fillColor', 'fillAlpha'] : ['strokeColor', 'strokeAlpha'];
+         let values = Misc.rgbaToHexAndAlpha(color);
+         if (!Misc.isArray(values) || values.length !== 2) return;
+
+         for (let i=0;i<properties.length;i++)
+             deltaProps[properties[i]] = values[i];
+
+         this.modifyShapes(
+             deltaProps, this.createUpdateHandler(properties, values));
+     }
+
     /**
-     * Handles fill/stroke color changes
+     * Handles stroke width changes
      *
-     * @param {string} color a color in rgba notation
-     * @param {boolean} fill the fill color if true, the stroke color otherwise
+     * @param {number} width the new stroke width
      * @param {Object} shape the primary shape that the change was invoked on
      * @memberof RegionsEdit
      */
-    onColorChange(color, fill=true, shape=null) {
+    onStrokeWidthChange(width = 10,shape=null) {
         if (typeof shape !== 'object' || shape === null) return;
-        if (typeof fill !== 'boolean') fill = true;
+        if (typeof width !== 'number' || isNaN(width) || width < 1 ||
+                width > 10) return;
 
-        // we create a deep copy, make the color definition changes
-        // and then request the changes
-        // once successful we execute the callback to update the actual
-        // shape definition
-        let deepCopyOfShape = Object.assign({}, shape);
-        let properties =
-            fill ? ['fillColor', 'fillAlpha'] : ['strokeColor', 'strokeAlpha'];
-        let values = Misc.rgbaToHexAndAlpha(color);
-        if (!Misc.isArray(values) || values.length !== 2) return;
-
-        for (let i=0;i<properties.length;i++)
-            deepCopyOfShape[properties[i]] = values[i];
+        let deltaProps = {type: shape.type};
+        deltaProps.strokeWidth = width;
 
         this.modifyShapes(
-            deepCopyOfShape, this.createUpdateHandler(properties, values));
+            deltaProps, this.createUpdateHandler(['strokeWidth'], [width]));
+    }
+
+    /**
+     * Handles font size changes
+     *
+     * @param {number} size the new font size
+     * @param {Object} shape the primary shape that the change was invoked on
+     * @memberof RegionsEdit
+     */
+    onFontSizeChange(size = 10,shape=null) {
+        if (typeof shape !== 'object' || shape === null) return;
+        if (typeof size !== 'number' || isNaN(size) || size < 1 ||
+                size > 1000) return;
+
+        let deltaProps = {type: shape.type};
+        deltaProps.fontStyle =
+            typeof shape.fontStyle === 'string' ? shape.fontStyle : 'normal';
+        deltaProps.fontFamily =
+            typeof shape.fontFamily === 'string' ?
+                shape.fontFamily : 'sans-serif';
+        deltaProps.fontSize = size;
+
+        this.modifyShapes(
+            deltaProps, this.createUpdateHandler(
+                ['fontSize', 'fontStyle', 'fontFamily'],
+                [size, shape.fontStyle, shape.fontFamily]));
+    }
+
+    /**
+     * Handles comment changes
+     *
+     * @param {string} comment the new  text  value
+     * @param {Object} shape the primary shape that the change was invoked on
+     * @memberof RegionsEdit
+     */
+    onCommentChange(comment = '',shape=null) {
+        if (typeof shape !== 'object' || shape === null) return;
+        if (typeof comment !== 'string') return;
+
+        let deltaProps = {type: shape.type};
+        deltaProps.textValue = comment;
+
+        this.modifyShapes(
+            deltaProps, this.createUpdateHandler(['textValue'], [comment]));
     }
 
     /**
@@ -176,7 +258,7 @@ export default class RegionsEdit {
                 this.regions_info.selected_shapes)
                     .subscribe(
                         (newValue, oldValue) =>
-                            this.adjustFillAndStrokePreview());
+                            this.adjustEditWidgets());
     }
 
     /**
@@ -217,15 +299,15 @@ export default class RegionsEdit {
         this.key_actions.map(
             (action) => this.context.removeKeyListener(action.key));
          $(this.element).find(".spectrum-input").spectrum("destroy");
-         this.unregisterObserver();
+         $(this.element).find(".shape-stroke-width input").spinner("destroy");
     }
 
     /**
-     * Sets the colors  for the edit buttons on shape selection
+     * Reacts to shape selections, adjusting the edit widgets accordingly
      *
      * @memberof RegionsEdit
      */
-    adjustFillAndStrokePreview() {
+    adjustEditWidgets() {
         let lastId =
             this.regions_info.selected_shapes.length === 0 ?
                 -1 :
@@ -237,26 +319,71 @@ export default class RegionsEdit {
         let type =
             lastSelection ? lastSelection.type.toLowerCase() : null;
 
-        // STROKE COLOR
+        // COMMENT
+        let editComment = $(this.element).find(".shape-edit-comment input");
+        editComment.off('input');
+        editComment.prop("disabled", true);
+        editComment.addClass("disabled-color");
+        editComment.val('Comment');
+        if (lastSelection) {
+            editComment.prop("disabled", false);
+            editComment.removeClass("disabled-color");
+            editComment.val(
+                typeof lastSelection.textValue === 'string' ?
+                    lastSelection.textValue : '');
+            editComment.on('input',
+                (event) =>
+                    this.onCommentChange(event.target.value, lastSelection));
+        }
+        let fontSize =
+            lastSelection ?
+                (typeof lastSelection.fontSize === 'number' ?
+                lastSelection.fontSize : 10) : 10;
+        let fontSizeSpinner = $(this.element).find(".shape-font-size input");
+        fontSizeSpinner.off("input spinstop");
+        fontSizeSpinner.spinner("value", fontSize);
+        fontSizeSpinner.spinner("disable");
+        if (lastSelection) {
+            fontSizeSpinner.spinner("enable");
+            fontSizeSpinner.on("input spinstop",
+               (event, ui) => this.onFontSizeChange(
+                   parseInt(event.target.value), lastSelection));
+        } else fontSizeSpinner.spinner("disable");
+
+        // STROKE COLOR & WIDTH
         let strokeOptions =
             this.getColorPickerOptions(false, lastSelection);
         let strokeSpectrum =
             $(this.element).find(".shape-stroke-color .spectrum-input");
+        let strokeWidthSpinner =
+            $(this.element).find(".shape-stroke-width input");
         let strokeColor =
             lastSelection ?
                 lastSelection.strokeColor : '#FFFFFF';
         let strokeAlpha =
             lastSelection ?
                 lastSelection.strokeAlpha : 0;
+        let strokeWidth =
+            lastSelection ?
+                (typeof lastSelection.strokeWidth === 'number' ?
+                    lastSelection.strokeWidth : 10) : 10;
         strokeOptions.color = Misc.hexColorToRgba(strokeColor, strokeAlpha);
         strokeSpectrum.spectrum(strokeOptions);
-        if (lastSelection) strokeSpectrum.spectrum("enable");
+        // STROKE width
+        strokeWidthSpinner.off("input spinstop");
+        strokeWidthSpinner.spinner("value", strokeWidth);
+        if (lastSelection) {
+            strokeSpectrum.spectrum("enable");
+            strokeWidthSpinner.spinner("enable");
+            strokeWidthSpinner.on("input spinstop",
+               (event, ui) => this.onStrokeWidthChange(
+                   parseInt(event.target.value), lastSelection));
+        } else strokeWidthSpinner.spinner("disable");
 
         // FILL COLOR
         let fillOptions = this.getColorPickerOptions(true, lastSelection);
         let fillSpectrum =
             $(this.element).find(".shape-fill-color .spectrum-input");
-
         // set fill (if not disabled)
         let fillDisabled = type === null ||
                 type === 'line' || type === 'polyline' || type === 'label';
@@ -264,7 +391,6 @@ export default class RegionsEdit {
             fillSpectrum.spectrum(fillOptions);
             return;
         }
-
         let fillColor =
             lastSelection ?
                 lastSelection.fillColor : '#FFFFFF';

@@ -91,11 +91,11 @@ a.ui-button:active,
     background-position: center;
 }
 .color-spectrum-container {
-    position: relative!important;
+    position: absolute!important;
     width: 186px;
     height: 270px;
-    top: 0px!important;
-    left: 0px!important;
+    top: 100px!important;
+    left: 10px!important;
     line-height: 30px;
 }
 .color-spectrum-container span {
@@ -591,17 +591,48 @@ thead, tbody {
     background-color: transparent;
 }
 
+.shapes-edit .edit-button {
+    line-height: 25px;
+    height: 28px;
+    width: 30px;
+    margin-left: 2px;
+}
+.shapes-edit .dropdown-menu {
+    left: -130px;
+}
 .shapes-persistence div {
     float: left;
 }
 
 .shape-fill-color, .shape-stroke-color {
     float: left;
-    width: 50px;
     height: 32px;
     margin-bottom: 2px;
+    margin-left: 2px;
 }
 
-.hidden-functionality {
-    display: none !important;
+.shape-stroke-width, .shape-font-size {
+    float: left;
+    padding-top: 2px;
+}
+
+.shape-stroke-width .ui-spinner {
+    width: 30px;
+    line-height: 28px;
+    height: 28px;
+}
+
+.shape-font-size .ui-spinner {
+    width: 38px;
+    line-height: 28px;
+    height: 28px;
+}
+
+.shape-edit-comment {
+    float: left;
+}
+.shape-edit-comment input {
+    width: 115px;
+    line-height: 28px;
+    height: 28px;
 }
