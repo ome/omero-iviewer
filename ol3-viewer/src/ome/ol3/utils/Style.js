@@ -64,9 +64,11 @@ ome.ol3.utils.Style.createFeatureStyle = function(shape_info, is_label, fill_in_
 
 	// contains style information
 	var style = {};
-	var text = {};
-    if (typeof shape_info['textValue'] === 'string')
+	var text = { "count" : 0};
+    if (typeof shape_info['textValue'] === 'string') {
         text['text'] = shape_info['textValue'];
+        text['count']++;
+    }
 	var font = "";
 	if (typeof(shape_info['fontStyle']) === 'string')
 		font += (shape_info['fontStyle'] + " ");
@@ -77,7 +79,10 @@ ome.ol3.utils.Style.createFeatureStyle = function(shape_info, is_label, fill_in_
 	if (typeof(shape_info['fontFamily']) === 'string')
 		font += shape_info['fontFamily'];
 	else if (fill_in_defaults) font += "sans-serif";
-	if (font.length > 0) text['font'] = font;
+	if (font.length > 0) {
+        text['font'] = font;
+        text['count']++;
+    }
 	if (strokeStyle) {
 		// we don't want spikes
 		stroke['lineCap'] = "round";
@@ -87,11 +92,15 @@ ome.ol3.utils.Style.createFeatureStyle = function(shape_info, is_label, fill_in_
 		text['stroke'] = new ol.style.Stroke(stroke);
 		//if (!forLabel) text['stroke'].setWidth(1);
         text['stroke'].setWidth(1);
+        text['count']++;
 	}
-	style['text'] = new ol.style.Text(text);
-    // we do not wish for defaults (ol creates default fill color)
-    if (!fill_in_defaults && typeof shape_info['fillColor'] !== 'string')
-        style['text'].fill_ = null;
+    if (text['count'] > 0) {
+        style['text'] = new ol.style.Text(text);
+
+        // we do not wish for defaults (ol creates default fill color)
+        if (!fill_in_defaults && typeof shape_info['strokeColor'] !== 'string')
+            style['text'].fill_ = null;
+    }
 
 	if (strokeStyle) style['stroke'] = strokeStyle;
 	if (fillStyle) style['fill'] = fillStyle;
