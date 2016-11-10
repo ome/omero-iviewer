@@ -73,7 +73,7 @@ export default class Ol3Viewer extends EventSubscriber {
         [REGIONS_STORE_SHAPES,
             (params={}) => this.storeShapes(params)],
         [REGIONS_STORED_SHAPES,
-            (params={}) => this.aftersShapeStorage(params)],
+            (params={}) => this.afterShapeStorage(params)],
         [REGIONS_MODIFY_SHAPES,
             (params={}) => this.modifyShapes(params)],
         [REGIONS_SHOW_COMMENTS,
@@ -541,7 +541,7 @@ export default class Ol3Viewer extends EventSubscriber {
      * @memberof Ol3Viewer
      * @param {Object} params the event notification parameters
      */
-    aftersShapeStorage(params = {}) {
+    afterShapeStorage(params = {}) {
         // the event doesn't concern us
         if (params.config_id !== this.config_id ||
                 typeof params.shapes !== 'object' ||
@@ -573,6 +573,8 @@ export default class Ol3Viewer extends EventSubscriber {
                     this.image_config.regions_info.data.delete(id);
             }
         }
+        // reload shapes async
+        this.image_config.regions_info.requestData(true);
     }
 
     /**

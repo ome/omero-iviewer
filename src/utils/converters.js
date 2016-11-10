@@ -23,3 +23,177 @@ export class ImageModelValueConverter {
       return model;
   }
 }
+
+import Misc from './misc';
+
+/*
+ * Methods for color conversion
+ */
+@noView
+export class Converters {
+
+    /**
+     * Creates a color in rgba notation from a hex string and an alpha value
+     *
+     * @static
+     * @param {string} hex the color in hex notation
+     * @param {number} alpha the alpha value
+     * @return {string} the color (incl. alpha) as rgba string
+     */
+    static hexColorToRgba(hex, alpha) {
+            if (typeof hex !== 'string' || hex.length === 0) return null;
+            if (typeof alpha !== 'number') alpha = 1.0;
+
+           try {
+               // strip white space and #
+               let strippedHex = hex.replace(/#|\s/g, "");
+            if (strippedHex.length === 3)
+                strippedHex = '' +
+                    strippedHex[0] + strippedHex[0] +
+                    strippedHex[1] + strippedHex[1] +
+                    strippedHex[2] + strippedHex[2];
+               if (strippedHex.length != 6) return null;
+
+               // prepare return object
+               let ret =
+                "rgba(" + parseInt(strippedHex.substring(0,2), 16) + "," +
+                parseInt(strippedHex.substring(2,4), 16) + "," +
+                parseInt(strippedHex.substring(4,6), 16) + "," + alpha + ")";
+            return ret;
+           } catch (parse_error) {
+               return null;
+           }
+   }
+
+   /**
+    * Turns a color in rgba notation into an array of a hex string with alpha
+    *
+    * @static
+    * @param {string} rgba the color in rgba notation
+    * @return {Array.<string, number>} an array with 2 entries, first hex, second alpha
+    */
+   static rgbaToHexAndAlpha(rgba) {
+       if (typeof rgba !== 'string' || rgba.length === 0) return null;
+
+      try {
+          let strippedRgba = rgba.replace(/\(rgba|\(|rgba|rgb|\)/g, "");
+          let tokens = strippedRgba.split(",");
+          if (tokens.length < 3) return null; // at a minimum we need 3 channels
+
+          let ret = [];
+          let hex =
+            "#" +
+                ("00" + parseInt(tokens[0], 10).toString(16)).substr(-2) +
+                ("00" + parseInt(tokens[1], 10).toString(16)).substr(-2) +
+                ("00" + parseInt(tokens[2], 10).toString(16)).substr(-2);
+          ret.push(hex);
+
+          let alpha = tokens.length > 3 ? parseFloat(tokens[3], 10) : 1.0;
+          ret.push(alpha);
+
+          return ret;
+      } catch (parse_error) {
+          return null;
+      }
+   }
+
+   /**
+    * Turns a color in signed integer encoding into an array that contains
+    * the hex representation in the first slot, the alpha value in the second
+    *
+    * @static
+    * @param {number} signed_integer a color as integer
+    * @return {Array.<string, number>} an array with 2 entries, first hex, second alpha
+    */
+    static signedIntegerColorToHexAndAlpha(signed_integer) {
+        if (typeof signed_integer !== 'number') return null;
+
+        let intAsHex = signed_integer.toString(16);
+        if (intAsHex.length === 0) return;
+        // check for negative and get rid of it
+        if (intAsHex[0] === '-') intAsHex.substring(1);
+        // we have to have rgb at a minimum
+        if (intAsHex.length < 6) return;
+
+        // finally convert padding appropriately if we don't have 8 positions
+        if (intAsHex.length === 6) intAsHex = "11" + intAsHex; // no alpha => 1 default
+        else intAsHex = ("00" + intAsHex).slice(-8); // pad zeros to fill up (if needed)
+        let alpha = parseInt(intAsHex.substring(0,2), 16) / 255;
+        let hex = "#";
+        for (let i=2;i<intAsHex.length;i+=2)
+            hex += intAsHex.substr(i, 2);
+
+        return [hex, alpha];
+    }
+
+    /**
+     * Makes omero marshal generated objects backwards compatible
+     *
+     * @static
+     * @param {object} shape a shape created from omero marshal json
+     * @return {object} a shape as if it was returned by the webgateway
+     */
+     static makeShapeBackwardsCompatible(shape) {
+         if (typeof shape !== 'object' || shape === null ||
+                typeof shape['@type'] !== 'string') return null;
+
+        let typePos = shape['@type'].lastIndexOf("#");
+        if (typePos === -1) return; // we really need this info
+        let type = shape['@type'].substring(typePos + 1).toLowerCase();
+
+        // create shape copy in 'webgateway format'
+        let compatibleShape = {type : type}; // type
+        compatibleShape.shape_id = shape.oldId; // dissect id
+        compatibleShape.id =
+            parseInt(
+                compatibleShape.shape_id.substring(
+                    compatibleShape.shape_id.indexOf(":") + 1));
+
+        // loop over individual properties
+        for (let p in shape) {
+            // we skip those
+            if (p === '@type' || p === 'oldId') continue;
+            // first letter will be lower case converted
+            let pComp = p[0].toLowerCase() + p.substring(1);
+            let value = shape[p];
+            // color value are signed integers and need to be converted
+            let colorPos = p.indexOf('Color');
+            if (colorPos !== -1 && typeof value === 'number') {
+                let color = Converters.signedIntegerColorToHexAndAlpha(value);
+                if (!Misc.isArray(color)) continue;
+                compatibleShape[pComp.substring(0,colorPos) + "Alpha"] = color[1];
+                value = color[0];
+            }
+            // text => textValue
+            if (p === 'Text') pComp = 'textValue';
+            // stroke width object => number
+            if (p === 'StrokeWidth') value = shape[p].Value;
+            // font size object => number
+            if (p === 'FontSize') value = shape[p].Value;
+            if (p === 'Points') {
+                try {
+                    let coords = [];
+                    let points = shape[p].split(" ");
+                    if (type === 'polygon') points.splice(points.length-1);
+                    points.map((point) => {
+                        let tuple = point.split(",");
+                        coords.push( // x/y
+                            [parseFloat(tuple[0]),
+                             parseFloat(tuple[1])]);});
+                    value = "M ";
+                    let i = 0;
+                    coords.map((c) => {
+                        if (i !== 0) value += " L ";
+                        value += c[0] + " " + c[1];
+                        i++;
+                    });
+                    if (type === 'polygon') value += " Z";
+                } catch(ignored) {}
+            }
+            // set propery and value
+            compatibleShape[pComp] = value;
+        }
+
+        return compatibleShape;
+     }
+}

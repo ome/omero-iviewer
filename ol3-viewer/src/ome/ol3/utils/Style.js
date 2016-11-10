@@ -48,7 +48,7 @@ ome.ol3.utils.Style.createFeatureStyle = function(shape_info, is_label, fill_in_
 	if (typeof(shape_info['strokeWidth']) === 'number') {
 		stroke['width'] = shape_info['strokeWidth'];
 		stroke['count']++;
-	} else {
+	} else if (fill_in_defaults) {
 		stroke['width'] = 1;
 	}
 	if (stroke['count'] > 0) {
@@ -379,7 +379,8 @@ ome.ol3.utils.Style.cloneStyle = function(style) {
 			style.getText().getScale() ? style.getText().getScale() : 1;
 		*/
 		var text =
-			style.getText().getText() ? style.getText().getText() : null;
+			typeof style.getText().getText() === 'string' ?
+                style.getText().getText() : "";
 		/*
 		var textAlign =
 			style.getText().getTextAlign() ? style.getText().getTextAlign() : "center";

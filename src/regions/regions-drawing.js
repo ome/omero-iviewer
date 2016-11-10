@@ -2,6 +2,7 @@
 import Context from '../app/context';
 import {inject, customElement, bindable} from 'aurelia-framework';
 import Misc from '../utils/misc';
+import {Converters} from '../utils/converters';
 import { REGIONS_MODE} from '../utils/constants';
 import {REGIONS_DRAW_SHAPE, REGIONS_SHAPE_DRAWN,
         EventSubscriber} from '../events/events';
@@ -67,28 +68,18 @@ export default class RegionsDrawing extends EventSubscriber {
         if (Misc.isArray(params.shapes))
             params.shapes.map(
                 (shape) => {
-                    let newShape = Object.assign({}, shape);
-                    // what we receive is omero marshal compatible json
-                    // we need to fill in some webgateway compatible bits
-                    newShape.shape_id = shape.oldId;
-                    newShape.id =
-                        parseInt(
-                            newShape.shape_id.substring(
-                                newShape.shape_id.indexOf(":") + 1));
-                    let typePos = shape['@type'].lastIndexOf("#");
-                    if (typePos === -1) return; // type is needed
-                    newShape.type =
-                        shape['@type'].substring(typePos+1).toLowerCase();
-                    if (shape.Text) newShape.textValue = shape.Text;
-                    newShape.theT = shape.TheT;
-                    newShape.theZ = shape.TheZ;
-                    // we also want these flags
-                    newShape.is_new = true;
-                    newShape.visible = true;
-                    newShape.selected = false;
-                    newShape.deleted = false;
-                    newShape.modified = true;
-                    this.regions_info.data.set(newShape.shape_id, newShape);
+                    let newShape =
+                        Converters.makeShapeBackwardsCompatible(shape);
+                    if (newShape) {
+                        // we also want these flags
+                        newShape.is_new = true;
+                        newShape.visible = true;
+                        newShape.selected = false;
+                        newShape.deleted = false;
+                        newShape.modified = true;
+                        // add to map
+                        this.regions_info.data.set(newShape.shape_id, newShape);
+                    }
                 });
     }
 

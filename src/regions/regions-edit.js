@@ -1,6 +1,7 @@
 // js
 import Context from '../app/context';
 import Misc from '../utils/misc';
+import {Converters} from '../utils/converters';
 import {REGIONS_MODE} from '../utils/constants';
 import {
     REGIONS_CHANGE_MODES, REGIONS_SET_PROPERTY,
@@ -151,7 +152,7 @@ export default class RegionsEdit {
          let deltaProps = {type: shape.type};
          let properties =
              fill ? ['fillColor', 'fillAlpha'] : ['strokeColor', 'strokeAlpha'];
-         let values = Misc.rgbaToHexAndAlpha(color);
+         let values = Converters.rgbaToHexAndAlpha(color);
          if (!Misc.isArray(values) || values.length !== 2) return;
 
          for (let i=0;i<properties.length;i++)
@@ -367,7 +368,8 @@ export default class RegionsEdit {
             lastSelection ?
                 (typeof lastSelection.strokeWidth === 'number' ?
                     lastSelection.strokeWidth : 10) : 10;
-        strokeOptions.color = Misc.hexColorToRgba(strokeColor, strokeAlpha);
+        strokeOptions.color =
+            Converters.hexColorToRgba(strokeColor, strokeAlpha);
         strokeSpectrum.spectrum(strokeOptions);
         // STROKE width
         strokeWidthSpinner.off("input spinstop");
@@ -397,7 +399,7 @@ export default class RegionsEdit {
         let fillAlpha =
             lastSelection ?
                 lastSelection.fillAlpha : 1.0;
-        fillOptions.color = Misc.hexColorToRgba(fillColor, fillAlpha);
+        fillOptions.color = Converters.hexColorToRgba(fillColor, fillAlpha);
         fillSpectrum.spectrum(fillOptions);
         fillSpectrum.spectrum("enable");
     }
