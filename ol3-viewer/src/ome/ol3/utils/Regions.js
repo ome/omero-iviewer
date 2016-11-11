@@ -213,8 +213,8 @@ ome.ol3.utils.Regions.generateRegions =
 	// if no number has been given, we default to 1
 	if (typeof(number) !== 'number' || number < 0)
 		number = 1;
-	if (number > 25000) {
-		console.info("The generation is limited to 25,000 at once for now!");
+	if (number > 10000) {
+		console.error("The generation is limited to 10,000 at once for now!");
 		return null;
 	}
 
@@ -264,6 +264,18 @@ ome.ol3.utils.Regions.generateRegions =
             deltaWidth === higherOfTheTwo ?
                 availableWidth / bboxWidth : availableHeight / bboxHeight;
         prototypeFeature.getGeometry().scale(scaleFactor);
+        var prototypeStyle = prototypeFeature.getStyle();
+        if (prototypeStyle &&
+            prototypeStyle.getText() instanceof ol.style.Text &&
+            typeof prototypeStyle.getText().getFont() === 'string') {
+                var tok = prototypeStyle.getText().getFont().split(" ");
+                if (tok.length === 3) {
+                  var scaledFontSize = parseInt(tok[1]) * scaleFactor;
+                  if (scaledFontSize < 10) scaledFontSize = 10;
+                  prototypeStyle.getText().font_ =
+                     tok[0] + scaledFontSize + "px" + tok[2];
+                }
+        }
         bboxWidth = parseInt(bboxWidth * scaleFactor) - 1;
         bboxHeight = parseInt(bboxHeight * scaleFactor) - 1;
         bboxPrototype = prototypeFeature.getGeometry().getExtent();

@@ -486,7 +486,6 @@ ome.ol3.utils.Style.modifyStyles =
 				style = style(
 					regions_reference.viewer_.viewer_.getView().getResolution());
                 if (ome.ol3.utils.Misc.isArray(style)) style = style[0];
-
 				var newFillStyle =
 					newStyle.getFill() ? newStyle.getFill() : style.getFill();
 
@@ -526,7 +525,16 @@ ome.ol3.utils.Style.modifyStyles =
 						newStrokeStyle.setWidth(newStyle.getStroke().getWidth());
 				}
 				var newTextStyle = style.getText();
-				if (newTextStyle === null)
+				if (newTextStyle === null &&
+                        feature['oldText'] instanceof ol.style.Text) {
+                    var tmp = newStyle.getText();
+                    if (tmp instanceof ol.style.Text) {
+                        if (typeof tmp.getText() === 'string')
+                            feature['oldText'].text_ = tmp.getText();
+                        if (typeof tmp.getFont() === 'string')
+                            feature['oldText'].font_ = tmp.getFont();
+                    }
+                } else if (newTextStyle === null)
 					newTextStyle = newStyle.getText();
 				else if (newStyle.getText()) {
 					// mix in new properties

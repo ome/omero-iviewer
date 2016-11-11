@@ -86,10 +86,8 @@ export default class Context {
             throw "Invalid EventAggregator given!"
 
         let server = optParams[REQUEST_PARAMS.SERVER];
-        if (typeof server !== 'string' || server.length === 0) {
-            server = "";
-            console.info("Using relative paths for server requests...");
-        } else {
+        if (typeof server !== 'string' || server.length === 0) server = "";
+        else {
             // check for localhost and if we need to prefix for requests
             let isLocal =
                 server.indexOf("localhost") >=0 ||

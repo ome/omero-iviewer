@@ -589,7 +589,7 @@ ome.ol3.Viewer.prototype.changeToImage =
 			this.id_ = parseInt(this.id_);
 		} catch(not_a_number) {}
         if (typeof this.id_ !== 'number' || this.id_ <=0)
-            console.info('Image Id has to be a strictly positive integer');
+            console.error('Image Id has to be a strictly positive integer');
 
 		/*
 		 * add controls and interactions to restore previous 'viewer state'

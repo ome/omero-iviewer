@@ -256,23 +256,14 @@ ome.ol3.utils.Conversion.convertColorToSignedInteger = function(color, alpha) {
 		return null;
 	}
 
-	var decimalMultiplied = color.alpha * 255;
+	var decimalMultiplied = color['alpha'] * 255;
 	var decimalOnly = decimalMultiplied - parseInt(decimalMultiplied);
-	var alpha =
-	 ("00" + (decimalOnly <= 0.5 ?
-		 					Math.floor(decimalMultiplied) :
-							Math.ceil(decimalMultiplied)).toString(16)).substr(-2);
-	var red = ("00" + color['red'].toString(16)).substr(-2);
-	var green = ("00" + color['green'].toString(16)).substr(-2);
-	var blue = ("00" + color['blue'].toString(16)).substr(-2);
+	alpha =
+        decimalOnly <= 0.5 ?
+            Math.floor(decimalMultiplied) : Math.ceil(decimalMultiplied);
 
-	// this line is essential to determine the bit length of the signed number: 32
-	// otherwise the length will be extended to ever get an unsigned integer just
-	// like python does ...
-	var ret = 0x00000000;
-	ret |= parseInt("0x" + alpha + red + green + blue, 16);
-
-	return ret;
+    return ((alpha << 24) |
+                (color['red'] << 16) | (color['green'] << 8) | color['blue']);
 }
 
 /**
@@ -585,11 +576,14 @@ ome.ol3.utils.Conversion.integrateStyleIntoJsonObject = function(feature, jsonOb
 			presentStyle.getText().getStroke().getWidth() : presentStrokeWidth
 	};
 
-	if (presentStyle.getText()) {  // TEXT
-		if (presentStyle.getText().getText())
-			jsonObject['Text'] = presentStyle.getText().getText();
-		if (presentStyle.getText().getFont()) {
-			var font = presentStyle.getText().getFont();
+    var presentText = presentStyle.getText();
+    if (presentText === null && feature['oldText'] instanceof ol.style.Text)
+        presentText = feature['oldText'];
+	if (presentText instanceof ol.style.Text) {  // TEXT
+		if (presentText.getText())
+			jsonObject['Text'] = presentText.getText();
+		if (presentText.getFont()) {
+			var font = presentText.getFont();
 			var fontTokens = font.split(' ');
 			if (fontTokens.length == 3) {
 				try {

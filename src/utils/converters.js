@@ -108,10 +108,8 @@ export class Converters {
     static signedIntegerColorToHexAndAlpha(signed_integer) {
         if (typeof signed_integer !== 'number') return null;
 
+        if (signed_integer < 0) signed_integer = signed_integer >>> 0;
         let intAsHex = signed_integer.toString(16);
-        if (intAsHex.length === 0) return;
-        // check for negative and get rid of it
-        if (intAsHex[0] === '-') intAsHex.substring(1);
         // we have to have rgb at a minimum
         if (intAsHex.length < 6) return;
 

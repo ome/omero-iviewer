@@ -186,7 +186,7 @@ ome.ol3.utils.Net.issueServerKeepAlivePing = function(server, action, context) {
 				action.call(context, data);
 			} else if (action) {
 				action(data);
-			} else console.info("Received: " + data);
+			}
 		},
 		"error" : function(error) { console.error("keep alive failed");}
 	};
@@ -257,7 +257,7 @@ ome.ol3.utils.Net.sendRequest = function(parameters, context) {
 	var timeout =  (typeof(params['timeout']) === 'number') ?
 		params['timeout'] : 60 * 1000;
 	var success =  (typeof(params['success']) === 'function') ?
-		params['success'] : function(data) {console.info(data);};
+		params['success'] : function(data) {};
 	var error =  (typeof(params['error']) === 'function') ?
 		params['error'] : function(error) {console.error(error);};
 
@@ -360,7 +360,7 @@ ome.ol3.utils.Net.sendSameOrigin = function(
 		xhr.setRequestHeader(h, headers[h]);
 
 	xhr.timeout = timeout; // timeout
-	xhr.ontimeout = function() { console.info("xhr request timed out!");};
+	xhr.ontimeout = function() { console.error("xhr request timed out!");};
 
 	xhr.onerror = function(error) { // error
 		var errorText =
