@@ -5,6 +5,15 @@
             <div class="shape-stroke-width"><input /></div>
             <div class="shape-edit-comment"><input value="Comment"/></div>
             <div class="shape-font-size"><input /></div>
+            <div class="dropdown rois-dropdown arrow-button" style="float: left;">
+                <button type="button" class="btn-xs dropdown-toggle disabled-color"
+                    disabled="disabled"
+                data-toggle="dropdown"><-></button>
+                <ul class="dropdown-menu">
+                    <li click.delegate="toggleArrow(true)"><a href="#">Head</a></li>
+                    <li click.delegate="toggleArrow(false)"><a href="#">Tail</a></li>
+                </ul>
+            </div>
 
             <div class="dropdown rois-dropdown" style="float: left;">
                 <button type="button" class="btn-xs dropdown-toggle edit-button"

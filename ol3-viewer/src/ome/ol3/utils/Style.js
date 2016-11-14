@@ -247,14 +247,18 @@ ome.ol3.utils.Style.updateStyleFunction = function(feature, regions_reference, f
 				typeof(feature['selected'] === 'boolean') ? feature['selected'] : false;
 			if (selected) {
 				var selStyle = new ol.style.Stroke();
-				selStyle.setColor("rgba(255,0,0,1)");
+                var c = feature['oldStrokeStyle'] &&
+                    typeof feature['oldStrokeStyle']['color'] !== 'undefined' ?
+                        feature['oldStrokeStyle']['color'] : "rgba(255,0,0,1)";
+                if (isLabel) c = "rgba(255,0,0,1)";
+                selStyle.setColor(c)
                 // we use width from old style if (exists)
                 var w =
                     feature['oldStrokeStyle'] &&
                         typeof feature['oldStrokeStyle']['width'] === 'number' ?
                             feature['oldStrokeStyle']['width'] : 3;
 				selStyle.setWidth(w+1);
-				selStyle.setLineDash([0.1, 5]);
+				selStyle.setLineDash([5, 5]);
 				oldStyle.stroke_ = selStyle;
 			} else if (feature['oldStrokeStyle']) {
 					// restore old style
@@ -275,8 +279,7 @@ ome.ol3.utils.Style.updateStyleFunction = function(feature, regions_reference, f
 
                 var lineStroke = oldStyle.getStroke();
                 var strokeWidth = lineStroke.getWidth() || 1;
-                var arrowBaseWidth =
-                    (strokeWidth * 6 + 9) * actual_resolution;
+                var arrowBaseWidth = 15 * actual_resolution;
 
                 // determine which arrows we need
                 var arrowsToDo = [];
@@ -477,6 +480,15 @@ ome.ol3.utils.Style.modifyStyles =
             // we pick the type from the existing feature
             var type = feature['type'].toLowerCase();
             shape_info['type'] = type;
+            // check for arrow markers
+            if (type === 'line' || type === 'polyline') {
+                if (typeof shape_info['markerStart'] === 'string')
+                    feature.getGeometry().has_start_arrow_ =
+                        shape_info['markerStart'] === 'Arrow';
+                if (typeof shape_info['markerEnd'] === 'string')
+                    feature.getGeometry().has_end_arrow_ =
+                        shape_info['markerEnd'] === 'Arrow';
+            }
             var newStyle = ome.ol3.utils.Style.createFeatureStyle(
                 shape_info, (type === 'label'), false);
             if (newStyle === null) continue;
@@ -533,6 +545,8 @@ ome.ol3.utils.Style.modifyStyles =
                             feature['oldText'].text_ = tmp.getText();
                         if (typeof tmp.getFont() === 'string')
                             feature['oldText'].font_ = tmp.getFont();
+                        if (newStrokeStyle)
+                            feature['oldText'].fill_ = newStrokeStyle;
                     }
                 } else if (newTextStyle === null)
 					newTextStyle = newStyle.getText();

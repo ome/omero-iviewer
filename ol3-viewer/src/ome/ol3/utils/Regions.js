@@ -270,10 +270,18 @@ ome.ol3.utils.Regions.generateRegions =
             typeof prototypeStyle.getText().getFont() === 'string') {
                 var tok = prototypeStyle.getText().getFont().split(" ");
                 if (tok.length === 3) {
-                  var scaledFontSize = parseInt(tok[1]) * scaleFactor;
-                  if (scaledFontSize < 10) scaledFontSize = 10;
-                  prototypeStyle.getText().font_ =
-                     tok[0] + scaledFontSize + "px" + tok[2];
+                    var scaledFontSize = parseInt(tok[1]) * scaleFactor;
+                    if (scaledFontSize < 10) scaledFontSize = 10;
+                    prototypeStyle.getText().font_ =
+                        tok[0] + " " + scaledFontSize + "px " + tok[2];
+                    if (prototypeFeature.getGeometry()
+                            instanceof ome.ol3.geom.Label) {
+                        var resizedDims =
+                            ome.ol3.utils.Style.measureTextDimensions(
+                                prototypeStyle.getText().getText(),
+                                prototypeStyle.getText().getFont(), null);
+                        prototypeFeature.getGeometry().resize(resizedDims);
+                  }
                 }
         }
         bboxWidth = parseInt(bboxWidth * scaleFactor) - 1;

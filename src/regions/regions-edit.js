@@ -304,11 +304,13 @@ export default class RegionsEdit {
     }
 
     /**
-     * Reacts to shape selections, adjusting the edit widgets accordingly
+     * Gets the last item in the selected_shapes array or null if empty
      *
+     * @return {Object|null} the last shape in the selected array or null
+     * @private
      * @memberof RegionsEdit
      */
-    adjustEditWidgets() {
+    getLastSelected() {
         let lastId =
             this.regions_info.selected_shapes.length === 0 ?
                 -1 :
@@ -317,6 +319,17 @@ export default class RegionsEdit {
             lastId === -1 ? null :
             this.regions_info.data.get(
                 this.regions_info.selected_shapes[lastId]);
+
+        return lastSelection;
+    }
+
+    /**
+     * Reacts to shape selections, adjusting the edit widgets accordingly
+     *
+     * @memberof RegionsEdit
+     */
+    adjustEditWidgets() {
+        let lastSelection = this.getLastSelected();
         let type =
             lastSelection ? lastSelection.type.toLowerCase() : null;
 
@@ -381,6 +394,16 @@ export default class RegionsEdit {
                (event, ui) => this.onStrokeWidthChange(
                    parseInt(event.target.value), lastSelection));
         } else strokeWidthSpinner.spinner("disable");
+
+        // ARROW
+        let arrowButton = $(this.element).find(".arrow-button button");
+        if (type && type.indexOf('line') >= 0) {
+            arrowButton.prop('disabled', false);
+            arrowButton.removeClass('disabled-color');
+        } else {
+            arrowButton.prop('disabled', true);
+            arrowButton.addClass('disabled-color');
+        }
 
         // FILL COLOR
         let fillOptions = this.getColorPickerOptions(true, lastSelection);
@@ -448,6 +471,32 @@ export default class RegionsEdit {
             REGIONS_CHANGE_MODES, {
                 config_id : this.regions_info.image_info.config_id,
                 modes : mode});
+    }
+
+    /**
+     * Toggles if line has an arrow
+     *
+     * @param {boolean} head if true we append arrow at head, otherwise tail
+     * @memberof RegionsEdit
+     */
+    toggleArrow(head=true) {
+        if (typeof head !== 'boolean') head = true;
+
+        let lastSelection = this.getLastSelected();
+        if (lastSelection === null) return;
+
+        let deltaProps = {type: 'polyline'};
+
+        let property = head ? 'markerStart' : 'markerEnd';
+        let hasArrowMarker =
+            typeof lastSelection[property] === 'string' &&
+                lastSelection[property] === 'Arrow';
+
+        let value = hasArrowMarker ? "" : "Arrow";
+        deltaProps[property] = value;
+
+        this.modifyShapes(
+            deltaProps, this.createUpdateHandler([property], [value]));
     }
 
     /**

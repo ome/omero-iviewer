@@ -41,7 +41,8 @@ a.ui-button:active,
     float: left;
     margin-left: 2px;
     margin-right: 2px;
-    width: 50px;
+    min-width: 50px;
+    width: 15%;
 }
 .ui-spinner span {
     position: relative;
@@ -89,6 +90,9 @@ a.ui-button:active,
     background-image: url('images/line.png');
     background-repeat: no-repeat;
     background-position: center;
+}
+.shape-stroke-color-replacer .sp-preview-inner {
+    opacity: 0.8;
 }
 .color-spectrum-container {
     position: absolute!important;
@@ -145,8 +149,8 @@ a.ui-button:active,
 .frame {
     margin-left: -105px;
     padding-left: 110px;
-    margin-right: -325px;
-    padding-right: 340px;
+    margin-right: -355px;
+    padding-right: 365px;
 }
 
 .center {
@@ -263,7 +267,7 @@ thumbnail-slider img {
 }
 
 .right-hand-panel {
-    width: 320px;
+    width: 350px;
     max-width: 800px;
     overflow-y: auto;
 }
@@ -273,7 +277,7 @@ thumbnail-slider img {
 }
 
 .right-hand-panel .row {
-    min-width: 320px;
+    min-width: 350px;
     max-width: 800px;
     line-height: 30px;
     height: 30px;
@@ -310,7 +314,7 @@ thumbnail-slider img {
     margin-top: 10px;
     height: 10px;
     float: left;
-    width: 35%;
+    width: 40%;
     margin-left: 7px;
     margin-right: 1px;
 }
@@ -373,7 +377,8 @@ thumbnail-slider img {
     font-size: 10px;
     float: left;
     height: 100%;
-    width: 50px;
+    min-width: 50px;
+    width: 15%;
     border-width: 2px;
     border-radius: 0px;
 }
@@ -404,7 +409,7 @@ thumbnail-slider img {
 .regions-header {
     table-layout: fixed;
     width: 100%
-    min-width: 320px;
+    min-width: 350px;
 }
 
 thead, tbody {
@@ -437,7 +442,7 @@ thead, tbody {
 .regions-table {
     margin-top: 5px;
     table-layout: fixed;
-    min-width:320px;
+    min-width:350px;
     max-width:800px;
     height:400px;
     display: block;
@@ -572,7 +577,7 @@ thead, tbody {
     border: solid #ccc 1px;
     margin-bottom: 5px;
     height: 125px;
-    width: 300px;
+    width: 330px;
 }
 
 .histogram-line {
@@ -617,22 +622,33 @@ thead, tbody {
 }
 
 .shape-stroke-width .ui-spinner {
-    width: 30px;
+    min-width: 30px;
+    max-width: 30px;
     line-height: 28px;
     height: 28px;
 }
-
 .shape-font-size .ui-spinner {
-    width: 38px;
+    min-width: 38px;
+    max-width: 38px;
     line-height: 28px;
     height: 28px;
+}
+.shape-font-size span {
+    max-width: 38px;
 }
 
 .shape-edit-comment {
+    min-width: 115px;
+    width: 33%;
     float: left;
 }
 .shape-edit-comment input {
-    width: 115px;
+    width: 100%;
     line-height: 28px;
     height: 28px;
+}
+
+.arrow-button .dropdown-menu {
+    left: -20px;
+    min-width: 20px;
 }

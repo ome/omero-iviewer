@@ -63,8 +63,9 @@ ome.ol3.interaction.Draw = function(previous_modes, regions_reference) {
                     fill: new ol.style.Fill({color: blue}),
                     stroke: new ol.style.Stroke(
                                 {color: "#FFFFFF",width: 3 / 2})}) : null,
-            fill: !isLabel ?
-                    new ol.style.Fill({color: transWhite}) : null,
+            fill: isLabel ?
+                    new ol.style.Fill({color: blue}) :
+                    new ol.style.Fill({color: transWhite}),
             stroke: new ol.style.Stroke({color: blue, width: 1})});
 
         // we don't have a sketch feature to style
@@ -75,7 +76,7 @@ ome.ol3.interaction.Draw = function(previous_modes, regions_reference) {
             new ol.style.Text(
                 { text: "TEXT",
                   font: "normal " + geom.getHeight() + "px sans-serif",
-                  fill: new ol.style.Fill({color: transWhite, width: 1}),
+                  fill: new ol.style.Fill({color: blue}),
                   stroke: new ol.style.Stroke({color: blue, width: 1})}) :
             null;
         if (text) {
@@ -139,7 +140,7 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                 text = new ol.style.Text(
                     { text: "TEXT",
                       font: "normal " + geom.getHeight() + "px sans-serif",
-                      fill: new ol.style.Fill({color: white, width: 1}),
+                      fill: new ol.style.Fill({color: blue}),
                       stroke: new ol.style.Stroke({color: blue, width: 1})});
             }
 
