@@ -404,11 +404,12 @@ thumbnail-slider img {
 
 .regions-list {
     padding-top: 5px;
+    height: 80%!important;
 }
 
 .regions-header {
     table-layout: fixed;
-    width: 100%
+    width: 100%;
     min-width: 350px;
 }
 
@@ -444,9 +445,10 @@ thead, tbody {
     table-layout: fixed;
     min-width:350px;
     max-width:800px;
-    height:400px;
+    max-height: 300px;
     display: block;
-    overflow: scroll;
+    overflow-x: scroll;
+    overflow-y: auto;
 }
 
 .regions-table tr {

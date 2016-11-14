@@ -40,6 +40,19 @@ export default class RegionsList {
     }
 
     /**
+     * Hide/Shows tegions table
+     *
+     * @memberof RegionsList
+     */
+    toggleRegionsTable() {
+        if ($('.regions-list').is(':visible')) {
+            $('.regions-list').hide();
+        } else {
+            $('.regions-list').show();
+        }
+    }
+
+    /**
      * Overridden aurelia lifecycle method:
      * fired when PAL (dom abstraction) is ready for use
      *

@@ -24,7 +24,13 @@
               change.delegate="toggleScalebar()">Show Scalebar</label>
               <span>&nbsp;</span>
 
-            <label><input type="checkbox"
+            <label class="${image_info === null ||
+                 image_info.projection === 'split' ? 'disabled-color' : ''}">
+                 <input type="checkbox"
+                        disabled.bind="image_info === null ||
+                            image_info.projection === 'split'"
+                    class="${image_info === null ||
+                        image_info.projection === 'split' ? 'disabled-color' : ''}"
                checked.bind="context.show_regions"
               change.delegate="toggleRegions()">Show ROIs</label>
 

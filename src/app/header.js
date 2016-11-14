@@ -32,6 +32,13 @@ export class Header extends EventSubscriber {
                     (params = {}) => this.onImageConfigChange(params)]];
 
     /**
+     * the selected image info
+     * @memberof Header
+     * @type {ImageInfo}
+     */
+    image_info = null;
+
+    /**
      * Overridden aurelia lifecycle method:
      * called whenever the view is bound within aurelia
      * in other words an 'init' hook that happens before 'attached'
@@ -86,10 +93,10 @@ export class Header extends EventSubscriber {
      */
      onImageConfigChange(params = {}) {
          if (this.context.getImageConfig(params.config_id) === null) return;
-         let image_info =
+         this.image_info =
              this.context.getImageConfig(params.config_id).image_info;
 
-         if (!image_info.has_scalebar) {
+         if (!this.image_info.has_scalebar) {
              this.context.show_scalebar = false;
              $(".has_scalebar").addClass("disabled-color");
              $(".has_scalebar input").prop('disabled', true);
@@ -97,18 +104,19 @@ export class Header extends EventSubscriber {
             $(".has_scalebar").removeClass("disabled-color");
             $(".has_scalebar input").prop('disabled', false);
         }
-        $(".split_channels").val(image_info.projection);
-        if (!image_info.tiled &&
-                Misc.isArray(image_info.channels) &&
-                image_info.channels.length > 1) {
+        $(".split_channels").val(this.image_info.projection);
+        if (!this.image_info.tiled &&
+                Misc.isArray(this.image_info.channels) &&
+                this.image_info.channels.length > 1) {
             $(".split_channels").removeClass("disabled-color");
             $(".split_channels").prop('disabled', false);
             $(".split_channels").html(
-                image_info.projection === 'split' ? "Normal" :"Split Channels");
+                this.image_info.projection === 'split' ? "Normal" :"Split Channels");
         } else {
             $(".split_channels").addClass("disabled-color");
             $(".split_channels").prop('disabled', true);
             $(".split_channels").html("Normal");
+            this.context.show_regions = false;
         }
      }
 
@@ -123,7 +131,7 @@ export class Header extends EventSubscriber {
              let url =
                 Misc.assembleImageLink(
                     this.context.server,
-                    this.context.getSelectedImageConfig().image_info.image_id,
+                    this.image_info.image_id,
                     settings);
                 // show link and register close button
                 $('.link-url button').blur();
@@ -157,10 +165,15 @@ export class Header extends EventSubscriber {
                 (value === 'split' || value === 'normal')) {
                 let ctx = this.context.getSelectedImageConfig();
                 if (ctx === null) return;
+                this.image_info = ctx.image_info;
                 let makeSplit = (value === 'normal');
                 $(".split_channels").val(makeSplit ? "split" : "normal");
                 $(".split_channels").html(makeSplit ? "Normal" : "Split Channels");
-                ctx.image_info.projection = makeSplit ? "split" : "normal";
+                this.image_info.projection = makeSplit ? "split" : "normal";
+                if (makeSplit) {
+                    this.context.show_regions = false;
+                    ctx.regions_info.requestData(true);
+                }
                 this.context.publish(
                     IMAGE_VIEWER_SPLIT_VIEW,
                         {config_id : ctx.id, split : makeSplit});
