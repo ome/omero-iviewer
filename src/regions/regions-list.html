@@ -1,6 +1,11 @@
 <template>
     <hr />
-    <a href="#" click.delegate="toggleRegionsTable()">Regions List</a>
+    <div style="min-width: 110px;">
+        <span class="collapsible-regions-header">Shape List</span>
+        <div click.delegate="toggleRegionsTable()"
+            class="regions-list-toggler collapse-up"></div>
+    </div>
+    <hr />
     <div class="row regions-list">
         <table class="regions-header">
             <thead>

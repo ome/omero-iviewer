@@ -47,8 +47,12 @@ export default class RegionsList {
     toggleRegionsTable() {
         if ($('.regions-list').is(':visible')) {
             $('.regions-list').hide();
+            $('.regions-list-toggler').removeClass('collapse-up');
+            $('.regions-list-toggler').addClass('expand-down');
         } else {
             $('.regions-list').show();
+            $('.regions-list-toggler').removeClass('expand-down');
+            $('.regions-list-toggler').addClass('collapse-up');
         }
     }
 

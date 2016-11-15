@@ -72,7 +72,9 @@
         </div>
     </div>
 
-    <div class="row"><div class="histogram"></div></div>
+    <div show.bind="histogram && histogram.visible" class="row">
+        <div class="histogram"></div>
+    </div>
 
     <div class="row" style="height: 100%">
         <channel-settings class="col-xs-12" config_id.bind="config_id"></channel-settings>

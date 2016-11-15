@@ -640,8 +640,8 @@ thead, tbody {
 }
 
 .shape-edit-comment {
-    min-width: 115px;
-    width: 33%;
+    min-width: 110px;
+    width: 30%;
     float: left;
 }
 .shape-edit-comment input {
@@ -653,4 +653,47 @@ thead, tbody {
 .arrow-button .dropdown-menu {
     left: -20px;
     min-width: 20px;
+}
+
+.regions-pinning div {
+    float: left;
+    width: 100%;
+}
+
+.regions-pinning input {
+    float: left;
+    height: 28px;
+    line-height: 28px;
+}
+
+.regions-pinning span {
+    float: left;
+    margin-left: 20px;
+    margin-right: 2px;
+    width: 15px;
+}
+
+.collapse-up {
+    float: right;
+    height: 16px;
+    width: 16px;
+    background-image: url('images/collapse.png');
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.expand-down {
+    float: right;
+    height: 16px;
+    width: 16px;
+    background-image: url('images/expand.png');
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.collapsible-regions-header {
+    margin-left: 2px;
+    font-weight: bold;
+    font-size: 12px;
+    width: 80%;
 }
