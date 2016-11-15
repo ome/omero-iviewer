@@ -3,6 +3,7 @@ import {
     IMAGE_CONFIG_UPDATE, EventSubscriber} from '../events/events';
 import Misc from '../utils/misc';
 import {REGIONS_MODE} from '../utils/constants';
+import {REGIONS_DRAWING_MODE} from '../utils/constants';
 
 /**
  * Holds region information
@@ -49,6 +50,20 @@ export default class RegionsInfo extends EventSubscriber {
      * @type {Array.<number>}
      */
     regions_modes = [REGIONS_MODE.SELECT, REGIONS_MODE.TRANSLATE];
+
+    /**
+     * the drawing mode
+     * @memberof RegionsInfo
+     * @type {number}
+     */
+    drawing_mode = REGIONS_DRAWING_MODE.Z_AND_T_VIEWED;
+
+    /**
+     * the z/t indices that we draw to
+     * @memberof RegionsInfo
+     * @type {number}
+     */
+    drawing_dims = { t: [], z: []};
 
     /**
      * our list of events we subscribe to via the EventSubscriber

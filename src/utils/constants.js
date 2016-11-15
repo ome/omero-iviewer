@@ -38,3 +38,16 @@ export const REGIONS_MODE = {
     MODIFY : 3,
     DRAW : 4
 }
+
+/**
+ * the possible region drawing modes
+ * @type {Object}
+ */
+export const REGIONS_DRAWING_MODE = {
+    Z_AND_T_VIEWED : 0,
+    ALL_Z_AND_T : 1,
+    ALL_Z: 2,
+    ALL_T : 3,
+    SELECTED_Z_AND_T : 4,
+    NEITHER_Z_NOR_T : 5
+}

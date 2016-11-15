@@ -655,18 +655,35 @@ thead, tbody {
     min-width: 20px;
 }
 
-.regions-pinning div {
+.drawing-mode {
     float: left;
+    margin-left: 2px;
+    width: 100%;
+    min-width: 200px;
+}
+.drawing-mode input {
+    float: left;
+}
+.drawing-mode span {
+    float: left;
+}
+.drawing-mode-apply {
+    text-align: center;
+}
+
+.regions-propagation-options div {
+    float: left;
+    margin-left: 20px;
     width: 100%;
 }
 
-.regions-pinning input {
+.regions-propagation-options input {
     float: left;
     height: 28px;
     line-height: 28px;
 }
 
-.regions-pinning span {
+.regions-propagation-options .aligned-text-input {
     float: left;
     margin-left: 20px;
     margin-right: 2px;
