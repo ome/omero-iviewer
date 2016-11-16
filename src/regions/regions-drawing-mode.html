@@ -51,6 +51,7 @@
                     ${propagate ? '' : 'disabled-color'}">Z:</span>
                 <input type="input"
                     disabled.bind="!propagate || regions_info.drawing_mode !== 4"
+                    change.delegate="onDimensionInputChange('z', $event.target)"
                     class="${!propagate || regions_info.drawing_mode !== 4 ?
                             'disabled-color' : ''}"
                 value="${regions_info.drawing_mode !== 4 ?
@@ -61,6 +62,7 @@
                     ${propagate ? '' : 'disabled-color'}">T:</span>
                 <input type="input"
                     disabled.bind="!propagate || regions_info.drawing_mode !== 4"
+                    change.delegate="onDimensionInputChange('t', $event.target)"
                     class="${!propagate || regions_info.drawing_mode !== 4 ?
                             'disabled-color' : ''}"
                 value="${regions_info.drawing_mode !== 4 ?

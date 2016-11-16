@@ -123,7 +123,11 @@ export default class Context {
             window.onkeydown = (event) => {
                 try {
                     // only process CTRL+KEY combinations
-                    if (!event.ctrlKey) return;
+                    // and if target is an input field,
+                    // we do not wish to override either
+                    if (!event.ctrlKey ||
+                            event.target.tagName.toUpperCase() === 'INPUT')
+                            return;
                     let keyHandler =
                         this.key_listeners.get(event.keyCode);
                     if (keyHandler) {

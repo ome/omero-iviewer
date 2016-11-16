@@ -49,6 +49,56 @@ export default class RegionsDrawingMode {
     }
 
     /**
+     * Handles z/t propagation changes, typed in by the user
+     * @memberof RegionsDrawingMode
+     * @param {string} dim the dimension: 't' or 'z'
+     * @param {Element} target the target element (input)
+     */
+    onDimensionInputChange(dim, target) {
+        if (dim !== 't' && dim !== 'z') return;
+
+        let value = target.value;
+        //first eliminate all whitespace
+        value = value.replace(/\s/g, '');
+        if (value.length === 0) return;
+
+        let tokens = value.split(","); // tokenize by ,
+        let max = this.regions_info.image_info.dimensions['max_' + dim];
+        let vals = [];
+        tokens.map((t) => {
+            let potentialDashPos = t.indexOf("-");
+            if (potentialDashPos === -1) {// single number assumed
+                let temp = parseInt(t);
+                if (typeof temp === 'number' && !isNaN(temp) &&
+                        temp > 0 && temp <= max) vals.push(temp);
+            } else { // we might have a range
+                let start = parseInt(t.substring(0, potentialDashPos));
+                let end = parseInt(t.substring(potentialDashPos+1));
+                if (typeof start === 'number' && typeof end === 'number' &&
+                    !isNaN(start) && !isNaN(end) && start <= end) {
+                         // equal: we increment end
+                        if (start === end) end++;
+                        else {
+                            // we do have a 'range'
+                            for (let i=start;i<end;i++)
+                                if (i > 0 && i <= max) vals.push(i);
+                        }
+                    }
+            }
+        });
+        // now let's add to our actual list that is applied for propagation
+        // eliminating duplicates and decrementing by 1 to get true dim indices
+        vals.sort();
+        let previous = -1;
+        for (let x=0;x<vals.length;x++) {
+            let present = vals[x];
+            if (present === previous) continue;
+            previous = present;
+            this.regions_info.drawing_dims[dim].push(present-1);
+        }
+    }
+
+    /**
      * Handler for region drawing mode selection (propagation or present Z/T)
      * @memberof RegionsDrawingMode
      * @param {boolean} propagate true if we use propagation options
@@ -56,6 +106,8 @@ export default class RegionsDrawingMode {
      */
     onDrawingModeChange(propagate, flag) {
         this.propagate = (propagate && flag) || (!propagate && !flag);
+        this.regions_info.drawing_dims.t = [];
+        this.regions_info.drawing_dims.z = [];
         let opt = REGIONS_DRAWING_MODE.Z_AND_T_VIEWED;
         if (this.propagate) // find active option
             $(".regions-propagation-options [type='radio']").each(
