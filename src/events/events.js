@@ -18,14 +18,14 @@ export const REGIONS_SET_PROPERTY = "REGIONS_SET_PROPERTY";
 export const REGIONS_PROPERTY_CHANGED = "REGIONS_PROPERTY_CHANGED";
 /** whenever a new shape has been drawn */
 export const REGIONS_DRAW_SHAPE = "REGIONS_DRAW_SHAPE";
-/** whenever a new shape has been drawn */
-export const REGIONS_SHAPE_DRAWN = "REGIONS_SHAPE_DRAWN";
+/** whenever a new shape has been generated/drawn */
+export const REGIONS_SHAPE_GENERATED = "REGIONS_SHAPE_GENERATED";
 /** whenever the modes ought to be changed */
 export const REGIONS_CHANGE_MODES = "REGIONS_CHANGE_MODES";
 /** whenever comments ought to be shown/hidden */
 export const REGIONS_SHOW_COMMENTS = "REGIONS_SHOW_COMMENTS";
-/** whenever shape definitions get copied */
-export const REGIONS_PASTE_SHAPES = "REGIONS_PASTE_SHAPES";
+/** whenever shapes ought to be generated */
+export const REGIONS_GENERATE_SHAPES = "REGIONS_GENERATE_SHAPES";
 /** whenever shapes are stored */
 export const REGIONS_STORE_SHAPES = "REGIONS_STORE_SHAPES";
 /** after modified/new/deleted shapes were stored */

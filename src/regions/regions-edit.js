@@ -5,7 +5,7 @@ import {Converters} from '../utils/converters';
 import {REGIONS_MODE} from '../utils/constants';
 import {
     REGIONS_CHANGE_MODES, REGIONS_SET_PROPERTY,
-    REGIONS_PASTE_SHAPES,REGIONS_MODIFY_SHAPES
+    REGIONS_GENERATE_SHAPES,REGIONS_MODIFY_SHAPES
 } from '../events/events';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {spectrum} from 'spectrum-colorpicker';
@@ -529,8 +529,9 @@ export default class RegionsEdit {
      */
     pasteShapes() {
         this.context.publish(
-            REGIONS_PASTE_SHAPES,
+            REGIONS_GENERATE_SHAPES,
             {config_id : this.regions_info.image_info.config_id,
-                shapes : this.regions_info.copied_shapes});
+                shapes : this.regions_info.copied_shapes,
+                number : 1, random : true});
     }
 }

@@ -13,7 +13,7 @@ import {
     REGIONS_SET_PROPERTY, REGIONS_PROPERTY_CHANGED,
     VIEWER_IMAGE_SETTINGS, IMAGE_VIEWER_SPLIT_VIEW,
     REGIONS_DRAW_SHAPE, REGIONS_CHANGE_MODES, REGIONS_SHOW_COMMENTS,
-    REGIONS_PASTE_SHAPES, REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES,
+    REGIONS_GENERATE_SHAPES, REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES,
     REGIONS_MODIFY_SHAPES, EventSubscriber }
 from '../events/events';
 
@@ -68,8 +68,8 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.changeRegionsModes(params)],
         [REGIONS_DRAW_SHAPE,
             (params={}) => this.drawShape(params)],
-        [REGIONS_PASTE_SHAPES,
-            (params={}) => this.pasteShapes(params)],
+        [REGIONS_GENERATE_SHAPES,
+            (params={}) => this.generateShapes(params)],
         [REGIONS_STORE_SHAPES,
             (params={}) => this.storeShapes(params)],
         [REGIONS_STORED_SHAPES,
@@ -299,23 +299,30 @@ export default class Ol3Viewer extends EventSubscriber {
      }
 
      /**
-      * 'Pastes' copied shapes by generating new ones from given shape json
+      * Generates shape for both, pasting and propagation
       *
       * @param {Object} params the event notification parameters
       * @memberof Ol3Viewer
       */
-      pasteShapes(params = {}) {
+      generateShapes(params = {}) {
           //we want only notifications that concern us
           // and need at least one shape definition in an array
           if (params.config_id !== this.config_id ||
               !Misc.isArray(params.shapes) || params.shapes.length === 0) return;
 
           let extent = this.viewer.getSmallestViewExtent();
+          if (typeof params.random !== 'boolean') params.random = false;
+          if (typeof params.number !== 'number') params.number = 1;
+          let theDims =
+            Misc.isArray(params.theDims) && params.theDims.length !== 0 ?
+                params.theDims : null;
+
           params.shapes.map(
               (def) => {
                   try {
                       this.viewer.generateShapes(
-                          Object.assign({},def),1, true, extent);
+                          Object.assign({},def),
+                          params.number, params.random, extent, theDims);
                   } catch(ignored) {}});
       }
 

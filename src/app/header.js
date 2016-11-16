@@ -116,7 +116,6 @@ export class Header extends EventSubscriber {
             $(".split_channels").addClass("disabled-color");
             $(".split_channels").prop('disabled', true);
             $(".split_channels").html("Normal");
-            this.context.show_regions = false;
         }
      }
 

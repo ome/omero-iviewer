@@ -1,7 +1,7 @@
 <template>
     <hr />
-    <div style="min-width: 150px;">
-        <span class="collapsible-regions-header">Drawing Mode Shapes</span>
+    <div style="min-width: 200px;">
+        <span class="collapsible-regions-header">Drawing Mode & Propagation</span>
         <div click.delegate="toggleRegionsDrawingMode()"
             class="regions-drawing-mode-toggler collapse-up"></div>
     </div>
@@ -65,14 +65,6 @@
                             'disabled-color' : ''}"
                 value="${regions_info.drawing_mode !== 4 ?
                         'Enter as 4-9 or 3,9,11...' : ''}">
-            </div>
-            <div><input type="radio" name="propagation-option-5"
-                    disabled.bind="!propagate"
-                    class="${propagate ? '' : 'disabled-color'}"
-                    click.delegate="onPropagationOptionChange(5)">
-                <span class="${propagate ? '' : 'disabled-color'}">
-                    &nbsp;Do not attach to Z or T
-                </span>
             </div>
         </div>
         <div class="drawing-mode"><input class='viewed-mode'

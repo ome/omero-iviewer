@@ -1225,60 +1225,86 @@ ome.ol3.Viewer.prototype.setRegionsModes = function(modes) {
  *
  * @param {Object} shape_info the roi shape information (in 'get_rois_json' format )
  * @param {number} number the number of shapes that should be generated
- * @param {boolean=} random_placement should the shapes be generated in random places? default: false
+ * @param {boolean} random_placement should the shapes be generated in random places? default: false
  * @param {ol.Extent=} extent the portion of the image used for generation (bbox format), default: the entire image
+ * @param {Array.<Array.<number,number>>=} theDims a list of dims to associate with
  */
 ome.ol3.Viewer.prototype.generateShapes =
- 	function(shape_info, number, random_placement, extent) {
+ 	function(shape_info, number, random_placement, extent, theDims) {
+    // we don't do generation any more for the case where we don't
+    // have a regions layer, nor do we do it without shape definition or
+    // if the given number is nonsensical
+    if (this.getRegionsLayer() === null || typeof shape_info !== 'object' ||
+            typeof number !== 'number' || number <= 0)
+        return;
+
+    // more checks
+    // default to false for random_placement if not provided/wrong type
+    if (typeof random_placement !== 'boolean') random_placement = false;
+    // use image extent if none given
 	if (!ome.ol3.utils.Misc.isArray(extent) || extent.length === 0)
-		extent = this.viewer_.getView().getProjection().getExtent(); // use image extent
+		extent = this.viewer_.getView().getProjection().getExtent();
+    // shouldn't there be dims we want to associate with
+    // we use the present z/t
+    if (!ome.ol3.utils.Misc.isArray(theDims) || theDims.length === 0)
+		theDims = [{
+            "z" : this.getDimensionIndex('z'),
+            "t" : this.getDimensionIndex('t'),
+            "c" : -1}];
+
+    // sanity check: we are going to need matching numbers for shapes
+    // and associated t/zs for the association loop below to make sense
+    // exception is random generation which we allow for only 1 z/t combination
+    if ((random_placement && theDims.length !== 1) ||
+        (!random_placement && number !== theDims.length)) return;
 
 	// delegate
 	var generatedShapes = ome.ol3.utils.Regions.generateRegions(
 		shape_info, number, extent, random_placement);
-
-	if (generatedShapes === null)
+    // another brief sanity check in case not all shapes were created
+    if (generatedShapes === null ||
+            (!random_placement && generatedShapes.length !== theDims.length))
 		return;
 
-	// in the case that the regions layer hasn't been added, we take the liberty
-	// of doing so
-	if (this.getRegionsLayer()) {
-		// we run updateStyle over the shapes
-		for (var s in generatedShapes) {
-            var f = generatedShapes[s];
-            // and associate them to the present z/t
-            var theT = this.getDimensionIndex('t');
-            var theZ = this.getDimensionIndex('z');
-            f['theT'] = theT;
-            f['theZ'] = theZ;
-            f['theC'] = -1;
-			// in case we got created in a rotated view
-			var res = this.viewer_.getView().getResolution();
-			var rot = this.viewer_.getView().getRotation();
-			if (f.getGeometry() instanceof ome.ol3.geom.Label && rot !== 0 &&
-					!this.getRegions().rotate_text_)
-				f.getGeometry().rotate(-rot);
-				ome.ol3.utils.Style.updateStyleFunction(f, this.regions_, true);
-		}
-		this.getRegions().addFeatures(generatedShapes);
+    // post generation work
+	// update the styling and associate with dimensions
+	for (var i=0;i<generatedShapes.length;i++) {
+        var f = generatedShapes[i];
+        // and associate them to the proper dims
+        f['theZ'] =
+            random_placement ? theDims[0]['z'] : theDims[i]['z'];
+        f['theT'] =
+            random_placement ? theDims[0]['t'] : theDims[i]['t'];
+        var theC =
+            random_placement ? theDims[0]['c'] :
+                (typeof theDims[i]['c'] === 'number' ?
+                    theDims[i]['c'] : -1);
+        f['theC'] = theC;
+		// in case we got created in a rotated view
+		var res = this.viewer_.getView().getResolution();
+		var rot = this.viewer_.getView().getRotation();
+		if (f.getGeometry() instanceof ome.ol3.geom.Label && rot !== 0 &&
+				!this.getRegions().rotate_text_)
+			f.getGeometry().rotate(-rot);
+			ome.ol3.utils.Style.updateStyleFunction(f, this.regions_, true);
+	}
+	this.getRegions().addFeatures(generatedShapes);
 
-        // notify about generation
-        var eventbus = this.eventbus_;
-        var config_id = this.getTargetId();
-        if (eventbus)
-            setTimeout(function() {
-                var newRegionsObject =
-                    ome.ol3.utils.Conversion.toJsonObject(
-                        new ol.Collection(generatedShapes), true, true);
-                if (typeof newRegionsObject !== 'object' ||
-                    !ome.ol3.utils.Misc.isArray(newRegionsObject['rois']) ||
-                    newRegionsObject['rois'].length === 0) return;
-                eventbus.publish("REGIONS_SHAPE_DRAWN",
-                    { "config_id": config_id,
-                      "shapes": newRegionsObject['rois'] });
-            },25);
-
-	} else this.addRegions({"features" : generatedShapes});
+    // notify about generation
+    var eventbus = this.eventbus_;
+    var config_id = this.getTargetId();
+    if (eventbus)
+        setTimeout(function() {
+            var newRegionsObject =
+                ome.ol3.utils.Conversion.toJsonObject(
+                    new ol.Collection(generatedShapes), true, true);
+            if (typeof newRegionsObject !== 'object' ||
+                !ome.ol3.utils.Misc.isArray(newRegionsObject['rois']) ||
+                newRegionsObject['rois'].length === 0) return;
+            eventbus.publish("REGIONS_SHAPE_GENERATED",
+                { "config_id": config_id,
+                  "shapes": newRegionsObject['rois'] });
+        },25);
 };
 
 /**

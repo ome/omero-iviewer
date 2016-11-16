@@ -166,9 +166,10 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                     if (typeof newRegionsObject !== 'object' ||
                         !ome.ol3.utils.Misc.isArray(newRegionsObject['rois']) ||
                         newRegionsObject['rois'].length === 0) return;
-                    eventbus.publish("REGIONS_SHAPE_DRAWN",
+                    eventbus.publish("REGIONS_SHAPE_GENERATED",
                         { "config_id": config_id,
-                          "shapes": newRegionsObject['rois'] });
+                          "shapes": newRegionsObject['rois'],
+                            "drawn" : true});
                 },25);
         }
 
