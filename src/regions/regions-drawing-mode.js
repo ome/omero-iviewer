@@ -1,6 +1,8 @@
 // js
 import Context from '../app/context';
+import Regions from '../utils/regions';
 import {REGIONS_DRAWING_MODE} from '../utils/constants';
+import {REGIONS_GENERATE_SHAPES} from '../events/events';
 import {inject, customElement, bindable} from 'aurelia-framework';
 
 /**
@@ -136,5 +138,31 @@ export default class RegionsDrawingMode {
                     what.checked = false;});
 
         return true;
+    }
+
+    /**
+     * Propagate selected shapes using chosen drawing modes
+     *
+     * @memberof RegionsDrawingMode
+     */
+    propagateSelectedShapes() {
+        // we loop over all selected shapes and propagate them individually
+        // since they could be in different t/z so that he propagation won't
+        // be the same for each of them
+        this.regions_info.selected_shapes.map(
+            (id) => {
+                let shape = this.regions_info.data.get(id);
+                // collect dimensions for propagation
+                let theDims =
+                    Regions.getDimensionsForPropagation(
+                        this.regions_info, shape.theZ, shape.theT);
+                if (theDims.length > 0)
+                    this.context.publish(
+                        REGIONS_GENERATE_SHAPES,
+                        {config_id : this.regions_info.image_info.config_id,
+                            shapes : [shape],
+                            number : theDims.length, random : false,
+                            theDims : theDims});
+            });
     }
 }

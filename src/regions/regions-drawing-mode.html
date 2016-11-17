@@ -77,10 +77,11 @@
         </div>
         <div class="drawing-mode-apply">
             <button
-                class="${regions_info.selected_shapes.length === 0 ?
+                class="${regions_info.selected_shapes.length === 0 || !propagate ?
                             'disabled-color' : ''}"
-                disabled.bind="regions_info.selected_shapes.length === 0">
-                Apply to Selected
+                click.delegate="propagateSelectedShapes()"
+                disabled.bind="regions_info.selected_shapes.length === 0 || !propagate ">
+                Propagate Selected Shapes
             </button>
         </div>
     </div>

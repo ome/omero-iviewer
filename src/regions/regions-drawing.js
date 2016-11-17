@@ -2,6 +2,7 @@
 import Context from '../app/context';
 import {inject, customElement, bindable} from 'aurelia-framework';
 import Misc from '../utils/misc';
+import Regions from '../utils/regions';
 import {Converters} from '../utils/converters';
 import { REGIONS_MODE, REGIONS_DRAWING_MODE} from '../utils/constants';
 import {REGIONS_DRAW_SHAPE, REGIONS_SHAPE_GENERATED, REGIONS_GENERATE_SHAPES,
@@ -87,52 +88,14 @@ export default class RegionsDrawing extends EventSubscriber {
         // (i.e. drawing mode other that z and t viewed)
         // these checks are vital otherwise we risk a chain reaction
         if (typeof params.drawn !== 'boolean') params.drawn = false;
-        if (!params.drawn || this.regions_info.drawing_mode ===
-            REGIONS_DRAWING_MODE.Z_AND_T_VIEWED) return;
+        if (!params.drawn) return;
 
-        // establish what z/ts we use based on the drawing mode,
-        // then form the union minus the present z/t already drawn
-        let theDims = [];
-        let m = this.regions_info.drawing_mode;
-        let useZs = m === REGIONS_DRAWING_MODE.SELECTED_Z_AND_T ?
-                this.regions_info.drawing_dims.z : [];
-        let useTs = m === REGIONS_DRAWING_MODE.SELECTED_Z_AND_T ?
-                this.regions_info.drawing_dims.t : [];
-        // for drawing modes where we don't have custom selections
-        if (m !== REGIONS_DRAWING_MODE.SELECTED_Z_AND_T) {
-            let maxZ = this.regions_info.image_info.dimensions.max_z;
-            let maxT = this.regions_info.image_info.dimensions.max_t;
-            let allZs = Array.from(Array(maxZ).keys());
-            let allTs = Array.from(Array(maxT).keys());
-            ['z', 't'].map(
-                (d) => {
-                    if (d === 'z' &&
-                        (m === REGIONS_DRAWING_MODE.ALL_Z ||
-                         m === REGIONS_DRAWING_MODE.ALL_Z_AND_T))
-                            useZs = allZs;
-                    if (d === 't' &&
-                        (m === REGIONS_DRAWING_MODE.ALL_T ||
-                         m === REGIONS_DRAWING_MODE.ALL_Z_AND_T))
-                            useTs = allTs;});
-        }
-        // last but not least, if we have an empty array in one dimension
-        // we will use the present value for that from the new shape already
-        // drawn
-        // i.e. all z means for present t
-        if (useZs.length === 0) useZs.push(newShape.theZ);
-        if (useTs.length === 0) useTs.push(newShape.theT);
-        // now finally union them ommitting the present z/t of the new shape
-        for (let i=0;i<useZs.length;i++)
-            for (let j=0;j<useTs.length;j++) {
-                let zIndex = useZs[i];
-                let tIndex = useTs[j];
-                if (zIndex === newShape.theZ && tIndex === newShape.theT)
-                    continue;
-                theDims.push({"z" : zIndex, "t": tIndex});
-            }
+        // collect dimensions for propagation
+        let theDims =
+            Regions.getDimensionsForPropagation(
+                this.regions_info, newShape.theZ, newShape.theT);
 
-        // finally send event to trigger generation if we have something to
-        // generate/associate with
+        // trigger generation if we have something to generate/associate with
         if (theDims.length > 0)
             this.context.publish(
                 REGIONS_GENERATE_SHAPES,
