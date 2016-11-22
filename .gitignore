@@ -1,7 +1,9 @@
 .settings
 .project
 .pydevproject
+.DS_Store
 build
 node_modules
 static
 templates
+dist
