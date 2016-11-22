@@ -323,6 +323,8 @@ ome.ol3.utils.Conversion.ellipseToJsonObject = function(geometry, shape_id) {
 	ret['RadiusX'] = radius[0];
 	ret['RadiusY'] = radius[1];
 
+    if (geometry.getTransform()) ret['Transform'] = geometry.getTransform();
+
 	return ret;
 }
 

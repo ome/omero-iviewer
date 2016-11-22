@@ -1,11 +1,13 @@
 import {noView} from 'aurelia-framework';
-import {REGIONS_DRAWING_MODE} from '../utils/constants';
+import {REGIONS_DRAWING_MODE} from './constants';
+import Misc from './misc';
+import {History} from '../model/regions_info';
 
 /**
  * Regions Utility Class
  */
 @noView
-export default class Regions {
+export class Utils {
 
     /**
      * Extracts the dimension combinations (z/t) for shape propagation,
@@ -63,4 +65,50 @@ export default class Regions {
             }
         return theDims;
     }
+
+    /**
+     * Creates a callback function that is intended to be called per shape
+     * and modify the properties according to the new values
+     *
+     * @param {Array.<string>} properties the properties to be changed
+     * @param {Array.<?>} values the respective values for the properties
+     * @param {History?} history an optional History instance
+     * @param {number?} hist_id an optional history id
+     * @return {function} a function which takes a shape as an input or null
+     * @static
+     */
+     static createUpdateHandler(
+         properties = [], values = [], history=null, hist_id=-1,
+            post_update_handler = null) {
+         // we expect 2 non empty arrays of equal length
+         if (!Misc.isArray(properties) || properties.length === 0 ||
+                !Misc.isArray(values) || values.length !== properties.length)
+            return null;
+
+        let callback = (shape) => {
+            if (typeof shape !== 'object' || shape === null) return;
+
+            let oldVals = [];
+            for (let i=0;i<properties.length;i++) {
+                let prop = properties[i];
+                oldVals.push(
+                    typeof shape[prop] !== 'undefined' ?
+                        shape[prop] : null);
+                shape[prop] = values[i];
+            };
+            if (history instanceof History) {
+                if (typeof hist_id !== 'number') hist_id = -1;
+                history.addHistory(
+                    hist_id, history.action.PROPERTIES,
+                    {shape_id: shape.shape_id,
+                        diffs: properties,
+                        old_vals: oldVals, new_vals: values},
+                        typeof post_update_handler === 'function' ?
+                            post_update_handler : null);
+            }
+            if (typeof post_update_handler === 'function') post_update_handler();
+        }
+
+        return callback;
+     }
 }

@@ -45,6 +45,14 @@ ome.ol3.interaction.Draw = function(previous_modes, regions_reference) {
 	this.ol_draw_ = null;
 
     /**
+	 * the history id
+	 *
+	 * @type {number}
+	 * @private
+	 */
+	this.history_id_ = null;
+
+    /**
 	 * default styling for drawing
 	 *
 	 * @type {function}
@@ -158,6 +166,7 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
 
             var eventbus = this.regions_.viewer_.eventbus_;
             var config_id = this.regions_.viewer_.getTargetId();
+            var hist_id = this.history_id_;
             if (eventbus)
                 setTimeout(function() {
                     var newRegionsObject =
@@ -166,11 +175,15 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                     if (typeof newRegionsObject !== 'object' ||
                         !ome.ol3.utils.Misc.isArray(newRegionsObject['rois']) ||
                         newRegionsObject['rois'].length === 0) return;
-                    eventbus.publish("REGIONS_SHAPE_GENERATED",
-                        { "config_id": config_id,
-                          "shapes": newRegionsObject['rois'],
-                            "drawn" : true});
+                    var opts = {
+                        "config_id": config_id,
+                        "shapes": newRegionsObject['rois'],
+                        "drawn" : true
+                    };
+                    if (typeof hist_id === 'number') opts['hist_id'] = hist_id;
+                    eventbus.publish("REGIONS_SHAPE_GENERATED", opts);
                 },25);
+            this.history_id_ = null;
         }
 
         this.endDrawingInteraction();
@@ -201,14 +214,17 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
  * This method starts the drawing interaction for a certin shape type.
  *
  * @param {string} type the shape type
+ * @param {number=} hist_id an optional history id that needs to be returned
  */
-ome.ol3.interaction.Draw.prototype.drawShape = function(type) {
+ome.ol3.interaction.Draw.prototype.drawShape = function(type, hist_id) {
 	if (typeof(type) !== 'string' || type.length === 0) {
+        this.history_id_ = null;
         this.dispatchEvent(new ol.interaction.Draw.Event(
              ol.interaction.Draw.EventType.DRAWEND, null));
         return;
     }
 
+    if (typeof hist_id === 'number') this.history_id_ = hist_id;
 	var typeFunction = null;
 	switch(type.toLowerCase()) {
 		case "point" :

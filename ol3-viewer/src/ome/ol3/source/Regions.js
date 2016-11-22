@@ -708,8 +708,10 @@ ome.ol3.source.Regions.prototype.setProperty =
                         this.select_.toggleFeatureSelection(
                             this.idIndex_[s], false);
                         // we have already done this
-                        if (presentState !== ome.ol3.REGIONS_STATE.REMOVED)
-                            this.idIndex_[s]["old_state"] = presentState;
+                        if (presentState !== ome.ol3.REGIONS_STATE.REMOVED &&
+                            (typeof this.idIndex_[s]["old_state"] !== 'number' ||
+                                this.idIndex_[s]["old_state"] !== ome.ol3.REGIONS_STATE.ADDED))
+                                    this.idIndex_[s]["old_state"] = presentState;
                         eventProperty = "deleted";
                     } else if (value === ome.ol3.REGIONS_STATE.MODIFIED) {
                         // we are presently deleted
@@ -718,7 +720,9 @@ ome.ol3.source.Regions.prototype.setProperty =
                         if (presentState === ome.ol3.REGIONS_STATE.REMOVED) {
                             this.idIndex_[s]["old_state"] = value;
                             continue;
-                        }
+                        } else if (presentState === ome.ol3.REGIONS_STATE.ADDED)
+                            // we maintain the added state at all times
+                            this.idIndex_[s]["old_state"] = presentState;
                         eventProperty = "modified";
                     } else if (value === ome.ol3.REGIONS_STATE.ROLLBACK)
                         eventProperty = "rollback";
@@ -728,8 +732,12 @@ ome.ol3.source.Regions.prototype.setProperty =
             // in the case where we are deleting a newly added shape
             // we remove it altogether
             if (property === 'state' &&
-                presentState === ome.ol3.REGIONS_STATE.ADDED &&
-                value === ome.ol3.REGIONS_STATE.REMOVED) {
+                    value === ome.ol3.REGIONS_STATE.REMOVED &&
+                (presentState === ome.ol3.REGIONS_STATE.ADDED ||
+                    (presentState === ome.ol3.REGIONS_STATE.MODIFIED &&
+                        typeof this.idIndex_[s]["old_state"] === 'number' &&
+                        this.idIndex_[s]["old_state"]  ===
+                            ome.ol3.REGIONS_STATE.ADDED))) {
                     this.removeFeature(this.idIndex_[s]);
                     changedFeatures.push(s);
                     changedProperties.push("deleted");

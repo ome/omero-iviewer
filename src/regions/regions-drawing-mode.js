@@ -1,6 +1,6 @@
 // js
 import Context from '../app/context';
-import Regions from '../utils/regions';
+import {Utils} from '../utils/regions';
 import {REGIONS_DRAWING_MODE} from '../utils/constants';
 import {REGIONS_GENERATE_SHAPES} from '../events/events';
 import {inject, customElement, bindable} from 'aurelia-framework';
@@ -151,10 +151,12 @@ export default class RegionsDrawingMode {
         // be the same for each of them
         this.regions_info.selected_shapes.map(
             (id) => {
-                let shape = this.regions_info.data.get(id);
+                let shape =
+                    Object.assign({}, this.regions_info.data.get(id));
+                delete shape['shape_id'];
                 // collect dimensions for propagation
                 let theDims =
-                    Regions.getDimensionsForPropagation(
+                    Utils.getDimensionsForPropagation(
                         this.regions_info, shape.theZ, shape.theT);
                 if (theDims.length > 0)
                     this.context.publish(

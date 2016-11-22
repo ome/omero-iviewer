@@ -262,6 +262,9 @@ export default class Ol3Viewer extends EventSubscriber {
             // loop over all shapes, trying to set the property
             for (let i in params.shapes) {
                 let shape = params.shapes[i];
+                let refOrCopy =
+                    this.image_config.regions_info.data ?
+                        this.image_config.regions_info.data.get(shape) : null;
                 let prop = Misc.isArray(params.properties) ?
                                 params.properties[i] : params.properties;
                 let value = Misc.isArray(params.values) ?
@@ -270,9 +273,12 @@ export default class Ol3Viewer extends EventSubscriber {
                         prop === 'deleted')
                     this.image_config.regions_info.setPropertyForShape(
                         shape, prop, value);
+                // in the case of new shapes that get deleted we will need
+                // a deep copy since they get removed from the map
+                if (refOrCopy && prop === 'deleted')
+                    refOrCopy = Object.assign({}, refOrCopy);
                 if (typeof params.callback === 'function')
-                    params.callback(
-                        this.image_config.regions_info.data.get(shape));
+                    params.callback(refOrCopy);
             }
      }
 
@@ -322,7 +328,8 @@ export default class Ol3Viewer extends EventSubscriber {
                   try {
                       this.viewer.generateShapes(
                           Object.assign({},def),
-                          params.number, params.random, extent, theDims);
+                          params.number, params.random, extent, theDims,
+                          params.add_history, params.hist_id);
                   } catch(ignored) {}});
       }
 
@@ -341,7 +348,7 @@ export default class Ol3Viewer extends EventSubscriber {
               !Misc.isArray(params.shapes) || params.shapes.length === 0) return;
 
           if (params.value === 'delete')
-             this.viewer.deleteShapes(params.shapes);
+             this.viewer.deleteShapes(params.shapes, false, params.callback);
           else if (params.value === 'undo')
             this.viewer.deleteShapes(params.shapes, true);
       }
@@ -502,7 +509,7 @@ export default class Ol3Viewer extends EventSubscriber {
         }
 
         // let's draw
-        this.viewer.drawShape(params.shape);
+        this.viewer.drawShape(params.shape, params.hist_id);
     }
 
     /**
@@ -520,7 +527,7 @@ export default class Ol3Viewer extends EventSubscriber {
             typeof params.selected === 'boolean' && params.selected;
 
         this.viewer.storeRegions(
-            selectedOnly, true, '/viewer-ng/persist_rois');
+            selectedOnly, true, '/ol3-viewer/persist_rois');
     }
 
     /**

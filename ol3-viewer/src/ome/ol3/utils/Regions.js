@@ -36,8 +36,10 @@ ome.ol3.utils.Regions.FEATURE_FACTORY_LOOKUP_TABLE = {
             typeof shape['rx'] === 'number' ? shape['rx'] : shape['radiusX'];
         var ry =
             typeof shape['ry'] === 'number' ? shape['ry'] : shape['radiusY'];
+        var trans =
+            typeof shape['transform'] === 'string' ? shape['transform'] : null;
 		var feat = new ol.Feature({"geometry" :
-			new ome.ol3.geom.Ellipse(x, -y, rx, ry, shape['transform'])});
+			new ome.ol3.geom.Ellipse(x, -y, rx, ry, trans)});
 		feat['type'] = "ellipse";
 		feat.setStyle(ome.ol3.utils.Style.createFeatureStyle(shape));
 		return feat;
@@ -283,7 +285,11 @@ ome.ol3.utils.Regions.generateRegions =
 		newFeature.setStyle(
 			ome.ol3.utils.Style.cloneStyle(prototypeFeature.getStyle()));
         // we generate an id of the form -1:uid
-		newFeature.setId("-1:" + ol.getUid(newFeature));
+        if (typeof shape_info['shape_id'] !== 'string' ||
+                shape_info['shape_id'].length === 0 ||
+                shape_info['shape_id'].indexOf(":") === -1)
+		              newFeature.setId("-1:" + ol.getUid(newFeature));
+        else newFeature.setId(shape_info['shape_id']);
 		newFeature['state'] = ome.ol3.REGIONS_STATE.ADDED; // state: added
 
         // put us in a random location within the extent

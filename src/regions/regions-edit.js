@@ -1,6 +1,7 @@
 // js
 import Context from '../app/context';
 import Misc from '../utils/misc';
+import {Utils} from '../utils/regions';
 import {Converters} from '../utils/converters';
 import {REGIONS_MODE} from '../utils/constants';
 import {
@@ -110,33 +111,6 @@ export default class RegionsEdit {
         fontSizeSpinner.spinner("value", 10);
     }
 
-    /**
-     * Creates a callback function that is intended to be called per shape
-     * and modify the properties according to the new values
-     *
-     * @param {Array.<string>} properties the properties to be changed
-     * @param {Array.<?>} values the respective values for the properties
-     * @return {function} a function which takes a shape as an input or null
-     * @memberof RegionsEdit
-     */
-     createUpdateHandler(properties = [], values = []) {
-         // we expect 2 non empty arrays of equal length
-         if (!Misc.isArray(properties) || properties.length === 0 ||
-                !Misc.isArray(values) || values.length !== properties.length)
-            return null;
-
-        let callback = (shape) => {
-            if (typeof shape !== 'object' || shape === null) return;
-
-            for (let i=0;i<properties.length;i++) {
-                let prop = properties[i];
-                shape[prop] = values[i];
-            };
-        }
-
-        return callback;
-     }
-
      /**
       * Handles fill/stroke color changes
       *
@@ -204,7 +178,7 @@ export default class RegionsEdit {
         this.modifyShapes(
             deltaProps, this.createUpdateHandler(
                 ['fontSize', 'fontStyle', 'fontFamily'],
-                [size, shape.fontStyle, shape.fontFamily]));
+                [size, deltaProps.fontStyle, deltaProps.fontFamily]));
     }
 
     /**
@@ -222,7 +196,8 @@ export default class RegionsEdit {
         deltaProps.textValue = comment;
 
         this.modifyShapes(
-            deltaProps, this.createUpdateHandler(['textValue'], [comment]));
+            deltaProps,
+            this.createUpdateHandler(['textValue'], [comment]));
     }
 
     /**
@@ -500,6 +475,22 @@ export default class RegionsEdit {
     }
 
     /**
+     * Creates a more custom update handler than the standard one
+     *
+     * @return {function} the wrapped standard update handler
+     * @memberof RegionsEdit
+     */
+    createUpdateHandler(properties, values) {
+        let func =
+            Utils.createUpdateHandler(
+                properties,values,
+                this.regions_info.history,
+                this.regions_info.history.getHistoryId(),
+                this.adjustEditWidgets.bind(this));
+        return func;
+    }
+
+    /**
      * Copy Shapes
      *
      * @memberof RegionsEdit
@@ -513,8 +504,11 @@ export default class RegionsEdit {
         //then store it this.regions_info.copied_shapes and
         // in the localStorage (if supported)
         this.regions_info.selected_shapes.map(
-            (id) => this.regions_info.copied_shapes.push(
-                Object.assign({}, this.regions_info.data.get(id))));
+            (id) => {
+                let deepCopy =
+                    Object.assign({}, this.regions_info.data.get(id));
+                delete deepCopy['shape_id'];
+                this.regions_info.copied_shapes.push(deepCopy)});
 
         if (typeof window.localStorage)
             window.localStorage.setItem(

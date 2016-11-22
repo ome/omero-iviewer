@@ -2,7 +2,7 @@
 import Context from '../app/context';
 import {inject, customElement, bindable} from 'aurelia-framework';
 import Misc from '../utils/misc';
-import Regions from '../utils/regions';
+import {Utils} from '../utils/regions';
 import {Converters} from '../utils/converters';
 import { REGIONS_MODE, REGIONS_DRAWING_MODE} from '../utils/constants';
 import {REGIONS_DRAW_SHAPE, REGIONS_SHAPE_GENERATED, REGIONS_GENERATE_SHAPES,
@@ -66,11 +66,11 @@ export default class RegionsDrawing extends EventSubscriber {
 
         this.shape_to_be_drawn = null;
 
-        let newShape = null;
+        let generatedShapes = [];
         if (Misc.isArray(params.shapes))
             params.shapes.map(
                 (shape) => {
-                    newShape =
+                    let newShape =
                         Converters.makeShapeBackwardsCompatible(shape);
                     if (newShape) {
                         // we also want these flags
@@ -81,28 +81,44 @@ export default class RegionsDrawing extends EventSubscriber {
                         newShape.modified = true;
                         // add to map
                         this.regions_info.data.set(newShape.shape_id, newShape);
+                        generatedShapes.push(Object.assign({}, newShape));
                     }
                 });
+
+        // add a history entry for the drawn shapes, if we have at least one
+        // and no directive to not add a history record
+        if (typeof params.add_history !== 'boolean') params.add_history = true;
+        if (typeof params.hist_id !== 'number') params.hist_id = -1;
+        let len = generatedShapes.length;
+        if (len !== 0 && params.add_history) {
+            this.regions_info.history.addHistory(
+                params.hist_id, this.regions_info.history.action.SHAPES,
+                { diffs: generatedShapes, old_vals: false, new_vals: true});
+        }
 
         // we only continue if we have been drawn and intend to propagate
         // (i.e. drawing mode other that z and t viewed)
         // these checks are vital otherwise we risk a chain reaction
         if (typeof params.drawn !== 'boolean') params.drawn = false;
-        if (!params.drawn) return;
+        if (!params.drawn || len === 0) return;
 
         // collect dimensions for propagation
+        let newShape = Object.assign({}, generatedShapes[len-1]);
+        delete newShape['shape_id'];
         let theDims =
-            Regions.getDimensionsForPropagation(
+            Utils.getDimensionsForPropagation(
                 this.regions_info, newShape.theZ, newShape.theT);
 
         // trigger generation if we have something to generate/associate with
-        if (theDims.length > 0)
+        if (theDims.length > 0) {
             this.context.publish(
                 REGIONS_GENERATE_SHAPES,
                 {config_id : this.regions_info.image_info.config_id,
                     shapes : [newShape],
                     number : theDims.length,
-                    random : false, theDims : theDims});
+                    random : false, theDims : theDims,
+                    hist_id : params.hist_id});
+        }
     }
 
     /**
@@ -128,7 +144,8 @@ export default class RegionsDrawing extends EventSubscriber {
         this.context.publish(
            REGIONS_DRAW_SHAPE, {
                config_id: this.regions_info.image_info.config_id,
-               shape : this.shape_to_be_drawn, abort: abort});
+               shape : this.shape_to_be_drawn, abort: abort,
+                hist_id: this.regions_info.history.getHistoryId()});
     }
 
     /**

@@ -26,7 +26,7 @@ export default class History {
      * @memberof History
      * @type {number}
      */
-    historyPointer = 0;
+    historyPointer = -1;
 
     /**
      * Records an action that relates to a property remembering its old value,
@@ -79,8 +79,10 @@ export default class History {
              }
          });
          // add entries now
-         this.history.push(entries);
-         this.historyPointer = this.history.length-1;
+         this.history.splice(
+             this.historyPointer+1,
+             this.history.length-this.historyPointer, entries);
+         this.historyPointer++;
      }
 
     /**
@@ -179,6 +181,6 @@ export default class History {
        */
        resetHistory() {
            this.history = [];
-           this.historyPointer = 0;
+           this.historyPointer = -1;
        }
 }

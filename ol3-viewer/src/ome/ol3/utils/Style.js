@@ -68,6 +68,9 @@ ome.ol3.utils.Style.createFeatureStyle = function(shape_info, is_label, fill_in_
     if (typeof shape_info['textValue'] === 'string') {
         text['text'] = shape_info['textValue'];
         text['count']++;
+    } else {
+        text['text'] = '';
+        text['count']++;
     }
 	var font = "";
 	if (typeof(shape_info['fontStyle']) === 'string')
@@ -485,9 +488,15 @@ ome.ol3.utils.Style.modifyStyles =
                 if (typeof shape_info['markerStart'] === 'string')
                     feature.getGeometry().has_start_arrow_ =
                         shape_info['markerStart'] === 'Arrow';
+                else if (typeof shape_info['markerStart'] === 'object' &&
+                    shape_info['markerStart'] === null)
+                    feature.getGeometry().has_start_arrow_ = false;
                 if (typeof shape_info['markerEnd'] === 'string')
                     feature.getGeometry().has_end_arrow_ =
                         shape_info['markerEnd'] === 'Arrow';
+                else if (typeof shape_info['markerEnd'] === 'object' &&
+                    shape_info['markerEnd'] === null)
+                    feature.getGeometry().has_end_arrow_ = false;
             }
             var newStyle = ome.ol3.utils.Style.createFeatureStyle(
                 shape_info, (type === 'label'), false);

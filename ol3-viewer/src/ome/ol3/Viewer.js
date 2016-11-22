@@ -740,10 +740,11 @@ ome.ol3.Viewer.prototype.selectShapes = function(
  * have a single shape only
  *
  * @param {Array<string>} roi_shape_ids list in roi_id:shape_id notation
- * @param {boolean=} undo if true we roll back, default: false
+ * @param {boolean} undo if true we roll back, default: false
+ * @param {function=} callback a success handler
  */
 ome.ol3.Viewer.prototype.deleteShapes = function(
-    roi_shape_ids, undo) {
+    roi_shape_ids, undo, callback) {
 	// without a regions layer there will be no select of regions ...
 	var regions = this.getRegions();
 	if (regions === null) return;
@@ -751,7 +752,8 @@ ome.ol3.Viewer.prototype.deleteShapes = function(
     regions.setProperty(
         roi_shape_ids, "state",
         typeof undo === 'boolean' && undo ?
-            ome.ol3.REGIONS_STATE.ROLLBACK : ome.ol3.REGIONS_STATE.REMOVED);
+            ome.ol3.REGIONS_STATE.ROLLBACK : ome.ol3.REGIONS_STATE.REMOVED,
+        typeof callback === 'function' ? callback : null);
 }
 
 /**
@@ -1228,9 +1230,12 @@ ome.ol3.Viewer.prototype.setRegionsModes = function(modes) {
  * @param {boolean} random_placement should the shapes be generated in random places? default: false
  * @param {ol.Extent=} extent the portion of the image used for generation (bbox format), default: the entire image
  * @param {Array.<Array.<number,number>>=} theDims a list of dims to associate with
+ * @param {boolean=} add_history an optional flag if we should consequently not add the generation to the history
+ * @param {number=} hist_id a history id to pass through and return
  */
 ome.ol3.Viewer.prototype.generateShapes =
- 	function(shape_info, number, random_placement, extent, theDims) {
+ 	function(shape_info, number, random_placement, extent, theDims,
+                add_history, hist_id) {
     // we don't do generation any more for the case where we don't
     // have a regions layer, nor do we do it without shape definition or
     // if the given number is nonsensical
@@ -1301,9 +1306,12 @@ ome.ol3.Viewer.prototype.generateShapes =
             if (typeof newRegionsObject !== 'object' ||
                 !ome.ol3.utils.Misc.isArray(newRegionsObject['rois']) ||
                 newRegionsObject['rois'].length === 0) return;
-            eventbus.publish("REGIONS_SHAPE_GENERATED",
-                { "config_id": config_id,
-                  "shapes": newRegionsObject['rois'] });
+            var opts = { "config_id": config_id,
+                            "shapes": newRegionsObject['rois']};
+            if (typeof hist_id === 'number') opts['hist_id'] = hist_id;
+            if (typeof add_history === 'boolean')
+                opts['add_history'] = add_history;
+            eventbus.publish("REGIONS_SHAPE_GENERATED", opts);
         },25);
 };
 
@@ -1439,8 +1447,9 @@ ome.ol3.Viewer.prototype.enableRegionsContextMenu = function(flag) {
  * 'polygons'.
  *
  * @param {string} type the shape type to draw
+ * @param {number=} hist_id an optional history id to pass through and return
  */
-ome.ol3.Viewer.prototype.drawShape = function(type) {
+ome.ol3.Viewer.prototype.drawShape = function(type, hist_id) {
 	if (!(this.regions_ instanceof ome.ol3.source.Regions) ||
 			typeof(type) !== 'string' || type.length === 0)
 		return;
@@ -1452,7 +1461,7 @@ ome.ol3.Viewer.prototype.drawShape = function(type) {
 		return;
 	}
 
-	this.regions_.draw_.drawShape(type);
+	this.regions_.draw_.drawShape(type, hist_id);
 }
 
 /**
