@@ -1,3 +1,3 @@
-include viewer-ng/README.rst
+include omero_viewerng/README.rst
 include LICENSE
 recursive-include omero_viewerng *

@@ -32,7 +32,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
-VERSION = '0.0.13'
+VERSION = '0.0.14'
 
 
 setup(name="omero-viewerng",

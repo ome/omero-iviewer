@@ -1,3 +1,3 @@
-OME.setOpenWithUrlProvider("viewer-ng", function(selected, url) {
+OME.setOpenWithUrlProvider("omero_viewerng", function(selected, url) {
     return url + selected[0].id + "/";
 });

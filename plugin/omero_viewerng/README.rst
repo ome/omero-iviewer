@@ -32,13 +32,13 @@ Add viewerng custom app to your installed web apps:
 
 ::
 
-    $ bin/omero config append omero.web.apps '"viewer-ng"'
+    $ bin/omero config append omero.web.apps '"omero_viewerng"'
 
 To replace the default omero.web viewer:
 
 ::
 
-    $ bin/omero config set omero.web.viewer.view viewer-ng.views.index
+    $ bin/omero config set omero.web.viewer.view omero_viewerng.views.index
 
 
 Now restart OMERO.web as normal.
