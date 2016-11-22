@@ -12,4 +12,4 @@ def index(request, iid=None, conn=None, **kwargs):
         if request.GET[key]:
             params[str(key).upper()] = str(request.GET[key]);
 
-    return render(request, 'viewer-ng/index.html', {'params' : params})
+    return render(request, 'omero_viewerng/index.html', {'params' : params})

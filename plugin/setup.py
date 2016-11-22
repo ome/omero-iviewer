@@ -39,7 +39,7 @@ setup(name="omero-viewerng",
       packages=find_packages(exclude=['ez_setup']),
       version=VERSION,
       description="A Python plugin for OMERO.web",
-      long_description=read('viewer-ng/README.rst'),
+      long_description=read('omero_viewerng/README.rst'),
       classifiers=[
           'Development Status :: 5 - Production/Stable',
           'Environment :: Web Environment',
