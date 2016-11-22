@@ -1,0 +1,3 @@
+include viewer-ng/README.rst
+include LICENSE
+recursive-include viewer-ng *
