@@ -20,7 +20,13 @@ ome.ol3.interaction.Translate = function(regions_reference) {
    * @type {ome.ol3.source.Regions}
    * @private
    */
-	this.regions_ = regions_reference;
+   this.regions_ = regions_reference;
+
+    /**
+   * @type {number}
+   * @private
+   */
+   this.hist_id_ = -1;
 
 	// call super
     goog.base(this, {});
@@ -35,6 +41,13 @@ ome.ol3.interaction.Translate = function(regions_reference) {
    * @private
    */
   this.features_ = this.regions_.select_.getFeatures();
+
+  // a listener to react on translate start
+  ol.events.listen(
+      this,
+      ol.interaction.Translate.EventType.TRANSLATESTART,
+      ome.ol3.interaction.Translate.prototype.handleTranslateStart,
+      this);
 
 	// a listener to react on translate end
 	ol.events.listen(
@@ -60,8 +73,24 @@ ome.ol3.interaction.Translate.prototype.handleTranslateEnd = function(event) {
 			);
         ids.push(featuresTranslated[f].getId());
 	}
+    // complete history entry
+    if (this.hist_id_ >= 0) {
+        this.regions_.addHistory(featuresTranslated, false, this.hist_id_);
+        this.regions_.sendHistoryNotification(this.hist_id_);
+        this.hist_id_ = -1; // reset
+    }
+    // set modified flag
     if (ids.length > 0) this.regions_.setProperty(
         ids, "state", ome.ol3.REGIONS_STATE.MODIFIED);
+}
+
+/**
+ * We want to react to the start of translation for some features
+ * @param {ol.interaction.Translate.Event} event a translate event.
+ */
+ome.ol3.interaction.Translate.prototype.handleTranslateStart = function(event) {
+    // start the history for the translate, snapshotting the geometry as is
+    this.hist_id_ = this.regions_.addHistory(event.features.array_, true);
 }
 
 /**

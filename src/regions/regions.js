@@ -34,7 +34,9 @@ export default class Regions {
     key_actions = [
         { key: 68, func: this.deleteShapes},                        // ctrl - d
         { key: 85, func: this.deleteShapes, args: [false, true]},   // ctrl - u
-        { key: 83, func: this.saveShapes}                           // ctrl - s
+        { key: 83, func: this.saveShapes},                          // ctrl - s
+        { key: 89, func: this.redoHistory},                         // ctrl - y
+        { key: 90, func: this.undoHistory}                          // ctrl - z
     ];
 
     /**
@@ -154,6 +156,24 @@ export default class Regions {
         this.context.publish(
             REGIONS_SHOW_COMMENTS,
         {config_id : this.regions_info.image_info.config_id, value: flag});
+    }
+
+    /**
+     * Undoes the last region modification
+     *
+     * @memberof Regions
+     */
+    undoHistory() {
+        this.regions_info.history.undoHistory();
+    }
+
+    /**
+     * Redoes a previous region modification
+     *
+     * @memberof Regions
+     */
+    redoHistory() {
+        this.regions_info.history.redoHistory();
     }
 
     /**

@@ -1667,6 +1667,18 @@ ome.ol3.Viewer.prototype.captureViewParameters = function() {
      return ret;
 }
 
+/**
+ * Undoes/redoes history entries
+ *
+ * @param {number} hist_id the id associated with the history entry
+ * @param {boolean=} undo if true we undo, if false we redo, default: undo
+ */
+ome.ol3.Viewer.prototype.doHistory = function(hist_id, undo) {
+     if (typeof hist_id !== 'number' || this.getRegions() === null) return;
+
+     this.getRegions().doHistory(hist_id, undo);
+}
+
 /*
  * This section determines which methods are exposed and usable after compilation
  */
@@ -1854,3 +1866,8 @@ goog.exportProperty(
     ome.ol3.Viewer.prototype,
     'getSmallestViewExtent',
     ome.ol3.Viewer.prototype.getSmallestViewExtent);
+
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
+    'doHistory',
+    ome.ol3.Viewer.prototype.doHistory);

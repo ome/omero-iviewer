@@ -14,6 +14,7 @@ import {
     VIEWER_IMAGE_SETTINGS, IMAGE_VIEWER_SPLIT_VIEW,
     REGIONS_DRAW_SHAPE, REGIONS_CHANGE_MODES, REGIONS_SHOW_COMMENTS,
     REGIONS_GENERATE_SHAPES, REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES,
+    REGIONS_HISTORY_ENTRY, REGIONS_HISTORY_ACTION,
     REGIONS_MODIFY_SHAPES, EventSubscriber }
 from '../events/events';
 
@@ -76,6 +77,10 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.afterShapeStorage(params)],
         [REGIONS_MODIFY_SHAPES,
             (params={}) => this.modifyShapes(params)],
+        [REGIONS_HISTORY_ENTRY,
+            (params={}) => this.addHistoryEntry(params)],
+        [REGIONS_HISTORY_ACTION,
+            (params={}) => this.affectHistoryAction(params)],
         [REGIONS_SHOW_COMMENTS,
             (params={}) => this.showComments(params)]];
 
@@ -602,5 +607,42 @@ export default class Ol3Viewer extends EventSubscriber {
         if (params.config_id !== this.config_id) return;
 
         this.viewer.showShapeComments(params.value);
+    }
+
+    /**
+     * Adds an ol3 viewer history entry to our internal history
+     * which is the only way we can then undo/redo geometry translations/
+     * modifications that take place within the ol3 viewer
+     *
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     */
+    addHistoryEntry(params) {
+        // the event doesn't concern us or we don't have a numeric history id
+        if (params.config_id !== this.config_id ||
+            typeof params.hist_id !== 'number') return;
+
+        // we record the ol3 history id from a geometry modification/translation
+        let history = this.image_config.regions_info.history;
+        history.addHistory(
+            history.getHistoryId(),
+            history.action.OL_ACTION,
+            {hist_id : params.hist_id});
+    }
+
+    /**
+     * Undo/redo geometry modifications and translations that took place
+     * in the ol3 viewer and have an associated history entry
+     *
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     */
+    affectHistoryAction(params) {
+        // the event doesn't concern us or we don't have a numeric history id
+        if (params.config_id !== this.config_id ||
+            typeof params.hist_id !== 'number') return;
+
+        if (typeof params.undo !== 'boolean') params.undo = true;
+        this.viewer.doHistory(params.hist_id, params.undo);
     }
 }

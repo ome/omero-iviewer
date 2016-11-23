@@ -68,7 +68,8 @@ ome.ol3.utils.Style.createFeatureStyle = function(shape_info, is_label, fill_in_
     if (typeof shape_info['textValue'] === 'string') {
         text['text'] = shape_info['textValue'];
         text['count']++;
-    } else {
+    } else if (typeof shape_info['textValue'] === 'object' &&
+        shape_info['textValue'] === null) {
         text['text'] = '';
         text['count']++;
     }
