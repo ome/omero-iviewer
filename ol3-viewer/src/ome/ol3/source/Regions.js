@@ -572,7 +572,7 @@ ome.ol3.source.Regions.prototype.storeRegions = function(roisAsJsonObject, uri) 
 						"@type" : "http://www.openmicroscopy.org/Schemas/OME/2016-06#ROI",
 						"shapes" : []};
                     var roisId = parseInt(r);
-                    if (roisId !== -1) newRois['@id'] = roisId;
+                    if (roisId >= 0) newRois['@id'] = roisId;
                     rois[r] = newRois;
                 }
 				rois[r]['shapes'].push(roisAsJsonObject['rois'][r]['shapes'][s]);
