@@ -44,3 +44,20 @@ To build the open layers viewer for viewer-ng (deploys into libs directory),
 simply run ```ant``` (default target).
 
 For further options type ```ant -p```.
+
+More detailed resources on how to create a web app and development setup can be found here:
+
+1. [CreateApp](https://www.openmicroscopy.org/site/support/omero5.2/developers/Web/CreateApp.html)
+2. [Deployment](https://www.openmicroscopy.org/site/support/omero5.2/developers/Web/Deployment.html)
+
+
+Important
+=========
+
+You need to build the viewer beforehand and deploy to the plugin directory.
+Please consult the respective [README](../../README.md).
+
+
+Also, make sure you keep the omero.web plugin in sync with the build:
+
+```$OMERO_SERVER/bin/omero websync```

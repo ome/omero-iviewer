@@ -14,7 +14,7 @@ For full details see URL_TO_ADD
 Requirements
 ============
 
-* OMERO 5.2.6 or newer.
+* OMERO 5.3.0 or newer.
 
 
 Installing from PyPI
@@ -40,31 +40,19 @@ To replace the default omero.web viewer:
 
     $ bin/omero config set omero.web.viewer.view omero_viewerng.views.index
 
+To enable the "open with" feature:
+
+::
+
+	$ bin/omero config append omero.web.open_with '["omero_viewerng", "viewer_ng_index", {"supported_objects":["images"], "script_url": "omero_viewerng/openwith.js"}]'
 
 Now restart OMERO.web as normal.
-
-More detailed resources on how to create a web app and development setup can be found here:
-
-1. [CreateApp](https://www.openmicroscopy.org/site/support/omero5.2/developers/Web/CreateApp.html)
-2. [Deployment](https://www.openmicroscopy.org/site/support/omero5.2/developers/Web/Deployment.html)
-
-
-Important
-=========
-
-You need to build the viewer beforehand and deploy to the plugin directory.
-Please consult the respective [README](../../README.md).
-
-
-Also, make sure you keep the omero.web plugin in sync with the build:
-
-```$OMERO_SERVER/bin/omero websync```
 
 
 License
 -------
 
-OMERO.figure is released under the AGPL.
+OMERO.viewerng is released under the AGPL.
 
 Copyright
 ---------
