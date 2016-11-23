@@ -21,7 +21,7 @@ def index(request, iid=None, conn=None, **kwargs):
 
 
 @login_required()
-def persistRois(request, conn=None, **kwargs):
+def persist_rois(request, conn=None, **kwargs):
     if not request.method == 'POST':
         return JsonResponse({"error": "Use HTTP POST to send data!"})
 
@@ -66,21 +66,21 @@ def persistRois(request, conn=None, **kwargs):
             decoded_roi = update_service.saveAndReturnObject(decoded_roi)
 
             i = 0
-            hasDeletedShapes = False
+            has_deleted_shapes = False
             for s in decoded_roi.copyShapes():
-                oldId = roi['shapes'][i].get('oldId', None)
+                old_id = roi['shapes'][i].get('oldId', None)
                 delete = roi['shapes'][i].get('markedForDeletion', None)
                 # we delete in here so as to not create another loop
                 if delete is not None:
-                    hasDeletedShapes = True
+                    has_deleted_shapes = True
                     decoded_roi.removeShape(s)
-                if oldId is not None:
+                if old_id is not None:
                     id1 = decoded_roi.getId().getValue()
                     id2 = s.getId().getValue()
-                    ret_ids[oldId] = str(id1) + ":" + str(id2)
+                    ret_ids[old_id] = str(id1) + ":" + str(id2)
                 i += 1
             # update if we removed shapes
-            if hasDeletedShapes:
+            if has_deleted_shapes:
                 decoded_roi = update_service.saveAndReturnObject(decoded_roi)
                 # if roi is empty => delete it as well
                 if len(decoded_roi.copyShapes()) == 0:
