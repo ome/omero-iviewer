@@ -33,25 +33,25 @@ def plugin_debug(request, iid=None, conn=None, **kwargs):
 
 
 @login_required()
-def persistRois(request, conn=None, **kwargs):
+def persist_rois(request, conn=None, **kwargs):
     if not request.method == 'POST':
         return JsonResponse({"error": "Use HTTP POST to send data!"})
 
     try:
-        roisDict = json.loads(request.body)
+        rois_dict = json.loads(request.body)
     except Exception as e:
         return JsonResponse({"error": "Failed to load json: " + e})
 
     # some preliminary checks are following...
-    image_id = roisDict.get('imageId', None)
+    image_id = rois_dict.get('imageId', None)
     if image_id is None:
         return JsonResponse({"error": "No image id provided!"})
 
-    count = roisDict.get('count', 0)
+    count = rois_dict.get('count', 0)
     if count == 0:
         return JsonResponse({"stored": 0})
 
-    rois = roisDict.get('rois', None)
+    rois = rois_dict.get('rois', None)
     if rois is None:
         return JsonResponse({"error": "Could not find rois array!"})
 
@@ -105,7 +105,7 @@ def persistRois(request, conn=None, **kwargs):
 
 
 @login_required()
-def requestRois(request, iid, conn=None, **kwargs):
+def request_rois(request, iid, conn=None, **kwargs):
     if iid is None:
         return JsonResponse({"error":
                              "no image id supplied for regions request"})
