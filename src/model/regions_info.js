@@ -1,7 +1,7 @@
 import {noView} from 'aurelia-framework';
 import {
     IMAGE_CONFIG_UPDATE, REGIONS_MODIFY_SHAPES,
-    REGIONS_SET_PROPERTY,REGIONS_GENERATE_SHAPES,
+    REGIONS_SET_PROPERTY,REGIONS_GENERATE_SHAPES, REGIONS_HISTORY_ACTION,
     EventSubscriber} from '../events/events';
 import Misc from '../utils/misc';
 import {Utils} from '../utils/regions';
@@ -377,6 +377,9 @@ export class History {
                     typeof rec.old_vals !== 'boolean' ||
                     typeof rec.new_vals !== 'boolean') continue;
                 tmp.push(rec);
+            } else if (action === this.action.OL_ACTION) {
+                if (typeof rec.hist_id !== 'number') continue;
+                tmp.push(rec);
             }
         }
 
@@ -469,6 +472,11 @@ export class History {
                             {config_id : imgInfo.config_id,
                              property: 'state', shapes : ids, value: 'delete'});
                 }
+            } else if (entry.action === this.action.OL_ACTION) {
+                imgInfo.context.publish(
+                    REGIONS_HISTORY_ACTION,
+                        {config_id : imgInfo.config_id,
+                         hist_id: rec.hist_id, undo: undo});
             }
         }
     }

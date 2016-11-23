@@ -145,6 +145,22 @@ ome.ol3.source.Regions = function(viewerReference, options) {
  	 */
 	 this.present_modes_ = [];
 
+     /**
+ 	 * a history for translations and modifications
+     * keeping old and new versions of the respective geometries
+ 	 *
+ 	 * @type {Object}
+ 	 * @private
+ 	 */
+	 this.history_ = {};
+
+     /**
+ 	  * an autoincremented history id
+ 	  * @type {number}
+ 	  * @private
+ 	  */
+	 this.history_id_ = 0;
+
 	/**
 	 * The initialization function performs the following steps:
 	 * 1. Request regions data as json and store it internally
@@ -779,6 +795,82 @@ ome.ol3.source.Regions.prototype.setProperty =
 }
 
 /**
+ * Adds an old value/new value pair to the history,
+ * returning the id for the entry
+ * @param {Array.<ol.Feature>} features an array of features containing the geometries
+ * @param {boolean} is_old_value
+ *          if true we take the geometries to be the old value, otherwise new
+ * @return {number} the id for the history entry
+ */
+ome.ol3.source.Regions.prototype.addHistory =
+    function(features, is_old_value, hist_id) {
+    if (!ome.ol3.utils.Misc.isArray(features) || features.length === 0) return;
+
+    // get the latest id and increment it, if we don't have an id
+    var hist_entry = {};
+    if (typeof hist_id !== 'number') {
+        hist_id = ++this.history_id_;
+        this.history_[hist_id] = hist_entry;
+    } else hist_entry = this.history_[hist_id];
+    // we have to have either a new(empty) entry or an existing one
+    if (typeof hist_entry !== 'object') return;
+
+    // iterate over features and add the geometries to the history
+    for (var i=0;i<features.length;i++) {
+        var f = features[i];
+        // we have a record per feature id for convenient lookup
+        // if we don't have one yet, we ar going to create and add it
+        var hist_record = { old_value : null, new_value : null};
+        if (typeof hist_entry[f.getId()] === 'object')
+            hist_record = hist_entry[f.getId()];
+        else hist_entry[f.getId()] = hist_record;
+        // now set either the old or new value
+        var clonedGeometry = f.getGeometry().clone();
+        if (is_old_value) hist_record.old_value = clonedGeometry;
+        else hist_record.new_value = clonedGeometry;
+    }
+
+    return hist_id;
+}
+
+/**
+ * Undoes/redoes the history
+ *
+ * @param {number} hist_id the id for the history entry we like to un/redo
+ * @param {boolean=} undo if true we undo, if false we redo, default: undo
+ */
+ome.ol3.source.Regions.prototype.doHistory = function(hist_id, undo) {
+    // get the history entry for the given id (if exists)
+    if (typeof this.history_[hist_id] !== 'object') return;
+    if (typeof undo !== 'boolean') undo = true;
+    var hist_entry = this.history_[hist_id];
+
+    // iterate over history records of associated feature ids
+    // to then apply the history undo
+    for (var f in hist_entry) {
+        var hist_record = hist_entry[f];
+        // check if we have such as feature
+        if (this.idIndex_[f] instanceof ol.Feature)
+            this.idIndex_[f].setGeometry(
+                undo ? hist_record.old_value : hist_record.new_value);
+    }
+}
+
+/**
+ * Sends out an event notification with the associated history id
+ *
+ * @param {number} hist_id the id for the history entry we like to un/redo
+ */
+ome.ol3.source.Regions.prototype.sendHistoryNotification = function(hist_id) {
+    // send out notification with shape ids
+    var config_id = this.viewer_.getTargetId();
+    var eventbus = this.viewer_.eventbus_;
+    if (config_id && eventbus) // publish
+        eventbus.publish("REGIONS_HISTORY_ENTRY",
+                {"config_id": config_id, "hist_id": hist_id});
+}
+
+/**
  * Clean up
  */
 ome.ol3.source.Regions.prototype.disposeInternal = function() {
@@ -786,6 +878,7 @@ ome.ol3.source.Regions.prototype.disposeInternal = function() {
     this.featuresRtree_ = null;
     this.loadedExtentsRtree_ = null;
     this.nullGeometryFeatures_ = null;
+    this.history_ = {};
 	this.regions_info_ = null;
 	this.viewer_ = null;
 };

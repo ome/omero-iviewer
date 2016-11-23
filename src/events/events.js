@@ -34,6 +34,10 @@ export const REGIONS_STORED_SHAPES = "REGIONS_STORED_SHAPES";
 export const REGIONS_MODIFY_SHAPES = "REGIONS_MODIFY_SHAPES";
 /** Retrieves the viewer image settings */
 export const VIEWER_IMAGE_SETTINGS = "VIEWER_IMAGE_SETTINGS";
+/** whenever the ol3 viewer has made a history entry */
+export const REGIONS_HISTORY_ENTRY = "REGIONS_HISTORY_ENTRY";
+/** whenever we want to affect an ol3 viewer history undo/redo */
+export const REGIONS_HISTORY_ACTION = "REGIONS_HISTORY_ACTION";
 /** whenever the histogram range was updated */
 export const HISTOGRAM_RANGE_UPDATE = "HISTOGRAM_RANGE_UPDATE";
 /** whenever thumbnails are supposed to be updated */

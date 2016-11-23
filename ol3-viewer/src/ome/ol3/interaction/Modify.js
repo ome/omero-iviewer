@@ -25,6 +25,12 @@ ome.ol3.interaction.Modify = function(regions_reference) {
    */
     this.regions_ = regions_reference;
 
+    /**
+   * @type {number}
+   * @private
+   */
+	this.hist_id_ = -1;
+
     goog.base(this, {features : this.regions_.select_.getFeatures()}); // call super
 
 	this.handleDragEvent_ = ome.ol3.interaction.Modify.handleDragEvent_;
@@ -35,6 +41,23 @@ ome.ol3.interaction.Modify = function(regions_reference) {
 		return ol.events.condition.noModifierKeys(mapBrowserEvent) &&
 			ol.events.condition.click(mapBrowserEvent);
 	}
+
+    // a listener to react on modify start
+    ol.events.listen(this, ol.interaction.Modify.EventType.MODIFYSTART,
+        function(event) {
+            this.hist_id_ =
+                this.regions_.addHistory(event.features.array_, true)},
+        this);
+
+    // a listener to react on modify end
+    ol.events.listen(this, ol.interaction.Modify.EventType.MODIFYEND,
+        function(event) {
+            // complete history entry
+            if (this.hist_id_ >= 0) {
+                this.regions_.addHistory(
+                    event.features.array_, false, this.hist_id_);
+                this.regions_.sendHistoryNotification(this.hist_id_);
+            }},this);
 };
 goog.inherits(ome.ol3.interaction.Modify, ol.interaction.Modify);
 
@@ -272,6 +295,7 @@ ome.ol3.interaction.Modify.handleUpEvent_ = function(mapBrowserEvent) {
 			ol.interaction.Modify.EventType.MODIFYEND, this.features_, mapBrowserEvent));
 		this.modified_ = false;
 	}
+    this.hist_id_ = -1; // reset
 
 	return false;
 };
