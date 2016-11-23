@@ -7,3 +7,4 @@ node_modules
 static
 templates
 dist
+omero_viewerng.*
