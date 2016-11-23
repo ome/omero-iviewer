@@ -12,6 +12,7 @@ echo "Erasing build/deploy directories..."
 rm -rf build
 
 #delete plugin directories
+rm -rf plugin/dist plugin/omero_viewerng.egg-info
 rm -rf plugin/omero_viewerng/static plugin/omero_viewerng/templates
 
 #recreate static and templates directories
