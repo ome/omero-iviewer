@@ -1,4 +1,6 @@
 language: node_js
+node_js:
+  - "6"
 
 # This (sudo: false) is needed to "run on container-based infrastructure" on
 # which cache: is available
@@ -11,6 +13,7 @@ before_install:
   - flake8 --exclude closure -v .
   - rst-lint plugin/omero_viewerng/README.rst
 
-#script:
-#  - npm run prod
-# - python plugin/setup.py sdist install --user || exit 1
+script:
+  - npm run prod
+  - cd plugin
+  - python setup.py sdist install --user || exit 1
