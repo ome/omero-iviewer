@@ -254,16 +254,26 @@ ome.ol3.geom.Ellipse.prototype.getInvertedTransformMatrix = function() {
  * Turns the tansformation matrix back into a string of the format matrix (...)
  * @return {string|null} the transformation string or null
  */
-ome.ol3.geom.Ellipse.prototype.getTransform = function() {
+ome.ol3.geom.Ellipse.prototype.getTransform = function(asObject) {
     if (!ome.ol3.utils.Misc.isArray(this.transform_) ||
         this.transform_.length <= 2 ||
         this.transform.length % 2 !== 0) return null;
 
-    var transform = "matrix (" +
+    // by default we return as matrix string
+    if (typeof asObject !== 'boolean') asObject = false;
+
+    var transform = null;
+    if (asObject)
+        transform = {'A00' : this.transform_[0], 'A10' : this.transform_[1],
+                     'A01' : this.transform_[2], 'A11' : this.transform_[3],
+                     'A02' : this.transform_[4], 'A12' : this.transform_[5]};
+    else {
+        transform = "matrix(" +
         this.transform_[0] + " " + this.transform_[1];
-    for (var i=2;i<this.transform_.length;i+=2)
-        transform += " " + this.transform_[i] + " " + this.transform_[i+1];
-    transform += ")";
+        for (var i=2;i<this.transform_.length;i+=2)
+            transform += " " + this.transform_[i] + " " + this.transform_[i+1];
+        transform += ")";
+    }
 
     return transform;
 }
