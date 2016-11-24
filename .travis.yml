@@ -1,0 +1,19 @@
+language: node_js
+node_js:
+  - "6"
+
+# This (sudo: false) is needed to "run on container-based infrastructure" on
+# which cache: is available
+# http://docs.travis-ci.com/user/workers/container-based-infrastructure/
+sudo: false
+
+before_install:
+  - pip install --user restructuredtext_lint
+  - pip install --user flake8 pycodestyle pep8-naming
+  - flake8 --exclude closure -v .
+  - rst-lint plugin/omero_viewerng/README.rst
+
+script:
+  - npm run prod
+  - cd plugin
+  - python setup.py sdist install --user || exit 1

@@ -1,4 +1,4 @@
-# viewer_ng
+# omero_viewerng
 
 ##Requirements:
 
@@ -12,10 +12,10 @@ Run ```npm run prod``` to build an uglified version.
 
 All builds will build into the build directory AND deploy to the plugin directory
 which can then be used like any django plugin.
-For further installation help have a look at the respective [README](plugin/viewer-ng/README.md).
+For further installation help have a look at the respective [README](plugin/omero_viewerng/README.rst).
 
 Should you want to enable the "open with" feature execute this one-liner:
-``` $OMERO_SERVER/bin/omero config append omero.web.open_with '["viewer-ng", "viewer_ng_index", {"supported_objects":["images"], "script_url": "viewer-ng/openwith.js"}]'```
+``` $OMERO_SERVER/bin/omero config append omero.web.open_with '["omero_viewerng", "viewer_ng_index", {"supported_objects":["images"], "script_url": "omero_viewerng/openwith.js"}]'```
 
 Note: Should you like or need to rebuild viewer-ng's internal ol3 viewer,
       please have a look at the section *ol3-viewer* below!
@@ -44,3 +44,20 @@ To build the open layers viewer for viewer-ng (deploys into libs directory),
 simply run ```ant``` (default target).
 
 For further options type ```ant -p```.
+
+More detailed resources on how to create a web app and development setup can be found here:
+
+1. [CreateApp](https://www.openmicroscopy.org/site/support/omero5.2/developers/Web/CreateApp.html)
+2. [Deployment](https://www.openmicroscopy.org/site/support/omero5.2/developers/Web/Deployment.html)
+
+
+Important
+=========
+
+You need to build the viewer beforehand and deploy to the plugin directory.
+Please consult the respective [README](../../README.md).
+
+
+Also, make sure you keep the omero.web plugin in sync with the build:
+
+```$OMERO_SERVER/bin/omero websync```

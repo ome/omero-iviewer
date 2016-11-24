@@ -1,35 +1,23 @@
 from django.shortcuts import render
-from omeroweb.decorators import login_required
 from django.http import JsonResponse
 from django.http import HttpResponse
-import json
+from omeroweb.decorators import login_required
 
+import json
 import omero_marshal
-from omero.model import MaskI
 
 
 @login_required()
 def index(request, iid=None, conn=None, **kwargs):
-    return plugin_debug(request, iid=iid, conn=conn)
-
-
-@login_required()
-def plugin(request, iid=None, conn=None, debug=False, **kwargs):
     if iid is None:
         return HttpResponse("Viewer needs an image id!")
 
-    params = {}
+    params = {'IMAGE_ID': iid}
     for key in request.GET:
         if request.GET[key]:
             params[str(key).upper()] = str(request.GET[key])
 
-    return render(request, 'ol3-viewer/plugin.html',
-                  {'image_id': iid, 'debug': debug, 'params': params})
-
-
-@login_required()
-def plugin_debug(request, iid=None, conn=None, **kwargs):
-    return plugin(request, iid=iid, conn=conn, debug=True)
+    return render(request, 'omero_viewerng/index.html', {'params': params})
 
 
 @login_required()
@@ -96,47 +84,10 @@ def persist_rois(request, conn=None, **kwargs):
                 decoded_roi = update_service.saveAndReturnObject(decoded_roi)
                 # if roi is empty => delete it as well
                 if len(decoded_roi.copyShapes()) == 0:
-                    conn.deleteObjects("Roi", [decoded_roi.id.val], wait=False)
+                    conn.deleteObjects("Roi", [decoded_roi.getId().getValue],
+                                       wait=False)
             count += 1
         return JsonResponse({"ids": ret_ids})
     except Exception as marshalOrPersistenceException:
         return JsonResponse({"error": "Failed to marshal/save rois: " +
                             repr(marshalOrPersistenceException)})
-
-
-@login_required()
-def request_rois(request, iid, conn=None, **kwargs):
-    if iid is None:
-        return JsonResponse({"error":
-                             "no image id supplied for regions request"})
-
-    roi_service = conn.getRoiService()
-    if roi_service is None:
-        return JsonResponse({"error":
-                             "Could not get rois instance of roi service!"})
-
-    # loop over all rois and marshal, then store them
-    ret = []
-    try:
-        result = roi_service.findByImage(long(iid), None)
-        # we have to loop on the shape level as well for the following reasons
-        # 1. we reduce the resulting json a tiny bit at least by omitting the
-        #    experimenter on the roi level
-        # 2. we can omit masks which otherwise would trigger an errror
-        for roi in result.rois:
-            rois_to_be_returned = {"@id": roi.getId().val, "shapes": []}
-            for shape in roi.copyShapes():
-                # marshal if not mask
-                if shape.__class__ == MaskI:
-                    continue
-                encoder = omero_marshal.get_encoder(shape.__class__)
-                encoded_shape = encoder.encode(shape)
-                if encoded_shape is None:
-                    return JsonResponse({"error": "Failed to encode roi!"})
-                rois_to_be_returned['shapes'].append(encoded_shape)
-            ret.append(rois_to_be_returned)
-
-        return JsonResponse({"rois": ret})
-    except Exception as marshalException:
-        return JsonResponse({"error": "Failed to find/marshal rois: " +
-                            repr(marshalException)})

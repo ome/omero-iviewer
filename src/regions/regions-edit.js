@@ -512,7 +512,7 @@ export default class RegionsEdit {
 
         if (typeof window.localStorage)
             window.localStorage.setItem(
-                "viewer-ng.copied_shapes",
+                "omero_viewerng.copied_shapes",
                 JSON.stringify(this.regions_info.copied_shapes));
     }
 
