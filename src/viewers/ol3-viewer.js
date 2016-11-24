@@ -532,7 +532,7 @@ export default class Ol3Viewer extends EventSubscriber {
             typeof params.selected === 'boolean' && params.selected;
 
         this.viewer.storeRegions(
-            selectedOnly, true, '/viewer-ng/persist_rois');
+            selectedOnly, true, '/omero_viewerng/persist_rois');
     }
 
     /**
