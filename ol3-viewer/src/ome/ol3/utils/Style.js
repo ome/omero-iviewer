@@ -91,11 +91,11 @@ ome.ol3.utils.Style.createFeatureStyle = function(shape_info, is_label, fill_in_
 		// we don't want spikes
 		stroke['lineCap'] = "round";
 		stroke['lineJoin'] = "round";
-		text['fill'] = new ol.style.Fill(stroke);
-            //forLabel && fillStyle ? fillStyle : new ol.style.Fill(stroke);
-		text['stroke'] = new ol.style.Stroke(stroke);
-		//if (!forLabel) text['stroke'].setWidth(1);
-        text['stroke'].setWidth(1);
+		text['fill'] = forLabel ?
+                (fillStyle ? new ol.style.Fill(fill) : new ol.style.Fill(stroke)) :
+                    new ol.style.Fill(stroke);
+		//text['stroke'] = new ol.style.Stroke(stroke);
+        //text['stroke'].setWidth(1);
         text['count']++;
 	}
     if (text['count'] > 0) {
@@ -583,6 +583,14 @@ ome.ol3.utils.Style.modifyStyles =
 					if (newStyle.getText().getTextBaseline())
 						newTextStyle.setTextBaseline(newStyle.getText().getTextBaseline());
 				}
+                if (newTextStyle instanceof ol.style.Text &&
+                    typeof newTextStyle.text_ !== 'string')
+                        newTextStyle.text_ = "";
+                if (newTextStyle instanceof ol.style.Text &&
+                    newTextStyle.fill_ === null)
+                        newTextStyle.fill_ =
+                            new ol.style.Fill({color: newStrokeStyle.getColor()});
+
 				var newMixedStyle = new ol.style.Style({
 					"fill" : newFillStyle,
 					"stroke" : newStrokeStyle,

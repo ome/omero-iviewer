@@ -89,14 +89,16 @@ export class Utils {
             if (typeof shape !== 'object' || shape === null) return;
 
             let oldVals = [];
+            let allPropertiesEqual = true;
             for (let i=0;i<properties.length;i++) {
                 let prop = properties[i];
-                oldVals.push(
-                    typeof shape[prop] !== 'undefined' ?
-                        shape[prop] : null);
+                let old_value =
+                    typeof shape[prop] !== 'undefined' ? shape[prop] : null;
+                if (old_value !== values[i]) allPropertiesEqual = false;
+                oldVals.push(old_value);
                 shape[prop] = values[i];
             };
-            if (history instanceof History) {
+            if (history instanceof History && !allPropertiesEqual) {
                 if (typeof hist_id !== 'number') hist_id = -1;
                 history.addHistory(
                     hist_id, history.action.PROPERTIES,

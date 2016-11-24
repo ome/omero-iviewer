@@ -104,7 +104,6 @@ export default class RegionsDrawing extends EventSubscriber {
 
         // collect dimensions for propagation
         let newShape = Object.assign({}, generatedShapes[len-1]);
-        delete newShape['shape_id'];
         let theDims =
             Utils.getDimensionsForPropagation(
                 this.regions_info, newShape.theZ, newShape.theT);
@@ -117,7 +116,7 @@ export default class RegionsDrawing extends EventSubscriber {
                     shapes : [newShape],
                     number : theDims.length,
                     random : false, theDims : theDims,
-                    hist_id : params.hist_id});
+                    hist_id : params.hist_id, propagated: true});
         }
     }
 

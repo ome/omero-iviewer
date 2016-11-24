@@ -636,8 +636,8 @@ ome.ol3.utils.Conversion.integrateMiscInfoIntoJsonObject  = function(feature, js
 }
 
 /**
- * Turns an openlayers feature/geometry into a json shape definition that
- * can then be marshalled by omero marshal and stored
+ * Produces a json shape definition that can then be
+ * used by omero marshal and for persistence
  *
  * @static
  * @function
@@ -716,24 +716,14 @@ ome.ol3.utils.Conversion.toJsonObject = function(
 				 "shapes" : []};
 			roiContainer = rois[roiIdToBeUsed];
 		}
-		var type = feature['type'];
-		try {
-			var jsonObject = // retrieve object with 'geometry' type of properties
-				ome.ol3.utils.Conversion.LOOKUP[type].call(
-					null, feature.getGeometry(),
-					feature['state'] === ome.ol3.REGIONS_STATE.ADDED ? -1 : shapeId);
-			ome.ol3.utils.Conversion.integrateStyleIntoJsonObject( // add 'style' properties
-				feature, jsonObject);
-			// add any additional information related to the shape that needs storing
-			ome.ol3.utils.Conversion.integrateMiscInfoIntoJsonObject(feature, jsonObject);
-			// we like to keep the old id for later synchronization
-			jsonObject['oldId'] = feature.getId();
-			roiContainer['shapes'].push(jsonObject);
-		} catch(conversion_error) {
-			console.error("Failed to turn feature " + type + "(" + feature.getId() +
-				") into json => " + conversion_error);
-			continue;
-		}
+
+        var jsonObject =
+            ome.ol3.utils.Conversion.featureToJsonObject(feature, shapeId);
+        if (jsonObject === null) continue;
+        // we like to keep the old id for later synchronization
+        jsonObject['oldId'] = feature.getId();
+        roiContainer['shapes'].push(jsonObject);
+
 		roisToBeStored['count']++;
 	};
 
@@ -752,3 +742,45 @@ ome.ol3.utils.Conversion.toJsonObject = function(
 
 	return roisToBeStored;
 };
+
+/**
+ * Turns an openlayers feature/geometry into a json shape definition that
+ * can then be marshalled by omero marshal and stored
+ *
+ * @static
+ * @function
+ * @param {ol.Feature} feature an ol.Feature
+ * @param {number} shape_id a shape_id
+ * @return {Object|null} returns the json definition of the shape or null if an error occured
+ */
+ome.ol3.utils.Conversion.featureToJsonObject = function(feature, shape_id) {
+    var type = feature['type'];
+    try {
+        // extract the shape id from the feature's compound rois:shape id
+        if (typeof shape_id !== 'number' ||
+                typeof(feature.getId()) !== 'string' ||
+                feature.getId().length < 3) {
+            var colon = feature.getId().indexOf(":");
+            if (colon > 0) shape_id =
+                parseInt(feature.getId().substring(colon+1));
+        }
+
+        var jsonObject = // retrieve object with 'geometry' type of properties
+            ome.ol3.utils.Conversion.LOOKUP[type].call(
+                null, feature.getGeometry(),
+                feature['state'] === ome.ol3.REGIONS_STATE.ADDED ? -1 : shape_id);
+
+        // add 'style' properties
+        ome.ol3.utils.Conversion.integrateStyleIntoJsonObject(
+            feature, jsonObject);
+
+        // add any additional information related to the shape that needs storing
+        ome.ol3.utils.Conversion.integrateMiscInfoIntoJsonObject(feature, jsonObject);
+
+        return jsonObject;
+    } catch(conversion_error) {
+        console.error("Failed to turn feature " + type + "(" + feature.getId() +
+            ") into json => " + conversion_error);
+        return null;
+    }
+}

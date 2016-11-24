@@ -38,6 +38,8 @@ export const VIEWER_IMAGE_SETTINGS = "VIEWER_IMAGE_SETTINGS";
 export const REGIONS_HISTORY_ENTRY = "REGIONS_HISTORY_ENTRY";
 /** whenever we want to affect an ol3 viewer history undo/redo */
 export const REGIONS_HISTORY_ACTION = "REGIONS_HISTORY_ACTION";
+/** whenever we want to copy selected shape definitions */
+export const REGIONS_COPY_SHAPES = "REGIONS_COPY_SHAPES";
 /** whenever the histogram range was updated */
 export const HISTOGRAM_RANGE_UPDATE = "HISTOGRAM_RANGE_UPDATE";
 /** whenever thumbnails are supposed to be updated */

@@ -1679,6 +1679,21 @@ ome.ol3.Viewer.prototype.doHistory = function(hist_id, undo) {
      this.getRegions().doHistory(hist_id, undo);
 }
 
+/**
+ * Retrieves an up-to-date shape definition for the given shape id
+ *
+ * @param {string} shape_id a combined roi:shape id
+ * @return {Object} the shape definition or null if id does not have a feature
+ */
+ome.ol3.Viewer.prototype.getShapeDefinition = function(shape_id) {
+     if (this.getRegions() === null || typeof shape_id !== 'string' ||
+            typeof this.getRegions().idIndex_[shape_id] !== 'object')
+        return null;
+
+     return ome.ol3.utils.Conversion.featureToJsonObject(
+         this.getRegions().idIndex_[shape_id]);
+}
+
 /*
  * This section determines which methods are exposed and usable after compilation
  */
@@ -1871,3 +1886,8 @@ goog.exportProperty(
     ome.ol3.Viewer.prototype,
     'doHistory',
     ome.ol3.Viewer.prototype.doHistory);
+
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
+    'getShapeDefinition',
+    ome.ol3.Viewer.prototype.getShapeDefinition);

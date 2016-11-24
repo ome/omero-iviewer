@@ -141,11 +141,13 @@ export class Converters {
 
         // create shape copy in 'webgateway format'
         let compatibleShape = {type : type}; // type
-        compatibleShape.shape_id = shape.oldId; // dissect id
-        compatibleShape.id =
-            parseInt(
-                compatibleShape.shape_id.substring(
-                    compatibleShape.shape_id.indexOf(":") + 1));
+        if (typeof shape.oldId === 'string' && shape.oldId.indexOf(":") > 0) {
+            compatibleShape.shape_id = shape.oldId; // dissect id
+            compatibleShape.id =
+                parseInt(
+                    compatibleShape.shape_id.substring(
+                        compatibleShape.shape_id.indexOf(":") + 1));
+        }
 
         // loop over individual properties
         for (let p in shape) {
@@ -168,6 +170,12 @@ export class Converters {
             if (p === 'StrokeWidth') value = shape[p].Value;
             // font size object => number
             if (p === 'FontSize') value = shape[p].Value;
+            // transform
+            if (p === 'Transform')
+                value = "matrix(" + 
+                    shape[p].A00 + " " + shape[p].A10 + " " +
+                    shape[p].A01 + " " + shape[p].A11 + " " +
+                    shape[p].A02 + " " + shape[p].A12 + ")";
             if (p === 'Points') {
                 try {
                     let coords = [];

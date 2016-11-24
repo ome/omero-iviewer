@@ -6,7 +6,7 @@ import {Converters} from '../utils/converters';
 import {REGIONS_MODE} from '../utils/constants';
 import {
     REGIONS_CHANGE_MODES, REGIONS_SET_PROPERTY,
-    REGIONS_GENERATE_SHAPES,REGIONS_MODIFY_SHAPES
+    REGIONS_GENERATE_SHAPES,REGIONS_MODIFY_SHAPES, REGIONS_COPY_SHAPES
 } from '../events/events';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {spectrum} from 'spectrum-colorpicker';
@@ -164,7 +164,7 @@ export default class RegionsEdit {
      */
     onFontSizeChange(size = 10,shape=null) {
         if (typeof shape !== 'object' || shape === null) return;
-        if (typeof size !== 'number' || isNaN(size) || size < 1 ||
+        if (typeof size !== 'number' || isNaN(size) || size < 10 ||
                 size > 1000) return;
 
         let deltaProps = {type: shape.type};
@@ -496,25 +496,10 @@ export default class RegionsEdit {
      * @memberof RegionsEdit
      */
     copyShapes() {
-        // nothing selected
-        if (this.regions_info.selected_shapes.length === 0) return;
-
-        this.regions_info.copied_shapes = []; // empty first
-        // loop over the selected and find the json for the shape,
-        //then store it this.regions_info.copied_shapes and
-        // in the localStorage (if supported)
-        this.regions_info.selected_shapes.map(
-            (id) => {
-                let deepCopy =
-                    Object.assign({}, this.regions_info.data.get(id));
-                delete deepCopy['shape_id'];
-                this.regions_info.copied_shapes.push(deepCopy)});
-
-        if (typeof window.localStorage)
-            window.localStorage.setItem(
-                "omero_viewerng.copied_shapes",
-                JSON.stringify(this.regions_info.copied_shapes));
-    }
+        this.context.publish(
+            REGIONS_COPY_SHAPES,
+            {config_id : this.regions_info.image_info.config_id});
+   }
 
     /**
      * Paste Shapes
@@ -522,10 +507,12 @@ export default class RegionsEdit {
      * @memberof RegionsEdit
      */
     pasteShapes() {
+        let hist_id = this.regions_info.history.getHistoryId();
         this.context.publish(
             REGIONS_GENERATE_SHAPES,
             {config_id : this.regions_info.image_info.config_id,
                 shapes : this.regions_info.copied_shapes,
-                number : 1, random : true});
+                number : 1, random : true, hist_id : hist_id,
+                propagated: true});
     }
 }

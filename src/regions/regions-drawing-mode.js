@@ -153,7 +153,6 @@ export default class RegionsDrawingMode {
             (id) => {
                 let shape =
                     Object.assign({}, this.regions_info.data.get(id));
-                delete shape['shape_id'];
                 // collect dimensions for propagation
                 let theDims =
                     Utils.getDimensionsForPropagation(
@@ -164,7 +163,7 @@ export default class RegionsDrawingMode {
                         {config_id : this.regions_info.image_info.config_id,
                             shapes : [shape],
                             number : theDims.length, random : false,
-                            theDims : theDims});
+                            theDims : theDims, propagated: true});
             });
     }
 }

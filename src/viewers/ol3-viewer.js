@@ -4,6 +4,7 @@ require('../css/ol3-viewer.css');
 // dependencies
 import Context from '../app/context';
 import Misc from '../utils/misc';
+import {Converters} from '../utils/converters';
 import Ui from '../utils/ui';
 import {inject, customElement, bindable} from 'aurelia-framework';
 import {ol3} from '../../libs/ol3-viewer-1.0.js';
@@ -14,8 +15,8 @@ import {
     VIEWER_IMAGE_SETTINGS, IMAGE_VIEWER_SPLIT_VIEW,
     REGIONS_DRAW_SHAPE, REGIONS_CHANGE_MODES, REGIONS_SHOW_COMMENTS,
     REGIONS_GENERATE_SHAPES, REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES,
-    REGIONS_HISTORY_ENTRY, REGIONS_HISTORY_ACTION,
-    REGIONS_MODIFY_SHAPES, EventSubscriber }
+    REGIONS_HISTORY_ENTRY, REGIONS_HISTORY_ACTION,REGIONS_MODIFY_SHAPES,
+    REGIONS_COPY_SHAPES, EventSubscriber }
 from '../events/events';
 
 
@@ -81,6 +82,8 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.addHistoryEntry(params)],
         [REGIONS_HISTORY_ACTION,
             (params={}) => this.affectHistoryAction(params)],
+        [REGIONS_COPY_SHAPES,
+            (params={}) => this.copyShapeDefinitions(params)],
         [REGIONS_SHOW_COMMENTS,
             (params={}) => this.showComments(params)]];
 
@@ -331,8 +334,20 @@ export default class Ol3Viewer extends EventSubscriber {
           params.shapes.map(
               (def) => {
                   try {
-                      this.viewer.generateShapes(
-                          Object.assign({},def),
+                      let deepCopy = Object.assign({},def);
+                      // we are modified so let's update the definition
+                      // before we generate from it
+                      if (deepCopy.modified) {
+                          let upToDateDef =
+                            this.viewer.getShapeDefinition(deepCopy.shape_id);
+                          if (upToDateDef)
+                            deepCopy =
+                                Converters.makeShapeBackwardsCompatible(upToDateDef);
+                      }
+                      // for any generated shape we don't want an id
+                      // it will receive its own, new id
+                      if (params.propagated) delete deepCopy['shape_id'];
+                      this.viewer.generateShapes(deepCopy,
                           params.number, params.random, extent, theDims,
                           params.add_history, params.hist_id);
                   } catch(ignored) {}});
@@ -644,5 +659,44 @@ export default class Ol3Viewer extends EventSubscriber {
 
         if (typeof params.undo !== 'boolean') params.undo = true;
         this.viewer.doHistory(params.hist_id, params.undo);
+    }
+
+    /**
+     * Copies shape definitions (updating them if necessary)
+     *
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     * @return
+     */
+    copyShapeDefinitions(params) {
+        // the event doesn't concern us or we have nothing selected for copy
+        if (params.config_id !== this.config_id ||
+            this.image_config.regions_info.selected_shapes.length === 0) return;
+
+        this.image_config.regions_info.copied_shapes = []; // empty first
+        // loop over the selected and find the json for the shape,
+        //then store it this.regions_info.copied_shapes and
+        // in the localStorage (if supported)
+        this.image_config.regions_info.selected_shapes.map(
+            (id) => {
+                let deepCopy =
+                    Object.assign({},
+                    this.image_config.regions_info.data.get(id));
+                // if we have been modified we get an up-to-date def
+                // from the viewer
+                if (deepCopy.modified) {
+                  let upToDateDef =
+                    this.viewer.getShapeDefinition(deepCopy.shape_id);
+                  if (upToDateDef)
+                    deepCopy =
+                        Converters.makeShapeBackwardsCompatible(upToDateDef);
+                }
+                this.image_config.regions_info.copied_shapes.push(deepCopy)});
+
+        // put them in local storage if exists
+        if (typeof window.localStorage)
+            window.localStorage.setItem(
+                "omero_viewerng.copied_shapes",
+                JSON.stringify(this.image_config.regions_info.copied_shapes));
     }
 }
