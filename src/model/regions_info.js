@@ -449,7 +449,9 @@ export class History {
                 let generate = undo ? rec.old_vals : rec.new_vals;
                 if (generate) { // we recreate them
                     rec.diffs.map((shape) => {
-                        if (shape.deleted)
+                        let isNew =
+                            typeof shape.is_new === 'boolean' && shape.is_new;
+                        if (!isNew && shape.deleted)
                             imgInfo.context.publish(
                                 REGIONS_SET_PROPERTY,
                                     {config_id : imgInfo.config_id,
