@@ -53,6 +53,14 @@ ome.ol3.interaction.Draw = function(previous_modes, regions_reference) {
 	this.history_id_ = null;
 
     /**
+	 * the roi id
+	 *
+	 * @type {number}
+	 * @private
+	 */
+	this.roi_id_ = 0;
+
+    /**
 	 * default styling for drawing
 	 *
 	 * @type {function}
@@ -124,7 +132,10 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
 
 		if (event.feature instanceof ol.Feature) {
 			// set id, type and state as new
-			event.feature.setId("-1:" + ol.getUid(event.feature));
+			event.feature.setId(
+                (typeof this.roi_id_ === 'number' && this.roi_id_ < 0 ?
+                    "" + this.roi_id_ + ":" :
+                    "-1:") + ol.getUid(event.feature));
 			event.feature['state'] = ome.ol3.REGIONS_STATE.ADDED;
 			event.feature['type'] = shape_type;
 
@@ -167,11 +178,12 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
             var eventbus = this.regions_.viewer_.eventbus_;
             var config_id = this.regions_.viewer_.getTargetId();
             var hist_id = this.history_id_;
+            if (this.roi_id_ < 0) event.feature['roi_id'] = this.roi_id_;
             if (eventbus)
                 setTimeout(function() {
                     var newRegionsObject =
                         ome.ol3.utils.Conversion.toJsonObject(
-                            new ol.Collection([event.feature]), true, true);
+                            new ol.Collection([event.feature]), false, true);
                     if (typeof newRegionsObject !== 'object' ||
                         !ome.ol3.utils.Misc.isArray(newRegionsObject['rois']) ||
                         newRegionsObject['rois'].length === 0) return;
@@ -181,9 +193,12 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                         "drawn" : true
                     };
                     if (typeof hist_id === 'number') opts['hist_id'] = hist_id;
+                    if (typeof event.feature['roi_id'] === 'number')
+                        opts['roi_id'] = event.feature['roi_id'];
                     eventbus.publish("REGIONS_SHAPE_GENERATED", opts);
                 },25);
             this.history_id_ = null;
+            this.rois_id_ = 0;
         }
 
         this.endDrawingInteraction();
@@ -214,16 +229,19 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
  * This method starts the drawing interaction for a certin shape type.
  *
  * @param {string} type the shape type
+ * @param {number} roi_id a roi id that gets incorporated into the id (for grouping)
  * @param {number=} hist_id an optional history id that needs to be returned
  */
-ome.ol3.interaction.Draw.prototype.drawShape = function(type, hist_id) {
+ome.ol3.interaction.Draw.prototype.drawShape = function(type, roi_id, hist_id) {
 	if (typeof(type) !== 'string' || type.length === 0) {
         this.history_id_ = null;
+        this.roi_id_ = 0;
         this.dispatchEvent(new ol.interaction.Draw.Event(
              ol.interaction.Draw.EventType.DRAWEND, null));
         return;
     }
 
+    this.roi_id_ = (typeof roi_id === 'number' && roi_id < 0) ? roi_id : -1;
     if (typeof hist_id === 'number') this.history_id_ = hist_id;
 	var typeFunction = null;
 	switch(type.toLowerCase()) {

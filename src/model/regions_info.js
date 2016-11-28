@@ -75,6 +75,13 @@ export default class RegionsInfo extends EventSubscriber {
     drawing_dims = { t: [], z: []};
 
     /**
+     * a roi id for new regions (shapes to be combined), strictly negative
+     * @memberof RegionsInfo
+     * @type {number}
+     */
+    roi_id = -1;
+
+    /**
      * our list of events we subscribe to via the EventSubscriber
      * @memberof RegionsInfo
      * @type {Map}
@@ -218,6 +225,15 @@ export default class RegionsInfo extends EventSubscriber {
                 this.ready = true;
                 }, error : (error) => this.ready = false
         });
+    }
+
+    /**
+     * Simply returns an autodecremented roi id for new shapes to be combined
+     * @memberof RegionsInfo
+     * @return {number} an autoincremented roi id
+     */
+    getNewRegionsId() {
+        return --this.roi_id;
     }
 
     /**

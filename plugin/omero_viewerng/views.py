@@ -84,7 +84,7 @@ def persist_rois(request, conn=None, **kwargs):
                 decoded_roi = update_service.saveAndReturnObject(decoded_roi)
                 # if roi is empty => delete it as well
                 if len(decoded_roi.copyShapes()) == 0:
-                    conn.deleteObjects("Roi", [decoded_roi.getId().getValue],
+                    conn.deleteObjects("Roi", [decoded_roi.getId().getValue()],
                                        wait=False)
             count += 1
         return JsonResponse({"ids": ret_ids})

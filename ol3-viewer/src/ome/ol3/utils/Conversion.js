@@ -694,7 +694,7 @@ ome.ol3.utils.Conversion.toJsonObject = function(
 
         // we don't want newly added but immediately deleted shapes
         if (feature['state'] === ome.ol3.REGIONS_STATE.REMOVED &&
-                shapeId === -1) continue;
+                shapeId < 0) continue;
 
 		// now that we have the roi and shape id we check whether we have them in
 		// our associative array already or we need to create it yet

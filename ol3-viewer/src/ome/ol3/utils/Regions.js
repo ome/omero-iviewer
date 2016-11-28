@@ -286,9 +286,13 @@ ome.ol3.utils.Regions.generateRegions =
 			ome.ol3.utils.Style.cloneStyle(prototypeFeature.getStyle()));
         // we generate an id of the form -1:uid
         if (typeof shape_info['shape_id'] !== 'string' ||
-                shape_info['shape_id'].length === 0 ||
-                shape_info['shape_id'].indexOf(":") === -1)
-		              newFeature.setId("-1:" + ol.getUid(newFeature));
+            shape_info['shape_id'].length === 0 ||
+            shape_info['shape_id'].indexOf(":") === -1)
+		        newFeature.setId(
+                    (typeof shape_info['roi_id'] === 'number' &&
+                     shape_info['roi_id'] < 0 ?
+                        "" + shape_info['roi_id'] + ":" : "-1:") +
+                            ol.getUid(newFeature));
         else newFeature.setId(shape_info['shape_id']);
 		newFeature['state'] = ome.ol3.REGIONS_STATE.ADDED; // state: added
 

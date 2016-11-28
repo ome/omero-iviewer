@@ -327,6 +327,8 @@ export default class Ol3Viewer extends EventSubscriber {
           let extent = this.viewer.getSmallestViewExtent();
           if (typeof params.random !== 'boolean') params.random = false;
           if (typeof params.number !== 'number') params.number = 1;
+          if (typeof params.roi_id !== 'number' || params.roi_id > 0)
+            params.roi_id = this.image_config.regions_info.getNewRegionsId();
           let theDims =
             Misc.isArray(params.theDims) && params.theDims.length !== 0 ?
                 params.theDims : null;
@@ -347,6 +349,7 @@ export default class Ol3Viewer extends EventSubscriber {
                       // for any generated shape we don't want an id
                       // it will receive its own, new id
                       if (params.propagated) delete deepCopy['shape_id'];
+                      deepCopy['roi_id'] = params.roi_id;
                       this.viewer.generateShapes(deepCopy,
                           params.number, params.random, extent, theDims,
                           params.add_history, params.hist_id);
@@ -529,7 +532,7 @@ export default class Ol3Viewer extends EventSubscriber {
         }
 
         // let's draw
-        this.viewer.drawShape(params.shape, params.hist_id);
+        this.viewer.drawShape(params.shape, params.roi_id, params.hist_id);
     }
 
     /**
@@ -547,7 +550,7 @@ export default class Ol3Viewer extends EventSubscriber {
             typeof params.selected === 'boolean' && params.selected;
 
         this.viewer.storeRegions(
-            selectedOnly, true, '/omero_viewerng/persist_rois');
+            selectedOnly, false, '/omero_viewerng/persist_rois');
     }
 
     /**

@@ -1302,7 +1302,7 @@ ome.ol3.Viewer.prototype.generateShapes =
         setTimeout(function() {
             var newRegionsObject =
                 ome.ol3.utils.Conversion.toJsonObject(
-                    new ol.Collection(generatedShapes), true, true);
+                    new ol.Collection(generatedShapes), false, true);
             if (typeof newRegionsObject !== 'object' ||
                 !ome.ol3.utils.Misc.isArray(newRegionsObject['rois']) ||
                 newRegionsObject['rois'].length === 0) return;
@@ -1447,9 +1447,10 @@ ome.ol3.Viewer.prototype.enableRegionsContextMenu = function(flag) {
  * 'polygons'.
  *
  * @param {string} type the shape type to draw
+ * @param {number} roi_id a roi id that gets incorporated into the id (for grouping)
  * @param {number=} hist_id an optional history id to pass through and return
  */
-ome.ol3.Viewer.prototype.drawShape = function(type, hist_id) {
+ome.ol3.Viewer.prototype.drawShape = function(type, roi_id, hist_id) {
 	if (!(this.regions_ instanceof ome.ol3.source.Regions) ||
 			typeof(type) !== 'string' || type.length === 0)
 		return;
@@ -1461,7 +1462,7 @@ ome.ol3.Viewer.prototype.drawShape = function(type, hist_id) {
 		return;
 	}
 
-	this.regions_.draw_.drawShape(type, hist_id);
+	this.regions_.draw_.drawShape(type, roi_id, hist_id);
 }
 
 /**
