@@ -30,8 +30,6 @@ describe("Style", function() {
 			"fontFamily": "sans-serif",
 			"textValue": "some text",
 			"strokeWidth": 1.0,
-			"strokeColor": "#808080",
-			"strokeAlpha": 0.86328125,
 			"fillColor": "#00ff00",
 			"fillAlpha": 0.640625
 		}
@@ -42,11 +40,7 @@ describe("Style", function() {
 		var textStyle = style.getText();
 		assert.instanceOf(textStyle, ol.style.Text);
 		expect(textStyle.getText()).to.eql("some text");
-		var stroke = textStyle.getStroke();
-		expect(stroke.getColor()).to.eql("rgba(128,128,128,0.86328125)");
-        expect(stroke.getWidth()).to.eql(1);
 		var fill = textStyle.getFill();
-        expect(fill.getColor()).to.eql("rgba(128,128,128,0.86328125)");
-		//expect(fill.getColor()).to.eql("rgba(0,255,0,0.640625)");
+		expect(fill.getColor()).to.eql("rgba(0,255,0,0.640625)");
 	});
 });
