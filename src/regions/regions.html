@@ -7,7 +7,7 @@
     <div show.bind="context.show_regions &&
         regions_info !== null && regions_info.data !== null">
 
-        <div class="row shapes-persistence">
+        <div class="row shapes-persistence" style="padding-top: 2px">
             <div>
                 <button type="button" class="btn-xs"
                     click.delegate="saveShapes()">Save
@@ -36,7 +36,7 @@
                 </button>
             </div>
 
-            <div class="dropdown rois-dropdown">
+            <div class="dropdown rois-dropdown" style="margin-left: 5px;">
                 <button type="button" class="btn-xs dropdown-toggle"
                         data-toggle="dropdown">Delete
                 </button>
@@ -49,8 +49,8 @@
                 </ul>
             </div>
 
-            <div class="checkbox checkbox-settings">
-                <label><input type="checkbox"
+            <div class="checkbox checkbox-settings" style="line-height: 20px;">
+                <label><input style="line-height: 20px;" type="checkbox"
                     change.delegate="showComments($event.target.checked)">
                     Show Comments
                 </label>

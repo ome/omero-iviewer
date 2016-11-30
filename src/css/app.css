@@ -589,6 +589,9 @@ thead, tbody {
 .delete-rois>.dropdown-menu {
     background-color: #f8f8f8;
 }
+.rois-dropdown {
+    float: left;
+}
 .rois-dropdown>.dropdown-menu>li>a:hover,
 .rois-dropdown>.dropdown-menu>li>a:focus,
 .rois-dropdown>.dropdown-menu>.active>a,
