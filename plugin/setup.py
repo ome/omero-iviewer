@@ -32,14 +32,14 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
-VERSION = '0.0.14'
+VERSION = '0.0.1'
 
 
-setup(name="omero-viewerng",
+setup(name="omero-iviewer",
       packages=find_packages(exclude=['ez_setup']),
       version=VERSION,
       description="A Python plugin for OMERO.web",
-      long_description=read('omero_viewerng/README.rst'),
+      long_description=read('omero_iviewer/README.rst'),
       classifiers=[
           'Development Status :: 5 - Production/Stable',
           'Environment :: Web Environment',
@@ -64,8 +64,8 @@ setup(name="omero-viewerng",
       author='The Open Microscopy Team',
       author_email='ome-devel@lists.openmicroscopy.org.uk',
       license='AGPLv3',
-      url="https://github.com/waxenegger/viewer-ng/",
-      download_url='https://github.com/waxenegger/viewer-ng//tarball/%s' % VERSION,  # NOQA
+      url="https://github.com/ome/omero-iviewer/",
+      download_url='https://github.com/ome/omero-iviewer//tarball/%s' % VERSION,  # NOQA
       keywords=['OMERO.web', 'plugin'],
       include_package_data=True,
       zip_safe=False,

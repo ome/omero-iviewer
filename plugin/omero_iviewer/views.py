@@ -17,7 +17,7 @@ def index(request, iid=None, conn=None, **kwargs):
         if request.GET[key]:
             params[str(key).upper()] = str(request.GET[key])
 
-    return render(request, 'omero_viewerng/index.html', {'params': params})
+    return render(request, 'omero_iviewer/index.html', {'params': params})
 
 
 @login_required()

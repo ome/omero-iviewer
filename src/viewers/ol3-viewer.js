@@ -550,7 +550,7 @@ export default class Ol3Viewer extends EventSubscriber {
             typeof params.selected === 'boolean' && params.selected;
 
         this.viewer.storeRegions(
-            selectedOnly, false, '/omero_viewerng/persist_rois');
+            selectedOnly, false, '/omero_iviewer/persist_rois');
     }
 
     /**
@@ -699,7 +699,7 @@ export default class Ol3Viewer extends EventSubscriber {
         // put them in local storage if exists
         if (typeof window.localStorage)
             window.localStorage.setItem(
-                "omero_viewerng.copied_shapes",
+                "omero_iviewer.copied_shapes",
                 JSON.stringify(this.image_config.regions_info.copied_shapes));
     }
 }

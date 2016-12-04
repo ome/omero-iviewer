@@ -104,7 +104,7 @@ export default class RegionsInfo extends EventSubscriber {
         try {
             this.copied_shapes =
                 JSON.parse(
-                    window.localStorage.getItem("omero_viewerng.copied_shapes"));
+                    window.localStorage.getItem("omero_iviewer.copied_shapes"));
         } catch(ignored) {}
     }
 

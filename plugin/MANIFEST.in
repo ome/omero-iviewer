@@ -1,3 +1,3 @@
-include omero_viewerng/README.rst
+include omero_iviewer/README.rst
 include LICENSE
-recursive-include omero_viewerng *
+recursive-include omero_iviewer *

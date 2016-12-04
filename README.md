@@ -1,4 +1,4 @@
-# omero_viewerng
+# omero_iviewer
 
 ##Requirements:
 
@@ -12,12 +12,12 @@ Run ```npm run prod``` to build an uglified version.
 
 All builds will build into the build directory AND deploy to the plugin directory
 which can then be used like any django plugin.
-For further installation help have a look at the respective [README](plugin/omero_viewerng/README.rst).
+For further installation help have a look at the respective [README](plugin/omero_iviewer/README.rst).
 
 Should you want to enable the "open with" feature execute this one-liner:
-``` $OMERO_SERVER/bin/omero config append omero.web.open_with '["omero_viewerng", "viewer_ng_index", {"supported_objects":["images"], "script_url": "omero_viewerng/openwith.js"}]'```
+``` $OMERO_SERVER/bin/omero config append omero.web.open_with '["omero_iviewer", "iviewer_index", {"supported_objects":["images"], "script_url": "omero_iviewer/openwith.js"}]'```
 
-Note: Should you like or need to rebuild viewer-ng's internal ol3 viewer,
+Note: Should you like or need to rebuild OMERO.iviewer's internal ol3 viewer,
       please have a look at the section *ol3-viewer* below!
 
 ##Development:
@@ -32,7 +32,7 @@ Run ```npm run docs``` to build the html in build/docs
 
 
 # ol3-viewer
-Viewer NG's internal image viewer (based on open layers 3)
+OMERO.iviewer's internal image viewer (based on open layers 3)
 
 The following software has to be installed in order to compile the java script code:
 
@@ -40,7 +40,7 @@ The following software has to be installed in order to compile the java script c
 2. apache ant (and therefore a java runtime)
 3. python (for closure's calcdeps.py)
 
-To build the open layers viewer for viewer-ng (deploys into libs directory),
+To build the open layers viewer for OMERO.iviewer (deploys into libs directory),
 simply run ```ant``` (default target).
 
 For further options type ```ant -p```.

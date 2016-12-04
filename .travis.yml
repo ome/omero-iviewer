@@ -11,7 +11,7 @@ before_install:
   - pip install --user restructuredtext_lint
   - pip install --user flake8 pycodestyle pep8-naming
   - flake8 --exclude closure -v .
-  - rst-lint plugin/omero_viewerng/README.rst
+  - rst-lint plugin/omero_iviewer/README.rst
 
 script:
   - npm run prod
