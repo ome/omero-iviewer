@@ -54,7 +54,7 @@ To build the html in build/docs, run:
 ol3-viewer
 ==========
 
-The OMERO.iviewer's internal image viewer is based on [OpenLayers 3](https://openlayers.org/),
+The OMERO.iviewer's internal image viewer is based on `OpenLayers 3 <https://openlayers.org/>`_,
 
 The following software has to be installed in order to compile the java script code:
 
@@ -72,6 +72,6 @@ For further options type ```ant -p```.
 
 More detailed resources on how to create a web app and development setup can be found at:
 
-1. [CreateApp](https://www.openmicroscopy.org/site/support/omero5.2/developers/Web/CreateApp.html)
-2. [Deployment](https://www.openmicroscopy.org/site/support/omero5.2/developers/Web/Deployment.html)
+1. `CreateApp <https://www.openmicroscopy.org/site/support/omero5.2/developers/Web/CreateApp.html>`_
+2. `Deployment <https://www.openmicroscopy.org/site/support/omero5.2/developers/Web/Deployment.html>`_
 
