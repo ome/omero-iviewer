@@ -15,9 +15,12 @@ To build an uncompressed version, run:
 
     $ npm run debug
 
+
+
 To build an uglified version, run:
 
 ::
+
     $ npm run prod
 
 All builds will build into the build directory and deploy to the plugin directory
