@@ -50,25 +50,26 @@
 
     <div class="row checkbox checkbox-settings">
         <div class="col-xs-6">
-            <label><input type="checkbox"
-               checked.bind="image_config.image_info.model | imageModel"
-               change.delegate="onModelChange($event.target.checked)">Grayscale</label>
-        </div>
-        <div class="col-xs-6">
-            <label
-                class="${image_config && image_config.image_info &&
-                            image_config.image_info.has_histogram
-                                ? '' : 'disabled-color'}">
+            <label>
                 <input type="checkbox"
-                    class="${image_config && image_config.image_info &&
+                    checked.bind="image_config.image_info.model | imageModel"
+                    change.delegate="onModelChange($event.target.checked)" />
+               Grayscale
+           </label>
+        </div>
+        <div class="col-xs-6
+                    ${image_config && image_config.image_info &&
                         image_config.image_info.has_histogram
-                            ? '' : 'disabled-color'}"
-                    disabled="${image_config && image_config.image_info &&
-                        image_config.image_info.has_histogram
-                            ? '' : 'disabled-color'}"
-                    change.delegate="toggleHistogram($event.target.checked)">
-                Show Histogram
-            </label>
+                            ? '' : 'disabled-color'}">
+            <input type="checkbox"
+                class="${image_config && image_config.image_info &&
+                    image_config.image_info.has_histogram
+                        ? '' : 'disabled-color'}"
+                disabled="${image_config && image_config.image_info &&
+                    image_config.image_info.has_histogram
+                        ? '' : 'disabled-color'}"
+                change.delegate="toggleHistogram($event.target.checked)" />
+            &nbsp;Show Histogram
         </div>
     </div>
 
