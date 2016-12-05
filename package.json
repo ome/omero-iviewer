@@ -1,6 +1,6 @@
 {
-  "version": "1.0.0",
-  "description": "Viewer NG",
+  "version": "0.0.1",
+  "description": "OMERO.iviewer",
   "scripts": {
     "dev": "webpack-dev-server --config webpack.dev.config.js --hot --inline --progress --devtool eval",
     "debug": "./prepare_build.sh && webpack --config webpack.prod.config.js --progress --devtool source-map && ./deploy_build.sh",
