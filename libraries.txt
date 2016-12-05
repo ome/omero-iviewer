@@ -1,0 +1,14 @@
+Third party libraries
+
+Library: OpenLayers 3
+License: 2-Clause BSD
+Site: https://openlayers.org/
+
+Library: Google Closure
+License: Apache Version 2.0
+Site: https://developers.google.com/closure/
+
+Library: Apache Ant
+License: Apache Version 2.0
+Site: http://ant.apache.org/
+
