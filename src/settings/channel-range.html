@@ -10,6 +10,7 @@
             <div>Lookup Tables</div>
             <hr/>
             <div><input type="checkbox"
+                disabled.bind="channel.reverseIntensity === null"
                 checked.bind="channel.reverseIntensity"
                 change.delegate="onReverseIntensityToggle()"/>
                 &nbsp;Reverse Intensity
