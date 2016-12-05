@@ -25,10 +25,12 @@ To build an uglified version, run:
 
 All builds will build into the build directory and deploy to the plugin directory
 which can then be used like any Django plugin.
-For further installation help have a look at the respective [README](plugin/omero_iviewer/README.rst).
+For further installation help have a look at the respective README.rst.
 
-Note: Should you like or need to rebuild OMERO.iviewer's internal ol3 viewer,
-      please have a look at the section *ol3-viewer* below!
+**Note**: 
+
+Should you like or need to rebuild OMERO.iviewer's internal ol3 viewer,
+please have a look at the section *ol3-viewer* below!
 
 Development
 ===========
