@@ -21,6 +21,9 @@
 # Version: 1.0
 
 import os
+import setuptools.command.install
+import setuptools.command.sdist
+from distutils.core import Command
 from setuptools import setup, find_packages
 
 
@@ -34,6 +37,46 @@ def read(fname):
 
 VERSION = '0.0.1'
 
+
+cmdclass = {}
+
+class run_prod(Command):
+
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        for command in self.get_sub_commands():
+            self.run_command(command)
+
+        self.spawn(['npm', 'run', 'prod'])
+
+
+cmdclass['run_prod'] = run_prod
+
+
+class sdist(setuptools.command.sdist.sdist):
+
+    def run(self):
+        self.run_command('run_prod')
+        setuptools.command.sdist.sdist.run(self)
+
+
+cmdclass['sdist'] = sdist
+
+
+class install(setuptools.command.install.install):
+
+    def run(self):
+        self.run_command('run_prod')
+        setuptools.command.install.install.run(self)
+
+
+cmdclass['install'] = install
 
 setup(name="omero-iviewer",
       packages=find_packages(exclude=['ez_setup']),
@@ -69,4 +112,5 @@ setup(name="omero-iviewer",
       keywords=['OMERO.web', 'plugin'],
       include_package_data=True,
       zip_safe=False,
+      cmdclass=cmdclass,
       )
