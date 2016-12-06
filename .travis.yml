@@ -14,6 +14,7 @@ before_install:
   - rst-lint plugin/omero_iviewer/README.rst
 
 script:
+  - cd plugin
   - python setup.py sdist install --user || exit 1
-  - if [ ! -d "plugin/omero_iviewer/static" ]; then exit 1 ;fi
-  - if [ ! -d "plugin/omero_iviewer/templates" ]; then exit 1 ;fi
+  - if [ ! -d "omero_iviewer/static" ]; then exit 1 ;fi
+  - if [ ! -d "omero_iviewer/templates" ]; then exit 1 ;fi
