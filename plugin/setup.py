@@ -40,8 +40,8 @@ VERSION = '0.0.1'
 
 cmdclass = {}
 
-class run_prod(Command):
 
+class RunProd(Command):
 
     def initialize_options(self):
         pass
@@ -56,27 +56,27 @@ class run_prod(Command):
         self.spawn(['npm', 'run', 'prod'])
 
 
-cmdclass['run_prod'] = run_prod
+cmdclass['run_prod'] = RunProd
 
 
-class sdist(setuptools.command.sdist.sdist):
+class Sdist(setuptools.command.sdist.sdist):
 
     def run(self):
         self.run_command('run_prod')
         setuptools.command.sdist.sdist.run(self)
 
 
-cmdclass['sdist'] = sdist
+cmdclass['sdist'] = Sdist
 
 
-class install(setuptools.command.install.install):
+class Install(setuptools.command.install.install):
 
     def run(self):
         self.run_command('run_prod')
         setuptools.command.install.install.run(self)
 
 
-cmdclass['install'] = install
+cmdclass['install'] = Install
 
 setup(name="omero-iviewer",
       packages=find_packages(exclude=['ez_setup']),
