@@ -7,4 +7,4 @@ node_modules
 static
 templates
 dist
-omero_iviewer.*
+omero_iviewer.egg-info
