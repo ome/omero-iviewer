@@ -50,10 +50,8 @@ class RunProd(Command):
         pass
 
     def run(self):
-        for command in self.get_sub_commands():
-            self.run_command(command)
-
-        self.spawn(['npm', 'run', 'prod'])
+        if not os.path.isdir('omero-iviewer/static'):
+            self.spawn(['npm', 'run', 'prod'])
 
 
 cmdclass['run_prod'] = RunProd
@@ -62,7 +60,9 @@ cmdclass['run_prod'] = RunProd
 class Sdist(setuptools.command.sdist.sdist):
 
     def run(self):
-        self.run_command('run_prod')
+        print os.path.isdir('omero-iviewer/static')
+        if not os.path.isdir('omero-iviewer/static'):
+            self.run_command('run_prod')
         setuptools.command.sdist.sdist.run(self)
 
 
@@ -72,7 +72,8 @@ cmdclass['sdist'] = Sdist
 class Install(setuptools.command.install.install):
 
     def run(self):
-        self.run_command('run_prod')
+        if not os.path.isdir('omero-iviewer/static'):
+            self.run_command('run_prod')
         setuptools.command.install.install.run(self)
 
 
