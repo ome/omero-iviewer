@@ -1,5 +1,5 @@
 {
-  "version": "0.0.1",
+  "version": "0.0.0",
   "description": "OMERO.iviewer",
   "scripts": {
     "dev": "webpack-dev-server --config webpack.dev.config.js --hot --inline --progress --devtool eval",
