@@ -11,7 +11,7 @@ module.exports = {
   },
   output: {
     path: path.join(__dirname, 'build'),
-    filename: 'bundle' + pkg.version + '.js',
+    filename: 'bundle.js',
     publicPath: '/static/omero_iviewer/'
   },
   plugins: [
