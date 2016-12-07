@@ -213,7 +213,8 @@ ome.ol3.source.Image = function(options) {
                 // amend url with channel info
                 url += (!channelInfo['active'] ? "-" : "") + (c + 1);
                 url += "|" + channelInfo['start'] + ":" + channelInfo['end'];
-                url += (channelInfo['reverse'] ? "" : "-") + "r"; // reverse int.
+                if (typeof channelInfo['reverse'] === 'boolean')  // reverse int.
+                    url += (channelInfo['reverse'] ? "" : "-") + "r";
                 url += "$" + channelInfo['color']; // color info
             }
             url += '&m=' + this.image_model_;
@@ -459,12 +460,13 @@ ome.ol3.source.Image.prototype.captureImageSettings = function() {
             var chanSnap = {
                 "active" : chan['active'],
                 "color" : chan['color'],
-                "reverseIntensity" : chan['reverse'],
                 "min" : chan['min'],
                 "max" : chan['max'],
                 "start" : chan['start'],
                 "end" : chan['end']
             };
+            if (typeof chan['reverse'] === 'boolean')
+                chanSnap['reverseIntensity'] = chan['reverse'];
             ret['channels'].push(chanSnap);
         }
 

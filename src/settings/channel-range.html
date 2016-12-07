@@ -9,7 +9,11 @@
             <img class="luts-close" src="../css/images/close.gif"/>
             <div>Lookup Tables</div>
             <hr/>
-            <div><input type="checkbox"
+            <div
+                class="${channel.reverseIntensity === null ? 'disabled-color' : ''}">
+                <input type="checkbox"
+                disabled.bind="channel.reverseIntensity === null"
+                class="${channel.reverseIntensity === null ? 'disabled-color' : ''}"
                 checked.bind="channel.reverseIntensity"
                 change.delegate="onReverseIntensityToggle()"/>
                 &nbsp;Reverse Intensity
