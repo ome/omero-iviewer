@@ -94,13 +94,13 @@ export class Header extends EventSubscriber {
      */
      onImageConfigChange(params = {}) {
          let conf = this.context.getImageConfig(params.config_id);
+
          this.setTitle(
              conf && conf.image_info && conf.image_info.image_name ?
                 conf.image_info.image_name : null);
-         if (conf === null) return;
 
-         this.image_info =
-             this.context.getImageConfig(params.config_id).image_info;
+         if (conf === null) return;
+         this.image_info = conf.image_info;
 
          if (!this.image_info.has_scalebar) {
              this.context.show_scalebar = false;
