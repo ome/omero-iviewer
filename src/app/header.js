@@ -5,6 +5,7 @@ require('../css/images/close.gif');
 import {inject,customElement} from 'aurelia-framework';
 import Context from './context';
 import Misc from '../utils/misc';
+import {APP_NAME} from '../utils/constants';
 import {
     IMAGE_CONFIG_UPDATE,
     IMAGE_VIEWER_SCALEBAR,
@@ -92,7 +93,12 @@ export class Header extends EventSubscriber {
      * @param {Object} params the event notification parameters
      */
      onImageConfigChange(params = {}) {
-         if (this.context.getImageConfig(params.config_id) === null) return;
+         let conf = this.context.getImageConfig(params.config_id);
+         this.setTitle(
+             conf && conf.image_info && conf.image_info.image_name ?
+                conf.image_info.image_name : null);
+         if (conf === null) return;
+
          this.image_info =
              this.context.getImageConfig(params.config_id).image_info;
 
@@ -178,6 +184,22 @@ export class Header extends EventSubscriber {
                         {config_id : ctx.id, split : makeSplit});
           }
       }
+
+    /**
+    * Will set the title of the window
+    *
+    * @param {string} title the title
+    * @param {boolean} use_app_prefix if true we prefix with the app name
+    * @memberof Header
+    */
+    setTitle(title = null, use_app_prefix = true) {
+        if (typeof use_app_prefix !== 'boolean') use_app_prefix = true;
+        let actTitle = use_app_prefix ? APP_NAME : '';
+        if (typeof title === 'string')
+        actTitle =
+            (actTitle.length > 0 ? actTitle + ": " : actTitle) + title;
+        document.title = actTitle;
+    }
 
     /**
      * Overridden aurelia lifecycle method:

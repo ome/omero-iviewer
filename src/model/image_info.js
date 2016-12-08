@@ -55,6 +55,13 @@ export default class ImageInfo {
     author = null;
 
     /**
+     * the imageName in the json response
+     * @memberof ImageInfo
+     * @type {string}
+     */
+    image_name = null;
+
+    /**
      * a flag for whether we are allowed to save the settings
      * @memberof ImageInfo
      * @type {boolean}
@@ -267,6 +274,8 @@ export default class ImageInfo {
         this.can_save_settings = response.perms.canAnnotate;
         if (typeof response.meta.imageAuthor === 'string')
             this.author = response.meta.imageAuthor;
+        if (typeof response.meta.imageName === 'string')
+            this.image_name = response.meta.imageName;
         this.sanityCheckInitialValues();
 
         // signal that we are ready and
