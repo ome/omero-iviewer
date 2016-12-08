@@ -7,6 +7,7 @@ from omeroweb.decorators import login_required
 
 import json
 import omero_marshal
+from version import VERSION
 
 
 @login_required()
@@ -25,7 +26,10 @@ def index(request, iid=None, conn=None, **kwargs):
     if settings.FORCE_SCRIPT_NAME is not None:
         params['URI_PREFIX'] = settings.FORCE_SCRIPT_NAME
 
-    return render(request, 'omero_iviewer/index.html', {'params': params})
+    return render(
+        request, 'omero_iviewer/index.html',
+        {'params': params, 'iviewer_url_suffix': u"?_iviewer-%s" % VERSION}
+    )
 
 
 @login_required()

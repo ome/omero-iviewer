@@ -25,6 +25,7 @@ import setuptools.command.install
 import setuptools.command.sdist
 from distutils.core import Command
 from setuptools import setup, find_packages
+from omero_iviewer.version import VERSION
 
 
 # Utility function to read the README file.
@@ -33,9 +34,6 @@ from setuptools import setup, find_packages
 # string in below ...
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
-
-
-VERSION = '0.0.7'
 
 
 cmdclass = {}
