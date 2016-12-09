@@ -1,5 +1,4 @@
 goog.require('ol.control.Attribution');
-goog.require('ol.control.Zoom');
 goog.require('ol.control.Rotate');
 goog.require('ol.control.FullScreen');
 goog.require('ol.interaction.DragPan');
@@ -80,7 +79,7 @@ ome.ol3.AVAILABLE_VIEWER_CONTROLS = {
 		 "enabled": false,
 		 "links" : []},
 	"zoom" :
-		{"clazz" : ol.control.Zoom,
+		{"clazz" : ome.ol3.controls.Zoom,
 		 "options": {},
 	 	 "defaults": true,
 		 "enabled": true,
