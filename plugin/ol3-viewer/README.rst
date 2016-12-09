@@ -40,4 +40,8 @@ or (depending on whether you want the compressed/debug version):
 Choose one out of the two as a first parameter. This way of compiling is shorter and easier for development
 
 
-Don't forget to call '$ bin/omero websync' to keep the files up-to-date during development
+To keep the files up-to-date during development, don't forget to call 
+
+::
+
+    $ bin/omero websync
