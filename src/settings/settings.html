@@ -8,7 +8,7 @@
                 image_config.image_info.can_save_settings &&
                 image_config.history.length > 0 && image_config.historyPointer >= 0 ?
                 '': 'disabled'}"
-            class="btn-xs ${image_config && image_config.image_info &&
+            class="btn btn-default btn btn-default btn-xs ${image_config && image_config.image_info &&
                 image_config.image_info.can_save_settings &&
                 image_config.history.length > 0 && image_config.historyPointer >= 0 ?
                 '' : 'disabled-color'}"
@@ -17,7 +17,7 @@
         <button type="button"
             disabled="${image_config && image_config.image_info &&
                 image_config.image_info.can_save_settings ? '': 'disabled'}"
-            class="btn-xs  ${image_config && image_config.image_info &&
+            class="btn btn-default btn-xs  ${image_config && image_config.image_info &&
                 image_config.image_info.can_save_settings ? '' : 'disabled-color'}"
             click.delegate="saveImageSettingsToAll()">Save to All
         </button>
@@ -27,17 +27,17 @@
         <button type="button" click.delegate="undo()"
             disabled="${image_config && image_config.history.length > 0 &&
                 image_config.historyPointer >= 0 ? '' : 'disabled'}"
-            class="btn-xs  ${image_config && image_config.history.length > 0 &&
+            class="btn btn-default btn-xs  ${image_config && image_config.history.length > 0 &&
                 image_config.historyPointer >= 0 ? '' : 'disabled-color'}">Undo</button>
         <button type="button" click.delegate="redo()"
             disabled="${image_config && image_config.history.length > 0 &&
                 image_config.historyPointer < image_config.history.length-1 ? '' :'disabled'}"
-            class="btn-xs  ${image_config && image_config.history.length > 0 &&
+            class="btn btn-default btn-xs  ${image_config && image_config.history.length > 0 &&
                 image_config.historyPointer < image_config.history.length-1 ?
                  '' : 'disabled-color'}">Redo</button>
-        <button type="button" click.delegate="copy()" class="btn-xs">Copy</button>
+        <button type="button" click.delegate="copy()" class="btn btn-default btn-xs">Copy</button>
         <button type="button"
-            class="btn-xs  ${image_config && image_config.image_info &&
+            class="btn btn-default btn-xs  ${image_config && image_config.image_info &&
                 image_config.image_info.copied_img_rdef &&
                 image_config.image_info.copied_img_rdef.imageId ===
                 image_config.image_info.image_id ? '' : 'disabled-color'}"
@@ -78,7 +78,7 @@
     </div>
 
     <div class="row" style="height: 100%">
-        <channel-settings class="col-xs-12" config_id.bind="config_id"></channel-settings>
+        <channel-settings class="full-width" config_id.bind="config_id"></channel-settings>
     </div>
 
     <div class="row">

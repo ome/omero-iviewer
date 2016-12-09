@@ -64,6 +64,9 @@ a.ui-button:active,
 .ui-icon-triangle-1-s,.ui-icon-triangle-1-n {
     height: 100%;
 }
+.full-width {
+    width: 100%;
+}
 /** JQUERY UI adjustments END **/
 
 /** SPECTRUM colorpicker adjustments START **/
@@ -283,11 +286,6 @@ thumbnail-slider img {
     height: 30px;
     margin-left: 2px;
     margin-right: 0px;
-}
-
-.right-hand-panel * {
-    padding-left: 0px;
-    padding-right: 0px;
 }
 
 .left-hand-panel-hidden {
