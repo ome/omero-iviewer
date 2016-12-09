@@ -13,8 +13,8 @@ Build
 
 In order to build you need:
 
-  * nodejs version 6.x
-  * npm version equal or greater to 3.0!
+* nodejs version 6.x
+* npm version equal or greater to 3.0!
 
 To build an uncompressed version, run:
 
@@ -33,7 +33,7 @@ All builds will build into the build directory and deploy to the plugin director
 which can then be used like any Django plugin.
 
 Intructions on how to add the OMERO.iviewer app to your installed OMERO.web apps
-can be found in plugin/omero_iviewer/README.rst.
+can be found in the `OMERO.iviewer README <plugin/omero_iviewer/README.rst>`_.
 
 **Note**: 
 
@@ -78,7 +78,7 @@ To build the OpenLayers viewer for OMERO.iviewer (deploys into libs directory), 
 
     $ ant
 
-For further options type ```ant -p```.
+For further options type ``ant -p``.
 
 More detailed resources on how to create a web app and development setup can be found at:
 
