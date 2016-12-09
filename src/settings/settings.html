@@ -2,7 +2,7 @@
     <require from="../utils/converters"></require>
     <require from="./channel-settings"></require>
 
-    <div class="row save-settings">
+    <div class="btn-group" style="margin: 5px">
         <button type="button"
             disabled="${image_config && image_config.image_info &&
                 image_config.image_info.can_save_settings &&
@@ -23,7 +23,7 @@
         </button>
     </div>
 
-    <div class="row history">
+    <div class="btn-group" style="margin: 5px">
         <button type="button" click.delegate="undo()"
             disabled="${image_config && image_config.history.length > 0 &&
                 image_config.historyPointer >= 0 ? '' : 'disabled'}"
