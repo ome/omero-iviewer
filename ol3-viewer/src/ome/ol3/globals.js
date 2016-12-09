@@ -36,15 +36,6 @@ ome.ol3.WEBCLIENT = 'WEBCLIENT';
  */
 ome.ol3.PREFIXED_URIS = [ome.ol3.WEBGATEWAY, ome.ol3.WEBCLIENT];
 
-
-/**
- * the default resolutions: [2.25, 2.0, 1.75, 1.5,1.25,1.0,0.75,0.5, 0.25]
- *
- * @const
- * @type {Array.<number>}
- */
-ome.ol3.DEFAULT_RESOLUTIONS = [2.25, 2.0, 1.75, 1.5,1.25,1.0,0.75,0.5, 0.25];
-
 /**
  * A lookup table to get or set dimension indices
  *
