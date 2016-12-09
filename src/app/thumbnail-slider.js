@@ -2,6 +2,7 @@
 import {inject,customElement} from 'aurelia-framework';
 import Context from '../app/context';
 import Misc from '../utils/misc';
+import {WEBGATEWAY} from '../utils/constants';
 import {
     IMAGE_CONFIG_UPDATE, THUMBNAILS_UPDATE,
     EventSubscriber
@@ -100,8 +101,8 @@ export default class ThumbnailSlider extends EventSubscriber {
         this.dataset_id = dataset_id;
 
         let url =
-            this.context.server +
-            "/webgateway/dataset/" + dataset_id + '/children/';
+            this.context.server + this.context.getPrefixedURI(WEBGATEWAY) +
+                "/dataset/" + dataset_id + '/children/';
 
         $.ajax(
             {url : url,

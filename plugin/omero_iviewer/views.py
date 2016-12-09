@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.http import HttpResponse
+from django.conf import settings
+from django.core.urlresolvers import reverse
 from omeroweb.decorators import login_required
 
 import json
@@ -16,6 +18,12 @@ def index(request, iid=None, conn=None, **kwargs):
     for key in request.GET:
         if request.GET[key]:
             params[str(key).upper()] = str(request.GET[key])
+
+    # we add the (possibly prefixed uris
+    params['WEBGATEWAY'] = reverse('webgateway')
+    if settings.FORCE_SCRIPT_NAME is not None:
+        params['URI_PREFIX'] = settings.FORCE_SCRIPT_NAME
+        params['WEBCLIENT'] = params['URI_PREFIX'] + '/webclient'
 
     return render(request, 'omero_iviewer/index.html', {'params': params})
 

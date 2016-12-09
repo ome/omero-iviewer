@@ -152,11 +152,12 @@ export default class Misc {
      *
      * @static
      * @param {string} server the server
+     * @param {string} prefixed_uri the (potentially prefixed) uri
      * @param {number} image_id the image_idr
      * @param {Object} settings the image settings
      * @return {string} the url representing a link to the image
      */
-    static assembleImageLink(server="", image_id, settings={}) {
+    static assembleImageLink(server="", prefixed_uri, image_id, settings={}) {
         // we have no server => we are relative
         // therefore we are going to have to use the hostname
         // at a minimum (localhost) or protocol plus hostname
@@ -173,9 +174,8 @@ export default class Misc {
                 else server = hostname;
             }
         }
-
         // the base url
-        let url = server + "/webclient/img_detail/" + image_id + '/?';
+        let url = server + prefixed_uri + "/img_detail/" + image_id + '/?';
 
         // append channel info
         if (Misc.isArray(settings.channels)) {

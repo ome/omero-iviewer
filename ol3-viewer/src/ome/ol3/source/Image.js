@@ -154,14 +154,13 @@ ome.ol3.source.Image = function(options) {
         console.error("The given server information is invalid!");
 
 	/**
- 	 * the omero server address/ip
+ 	 * the uri to use (incl. a porential prefix)
  	 * @type {string}
  	 * @private
  	 */
-	//this.uri_ = ome.ol3.utils.Net.checkAndSanitizeUri(opts.uri);
-    //if (this.uri_ === null) console.error("The server uri is invalid!");
     this.uri_ =
-        ome.ol3.utils.Net.checkAndSanitizeUri('/webgateway/' +
+        ome.ol3.utils.Net.checkAndSanitizeUri(
+            opts.uri + '/' +
             (this.split_ ? 'render_split_channel' : 'render_image_region'));
 
 	/**
@@ -190,8 +189,9 @@ ome.ol3.source.Image = function(options) {
 
 			var zoom = this.tileGrid.resolutions_.length - tileCoord[0] - 1;
 
-			var url = this.server_['full'] + "/" + this.uri_['full'] + '/' + this.id_ + '/' +
-				this.plane_ + '/' + this.time_ + '/?';
+			var url =
+                this.server_['full'] + "/" + this.uri_['full'] + '/' +
+                    this.id_ + '/' + this.plane_ + '/' + this.time_ + '/?';
 
             if (!this.split_) { // only for non split view
     			if (this.tiled_) // for tiles we use &tile

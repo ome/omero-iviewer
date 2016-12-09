@@ -15,6 +15,29 @@ goog.require('ol.interaction.DragBox');
 goog.require('ol.events.condition');
 
 /**
+ * a simple string lookup constant for WEBGATEWAY
+ * @const
+ * @type {string}
+ */
+ome.ol3.WEBGATEWAY = 'WEBGATEWAY';
+
+/**
+ * a simple string lookup constant for WEBCLIENT
+ * @const
+ * @type {string}
+ */
+ome.ol3.WEBCLIENT = 'WEBCLIENT';
+
+/**
+ * a list of (possiblye prefixed) uri resources we need
+ *
+ * @const
+ * @type {Array.<string>}
+ */
+ome.ol3.PREFIXED_URIS = [ome.ol3.WEBGATEWAY, ome.ol3.WEBCLIENT];
+
+
+/**
  * the default resolutions: [2.25, 2.0, 1.75, 1.5,1.25,1.0,0.75,0.5, 0.25]
  *
  * @const

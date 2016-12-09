@@ -104,6 +104,14 @@ ome.ol3.Viewer = function(id, options) {
 	this.initParams_ = opts['initParams'] || {};
 
     /**
+	 * a list of (possibly prefixed) uris for lookup
+	 * @type {Object}
+	 * @private
+	 */
+	this.prefixed_uris_ = {};
+    this.readPrefixedUris(this.initParams_);
+
+    /**
 	 * because of async wait until map has been instatiated, an addRegions call
      * might not be able to execute successfully. this flag tells us so that
      * we can make one once the map initialization has finished
@@ -364,8 +372,8 @@ ome.ol3.Viewer = function(id, options) {
 
 				// create an OmeroImage source (tiled)
 				 var source = new ome.ol3.source.Image({
-					 server : scope.server_,
-					 //uri : '/webgateway/render_image_region',
+					 server : scope.getServer(),
+					 uri : scope.getPrefixedURI(ome.ol3.WEBGATEWAY),
 					 image: scope.id_,
 					 width: dims['width'],
 					 height: dims['height'],
@@ -466,8 +474,9 @@ ome.ol3.Viewer = function(id, options) {
 
 			// define request settings
 			var reqParams = {
-				 "server" : scope.server_,
-				 "uri" : '/webgateway/imgData/' + scope.id_,
+				 "server" : scope.getServer(),
+				 "uri" : scope.getPrefixedURI(ome.ol3.WEBGATEWAY) +
+                            '/imgData/' + scope.id_,
 				 "jsonp" : true, // this will only count if we are cross-domain
 				 "success" : success,
 				 "error" : function(error) {
@@ -1189,6 +1198,46 @@ ome.ol3.Viewer.prototype.getId = function() {
 }
 
 /**
+ * Gets a (possibly prefixed uri)
+ *
+ * @param {string} resource the resource name
+ * @return {string\null} the prefixed URI or null (if not found)
+ */
+ome.ol3.Viewer.prototype.getPrefixedURI = function(resource) {
+    if (typeof this.prefixed_uris_[resource] !== 'string') return null;
+
+    var uri = this.prefixed_uris_[resource];
+    if (typeof uri === 'string' && uri.length > 1) {
+        // check for leading slash and remove trailing one if there...
+        let i=uri.length-1;
+        while(i>0) {
+            if (uri[i] === '/') uri = uri.substring(0,i);
+            else break;
+            i--;
+        }
+        if (uri[0] !== '/') uri = '/' + uri;
+    }
+
+    return uri;
+}
+
+/**
+ * Reads the prefixed uris that we need
+ *
+ * @param {Object} params the parameters handed in
+ */
+ome.ol3.Viewer.prototype.readPrefixedUris = function(params) {
+    if (typeof params !== 'object' || params === null) return;
+
+    for (var uri in ome.ol3.PREFIXED_URIS) {
+        var resource = ome.ol3.PREFIXED_URIS[uri];
+        if (typeof params[resource] === 'string')
+            this.prefixed_uris_[resource] = params[resource];
+        else this.prefixed_uris_[resource] = '/' + resource.toLowerCase();
+        }
+}
+
+/**
  * Gets the server information
  *
  * @return {object} the server information
@@ -1734,16 +1783,6 @@ goog.exportProperty(
 
 goog.exportProperty(
 	ome.ol3.Viewer.prototype,
-	'addPostTileLoadHook',
-	ome.ol3.Viewer.prototype.addPostTileLoadHook);
-
-goog.exportProperty(
-	ome.ol3.Viewer.prototype,
-	'removePostTileLoadHook',
-	ome.ol3.Viewer.prototype.removePostTileLoadHook);
-
-goog.exportProperty(
-	ome.ol3.Viewer.prototype,
 	'setDimensionIndex',
 	ome.ol3.Viewer.prototype.setDimensionIndex);
 
@@ -1751,16 +1790,6 @@ goog.exportProperty(
 	ome.ol3.Viewer.prototype,
 	'getDimensionIndex',
 	ome.ol3.Viewer.prototype.getDimensionIndex);
-
-goog.exportProperty(
-	ome.ol3.Viewer.prototype,
-	'getId',
-	ome.ol3.Viewer.prototype.getId);
-
-goog.exportProperty(
-	ome.ol3.Viewer.prototype,
-	'getServer',
-	ome.ol3.Viewer.prototype.getServer);
 
 goog.exportProperty(
 	ome.ol3.Viewer.prototype,

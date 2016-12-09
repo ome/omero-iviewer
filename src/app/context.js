@@ -2,7 +2,9 @@ import {noView} from 'aurelia-framework';
 import {EventAggregator} from 'aurelia-event-aggregator';
 import {IMAGE_CONFIG_SELECT} from '../events/events';
 import ImageConfig from '../model/image_config';
-import {REQUEST_PARAMS} from '../utils/constants'
+import {
+    REQUEST_PARAMS, WEBGATEWAY, WEBCLIENT, URI_PREFIX, IVIEWER
+} from '../utils/constants';
 
 /**
  * Provides all the information to the application that it shares
@@ -30,6 +32,12 @@ export default class Context {
      * @type {string}
      */
     server = null;
+
+    /**
+     * a list of potentially prefixes resources
+     * @type {Map}
+     */
+    prefixed_uris = new Map();
 
     /**
      * a map for a more convenient key based lookup of an ImageConfig instance
@@ -99,9 +107,12 @@ export default class Context {
             if (isLocal && pos < minLen)  // we need to add the http
                 server = "http://" + server;
         }
-        delete optParams[REQUEST_PARAMS.SERVER];
-        this.eventbus = eventbus;
         this.server = server;
+        delete optParams[REQUEST_PARAMS.SERVER];
+
+        this.readPrefixedURIs(optParams);
+
+        this.eventbus = eventbus;
         this.initParams = optParams;
 
         // we set the initial image as the default (if given)
@@ -109,6 +120,44 @@ export default class Context {
         this.selected_config = initial_image_config.id;
         // set up key listener
         this.establishKeyDownListener();
+    }
+
+    /**
+     * Reads the list of uris that we need
+     *
+     * @memberof Context
+     */
+    readPrefixedURIs(params) {
+        this.prefixed_uris.set(
+            IVIEWER,
+                (typeof params[URI_PREFIX] === 'string' ?
+                    params[URI_PREFIX] : "") + "/omero_iviewer");
+        [WEBGATEWAY, WEBCLIENT].map(
+            (key) =>
+                this.prefixed_uris.set(
+                    key, typeof params[key] === 'string' ? params[key] :
+                        '/' + key.toLowerCase()));
+    }
+
+    /**
+     * Reads the list of uris that we need
+     *
+     * @param {string} resource name
+     * @return {string\null} the (potentially prefixed) uri for the resource or null
+     */
+    getPrefixedURI(resource) {
+        let uri = this.prefixed_uris.get(resource, null);
+        if (typeof uri === 'string' && uri.length > 1) {
+            // check for leading slash and remove trailing one if there...
+            let i=uri.length-1;
+            while(i>0) {
+                if (uri[i] === '/') uri = uri.substring(0,i);
+                else break;
+                i--;
+            }
+            if (uri[0] !== '/') uri = '/' + uri;
+        }
+        return uri;
     }
 
     /**
@@ -310,5 +359,17 @@ export default class Context {
             typeof this.initParams[key] === null) return null;
 
         return this.initParams[key];
+    }
+
+    /**
+     * Resets initial parameters
+     *
+     * @memberof Context
+     */
+    resetInitParams() {
+        // empty all handed in params
+        this.initParams = {};
+        // we do need our uri prefixes again
+        this.prefixed_uris.forEach((value, key) => this.initParams[key] = value);
     }
 }

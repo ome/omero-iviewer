@@ -1,5 +1,6 @@
 import {noView} from 'aurelia-framework';
 import Misc from '../utils/misc';
+import {WEBGATEWAY} from '../utils/constants';
 import ImageInfo from '../model/image_info';
 import {
     IMAGE_SETTINGS_CHANGE, IMAGE_DIMENSION_CHANGE, HISTOGRAM_RANGE_UPDATE,
@@ -310,9 +311,10 @@ export default class Histogram extends EventSubscriber {
 
         // assemble url
         let server = this.image_info.context.server;
+        let uri_prefix = this.image_info.context.getPrefixedURI(WEBGATEWAY);
         let time = this.image_info.dimensions.t;
         let plane = this.image_info.dimensions.z;
-        let url = server + "/webgateway/histogram_json/" +
+        let url = server + uri_prefix + "/histogram_json/" +
             this.image_info.image_id + "/channel/" + channel + "/?theT=" +
             time + "&theZ="+ plane;
 
