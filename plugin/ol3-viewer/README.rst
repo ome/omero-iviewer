@@ -29,9 +29,7 @@ IMPORTANT: In order to have the javascript files built and deployed you can choo
     $ ant build-plugin
 
 This will build compressed/debug versions of the viewer, then copy them over to the static
-Django directories.
-
-or (depending on whether you want the compressed/debug version):
+Django directories:
 
 ::
 
