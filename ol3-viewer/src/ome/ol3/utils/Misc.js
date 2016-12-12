@@ -7,6 +7,41 @@ goog.provide('ome.ol3.utils.Misc');
 goog.require('ol.array');
 
 /**
+ * Generates an array of resolutions according to a step size
+ * If one likes to think of it in terms of 100% (resolution: 1)
+ * then the step size will determine how many levels there will be.
+ * To cater for slightly different needs (i.e. tiled vs untiled sources)
+ * a zoom_in step size and zoom_out step size can be given to result
+ * in corresponding level numbers for above and below resolution 1.
+ *
+ * @static
+ * @function
+ * @param {number} zoom_in the increment for zoom_in
+ * @param {number} zoom_out the increment for zoom_out
+ */
+ome.ol3.utils.Misc.generateDefaultResolutions = function(zoom_in, zoom_out) {
+    // checks and clamps so as to not get an unreasonable number of
+    // levels
+    if (typeof zoom_in !== 'number' || zoom_in < 0.01 || zoom_in >= 1)
+        zoom_in = 0.2;
+    if (typeof zoom_out !== 'number' || zoom_out < 0.1 || zoom_out >= 5)
+        zoom_out = 1;
+
+    var resolutions = [];
+    var zoom_out_levels = [];
+    for (var z=1+zoom_out; z<5; z+=zoom_out)
+        zoom_out_levels.push(z);
+    resolutions = resolutions.concat(zoom_out_levels.reverse());
+    resolutions.push(1);
+    var zoom_in_levels = [];
+    for (var z=1-zoom_in; z>0.01; z-=zoom_in)
+        zoom_in_levels.push(z);
+    resolutions = resolutions.concat(zoom_in_levels);
+
+    return resolutions;
+}
+
+/**
  * This convenience method prepares the resolutions for pyramid and non-tiled
  * sources likewise. It makes use of {@link ome.ol3.DEFAULT_RESOLUTIONS} to achieve a
  * certain number of zoom levels
@@ -18,11 +53,13 @@ goog.require('ol.array');
 ome.ol3.utils.Misc.prepareResolutions = function(resolutions) {
 	if (!ome.ol3.utils.Misc.isArray(resolutions) || resolutions.length === 0 ||
 				(resolutions.length === 1 && resolutions[0] === 1))
-		return ome.ol3.DEFAULT_RESOLUTIONS;
+		return ome.ol3.utils.Misc.generateDefaultResolutions(0.05, 0.25);
 
+    var DEFAULT_RESOLUTIONS =
+        ome.ol3.utils.Misc.generateDefaultResolutions(0.1, 2)
 	// if the given resolutions exceed the number of default zoom levels
 	// we use them as is
-	var defResLen = ome.ol3.DEFAULT_RESOLUTIONS.length;
+	var defResLen = DEFAULT_RESOLUTIONS.length;
 	if (resolutions.length >= defResLen)
 		return resolutions;
 
@@ -30,13 +67,13 @@ ome.ol3.utils.Misc.prepareResolutions = function(resolutions) {
 	// by taking into  account the number of levels before and after the 1:1 resolution
 	var newRes = [].concat(resolutions);
 	var oneToOneIndex = -1;
-	for (var i in  newRes)
+	for (var i=0; i<newRes.length;i++)
 		if (newRes[i] === 1.0) {
 			oneToOneIndex = i;
 			break;
 		}
 	if (oneToOneIndex < 0) { // no one to one, let's inject one
-		for (var i in  newRes)
+		for (var i=0; i<newRes.length;i++)
 			if (newRes[i] < 1.0) {
 				oneToOneIndex = i;
 				break;
@@ -50,9 +87,10 @@ ome.ol3.utils.Misc.prepareResolutions = function(resolutions) {
 	if (newRes.length >= defResLen) // we are already full, return us
 		return newRes;
 
+    // TODO: check intervals in between resolutions and fill 'gaps'
 	var defResOneToOne = 0;
-	for (var i in  ome.ol3.DEFAULT_RESOLUTIONS)
-		if (ome.ol3.DEFAULT_RESOLUTIONS[i] == 1.0) {
+	for (var i in  DEFAULT_RESOLUTIONS)
+		if (DEFAULT_RESOLUTIONS[i] == 1.0) {
 			defResOneToOne = i;
 			break;
 		}
@@ -65,10 +103,10 @@ ome.ol3.utils.Misc.prepareResolutions = function(resolutions) {
 	while (remainingPositions > 0) {
 		if (insertFront) {
 			insertFront=false;
-			newRes.splice(0, 0, newRes[0] * 1.5);
+			newRes.splice(0, 0, newRes[0] * 1.2);
 		} else {
 			insertFront=true;
-			var newVal = newRes[newRes.length-1] / 1.5;
+			var newVal = newRes[newRes.length-1] / 2.0;
 			newRes.push(newVal);
 		}
 		remainingPositions--;

@@ -28,7 +28,7 @@ ome.ol3.WEBGATEWAY = 'WEBGATEWAY';
 ome.ol3.WEBCLIENT = 'WEBCLIENT';
 
 /**
- * a list of (possiblye prefixed) uri resources we need
+ * a list of (possibly prefixed) uri resources we need
  *
  * @const
  * @type {Array.<string>}
