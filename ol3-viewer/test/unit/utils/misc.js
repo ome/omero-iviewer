@@ -5,22 +5,18 @@ describe("Misc", function() {
 	it('prepareResolutions', function() {
 		var resolutions =
 			ome.ol3.utils.Misc.prepareResolutions([]);
-		expect(resolutions).to.eql(ome.ol3.DEFAULT_RESOLUTIONS);
+		expect(resolutions.length).to.eql(80);
+        expect(resolutions[40]).to.eql(1);
+        resolutions =
+			ome.ol3.utils.Misc.prepareResolutions([1]);
+        expect(resolutions.length).to.eql(80);
+        expect(resolutions[40]).to.eql(1);
 		resolutions =
 			ome.ol3.utils.Misc.prepareResolutions([2.2,0.6, 0.1]);
-		expect(resolutions.slice(3, 7)).to.eql([2.2,1, 0.6, 0.1]);
-		resolutions =
-			ome.ol3.utils.Misc.prepareResolutions([1,0.6, 0.1]);
-		expect(resolutions.slice(3, 6)).to.eql([1, 0.6, 0.1]);
-		resolutions =
-			ome.ol3.utils.Misc.prepareResolutions([5, 4.2,2.3,1.9,1,0.6]);
-		expect(resolutions.slice(1, 7)).to.eql([5,4.2,2.3,1.9,1,0.6]);
-		resolutions =
-			ome.ol3.utils.Misc.prepareResolutions([1]);
-		expect(resolutions).to.eql(ome.ol3.DEFAULT_RESOLUTIONS);
-		resolutions =
-			ome.ol3.utils.Misc.prepareResolutions([6, 5,4.2,2.3,1.9,1,0.9,0.6, 0.5, 0.3]);
-		expect(resolutions).to.eql([6, 5,4.2,2.3,1.9,1,0.9,0.6, 0.5, 0.3]);
+		expect(resolutions.length).to.eql(21);
+        expect(resolutions[5]).to.eql(2.2);
+        expect(resolutions[13]).to.eql(1);
+        expect(resolutions.slice(14,16)).to.eql([0.6,0.1]);
 	});
 
 	it('parseSvgStringForPolyShapes', function() {

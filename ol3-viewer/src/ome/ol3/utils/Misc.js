@@ -53,49 +53,35 @@ ome.ol3.utils.Misc.generateDefaultResolutions = function(zoom_in, zoom_out) {
 ome.ol3.utils.Misc.prepareResolutions = function(resolutions) {
 	if (!ome.ol3.utils.Misc.isArray(resolutions) || resolutions.length === 0 ||
 				(resolutions.length === 1 && resolutions[0] === 1))
-		return ome.ol3.utils.Misc.generateDefaultResolutions(0.05, 0.25);
+		return ome.ol3.utils.Misc.generateDefaultResolutions(0.025, 0.10);
 
-    var DEFAULT_RESOLUTIONS =
-        ome.ol3.utils.Misc.generateDefaultResolutions(0.1, 2)
-	// if the given resolutions exceed the number of default zoom levels
-	// we use them as is
-	var defResLen = DEFAULT_RESOLUTIONS.length;
-	if (resolutions.length >= defResLen)
-		return resolutions;
+    // for tiled sources we find the 1:1, then go backwards in the array
+    // filling up with levels for zoom out
+    var newRes = [1];
+    var oneToOneIndex = resolutions.indexOf(1.0);
+    if (oneToOneIndex === -1) resolutions.push(1.0);
+    // make sure we are sorted and in reverse
+    resolutions.sort((a,b) => b - a);
+    oneToOneIndex = resolutions.indexOf(1.0);
+    var p = oneToOneIndex > 0 ? oneToOneIndex : resolutions.length-1;
+    for (var i=p; i>0;i--) {
+        var resAtI = resolutions[i];
+        var resBefI = resolutions[i-1];
+        var delta = Math.abs(resBefI - resAtI);
+        // we divide up into 8 levels in between, i.e. 12.5% of the original delta
+        var partialDelta = delta * 0.125;
+        for (var j=1;j<=8;j++) newRes.push(resAtI + j * partialDelta);
+    }
+    // append zoom in factors (if present, unlikely with tiled)
+    if (oneToOneIndex < resolutions.length-1)
+        for (var x=oneToOneIndex+1;x<resolutions.length;x++)
+            newRes.push(resolutions[x]);
 
-	// if the given resolutions do not cover the default zoom levels, fill up
-	// by taking into  account the number of levels before and after the 1:1 resolution
-	var newRes = [].concat(resolutions);
-	var oneToOneIndex = -1;
-	for (var i=0; i<newRes.length;i++)
-		if (newRes[i] === 1.0) {
-			oneToOneIndex = i;
-			break;
-		}
-	if (oneToOneIndex < 0) { // no one to one, let's inject one
-		for (var i=0; i<newRes.length;i++)
-			if (newRes[i] < 1.0) {
-				oneToOneIndex = i;
-				break;
-			}
-		if (oneToOneIndex < 0) {
-			newRes.push(1.0);
-			oneToOneIndex = newRes.length-1;
-		} else
-			newRes.splice(oneToOneIndex, 0, 1.0);
-	}
-	if (newRes.length >= defResLen) // we are already full, return us
-		return newRes;
-
-    // TODO: check intervals in between resolutions and fill 'gaps'
-	var defResOneToOne = 0;
-	for (var i in  DEFAULT_RESOLUTIONS)
-		if (DEFAULT_RESOLUTIONS[i] == 1.0) {
-			defResOneToOne = i;
-			break;
-		}
-
-	var remainingPositions = defResLen - newRes.length;
+    // now we fill up zoom in and out positions
+    // for a total number of resolutions
+    newRes.sort((a,b) => b - a);
+    var totalNumberOfLevels = newRes.length === 1 ? 20 : newRes.length + 10;
+	var remainingPositions = totalNumberOfLevels - newRes.length;
 	//we alternate starting at which end has fewer zoom level
 	var insertFront = true;
 	if (newRes.length - oneToOneIndex < oneToOneIndex)
@@ -103,10 +89,10 @@ ome.ol3.utils.Misc.prepareResolutions = function(resolutions) {
 	while (remainingPositions > 0) {
 		if (insertFront) {
 			insertFront=false;
-			newRes.splice(0, 0, newRes[0] * 1.2);
+			newRes.splice(0, 0, newRes[0] * 1.20);
 		} else {
 			insertFront=true;
-			var newVal = newRes[newRes.length-1] / 2.0;
+			var newVal = newRes[newRes.length-1] / 1.10;
 			newRes.push(newVal);
 		}
 		remainingPositions--;

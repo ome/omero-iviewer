@@ -27,32 +27,24 @@ ome.ol3.controls.Zoom = function(opt_options) {
 
     var delta = options.delta !== undefined ? options.delta : 1;
 
-    var zoomInLabel =
-        options.zoomInLabel !== undefined ? options.zoomInLabel : '+';
-    var zoomOutLabel =
-        options.zoomOutLabel !== undefined ? options.zoomOutLabel : '\u2212';
+    var oneToOneElement = document.createElement('button');
+    oneToOneElement.className = className + '-1-1';
+    oneToOneElement.setAttribute('type', 'button');
+    oneToOneElement.title = "Actual Size";
+    oneToOneElement.appendChild(document.createTextNode("1:1"));
+    ol.events.listen(oneToOneElement, ol.events.EventType.CLICK,
+        function() {
+            var map = this.getMap();
+            var view = map ? map.getView() : null;
+            if (view === null) return;
 
-    var zoomInTipLabel = options.zoomInTipLabel !== undefined ?
-      options.zoomInTipLabel : 'Zoom in';
-    var zoomOutTipLabel = options.zoomOutTipLabel !== undefined ?
-      options.zoomOutTipLabel : 'Zoom out';
-
-    var inElement = document.createElement('button');
-    inElement.className = className + '-in';
-    inElement.setAttribute('type', 'button');
-    inElement.title = zoomInTipLabel;
-    inElement.appendChild(
-        typeof zoomInLabel === 'string' ?
-            document.createTextNode(zoomInLabel) : zoomInLabel);
-
-    ol.events.listen(inElement, ol.events.EventType.CLICK,
-        ome.ol3.controls.Zoom.prototype.handleClick_.bind(this, delta));
+            var ext = view.getProjection().getExtent();
+            view.fit([ext[0], -ext[3], ext[2], ext[1]], map.getSize());
+        }, this);
 
     var zoomDisplayElement = document.createElement('input');
     zoomDisplayElement.className = className + '-display';
     zoomDisplayElement.setAttribute('type', 'input');
-    // TODO: improve style and move to css
-    zoomDisplayElement.style = 'width: 1.375em';
     // TODO: improve method to be more 'responsive' than change but not as
     // responsive as input
     ol.events.listen(
@@ -70,24 +62,14 @@ ome.ol3.controls.Zoom = function(opt_options) {
                 parseInt((1 / view.getResolution()) * 100);
         },this);
 
-    var outElement = document.createElement('button');
-    outElement.className = className + '-out';
-    outElement.setAttribute('type', 'button');
-    outElement.title = zoomOutTipLabel;
-    outElement.appendChild(
-        typeof zoomOutLabel === 'string' ?
-            document.createTextNode(zoomOutLabel) : zoomOutLabel);
-
-    ol.events.listen(outElement, ol.events.EventType.CLICK,
-      ome.ol3.controls.Zoom.prototype.handleClick_.bind(this, -delta));
-
     var cssClasses = className + ' ' + ol.css.CLASS_UNSELECTABLE + ' ' +
       ol.css.CLASS_CONTROL;
     var element = document.createElement('div');
     element.className = cssClasses;
-    element.appendChild(inElement);
+    element.appendChild(this.addZoomButton(true));
+    element.appendChild(oneToOneElement);
     element.appendChild(zoomDisplayElement);
-    element.appendChild(outElement);
+    element.appendChild(othis.addZoomButton(false));
 
     ol.control.Control.call(this, {
         element: element,
@@ -102,6 +84,26 @@ ome.ol3.controls.Zoom = function(opt_options) {
 
 };
 ol.inherits(ome.ol3.controls.Zoom, ol.control.Control);
+
+/**
+* @param {boolean} in the in zoom button is added if true, otherwise out
+* @private
+*/
+ome.ol3.controls.Zoom.prototype.addZoomButton = function(in) {
+    if (typeof in !== 'boolean') in = false;
+
+    var label = in ? '+' : '\u2212';
+    var title = 'Zoom ' + (in ? 'in' : 'out');
+
+    var element = document.createElement('button');
+    element.className = className + (in ? '-in' : '-out');
+    element.setAttribute('type', 'button');
+    element.title = title;
+    element.appendChild(document.createTextNode(label));
+
+    ol.events.listen(element, ol.events.EventType.CLICK,
+        ome.ol3.controls.Zoom.prototype.handleClick_.bind(this, delta));
+};
 
 
 /**

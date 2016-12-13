@@ -147,7 +147,7 @@ ome.ol3.AVAILABLE_VIEWER_INTERACTIONS = {
 			"links" : []},
 	"mouseWheelZoom" : {"clazz" : ol.interaction.MouseWheelZoom,
 			"options":
-			{"zoomDuration" : null},
+			{"duration" : 0, "timeout": 0},
 			"defaults": true,
 			"enabled": true,
 			"links" : []},

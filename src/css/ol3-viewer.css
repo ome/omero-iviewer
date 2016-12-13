@@ -8,37 +8,18 @@
 	transition:opacity .25s linear,visibility 0s linear;
 }
 
-/** CONTEXT MENU START **/
-#ome_context_menu {
-	background-color: white;
-	padding: 5px;
-	border: 1px solid #cccccc;
-	min-width: 150px;
-	min-height: 20px;
+/** CUSTOM ZOOM START **/
+.ol-zoom {
+    width: 40px;
 }
-#ome_context_menu hr {
-    margin-top: 0px;
-    margin-bottom: 0px;
+.ol-zoom-in, .ol-zoom-out {
+    width: 38px;
 }
-#ome_context_menu .context-head {
-	width: 95%;
-	height: 95%;
+.ol-zoom-display {
+    width: 32px;
+    height: 20px;
 }
-#ome_context_menu .context-title {
-	font-weight: bold;
-	text-decoration: underline;
-}
-#ome_context_menu .context-close {
-	color: black;
-	text-decoration: none;
-	position: absolute;
-	top: 0px;
-	right: 0px;
-}
-.context-selected {
-	background-color: gray;
-}
-/** CONTEXT MENU END **/
+/** CUSTOM ZOOM END **/
 
 /** BIRDS EYE STYLE START **/
 .ol-overviewmap {

@@ -69,3 +69,31 @@ body {
     left: auto;
     left: initial;
 }
+
+.ol-zoom {
+    width: 40px;
+}
+.ol-zoom-1-1 {
+    width: 38px!important;
+}
+.ol-zoom-fit {
+    width: 38px;
+    background-image: url('images/fit.gif');
+    background-repeat: no-repeat;
+    background-position: center;
+}
+.ol-zoom-in {
+    width: 38px!important;
+}
+.ol-zoom-out {
+    width: 38px!important;
+}
+.ol-zoom-display {
+    border-width: 1px;
+    border-style: solid;
+    border-color: rgba(0,60,136,.5);
+    width: 34px;
+    height: 20px;
+    margin-left: 1px;
+    text-align: center;
+}
