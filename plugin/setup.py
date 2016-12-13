@@ -80,7 +80,7 @@ class Install(setuptools.command.install.install):
 cmdclass['install'] = Install
 
 setup(name="omero-iviewer",
-      packages=find_packages(exclude=['ez_setup']),
+      packages=find_packages(exclude=['ez_setup', 'ol3-viewer']),
       version=VERSION,
       description="A Python plugin for OMERO.web",
       long_description=read('omero_iviewer/README.rst'),
