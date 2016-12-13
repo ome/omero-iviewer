@@ -1,6 +1,12 @@
 import {noView} from 'aurelia-framework';
 
 /**
+ * the app name
+ * @type {string}
+ */
+export const APP_NAME = 'iViewer';
+
+/**
  * the possible request params that we accept
  * @type {Object}
  */
