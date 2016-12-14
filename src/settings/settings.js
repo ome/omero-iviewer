@@ -205,10 +205,9 @@ export default class Settings extends EventSubscriber {
         image_info.channels.map(
             (c) =>
                 url+= (i !== 0 ? ',' : '') + (!c.active ? '-' : '') + (++i) +
-                 "|" + c.window.start + ":" + c.window.end +
-                 (typeof  c.reverseIntensity === 'boolean' ?
-                    (c.reverseIntensity ? "r" : "-r") : "") + "$" + c.color
-        );
+                    "|" + c.window.start + ":" + c.window.end +
+                    (typeof  c.reverseIntensity === 'boolean' ?
+                    (c.reverseIntensity ? "r" : "-r") : "") + "$" + c.color);
         $.ajax(
             {url : url,
              method: 'POST',

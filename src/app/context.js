@@ -133,6 +133,7 @@ export default class Context {
         let prefix =
             typeof params[URI_PREFIX] === 'string' ?
                 Misc.prepareURI(params[URI_PREFIX]) : "";
+        this.prefixed_uris.set(URI_PREFIX, prefix);
         this.prefixed_uris.set(IVIEWER, prefix + "/" + PLUGIN_NAME);
         this.prefixed_uris.set(
             IVIEWER_STATIC, prefix + '/static/'+ PLUGIN_NAME);

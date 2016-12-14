@@ -7,7 +7,7 @@ require('../css/images/colorpicker.png');
 // js
 import Context from '../app/context';
 import Misc from '../utils/misc';
-import {CHANNEL_SETTINGS_MODE} from '../utils/constants';
+import {CHANNEL_SETTINGS_MODE,URI_PREFIX} from '../utils/constants';
 import {HISTOGRAM_RANGE_UPDATE} from '../events/events';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {spinner} from 'jquery-ui/ui/widgets/spinner';
@@ -97,6 +97,17 @@ export default class ChannelRange  {
     bind() {
         this.registerObservers();
         this.updateUI();
+    }
+
+    /**
+     * Returns assembled luts png url
+     * @return {string} the luts.png url
+     * @memberof ChannelRange
+     */
+    getLutsPngUrl() {
+        return (this.context.server +
+            this.context.getPrefixedURI(URI_PREFIX) +
+                '/static/webgateway/img/luts_10.png');
     }
 
     /**

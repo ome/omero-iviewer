@@ -325,8 +325,10 @@ export default class Histogram extends EventSubscriber {
             success : (response) => {
                 // for error and non array data (which is what we want)
                 // we return null and the handler will respond accordingly
-                if (!Misc.isArray(response)) response =null;
-                handler(response);
+                let data =
+                    typeof response === 'object' &&
+                        Misc.isArray(response.data) ? response.data : null;
+                handler(data);
             },
             error : () => handler(null)});
     }
