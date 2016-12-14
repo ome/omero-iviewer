@@ -10,43 +10,88 @@ goog.require('ol.easing');
 
 
 /**
-* @classdesc
-* A custom zoom control that displays the zoom with the possibility to
-* enter a number
-*
-* @constructor
-* @extends {ol.control.Control}
-* @param {olx.control.ZoomOptions=} opt_options Zoom options.
-*/
+ * @classdesc
+ * A custom zoom control that displays the zoom with the possibility to
+ * enter a number
+ *
+ * @constructor
+ * @extends {ol.control.Control}
+ * @param {olx.control.ZoomOptions=} opt_options Zoom options.
+ */
 ome.ol3.controls.Zoom = function(opt_options) {
-
     var options = opt_options ? opt_options : {};
 
-    var className =
-        options.className !== undefined ? options.className : 'ol-zoom';
+    /**
+    * @type {number}
+    * @private
+    */
+    this.duration_ = options.duration !== undefined ? options.duration : 0;
 
-    var delta = options.delta !== undefined ? options.delta : 1;
+    /**
+    * @type {number}
+    * @private
+    */
+    this.delta_ = options.delta === 'number' ? options.delta : 1;
 
-    var oneToOneElement = document.createElement('button');
-    oneToOneElement.className = className + '-1-1';
-    oneToOneElement.setAttribute('type', 'button');
-    oneToOneElement.title = "Actual Size";
-    oneToOneElement.appendChild(document.createTextNode("1:1"));
-    ol.events.listen(oneToOneElement, ol.events.EventType.CLICK,
-        function() {
-            var map = this.getMap();
-            var view = map ? map.getView() : null;
-            if (view === null) return;
+    /**
+    * @type {string}
+    * @private
+    */
+    this.class_name_ =
+        options.className === 'string' ? options.className : 'ol-zoom';
 
-            var ext = view.getProjection().getExtent();
-            view.fit([ext[0], -ext[3], ext[2], ext[1]], map.getSize());
-        }, this);
+    var cssClasses =
+        this.class_name_ + ' ' + ol.css.CLASS_UNSELECTABLE + ' ' +
+            ol.css.CLASS_CONTROL;
 
+    var element = document.createElement('div');
+    element.className = cssClasses;
+    element.appendChild(this.addZoomButton_(true));
+    element.appendChild(this.addOneToOneButton_());
+    element.appendChild(this.addDisplayField_());
+    element.appendChild(this.addFitToExtentButton_());
+    element.appendChild(this.addZoomButton_(false));
+
+    ol.control.Control.call(this, {
+        element: element,
+        target: options.target
+    });
+};
+ol.inherits(ome.ol3.controls.Zoom, ol.control.Control);
+
+/**
+ * Adds both, zoom in and out buttons
+ * @param {boolean} zoom_in the in zoom button is added if true, otherwise out
+ * @private
+ */
+ome.ol3.controls.Zoom.prototype.addZoomButton_ = function(zoom_in) {
+    if (typeof zoom_in !== 'boolean') zoom_in = false;
+
+    var label = zoom_in ? '+' : '\u2212';
+    var title = 'Zoom ' + (zoom_in ? 'in' : 'out');
+
+    var element = document.createElement('button');
+    element.className = this.class_name_ + (zoom_in ? '-in' : '-out');
+    element.setAttribute('type', 'button');
+    element.title = title;
+    element.appendChild(document.createTextNode(label));
+
+    ol.events.listen(element, ol.events.EventType.CLICK,
+        ome.ol3.controls.Zoom.prototype.handleClick_.bind(
+            this, this.delta_ * (zoom_in ? 1 : -1)));
+
+    return element;
+};
+
+/**
+ * Adds an input field for zoom values for both, display and changing
+ * @private
+ */
+ome.ol3.controls.Zoom.prototype.addDisplayField_ = function() {
     var zoomDisplayElement = document.createElement('input');
-    zoomDisplayElement.className = className + '-display';
+    zoomDisplayElement.className = this.class_name_ + '-display';
     zoomDisplayElement.setAttribute('type', 'input');
-    // TODO: improve method to be more 'responsive' than change but not as
-    // responsive as input
+
     ol.events.listen(
         zoomDisplayElement, "change",
         function() {
@@ -62,64 +107,68 @@ ome.ol3.controls.Zoom = function(opt_options) {
                 parseInt((1 / view.getResolution()) * 100);
         },this);
 
-    var cssClasses = className + ' ' + ol.css.CLASS_UNSELECTABLE + ' ' +
-      ol.css.CLASS_CONTROL;
-    var element = document.createElement('div');
-    element.className = cssClasses;
-    element.appendChild(this.addZoomButton(true));
-    element.appendChild(oneToOneElement);
-    element.appendChild(zoomDisplayElement);
-    element.appendChild(othis.addZoomButton(false));
-
-    ol.control.Control.call(this, {
-        element: element,
-        target: options.target
-    });
-
-    /**
-    * @type {number}
-    * @private
-    */
-    this.duration_ = options.duration !== undefined ? options.duration : 0;
-
-};
-ol.inherits(ome.ol3.controls.Zoom, ol.control.Control);
+    return zoomDisplayElement;
+}
 
 /**
-* @param {boolean} in the in zoom button is added if true, otherwise out
-* @private
-*/
-ome.ol3.controls.Zoom.prototype.addZoomButton = function(in) {
-    if (typeof in !== 'boolean') in = false;
+ * Adds a 1:1 zoom button
+ * @private
+ */
+ome.ol3.controls.Zoom.prototype.addOneToOneButton_ = function() {
+    var oneToOneElement = document.createElement('button');
+    oneToOneElement.className = this.class_name_ + '-1-1';
+    oneToOneElement.setAttribute('type', 'button');
+    oneToOneElement.title = "Actual Size";
+    oneToOneElement.appendChild(document.createTextNode("1:1"));
+    ol.events.listen(oneToOneElement, ol.events.EventType.CLICK,
+        function() {
+            var map = this.getMap();
+            var view = map ? map.getView() : null;
+            if (view === null) return;
+            view.setResolution(1);
+            var ext = view.getProjection().getExtent();
+            view.setCenter([(ext[2]-ext[0])/2, -(ext[3]-ext[1])/2]);
+        }, this);
 
-    var label = in ? '+' : '\u2212';
-    var title = 'Zoom ' + (in ? 'in' : 'out');
-
-    var element = document.createElement('button');
-    element.className = className + (in ? '-in' : '-out');
-    element.setAttribute('type', 'button');
-    element.title = title;
-    element.appendChild(document.createTextNode(label));
-
-    ol.events.listen(element, ol.events.EventType.CLICK,
-        ome.ol3.controls.Zoom.prototype.handleClick_.bind(this, delta));
+    return oneToOneElement;
 };
 
+/**
+ * Adds a zoom button that will make the image fit into the viewing extent
+ * @private
+ */
+ome.ol3.controls.Zoom.prototype.addFitToExtentButton_ = function() {
+    var oneToOneElement = document.createElement('button');
+    oneToOneElement.className = this.class_name_ + '-fit';
+    oneToOneElement.setAttribute('type', 'button');
+    oneToOneElement.title = "Zoom Image to Fit";
+    oneToOneElement.appendChild(document.createTextNode("FIT"));
+    ol.events.listen(oneToOneElement, ol.events.EventType.CLICK,
+        function() {
+            var map = this.getMap();
+            var view = map ? map.getView() : null;
+            if (view === null) return;
+
+            var ext = view.getProjection().getExtent();
+            view.fit([ext[0], -ext[3], ext[2], ext[1]], map.getSize());
+        }, this);
+
+    return oneToOneElement;
+};
 
 /**
-* @param {number} delta Zoom delta.
-* @param {Event} event The event to handle
-* @private
-*/
+ * @param {number} delta Zoom delta.
+ * @param {Event} event The event to handle
+ * @private
+ */
 ome.ol3.controls.Zoom.prototype.handleClick_ = function(delta, event) {
     event.preventDefault();
     this.zoomByDelta_(delta);
 };
 
-
 /**
-* @param {number} delta Zoom delta.
-* @private
+ * @param {number} delta Zoom delta.
+ * @private
 */
 ome.ol3.controls.Zoom.prototype.zoomByDelta_ = function(delta) {
     var map = this.getMap();
@@ -128,14 +177,14 @@ ome.ol3.controls.Zoom.prototype.zoomByDelta_ = function(delta) {
 
     var currentResolution = view.getResolution();
     if (currentResolution) {
-    if (this.duration_ > 0) {
-      map.beforeRender(ol.animation.zoom({
-        resolution: currentResolution,
-        duration: this.duration_,
-        easing: ol.easing.easeOut
-      }));
-    }
-    var newResolution = view.constrainResolution(currentResolution, delta);
-    view.setResolution(newResolution);
+        if (this.duration_ > 0) {
+          map.beforeRender(ol.animation.zoom({
+            resolution: currentResolution,
+            duration: this.duration_,
+            easing: ol.easing.easeOut
+          }));
+        }
+        var newResolution = view.constrainResolution(currentResolution, delta);
+        view.setResolution(newResolution);
     }
 };
