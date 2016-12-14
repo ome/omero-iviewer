@@ -3,21 +3,27 @@ import {EventAggregator} from 'aurelia-event-aggregator';
 import Context from './app/context';
 import Index from './app/index';
 import Misc from './utils/misc';
-import {REQUEST_PARAMS} from './utils/constants';
+import {REQUEST_PARAMS, URI_PREFIX, PLUGIN_NAME} from './utils/constants';
+
+let req = window.INITIAL_REQUEST_PARAMS || {};
+
+/* IMPORTANT:
+ * we have to set the public path here to include any potential prefix
+ * has to happen before the bootstrap!
+ */
+let is_dev_server = typeof req["DEV_SERVER"] === 'boolean' && req["DEV_SERVER"];
+if (!is_dev_server) {
+    let prefix =
+        typeof req[URI_PREFIX] === 'string' ?
+            Misc.prepareURI(req[URI_PREFIX]) : "";
+    __webpack_public_path__ = prefix + '/static/' + PLUGIN_NAME + '/';
+}
 
 bootstrap(function(aurelia) {
   aurelia.use
     .standardConfiguration()
     .developmentLogging();
 
-    // we need the initial request params with an image id at the minimum
-    // otherwise we won't be able to bootstrap
-    if (typeof window.INITIAL_REQUEST_PARAMS !== 'object' ||
-            window.INITIAL_REQUEST_PARAMS === null) {
-        console.error("Please supply the required 'window.INITIAL_REQUEST_PARAMS'");
-        return;
-    }
-    let req = window.INITIAL_REQUEST_PARAMS;
     let init_id =
         typeof req[REQUEST_PARAMS.IMAGE_ID] !== 'undefined' ?
         parseInt(req[REQUEST_PARAMS.IMAGE_ID]) : null;
@@ -29,6 +35,7 @@ bootstrap(function(aurelia) {
     delete req[REQUEST_PARAMS.IMAGE_ID]; // don't process it any more
 
     let ctx = new Context(aurelia.container.get(EventAggregator), init_id, req);
+    if (is_dev_server) ctx.tweakForDevServer();
     aurelia.container.registerInstance(Context,ctx);
 
     $.ajaxSetup({

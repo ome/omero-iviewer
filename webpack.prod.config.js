@@ -12,7 +12,7 @@ module.exports = {
   output: {
     path: path.join(__dirname, 'build'),
     filename: 'bundle.js',
-    publicPath: '/static/omero_iviewer/'
+    chunkFilename: "[chunkhash].bundle.js"
   },
   plugins: [
     new AureliaWebpackPlugin({nameExternalModules: false}),

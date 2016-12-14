@@ -1,9 +1,11 @@
 import {noView} from 'aurelia-framework';
 import {EventAggregator} from 'aurelia-event-aggregator';
 import {IMAGE_CONFIG_SELECT} from '../events/events';
+import Misc from '../utils/misc';
 import ImageConfig from '../model/image_config';
 import {
-    REQUEST_PARAMS, WEBGATEWAY, WEBCLIENT, URI_PREFIX, IVIEWER
+    REQUEST_PARAMS,
+    WEBGATEWAY, WEBCLIENT, PLUGIN_NAME, URI_PREFIX, IVIEWER, IVIEWER_STATIC
 } from '../utils/constants';
 
 /**
@@ -128,10 +130,12 @@ export default class Context {
      * @memberof Context
      */
     readPrefixedURIs(params) {
+        let prefix =
+            typeof params[URI_PREFIX] === 'string' ?
+                Misc.prepareURI(params[URI_PREFIX]) : "";
+        this.prefixed_uris.set(IVIEWER, prefix + "/" + PLUGIN_NAME);
         this.prefixed_uris.set(
-            IVIEWER,
-                (typeof params[URI_PREFIX] === 'string' ?
-                    params[URI_PREFIX] : "") + "/omero_iviewer");
+            IVIEWER_STATIC, prefix + '/static/'+ PLUGIN_NAME);
         [WEBGATEWAY, WEBCLIENT].map(
             (key) =>
                 this.prefixed_uris.set(
@@ -147,17 +151,17 @@ export default class Context {
      */
     getPrefixedURI(resource) {
         let uri = this.prefixed_uris.get(resource, null);
-        if (typeof uri === 'string' && uri.length > 1) {
-            // check for leading slash and remove trailing one if there...
-            let i=uri.length-1;
-            while(i>0) {
-                if (uri[i] === '/') uri = uri.substring(0,i);
-                else break;
-                i--;
-            }
-            if (uri[0] !== '/') uri = '/' + uri;
-        }
-        return uri;
+        return Misc.prepareURI(uri);
+    }
+
+    /**
+     * Adjustments that are necessary if we are running under the
+     * webpack dev server
+     * @memberof Context
+     */
+    tweakForDevServer() {
+        this.prefixed_uris.set(IVIEWER, "");
+        this.prefixed_uris.set(IVIEWER_STATIC, "");
     }
 
     /**

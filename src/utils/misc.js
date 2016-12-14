@@ -79,6 +79,29 @@ export default class Misc {
     }
 
     /**
+     * 'Prepares' uri so as to have a leading slash and take off any
+     * trailing slashes. This is how internally we expect them to be
+     * to achieve a consistent concatination.
+     *
+     * @static
+     * @param {string} uri the uri
+     * @return {string} the uri in a form that we want it to be 
+     */
+    static prepareURI(uri) {
+        if (typeof uri === 'string' && uri.length > 1) {
+            // check for leading slash and remove trailing one if there...
+            let i=uri.length-1;
+            while(i>0) {
+                if (uri[i] === '/') uri = uri.substring(0,i);
+                else break;
+                i--;
+            }
+            if (uri[0] !== '/') uri = '/' + uri;
+        }
+        return uri;
+    }
+
+    /**
      * Takes a string with channel information in the form:
      * -1|111:343$808080,2|0:255$FF0000 and parses it into an object that contains
      * the respective channel information/properties

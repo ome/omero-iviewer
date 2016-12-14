@@ -84,9 +84,11 @@ export default class Ui {
     /**
      * Binds panel collapse handlers
      *
+     * @params {string} uri_prefix a uri prefix for resource requests
      * @static
      */
-    static bindCollapseHandlers() {
+    static bindCollapseHandlers(uri_prefix) {
+        if (typeof uri_prefix !== 'string') uri_prefix = '';
         $('.left-split img, .right-split img').mousedown(
             (e) => {e.preventDefault(); e.stopPropagation();});
 
@@ -115,7 +117,10 @@ export default class Ui {
             }
             el.attr("old-width", width);
 
-            let url = Misc.pruneUrlToLastDash($(e.currentTarget).attr("src"));
+            let url =
+                uri_prefix === '' ?
+                    Misc.pruneUrlToLastDash($(e.currentTarget).attr("src")) :
+                    uri_prefix + "/css/images";
             $(e.currentTarget).attr(
                 "src", url + "/collapse-" +
                 (leftSplit && newWidth === 0 ||
@@ -142,13 +147,14 @@ export default class Ui {
      * as well as unbinding beforehand
      *
      * @param {object} eventbus the eventbus for publishing
+     * @param {string} uri_prefix a uri prefix for resource requests
      * @static
      */
-    static registerSidePanelHandlers(eventbus) {
+    static registerSidePanelHandlers(eventbus, uri_prefix) {
         this.unbindResizeHandlers();
         this.unbindCollapseHandlers();
         this.bindResizeHandlers(eventbus);
-        this.bindCollapseHandlers();
+        this.bindCollapseHandlers(uri_prefix);
     }
 
     /**
