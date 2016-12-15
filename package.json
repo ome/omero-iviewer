@@ -2,9 +2,9 @@
   "version": "0.0.0",
   "description": "OMERO.iviewer",
   "scripts": {
-    "dev": "webpack-dev-server --config webpack.dev.config.js --hot --inline --progress --devtool eval",
-    "debug": "./prepare_build.sh && webpack --config webpack.prod.config.js --progress --devtool source-map && ./deploy_build.sh",
-    "prod": "./prepare_build.sh && webpack -p --config webpack.prod.config.js --progress && ./deploy_build.sh",
+    "dev": "./ol3_viewer_prepare.sh && webpack-dev-server --config webpack.dev.config.js --hot --inline --progress --devtool eval",
+    "debug": "./ol3_viewer_prepare.sh && ./prepare_build.sh && webpack --config webpack.prod.config.js --progress --devtool source-map && ./deploy_build.sh",
+    "prod": "./ol3_viewer_prepare.sh && ./prepare_build.sh && webpack -p --config webpack.prod.config.js --progress && ./deploy_build.sh",
     "docs": "./node_modules/.bin/esdoc -c esdoc.json"
   },
   "dependencies": {
