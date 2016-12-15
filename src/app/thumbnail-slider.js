@@ -100,9 +100,10 @@ export default class ThumbnailSlider extends EventSubscriber {
         if (dataset_id  === this.dataset_id) return;
         this.dataset_id = dataset_id;
 
+        let prefixedGateway = this.context.getPrefixedURI(WEBGATEWAY);
         let url =
-            this.context.server + this.context.getPrefixedURI(WEBGATEWAY) +
-                "/dataset/" + dataset_id + '/children/';
+            this.context.server + prefixedGateway + "/dataset/" +
+                dataset_id + '/children/';
 
         $.ajax(
             {url : url,
@@ -117,11 +118,20 @@ export default class ThumbnailSlider extends EventSubscriber {
                  response.map((item) => {
                      if (typeof item.thumb_url === "string" &&
                             item.thumb_url.length> 0 &&
-                            typeof item.id === "number")
+                            typeof item.id === "number") {
+                        // for dev/remote server we take out the prefix
+                        // because the thumb url includes it as well
+                        let thumbUrl = item.thumb_url;
+                        if (this.context.server !== "") {
+                            let prefixStart = thumbUrl.indexOf(prefixedGateway);
+                            if (prefixStart > 0)
+                                thumbUrl = thumbUrl.substring(prefixStart);
+                        }
                         this.thumbnails.set(
                             item.id,
-                            {url : item.thumb_url + this.thumbnail_length + "/",
+                            {url : thumbUrl + this.thumbnail_length + "/",
                             revision : 0});
+                     }
                  });
             },
             error : (response) => {
