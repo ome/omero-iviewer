@@ -321,14 +321,14 @@ ome.ol3.Viewer = function(id, options) {
                  var initialTime =
                      scope.getInitialRequestParam(ome.ol3.REQUEST_PARAMS.TIME);
                  initialTime =
-                    initialTime !== null ? parseInt(initialTime) :
+                    initialTime !== null ? (parseInt(initialTime)-1) :
                     scope.image_info_['rdefs']['defaultT'];
                 if (initialTime < 0) initialTime = 0;
                 if (initialTime >= dims.t) initialTime =  dims.t-1;
                  var initialPlane =
                      scope.getInitialRequestParam(ome.ol3.REQUEST_PARAMS.PLANE);
                  initialPlane =
-                    initialPlane !== null ? parseInt(initialPlane) :
+                    initialPlane !== null ? (parseInt(initialPlane)-1) :
                         scope.image_info_['rdefs']['defaultZ'];
                 if (initialPlane < 0) initialPlane = 0;
                 if (initialPlane >= dims.z) initialPlane =  dims.z-1;
@@ -395,11 +395,31 @@ ome.ol3.Viewer = function(id, options) {
                  var possibleResolutions =
                     ome.ol3.utils.Misc.prepareResolutions(zoomLevelScaling);
                  if (initialZoom && !isNaN(parseFloat(initialZoom))) {
-                     initialZoom = parseFloat(initialZoom);
+                     initialZoom = (1 / (parseFloat(initialZoom) / 100));
                      var posLen = possibleResolutions.length;
-                     if (posLen > 0 && initialZoom <= possibleResolutions[0] &&
-                         initialZoom >= possibleResolutions[posLen-1])
-                         actualZoom = initialZoom;
+                     if (posLen > 1) {
+                         if (initialZoom >= possibleResolutions[0])
+                            actualZoom = possibleResolutions[0];
+                         else if (initialZoom <= possibleResolutions[posLen-1])
+                            actualZoom = possibleResolutions[posLen-1];
+                         else {
+                             // find nearest resolution
+                             for (var r=0;r<posLen-1;r++) {
+                                 if (initialZoom < possibleResolutions[r+1])
+                                    continue;
+                                 var d1 =
+                                    Math.abs(
+                                        possibleResolutions[r] - initialZoom);
+                                 var d2 =
+                                    Math.abs(
+                                       possibleResolutions[r+1] - initialZoom);
+                                 if (d1 < d2)
+                                    actualZoom = possibleResolutions[r];
+                                 else actualZoom = possibleResolutions[r+1];
+                                 break;
+                             }
+                         }
+                     } else actualZoom = 1;
                  }
 
 				 // we need a View object for the map

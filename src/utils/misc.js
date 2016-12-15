@@ -85,7 +85,7 @@ export default class Misc {
      *
      * @static
      * @param {string} uri the uri
-     * @return {string} the uri in a form that we want it to be 
+     * @return {string} the uri in a form that we want it to be
      */
     static prepareURI(uri) {
         if (typeof uri === 'string' && uri.length > 1) {
@@ -209,7 +209,7 @@ export default class Misc {
                 url += (chan.active ? "" : "-") + (count+1) + "|" +
                     chan.start + ":" + chan.end +
                     (typeof chan.reverseIntensity === 'boolean' ?
-                        (chan.reverseIntensity ? '' : '-r')  : '-') + "r$" +
+                        (chan.reverseIntensity ? 'r' : '-r')  : '') + "$" +
                 chan.color;
                 count++;
             });
@@ -217,9 +217,9 @@ export default class Misc {
         }
         // append time and plane
         if (typeof settings.plane === 'number')
-            url += "z=" + settings.plane + "&";
+            url += "z=" + (settings.plane+1) + "&";
         if (typeof settings.time === 'number')
-            url += "t=" + settings.time + "&";
+            url += "t=" + (settings.time+1) + "&";
         // append projection and model
         if (typeof settings.projection === 'string')
             url += "p=" + settings.projection + "&";
@@ -227,7 +227,7 @@ export default class Misc {
             url += "m=" + settings.model + "&";
         // append resolution and and center
         if (typeof settings.resolution === 'number')
-            url += "zm=" + settings.resolution + "&";
+            url += "zm=" + parseInt((1 / settings.resolution) * 100) + "&";
         if (Misc.isArray(settings.center))
             url += "x=" + settings.center[0] + "&y=" + settings.center[1] + "&";
 

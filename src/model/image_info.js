@@ -256,10 +256,10 @@ export default class ImageInfo {
         this.range = response.pixel_range;
         this.dimensions = {
             t: initialTime !== null ?
-                parseInt(initialTime) : response.rdefs.defaultT,
+                (parseInt(initialTime)-1) : response.rdefs.defaultT,
             max_t : response.size.t,
             z: initialPlane !== null ?
-                parseInt(initialPlane) : response.rdefs.defaultZ,
+                (parseInt(initialPlane)-1) : response.rdefs.defaultZ,
             max_z : response.size.z
         };
         // do we have a scalebar
