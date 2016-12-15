@@ -8,8 +8,7 @@
                 title="${channel.label}"
                 css="
                     ${image_config.hasLookupTable(channel.color) ?
-                        'background-image: url(\'' + context.server +
-                            '/static/webgateway/img/luts_10.png\');
+                        'background-image: url(\'' + luts_png + '\');
                          background-size: 100% 1110px;
                          background-repeat: no-repeat;
                          background-position: 0 -' +
@@ -26,6 +25,7 @@
                 channel.bind="channel" revision.bind="image_config.revision"
                 mode.bind="mode"
                 luts.bind="image_config.luts"
+                luts_png.bind="luts_png"
                 range.bind="image_config.image_info.range"
                 change_mode.call="onModeChange($event)">
             </channel-range>

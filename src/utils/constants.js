@@ -24,12 +24,6 @@ export const URI_PREFIX = "URI_PREFIX";
 export const IVIEWER = "IVIEWER";
 
 /**
- * a convenience string lookup for IVIEWER_STATIC
- * @type {string}
- */
-export const IVIEWER_STATIC = "IVIEWER_STATIC";
-
-/**
  * a convenience string lookup for WEBGATEWAY
  * @type {string}
  */

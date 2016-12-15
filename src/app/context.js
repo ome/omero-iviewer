@@ -5,7 +5,7 @@ import Misc from '../utils/misc';
 import ImageConfig from '../model/image_config';
 import {
     REQUEST_PARAMS,
-    WEBGATEWAY, WEBCLIENT, PLUGIN_NAME, URI_PREFIX, IVIEWER, IVIEWER_STATIC
+    WEBGATEWAY, WEBCLIENT, PLUGIN_NAME, URI_PREFIX, IVIEWER
 } from '../utils/constants';
 
 /**
@@ -135,8 +135,6 @@ export default class Context {
                 Misc.prepareURI(params[URI_PREFIX]) : "";
         this.prefixed_uris.set(URI_PREFIX, prefix);
         this.prefixed_uris.set(IVIEWER, prefix + "/" + PLUGIN_NAME);
-        this.prefixed_uris.set(
-            IVIEWER_STATIC, prefix + '/static/'+ PLUGIN_NAME);
         [WEBGATEWAY, WEBCLIENT].map(
             (key) =>
                 this.prefixed_uris.set(
@@ -148,11 +146,24 @@ export default class Context {
      * Reads the list of uris that we need
      *
      * @param {string} resource name
+     * @param {boolean} for_static_resources if true we include static in the uri
      * @return {string\null} the (potentially prefixed) uri for the resource or null
      */
-    getPrefixedURI(resource) {
-        let uri = this.prefixed_uris.get(resource, null);
-        return Misc.prepareURI(uri);
+    getPrefixedURI(resource, for_static_resources) {
+        if (typeof for_static_resources !== 'boolean')
+            for_static_resources = false;
+
+        let uri = Misc.prepareURI(this.prefixed_uris.get(resource, ""));
+        if (uri === "") return uri; // no need to go on if we are empty
+
+        if (for_static_resources) {
+            let prefix =
+                Misc.prepareURI(this.prefixed_uris.get(URI_PREFIX, ""));
+            if (prefix !== "") {
+                uri = prefix + '/static' + uri.replace(prefix, '');
+            } else uri = "/static" + uri;
+        }
+        return uri;
     }
 
     /**
@@ -162,7 +173,6 @@ export default class Context {
      */
     tweakForDevServer() {
         this.prefixed_uris.set(IVIEWER, "");
-        this.prefixed_uris.set(IVIEWER_STATIC, "");
     }
 
     /**

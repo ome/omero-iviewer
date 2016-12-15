@@ -8,7 +8,7 @@ import {Converters} from '../utils/converters';
 import Ui from '../utils/ui';
 import {inject, customElement, bindable} from 'aurelia-framework';
 import {ol3} from '../../libs/ol3-viewer.js';
-import {IVIEWER, IVIEWER_STATIC} from '../utils/constants';
+import {IVIEWER} from '../utils/constants';
 import {
     IMAGE_CONFIG_UPDATE, IMAGE_VIEWER_RESIZE, IMAGE_VIEWER_SCALEBAR,
     IMAGE_DIMENSION_CHANGE, IMAGE_SETTINGS_CHANGE,
@@ -109,7 +109,7 @@ export default class Ol3Viewer extends EventSubscriber {
         // register resize and collapse handlers
         Ui.registerSidePanelHandlers(
             this.context.eventbus,
-            this.context.getPrefixedURI(IVIEWER_STATIC),
+            this.context.getPrefixedURI(IVIEWER, true),
         );
 
         // instantiate the viewer

@@ -43,6 +43,13 @@ export default class ChannelRange  {
     @bindable mode = 0;
 
     /**
+     * the luts png uri
+     * @memberof ChannelRange
+     * @type {string}
+     */
+    @bindable luts_png = '';
+
+    /**
      * the channels settings change mode handler
      * @memberof ChannelRange
      * @type {function}
@@ -97,17 +104,6 @@ export default class ChannelRange  {
     bind() {
         this.registerObservers();
         this.updateUI();
-    }
-
-    /**
-     * Returns assembled luts png url
-     * @return {string} the luts.png url
-     * @memberof ChannelRange
-     */
-    getLutsPngUrl() {
-        return (this.context.server +
-            this.context.getPrefixedURI(URI_PREFIX) +
-                '/static/webgateway/img/luts_10.png');
     }
 
     /**
@@ -394,7 +390,7 @@ export default class ChannelRange  {
              "background", "");
              $(this.element).find(".channel-slider").find(".ui-slider-range").css(
                  {"background-image" :
-                    "url('" + this.getLutsPngUrl() + "'",
+                    "url('" + this.luts_png + "'",
                   "background-position" : "0 -" +
                     (this.luts.get(this.channel.color).index*20) + "px",
                   "background-size" : "100% 740px",
