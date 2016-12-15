@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 #copy over html,css,js and templates
 echo "Deploying built resources to plugin directory..."
