@@ -19,11 +19,11 @@ def index(request, iid=None, conn=None, **kwargs):
         if request.GET[key]:
             params[str(key).upper()] = str(request.GET[key])
 
-    # we add the (possibly prefixed uris
+    # we add the (possibly prefixed) uris
     params['WEBGATEWAY'] = reverse('webgateway')
+    params['WEBCLIENT'] = reverse('webindex')
     if settings.FORCE_SCRIPT_NAME is not None:
         params['URI_PREFIX'] = settings.FORCE_SCRIPT_NAME
-        params['WEBCLIENT'] = params['URI_PREFIX'] + '/webclient'
 
     return render(request, 'omero_iviewer/index.html', {'params': params})
 
