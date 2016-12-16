@@ -12,7 +12,7 @@ module.exports = {
   output: {
     path: path.join(__dirname, 'build'),
     filename: 'bundle.js',
-    publicPath: '/static/omero_iviewer/'
+    chunkFilename: "[chunkhash].bundle.js"
   },
   plugins: [
     new AureliaWebpackPlugin({nameExternalModules: false}),
@@ -28,7 +28,7 @@ module.exports = {
     ]
   },
   module: {
-    noParse: [/libs\/ol3-viewer-1.0.js$/],
+    noParse: [/libs\/ol3-viewer.js$/],
     loaders: [
       { test: /\.js$/, loader: 'babel', exclude: /node_modules/,
         query: { compact: false, presets: ['es2015-loose', 'stage-1'], plugins: ['transform-decorators-legacy'] } },

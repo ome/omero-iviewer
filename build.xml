@@ -21,9 +21,9 @@
 	<property name="plugin.dir.static" value="${basedir}/plugin/${ant.project.name}/static/${ant.project.name}" />
 
 	<property name="dist.name"
-			value="${build.dir}/ol3-viewer-${version.major}.${version.minor}.js" />
+			value="${build.dir}/ol3-viewer.js" />
 	<property name="debug.name"
-			value="${build.dir}/ol3-viewer-${version.major}.${version.minor}-debug.js" />
+			value="${build.dir}/ol3-viewer-debug.js" />
 
 	<property name="outputwrapper" value="
 		(function (root, factory) {

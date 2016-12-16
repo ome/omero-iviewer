@@ -2,7 +2,7 @@
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import Histogram from './histogram';
-import {CHANNEL_SETTINGS_MODE} from '../utils/constants';
+import {CHANNEL_SETTINGS_MODE, WEBGATEWAY} from '../utils/constants';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 
 import {
@@ -114,8 +114,10 @@ export default class Settings extends EventSubscriber {
             return;
 
         let img_id = this.image_config.image_info.image_id;
-        $.ajax({url :
-            this.context.server + "/webgateway/get_image_rdefs_json/" + img_id,
+        $.ajax({
+            url : this.context.server +
+                    this.context.getPrefixedURI(WEBGATEWAY) +
+                        "/get_image_rdefs_json/" + img_id,
             dataType : Misc.useJsonp(this.context.server) ? 'jsonp' : 'json',
             cache : false,
             success : (response) => {
@@ -149,7 +151,8 @@ export default class Settings extends EventSubscriber {
 
         let img_id = this.image_config.image_info.image_id;
 
-        return this.context.server + "/webgateway/render_thumbnail/" + img_id;
+        return this.context.server + this.context.getPrefixedURI(WEBGATEWAY) +
+                    "/render_thumbnail/" + img_id;
     }
 
     /**
@@ -191,7 +194,8 @@ export default class Settings extends EventSubscriber {
 
         let image_info = this.image_config.image_info;
         let url =
-            this.context.server + "/webgateway/saveImgRDef/" +
+            this.context.server + this.context.getPrefixedURI(WEBGATEWAY) +
+            "/saveImgRDef/" +
             image_info.image_id + '/?m=' + image_info.model[0] +
             "&p=" + image_info.projection +
             "&t=" + (image_info.dimensions.t+1) +
@@ -201,10 +205,9 @@ export default class Settings extends EventSubscriber {
         image_info.channels.map(
             (c) =>
                 url+= (i !== 0 ? ',' : '') + (!c.active ? '-' : '') + (++i) +
-                 "|" + c.window.start + ":" + c.window.end +
-                 (typeof  c.reverseIntensity === 'boolean' ?
-                    (c.reverseIntensity ? "r" : "-r") : "") + "$" + c.color
-        );
+                    "|" + c.window.start + ":" + c.window.end +
+                    (typeof  c.reverseIntensity === 'boolean' ?
+                    (c.reverseIntensity ? "r" : "-r") : "") + "$" + c.color);
         $.ajax(
             {url : url,
              method: 'POST',
@@ -273,7 +276,9 @@ export default class Settings extends EventSubscriber {
         }
 
         let imgInf = this.image_config.image_info;
-        let url = this.context.server + "/webgateway/copyImgRDef/?";
+        let url =
+            this.context.server + this.context.getPrefixedURI(WEBGATEWAY) +
+                    "/copyImgRDef/?";
         if (!toAll)
             url += "imageId=" + imgInf.image_id + "&q=0.9&pixel_range=" +
                     imgInf.range[0] + ":" + imgInf.range[1] +"&";

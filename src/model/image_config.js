@@ -2,6 +2,7 @@ import {noView} from 'aurelia-framework';
 import ImageInfo from '../model/image_info';
 import RegionsInfo from '../model/regions_info';
 import Misc from '../utils/misc';
+import {WEBGATEWAY} from '../utils/constants';
 import History from './history';
 
 /**
@@ -109,8 +110,9 @@ export default class ImageConfig extends History {
         }
 
         let server = this.image_info.context.server;
+        let uri_prefix =  this.image_info.context.getPrefixedURI(WEBGATEWAY);
         $.ajax(
-            {url : server + "/webgateway/luts/",
+            {url : server + uri_prefix + "/luts/",
             dataType : Misc.useJsonp(server) ? "jsonp" : "json",
             cache : false,
             success : (response) => {

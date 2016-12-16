@@ -5,7 +5,7 @@ import {
     EventSubscriber} from '../events/events';
 import Misc from '../utils/misc';
 import {Utils} from '../utils/regions';
-import {REGIONS_MODE} from '../utils/constants';
+import {REGIONS_MODE, WEBGATEWAY} from '../utils/constants';
 import {REGIONS_DRAWING_MODE} from '../utils/constants';
 
 /**
@@ -192,8 +192,10 @@ export default class RegionsInfo extends EventSubscriber {
         this.history.resetHistory();
 
         // assmeble url
-        let url = this.image_info.context.server + "/webgateway/get_rois_json/" +
-         this.image_info.image_id + '/';
+        let url =
+            this.image_info.context.server +
+                this.image_info.context.getPrefixedURI(WEBGATEWAY) +
+                    "/get_rois_json/" + this.image_info.image_id + '/';
         let dataType = "json";
         if (Misc.useJsonp(this.image_info.context.server)) dataType += "p";
 

@@ -1,10 +1,39 @@
 import {noView} from 'aurelia-framework';
 
 /**
- * the app name
  * @type {string}
  */
 export const APP_NAME = 'iViewer';
+
+/**
+ * the plugin name
+ * @type {string}
+ */
+export const PLUGIN_NAME = 'omero_iviewer';
+
+/**
+ * a convenience string lookup for URI_PREFIX
+ * @type {string}
+ */
+export const URI_PREFIX = "URI_PREFIX";
+
+/**
+ * a convenience string lookup for IVIEWER
+ * @type {string}
+ */
+export const IVIEWER = "IVIEWER";
+
+/**
+ * a convenience string lookup for WEBGATEWAY
+ * @type {string}
+ */
+export const WEBGATEWAY = "WEBGATEWAY";
+
+/**
+ * a convenience string lookup for WEBCLIENT
+ * @type {string}
+ */
+export const WEBCLIENT = "WEBCLIENT";
 
 /**
  * the possible request params that we accept

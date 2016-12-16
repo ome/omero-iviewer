@@ -5,7 +5,8 @@ require('../css/images/close.gif');
 import {inject,customElement} from 'aurelia-framework';
 import Context from './context';
 import Misc from '../utils/misc';
-import {APP_NAME} from '../utils/constants';
+import {APP_NAME, WEBCLIENT} from '../utils/constants';
+
 import {
     IMAGE_CONFIG_UPDATE,
     IMAGE_VIEWER_SCALEBAR,
@@ -136,6 +137,7 @@ export class Header extends EventSubscriber {
              let url =
                 Misc.assembleImageLink(
                     this.context.server,
+                    this.context.getPrefixedURI(WEBCLIENT),
                     this.image_info.image_id,
                     settings);
                 // show link and register close button

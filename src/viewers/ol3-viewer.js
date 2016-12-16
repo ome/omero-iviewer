@@ -7,7 +7,8 @@ import Misc from '../utils/misc';
 import {Converters} from '../utils/converters';
 import Ui from '../utils/ui';
 import {inject, customElement, bindable} from 'aurelia-framework';
-import {ol3} from '../../libs/ol3-viewer-1.0.js';
+import {ol3} from '../../libs/ol3-viewer.js';
+import {IVIEWER} from '../utils/constants';
 import {
     IMAGE_CONFIG_UPDATE, IMAGE_VIEWER_RESIZE, IMAGE_VIEWER_SCALEBAR,
     IMAGE_DIMENSION_CHANGE, IMAGE_SETTINGS_CHANGE,
@@ -106,7 +107,10 @@ export default class Ol3Viewer extends EventSubscriber {
      */
     attached() {
         // register resize and collapse handlers
-        Ui.registerSidePanelHandlers(this.context.eventbus);
+        Ui.registerSidePanelHandlers(
+            this.context.eventbus,
+            this.context.getPrefixedURI(IVIEWER, true),
+        );
 
         // instantiate the viewer
         this.viewer =
@@ -227,7 +231,7 @@ export default class Ol3Viewer extends EventSubscriber {
         this.showRegions(this.context.show_regions);
 
         // only the first request should be affected
-        this.context.initParams = {};
+        this.context.resetInitParams();
     }
 
     /**
@@ -550,7 +554,8 @@ export default class Ol3Viewer extends EventSubscriber {
             typeof params.selected === 'boolean' && params.selected;
 
         this.viewer.storeRegions(
-            selectedOnly, false, '/omero_iviewer/persist_rois');
+            selectedOnly, false,
+            this.context.getPrefixedURI(IVIEWER) + '/persist_rois');
     }
 
     /**

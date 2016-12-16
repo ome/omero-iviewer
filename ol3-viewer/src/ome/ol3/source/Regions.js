@@ -204,8 +204,8 @@ ome.ol3.source.Regions = function(viewerReference, options) {
 		 // define request settings
 		 var reqParams = {
 			 "server" : scope.viewer_.getServer(),
-			 "uri" : '/webgateway/get_rois_json/' +
-			  	scope.viewer_.getId(),
+			 "uri" : scope.viewer_.getPrefixedURI(ome.ol3.WEBGATEWAY) +
+                        '/get_rois_json/' + scope.viewer_.getId(),
 				"jsonp" : true, // this will only count if we are cross-domain
 			 "success" : success,
 			 "error" : function(error) {

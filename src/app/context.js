@@ -1,8 +1,12 @@
 import {noView} from 'aurelia-framework';
 import {EventAggregator} from 'aurelia-event-aggregator';
 import {IMAGE_CONFIG_SELECT} from '../events/events';
+import Misc from '../utils/misc';
 import ImageConfig from '../model/image_config';
-import {REQUEST_PARAMS} from '../utils/constants'
+import {
+    REQUEST_PARAMS,
+    WEBGATEWAY, WEBCLIENT, PLUGIN_NAME, URI_PREFIX, IVIEWER
+} from '../utils/constants';
 
 /**
  * Provides all the information to the application that it shares
@@ -30,6 +34,12 @@ export default class Context {
      * @type {string}
      */
     server = null;
+
+    /**
+     * a list of potentially prefixes resources
+     * @type {Map}
+     */
+    prefixed_uris = new Map();
 
     /**
      * a map for a more convenient key based lookup of an ImageConfig instance
@@ -99,9 +109,12 @@ export default class Context {
             if (isLocal && pos < minLen)  // we need to add the http
                 server = "http://" + server;
         }
-        delete optParams[REQUEST_PARAMS.SERVER];
-        this.eventbus = eventbus;
         this.server = server;
+        delete optParams[REQUEST_PARAMS.SERVER];
+
+        this.readPrefixedURIs(optParams);
+
+        this.eventbus = eventbus;
         this.initParams = optParams;
 
         // we set the initial image as the default (if given)
@@ -109,6 +122,57 @@ export default class Context {
         this.selected_config = initial_image_config.id;
         // set up key listener
         this.establishKeyDownListener();
+    }
+
+    /**
+     * Reads the list of uris that we need
+     *
+     * @memberof Context
+     */
+    readPrefixedURIs(params) {
+        let prefix =
+            typeof params[URI_PREFIX] === 'string' ?
+                Misc.prepareURI(params[URI_PREFIX]) : "";
+        this.prefixed_uris.set(URI_PREFIX, prefix);
+        this.prefixed_uris.set(IVIEWER, prefix + "/" + PLUGIN_NAME);
+        [WEBGATEWAY, WEBCLIENT].map(
+            (key) =>
+                this.prefixed_uris.set(
+                    key, typeof params[key] === 'string' ? params[key] :
+                        '/' + key.toLowerCase()));
+    }
+
+    /**
+     * Reads the list of uris that we need
+     *
+     * @param {string} resource name
+     * @param {boolean} for_static_resources if true we include static in the uri
+     * @return {string\null} the (potentially prefixed) uri for the resource or null
+     */
+    getPrefixedURI(resource, for_static_resources) {
+        if (typeof for_static_resources !== 'boolean')
+            for_static_resources = false;
+
+        let uri = Misc.prepareURI(this.prefixed_uris.get(resource, ""));
+        if (uri === "") return uri; // no need to go on if we are empty
+
+        if (for_static_resources) {
+            let prefix =
+                Misc.prepareURI(this.prefixed_uris.get(URI_PREFIX, ""));
+            if (prefix !== "") {
+                uri = prefix + '/static' + uri.replace(prefix, '');
+            } else uri = "/static" + uri;
+        }
+        return uri;
+    }
+
+    /**
+     * Adjustments that are necessary if we are running under the
+     * webpack dev server
+     * @memberof Context
+     */
+    tweakForDevServer() {
+        this.prefixed_uris.set(IVIEWER, "");
     }
 
     /**
@@ -310,5 +374,17 @@ export default class Context {
             typeof this.initParams[key] === null) return null;
 
         return this.initParams[key];
+    }
+
+    /**
+     * Resets initial parameters
+     *
+     * @memberof Context
+     */
+    resetInitParams() {
+        // empty all handed in params
+        this.initParams = {};
+        // we do need our uri prefixes again
+        this.prefixed_uris.forEach((value, key) => this.initParams[key] = value);
     }
 }

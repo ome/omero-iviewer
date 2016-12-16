@@ -104,6 +104,14 @@ ome.ol3.Viewer = function(id, options) {
 	this.initParams_ = opts['initParams'] || {};
 
     /**
+	 * a list of (possibly prefixed) uris for lookup
+	 * @type {Object}
+	 * @private
+	 */
+	this.prefixed_uris_ = {};
+    this.readPrefixedUris(this.initParams_);
+
+    /**
 	 * because of async wait until map has been instatiated, an addRegions call
      * might not be able to execute successfully. this flag tells us so that
      * we can make one once the map initialization has finished
@@ -313,14 +321,14 @@ ome.ol3.Viewer = function(id, options) {
                  var initialTime =
                      scope.getInitialRequestParam(ome.ol3.REQUEST_PARAMS.TIME);
                  initialTime =
-                    initialTime !== null ? parseInt(initialTime) :
+                    initialTime !== null ? (parseInt(initialTime)-1) :
                     scope.image_info_['rdefs']['defaultT'];
                 if (initialTime < 0) initialTime = 0;
                 if (initialTime >= dims.t) initialTime =  dims.t-1;
                  var initialPlane =
                      scope.getInitialRequestParam(ome.ol3.REQUEST_PARAMS.PLANE);
                  initialPlane =
-                    initialPlane !== null ? parseInt(initialPlane) :
+                    initialPlane !== null ? (parseInt(initialPlane)-1) :
                         scope.image_info_['rdefs']['defaultZ'];
                 if (initialPlane < 0) initialPlane = 0;
                 if (initialPlane >= dims.z) initialPlane =  dims.z-1;
@@ -364,8 +372,8 @@ ome.ol3.Viewer = function(id, options) {
 
 				// create an OmeroImage source (tiled)
 				 var source = new ome.ol3.source.Image({
-					 server : scope.server_,
-					 //uri : '/webgateway/render_image_region',
+					 server : scope.getServer(),
+					 uri : scope.getPrefixedURI(ome.ol3.WEBGATEWAY),
 					 image: scope.id_,
 					 width: dims['width'],
 					 height: dims['height'],
@@ -387,11 +395,31 @@ ome.ol3.Viewer = function(id, options) {
                  var possibleResolutions =
                     ome.ol3.utils.Misc.prepareResolutions(zoomLevelScaling);
                  if (initialZoom && !isNaN(parseFloat(initialZoom))) {
-                     initialZoom = parseFloat(initialZoom);
+                     initialZoom = (1 / (parseFloat(initialZoom) / 100));
                      var posLen = possibleResolutions.length;
-                     if (posLen > 0 && initialZoom <= possibleResolutions[0] &&
-                         initialZoom >= possibleResolutions[posLen-1])
-                         actualZoom = initialZoom;
+                     if (posLen > 1) {
+                         if (initialZoom >= possibleResolutions[0])
+                            actualZoom = possibleResolutions[0];
+                         else if (initialZoom <= possibleResolutions[posLen-1])
+                            actualZoom = possibleResolutions[posLen-1];
+                         else {
+                             // find nearest resolution
+                             for (var r=0;r<posLen-1;r++) {
+                                 if (initialZoom < possibleResolutions[r+1])
+                                    continue;
+                                 var d1 =
+                                    Math.abs(
+                                        possibleResolutions[r] - initialZoom);
+                                 var d2 =
+                                    Math.abs(
+                                       possibleResolutions[r+1] - initialZoom);
+                                 if (d1 < d2)
+                                    actualZoom = possibleResolutions[r];
+                                 else actualZoom = possibleResolutions[r+1];
+                                 break;
+                             }
+                         }
+                     } else actualZoom = 1;
                  }
 
 				 // we need a View object for the map
@@ -466,8 +494,9 @@ ome.ol3.Viewer = function(id, options) {
 
 			// define request settings
 			var reqParams = {
-				 "server" : scope.server_,
-				 "uri" : '/webgateway/imgData/' + scope.id_,
+				 "server" : scope.getServer(),
+				 "uri" : scope.getPrefixedURI(ome.ol3.WEBGATEWAY) +
+                            '/imgData/' + scope.id_,
 				 "jsonp" : true, // this will only count if we are cross-domain
 				 "success" : success,
 				 "error" : function(error) {
@@ -1189,6 +1218,46 @@ ome.ol3.Viewer.prototype.getId = function() {
 }
 
 /**
+ * Returns the (possibly prefixed) uri for a resource
+ *
+ * @param {string} resource the resource name
+ * @return {string\null} the prefixed URI or null (if not found)
+ */
+ome.ol3.Viewer.prototype.getPrefixedURI = function(resource) {
+    if (typeof this.prefixed_uris_[resource] !== 'string') return null;
+
+    var uri = this.prefixed_uris_[resource];
+    if (typeof uri === 'string' && uri.length > 1) {
+        // check for leading slash and remove trailing one if there...
+        let i=uri.length-1;
+        while(i>0) {
+            if (uri[i] === '/') uri = uri.substring(0,i);
+            else break;
+            i--;
+        }
+        if (uri[0] !== '/') uri = '/' + uri;
+    }
+
+    return uri;
+}
+
+/**
+ * Reads (possibly prefixed) uris from the parameters
+ *
+ * @param {Object} params the parameters handed in
+ */
+ome.ol3.Viewer.prototype.readPrefixedUris = function(params) {
+    if (typeof params !== 'object' || params === null) return;
+
+    for (var uri in ome.ol3.PREFIXED_URIS) {
+        var resource = ome.ol3.PREFIXED_URIS[uri];
+        if (typeof params[resource] === 'string')
+            this.prefixed_uris_[resource] = params[resource];
+        else this.prefixed_uris_[resource] = '/' + resource.toLowerCase();
+        }
+}
+
+/**
  * Gets the server information
  *
  * @return {object} the server information
@@ -1734,16 +1803,6 @@ goog.exportProperty(
 
 goog.exportProperty(
 	ome.ol3.Viewer.prototype,
-	'addPostTileLoadHook',
-	ome.ol3.Viewer.prototype.addPostTileLoadHook);
-
-goog.exportProperty(
-	ome.ol3.Viewer.prototype,
-	'removePostTileLoadHook',
-	ome.ol3.Viewer.prototype.removePostTileLoadHook);
-
-goog.exportProperty(
-	ome.ol3.Viewer.prototype,
 	'setDimensionIndex',
 	ome.ol3.Viewer.prototype.setDimensionIndex);
 
@@ -1751,16 +1810,6 @@ goog.exportProperty(
 	ome.ol3.Viewer.prototype,
 	'getDimensionIndex',
 	ome.ol3.Viewer.prototype.getDimensionIndex);
-
-goog.exportProperty(
-	ome.ol3.Viewer.prototype,
-	'getId',
-	ome.ol3.Viewer.prototype.getId);
-
-goog.exportProperty(
-	ome.ol3.Viewer.prototype,
-	'getServer',
-	ome.ol3.Viewer.prototype.getServer);
 
 goog.exportProperty(
 	ome.ol3.Viewer.prototype,

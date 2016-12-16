@@ -166,34 +166,6 @@ ome.ol3.utils.Net.isSameOrigin = function(server) {
 }
 
 /**
- * Issues a keep-alive request to the omero server.
- *
- * @private
- * @static
- * @function
- * @param {Object} server the server info object
- * @param {function} action a response handler
- * @param {ome.ol3.Viewer} context the omero viewer context
- */
-ome.ol3.utils.Net.issueServerKeepAlivePing = function(server, action, context) {
-	// set params
-	var params = {
-		"server" : server,
-		"uri" : '/webclient/keepalive_ping/',
-		"jsonp" : false,
-		"success" : function(data) {
-			if (action && context) {
-				action.call(context, data);
-			} else if (action) {
-				action(data);
-			}
-		},
-		"error" : function(error) { console.error("keep alive failed");}
-	};
-	ome.ol3.utils.Net.sendRequest(params, context);
-}
-
-/**
  * Sends an ajax request, based on the handed in settings.
  * The only mandatory options are:
  * <ul>
@@ -241,6 +213,7 @@ ome.ol3.utils.Net.sendRequest = function(parameters, context) {
 	var uri = params.uri || "";
     if (typeof uri !== 'string')
         console.error("sendRequest uri parameter has to be a string");
+
 	uri = ome.ol3.utils.Net.checkAndSanitizeUri(uri);
     if (typeof uri !== 'object' || uri === null)
         console.error("sendRequest uri parameter is invalid");

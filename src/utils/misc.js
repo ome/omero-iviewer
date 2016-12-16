@@ -79,6 +79,29 @@ export default class Misc {
     }
 
     /**
+     * 'Prepares' uri so as to have a leading slash and take off any
+     * trailing slashes. This is how internally we expect them to be
+     * to achieve a consistent concatination.
+     *
+     * @static
+     * @param {string} uri the uri
+     * @return {string} the uri in a form that we want it to be
+     */
+    static prepareURI(uri) {
+        if (typeof uri === 'string' && uri.length > 1) {
+            // check for leading slash and remove trailing one if there...
+            let i=uri.length-1;
+            while(i>0) {
+                if (uri[i] === '/') uri = uri.substring(0,i);
+                else break;
+                i--;
+            }
+            if (uri[0] !== '/') uri = '/' + uri;
+        }
+        return uri;
+    }
+
+    /**
      * Takes a string with channel information in the form:
      * -1|111:343$808080,2|0:255$FF0000 and parses it into an object that contains
      * the respective channel information/properties
@@ -152,11 +175,12 @@ export default class Misc {
      *
      * @static
      * @param {string} server the server
+     * @param {string} prefixed_uri the (potentially prefixed) uri
      * @param {number} image_id the image_idr
      * @param {Object} settings the image settings
      * @return {string} the url representing a link to the image
      */
-    static assembleImageLink(server="", image_id, settings={}) {
+    static assembleImageLink(server="", prefixed_uri, image_id, settings={}) {
         // we have no server => we are relative
         // therefore we are going to have to use the hostname
         // at a minimum (localhost) or protocol plus hostname
@@ -173,9 +197,8 @@ export default class Misc {
                 else server = hostname;
             }
         }
-
         // the base url
-        let url = server + "/webclient/img_detail/" + image_id + '/?';
+        let url = server + prefixed_uri + "/img_detail/" + image_id + '/?';
 
         // append channel info
         if (Misc.isArray(settings.channels)) {
@@ -186,7 +209,7 @@ export default class Misc {
                 url += (chan.active ? "" : "-") + (count+1) + "|" +
                     chan.start + ":" + chan.end +
                     (typeof chan.reverseIntensity === 'boolean' ?
-                        (chan.reverseIntensity ? '' : '-r')  : '-') + "r$" +
+                        (chan.reverseIntensity ? 'r' : '-r')  : '') + "$" +
                 chan.color;
                 count++;
             });
@@ -194,9 +217,9 @@ export default class Misc {
         }
         // append time and plane
         if (typeof settings.plane === 'number')
-            url += "z=" + settings.plane + "&";
+            url += "z=" + (settings.plane+1) + "&";
         if (typeof settings.time === 'number')
-            url += "t=" + settings.time + "&";
+            url += "t=" + (settings.time+1) + "&";
         // append projection and model
         if (typeof settings.projection === 'string')
             url += "p=" + settings.projection + "&";
@@ -204,7 +227,7 @@ export default class Misc {
             url += "m=" + settings.model + "&";
         // append resolution and and center
         if (typeof settings.resolution === 'number')
-            url += "zm=" + settings.resolution + "&";
+            url += "zm=" + parseInt((1 / settings.resolution) * 100) + "&";
         if (Misc.isArray(settings.center))
             url += "x=" + settings.center[0] + "&y=" + settings.center[1] + "&";
 

@@ -1,7 +1,9 @@
 import {noView} from 'aurelia-framework';
 import {IMAGE_CONFIG_UPDATE} from '../events/events';
 import Misc from '../utils/misc';
-import {REQUEST_PARAMS, CHANNEL_SETTINGS_MODE} from '../utils/constants'
+import {
+    REQUEST_PARAMS, WEBGATEWAY, CHANNEL_SETTINGS_MODE
+} from '../utils/constants'
 
 /**
  * Holds basic image information required for viewing:
@@ -176,7 +178,9 @@ export default class ImageInfo {
         let dataType = "json";
         if (Misc.useJsonp(this.context.server)) dataType += "p";
 
-        let url = this.context.server + "/webgateway/imgData/" + this.image_id + '/';
+        let url =
+            this.context.server + this.context.getPrefixedURI(WEBGATEWAY) +
+            "/imgData/" + this.image_id + '/';
 
         $.ajax(
             {url : url,
@@ -252,10 +256,10 @@ export default class ImageInfo {
         this.range = response.pixel_range;
         this.dimensions = {
             t: initialTime !== null ?
-                parseInt(initialTime) : response.rdefs.defaultT,
+                (parseInt(initialTime)-1) : response.rdefs.defaultT,
             max_t : response.size.t,
             z: initialPlane !== null ?
-                parseInt(initialPlane) : response.rdefs.defaultZ,
+                (parseInt(initialPlane)-1) : response.rdefs.defaultZ,
             max_z : response.size.z
         };
         // do we have a scalebar
@@ -317,7 +321,10 @@ export default class ImageInfo {
      * @memberof ImageInfo
      */
     requestImgRDef(callback = null) {
-        $.ajax({url : this.context.server + "/webgateway/getImgRDef/",
+        $.ajax({
+            url : this.context.server +
+                    this.context.getPrefixedURI(WEBGATEWAY) +
+                        "/getImgRDef/",
             dataType : Misc.useJsonp(this.context.server) ? 'jsonp' : 'json',
             cache : false,
             success : (response) => {
@@ -351,8 +358,9 @@ export default class ImageInfo {
         let dataType = "json";
         if (Misc.useJsonp(this.context.server)) dataType += "p";
 
-        let url = this.context.server + "/webgateway/imgData/" +
-         this.image_id + '/?getDefaults=true';
+        let url =
+            this.context.server + this.context.getPrefixedURI(WEBGATEWAY) +
+            "/imgData/" + this.image_id + '/?getDefaults=true';
 
         $.ajax(
             {url : url,
