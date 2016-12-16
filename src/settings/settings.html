@@ -2,45 +2,34 @@
     <require from="../utils/converters"></require>
     <require from="./channel-settings"></require>
 
-    <div class="btn-group" style="margin: 5px">
+    <div class="btn-group save-settings" style="margin: 5px">
         <button type="button"
             disabled="${image_config && image_config.image_info &&
                 image_config.image_info.can_save_settings &&
                 image_config.history.length > 0 && image_config.historyPointer >= 0 ?
                 '': 'disabled'}"
-            class="btn btn-default btn btn-default btn-xs ${image_config && image_config.image_info &&
-                image_config.image_info.can_save_settings &&
-                image_config.history.length > 0 && image_config.historyPointer >= 0 ?
-                '' : 'disabled-color'}"
+            class="btn btn-default btn-xs"
             click.delegate="saveImageSettings()">Save
         </button>
         <button type="button"
             disabled="${image_config && image_config.image_info &&
                 image_config.image_info.can_save_settings ? '': 'disabled'}"
-            class="btn btn-default btn-xs  ${image_config && image_config.image_info &&
-                image_config.image_info.can_save_settings ? '' : 'disabled-color'}"
+            class="btn btn-default btn-xs"
             click.delegate="saveImageSettingsToAll()">Save to All
         </button>
     </div>
 
-    <div class="btn-group" style="margin: 5px">
+    <div class="btn-group history" style="margin: 5px">
         <button type="button" click.delegate="undo()"
             disabled="${image_config && image_config.history.length > 0 &&
                 image_config.historyPointer >= 0 ? '' : 'disabled'}"
-            class="btn btn-default btn-xs  ${image_config && image_config.history.length > 0 &&
-                image_config.historyPointer >= 0 ? '' : 'disabled-color'}">Undo</button>
+            class="btn btn-default btn-xs">Undo</button>
         <button type="button" click.delegate="redo()"
             disabled="${image_config && image_config.history.length > 0 &&
                 image_config.historyPointer < image_config.history.length-1 ? '' :'disabled'}"
-            class="btn btn-default btn-xs  ${image_config && image_config.history.length > 0 &&
-                image_config.historyPointer < image_config.history.length-1 ?
-                 '' : 'disabled-color'}">Redo</button>
+            class="btn btn-default btn-xs">Redo</button>
         <button type="button" click.delegate="copy()" class="btn btn-default btn-xs">Copy</button>
-        <button type="button"
-            class="btn btn-default btn-xs  ${image_config && image_config.image_info &&
-                image_config.image_info.copied_img_rdef &&
-                image_config.image_info.copied_img_rdef.imageId ===
-                image_config.image_info.image_id ? '' : 'disabled-color'}"
+        <button type="button" class="btn btn-default btn-xs"
             disabled="${image_config && image_config.image_info &&
                 image_config.image_info.copied_img_rdef &&
                 image_config.image_info.copied_img_rdef.imageId ===
@@ -57,19 +46,17 @@
                Grayscale
            </label>
         </div>
-        <div class="col-xs-6
-                    ${image_config && image_config.image_info &&
-                        image_config.image_info.has_histogram
-                            ? '' : 'disabled-color'}">
-            <input type="checkbox"
-                class="${image_config && image_config.image_info &&
+        <div class="col-xs-6">
+            <label  class="${image_config && image_config.image_info &&
                     image_config.image_info.has_histogram
-                        ? '' : 'disabled-color'}"
+                        ? '' : 'disabled-color'}">
+            <input type="checkbox"
                 disabled="${image_config && image_config.image_info &&
                     image_config.image_info.has_histogram
-                        ? '' : 'disabled-color'}"
+                        ? '' : 'disabled'}"
                 change.delegate="toggleHistogram($event.target.checked)" />
-            &nbsp;Show Histogram
+            Show Histogram
+            </label>
         </div>
     </div>
 
@@ -78,7 +65,7 @@
     </div>
 
     <div class="row" style="height: 100%">
-        <channel-settings class="full-width" config_id.bind="config_id"></channel-settings>
+        <channel-settings config_id.bind="config_id"></channel-settings>
     </div>
 
     <div class="row">

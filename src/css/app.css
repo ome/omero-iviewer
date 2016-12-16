@@ -64,9 +64,6 @@ a.ui-button:active,
 .ui-icon-triangle-1-s,.ui-icon-triangle-1-n {
     height: 100%;
 }
-.full-width {
-    width: 100%;
-}
 /** JQUERY UI adjustments END **/
 
 /** SPECTRUM colorpicker adjustments START **/
@@ -78,11 +75,11 @@ a.ui-button:active,
 }
 .color-range-spectrum-container {
     position: relative!important;
-    width: 176px;
+    width: 195px;
     height: 220px;
     right: 100px;
     top: 12px!important;
-    left: -150px!important;
+    left: -180px!important;
 }
 .shape-fill-color-replacer .sp-preview {
     margin-left: 2px;
@@ -99,12 +96,26 @@ a.ui-button:active,
 }
 .color-spectrum-container {
     position: absolute!important;
-    width: 186px;
+    width: 195px;
     height: 270px;
     top: 100px!important;
     left: 10px!important;
     line-height: 30px;
 }
+.color-spectrum-container .sp-picker-container {
+    padding: 4px;
+    width: 184px;
+}
+.color-spectrum-container .sp-input-container {
+    width: 135px;
+}
+.color-spectrum-container .sp-thumb {
+    width: 42px;
+}
+.color-spectrum-container span {
+    width: 21px;
+}
+
 .color-spectrum-container span {
     background-image: none;
 }
@@ -116,9 +127,20 @@ a.ui-button:active,
 /** SPECTRUM colorpicker adjustments END **/
 
 .disabled-color {
-    color: #c0c0c0!important;
+    cursor:not-allowed;
+    filter:alpha(opacity=65);
+    -webkit-box-shadow:none;
+    box-shadow:none;
+    opacity:.65;
 }
-
+.header-content {
+    height: 40px;
+}
+.header-content label {
+    margin-left: 5px;
+    line-height: 40px;
+    font-weight: normal;
+}
 .link-url {
     height: 40px;
 }
@@ -282,8 +304,8 @@ thumbnail-slider img {
 .right-hand-panel .row {
     min-width: 350px;
     max-width: 800px;
-    line-height: 30px;
     height: 30px;
+    margin-bottom: 2px;
     margin-left: 2px;
     margin-right: 0px;
 }
@@ -330,10 +352,10 @@ thumbnail-slider img {
     background: #f8f8f8;
     border: 1px solid #000;
     display: none;
-    position: absolute;
+    position: relative;
     z-index: 1000;
-    top: 32px;
-    right: 5px;
+    top: 12px;
+    left: -230px;
     max-height: 250px;
     overflow-y: auto;
     width: 250px;
@@ -361,7 +383,15 @@ thumbnail-slider img {
     line-height: 13px;
     font-size: 13px;
 }
-
+.luts-color-picker {
+    margin-bottom: 5px;
+}
+.luts-color-picker .sp-replacer {
+    width: 145px;
+}
+.luts-color-picker .sp-preview {
+    width: 115px;
+}
 .channel-mode {
     margin-top: 2px;
     width: 100%;
@@ -599,14 +629,8 @@ thead, tbody {
     background-color: transparent;
 }
 
-.shapes-edit .edit-button {
-    line-height: 25px;
-    height: 28px;
-    width: 30px;
-    margin-left: 2px;
-}
 .shapes-edit .dropdown-menu {
-    left: -130px;
+    left: -55px;
 }
 .shapes-persistence div {
     float: left;
@@ -615,34 +639,44 @@ thead, tbody {
 .shape-fill-color, .shape-stroke-color {
     float: left;
     height: 32px;
-    margin-bottom: 2px;
-    margin-left: 2px;
+    margin-left: 5px;
+    margin-right: 5px;
 }
 
 .shape-stroke-width, .shape-font-size {
+    margin-right: 5px;
     float: left;
     padding-top: 2px;
 }
 
 .shape-stroke-width .ui-spinner {
-    min-width: 30px;
-    max-width: 30px;
+    min-width: 50px;
+    max-width: 50px;
     line-height: 28px;
     height: 28px;
 }
 .shape-font-size .ui-spinner {
-    min-width: 38px;
-    max-width: 38px;
+    min-width: 50px;
+    max-width: 50px;
     line-height: 28px;
     height: 28px;
 }
 .shape-font-size span {
     max-width: 38px;
 }
-
+.shapes-edit {
+    line-height: 30px;
+    margin: 5px;
+}
+.shape-edit-button {
+    width: 100px;
+    margin-left: 5px;
+}
 .shape-edit-comment {
-    min-width: 110px;
-    width: 30%;
+    margin-left: 5px;
+    margin-right: 5px;
+    min-width: 100px;
+    width: 75%;
     float: left;
 }
 .shape-edit-comment input {
@@ -652,10 +686,12 @@ thead, tbody {
 }
 
 .arrow-button .dropdown-menu {
-    left: -20px;
+    left: -5px;
     min-width: 20px;
 }
-
+.regions-drawing-mode {
+    line-height: 30px;
+}
 .drawing-mode {
     float: left;
     margin-left: 2px;
@@ -681,7 +717,7 @@ thead, tbody {
 .regions-propagation-options input {
     float: left;
     height: 28px;
-    line-height: 28px;
+    line-height: 30px;
 }
 
 .regions-propagation-options .aligned-text-input {
