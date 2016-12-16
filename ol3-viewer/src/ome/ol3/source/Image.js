@@ -154,7 +154,7 @@ ome.ol3.source.Image = function(options) {
         console.error("The given server information is invalid!");
 
 	/**
- 	 * the uri to use (incl. a porential prefix)
+ 	 * the uri for image requests
  	 * @type {string}
  	 * @private
  	 */

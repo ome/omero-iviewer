@@ -1218,7 +1218,7 @@ ome.ol3.Viewer.prototype.getId = function() {
 }
 
 /**
- * Gets a (possibly prefixed uri)
+ * Returns the (possibly prefixed) uri for a resource
  *
  * @param {string} resource the resource name
  * @return {string\null} the prefixed URI or null (if not found)
@@ -1242,7 +1242,7 @@ ome.ol3.Viewer.prototype.getPrefixedURI = function(resource) {
 }
 
 /**
- * Reads the prefixed uris that we need
+ * Reads (possibly prefixed) uris from the parameters
  *
  * @param {Object} params the parameters handed in
  */
