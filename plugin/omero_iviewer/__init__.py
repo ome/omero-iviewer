@@ -1,1 +1,1 @@
-default_app_config = 'omero_viewer.apps.IviewerAppConfig'
+default_app_config = 'omero_iviewer.apps.IviewerAppConfig'
