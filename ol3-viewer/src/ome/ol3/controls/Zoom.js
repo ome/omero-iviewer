@@ -77,8 +77,8 @@ ome.ol3.controls.Zoom.prototype.addZoomButton_ = function(zoom_in) {
     element.appendChild(document.createTextNode(label));
 
     ol.events.listen(element, ol.events.EventType.CLICK,
-        ome.ol3.controls.Zoom.prototype.handleClick_.bind(
-            this, this.delta_ * (zoom_in ? 1 : -1)));
+        ome.ol3.controls.Zoom.prototype.handleClick_,
+        this);
 
     return element;
 };
@@ -92,22 +92,42 @@ ome.ol3.controls.Zoom.prototype.addDisplayField_ = function() {
     zoomDisplayElement.className = this.class_name_ + '-display';
     zoomDisplayElement.setAttribute('type', 'input');
 
+    var percent = document.createElement('button');
+    percent.className = 'ol-zoom-percent';
+    percent.title = 'Click to apply Zoom Value';
+    percent.appendChild(document.createTextNode("%"));
     ol.events.listen(
-        zoomDisplayElement, "change",
+        percent, "click",
         function() {
-            var map = this.getMap();
-            var view = map ? map.getView() : null;
-            if (view === null) return;
-
-            var constrainedResolution =
-                 view.constrainResolution(
-                     1 / (parseInt(zoomDisplayElement.value) / 100), 0, 0);
-            view.setResolution(constrainedResolution);
-            zoomDisplayElement.value =
-                parseInt((1 / view.getResolution()) * 100);
+            this.changeResolution_(parseInt(zoomDisplayElement.value));
         },this);
 
-    return zoomDisplayElement;
+    var element = document.createElement('div');
+    element.appendChild(zoomDisplayElement);
+    element.appendChild(percent);
+
+    return element;
+}
+
+/**
+ * Changes the resolution to the given value
+ * @param {number} value the new value
+ * @private
+ */
+ome.ol3.controls.Zoom.prototype.changeResolution_ = function(value) {
+    var map = this.getMap();
+    var view = map ? map.getView() : null;
+    if (view === null) return;
+
+    if (!isNaN(value)) {
+        if (value < 0 ) value = 0;
+        var constrainedResolution =
+            view.constrainResolution(1 / (value / 100), 0, 0);
+            view.setResolution(constrainedResolution);
+    }
+    var zoomDisplayElement = document.getElementsByClassName('ol-zoom-display');
+    if (zoomDisplayElement.length === 0) return;
+    zoomDisplayElement[0].value = parseInt((1 / view.getResolution()) * 100);
 }
 
 /**
@@ -157,24 +177,17 @@ ome.ol3.controls.Zoom.prototype.addFitToExtentButton_ = function() {
 };
 
 /**
- * @param {number} delta Zoom delta.
  * @param {Event} event The event to handle
  * @private
  */
-ome.ol3.controls.Zoom.prototype.handleClick_ = function(delta, event) {
+ome.ol3.controls.Zoom.prototype.handleClick_ = function(event) {
     event.preventDefault();
-    this.zoomByDelta_(delta);
-};
 
-/**
- * @param {number} delta Zoom delta.
- * @private
-*/
-ome.ol3.controls.Zoom.prototype.zoomByDelta_ = function(delta) {
     var map = this.getMap();
     var view = map.getView();
     if (!view) return;
 
+    var delta = event.target.className.indexOf("ol-zoom-out") !== -1 ? -1 : 1;
     var currentResolution = view.getResolution();
     if (currentResolution) {
         if (this.duration_ > 0) {
