@@ -133,7 +133,7 @@ ome.ol3.controls.Zoom.prototype.changeResolution_ = function(value) {
     }
     var zoomDisplayElement = document.getElementsByClassName('ol-zoom-display');
     if (zoomDisplayElement.length === 0) return;
-    zoomDisplayElement[0].value = parseInt((1 / view.getResolution()) * 100);
+    zoomDisplayElement[0].value = Math.round((1 / view.getResolution()) * 100);
 }
 
 /**
