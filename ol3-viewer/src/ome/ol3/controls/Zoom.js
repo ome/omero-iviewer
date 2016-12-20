@@ -91,6 +91,12 @@ ome.ol3.controls.Zoom.prototype.addDisplayField_ = function() {
     var zoomDisplayElement = document.createElement('input');
     zoomDisplayElement.className = this.class_name_ + '-display';
     zoomDisplayElement.setAttribute('type', 'input');
+    ol.events.listen(
+        zoomDisplayElement, "keyup",
+        function(event) {
+            if (event.keyCode === 13)
+                this.changeResolution_(parseInt(zoomDisplayElement.value));
+        },this);
 
     var percent = document.createElement('button');
     percent.className = 'ol-zoom-percent';
