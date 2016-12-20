@@ -8,17 +8,15 @@
         regions_info !== null && regions_info.data !== null">
 
         <div class="row shapes-persistence" style="padding-top: 2px">
-            <div>
-                <button type="button" class="btn-xs"
+            <div class="btn-group" style="margin: 5px;">
+                <button type="button" class="btn btn-default btn-xs"
                     click.delegate="saveShapes()">Save
                 </button>
                 <button type="button"
                     disabled="${regions_info.history &&
                         regions_info.history.history.length > 0 &&
                          regions_info.history.historyPointer >= 0 ? '' : 'disabled'}"
-                    class="btn-xs  ${regions_info.history &&
-                        regions_info.history.history.length > 0 &&
-                        regions_info.history.historyPointer >= 0 ? '' : 'disabled-color'}"
+                    class="btn btn-default btn-xs"
                     click.delegate="undoHistory()">Undo
                 </button>
                 <button type="button"
@@ -27,17 +25,13 @@
                          regions_info.history.historyPointer <
                          regions_info.history.history.length-1 ?
                           '' :'disabled'}"
-                    class="btn-xs  ${regions_info.history &&
-                            regions_info.history.history.length > 0 &&
-                            regions_info.history.historyPointer <
-                            regions_info.history.history.length-1 ?
-                                '' : 'disabled-color'}"
+                    class="btn btn-default btn-xs"
                     click.delegate="redoHistory()">Redo
                 </button>
             </div>
 
-            <div class="dropdown rois-dropdown" style="margin-left: 5px;">
-                <button type="button" class="btn-xs dropdown-toggle"
+            <div class="dropdown rois-dropdown" style="margin: 5px;">
+                <button type="button" class="btn btn-default btn-xs dropdown-toggle"
                         data-toggle="dropdown">Delete
                 </button>
                 <ul class="dropdown-menu">
@@ -45,12 +39,12 @@
                                     regions_info.selected_shapes.length !== 0"
                         click.delegate="deleteShapes()"><a href="#">Delete</a></li>
                     <li click.delegate="deleteShapes(true)"><a href="#">Delete All</a></li>
-                    <!--li click.delegate="deleteShapes(true, true)"><a href="#">Undo All Deletes</a></li-->
                 </ul>
             </div>
 
             <div class="checkbox checkbox-settings" style="line-height: 20px;">
-                <label><input style="line-height: 20px;" type="checkbox"
+                <label>
+                    <input style="line-height: 20px;" type="checkbox"
                     change.delegate="showComments($event.target.checked)">
                     Show Comments
                 </label>

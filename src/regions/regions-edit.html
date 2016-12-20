@@ -3,10 +3,10 @@
             <div class="shape-fill-color"><input class="spectrum-input"/></div>
             <div class="shape-stroke-color"><input class="spectrum-input"/></div>
             <div class="shape-stroke-width"><input /></div>
-            <div class="shape-edit-comment"><input value="Comment"/></div>
-            <div class="shape-font-size"><input /></div>
+
             <div class="dropdown rois-dropdown arrow-button">
-                <button type="button" class="btn-xs dropdown-toggle disabled-color"
+                <button type="button"
+                    class="btn btn-default btn-sm dropdown-toggle disabled-color"
                     disabled="disabled"
                 data-toggle="dropdown">&lt;-&gt;</button>
                 <ul class="dropdown-menu">
@@ -16,7 +16,8 @@
             </div>
 
             <div class="dropdown rois-dropdown">
-                <button type="button" class="btn-xs dropdown-toggle edit-button"
+                <button type="button"
+                    class="btn btn-default btn-sm dropdown-toggle shape-edit-button"
                 data-toggle="dropdown">Edit
                 </button>
                 <ul class="dropdown-menu">
@@ -31,6 +32,10 @@
                     <li click.delegate="setEditMode(true)"><a href="#">Modify</a></li>
                 </ul>
             </div>
+        </div>
+        <div class="row shapes-edit">
+            <div class="shape-edit-comment"><input value="Comment"/></div>
+            <div class="shape-font-size"><input /></div>
         </div>
     </div>
 </template>

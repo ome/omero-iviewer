@@ -3,14 +3,16 @@
     <div style="min-width: 200px;">
         <span class="collapsible-regions-header">Drawing Mode & Propagation</span>
         <div click.delegate="toggleRegionsDrawingMode()"
-            class="regions-drawing-mode-toggler collapse-up"></div>
+            class="regions-drawing-mode-toggler collapse-up"
+            style="margin-right: 5px;">
+        </div>
     </div>
     <hr />
     <div class="regions-drawing-mode">
         <div class="drawing-mode">
             <input class='propagate-mode'
                 click.delegate="onDrawingModeChange(true,$event.target.checked)"
-                type="checkbox" />
+                type="checkbox" style="margin-top: 10px"/>
             <span>&nbsp;Propagate</span>
         </div>
         <div class="row regions-propagation-options">
@@ -70,7 +72,7 @@
             </div>
         </div>
         <div class="drawing-mode"><input class='viewed-mode'
-            checked="checked"
+            checked="checked" style="margin-top: 10px"
             click.delegate="onDrawingModeChange(false,$event.target.checked)"
                 type="checkbox" />
                 <span>&nbsp;Attach to viewed Z and T</span>

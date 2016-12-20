@@ -11,31 +11,30 @@
             </div>
         </div>
 
-        <div class="checkbox col-xs-6">
+        <div class="header-content col-xs-9">
             <button
-                disabled="disabled" class="btn-xs split_channels disabled-color"
+                disabled="disabled"
+                class="btn btn-default btn-sm split_channels disabled-color"
                 click.delegate="toggleSplitChannels()"
+                style="line-height: 20px;margin-bottom:5px"
                 value="normal">
                 Split Channels
             </button>
 
-            <label class="has_scalebar"><input type="checkbox"
-               checked.bind="context.show_scalebar"
-              change.delegate="toggleScalebar()">Show Scalebar</label>
-              <span>&nbsp;</span>
+            <label class="has_scalebar">
+                <input type="checkbox"
+                checked.bind="context.show_scalebar"
+                change.delegate="toggleScalebar()">&nbsp;Show Scalebar
+            </label>
 
             <label class="${image_info === null ||
                  image_info.projection === 'split' ? 'disabled-color' : ''}">
                  <input type="checkbox"
                         disabled.bind="image_info === null ||
                             image_info.projection === 'split'"
-                    class="${image_info === null ||
-                        image_info.projection === 'split' ? 'disabled-color' : ''}"
                checked.bind="context.show_regions"
-              change.delegate="toggleRegions()">Show ROIs</label>
+              change.delegate="toggleRegions()">&nbsp;Show ROIs</label>
 
         </div>
-
-        <div class="col-xs-3">&nbsp;</div>
     </nav>
 </template>
