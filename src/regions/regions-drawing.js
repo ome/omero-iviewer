@@ -5,8 +5,10 @@ import Misc from '../utils/misc';
 import {Utils} from '../utils/regions';
 import {Converters} from '../utils/converters';
 import { REGIONS_MODE, REGIONS_DRAWING_MODE} from '../utils/constants';
-import {REGIONS_DRAW_SHAPE, REGIONS_SHAPE_GENERATED, REGIONS_GENERATE_SHAPES,
-        EventSubscriber} from '../events/events';
+import {
+    REGIONS_DRAW_SHAPE, REGIONS_SHAPE_GENERATED,
+    REGIONS_GENERATE_SHAPES, REGIONS_CHANGE_MODES, EventSubscriber
+} from '../events/events';
 
 /**
  * Represents the regions drawing palette in the right hand panel
@@ -43,7 +45,9 @@ export default class RegionsDrawing extends EventSubscriber {
      */
     sub_list = [
         [REGIONS_SHAPE_GENERATED,
-             (params={}) => this.onShapeDrawn(params)]];
+            (params={}) => this.onShapeDrawn(params)],
+        [REGIONS_CHANGE_MODES,
+            (params={}) => this.onModeChange(params)]];
 
     /**
      * the type of shape that is to be drawn,
@@ -63,8 +67,6 @@ export default class RegionsDrawing extends EventSubscriber {
     onShapeDrawn(params={}) {
         // if the event is for another config, forget it...
         if (params.config_id !== this.regions_info.image_info.config_id) return;
-
-        this.shape_to_be_drawn = null;
 
         let generatedShapes = [];
         if (Misc.isArray(params.shapes))
@@ -155,6 +157,23 @@ export default class RegionsDrawing extends EventSubscriber {
                 hist_id: this.regions_info.history.getHistoryId(),
                 roi_id: this.regions_info.getNewRegionsId()});
     }
+
+    /**
+     * If we had a mode change (translate/modify)
+     * we have to abort the draw mode
+     *
+     * @memberof RegionsDrawing
+     * @param {Object} params the event notification parameters
+     */
+     onModeChange(params={}) {
+         // if the event is for another config, forget it...
+         if (params.config_id !== this.regions_info.image_info.config_id) return;
+
+         this.shape_to_be_drawn = null;
+         // send drawing abort notification to ol3 viewer
+         this.context.publish(
+            REGIONS_DRAW_SHAPE, {config_id: params.config_id, abort: true});
+     }
 
     /**
      * @constructor
