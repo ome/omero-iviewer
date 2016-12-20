@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 echo "Preparing build. You are going to need npm at a minimum"
 
