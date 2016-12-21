@@ -7,10 +7,11 @@
             click.delegate="showLuts()"/>
         <div class="luts">
             <img class="luts-close" src="../css/images/close.gif"/>
-            <div>Lookup Tables</div>
+            <div class="luts-title">Colors &amp; Lookup Tables</div>
             <hr/>
             <div
-                class="${channel.reverseIntensity === null ? 'disabled-color' : ''}">
+                class="${channel.reverseIntensity === null ? 'disabled-color' : ''}"
+                style="margin-left: 2px;">
                 <input type="checkbox"
                 disabled.bind="channel.reverseIntensity === null"
                 class="${channel.reverseIntensity === null ? 'disabled-color' : ''}"

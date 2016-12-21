@@ -360,6 +360,10 @@ thumbnail-slider img {
     overflow-y: auto;
     width: 250px;
 }
+.luts-title {
+    text-align: center;
+    font-weight: bold;
+}
 .luts-close {
     position: absolute;
     top: 2px;
