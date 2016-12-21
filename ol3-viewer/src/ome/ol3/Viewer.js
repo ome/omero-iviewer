@@ -467,6 +467,15 @@ ome.ol3.Viewer = function(id, options) {
 					view: view
 				});
 
+                // listens to resolution changes
+                scope.onViewResolutionListener =
+        			ol.events.listen( // register a resolution handler for zoom display
+        				scope.viewer_.getView(), "change:resolution",
+        				function(event) {
+                            this.displayResolutionInPercent();
+        				}, scope);
+                scope.displayResolutionInPercent();
+
                 // an endMove listener to publish move events
                 if (scope.eventbus_)
                     scope.onEndMoveListener =
@@ -1581,10 +1590,13 @@ ome.ol3.Viewer.prototype.dispose = function(rememberEnabled) {
 		if (omeroImage) omeroImage.dispose();
 		this.viewer_.getLayers().clear();
 		this.viewer_.getOverlays().clear();
-        // remove any onEndMoveListener
+        // remove global ol event listeners
         if (typeof(this.onEndMoveListener) !== 'undefined' &&
                     this.onEndMoveListener)
                 ol.events.unlistenByKey(this.onEndMoveListener);
+        if (typeof(this.onViewResolutionListener) !== 'undefined' &&
+            this.onViewResolutionListener)
+                ol.events.unlistenByKey(this.onViewResolutionListener);
 		this.viewer_.dispose();
 	}
 
@@ -1761,6 +1773,21 @@ ome.ol3.Viewer.prototype.getShapeDefinition = function(shape_id) {
 
      return ome.ol3.utils.Conversion.featureToJsonObject(
          this.getRegions().idIndex_[shape_id]);
+}
+
+/**
+ * Displays resolution as a percentage
+ */
+ome.ol3.Viewer.prototype.displayResolutionInPercent = function() {
+    var zoomDisplay =
+        document.getElementsByClassName('ol-zoom-display');
+    if (typeof zoomDisplay !== 'object' ||
+            typeof zoomDisplay.length !== 'number' ||
+            zoomDisplay.length === 0) return;
+
+    zoomDisplay[0].value =
+        Math.round(
+            (1 / this.viewer_.getView().getResolution()) * 100);
 }
 
 /*

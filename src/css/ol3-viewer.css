@@ -8,37 +8,42 @@
 	transition:opacity .25s linear,visibility 0s linear;
 }
 
-/** CONTEXT MENU START **/
-#ome_context_menu {
-	background-color: white;
-	padding: 5px;
-	border: 1px solid #cccccc;
-	min-width: 150px;
-	min-height: 20px;
+/** CUSTOM ZOOM START **/
+.ol-zoom {
+    box-sizing: content-box;
+    width: 55px;
 }
-#ome_context_menu hr {
-    margin-top: 0px;
-    margin-bottom: 0px;
+.ol-zoom-1-1 {
+    width: 53px!important;
 }
-#ome_context_menu .context-head {
-	width: 95%;
-	height: 95%;
+.ol-zoom-fit {
+    width: 53px!important;;
 }
-#ome_context_menu .context-title {
-	font-weight: bold;
-	text-decoration: underline;
+.ol-zoom-in {
+    width: 53px!important;
 }
-#ome_context_menu .context-close {
-	color: black;
-	text-decoration: none;
-	position: absolute;
-	top: 0px;
-	right: 0px;
+.ol-zoom-out {
+    width: 53px!important;
 }
-.context-selected {
-	background-color: gray;
+.ol-zoom-display {
+    float: left;
+    margin-bottom: 1px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: rgba(0,60,136,.5);
+    width: 35px;
+    margin-left: 1px;
+    text-align: center;
 }
-/** CONTEXT MENU END **/
+.ol-zoom-percent {
+    float: left;
+    padding: 0px;
+    margin-left: 1px;
+    margin-top: 1px;
+    font-weight: normal;
+    width: 16px!important;
+}
+/** CUSTOM ZOOM END **/
 
 /** BIRDS EYE STYLE START **/
 .ol-overviewmap {

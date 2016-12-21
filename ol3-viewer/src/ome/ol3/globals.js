@@ -1,5 +1,4 @@
 goog.require('ol.control.Attribution');
-goog.require('ol.control.Zoom');
 goog.require('ol.control.Rotate');
 goog.require('ol.control.FullScreen');
 goog.require('ol.interaction.DragPan');
@@ -29,21 +28,12 @@ ome.ol3.WEBGATEWAY = 'WEBGATEWAY';
 ome.ol3.WEBCLIENT = 'WEBCLIENT';
 
 /**
- * a list of (possiblye prefixed) uri resources we need
+ * a list of (possibly prefixed) uri resources we need
  *
  * @const
  * @type {Array.<string>}
  */
 ome.ol3.PREFIXED_URIS = [ome.ol3.WEBGATEWAY, ome.ol3.WEBCLIENT];
-
-
-/**
- * the default resolutions: [2.25, 2.0, 1.75, 1.5,1.25,1.0,0.75,0.5, 0.25]
- *
- * @const
- * @type {Array.<number>}
- */
-ome.ol3.DEFAULT_RESOLUTIONS = [2.25, 2.0, 1.75, 1.5,1.25,1.0,0.75,0.5, 0.25];
 
 /**
  * A lookup table to get or set dimension indices
@@ -89,7 +79,7 @@ ome.ol3.AVAILABLE_VIEWER_CONTROLS = {
 		 "enabled": false,
 		 "links" : []},
 	"zoom" :
-		{"clazz" : ol.control.Zoom,
+		{"clazz" : ome.ol3.controls.Zoom,
 		 "options": {},
 	 	 "defaults": true,
 		 "enabled": true,
@@ -157,7 +147,7 @@ ome.ol3.AVAILABLE_VIEWER_INTERACTIONS = {
 			"links" : []},
 	"mouseWheelZoom" : {"clazz" : ol.interaction.MouseWheelZoom,
 			"options":
-			{"zoomDuration" : null},
+			{"duration" : 0, "timeout": 0},
 			"defaults": true,
 			"enabled": true,
 			"links" : []},
