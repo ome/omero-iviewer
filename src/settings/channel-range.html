@@ -19,6 +19,34 @@
                 &nbsp;Reverse Intensity
             </div>
             <hr/>
+            <div class="luts-preview luts-item" style="background-color: #FF0000"
+                click.delegate="chooseLut('#FF0000')">
+                <div class="luts-name">red</div>
+            </div>
+            <div class="luts-preview luts-item" style="background-color: #00FF00"
+                click.delegate="chooseLut('#00FF00')">
+                <div class="luts-name">green</div>
+            </div>
+            <div class="luts-preview luts-item" style="background-color: #0000FF"
+                click.delegate="chooseLut('#0000FF')">
+                <div class="luts-name">blue</div>
+            </div>
+            <div class="luts-preview luts-item" style="background-color: #FFFFFF"
+                click.delegate="chooseLut('#FFFFFF')">
+                <div class="luts-name">white</div>
+            </div>
+            <div class="luts-preview luts-item" style="background-color: #FFFF00"
+                click.delegate="chooseLut('#FFFF00')">
+                <div class="luts-name">yellow</div>
+            </div>
+            <div class="luts-preview luts-item" style="background-color: #FF00FF"
+                click.delegate="chooseLut('#FF00FF')">
+                <div class="luts-name">magenta</div>
+            </div>
+            <div class="luts-preview luts-item" style="background-color: #00FFFF"
+                click.delegate="chooseLut('#00FFFF')">
+                <div class="luts-name">cyan</div>
+            </div>
             <div class="luts-item" repeat.for="[id, lut] of luts"
                 click.delegate="chooseLut(id)">
                 <div class="luts-preview" css="background-image:
