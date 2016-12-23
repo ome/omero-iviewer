@@ -700,9 +700,9 @@ ome.ol3.source.Regions.prototype.setProperty =
         typeof value === 'undefined' ||
         typeof this.idIndex_ !== 'object') return;
 
-    let changedFeatures = [];
-    let changedProperties = [];
-    let changedValues = [];
+    var changedFeatures = [];
+    var changedProperties = [];
+    var changedValues = [];
     var eventProperty = null;
     for (var r in roi_shape_ids) {
         var s = roi_shape_ids[r];
@@ -710,39 +710,39 @@ ome.ol3.source.Regions.prototype.setProperty =
         if (this.idIndex_[s] instanceof ol.Feature) {
             // we allow to toggle the selected state
             // as well as the state for removed, modified and rollback deletes
-            if (this.select_ instanceof ome.ol3.interaction.Select) {
-                var presentState = null;
-                if (property === 'selected' && value)
-                    this.select_.getFeatures().push(this.idIndex_[s]);
-                else if ((property === 'selected' || property === 'visible') &&
-                    !value) {
-                    this.select_.toggleFeatureSelection(
-                        this.idIndex_[s], false);
-                } else if (property === 'state') {
-                    presentState = this.idIndex_[s][property];
-                    if (value === ome.ol3.REGIONS_STATE.REMOVED) {
+            var presentState = null;
+            var hasSelect = (this.select_ instanceof ome.ol3.interaction.Select);
+            if (hasSelect && property === 'selected' && value)
+                this.select_.getFeatures().push(this.idIndex_[s]);
+            else if (hasSelect && !value &&
+                        (property === 'selected' || property === 'visible')) {
+                this.select_.toggleFeatureSelection(
+                    this.idIndex_[s], false);
+            } else if (property === 'state') {
+                presentState = this.idIndex_[s][property];
+                if (value === ome.ol3.REGIONS_STATE.REMOVED) {
+                    if (hasSelect)
                         this.select_.toggleFeatureSelection(
                             this.idIndex_[s], false);
-                        // we have already done this
-                        if (presentState !== ome.ol3.REGIONS_STATE.REMOVED &&
-                            (typeof this.idIndex_[s]["old_state"] !== 'number' ||
-                                this.idIndex_[s]["old_state"] !== ome.ol3.REGIONS_STATE.ADDED))
-                                    this.idIndex_[s]["old_state"] = presentState;
-                        eventProperty = "deleted";
-                    } else if (value === ome.ol3.REGIONS_STATE.MODIFIED) {
-                        // we are presently deleted
-                        // so all we do is remember the modification as the
-                        // 'old_state' in case of a rollback
-                        if (presentState === ome.ol3.REGIONS_STATE.REMOVED) {
-                            this.idIndex_[s]["old_state"] = value;
-                            continue;
-                        } else if (presentState === ome.ol3.REGIONS_STATE.ADDED)
-                            // we maintain the added state at all times
-                            this.idIndex_[s]["old_state"] = presentState;
-                        eventProperty = "modified";
-                    } else if (value === ome.ol3.REGIONS_STATE.ROLLBACK)
-                        eventProperty = "rollback";
-                }
+                    // we have already done this
+                    if (presentState !== ome.ol3.REGIONS_STATE.REMOVED &&
+                        (typeof this.idIndex_[s]["old_state"] !== 'number' ||
+                            this.idIndex_[s]["old_state"] !== ome.ol3.REGIONS_STATE.ADDED))
+                                this.idIndex_[s]["old_state"] = presentState;
+                    eventProperty = "deleted";
+                } else if (value === ome.ol3.REGIONS_STATE.MODIFIED) {
+                    // we are presently deleted
+                    // so all we do is remember the modification as the
+                    // 'old_state' in case of a rollback
+                    if (presentState === ome.ol3.REGIONS_STATE.REMOVED) {
+                        this.idIndex_[s]["old_state"] = value;
+                        continue;
+                    } else if (presentState === ome.ol3.REGIONS_STATE.ADDED)
+                        // we maintain the added state at all times
+                        this.idIndex_[s]["old_state"] = presentState;
+                    eventProperty = "modified";
+                } else if (value === ome.ol3.REGIONS_STATE.ROLLBACK)
+                    eventProperty = "rollback";
             }
 
             // in the case where we are deleting a newly added shape

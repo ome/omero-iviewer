@@ -102,6 +102,10 @@ export default class RegionsDrawing extends EventSubscriber {
         // (i.e. drawing mode other that z and t viewed)
         // these checks are vital otherwise we risk a chain reaction
         if (typeof params.drawn !== 'boolean') params.drawn = false;
+        // we continue drawing with the same shape
+        if (params.drawn)
+            this.onDrawShape(
+                this.supported_shapes.indexOf(this.shape_to_be_drawn), true);
         if (!params.drawn || len === 0) return;
 
         // collect dimensions for propagation
@@ -136,14 +140,17 @@ export default class RegionsDrawing extends EventSubscriber {
      *
      * @memberof RegionsDrawing
      * @param {number} index the index matching an entry in the supported_shapes array
+     * @param {boolean} force we force drawing continuation
      */
-    onDrawShape(index) {
+    onDrawShape(index, force) {
+        if (typeof force !== 'boolean') force = false;
         let new_shape_type = this.supported_shapes[index];
         let abort = false;
 
         // if the shape to be drawn is already active =>
         // abort the drawing, otherwise choose new shape type
-        if (this.shape_to_be_drawn &&
+        // unless we want to force continuation
+        if (!force && this.shape_to_be_drawn &&
             this.shape_to_be_drawn === new_shape_type) {
             abort = true;
             this.shape_to_be_drawn = null;

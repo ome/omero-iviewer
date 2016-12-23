@@ -13,10 +13,9 @@ goog.require('ol.interaction.Draw');
  * @extends {Object}
  * @param {Array} previous_modes the previously set interaction modes on the regions
  * @param {ome.ol3.source.Regions} regions_reference an Regions instance.
- * @param {boolean=} keep_drawing an (optional) flag whether to remain in draw mode or not
 */
 ome.ol3.interaction.Draw =
-    function(previous_modes, regions_reference, keep_drawing) {
+    function(previous_modes, regions_reference) {
 	if (!ome.ol3.utils.Misc.isArray(previous_modes))
         console.error("Draw needs the prevously set modes as an array");
 
@@ -29,16 +28,6 @@ ome.ol3.interaction.Draw =
      * @private
      */
     this.regions_ = regions_reference;
-
-    /**
-	 * flag that determines whether we keep drawing or
-     * automatically end the interaction after drawing
-	 *
-	 * @type {boolean}
-	 * @private
-	 */
-	this.keep_drawing_ =
-        (typeof keep_drawing === 'boolean') ? keep_drawing : true;
 
 	/**
 	 * array of moded presently used
@@ -205,7 +194,7 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
             this.rois_id_ = 0;
         }
 
-        if (!this.keep_drawing_) this.endDrawingInteraction();
+        this.endDrawingInteraction();
 	};
 
 	// create a new draw interaction removing possible existing ones first
@@ -284,9 +273,7 @@ ome.ol3.interaction.Draw.prototype.endDrawingInteraction = function() {
     if (this.ol_draw_) {
         this.regions_.viewer_.viewer_.removeInteraction(this.ol_draw_);
         this.ol_draw_ = null;
-        var revertToOldModes =
-            function() {this.regions_.setModes(this.previous_modes_);};
-        setTimeout(revertToOldModes.bind(this), 100);
+        this.regions_.setModes(this.previous_modes_);
     }
 };
 
