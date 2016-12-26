@@ -288,7 +288,10 @@ export default class Settings extends EventSubscriber {
         imgInf.channels.map(
             (c) =>
                 url+= (i !== 0 ? ',' : '') + (!c.active ? '-' : '') + (++i) +
-                 "|" + c.window.start + ":" + c.window.end + "$" + c.color);
+                 "|" + c.window.start + ":" + c.window.end +
+                    (typeof c.reverseIntensity === 'boolean' ?
+                        (c.reverseIntensity ? 'r' : '-r') : '') +
+                 "$" + c.color);
 
         // save to all differs from copy in that it is a POST with data
         // instead of a JSON(P) GET, as well as the success handler
@@ -407,6 +410,19 @@ export default class Settings extends EventSubscriber {
                        new_val: newColor,
                        type: 'string'});
                     actChannel.color = copiedChannel.color;
+                }
+                if (typeof copiedChannel.reverseIntensity === 'undefined')
+                    copiedChannel.reverseIntensity = null;
+                if (actChannel.reverseIntensity !==
+                        copiedChannel.reverseIntensity) {
+                            history.push({
+                                prop: ['image_info',
+                                    'channels', '' + i, 'reverseIntensity'],
+                                old_val : actChannel.reverseIntensity,
+                                new_val: copiedChannel.reverseIntensity,
+                                type: 'boolean'});
+                    actChannel.reverseIntensity =
+                        copiedChannel.reverseIntensity;
                 }
             };
         if (history.length > 0) {

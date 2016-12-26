@@ -321,6 +321,17 @@ export default class ImageInfo {
      * @memberof ImageInfo
      */
     requestImgRDef(callback = null) {
+        if (callback === null)
+            callback = (rdef) => {
+                if (rdef === null || typeof rdef.c !== 'string') return;
+                let channels = Misc.parseChannelParameters(rdef.c);
+                // we only allow copy and paste with same number of channels
+                // and compatible range
+                if (!Misc.isArray(channels) ||
+                        channels.length != this.channels.length ||
+                        rdef.pixel_range != this.range.join(":"))
+                            this.copied_img_rdef = null;
+            }
         $.ajax({
             url : this.context.server +
                     this.context.getPrefixedURI(WEBGATEWAY) +
@@ -330,9 +341,7 @@ export default class ImageInfo {
             success : (response) => {
                 if (typeof response !== 'object' || response === null ||
                     typeof response.rdef !== 'object' ||
-                    response.rdef === null ||
-                    typeof response.rdef.imageId !== 'number' ||
-                    response.rdef.imageId !== this.image_id)
+                    response.rdef === null)
                         this.copied_img_rdef = null;
                 else this.copied_img_rdef = response.rdef;
                 if (typeof callback === 'function')

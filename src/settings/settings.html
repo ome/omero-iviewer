@@ -31,9 +31,7 @@
         <button type="button" click.delegate="copy()" class="btn btn-default btn-xs">Copy</button>
         <button type="button" class="btn btn-default btn-xs"
             disabled="${image_config && image_config.image_info &&
-                image_config.image_info.copied_img_rdef &&
-                image_config.image_info.copied_img_rdef.imageId ===
-                image_config.image_info.image_id ? '' : 'disabled'}"
+                image_config.image_info.copied_img_rdef ? '' : 'disabled'}"
             click.delegate="paste()">Paste</button>
     </div>
 
