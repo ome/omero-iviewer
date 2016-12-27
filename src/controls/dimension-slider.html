@@ -4,7 +4,7 @@
         click.delegate="onArrowClick(dim === 'z' ? 1 : -1)">
   </div>
   <div name="dim"
-        style="float:left ${dim === 'z' ? ';height: 90%' : ';width: 90%'}">
+        css="float: left; ${dim === 'z' ? 'height: 90%' : 'width: 90%'}">
         <span class='slider-value'></span>
   </div>
   <div class="dim-arrows
