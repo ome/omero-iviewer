@@ -37,7 +37,7 @@ export class Index  {
     attached() {
         window.onresize =
         () => this.context.publish(IMAGE_VIEWER_RESIZE,
-                {config_id: -1, window_resize: true});
+                {config_id: -1, is_dragging: false, window_resize: true});
     }
 
     /**
