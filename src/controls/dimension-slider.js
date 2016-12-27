@@ -248,10 +248,16 @@ export default class DimensionSlider extends EventSubscriber {
                 sliderValueSpan.show();
             },
             stop: (event, ui) => {
+                let upKey = this.dim === 'z' ? 38 : 39;
+                let downKey = this.dim === 'z' ? 40 : 37;
+                let newVal = ui.value;
+                if (event.keyCode === upKey) newVal = Math.ceil(newVal);
+                else if (event.keyCode === downKey) newVal = Math.floor(newVal);
+                else newVal = Math.round(ui.value);
                 let sliderValueSpan = $(this.elSelector + ' .slider-value');
                 sliderValueSpan.text("");
                 sliderValueSpan.hide();
-                $(this.elSelector).slider('value',  Math.round(ui.value));
+                $(this.elSelector).slider('value',  newVal);
             },
             change: (event, ui) => this.onChange(ui.value,
                 event.originalEvent ? true : false)
