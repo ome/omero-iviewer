@@ -243,6 +243,7 @@ export default class DimensionSlider extends EventSubscriber {
             min: 0, max: imgInf.dimensions['max_' + this.dim] - 1 ,
             step: 0.01, value: imgInf.dimensions[this.dim],
             slide: (event, ui) => {
+                if (typeof event.keyCode === 'number') return;
                 let sliderValueSpan = $(this.elSelector + ' .slider-value');
                 sliderValueSpan.text(
                     this.dim.toUpperCase() + ":" + Math.round(ui.value+1));
