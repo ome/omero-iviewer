@@ -243,7 +243,17 @@ export default class DimensionSlider extends EventSubscriber {
             min: 0, max: imgInf.dimensions['max_' + this.dim] - 1 ,
             step: 0.01, value: imgInf.dimensions[this.dim],
             slide: (event, ui) => {
-                if (typeof event.keyCode === 'number') return;
+                if (typeof event.keyCode === 'number') {
+                    let upKey =
+                        (event.keyCode === 38 || event.keyCode === 39);
+                    let downKey =
+                        (event.keyCode === 37 || event.keyCode === 40);
+                    let newVal = ui.value;
+                    if (upKey) newVal = Math.ceil(newVal);
+                    else if (downKey) newVal = Math.floor(newVal);
+                    $(this.elSelector).slider('value',  newVal);
+                    return false;
+                }
                 let sliderValueSpan = $(this.elSelector + ' .slider-value');
                 sliderValueSpan.text(
                     this.dim.toUpperCase() + ":" + Math.round(ui.value+1));
@@ -253,16 +263,10 @@ export default class DimensionSlider extends EventSubscriber {
                 sliderValueSpan.show();
             },
             stop: (event, ui) => {
-                let upKey = (event.keyCode === 38 || event.keyCode === 39);
-                let downKey = (event.keyCode === 37 || event.keyCode === 40);
-                let newVal = ui.value;
-                if (upKey) newVal = Math.ceil(newVal);
-                else if (downKey) newVal = Math.floor(newVal);
-                else newVal = Math.round(ui.value);
                 let sliderValueSpan = $(this.elSelector + ' .slider-value');
                 sliderValueSpan.text("");
                 sliderValueSpan.hide();
-                $(this.elSelector).slider('value',  newVal);
+                $(this.elSelector).slider('value',  Math.round(ui.value));
             },
             change: (event, ui) => this.onChange(ui.value,
                 event.originalEvent ? true : false)
