@@ -1,3 +1,14 @@
 <template>
-  <div name="dim"><span class='slider-value'></span></div>
+  <div class="dim-arrows
+                ${dim === 'z' ? 'dim-arrow-up' : 'dim-arrow-left'}"
+        click.delegate="onArrowClick(dim === 'z' ? 1 : -1)">
+  </div>
+  <div name="dim"
+        css="float: left; ${dim === 'z' ? 'height: 90%' : 'width: 90%'}">
+        <span class='slider-value'></span>
+  </div>
+  <div class="dim-arrows
+                ${dim === 'z' ? 'dim-arrow-down' : 'dim-arrow-right'}"
+                click.delegate="onArrowClick(dim === 'z' ? -1 : 1)">
+  </div>
 </template>

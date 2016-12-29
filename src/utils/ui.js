@@ -52,13 +52,15 @@ export default class Ui {
                               {"margin-right": '' + (-x-5) + 'px',
                                "padding-right": '' + (x+15) + 'px'});
                 }
+                eventbus.publish(IMAGE_VIEWER_RESIZE,
+                    {config_id: -1, is_dragging: true, window_resize: false});
             });
         });
 
         $(document).mouseup((e) => {
             $(document).unbind('mousemove');
             eventbus.publish(IMAGE_VIEWER_RESIZE,
-                {config_id: -1, window_resize: false});
+                {config_id: -1, is_dragging: false, window_resize: false});
         });
     }
 
@@ -84,10 +86,11 @@ export default class Ui {
     /**
      * Binds panel collapse handlers
      *
-     * @params {string} uri_prefix a uri prefix for resource requests
+     * @param {object} eventbus the eventbus for publishing
+     * @param {string} uri_prefix a uri prefix for resource requests
      * @static
      */
-    static bindCollapseHandlers(uri_prefix) {
+    static bindCollapseHandlers(eventbus, uri_prefix) {
         if (typeof uri_prefix !== 'string') uri_prefix = '';
         $('.left-split img, .right-split img').mousedown(
             (e) => {e.preventDefault(); e.stopPropagation();});
@@ -138,6 +141,8 @@ export default class Ui {
                 $('.frame').css(
                     {"margin-right": '' + (-newWidth-5) + 'px',
                      "padding-right": '' + (newWidth+15) + 'px'});
+            eventbus.publish(IMAGE_VIEWER_RESIZE,
+                {config_id: -1, is_dragging: true, window_resize: false});
         });
     }
 
@@ -154,7 +159,7 @@ export default class Ui {
         this.unbindResizeHandlers();
         this.unbindCollapseHandlers();
         this.bindResizeHandlers(eventbus);
-        this.bindCollapseHandlers(uri_prefix);
+        this.bindCollapseHandlers(eventbus, uri_prefix);
     }
 
     /**

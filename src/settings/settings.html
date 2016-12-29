@@ -4,16 +4,15 @@
 
     <div class="btn-group save-settings" style="margin: 5px">
         <button type="button"
-            disabled="${image_config && image_config.image_info &&
+            disabled.bind="!(image_config && image_config.image_info &&
                 image_config.image_info.can_save_settings &&
-                image_config.history.length > 0 && image_config.historyPointer >= 0 ?
-                '': 'disabled'}"
+                image_config.history.length > 0 && image_config.historyPointer >= 0)"
             class="btn btn-default btn-xs"
             click.delegate="saveImageSettings()">Save
         </button>
         <button type="button"
-            disabled="${image_config && image_config.image_info &&
-                image_config.image_info.can_save_settings ? '': 'disabled'}"
+            disabled.bind="!(image_config && image_config.image_info &&
+                image_config.image_info.can_save_settings)"
             class="btn btn-default btn-xs"
             click.delegate="saveImageSettingsToAll()">Save to All
         </button>
@@ -21,19 +20,17 @@
 
     <div class="btn-group history" style="margin: 5px">
         <button type="button" click.delegate="undo()"
-            disabled="${image_config && image_config.history.length > 0 &&
-                image_config.historyPointer >= 0 ? '' : 'disabled'}"
+            disabled.bind="!(image_config && image_config.history.length > 0 &&
+                image_config.historyPointer >= 0)"
             class="btn btn-default btn-xs">Undo</button>
         <button type="button" click.delegate="redo()"
-            disabled="${image_config && image_config.history.length > 0 &&
-                image_config.historyPointer < image_config.history.length-1 ? '' :'disabled'}"
+            disabled.bind="!(image_config && image_config.history.length > 0 &&
+                image_config.historyPointer < image_config.history.length-1)"
             class="btn btn-default btn-xs">Redo</button>
         <button type="button" click.delegate="copy()" class="btn btn-default btn-xs">Copy</button>
         <button type="button" class="btn btn-default btn-xs"
-            disabled="${image_config && image_config.image_info &&
-                image_config.image_info.copied_img_rdef &&
-                image_config.image_info.copied_img_rdef.imageId ===
-                image_config.image_info.image_id ? '' : 'disabled'}"
+            disabled.bind="!(image_config && image_config.image_info &&
+                image_config.image_info.copied_img_rdef)"
             click.delegate="paste()">Paste</button>
     </div>
 
@@ -47,13 +44,11 @@
            </label>
         </div>
         <div class="col-xs-6">
-            <label  class="${image_config && image_config.image_info &&
-                    image_config.image_info.has_histogram
-                        ? '' : 'disabled-color'}">
+            <label class="${image_config && image_config.image_info &&
+                    image_config.image_info.has_histogram ? '' : 'disabled-color'}">
             <input type="checkbox"
-                disabled="${image_config && image_config.image_info &&
-                    image_config.image_info.has_histogram
-                        ? '' : 'disabled'}"
+                disabled.bind="!(image_config && image_config.image_info &&
+                    image_config.image_info.has_histogram)"
                 change.delegate="toggleHistogram($event.target.checked)" />
             Show Histogram
             </label>

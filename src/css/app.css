@@ -216,7 +216,7 @@ a.ui-button:active,
     z-index: 3;
     max-height: 25px;
     margin-left: -30px;
-    padding-left: 75px
+    padding-left: 75px;
 }
 
 .plane-slider {
@@ -227,6 +227,30 @@ a.ui-button:active,
     height:100%;
     padding-top: 15px;
     padding-bottom: 40px;
+}
+
+.dim-arrows {
+    float: left;
+    background-repeat: no-repeat;
+    background-position: center;
+    width: 10px;
+    height: 10px;
+}
+.dim-arrow-up {
+    background-image: url('images/blue_arrow_up.gif');
+    margin-bottom: 10px;
+}
+.dim-arrow-down {
+    background-image: url('images/blue_arrow_down.gif');
+    margin-top: 10px;
+}
+.dim-arrow-left {
+    background-image: url('images/blue_arrow_left.gif');
+    margin-right: 10px;
+}
+.dim-arrow-right {
+    background-image: url('images/blue_arrow_right.gif');
+    margin-left: 10px;
 }
 
 .sidebar {

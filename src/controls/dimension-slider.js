@@ -6,7 +6,7 @@ import {inject,customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {slider} from 'jquery-ui/ui/widgets/slider';
 
 import {
-    IMAGE_CONFIG_UPDATE, IMAGE_DIMENSION_CHANGE,
+    IMAGE_CONFIG_UPDATE, IMAGE_DIMENSION_CHANGE, IMAGE_VIEWER_RESIZE,
     EventSubscriber
 } from '../events/events';
 
@@ -52,7 +52,9 @@ export default class DimensionSlider extends EventSubscriber {
      * @type {Array.<string,function>}
      */
     sub_list = [[IMAGE_CONFIG_UPDATE,
-                    (params = {}) => this.onImageConfigChange(params)]];
+                    (params = {}) => this.onImageConfigChange(params)],
+                [IMAGE_VIEWER_RESIZE,
+                    (params = {}) => this.onViewerResize()]];
 
     /**
      * @constructor
@@ -83,14 +85,15 @@ export default class DimensionSlider extends EventSubscriber {
     }
 
     /**
-     * Overridden aurelia lifecycle method:
-     * fired when PAL (dom abstraction) is ready for use
+     * Adjusts widget dynamically in case of panel/window resizing
      *
      * @memberof DimensionSlider
      */
-    attached() {
-        if (this.dim === 'z')
-            $(this.elSelector).height("100%");
+    onViewerResize() {
+        if (this.dim === 't')
+            $(this.elSelector).width($(this.elSelector).parent().width()-50);
+        else
+            $(this.elSelector).height($(this.elSelector).parent().height()-40);
     }
 
     /**
@@ -185,7 +188,8 @@ export default class DimensionSlider extends EventSubscriber {
          if (this.context.getImageConfig(params.config_id) === null) return;
          this.image_config = this.context.getImageConfig(params.config_id);
          this.bind();
-         this.updateSlider()
+         this.updateSlider();
+         setTimeout(this.onViewerResize.bind(this), 100);
      }
 
     /**
@@ -239,6 +243,17 @@ export default class DimensionSlider extends EventSubscriber {
             min: 0, max: imgInf.dimensions['max_' + this.dim] - 1 ,
             step: 0.01, value: imgInf.dimensions[this.dim],
             slide: (event, ui) => {
+                if (typeof event.keyCode === 'number') {
+                    let upKey =
+                        (event.keyCode === 38 || event.keyCode === 39);
+                    let downKey =
+                        (event.keyCode === 37 || event.keyCode === 40);
+                    let newVal = ui.value;
+                    if (upKey) newVal = Math.ceil(newVal);
+                    else if (downKey) newVal = Math.floor(newVal);
+                    $(this.elSelector).slider('value',  newVal);
+                    return false;
+                }
                 let sliderValueSpan = $(this.elSelector + ' .slider-value');
                 sliderValueSpan.text(
                     this.dim.toUpperCase() + ":" + Math.round(ui.value+1));
@@ -260,8 +275,17 @@ export default class DimensionSlider extends EventSubscriber {
             this.dim.toUpperCase() + ":" +
             (imgInf.dimensions[this.dim]+1) + "/" +
                 imgInf.dimensions['max_' + this.dim]);
-        this.attached();
         this.show();
+    }
+
+    /**
+     * Arrow Click Handler
+     *
+     * @memberof DimensionSlider
+     */
+    onArrowClick(step) {
+        let oldVal = $(this.elSelector).slider('value');
+        $(this.elSelector).slider('value',  oldVal + step);
     }
 
     /**
