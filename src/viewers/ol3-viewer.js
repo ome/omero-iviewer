@@ -8,10 +8,10 @@ import {Converters} from '../utils/converters';
 import Ui from '../utils/ui';
 import {inject, customElement, bindable} from 'aurelia-framework';
 import {ol3} from '../../libs/ol3-viewer.js';
-import {IVIEWER} from '../utils/constants';
+import {IVIEWER, RENDER_STATUS} from '../utils/constants';
 import {
     IMAGE_CONFIG_UPDATE, IMAGE_VIEWER_RESIZE, IMAGE_VIEWER_SCALEBAR,
-    IMAGE_DIMENSION_CHANGE, IMAGE_SETTINGS_CHANGE,
+    IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY, IMAGE_SETTINGS_CHANGE,
     REGIONS_SET_PROPERTY, REGIONS_PROPERTY_CHANGED,
     VIEWER_IMAGE_SETTINGS, IMAGE_VIEWER_SPLIT_VIEW,
     REGIONS_DRAW_SHAPE, REGIONS_CHANGE_MODES, REGIONS_SHOW_COMMENTS,
@@ -44,6 +44,13 @@ export default class Ol3Viewer extends EventSubscriber {
     image_config = null;
 
     /**
+     * the info needed for the play loop
+     * @memberof Ol3Viewer
+     * @type {number}
+     */
+    player_info = {dim: null, forwards: null, handle: null};
+
+    /**
      * events we subscribe to
      * @memberof Ol3Viewer
      * @type {Array.<string,function>}
@@ -57,6 +64,8 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.showScalebar(params.visible)],
         [IMAGE_DIMENSION_CHANGE,
             (params={}) => this.changeDimension(params)],
+        [IMAGE_DIMENSION_PLAY,
+            (params={}) => this.playDimension(params)],
         [IMAGE_SETTINGS_CHANGE,
             (params={}) => this.changeImageSettings(params)],
         [REGIONS_PROPERTY_CHANGED,
@@ -711,5 +720,86 @@ export default class Ol3Viewer extends EventSubscriber {
             window.localStorage.setItem(
                 "omero_iviewer.copied_shapes",
                 JSON.stringify(this.image_config.regions_info.copied_shapes));
+    }
+
+    /**
+     * Starts/Stops dimension play
+     *
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     * @return
+     */
+    playDimension(params = {}) {
+        // the event doesn't concern us or we don't have the minimum params
+        // needed to properly process the event
+        if (params.config_id !== this.config_id  ||
+            typeof params.forwards !== 'boolean' ||
+            typeof params.dim !== 'string' ||
+            (params.dim !== 'z' && params.dim !== 't')) return;
+
+        // the stop function
+        let stopPlay = (() => {
+            if (this.player_info.handle !== null)
+                clearInterval(this.player_info.handle);
+            this.player_info.dim = null;
+            this.player_info.forwards = null;
+            this.player_info.handle = null;
+            this.viewer.getRenderStatus(true);
+        }).bind(this);
+
+        // check explicit stop flag (we default to true if not there)
+        if (typeof params.stop !== 'boolean') params.stop = true;
+        let forwards = params.forwards;
+        // we stop the play loop if either we have the stop flag set to true
+        // or the dimension to be played has changed
+        // for both cases an existing loop handle needs to be there
+        if ((params.stop && this.player_info.handle !== null) ||
+                (!params.stop && this.player_info.handle !== null &&
+                    (params.dim !== this.player_info.dim ||
+                    forwards !== this.player_info.forwards))) stopPlay();
+
+        // only if stop is false we continue to start
+        if (params.stop) return;
+
+        let delay =
+            (typeof params.delay === 'number' && params.delay >= 100) ?
+                params.delay : 250;
+
+        // bounds and present dimension index
+        let dims = this.image_config.image_info.dimensions;
+        let dim = params.dim;
+        let min_dim = 0;
+        var max_dim = dims['max_' + dim]-1;
+        var pres_dim = dims[dim];
+
+        // we can go no further
+        if (max_dim === 0 ||
+             (forwards && pres_dim >= max_dim) ||
+             (!forwards && pres_dim <= min_dim)) return;
+
+        this.player_info.dim = dim;
+        this.player_info.forwards = forwards;
+        this.player_info.handle =
+            setInterval(
+                () => {
+                    // if we get an in progress status the dimension has not yet
+                    // rendered and we return to wait for the next iteration
+                    let renderStatus = this.viewer.getRenderStatus();
+                    if (renderStatus === RENDER_STATUS.IN_PROGRESS) return;
+
+                    // get present dim index and check if we have hit a bound
+                    // if so => abort play
+                    pres_dim = dims[dim];
+                    if (renderStatus === RENDER_STATUS.ERROR ||
+                            (forwards && pres_dim >= max_dim) ||
+                            (!forwards && pres_dim <= min_dim)) {
+                                stopPlay(); return;}
+
+                    // arrange for the render status to be watched
+                    if (!this.viewer.watchRenderStatus(true))
+                        this.viewer.getRenderStatus(true);
+                    // set the new dimension index
+                    dims[dim] = pres_dim + (forwards ? 1 : -1);
+                }, delay);
     }
 }

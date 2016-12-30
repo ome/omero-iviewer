@@ -233,24 +233,40 @@ a.ui-button:active,
     float: left;
     background-repeat: no-repeat;
     background-position: center;
-    width: 10px;
-    height: 10px;
+    background-size: 10px 10px;
+    width: 12px;
+    height: 12px;
 }
 .dim-arrow-up {
     background-image: url('images/blue_arrow_up.gif');
     margin-bottom: 10px;
 }
+.player-up {
+    background-image: url('images/blue_play_up.gif');
+}
 .dim-arrow-down {
     background-image: url('images/blue_arrow_down.gif');
     margin-top: 10px;
+}
+.player-down {
+    background-image: url('images/blue_play_down.gif');
 }
 .dim-arrow-left {
     background-image: url('images/blue_arrow_left.gif');
     margin-right: 10px;
 }
+.player-left {
+    background-image: url('images/blue_play_left.gif');
+}
 .dim-arrow-right {
     background-image: url('images/blue_arrow_right.gif');
     margin-left: 10px;
+}
+.player-right {
+    background-image: url('images/blue_play_right.gif');
+}
+.player-stop {
+    background-image: url('images/blue_square.gif');
 }
 
 .sidebar {

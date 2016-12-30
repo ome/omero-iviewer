@@ -296,6 +296,23 @@ ome.ol3.REGIONS_MODE = {
 	/** draw interaction */
 	"DRAW" : 4
 };
+
+/**
+ * Enum for Render Status.
+ * @static
+ * @enum {number}
+ */
+ome.ol3.RENDER_STATUS = {
+    /** we did no render watching */
+    "NOT_WATCHED" : 0,
+    /** we are watching and in progress */
+    "IN_PROGRESS" : 1,
+    /** we watched and are fininshed rendering */
+    "RENDERED" : 2,
+    /** we watched and got tile load errors  */
+    "ERROR" : 3
+};
+
 goog.exportSymbol(
 	'ome.ol3.REGIONS_MODE',
 	ome.ol3.REGIONS_MODE,

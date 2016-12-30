@@ -6,7 +6,7 @@ import {inject,customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {slider} from 'jquery-ui/ui/widgets/slider';
 
 import {
-    IMAGE_CONFIG_UPDATE, IMAGE_DIMENSION_CHANGE, IMAGE_VIEWER_RESIZE,
+    IMAGE_CONFIG_UPDATE, IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY, IMAGE_VIEWER_RESIZE,
     EventSubscriber
 } from '../events/events';
 
@@ -47,6 +47,13 @@ export default class DimensionSlider extends EventSubscriber {
     @bindable dim = 't';
 
     /**
+     * the info needed for the play loop (bound via template)
+     * @memberof DimensionSlider
+     * @type {number}
+     */
+    @bindable player_info = {dim: null, forwards: null, handle: null};
+
+    /**
      * events we subscribe to
      * @memberof DimensionSlider
      * @type {Array.<string,function>}
@@ -67,6 +74,19 @@ export default class DimensionSlider extends EventSubscriber {
         this.context = context;
         this.element = element;
         this.bindingEngine = bindingEngine;
+    }
+
+    playDimension(forwards) {
+        // send out a dimension change notification
+        this.context.publish(
+            IMAGE_DIMENSION_PLAY,
+                {config_id: this.config_id,
+                 dim: this.dim,
+                 forwards: forwards,
+                 stop:
+                    this.player_info.dim !== null &&
+                        this.player_info.dim === this.dim &&
+                        this.player_info.forwards === forwards});
     }
 
     /**
@@ -91,9 +111,9 @@ export default class DimensionSlider extends EventSubscriber {
      */
     onViewerResize() {
         if (this.dim === 't')
-            $(this.elSelector).width($(this.elSelector).parent().width()-50);
+            $(this.elSelector).width($(this.elSelector).parent().width()-80);
         else
-            $(this.elSelector).height($(this.elSelector).parent().height()-40);
+            $(this.elSelector).height($(this.elSelector).parent().height()-80);
     }
 
     /**
@@ -243,6 +263,7 @@ export default class DimensionSlider extends EventSubscriber {
             min: 0, max: imgInf.dimensions['max_' + this.dim] - 1 ,
             step: 0.01, value: imgInf.dimensions[this.dim],
             slide: (event, ui) => {
+                if (this.player_info.handle !== null) return false;
                 if (typeof event.keyCode === 'number') {
                     let upKey =
                         (event.keyCode === 38 || event.keyCode === 39);
@@ -284,6 +305,7 @@ export default class DimensionSlider extends EventSubscriber {
      * @memberof DimensionSlider
      */
     onArrowClick(step) {
+        if (this.player_info.handle !== null) return;
         let oldVal = $(this.elSelector).slider('value');
         $(this.elSelector).slider('value',  oldVal + step);
     }

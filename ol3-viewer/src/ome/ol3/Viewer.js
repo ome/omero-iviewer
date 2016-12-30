@@ -1790,6 +1790,28 @@ ome.ol3.Viewer.prototype.displayResolutionInPercent = function() {
             (1 / this.viewer_.getView().getResolution()) * 100);
 }
 
+/**
+ * Watches the next rendering iteration (i.e. postrender event)
+ * @param {boolean} stopOnTileLoadError we don't continue watching the load
+ *                      progress if we experience tile load errors,
+ *                      defaults to false
+ * @return {boolean} true if the watch has been started, false otherwise
+ */
+ome.ol3.Viewer.prototype.watchRenderStatus = function(stopOnTileLoadError) {
+    // delegate
+    return this.getImage().watchRenderStatus(this.viewer_, stopOnTileLoadError);
+}
+
+/**
+ * Gets the present render status
+ * @params {boolean} reset if true we reset to NOT_WATCHED
+ * @return {ome.ol3.RENDER_STATUS} the render status
+ */
+ome.ol3.Viewer.prototype.getRenderStatus = function(reset) {
+    // delegate
+    return this.getImage().getRenderStatus(reset);
+}
+
 /*
  * This section determines which methods are exposed and usable after compilation
  */
@@ -1967,3 +1989,13 @@ goog.exportProperty(
     ome.ol3.Viewer.prototype,
     'getShapeDefinition',
     ome.ol3.Viewer.prototype.getShapeDefinition);
+
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
+    'watchRenderStatus',
+    ome.ol3.Viewer.prototype.watchRenderStatus);
+
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
+    'getRenderStatus',
+    ome.ol3.Viewer.prototype.getRenderStatus);
