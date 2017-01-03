@@ -99,7 +99,7 @@ export default class RegionsEdit {
             $(this.element).find(".shape-stroke-width input");
         strokeWidthSpinner.spinner({
             min: 0, disabled: true});
-        strokeWidthSpinner.spinner("value", 10);
+        strokeWidthSpinner.spinner("value", 1);
 
         let editComment = $(this.element).find(".shape-edit-comment input");
         editComment.prop("disabled", true);
@@ -353,6 +353,8 @@ export default class RegionsEdit {
             lastSelection ?
                 (typeof lastSelection.strokeWidth === 'number' ?
                     lastSelection.strokeWidth : 1) : 1;
+        if ((type === 'line' || type === 'polyline') && strokeWidth === 0)
+            strokeWidth = 1;
         strokeOptions.color =
             Converters.hexColorToRgba(strokeColor, strokeAlpha);
         strokeSpectrum.spectrum(strokeOptions);

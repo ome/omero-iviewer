@@ -499,6 +499,9 @@ ome.ol3.utils.Style.modifyStyles =
             shape_info['type'] = type;
             // check for arrow markers
             if (type === 'line' || type === 'polyline') {
+                if (typeof shape_info['strokeWidth'] === 'number' &&
+                        shape_info['strokeWidth'] === 0)
+                            shape_info['strokeWidth'] = 1;
                 if (typeof shape_info['markerStart'] === 'string')
                     feature.getGeometry().has_start_arrow_ =
                         shape_info['markerStart'] === 'Arrow';
