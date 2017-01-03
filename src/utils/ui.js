@@ -132,7 +132,7 @@ export default class Ui {
             if (newWidth === 0)
                 $(e.currentTarget).parent().css("cursor", "default");
             else
-                $(e.currentTarget).parent().css("cursor", "col-resize");
+                $(e.currentTarget).parent().css("cursor", "ew-resize");
             if (leftSplit)
                 $('.frame').css(
                     {"margin-left": '' + (-newWidth-5) + 'px',

@@ -3,7 +3,6 @@ goog.provide('ome.ol3.controls.Zoom');
 goog.require('ol');
 goog.require('ol.events');
 goog.require('ol.events.EventType');
-goog.require('ol.animation');
 goog.require('ol.control.Control');
 goog.require('ol.css');
 goog.require('ol.easing');
@@ -196,14 +195,14 @@ ome.ol3.controls.Zoom.prototype.handleClick_ = function(event) {
     var delta = event.target.className.indexOf("ol-zoom-out") !== -1 ? -1 : 1;
     var currentResolution = view.getResolution();
     if (currentResolution) {
-        if (this.duration_ > 0) {
-          map.beforeRender(ol.animation.zoom({
-            resolution: currentResolution,
-            duration: this.duration_,
-            easing: ol.easing.easeOut
-          }));
-        }
         var newResolution = view.constrainResolution(currentResolution, delta);
-        view.setResolution(newResolution);
+        if (this.duration_ > 0) {
+            if (view.getAnimating()) view.cancelAnimations();
+
+            view.animate({
+                resolution: newResolution,
+                duration: this.duration_,
+                easing: ol.easing.easeOut});
+        } else view.setResolution(newResolution);
     }
 };

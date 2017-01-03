@@ -91,18 +91,21 @@ ome.ol3.utils.Style.createFeatureStyle = function(shape_info, is_label, fill_in_
 		// we don't want spikes
 		stroke['lineCap'] = "round";
 		stroke['lineJoin'] = "round";
-		text['fill'] = forLabel ?
-                (fillStyle ? new ol.style.Fill(fill) : new ol.style.Fill(stroke)) :
-                    new ol.style.Fill(stroke);
-		//text['stroke'] = new ol.style.Stroke(stroke);
-        //text['stroke'].setWidth(1);
+		text['fill'] = new ol.style.Fill(stroke);
         text['count']++;
-	}
+	} else if (forLabel &&
+        !(text['fill'] instanceof ol.style.Fill) && fillStyle) {
+            text['fill'] = new ol.style.Fill(fill);
+            text['count']++;
+    }
     if (text['count'] > 0) {
         style['text'] = new ol.style.Text(text);
 
         // we do not wish for defaults (ol creates default fill color)
-        if (!fill_in_defaults && typeof shape_info['strokeColor'] !== 'string')
+        if (!fill_in_defaults &&
+                ((!forLabel && typeof shape_info['strokeColor'] !== 'string') ||
+                (forLabel && typeof shape_info['fillColor'] !== 'string' &&
+                    typeof shape_info['strokeColor'] !== 'string')))
             style['text'].fill_ = null;
     }
 
@@ -253,25 +256,35 @@ ome.ol3.utils.Style.updateStyleFunction = function(feature, regions_reference, f
 				var selStyle = new ol.style.Stroke();
                 var c = feature['oldStrokeStyle'] &&
                     typeof feature['oldStrokeStyle']['color'] !== 'undefined' ?
-                        feature['oldStrokeStyle']['color'] : "rgba(255,0,0,1)";
-                if (isLabel) c = "rgba(255,0,0,1)";
+                        feature['oldStrokeStyle']['color'] : "rgba(0,153,255,0.7)";
+                if (isLabel) {
+                    if (textStyle && textStyle.getFill() &&
+                        textStyle.getFill().getColor() !== null)
+                            c = textStyle.getFill().getColor();
+                    else c = "rgba(0,153,255,0.7)";
+                }
                 selStyle.setColor(c)
                 // we use width from old style if (exists)
                 var w =
                     feature['oldStrokeStyle'] &&
                         typeof feature['oldStrokeStyle']['width'] === 'number' ?
-                            feature['oldStrokeStyle']['width'] : 3;
-				selStyle.setWidth(w+1);
+                            feature['oldStrokeStyle']['width'] : 1;
+				selStyle.setWidth(w);
 				selStyle.setLineDash([5, 5]);
-				oldStyle.stroke_ = selStyle;
+                oldStyle.stroke_ = selStyle;
 			} else if (feature['oldStrokeStyle']) {
-					// restore old style
-					oldStyle.getStroke().setColor(feature['oldStrokeStyle']['color']);
-					oldStyle.getStroke().setWidth(feature['oldStrokeStyle']['width']);
-					oldStyle.getStroke().setLineDash(feature['oldStrokeStyle']['lineDash']);
-					oldStyle.getStroke().setLineCap(feature['oldStrokeStyle']['lineCap']);
-					oldStyle.getStroke().setLineJoin(feature['oldStrokeStyle']['lineJoin']);
-					oldStyle.getStroke().setMiterLimit(feature['oldStrokeStyle']['miterLimit']);
+                // restore old style
+                var w = feature['oldStrokeStyle']['width'];
+                if (w !== 0)
+                    oldStyle.stroke_ = new ol.style.Stroke({
+                        'color' : feature['oldStrokeStyle']['color'],
+                        'lineDash' : feature['oldStrokeStyle']['lineDash'],
+                        'lineCap' : feature['oldStrokeStyle']['lineCap'],
+                        'lineJoin' : feature['oldStrokeStyle']['lineJoin'],
+                        'miterLimit' : feature['oldStrokeStyle']['miterLimit'],
+                        'width' : w
+                    });
+                else oldStyle.stroke_ = null;
 			} else {
 					oldStyle.stroke_ = null;
 			}
@@ -438,7 +451,7 @@ ome.ol3.utils.Style.cloneStyle = function(style) {
  	if (!(stroke instanceof ol.style.Stroke)) return null;
 
 	var strokeColor = stroke.getColor() ? stroke.getColor() : null;
-	var strokeWidth = stroke.getWidth() ? stroke.getWidth() : 1;
+	var strokeWidth = stroke.getWidth() !== null ? stroke.getWidth() : 1;
 	var lineCap = stroke.getLineCap() ? stroke.getLineCap() : "butt";
 	var lineDash = stroke.getLineDash() ? stroke.getLineDash() : null;
 	var lineJoin = stroke.getLineJoin() ? stroke.getLineJoin() : "miter";
@@ -543,7 +556,7 @@ ome.ol3.utils.Style.modifyStyles =
 						newStrokeStyle.setLineJoin(newStyle.getStroke().getLineJoin());
 					if (newStyle.getStroke().getMiterLimit())
 						newStrokeStyle.setMiterLimit(newStyle.getStroke().getMiterLimit());
-					if (newStyle.getStroke().getWidth())
+					if (newStyle.getStroke().getWidth() !== null)
 						newStrokeStyle.setWidth(newStyle.getStroke().getWidth());
 				}
 				var newTextStyle = style.getText();

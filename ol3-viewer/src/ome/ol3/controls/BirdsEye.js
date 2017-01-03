@@ -98,7 +98,7 @@ ome.ol3.controls.BirdsEye.prototype.setMap = function(map) {
         map.getView().getProjection();
 
     this.listenerKeys.push(ol.events.listen(
-        map, ol.ObjectEventType.PROPERTYCHANGE,
+        map, ol.Object.EventType.PROPERTYCHANGE,
         this.handleMapPropertyChange_, this));
 
     if (this.ovmap_.getLayers().getLength() === 0) {
