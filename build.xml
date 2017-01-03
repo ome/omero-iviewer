@@ -7,7 +7,7 @@
 
 	<property name="version.major" value="1" />
 	<property name="version.minor" value="0" />
-    <property name="ol3-version" value="3.20.1" />
+    <property name="ol3-version" value="3.19.1" />
 
 	<property name="closure-compiler.jar" value="${basedir}/closure/compiler.jar" />
 	<property name="closure-calcdeps.py" value="${basedir}/closure/calcdeps.py" />
