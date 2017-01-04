@@ -223,7 +223,7 @@ a.ui-button:active,
     visibility: hidden;
     position: relative;
     z-index: 3;
-    max-width: 27px;
+    max-width: 25px;
     height:100%;
     padding-top: 15px;
     padding-bottom: 40px;
