@@ -4,7 +4,7 @@
                 ((dim === 't' && !player_info.forwards) ||
                 (dim === 'z' && player_info.forwards)) ? 'player-stop' :
                 dim === 't' ? 'player-left' : 'player-up'}"
-          css="${dim === 't' ? 'margin-right:5px' : 'margin-bottom:5px'}"
+          css="${dim === 't' ? 'margin: -3px 5px' : 'margin: 0px 0px 5px -3px'}"
           click.delegate="playDimension(dim==='z')">
     </div>
     <div class="dim-arrows
@@ -12,7 +12,7 @@
         click.delegate="onArrowClick(dim === 'z' ? 1 : -1)">
     </div>
     <div name="dim"
-        css="float: left; ${dim === 'z' ? 'height: 90%' : 'width: 90%'}">
+        css="float: left; ${dim === 'z' ? 'height: 70%' : 'width: 70%'}">
         <span class='slider-value'></span>
     </div>
     <div class="dim-arrows
@@ -24,7 +24,7 @@
                 ((dim === 't' && player_info.forwards) ||
                 (dim === 'z' && !player_info.forwards)) ? 'player-stop' :
                 dim === 't' ? 'player-right' : 'player-down'}"
-          css="${dim === 't' ? 'margin-left:5px' : 'margin-top:5px'}"
+          css="${dim === 't' ? 'margin: -3px 0px 5px 4px' : 'margin: 5px 0px 0px -3px'}"
           click.delegate="playDimension(dim==='t')">
     </div>
 </template>

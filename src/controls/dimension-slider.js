@@ -111,9 +111,9 @@ export default class DimensionSlider extends EventSubscriber {
      */
     onViewerResize() {
         if (this.dim === 't')
-            $(this.elSelector).width($(this.elSelector).parent().width()-80);
+            $(this.elSelector).width($(this.elSelector).parent().width()-100);
         else
-            $(this.elSelector).height($(this.elSelector).parent().height()-80);
+            $(this.elSelector).height($(this.elSelector).parent().height()-90);
     }
 
     /**

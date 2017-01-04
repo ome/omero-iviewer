@@ -223,7 +223,7 @@ a.ui-button:active,
     visibility: hidden;
     position: relative;
     z-index: 3;
-    max-width: 25px;
+    max-width: 27px;
     height:100%;
     padding-top: 15px;
     padding-bottom: 40px;
@@ -233,40 +233,44 @@ a.ui-button:active,
     float: left;
     background-repeat: no-repeat;
     background-position: center;
-    background-size: 10px 10px;
-    width: 12px;
-    height: 12px;
+    background-size: 17px 17px;
+    width: 17px;
+    height: 17px;
 }
 .dim-arrow-up {
-    background-image: url('images/blue_arrow_up.gif');
-    margin-bottom: 10px;
+    background-image: url('images/arrow-up.png');
+    margin-bottom: 8px;
+    margin-left: -3px;
 }
 .player-up {
-    background-image: url('images/blue_play_up.gif');
+    background-image: url('images/play-up.png');
 }
 .dim-arrow-down {
-    background-image: url('images/blue_arrow_down.gif');
-    margin-top: 10px;
+    background-image: url('images/arrow-down.png');
+    margin-top: 8px;
+    margin-left: -3px;
 }
 .player-down {
-    background-image: url('images/blue_play_down.gif');
+    background-image: url('images/play-down.png');
 }
 .dim-arrow-left {
-    background-image: url('images/blue_arrow_left.gif');
-    margin-right: 10px;
+    background-image: url('images/arrow-left.png');
+    margin-right: 8px;
+    margin-top: -3px;
 }
 .player-left {
-    background-image: url('images/blue_play_left.gif');
+    background-image: url('images/play-left.png');
 }
 .dim-arrow-right {
-    background-image: url('images/blue_arrow_right.gif');
-    margin-left: 10px;
+    background-image: url('images/arrow-right.png');
+    margin-left: 8px;
+    margin-top: -3px;
 }
 .player-right {
-    background-image: url('images/blue_play_right.gif');
+    background-image: url('images/play-right.png');
 }
 .player-stop {
-    background-image: url('images/blue_square.gif');
+    background-image: url('images/play-stop.png');
 }
 
 .sidebar {
