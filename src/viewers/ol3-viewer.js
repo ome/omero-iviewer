@@ -354,23 +354,25 @@ export default class Ol3Viewer extends EventSubscriber {
           params.shapes.map(
               (def) => {
                   try {
-                      let deepCopy = Object.assign({},def);
-                      // we are modified so let's update the definition
-                      // before we generate from it
-                      if (deepCopy.modified) {
-                          let upToDateDef =
-                            this.viewer.getShapeDefinition(deepCopy.shape_id);
-                          if (upToDateDef)
-                            deepCopy =
-                                Converters.makeShapeBackwardsCompatible(upToDateDef);
-                      }
-                      // for any generated shape we don't want an id
-                      // it will receive its own, new id
-                      if (params.propagated) delete deepCopy['shape_id'];
-                      deepCopy['roi_id'] = params.roi_id;
-                      this.viewer.generateShapes(deepCopy,
-                          params.number, params.random, extent, theDims,
-                          params.add_history, params.hist_id);
+                      if (!def.deleted) {
+                          let deepCopy = Object.assign({},def);
+                          // we are modified so let's update the definition
+                          // before we generate from it
+                          if (deepCopy.modified) {
+                              let upToDateDef =
+                                this.viewer.getShapeDefinition(deepCopy.shape_id);
+                              if (upToDateDef)
+                                deepCopy =
+                                    Converters.makeShapeBackwardsCompatible(upToDateDef);
+                          }
+                          // for any generated shape we don't want an id
+                          // it will receive its own, new id
+                          if (params.propagated) delete deepCopy['shape_id'];
+                          deepCopy['roi_id'] = params.roi_id;
+                          this.viewer.generateShapes(deepCopy,
+                              params.number, params.random, extent, theDims,
+                              params.add_history, params.hist_id);
+                    };
                   } catch(ignored) {}});
       }
 

@@ -24,6 +24,7 @@
         <table class="regions-table">
             <tbody>
                 <tr repeat.for="[id, shape] of regions_info.data"
+                    show.bind="!(shape.deleted && shape.is_new)"
                     id="${'roi-' + id}"
                     css="${shape.selected ?
                             'background-color: #d0d0ff;' : ''}

@@ -147,26 +147,26 @@ export default class RegionsDrawingMode {
      */
     propagateSelectedShapes() {
         let hist_id = this.regions_info.history.getHistoryId();
-        let roi_id = this.regions_info.getNewRegionsId();
-        // we loop over all selected shapes and propagate them individually
-        // since they could be in different t/z so that the propagation won't
-        // be the same for each of them
-        this.regions_info.selected_shapes.map(
-            (id) => {
-                let shape =
-                    Object.assign({}, this.regions_info.data.get(id));
-                // collect dimensions for propagation
-                let theDims =
-                    Utils.getDimensionsForPropagation(
-                        this.regions_info, shape.theZ, shape.theT);
-                if (theDims.length > 0)
-                    this.context.publish(
-                        REGIONS_GENERATE_SHAPES,
-                        {config_id : this.regions_info.image_info.config_id,
-                            shapes : [shape],
-                            number : theDims.length, random : false,
-                            roi_id: roi_id, hist_id: hist_id,
-                            theDims : theDims, propagated: true});
-            });
+         let roi_id = this.regions_info.getNewRegionsId();
+         // we loop over all selected shapes and propagate them individually
+         // since they could be in different t/z so that the propagation won't
+         // be the same for each of them
+         this.regions_info.selected_shapes.map(
+             (id) => {
+                 let shape =
+                     Object.assign({}, this.regions_info.data.get(id));
+                 // collect dimensions for propagation
+                 let theDims =
+                     Utils.getDimensionsForPropagation(
+                         this.regions_info, shape.theZ, shape.theT);
+                 if (theDims.length > 0)
+                     this.context.publish(
+                         REGIONS_GENERATE_SHAPES,
+                         {config_id : this.regions_info.image_info.config_id,
+                             shapes : [shape],
+                             number : theDims.length, random : false,
+                             roi_id: roi_id, hist_id: hist_id,
+                             theDims : theDims, propagated: true});
+             });
     }
 }

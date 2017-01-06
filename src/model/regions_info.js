@@ -174,9 +174,6 @@ export default class RegionsInfo extends EventSubscriber {
             let i = this.selected_shapes.indexOf(id);
             if (i !== -1) this.selected_shapes.splice(i, 1);
         }
-        // for deleted shapes that were new, we remove them instantly
-        if (property === 'deleted' && value &&
-                typeof shape.is_new !== 'undefined') this.data.delete(id);
     }
 
     /**
@@ -467,23 +464,13 @@ export class History {
                 let generate = undo ? rec.old_vals : rec.new_vals;
                 if (generate) { // we recreate them
                     rec.diffs.map((shape) => {
-                        let isNew =
-                            typeof shape.is_new === 'boolean' && shape.is_new;
-                        if (!isNew && shape.deleted)
-                            imgInfo.context.publish(
-                                REGIONS_SET_PROPERTY,
-                                    {config_id : imgInfo.config_id,
-                                        property: 'state',
-                                        shapes : [shape.shape_id],
-                                        value: 'undo'});
-                        else
-                            imgInfo.context.publish(
-                                REGIONS_GENERATE_SHAPES,
+                        imgInfo.context.publish(
+                            REGIONS_SET_PROPERTY,
                                 {config_id : imgInfo.config_id,
-                                 shapes : [shape], number : 1, random : false,
-                                 theDims : [{z: shape.theZ, t: shape.theT}],
-                                 add_history : false})
-                         });
+                                    property: 'state',
+                                    shapes : [shape.shape_id],
+                                    value: 'undo'});
+                    });
                 } else { // we delete them
                     let ids = [];
                     rec.diffs.map((shape) => ids.push(shape.shape_id));
