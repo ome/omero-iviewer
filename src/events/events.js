@@ -12,6 +12,8 @@ export const IMAGE_VIEWER_SPLIT_VIEW = "IMAGE_VIEWER_SPLIT_VIEW";
 export const IMAGE_SETTINGS_CHANGE = "IMAGE_SETTINGS_CHANGE";
 /** whenever an image dimension (c,t,z) changes */
 export const IMAGE_DIMENSION_CHANGE = "IMAGE_DIMENSION_CHANGE";
+/** whenever the dimension play should be started/stopped */
+export const IMAGE_DIMENSION_PLAY = "IMAGE_DIMENSION_PLAY";
 /** to set rois/shape properties such as visibility and selection */
 export const REGIONS_SET_PROPERTY = "REGIONS_SET_PROPERTY";
 /** whenever a region property change is received, e.g. selection, modification */

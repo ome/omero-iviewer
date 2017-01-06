@@ -86,3 +86,14 @@ export const REGIONS_DRAWING_MODE = {
     SELECTED_Z_AND_T : 4,
     NEITHER_Z_NOR_T : 5
 }
+
+/**
+ * the render status
+ * @type {Object}
+ */
+export const RENDER_STATUS = {
+    NOT_WATCHED : 0,
+    IN_PROGRESS : 1,
+    RENDERED : 2,
+    ERROR : 3
+}

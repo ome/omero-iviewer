@@ -170,6 +170,20 @@ ome.ol3.source.Image = function(options) {
  	 */
 	this.postTileLoadFunction_ = null;
 
+    /**
+ 	 * the present render status
+ 	 * @type {number}
+ 	 * @private
+ 	 */
+    this.render_status_ = ome.ol3.RENDER_STATUS.NOT_WATCHED;
+
+    /**
+ 	 * the present render watch handle
+ 	 * @type {number}
+ 	 * @private
+ 	 */
+    this.render_watch_ = null;
+
 	// get rest of parameters and instantiate a tile grid
 	var tileSize = opts.tile_size ||
 		{ width: ol.DEFAULT_TILE_SIZE, height: ol.DEFAULT_TILE_SIZE };
@@ -540,6 +554,85 @@ ome.ol3.source.Image.prototype.forceRender = function(clearCache) {
         this.changed();
     } catch(canHappen) {}
 }
+
+/**
+ * Watches the render status by setting up a post render event once
+ * and registering the appropriate tile load listeners
+ *
+ * @param {ol.Map} viewer a map reference for postrender
+ * @param {boolean} stopOnTileLoadError we don't continue watching the load
+ *                      progress if we experience tile load errors,
+ *                      defaults to false
+ * @return {boolean} true if the watch has been started, false otherwise
+ */
+ome.ol3.source.Image.prototype.watchRenderStatus =
+    function(viewer,stopOnTileLoadError) {
+    if (this.render_watch_ !== null) return false;
+
+    if (typeof stopOnTileLoadError !== 'boolean') stopOnTileLoadError = false;
+
+    var tilesToBeLoaded = 0;
+    var tilesLoaded = 0;
+
+    this.render_watch_ = viewer.once("postrender",
+        function(event) {
+            // register tile listeners to keep track of tile load status
+            var incToBeLoaded = function(event) {++tilesToBeLoaded;};
+            var checkLoaded = function(event) {
+                ++tilesLoaded;
+                // we are all rendered
+                if (tilesLoaded >= tilesToBeLoaded) {
+                    this.un("tileloadstart", incToBeLoaded);
+                    this.un("tileloadend", checkLoaded, this);
+                    this.un("tileloaderror", checkLoaded, this);
+                    this.render_status_ = ome.ol3.RENDER_STATUS.RENDERED;
+                    this.render_watch_ = null;
+                }
+            };
+            var checkError = stopOnTileLoadError ?
+                function(event) {
+                    ++tilesLoaded;
+                    this.un("tileloadstart", incToBeLoaded);
+                    this.un("tileloadend", checkLoaded, this);
+                    this.un("tileloaderror", checkError, this);
+                    this.render_status_ = ome.ol3.RENDER_STATUS.ERROR;
+                    this.render_watch_ = null;
+                } : checkLoaded;
+
+            this.on("tileloadstart", incToBeLoaded);
+            this.on("tileloadend", checkLoaded, this);
+            this.on("tileloaderror", checkError, this);
+
+            // check if we have tiles loading, otherwise they are in the cache
+            // already. to that end we give a delay of 50 millis
+            this.render_status_ = ome.ol3.RENDER_STATUS.IN_PROGRESS;
+            setTimeout(
+                function() {
+                    if (tilesToBeLoaded === 0) {
+                        this.un("tileloadstart", incToBeLoaded);
+                        this.un("tileloadend", checkLoaded, this);
+                        this.un("tileloaderror", checkError, this);
+                        this.render_status_ = ome.ol3.RENDER_STATUS.NOT_WATCHED;
+                        this.render_watch_ = null;
+                    };
+                }.bind(this), 50);
+        }, this);
+    return true;
+}
+
+/**
+ * Returns the render status, resetting to not watched
+ *
+ * @params {boolean} reset if true we reset to NOT_WATCHED
+ * @return {ome.ol3.RENDER_STATUS} the render status
+ */
+ome.ol3.source.Image.prototype.getRenderStatus = function(reset) {
+    if (typeof reset !== 'boolean') reset = false;
+    var ret = this.render_status_;
+    if (reset) this.render_status_ = ome.ol3.RENDER_STATUS.NOT_WATCHED;
+    return ret;
+}
+
 
 /**
  * Clean up
