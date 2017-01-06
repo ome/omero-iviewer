@@ -260,6 +260,9 @@ export default class ChannelSettings extends EventSubscriber {
                     new_val: impImgData.c[index].color,
                     type: 'string'});
             // log reverse intensity
+            //(taking into account that it might not be supported)
+            if (typeof impImgData.c[index].reverseIntensity === 'undefined')
+                impImgData.c[index].reverseIntensity = null;
             if (chan.reverseIntensity !== impImgData.c[index].reverseIntensity)
                history.push({
                    prop: ['image_info', 'channels', '' + index, 'reverseIntensity'],
