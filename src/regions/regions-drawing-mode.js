@@ -146,8 +146,10 @@ export default class RegionsDrawingMode {
      * @memberof RegionsDrawingMode
      */
     propagateSelectedShapes() {
+        let hist_id = this.regions_info.history.getHistoryId();
+        let roi_id = this.regions_info.getNewRegionsId();
         // we loop over all selected shapes and propagate them individually
-        // since they could be in different t/z so that he propagation won't
+        // since they could be in different t/z so that the propagation won't
         // be the same for each of them
         this.regions_info.selected_shapes.map(
             (id) => {
@@ -163,6 +165,7 @@ export default class RegionsDrawingMode {
                         {config_id : this.regions_info.image_info.config_id,
                             shapes : [shape],
                             number : theDims.length, random : false,
+                            roi_id: roi_id, hist_id: hist_id,
                             theDims : theDims, propagated: true});
             });
     }

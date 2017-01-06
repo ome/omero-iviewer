@@ -5,8 +5,10 @@ import Misc from '../utils/misc';
 import {Utils} from '../utils/regions';
 import {Converters} from '../utils/converters';
 import { REGIONS_MODE, REGIONS_DRAWING_MODE} from '../utils/constants';
-import {REGIONS_DRAW_SHAPE, REGIONS_SHAPE_GENERATED, REGIONS_GENERATE_SHAPES,
-        EventSubscriber} from '../events/events';
+import {
+    REGIONS_DRAW_SHAPE, REGIONS_SHAPE_GENERATED,
+    REGIONS_GENERATE_SHAPES, REGIONS_CHANGE_MODES, EventSubscriber
+} from '../events/events';
 
 /**
  * Represents the regions drawing palette in the right hand panel
@@ -43,7 +45,9 @@ export default class RegionsDrawing extends EventSubscriber {
      */
     sub_list = [
         [REGIONS_SHAPE_GENERATED,
-             (params={}) => this.onShapeDrawn(params)]];
+            (params={}) => this.onShapeDrawn(params)],
+        [REGIONS_CHANGE_MODES,
+            (params={}) => this.onModeChange(params)]];
 
     /**
      * the type of shape that is to be drawn,
@@ -63,8 +67,6 @@ export default class RegionsDrawing extends EventSubscriber {
     onShapeDrawn(params={}) {
         // if the event is for another config, forget it...
         if (params.config_id !== this.regions_info.image_info.config_id) return;
-
-        this.shape_to_be_drawn = null;
 
         let generatedShapes = [];
         if (Misc.isArray(params.shapes))
@@ -100,6 +102,10 @@ export default class RegionsDrawing extends EventSubscriber {
         // (i.e. drawing mode other that z and t viewed)
         // these checks are vital otherwise we risk a chain reaction
         if (typeof params.drawn !== 'boolean') params.drawn = false;
+        // we continue drawing with the same shape
+        if (params.drawn)
+            this.onDrawShape(
+                this.supported_shapes.indexOf(this.shape_to_be_drawn), true);
         if (!params.drawn || len === 0) return;
 
         // collect dimensions for propagation
@@ -134,14 +140,17 @@ export default class RegionsDrawing extends EventSubscriber {
      *
      * @memberof RegionsDrawing
      * @param {number} index the index matching an entry in the supported_shapes array
+     * @param {boolean} force we force drawing continuation
      */
-    onDrawShape(index) {
+    onDrawShape(index, force) {
+        if (typeof force !== 'boolean') force = false;
         let new_shape_type = this.supported_shapes[index];
         let abort = false;
 
         // if the shape to be drawn is already active =>
         // abort the drawing, otherwise choose new shape type
-        if (this.shape_to_be_drawn &&
+        // unless we want to force continuation
+        if (!force && this.shape_to_be_drawn &&
             this.shape_to_be_drawn === new_shape_type) {
             abort = true;
             this.shape_to_be_drawn = null;
@@ -155,6 +164,23 @@ export default class RegionsDrawing extends EventSubscriber {
                 hist_id: this.regions_info.history.getHistoryId(),
                 roi_id: this.regions_info.getNewRegionsId()});
     }
+
+    /**
+     * If we had a mode change (translate/modify)
+     * we have to abort the draw mode
+     *
+     * @memberof RegionsDrawing
+     * @param {Object} params the event notification parameters
+     */
+     onModeChange(params={}) {
+         // if the event is for another config, forget it...
+         if (params.config_id !== this.regions_info.image_info.config_id) return;
+
+         this.shape_to_be_drawn = null;
+         // send drawing abort notification to ol3 viewer
+         this.context.publish(
+            REGIONS_DRAW_SHAPE, {config_id: params.config_id, abort: true});
+     }
 
     /**
      * @constructor

@@ -13,8 +13,9 @@ goog.require('ol.interaction.Draw');
  * @extends {Object}
  * @param {Array} previous_modes the previously set interaction modes on the regions
  * @param {ome.ol3.source.Regions} regions_reference an Regions instance.
- */
-ome.ol3.interaction.Draw = function(previous_modes, regions_reference) {
+*/
+ome.ol3.interaction.Draw =
+    function(previous_modes, regions_reference) {
 	if (!ome.ol3.utils.Misc.isArray(previous_modes))
         console.error("Draw needs the prevously set modes as an array");
 
@@ -22,11 +23,11 @@ ome.ol3.interaction.Draw = function(previous_modes, regions_reference) {
     if (!(regions_reference instanceof ome.ol3.source.Regions))
         console.error("Draw needs Regions instance!");
 
-		/**
-	   * @type {ome.ol3.source.Regions}
-	   * @private
-	   */
-		this.regions_ = regions_reference;
+    /**
+     * @type {ome.ol3.source.Regions}
+     * @private
+     */
+    this.regions_ = regions_reference;
 
 	/**
 	 * array of moded presently used
@@ -75,10 +76,6 @@ ome.ol3.interaction.Draw = function(previous_modes, regions_reference) {
         var blue = [0, 153, 255, 0.7];
         var isLabel = geom instanceof ome.ol3.geom.Label;
         var defaultStyle = new ol.style.Style({
-            image: !isLabel ? new ol.style.Circle({radius: 6,
-                    fill: new ol.style.Fill({color: blue}),
-                    stroke: new ol.style.Stroke(
-                                {color: "#FFFFFF",width: 3 / 2})}) : null,
             fill: isLabel ?
                     new ol.style.Fill({color: blue}) :
                     new ol.style.Fill({color: transWhite}),
@@ -122,14 +119,10 @@ goog.inherits(ome.ol3.interaction.Draw, ome.ol3.interaction);
 ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
 	function(ol_shape, shape_type, geometryFunction) {
 		if (typeof(ol_shape) !== 'string' || typeof(shape_type) !== 'string' ||
-					ol_shape.length === 0 || shape_type.length === 0)
-				return;
-  var customOnDrawEnd = typeof(onDrawEnd) === 'function' ? onDrawEnd : null;
+			ol_shape.length === 0 || shape_type.length === 0) return;
 
-	// these actions take place after drawing the shape
+	// called after drawing the shape
 	var onDrawEndAction = function(event) {
-		if (customOnDrawEnd) customOnDrawEnd.call(this, event);
-
 		if (event.feature instanceof ol.Feature) {
 			// set id, type and state as new
 			event.feature.setId(
@@ -218,7 +211,6 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
 	if (shape_type === 'point')
         this.ol_draw_.mode = this.mode = ol.interaction.Draw.Mode.POINT;
 
-
 	// add the interaction to the viewer and register our after draw handler
 	this.regions_.viewer_.viewer_.addInteraction(this.ol_draw_);
 	this.ol_draw_.on(
@@ -281,9 +273,7 @@ ome.ol3.interaction.Draw.prototype.endDrawingInteraction = function() {
     if (this.ol_draw_) {
         this.regions_.viewer_.viewer_.removeInteraction(this.ol_draw_);
         this.ol_draw_ = null;
-        var revertToOldModes =
-            function() {this.regions_.setModes(this.previous_modes_);};
-        setTimeout(revertToOldModes.bind(this), 100);
+        this.regions_.setModes(this.previous_modes_);
     }
 };
 
