@@ -35,7 +35,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
-VERSION = '0.0.1'
+VERSION = '0.0.7'
 
 
 cmdclass = {}
@@ -50,7 +50,7 @@ class RunProd(Command):
         pass
 
     def run(self):
-        if not os.path.isdir('omero-iviewer/static'):
+        if not os.path.isdir('omero_iviewer/static'):
             self.spawn(['npm', 'run', 'prod'])
 
 
@@ -60,8 +60,7 @@ cmdclass['run_prod'] = RunProd
 class Sdist(setuptools.command.sdist.sdist):
 
     def run(self):
-        print os.path.isdir('omero-iviewer/static')
-        if not os.path.isdir('omero-iviewer/static'):
+        if not os.path.isdir('omero_iviewer/static'):
             self.run_command('run_prod')
         setuptools.command.sdist.sdist.run(self)
 
@@ -72,7 +71,7 @@ cmdclass['sdist'] = Sdist
 class Install(setuptools.command.install.install):
 
     def run(self):
-        if not os.path.isdir('omero-iviewer/static'):
+        if not os.path.isdir('omero_iviewer/static'):
             self.run_command('run_prod')
         setuptools.command.install.install.run(self)
 
