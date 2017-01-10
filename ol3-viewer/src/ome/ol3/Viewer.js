@@ -1457,7 +1457,9 @@ ome.ol3.Viewer.prototype.getSmallestViewExtent = function() {
     if (ome.ol3.utils.Misc.isArray(ids) && ids.length > 0 && this.regions_.idIndex_) {
         col = new ol.Collection();
         for (var id in ids)
-            if (this.regions_.idIndex_[ids[id]] instanceof ol.Feature)
+            if (this.regions_.idIndex_[ids[id]] instanceof ol.Feature &&
+                    this.regions_.idIndex_[ids[id]]['state'] !==
+                        ome.ol3.REGIONS_STATE.REMOVED)
                 col.push(this.regions_.idIndex_[ids[id]]);
     }
 

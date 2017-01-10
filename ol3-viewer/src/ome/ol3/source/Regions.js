@@ -745,22 +745,6 @@ ome.ol3.source.Regions.prototype.setProperty =
                     eventProperty = "rollback";
             }
 
-            // in the case where we are deleting a newly added shape
-            // we remove it altogether
-            if (property === 'state' &&
-                    value === ome.ol3.REGIONS_STATE.REMOVED &&
-                (presentState === ome.ol3.REGIONS_STATE.ADDED ||
-                    (presentState === ome.ol3.REGIONS_STATE.MODIFIED &&
-                        typeof this.idIndex_[s]["old_state"] === 'number' &&
-                        this.idIndex_[s]["old_state"]  ===
-                            ome.ol3.REGIONS_STATE.ADDED))) {
-                    this.removeFeature(this.idIndex_[s]);
-                    changedFeatures.push(s);
-                    changedProperties.push("deleted");
-                    changedValues.push(true);
-                    continue;
-            }
-
             // set new value
             this.idIndex_[s][property] =
                 (property === 'state' && value === ome.ol3.REGIONS_STATE.ROLLBACK) ?
