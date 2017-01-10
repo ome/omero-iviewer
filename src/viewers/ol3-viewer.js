@@ -631,8 +631,6 @@ export default class Ol3Viewer extends EventSubscriber {
                     this.image_config.regions_info.data.delete(id);
             }
         }
-        // reload shapes async
-        this.image_config.regions_info.requestData(true);
     }
 
     /**
