@@ -618,59 +618,51 @@ ome.ol3.source.Regions.prototype.storeRegions = function(roisAsJsonObject, uri) 
 	// the success handler for the POST
 	var capturedRegionsReference = this;
 	properties["success"] = function(data) {
-			 if (typeof(data) !== 'string')
-				console.error("Did not receive any data after regions post");
+		try {
+			data = JSON.parse(data);
+		} catch(parseError) {
+			data['error'] = "Failed to parse storage response";
+		}
 
-			 try {
-				 data = JSON.parse(data);
-			 } catch(parseError) {
-				 console.error("Failed to parse json response for regions storage!");
-			 }
-			 if (typeof(data['error']) === 'string') {
-				 console.error("Failed to store rois: " + data['error']);
-				 return;
-			 }
-			 if (typeof(data['ids']) === 'object') {
-				 // synchronize ids and states
-				 for (var id in data['ids']) {
-					 try {
-                         var f = capturedRegionsReference.idIndex_[id];
-                         if (f['state'] === ome.ol3.REGIONS_STATE.REMOVED)
-                            capturedRegionsReference.removeFeature(f);
-						 else {
-                            f['state'] = ome.ol3.REGIONS_STATE.DEFAULT;
-						    f.setId(data['ids'][id]);
-                        }
-						 batch['storedCount']++;
-					 } catch(wrongIndex) {}
-				 }
+        if (typeof(data['ids']) === 'object') {
+            // synchronize ids and states
+            for (var id in data['ids']) {
+                try {
+                     var f = capturedRegionsReference.idIndex_[id];
+                     if (f['state'] === ome.ol3.REGIONS_STATE.REMOVED)
+                        capturedRegionsReference.removeFeature(f);
+                	 else {
+                        f['state'] = ome.ol3.REGIONS_STATE.DEFAULT;
+                	    f.setId(data['ids'][id]);
+                    }
+                	 batch['storedCount']++;
+                 } catch(wrongIndex) {}
+            }
 
-				 // send off of next batch
-				 if (batch['nextRoiId'] !== "" && batch['nextShapeId'] !== "") {
-					 properties['content'] =
-					 	getJsonForNextBatchToPost(batch);
-						if (properties['content'] === null) {
-							console.error("Failed to construct json for rois request!");
-							return;
-						} else if (properties['content'] === "")
-							return;
+            // send off of next batch
+            if (batch['nextRoiId'] !== "" && batch['nextShapeId'] !== "") {
+                properties['content'] =
+                	getJsonForNextBatchToPost(batch);
+                if (properties['content'] === null ||
+                    properties['content'] === "") return;
 
-						// send request
-						ome.ol3.utils.Net.sendRequest(properties, this);
-				 }
+                // send request
+                ome.ol3.utils.Net.sendRequest(properties, this);
+            }
 
-                 // send out notification with shape ids
-                 var v = capturedRegionsReference.viewer_;
-                 var config_id = v.getTargetId();
-                 var eventbus = v.eventbus_;
-                 if (config_id && eventbus) // publish
-                     setTimeout(function() {
-                         eventbus.publish("REGIONS_STORED_SHAPES",
-                             {"config_id": config_id,
-                                 "shapes": data['ids']});
-                     },25);
-			 }
-		};
+            // send out notification with shape ids
+            var v = capturedRegionsReference.viewer_;
+            var config_id = v.getTargetId();
+            var eventbus = v.eventbus_;
+            if (config_id && eventbus) // publish
+             setTimeout(function() {
+                 var params = {"config_id": config_id, "shapes": data['ids']};
+                 if (typeof data['error'] === 'string')
+                    params["error"] = data['error'];
+                 eventbus.publish("REGIONS_STORED_SHAPES", params);
+             },25);
+            }
+	};
 
 	if (postContent === null) {
 		console.error("Failed to construct json for rois request!");
