@@ -88,8 +88,8 @@ def persist_rois(request, conn=None, **kwargs):
                 existing_rois = result.rois[0]
                 # loop over handed in shapes and add them to the done list
                 j = 0
-                shapesDone = {}
-                shapesDeleted = 0
+                shapes_done = {}
+                shapes_deleted = 0
                 roi_id = decoded_roi.getId().getValue()
                 for s in decoded_roi.copyShapes():
                     shape_id = s.getId().getValue()
@@ -97,22 +97,22 @@ def persist_rois(request, conn=None, **kwargs):
                     delete = roi['shapes'][j].get('markedForDeletion', None)
                     if delete is not None:
                         decoded_roi.removeShape(s)
-                        shapesDeleted += 1
-                    shapesDone[shape_id] = old_id
+                        shapes_deleted += 1
+                    shapes_done[shape_id] = old_id
                     j += 1
                 # needed for saving many shapes in same roi
                 # otherwise the update routine keeps only the modified
                 for e in existing_rois.copyShapes():
-                    found = shapesDone.get(e.getId().getValue(), None)
+                    found = shapes_done.get(e.getId().getValue(), None)
                     if found is None:
                         decoded_roi.addShape(e)
                 # finally persist them
                 update_service.saveAndReturnObject(decoded_roi)
                 # if we deleted all shapes in the roi => remove it as well
-                if existing_rois.sizeOfShapes() == shapesDeleted:
+                if existing_rois.sizeOfShapes() == shapes_deleted:
                     conn.deleteObjects("Roi", [roi_id], wait=False)
                 # update the list that contains the success ids
-                for x in shapesDone.values():
+                for x in shapes_done.values():
                     ret_ids[x] = x
     except Exception as marshalOrPersistenceException:
         # we return all successfully stored rois up to the error
