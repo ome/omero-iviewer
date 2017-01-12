@@ -89,8 +89,8 @@ setup(name="omero-iviewer",
           'Framework :: Django',
           'Intended Audience :: End Users/Desktop',
           'Intended Audience :: Science/Research',
-          'License :: OSI Approved :: GNU Affero General Public License v3 '
-          'or later (AGPLv3+)',
+          'License :: OSI Approved :: GNU Affero General Public License v3.0 '
+          'or later',
           'Natural Language :: English',
           'Operating System :: OS Independent',
           'Programming Language :: JavaScript',
@@ -106,7 +106,7 @@ setup(name="omero-iviewer",
           # http://pypi.python.org/pypi?%3Aaction=list_classifiers
       author='The Open Microscopy Team',
       author_email='ome-devel@lists.openmicroscopy.org.uk',
-      license='AGPLv3',
+      license='AGPL-3.0',
       url="https://github.com/ome/omero-iviewer/",
       download_url='https://github.com/ome/omero-iviewer/tarball/%s' % VERSION,  # NOQA
       keywords=['OMERO.web', 'plugin'],
