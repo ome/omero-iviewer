@@ -108,18 +108,17 @@ export class Converters {
     static signedIntegerColorToHexAndAlpha(signed_integer) {
         if (typeof signed_integer !== 'number') return null;
 
+        // prepare integer to be converted to hex for easier dissection
         if (signed_integer < 0) signed_integer = signed_integer >>> 0;
         let intAsHex = signed_integer.toString(16);
-        // we have to have rgb at a minimum
-        if (intAsHex.length < 6) return;
+        // pad with zeros to have 8 digits
+        intAsHex = ("00" + intAsHex).slice(-8);
 
-        // finally convert padding appropriately if we don't have 8 positions
-        if (intAsHex.length === 6) intAsHex = "11" + intAsHex; // no alpha => 1 default
-        else intAsHex = ("00" + intAsHex).slice(-8); // pad zeros to fill up (if needed)
-        let alpha = parseInt(intAsHex.substring(0,2), 16) / 255;
+        // we expect RGBA
         let hex = "#";
-        for (let i=2;i<intAsHex.length;i+=2)
+        for (let i=0;i<intAsHex.length-2;i+=2)
             hex += intAsHex.substr(i, 2);
+        let alpha = parseInt(intAsHex.substring(6,8), 16) / 255;
 
         return [hex, alpha];
     }
@@ -172,7 +171,7 @@ export class Converters {
             if (p === 'FontSize') value = shape[p].Value;
             // transform
             if (p === 'Transform')
-                value = "matrix(" + 
+                value = "matrix(" +
                     shape[p].A00 + " " + shape[p].A10 + " " +
                     shape[p].A01 + " " + shape[p].A11 + " " +
                     shape[p].A02 + " " + shape[p].A12 + ")";

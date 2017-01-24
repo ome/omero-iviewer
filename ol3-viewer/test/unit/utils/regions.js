@@ -110,9 +110,7 @@ describe("Regions", function() {
 			assert.instanceOf(features[f], ol.Feature);
 			var geom = features[f].getGeometry();
 			assert.instanceOf(geom, ol.geom.Polygon);
-			assert(ol.extent.containsExtent(
-				[0,-1000,1000,0],
-				geom.getExtent()));
+			assert(ol.extent.containsExtent([0,-1000,1000,0], geom.getExtent()));
 		}
 	});
 
