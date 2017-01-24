@@ -142,7 +142,21 @@ ome.ol3.source.Image = function(options) {
  	 * @type {boolean}
  	 * @private
  	 */
-     this.tiled_ = this.resolutions_.length > 1;
+     this.tiled_ = opts.tiled;
+
+     /**
+  	 * should we use tiled retrieval methods?
+     * for now use them only for truly tiled/pyramidal sources
+     * and images that exceed a size of 1000x1000 pixels
+     * split view is excempted as well
+  	 * @type {boolean}
+  	 * @private
+  	 */
+      this.use_tiled_retrieval_ =
+        !this.split_ &&
+            (this.tiled_ || (this.width_* this.height_) > (1000 * 1000));
+      if (!this.use_tiled_retrieval_) // 1 tile with image dimensions
+        opts.tile_size = { width: this.width_, height: this.height_};
 
 	/**
  	 * the omero server information
@@ -161,7 +175,9 @@ ome.ol3.source.Image = function(options) {
     this.uri_ =
         ome.ol3.utils.Net.checkAndSanitizeUri(
             opts.uri + '/' +
-            (this.split_ ? 'render_split_channel' : 'render_image_region'));
+            (this.split_ ? 'render_split_channel' :
+                this.use_tiled_retrieval_ ?
+                    'render_image_region' : 'render_image'));
 
 	/**
  	 * the a function that can be called as a post tile load hook
@@ -210,9 +226,9 @@ ome.ol3.source.Image = function(options) {
             if (!this.split_) { // only for non split view
     			if (this.tiled_) // for tiles we use &tile
     				url += 'tile=' + zoom + ',' + tileCoord[1] + ',' + (-tileCoord[2]-1);
-    			else // for untiled we use &region to support 'tiled' behavior
-    					url += 'region=' + (tileCoord[1] * this.tileGrid.tileSize_[0]) + ',' +
-    							((-tileCoord[2]-1) * this.tileGrid.tileSize_[1]);
+                else if (this.use_tiled_retrieval_) // use &region to support 'tiled' behavior
+    				url += 'region=' + (tileCoord[1] * this.tileGrid.tileSize_[0]) + ',' +
+    					((-tileCoord[2]-1) * this.tileGrid.tileSize_[1]);
     			url += ',' + this.tileGrid.tileSize_[0] + ',' + this.tileGrid.tileSize_[1];
                 url += '&';
             }
@@ -547,7 +563,7 @@ ome.ol3.source.Image.prototype.forceRender = function(clearCache) {
     try {
         // if we didn't get a flag we clear the cache for tiled sources only
         if (typeof clearCache !== 'boolean')
-            clearCache = this.tiled_;
+            clearCache = this.use_tiled_retrieval_;
 
         if (clearCache) this.tileCache.clear();
         else this.cache_version_++;

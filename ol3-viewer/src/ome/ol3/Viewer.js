@@ -384,8 +384,10 @@ ome.ol3.Viewer = function(id, options) {
                      img_proj:  initialProjection,
                      img_model:  initialModel,
                      split: scope.split_,
-					 tile_size:  scope.image_info_['tile_size'] ?
-					 	scope.image_info_['tile_size'] : null
+                     tiled: typeof scope.image_info_['tiles'] === 'boolean' &&
+                                scope.image_info_['tiles'],
+                     tile_size:  scope.image_info_['tile_size'] ?
+                                scope.image_info_['tile_size'] : null
 				 });
                  source.changeChannelRange(initialChannels, false);
 
