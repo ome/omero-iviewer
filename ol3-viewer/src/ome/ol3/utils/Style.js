@@ -559,7 +559,7 @@ ome.ol3.utils.Style.modifyStyles =
 						newStrokeStyle.setLineJoin(newStyle.getStroke().getLineJoin());
 					if (newStyle.getStroke().getMiterLimit())
 						newStrokeStyle.setMiterLimit(newStyle.getStroke().getMiterLimit());
-					if (newStyle.getStroke().getWidth() !== null)
+					if (typeof newStyle.getStroke().getWidth() === 'number')
 						newStrokeStyle.setWidth(newStyle.getStroke().getWidth());
 				}
 				var newTextStyle = style.getText();
