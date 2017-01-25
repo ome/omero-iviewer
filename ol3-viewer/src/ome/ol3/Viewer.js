@@ -1097,7 +1097,7 @@ ome.ol3.Viewer.prototype.setDimensionIndex = function(key, value) {
 
     // we want to affect a rerender,
     // only clearing the cache for tiled sources and channel changes
-	omeroImage.forceRender(omeroImage.tiled_ && key === 'c');
+	omeroImage.forceRender(omeroImage.use_tiled_retrieval_ && key === 'c');
 
     // update regions (if necessary)
     if (this.getRegionsLayer()) this.getRegions().changed();
