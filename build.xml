@@ -24,6 +24,8 @@
 			value="${build.dir}/ol3-viewer.js" />
 	<property name="debug.name"
 			value="${build.dir}/ol3-viewer-debug.js" />
+    <property name="test.name"
+			value="${build.dir}/ol3-viewer-test.js" />
 
 	<property name="outputwrapper" value="
 		(function (root, factory) {
@@ -78,7 +80,6 @@
 
 	<target name="compile">
 		<mkdir dir="${build.dir}" />
-		<!--WHITESPACE_ONLY -->
 		<echo message="${src}" />
 		<closure-compile  inputfiles="${src}/ome" outputfile="${dist.name}" compilationlevel="ADVANCED_OPTIMIZATIONS">
 			<extraflags>
@@ -173,20 +174,28 @@
         </exec>
 	</target>
 
-  <target name="prepare-unit-tests" depends="clean, compile-debug">
-		<exec dir="${basedir}" executable="npm">
+	<target name="unit-tests" description="runs unit tests" >
+        <echo>Fetching test libraries ....</echo>
+        <exec dir="${basedir}" executable="npm">
 			<arg line="install mocha chai mocha-phantomjs"/>
 		</exec>
-        <copy file="${debug.name}" tofile="${build.dir}/ol3-viewer-test.js"/>
-	</target>
-
-	<target name="unit-tests" depends="prepare-unit-tests" description="runs unit tests" >
-		<echo>************************************************************************************</echo>
-		<echo>IF PHANTOM.JS or MOCHA.JS or CHAI.JS CANNOT BE FOUND, RUN: 'ant prepare-unit-tests' </echo>
-		<echo>************************************************************************************</echo>
-		<exec dir="${basedir}/${ant.project.name}/test/unit" executable="${mocha-phantomjs}" >
+        <echo>Getting rid of js docs and comments (for phantomjs) ....</echo>
+        <exec executable="java" >
+            <arg value="-jar"/>
+			<arg line="${closure-compiler.jar} --compilation_level WHITESPACE_ONLY --js ${debug.name}"/>
+            <redirector output="${test.name}"/>
+		</exec>
+        <echo>Running Test Suite ....</echo>
+		<exec dir="${basedir}/test/unit" resultproperty="result" executable="${mocha-phantomjs}" >
 			<arg line="suite.html"/>
 		</exec>
+        <fail status="${result}">
+            <condition>
+                <not>
+                    <equals arg1="${result}" arg2="0"/>
+                </not>
+            </condition>
+        </fail>
 	</target>
 
 	<target name="build" depends="clean, init, compile" description="builds production version" />

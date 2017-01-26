@@ -754,7 +754,7 @@ ome.ol3.source.Regions.prototype.setProperty =
 
             // gather info for event response
             changedFeatures.push(s);
-            let val = true;
+            var val = true;
             if (eventProperty === 'rollback') {
                 eventProperty = 'deleted';
                 val = false;
