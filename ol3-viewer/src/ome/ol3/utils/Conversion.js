@@ -558,9 +558,10 @@ ome.ol3.utils.Conversion.integrateStyleIntoJsonObject = function(feature, jsonOb
 			ome.ol3.utils.Conversion.convertColorToSignedInteger(presentFillColor);
 
 	var presentStrokeStyle =
-		isLabel && presentStyle.getText() && presentStyle.getText().getStroke() ?
-			presentStyle.getText().getStroke().getColor() :
+		isLabel && presentStyle.getText() && presentStyle.getText().getFill() ?
+			presentStyle.getText().getFill().getColor() :
 				((typeof(feature['oldStrokeStyle']) === 'object' &&
+                    feature['oldStrokeStyle'] !== null &&
 					typeof(feature['oldStrokeStyle']['color']) !== 'undefined') ?
 						feature['oldStrokeStyle']['color'] : null);
 

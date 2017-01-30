@@ -197,11 +197,10 @@ ome.ol3.controls.Zoom.prototype.handleClick_ = function(event) {
     var currentResolution = view.getResolution();
     if (currentResolution) {
         if (this.duration_ > 0) {
-          map.beforeRender(ol.animation.zoom({
-            resolution: currentResolution,
-            duration: this.duration_,
-            easing: ol.easing.easeOut
-          }));
+            map.beforeRender(ol.animation.zoom({
+                resolution: currentResolution,
+                duration: this.duration_,
+                easing: ol.easing.easeOut}));
         }
         var newResolution = view.constrainResolution(currentResolution, delta);
         view.setResolution(newResolution);

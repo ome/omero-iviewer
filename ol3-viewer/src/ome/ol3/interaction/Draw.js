@@ -89,9 +89,7 @@ ome.ol3.interaction.Draw =
             new ol.style.Text(
                 { text: "TEXT",
                   font: "normal " + geom.getHeight() + "px sans-serif",
-                  fill: new ol.style.Fill({color: blue}),
-                  stroke: new ol.style.Stroke({color: blue, width: 1})}) :
-            null;
+                  fill: new ol.style.Fill({color: blue})}) : null;
         if (text) {
             //adjust scale and rotation
             var rot = this.regions_.viewer_.viewer_.getView().getRotation();
@@ -152,8 +150,7 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                 text = new ol.style.Text(
                     { text: "TEXT",
                       font: "normal " + geom.getHeight() + "px sans-serif",
-                      fill: new ol.style.Fill({color: blue}),
-                      stroke: new ol.style.Stroke({color: blue, width: 1})});
+                      fill: new ol.style.Fill({color: blue})});
             }
 
             // apply style function after setting a default style
