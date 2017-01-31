@@ -187,15 +187,20 @@ export default class ImageInfo {
             dataType : dataType,
             cache : false,
             success : (response) => {
-                // remember any associated dataset id
-                if (typeof response.meta === 'object' &&
-                        typeof response.meta.datasetId === 'number')
-                    this.dataset_id = response.meta.datasetId;
-                else this.dataset_id = null;
-
-                // delegate to break up code
+                // reset existing dataset id
+                this.dataset_id = null;
+                // read initial request params
                 this.initializeImageInfo(response);
 
+                // check for a dataset id
+                if (typeof this.dataset_id !== 'number') {
+                    if (typeof response.meta === 'object' &&
+                            typeof response.meta.datasetId === 'number')
+                        this.dataset_id = response.meta.datasetId;
+                    else this.dataset_id = null;
+                    // TODO: fall back on other strategy for image in multiple ds
+                }
+                
                 // fire off the request for the imported data,
                 // can't hurt to have handy when we need it
                 this.requestImportedData();
@@ -236,6 +241,12 @@ export default class ImageInfo {
      */
     initializeImageInfo(response) {
         // we might have some requested defaults
+        let initialDatasetId =
+            parseInt(
+                this.context.getInitialRequestParam(REQUEST_PARAMS.DATASET));
+        if (typeof initialDatasetId === 'number' &&
+                !isNaN(initialDatasetId) && initialDatasetId >= 0)
+            this.dataset_id = initialDatasetId;
         let initialTime =
             this.context.getInitialRequestParam(REQUEST_PARAMS.TIME);
         let initialPlane =
