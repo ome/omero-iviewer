@@ -207,7 +207,7 @@ describe("Conversion", function() {
 			assert.equal(jsonObject['X'] , 500);
 			assert.equal(jsonObject['Y'] , 66);
 			assert.equal(jsonObject['Text'] , "unit test");
-			assert.equal(jsonObject['StrokeColor'], -65358);
+			assert.equal(jsonObject['StrokeColor'], -8388353);
 			assert.equal(jsonObject['StrokeWidth']['@type'] , 'TBD#LengthI');
 			assert.equal(jsonObject['StrokeWidth']['Unit'] , 'PIXEL');
 			assert.equal(jsonObject['StrokeWidth']['Value'] , 2);
