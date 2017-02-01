@@ -95,7 +95,50 @@ export default class Context {
         if (typeof eventbus instanceof EventAggregator)
             throw "Invalid EventAggregator given!"
 
-        let server = optParams[REQUEST_PARAMS.SERVER];
+        // process request params and assign members
+        this.processServerParameter(optParams);
+        this.readPrefixedURIs(optParams);
+        this.eventbus = eventbus;
+        this.initParams = optParams;
+
+        // we set the initial image as the default (if given)
+        let initial_dataset_id =
+            parseInt(
+                this.getInitialRequestParam(REQUEST_PARAMS.DATASET_ID));
+        let initial_image_config =
+            this.addImageConfig(initial_image_id, initial_dataset_id);
+        this.selected_config = initial_image_config.id;
+
+        // set up key listener
+        this.establishKeyDownListener();
+
+        if (this.hasHTML5HistoryFeatures()) {
+            window.onpopstate = (e) => {
+                if (e.state === null) window.history.go(0);
+                this.addImageConfig(e.state.image_id, e.state.dataset_id);
+            };
+        }
+    }
+
+    /**
+     * Checks for history features introduced with HTML5
+     *
+     * @memberof Context
+     */
+    hasHTML5HistoryFeatures() {
+        return window.history &&
+            typeof window.history.pushState === 'function' &&
+            typeof window.onpopstate !== 'undefined';
+    }
+
+    /**
+     * Processes and sanitizes some of the server param
+     *
+     * @param {Object} params the handed in parameters
+     * @memberof Context
+     */
+    processServerParameter(params) {
+        let server = params[REQUEST_PARAMS.SERVER];
         if (typeof server !== 'string' || server.length === 0) server = "";
         else {
             // check for localhost and if we need to prefix for requests
@@ -110,23 +153,13 @@ export default class Context {
                 server = "http://" + server;
         }
         this.server = server;
-        delete optParams[REQUEST_PARAMS.SERVER];
-
-        this.readPrefixedURIs(optParams);
-
-        this.eventbus = eventbus;
-        this.initParams = optParams;
-
-        // we set the initial image as the default (if given)
-        let initial_image_config = this.addImageConfig(initial_image_id);
-        this.selected_config = initial_image_config.id;
-        // set up key listener
-        this.establishKeyDownListener();
+        delete params[REQUEST_PARAMS.SERVER];
     }
 
     /**
      * Reads the list of uris that we need
      *
+     * @param {Object} params the handed in parameters
      * @memberof Context
      */
     readPrefixedURIs(params) {
@@ -229,6 +262,20 @@ export default class Context {
     removeKeyListener(key) {
         if (typeof key !== 'number') return;
         this.key_listeners.delete(key);
+    }
+
+    rememberImageConfigChange(image_id, dataset_id) {
+        if (!this.hasHTML5HistoryFeatures()) return;
+
+        let old_image_id =
+            this.getSelectedImageConfig().image_info.image_id;
+        let oldPath = window.location.pathname;
+        let newPath =
+            oldPath.replace(old_image_id, image_id);
+        if (typeof dataset_id === 'number')
+            newPath += '?dataset_id=' + dataset_id;
+        window.history.pushState(
+            {image_id: image_id, dataset_id: dataset_id},"",newPath);
     }
 
     /**
