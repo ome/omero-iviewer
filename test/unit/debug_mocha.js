@@ -6,7 +6,7 @@
  * mocha debug_mocha.js
  *
  * IMPORTANT:
- * mocha is not agnostic of browser enviroments, hence its use with
+ * mocha is not agnostic of browser environments, hence its use with
  * phantomjs as a headless test environment.
  * For code that does use browser objects you do have to define mock versions
  * (as is done below)

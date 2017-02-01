@@ -19,14 +19,14 @@
  *  2. uncomment the line in the head tag:
  * <!--script type="text/javascript" src="debug_tests.js"></script-->
  */
-function addScript( src,callback) {
-  var s = document.createElement( 'script' );
-  s.setAttribute( 'src', src );
+function addScript(src, callback) {
+  var s = document.createElement('script');
+  s.setAttribute('src', src);
   s.onload=callback;
   s.onerror=function(what) {
       console.error(what);
   };
-  document.head.appendChild( s );
+  document.head.appendChild(s);
 }
 
 var tests = [
