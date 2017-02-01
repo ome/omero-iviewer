@@ -197,16 +197,13 @@ export default class ImageInfo {
                     if (typeof response.meta === 'object' &&
                             typeof response.meta.datasetId === 'number')
                         this.dataset_id = response.meta.datasetId;
-                    else this.dataset_id = null;
-                    // TODO: fall back on other strategy for image in multiple ds
                 }
-                
+
                 // fire off the request for the imported data,
                 // can't hurt to have handy when we need it
                 this.requestImportedData();
                 // fetch copied img RDef
                 this.requestImgRDef();
-
                 // notify everyone that we are ready
                 if (this.context)
                     this.context.publish(
@@ -243,7 +240,7 @@ export default class ImageInfo {
         // we might have some requested defaults
         let initialDatasetId =
             parseInt(
-                this.context.getInitialRequestParam(REQUEST_PARAMS.DATASET));
+                this.context.getInitialRequestParam(REQUEST_PARAMS.DATASET_ID));
         if (typeof initialDatasetId === 'number' &&
                 !isNaN(initialDatasetId) && initialDatasetId >= 0)
             this.dataset_id = initialDatasetId;

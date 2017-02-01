@@ -40,7 +40,7 @@ export const WEBCLIENT = "WEBCLIENT";
  * @type {Object}
  */
 export const REQUEST_PARAMS = {
-    DATASET : 'DATASET',
+    DATASET_ID : 'DATASET_ID',
     SERVER : 'SERVER',
     IMAGE_ID : 'IMAGE_ID',
     CHANNELS : 'C',
