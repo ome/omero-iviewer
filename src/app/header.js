@@ -132,7 +132,9 @@ export class Header extends EventSubscriber {
       * @memberof Header
       */
      displayLink() {
-         if (this.context.getSelectedImageConfig() === null) return;
+         let selConf = this.context.getSelectedImageConfig();
+         if (selConf === null) return;
+
          let callback = ((settings) => {
              let url =
                 Misc.assembleImageLink(
@@ -140,6 +142,10 @@ export class Header extends EventSubscriber {
                     this.context.getPrefixedURI(WEBCLIENT),
                     this.image_info.image_id,
                     settings);
+                // let's add the dataset id if we have one
+                if (typeof selConf.image_info.dataset_id === 'number')
+                    url += "&dataset_id=" + selConf.image_info.dataset_id;
+
                 // show link and register close button
                 $('.link-url button').blur();
                 let linkDiv = $('.link-url div');

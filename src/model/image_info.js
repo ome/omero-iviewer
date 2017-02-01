@@ -130,11 +130,13 @@ export default class ImageInfo {
      * @param {Context} context the application context
      * @param {number} config_id the config id we belong to
      * @param {number} image_id the image id to be queried
+     * @param {number} dataset_id an optional dataset_id
      */
-    constructor(context, config_id, image_id) {
+    constructor(context, config_id, image_id, dataset_id) {
         this.context = context;
         this.config_id = config_id;
         this.image_id = image_id;
+        if (typeof dataset_id === 'number') this.dataset_id = dataset_id;
     }
 
     /**
@@ -187,8 +189,6 @@ export default class ImageInfo {
             dataType : dataType,
             cache : false,
             success : (response) => {
-                // reset existing dataset id
-                this.dataset_id = null;
                 // read initial request params
                 this.initializeImageInfo(response);
 

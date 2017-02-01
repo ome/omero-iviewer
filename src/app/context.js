@@ -240,10 +240,11 @@ export default class Context {
      * the same image to be used in multiple ImageConfigs.
      *
      * @memberof Context
-     * @param {number} image_id the image id of the server
+     * @param {number} image_id the image id
+     * @param {number} dataset_id an optional dataset_id
      * @return {ImageConfig} an ImageConfig object
      */
-    addImageConfig(image_id) {
+    addImageConfig(image_id, dataset_id) {
         if (typeof image_id !== 'number' || image_id < 0)
             return null;
 
@@ -252,7 +253,7 @@ export default class Context {
             for (let [id, conf] of this.image_configs)
                 this.removeImageConfig(id,conf)
 
-        let image_config = new ImageConfig(this, image_id);
+        let image_config = new ImageConfig(this, image_id, dataset_id);
         // store the image config in the map and make it the selected one
         this.image_configs.set(image_config.id, image_config);
         this.selectConfig(image_config.id);
