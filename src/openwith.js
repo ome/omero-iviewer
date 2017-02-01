@@ -1,4 +1,4 @@
-OME.setOpenWithUrlProvider("OMERO.iviewer", function(selected, url) {
+OME.setOpenWithUrlProvider("omero_iviewer", function(selected, url) {
 	// Add image Id to url
 	url += selected[0].id + "/";
 

@@ -106,7 +106,9 @@ export default class Context {
             parseInt(
                 this.getInitialRequestParam(REQUEST_PARAMS.DATASET_ID));
         let initial_image_config =
-            this.addImageConfig(initial_image_id, initial_dataset_id);
+            this.addImageConfig(initial_image_id,
+                typeof initial_dataset_id === 'number' &&
+                !isNaN(initial_dataset_id) ? initial_dataset_id : null);
         this.selected_config = initial_image_config.id;
 
         // set up key listener
