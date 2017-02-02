@@ -1238,7 +1238,7 @@ ome.ol3.Viewer.prototype.getPrefixedURI = function(resource) {
     var uri = this.prefixed_uris_[resource];
     if (typeof uri === 'string' && uri.length > 1) {
         // check for leading slash and remove trailing one if there...
-        let i=uri.length-1;
+        var i=uri.length-1;
         while(i>0) {
             if (uri[i] === '/') uri = uri.substring(0,i);
             else break;

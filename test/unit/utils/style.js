@@ -30,8 +30,8 @@ describe("Style", function() {
 			"fontFamily": "sans-serif",
 			"textValue": "some text",
 			"strokeWidth": 1.0,
-			"fillColor": "#00ff00",
-			"fillAlpha": 0.640625
+			"strokeColor": "#00ff00",
+			"strokeAlpha": 0.640625
 		}
 		style =
 			ome.ol3.utils.Style.createFeatureStyle(shape_info, true);
