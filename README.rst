@@ -1,20 +1,26 @@
 OMERO.iviewer
 =============
 
+An OMERO.web app for visualizing images in OMERO.
+
 Requirements
 ============
 
-In order to build you need npm version equal or greater to 3.0!
+* OMERO 5.3.0 or newer.
 
 Build
 =====
+
+In order to build you need:
+
+* nodejs version 6.x
+* npm version equal or greater to 3.0!
 
 To build an uncompressed version, run:
 
 ::
 
     $ npm run debug
-
 
 
 To build an uglified version, run:
@@ -25,12 +31,14 @@ To build an uglified version, run:
 
 All builds will build into the build directory and deploy to the plugin directory
 which can then be used like any Django plugin.
-For further installation help have a look at the respective README.rst.
+
+Intructions on how to add the OMERO.iviewer app to your installed OMERO.web apps
+can be found in the `OMERO.iviewer README <plugin/omero_iviewer/README.rst>`_.
 
 **Note**: 
 
 Should you like or need to rebuild OMERO.iviewer's internal ol3 viewer,
-please have a look at the section *ol3-viewer* below!
+please read the section *ol3-viewer* below!
 
 Development
 ===========
@@ -70,7 +78,7 @@ To build the OpenLayers viewer for OMERO.iviewer (deploys into libs directory), 
 
     $ ant
 
-For further options type ```ant -p```.
+For further options type ``ant -p``.
 
 More detailed resources on how to create a web app and development setup can be found at:
 
