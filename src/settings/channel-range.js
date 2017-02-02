@@ -122,18 +122,8 @@ export default class ChannelRange  {
                     let imgInf =
                         this.context.getSelectedImageConfig().image_info;
                     imgInf.initial_values = true;
-                    // we need to distinguish for cases that exceed the
-                    // min/max view
-                    let fRange = imgInf.needsFullRange();
-                    if (fRange) {
-                        this.mode = CHANNEL_SETTINGS_MODE.FULL_RANGE;
-                        this.change_mode({mode: this.mode, fullrange: true});
-                    } else if (!fRange &&
-                        this.mode !== CHANNEL_SETTINGS_MODE.MIN_MAX) {
-                        this.mode = CHANNEL_SETTINGS_MODE.MIN_MAX;
-                        this.change_mode({mode: this.mode, fullrange: true});
-                    }
-                    this.updateUI();}));
+                    this.updateUI();
+                }));
     }
 
     /**
@@ -267,51 +257,61 @@ export default class ChannelRange  {
          if (this.channel === null) return;
 
         let imgInf = this.context.getSelectedImageConfig().image_info;
+        let minMaxRange =
+            imgInf.getChannelMinMaxValues(
+                CHANNEL_SETTINGS_MODE.FULL_RANGE,this.index);
         let minMaxValues =
             imgInf.getChannelMinMaxValues(this.mode,this.index);
          // channel start
          $(this.element).find(".channel-start").spinner(
-             {min: minMaxValues.start_min, max: minMaxValues.start_max});
+             {min: minMaxRange.start_min, max: minMaxRange.start_max});
          $(this.element).find(".channel-start").on("input spinstop",
             (event, ui) => this.onRangeChange(event.target.value, true));
         $(this.element).find(".channel-start").spinner(
             "value", minMaxValues.start_val);
 
         // channel range slider
-        $(this.element).find(".channel-slider").slider(
-            {min: minMaxValues.start_min, max: minMaxValues.end_max,
-                range: true,
-                values: [minMaxValues.start_val, minMaxValues.end_val],
-                change: (event, ui) => {
-                    // if slide update is pending => clear it
-                    if (this.lastUpdate) {
-                        clearTimeout(this.lastUpdate);
-                        this.lastUpdate = null;
-                    }
-                    this.onRangeChangeBoth(ui.values,
-                        event.originalEvent ? true : false);
-                }, slide: (event,ui) => {
-                    if (ui.values[0] >= ui.values[1]) return false;
+        $(this.element).find(".channel-slider").slider({
+            min: this.mode === CHANNEL_SETTINGS_MODE.FULL_RANGE ?
+                    minMaxRange.start_min :
+                    minMaxValues.start_val > minMaxValues.start_min ?
+                    minMaxValues.start_min : minMaxValues.start_val,
+            max: this.mode === CHANNEL_SETTINGS_MODE.FULL_RANGE ?
+                    minMaxRange.end_max :
+                    minMaxValues.end_val < minMaxValues.end_max ?
+                    minMaxValues.end_max : minMaxValues.end_val,
+            range: true,
+            values: [minMaxValues.start_val, minMaxValues.end_val],
+            change: (event, ui) => {
+                // if slide update is pending => clear it
+                if (this.lastUpdate) {
+                    clearTimeout(this.lastUpdate);
+                    this.lastUpdate = null;
+                }
+                this.onRangeChangeBoth(ui.values,
+                    event.originalEvent ? true : false);
+            }, slide: (event,ui) => {
+                if (ui.values[0] >= ui.values[1]) return false;
 
-                    let imgConf = this.context.getSelectedImageConfig();
-                    if (!imgConf.image_info.has_histogram) return true;
+                let imgConf = this.context.getSelectedImageConfig();
+                if (!imgConf.image_info.has_histogram) return true;
 
-                    // we want to update the histogram on slide so we
-                    // need a separate event. we throttle so that
-                    // we send only the lastest slider value within a 100ms
-                    // window.
-                    this.lastDelayedTimeout = new Date().getTime();
-                    let delayedUpdate = (() => {
-                        if (new Date().getTime() < this.lastDelayedTimeout)
-                            return;
-                        this.context.publish(
-                            HISTOGRAM_RANGE_UPDATE,
-                                {config_id : imgConf.id,
-                                    prop: 'start',
-                                    channel: this.index,
-                                    start: ui.values[0],
-                                    end: ui.values[1]});}).bind(this);
-                    this.lastUpdate = setTimeout(delayedUpdate, 100);
+                // we want to update the histogram on slide so we
+                // need a separate event. we throttle so that
+                // we send only the lastest slider value within a 100ms
+                // window.
+                this.lastDelayedTimeout = new Date().getTime();
+                let delayedUpdate = (() => {
+                    if (new Date().getTime() < this.lastDelayedTimeout)
+                        return;
+                    this.context.publish(
+                        HISTOGRAM_RANGE_UPDATE,
+                            {config_id : imgConf.id,
+                                prop: 'start',
+                                channel: this.index,
+                                start: ui.values[0],
+                                end: ui.values[1]});}).bind(this);
+                this.lastUpdate = setTimeout(delayedUpdate, 100);
         }});
         $(this.element).find(".channel-slider").css(
             "background", "white");
@@ -322,7 +322,7 @@ export default class ChannelRange  {
 
         //channel end
         $(this.element).find(".channel-end").spinner(
-            {min: minMaxValues.end_min, max: minMaxValues.end_max});
+            {min: minMaxRange.end_min, max: minMaxRange.end_max});
         $(this.element).find(".channel-end").on("input spinstop",
             (event) => this.onRangeChange(event.target.value));
        $(this.element).find(".channel-end").spinner(
@@ -443,11 +443,17 @@ export default class ChannelRange  {
          if (isNaN(value)) return;
 
          // get appropriate min/max for start/end
+         let minMaxRange =
+            this.context.getSelectedImageConfig().
+                image_info.getChannelMinMaxValues(
+                    CHANNEL_SETTINGS_MODE.FULL_RANGE, this.index);
+         let min = is_start ? minMaxRange.start_min : minMaxRange.end_min;
+         let max = is_start ? minMaxRange.start_max : minMaxRange.end_max;
          let minMaxValues =
             this.context.getSelectedImageConfig().
                 image_info.getChannelMinMaxValues(this.mode, this.index);
-         let min = is_start ? minMaxValues.start_min : minMaxValues.end_min;
-         let max = is_start ? minMaxValues.start_max : minMaxValues.end_max;
+        let sliderMin = is_start ? minMaxValues.start_min : minMaxValues.end_min;
+        let sliderMax = is_start ? minMaxValues.start_max : minMaxValues.end_max;
 
          // clamp
          let exceededBounds = false;
@@ -475,21 +481,27 @@ export default class ChannelRange  {
                  oldValue = this.channel.window.end;
                  this.channel.window.end = value;
              }
+
              try {
                  $(this.element).find(clazz).spinner("value", value);
-                 if (is_start)
+                 $(this.element).find(".channel-slider").slider(
+                     "option", "values",
+                     [this.channel.window.start, this.channel.window.end]);
+                 if (is_start) {
                     $(this.element).find(otherClazz).spinner("option", "min", value+1);
-                 else
+                    $(this.element).find(".channel-slider").slider(
+                        "option", "min", value < sliderMin ? value : sliderMin);
+                } else {
                     $(this.element).find(otherClazz).spinner("option", "max", value-1);
                     $(this.element).find(".channel-slider").slider(
-                        "option", "values",
-                        [this.channel.window.start, this.channel.window.end]);
-                    // add history record
-                    this.context.getSelectedImageConfig().addHistory({
-                        prop:
-                            ['image_info', 'channels', '' + this.index,
-                            'window', is_start ? 'start' : 'end'],
-                            old_val : oldValue, new_val: value, type : "number"});
+                        "option", "max",value > sliderMax ? value : sliderMax);
+                }
+                // add history record
+                this.context.getSelectedImageConfig().addHistory({
+                    prop:
+                        ['image_info', 'channels', '' + this.index,
+                        'window', is_start ? 'start' : 'end'],
+                        old_val : oldValue, new_val: value, type : "number"});
              } catch (ignored) {}
          } else $(this.element).find(clazz).parent().css("border-color", "rgb(255,0,0)");
      }
