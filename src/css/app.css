@@ -734,7 +734,7 @@ thead, tbody {
 }
 
 .arrow-button .dropdown-menu {
-    left: -5px;
+    left: 0px;
     min-width: 20px;
 }
 .regions-drawing-mode {

@@ -461,7 +461,7 @@ export default class RegionsEdit {
 
         let deltaProps = {type: 'polyline'};
 
-        let property = head ? 'markerStart' : 'markerEnd';
+        let property = head ? 'markerEnd' : 'markerStart';
         let hasArrowMarker =
             typeof lastSelection[property] === 'string' &&
                 lastSelection[property] === 'Arrow';

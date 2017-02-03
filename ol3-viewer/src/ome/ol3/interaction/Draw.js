@@ -312,7 +312,7 @@ ome.ol3.interaction.Draw.prototype.drawLine_ = function(event) {
 ome.ol3.interaction.Draw.prototype.drawArrow_ = function(event) {
 	this.drawShapeCommonCode_('LineString', 'polyline',
         function(coordinates, opt_geometry) {
-            var geometry = new ome.ol3.geom.Line(coordinates, true, false);
+            var geometry = new ome.ol3.geom.Line(coordinates, false, true);
 
             if (opt_geometry) {
                 opt_geometry.setCoordinates(geometry.getCoordinates());
