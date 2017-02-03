@@ -9,7 +9,7 @@ OME.setOpenWithUrlProvider("omero_iviewer", function(selected, url) {
 			var parent = OME.getTreeImageContainerBestGuess(selected[0].id);
 			if (parent && parent.data) {
 				if (parent.type === 'dataset')
-					url += '?dataset_id=' + parent.data.id;
+					url += '?' + parent.type + '=' + parent.data.id
 			}
 		} catch(err) {
 			console.log(err);
