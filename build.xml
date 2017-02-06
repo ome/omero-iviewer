@@ -174,7 +174,7 @@
         </exec>
 	</target>
 
-	<target name="unit-tests" depends="build-all" description="runs unit tests" >
+	<target name="unit-tests" depends="build-debug" description="runs unit tests" >
         <echo>Fetching test libraries ....</echo>
         <exec dir="${basedir}" executable="npm">
 			<arg line="install mocha chai mocha-phantomjs"/>
