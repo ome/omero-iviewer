@@ -427,8 +427,8 @@ export default class ImageInfo {
      * response
      *
      * @memberof ImageInfo
-     * @param {Array.<Object>} an array of existing channels (from response)
-     * @param {Array.<Object>} an array of initial settings per channel
+     * @param {Array.<Object>} channels the existing channels (response)
+     * @param {Array.<Object>} initialChannels initial channel settings (request)
      * @return {Array.<Object>} an array of mixed-in channel objects
      */
     initAndMixChannelsWithInitialSettings(channels, initialChannels) {

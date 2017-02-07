@@ -19,6 +19,11 @@ if (!is_dev_server) {
     __webpack_public_path__ = prefix + '/static/' + PLUGIN_NAME + '/';
 }
 
+/**
+ * IViewer bootstrap function
+ * @function
+ * @param {Object} aurelia the aurealia instance
+ */
 bootstrap(function(aurelia) {
   aurelia.use
     .standardConfiguration()

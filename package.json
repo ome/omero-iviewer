@@ -5,7 +5,7 @@
     "dev": "./ol3_viewer_prepare.sh DEV && webpack-dev-server --config webpack.dev.config.js --hot --inline --progress --devtool eval",
     "debug": "./ol3_viewer_prepare.sh DEV && ./prepare_build.sh && webpack --config webpack.prod.config.js --progress --devtool source-map && ./deploy_build.sh",
     "prod": "./ol3_viewer_prepare.sh && ./prepare_build.sh && webpack -p --config webpack.prod.config.js --progress && ./deploy_build.sh",
-    "docs": "./node_modules/.bin/esdoc -c esdoc.json"
+    "docs": "./generate_docs.sh"
   },
   "dependencies": {
     "aurelia-bootstrapper-webpack": "^1.0.0",
@@ -48,8 +48,6 @@
     "style-loader": "^0.13.0",
     "url-loader": "^0.5.7",
     "webpack": "^1.13.1",
-    "webpack-dev-server": "^1.14.1",
-    "esdoc": ">=0.4.8",
-    "esdoc-es7-plugin": ">=0.0.3"
+    "webpack-dev-server": "^1.14.1"
   }
 }

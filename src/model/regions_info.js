@@ -244,8 +244,8 @@ export default class RegionsInfo extends EventSubscriber {
      * @memberof RegionsInfo
      * @param {Array.<string>} properties an array of property names
      * @param {number|string|Array|boolean|Object} values the values to filter for
-     * @param {Array.<ids>|null} an optional array of ids of the form: roi:shape-id
-     * @return {Array.<ids>} an array of ids for shapes that satisfy the filter
+     * @param {Array.<string>|null} ids an optional array of ids of the form: roi:shape-id
+     * @return {Array.<string>} an array of ids that satisfy the filter
      */
     unsophisticatedShapeFilter(properties=[], values=[], ids=null) {
         let ret = [];

@@ -74,7 +74,8 @@ export class Utils {
      * @param {Array.<?>} values the respective values for the properties
      * @param {History?} history an optional History instance
      * @param {number?} hist_id an optional history id
-     * @return {function} a function which takes a shape as an input or null
+     * @param {function} post_update_handler an optional callback after update
+     * @return {function} the update callback
      * @static
      */
      static createUpdateHandler(

@@ -347,7 +347,6 @@ export default class ChannelRange  {
      * channel color change handler
      *
      * @param {number} value the new value
-     * @param {boolean} is_start was start of range or not
      * @memberof ChannelRange
      */
      onColorChange(value) {

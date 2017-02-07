@@ -163,9 +163,8 @@ export default class Ui {
     }
 
     /**
-     * Collapse
+     * Adjusts the sidebars in case of window resize
      *
-     * @param {boolean} left flag if left sidebar
      * @static
      */
     static adjustSideBarsOnWindowResize() {
