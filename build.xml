@@ -209,9 +209,9 @@
     </target>
 
     <target name="build" depends="build-all, copy-to-lib" description="builds production and debug version, copying it to omero_iviewer's lib directory" />
-    <target name="build-all" depends="clean,init, compile,compile-debug" description="builds both, production and debug version" />
+    <target name="build-all" depends="clean, init, compile, compile-debug" description="builds both, production and debug version" />
     <target name="build-prod" depends="clean, init, compile" description="builds production version" />
     <target name="build-debug" depends="clean, init, compile-debug" description="builds debug version" />
-    <target name="build-plugin" depends="build-all,plugin" description="builds production version, deploying it into its respective plugin directory" />
+    <target name="build-plugin" depends="build-all, plugin" description="builds production version, deploying it into its respective plugin directory" />
 
 </project>
