@@ -1,4 +1,4 @@
-<project name="ol3-viewer" default="build-for-iviewer">
+<project name="ol3-viewer" default="build">
     <description>
         #################################################
         ####                OL3 VIEWER               ####
@@ -18,6 +18,7 @@
 
 	<property name="src" value="${basedir}/${ant.project.name}/src" />
 	<property name="build.dir" value="${basedir}/build" />
+    <property name="test.build.dir" value="${basedir}/test/build" />
 	<property name="plugin.dir.static" value="${basedir}/plugin/${ant.project.name}/static/${ant.project.name}" />
 
 	<property name="dist.name"
@@ -25,7 +26,7 @@
 	<property name="debug.name"
 			value="${build.dir}/ol3-viewer-debug.js" />
     <property name="test.name"
-			value="${build.dir}/ol3-viewer-test.js" />
+			value="${test.build.dir}/ol3-viewer-test.js" />
 
 	<property name="outputwrapper" value="
 		(function (root, factory) {
@@ -74,7 +75,7 @@
 		</sequential>
 	</macrodef>
 
-	<target name="clean" description="deletes all build files">
+	<target name="clean">
 		<delete dir="${build.dir}" />
 	</target>
 
@@ -166,7 +167,7 @@
 		</exec>
 	</target>
 
-	<target name="init" description="fetches all dependencies via npm">
+	<target name="init">
         <echo>Fetching deps with npm (bulk of stdout swallowed)</echo>
         <echo>May the patience be with you...</echo>
         <exec dir="${basedir}" executable="npm">
@@ -174,15 +175,24 @@
         </exec>
 	</target>
 
-	<target name="unit-tests" depends="build-debug" description="runs unit tests" >
+    <target name="prepare-unit-tests">
+        <echo>Preparing test build directory ....</echo>
+        <delete dir="${test.build.dir}" />
+		<mkdir dir="${test.build.dir}" />
+        <copy file="${debug.name}" tofile="${test.build.dir}/ol3-viewer-debug.js" overwrite="true"/>
+    </target>
+
+    <target name="unit-tests" depends="build-debug, prepare-unit-tests, unit-tests-only" description="runs unit tests" />
+
+	<target name="unit-tests-only">
         <echo>Fetching test libraries ....</echo>
         <exec dir="${basedir}" executable="npm">
 			<arg line="install mocha chai mocha-phantomjs"/>
 		</exec>
-        <echo>Getting rid of js docs and comments (for phantomjs) ....</echo>
+        <echo>Getting rid of js docs and comments in ${test.name} ....</echo>
         <exec executable="java" >
             <arg value="-jar"/>
-			<arg line="${closure-compiler.jar} --compilation_level WHITESPACE_ONLY --js ${debug.name}"/>
+			<arg line="${closure-compiler.jar} --compilation_level WHITESPACE_ONLY --js ${test.build.dir}/ol3-viewer-debug.js"/>
             <redirector output="${test.name}"/>
 		</exec>
         <echo>Running Test Suite ....</echo>
@@ -198,10 +208,10 @@
         </fail>
 	</target>
 
-	<target name="build" depends="clean, init, compile" description="builds production version" />
-    <target name="build-for-iviewer" depends="build, copy-to-lib" description="builds production version, copying it to omero_iviewer's lib directory" />
+    <target name="build" depends="build-all, copy-to-lib" description="builds production and debug version, copying it to omero_iviewer's lib directory" />
+    <target name="build-all" depends="clean,init, compile,compile-debug" description="builds both, production and debug version" />
+	<target name="build-prod" depends="clean, init, compile" description="builds production version" />
 	<target name="build-debug" depends="clean, init, compile-debug" description="builds debug version" />
-	<target name="build-all" depends="clean,init, compile,compile-debug" description="builds both, production and debug version" />
-	<target name="build-plugin" depends="build-all,plugin" description="builds production version, deploying it into its respective plugin directory" />
+	<target name="build-plugin" depends="build-all,plugin" />
 
 </project>

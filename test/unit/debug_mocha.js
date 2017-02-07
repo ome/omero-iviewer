@@ -33,7 +33,7 @@ document = {
 };
 
 // the built library
-require('../../build/ol3-viewer-test.js')
+require('../build/ol3-viewer-test.js')
 
 global.chai = require('../../node_modules/chai/chai.js')
 global.assert = chai.assert;
