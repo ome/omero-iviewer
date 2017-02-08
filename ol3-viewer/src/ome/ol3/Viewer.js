@@ -1474,9 +1474,11 @@ ome.ol3.Viewer.prototype.getSmallestViewExtent = function() {
  * @param {boolean} selectedOnly if true only selected regions are considered
  * @param {boolean} useSeparateRoiForEachNewShape if false all new shapes are combined within one roi
  * @param {string} uri a server uri to post to for persistance
+ * @param {boolean} omit_client_update an optional flag that's handed back to the client
+ *                  to indicate that a client side update to the response is not needed
  */
 ome.ol3.Viewer.prototype.storeRegions =
-	function(selectedOnly,useSeparateRoiForEachNewShape, uri) {
+	function(selectedOnly,useSeparateRoiForEachNewShape, uri, omit_client_update) {
 
 	if (!(this.regions_ instanceof ome.ol3.source.Regions))
 		return; // no regions, nothing to persist...
@@ -1499,7 +1501,7 @@ ome.ol3.Viewer.prototype.storeRegions =
 	if (roisAsJsonObject === null || roisAsJsonObject['count'] === 0)
 		return;
 
-	this.regions_.storeRegions(roisAsJsonObject, uri);
+	this.regions_.storeRegions(roisAsJsonObject, uri, omit_client_update);
 }
 
 /**
@@ -1698,19 +1700,21 @@ ome.ol3.Viewer.prototype.redraw = function(delay) {
  * e.g. xxxxx_344455
  */
 ome.ol3.Viewer.prototype.getTargetId = function() {
-    var elemId = typeof this.viewer_.getTargetElement() === 'string' ?
-        this.viewer_.getTargetElement() :
-            typeof this.viewer_.getTargetElement() === 'object' &&
-            typeof this.viewer_.getTargetElement().id === 'string' ?
-                this.viewer_.getTargetElement().id : null;
-
-    var _pos = -1;
-    if (elemId === null || ((_pos = elemId.lastIndexOf("_")) === -1)) return null;
-
     try {
+        var elemId = typeof this.viewer_.getTargetElement() === 'string' ?
+            this.viewer_.getTargetElement() :
+                typeof this.viewer_.getTargetElement() === 'object' &&
+                typeof this.viewer_.getTargetElement().id === 'string' ?
+                    this.viewer_.getTargetElement().id : null;
+
+        var _pos = -1;
+        if (elemId === null || ((_pos = elemId.lastIndexOf("_")) === -1)) return null;
+
         var id = parseInt(elemId.substring(_pos+1));
         if (!isNaN(id)) return id;
-    } catch(no_care) {}
+    } catch(no_care) {
+        return null;
+    }
 
     return null;
 }
