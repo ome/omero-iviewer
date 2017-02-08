@@ -3,9 +3,9 @@ import {inject,customElement} from 'aurelia-framework';
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import {WEBGATEWAY} from '../utils/constants';
+import {REGIONS_STORE_SHAPES, REGIONS_STORED_SHAPES} from '../events/events';
 import {
-    IMAGE_CONFIG_UPDATE, THUMBNAILS_UPDATE,
-    EventSubscriber
+    IMAGE_CONFIG_UPDATE, THUMBNAILS_UPDATE, EventSubscriber
 } from '../events/events';
 
 /**
@@ -173,7 +173,27 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @param {number} image_id the image id for the clicked thumbnail
      */
     onClick(image_id) {
-        this.context.addImageConfig(image_id);
+        let conf = this.context.getSelectedImageConfig();
+        // pop up dialog to ask whether user wants to store rois changes
+        // if we have a regions history, we have modifications
+        // and are not cross domain
+        if (conf && conf.regions_info &&
+                conf.regions_info.hasBeenModified() &&
+                !Misc.useJsonp(this.context.server) &&
+                    confirm(
+                        "You have new/deleted/modified ROI(S)." +
+                        "\nDo you want to save your changes?")) {
+            let tmpSub =
+                this.context.eventbus.subscribe(
+                    REGIONS_STORED_SHAPES,
+                    (params={}) => {
+                        this.context.addImageConfig(image_id);
+                        tmpSub.dispose();
+                });
+            this.context.publish(
+                REGIONS_STORE_SHAPES,
+                {config_id : conf.id, selected: false, omit_client_update: true});
+        } else this.context.addImageConfig(image_id);
     }
 
     /**

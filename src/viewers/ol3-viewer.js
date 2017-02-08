@@ -571,7 +571,8 @@ export default class Ol3Viewer extends EventSubscriber {
 
         this.viewer.storeRegions(
             selectedOnly, false,
-            this.context.getPrefixedURI(IVIEWER) + '/persist_rois');
+            this.context.getPrefixedURI(IVIEWER) + '/persist_rois',
+            params.omit_client_update);
     }
 
     /**
@@ -603,7 +604,8 @@ export default class Ol3Viewer extends EventSubscriber {
         // the event doesn't concern us
         if (params.config_id !== this.config_id ||
                 typeof params.shapes !== 'object' ||
-                params.shapes === null) return;
+                params.shapes === null ||
+                params.omit_client_update) return;
 
         // make deep copy to work with
         let ids = Object.assign({}, params.shapes);
