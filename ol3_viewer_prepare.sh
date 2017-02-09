@@ -10,6 +10,7 @@ if [ $COMPILE_VIEWER -eq 0 ]; then
     rm  -rf libs
     mkdir -p libs
     ant
+    ant prepare-unit-tests
 else
     echo "omitting ol3-viewer build"
 fi

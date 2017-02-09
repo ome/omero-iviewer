@@ -18,3 +18,5 @@ script:
   - python setup.py sdist install --user || exit 1
   - if [ ! -d "omero_iviewer/static" ]; then exit 1 ;fi
   - if [ ! -d "omero_iviewer/templates" ]; then exit 1 ;fi
+  - cd ..
+  - ant unit-tests-only
