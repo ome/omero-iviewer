@@ -118,8 +118,6 @@ export default class Settings extends EventSubscriber {
             url : this.context.server +
                     this.context.getPrefixedURI(WEBGATEWAY) +
                         "/get_image_rdefs_json/" + img_id,
-            dataType : Misc.useJsonp(this.context.server) ? 'jsonp' : 'json',
-            cache : false,
             success : (response) => {
                 if (!Misc.isArray(response.rdefs)) return;
 
@@ -298,21 +296,16 @@ export default class Settings extends EventSubscriber {
         let params = {
             url : url,
             method: toAll ? 'POST' : 'GET',
-            cache: false,
             error : (error) => {}
         };
 
-        if (!toAll) {
-            params.dataType = dataType;
-            params.success =
-                (response) => imgInf.requestImgRDef();
-        }else {
+        if (toAll) {
             params.data={
+                dataType: 'json',
                 toids: imgInf.dataset_id,
                 to_type: 'dataset',
                 imageId: imgInf.image_id
             };
-            params.dataType = "json";
             params.success =
                 (response) => {
                     let thumbIds = [imgInf.image_id];
@@ -327,7 +320,8 @@ export default class Settings extends EventSubscriber {
                                 { config_id : this.config_id, ids: thumbIds}));
                     this.requestAllRenderingDefs(action);
                 }
-        }
+        } else params.success =
+            (response) => imgInf.requestImgRDef();
         $.ajax(params);
     }
 

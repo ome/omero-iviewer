@@ -188,18 +188,11 @@ export default class RegionsInfo extends EventSubscriber {
         // reset history
         this.history.resetHistory();
 
-        // assmeble url
-        let url =
-            this.image_info.context.server +
-                this.image_info.context.getPrefixedURI(WEBGATEWAY) +
-                    "/get_rois_json/" + this.image_info.image_id + '/';
-        let dataType = "json";
-        if (Misc.useJsonp(this.image_info.context.server)) dataType += "p";
-
-        $.ajax(
-            {url : url,
-            dataType : dataType,
-            cache : false,
+        // send request
+        $.ajax({
+            url : this.image_info.context.server +
+                  this.image_info.context.getPrefixedURI(WEBGATEWAY) +
+                  "/get_rois_json/" + this.image_info.image_id + '/',
             success : (response) => {
                 // we want an array
                 if (!Misc.isArray(response)) return;

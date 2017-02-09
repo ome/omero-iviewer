@@ -101,6 +101,18 @@ export default class Context {
         this.eventbus = eventbus;
         this.initParams = optParams;
 
+        // set global ajax request properties
+        $.ajaxSetup({
+            cache: false,
+            dataType : Misc.useJsonp(this.server) ? "jsonp" : "json",
+            beforeSend: (xhr, settings) => {
+                if (!Misc.useJsonp(this.server) &&
+                    !(/^(GET|HEAD|OPTIONS|TRACE)$/.test(settings.type)))
+                    xhr.setRequestHeader("X-CSRFToken",
+                        Misc.getCookie('csrftoken'));
+            }
+        });
+
         // we set the initial image as the default (if given)
         let initial_dataset_id =
             parseInt(
@@ -113,7 +125,7 @@ export default class Context {
 
         // set up key listener
         this.establishKeyDownListener();
-
+        // url navigation
         if (this.hasHTML5HistoryFeatures()) {
             window.onpopstate = (e) => {
                 if (e.state === null) window.history.go(0);
