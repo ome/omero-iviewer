@@ -173,7 +173,8 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @param {number} image_id the image id for the clicked thumbnail
      */
     onClick(image_id) {
-        this.context.addImageConfig(image_id);
+        this.context.rememberImageConfigChange(image_id, this.dataset_id);
+        this.context.addImageConfig(image_id, this.dataset_id);
     }
 
     /**
