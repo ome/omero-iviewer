@@ -41,54 +41,54 @@ ome.ol3.source.Regions = function(viewerReference, options) {
     if (!(viewerReference instanceof ome.ol3.Viewer))
         console.error("Regions needs an ome.ol3.Viewer instance!");
 
-	var opts = options || {};
-	// we always use the spatial index
-	opts.useSpatialIndex = true;
+    var opts = options || {};
+    // we always use the spatial index
+    opts.useSpatialIndex = true;
 
-	var optGeneratedFeatures = null;
-	if (ome.ol3.utils.Misc.isArray(opts['features'])) {
-		optGeneratedFeatures = options['features'];
-		opts['features'] = null;
-		opts.features = null;
-	}
+    var optGeneratedFeatures = null;
+    if (ome.ol3.utils.Misc.isArray(opts['features'])) {
+        optGeneratedFeatures = options['features'];
+        opts['features'] = null;
+        opts.features = null;
+    }
 
-	goog.base(this, opts); // call super
-
-	/**
-	 * a flag that tells us if we'd like for the text to be scaled with resolution
-	 * changes of the view. Defaults to true
-	 * @type {boolean}
-	 * @private
-	 */
-	this.scale_text_ = true;
-	if (typeof(opts['scaleText']) === 'boolean')
-		this.scale_text_ = opts['scaleText'];
-
-	/**
-	 * a flag that tells us if we'd like for the text to go along with any
-	 * rotation that the view underwent. Defauls to false
-	 * @type {boolean}
-	 * @private
-	 */
-	this.rotate_text_ = false;
-	if (typeof(opts['rotateText']) === 'boolean')
-		this.rotate_text_ = opts['rotateText'];
+    goog.base(this, opts); // call super
 
     /**
-	 * this flag determines whether text is displayed for shapes other than labels
-	 * Defauls to false
-	 * @type {boolean}
-	 * @private
-	 */
+     * a flag that tells us if we'd like for the text to be scaled with resolution
+     * changes of the view. Defaults to true
+     * @type {boolean}
+     * @private
+     */
+    this.scale_text_ = true;
+    if (typeof(opts['scaleText']) === 'boolean')
+        this.scale_text_ = opts['scaleText'];
+
+    /**
+     * a flag that tells us if we'd like for the text to go along with any
+     * rotation that the view underwent. Defauls to false
+     * @type {boolean}
+     * @private
+     */
+    this.rotate_text_ = false;
+    if (typeof(opts['rotateText']) === 'boolean')
+        this.rotate_text_ = opts['rotateText'];
+
+    /**
+     * this flag determines whether text is displayed for shapes other than labels
+     * Defauls to false
+     * @type {boolean}
+     * @private
+     */
      this.show_comments_ = false;
 
-	/**
-	 * the associated regions information
-	 * as retrieved from the omero server
-	 * @type {Object}
-	 * @private
-	 */
-	 this.regions_info_ = null;
+    /**
+     * the associated regions information
+     * as retrieved from the omero server
+     * @type {Object}
+     * @private
+     */
+     this.regions_info_ = null;
 
      /**
       * used as a lookup container for new, unsaved shapes
@@ -97,15 +97,15 @@ ome.ol3.source.Regions = function(viewerReference, options) {
  	  */
  	 this.new_unsaved_shapes_ = {};
 
-	/**
-	 * the viewer reference
-	 *
-	 * @type {ome.ol3.Viewer}
-	 * @private
-	 */
-	 this.viewer_ = viewerReference;
+    /**
+     * the viewer reference
+     *
+     * @type {ome.ol3.Viewer}
+     * @private
+     */
+     this.viewer_ = viewerReference;
 
-	 /**
+     /**
  	 * a select interaction
  	 *
  	 * @type {ome.ol3.interaction.Select}
@@ -113,7 +113,7 @@ ome.ol3.source.Regions = function(viewerReference, options) {
  	 */
  	 this.select_ = null;
 
-	 /**
+     /**
  	 * a translate interaction
  	 *
  	 * @type {ome.ol3.interaction.Translate}
@@ -121,7 +121,7 @@ ome.ol3.source.Regions = function(viewerReference, options) {
  	 */
  	 this.translate_ = null;
 
-	 /**
+     /**
  	 * a modify interaction
  	 *
  	 * @type {ome.ol3.interaction.Modify}
@@ -129,7 +129,7 @@ ome.ol3.source.Regions = function(viewerReference, options) {
  	 */
  	 this.modify_ = null;
 
-	 /**
+     /**
  	 * a draw interaction
  	 *
  	 * @type {ome.ol3.interaction.Draw}
@@ -137,13 +137,13 @@ ome.ol3.source.Regions = function(viewerReference, options) {
  	 */
  	 this.draw_ = null;
 
-	 /**
+     /**
  	 * array of moded presently used
  	 *
  	 * @type {Array}
  	 * @private
  	 */
-	 this.present_modes_ = [];
+     this.present_modes_ = [];
 
      /**
  	 * a history for translations and modifications
@@ -152,93 +152,93 @@ ome.ol3.source.Regions = function(viewerReference, options) {
  	 * @type {Object}
  	 * @private
  	 */
-	 this.history_ = {};
+     this.history_ = {};
 
      /**
  	  * an autoincremented history id
  	  * @type {number}
  	  * @private
  	  */
-	 this.history_id_ = 0;
+     this.history_id_ = 0;
 
-	/**
-	 * The initialization function performs the following steps:
-	 * 1. Request regions data as json and store it internally
-	 * 2. Convert the json response into open layers objects
-	 * 		(ol.Feature and ol.geom.Geometry) and add them to its internal collection
-	 * 3. Instantiate a regions layer (ol.vector.Regions) and add it to the map
-	 *
-	 * Note: steps 2 and 3 are done asynchroniously after the regions data
-	 * 			has been received.
+    /**
+     * The initialization function performs the following steps:
+     * 1. Request regions data as json and store it internally
+     * 2. Convert the json response into open layers objects
+     * 		(ol.Feature and ol.geom.Geometry) and add them to its internal collection
+     * 3. Instantiate a regions layer (ol.vector.Regions) and add it to the map
+     *
+     * Note: steps 2 and 3 are done asynchroniously after the regions data
+     * 			has been received.
  	 *
  	 * @function
-	 * @param {Object} scope the java script context
+     * @param {Object} scope the java script context
  	 * @private
  	 */
  	this.initialize_ = function(scope) {
-		// the success handler that creates the vector layer and adds it to
-		// the open layers map
-		var success = function(data) {
-			if (typeof(data) === 'string') {
-				try {
-					data = JSON.parse(data);
-				} catch(parseError) {
-					console.error("Failed to parse json response!");
-				}
-			}
-			if (typeof(data) !== 'object') {
-					console.error("Regions Request did not receive proper response!");
-					return;
-			 }
+        // the success handler that creates the vector layer and adds it to
+        // the open layers map
+        var success = function(data) {
+            if (typeof(data) === 'string') {
+                try {
+                    data = JSON.parse(data);
+                } catch(parseError) {
+                    console.error("Failed to parse json response!");
+                }
+            }
+            if (typeof(data) !== 'object') {
+                console.error("Regions Request did not receive proper response!");
+                return;
+            }
 
-			 // store response internally to be able to work with it later
-			 scope.regions_info_ = data;
-             scope.new_unsaved_shapes_ = {}; // reset
-			 var regionsAsFeatures =
-			 	ome.ol3.utils.Regions.createFeaturesFromRegionsResponse(scope);
-			 if (ome.ol3.utils.Misc.isArray(regionsAsFeatures) && regionsAsFeatures.length > 0) {
-					scope.addFeatures(regionsAsFeatures);
-				}
-			};
+            // store response internally to be able to work with it later
+            scope.regions_info_ = data;
+            scope.new_unsaved_shapes_ = {}; // reset
+            var regionsAsFeatures =
+                ome.ol3.utils.Regions.createFeaturesFromRegionsResponse(scope);
+            if (ome.ol3.utils.Misc.isArray(regionsAsFeatures) &&
+                regionsAsFeatures.length > 0) {
+                    scope.addFeatures(regionsAsFeatures);
+            }
+        };
 
-		 // define request settings
-		 var reqParams = {
-			 "server" : scope.viewer_.getServer(),
-			 "uri" : scope.viewer_.getPrefixedURI(ome.ol3.WEBGATEWAY) +
-                        '/get_rois_json/' + scope.viewer_.getId(),
-				"jsonp" : true, // this will only count if we are cross-domain
-			 "success" : success,
-			 "error" : function(error) {
-				 console.error("Error retrieving regions info for id: " +
-				  scope.viewer_.getId() +
-				 	((error && error.length > 0) ? ("\\n" + error) : ""));
-			 }
-		 };
+         // define request settings
+         var reqParams = {
+             "server" : scope.viewer_.getServer(),
+             "uri" : scope.viewer_.getPrefixedURI(ome.ol3.WEBGATEWAY) +
+                     '/get_rois_json/' + scope.viewer_.getId(),
+             "jsonp" : true, // this will only count if we are cross-domain
+             "success" : success,
+             "error" : function(error) {
+                 console.error("Error retrieving regions info for id: " +
+                    scope.viewer_.getId() +
+                    ((error && error.length > 0) ? ("\\n" + error) : ""));
+             }
+         };
 
-		 // send request
-		 ome.ol3.utils.Net.sendRequest(reqParams);
-	};
+         // send request
+         ome.ol3.utils.Net.sendRequest(reqParams);
+     };
 
-	// might be we enter into this constructor with generated features.
-	// deal with them first
-	if (optGeneratedFeatures) {
-		// we run updateStyle over the shapes
-		for (var s in optGeneratedFeatures) {
-			var f = optGeneratedFeatures[s];
-			var rot = this.viewer_.viewer_.getView().getRotation();
-			var res = this.viewer_.viewer_.getView().getResolution();
-			// in case we got created in a rotated view
-			if (f.getGeometry() instanceof ome.ol3.geom.Label && rot !== 0 &&
-				!this.rotate_text_)
-				f.getGeometry().rotate(-rot);
-			// apply style function
-			ome.ol3.utils.Style.updateStyleFunction(f, this, true);
-		}
-		this.addFeatures(optGeneratedFeatures);
-	}
+    // might be we enter into this constructor with generated features.
+    // deal with them first
+    if (optGeneratedFeatures) {
+        // we run updateStyle over the shapes
+        for (var s in optGeneratedFeatures) {
+            var f = optGeneratedFeatures[s];
+            var rot = this.viewer_.viewer_.getView().getRotation();
+            var res = this.viewer_.viewer_.getView().getResolution();
+            // in case we got created in a rotated view
+            if (f.getGeometry() instanceof ome.ol3.geom.Label && rot !== 0 &&
+                !this.rotate_text_) f.getGeometry().rotate(-rot);
+            // apply style function
+            ome.ol3.utils.Style.updateStyleFunction(f, this, true);
+        }
+        this.addFeatures(optGeneratedFeatures);
+    }
 
-	// execute initialization function
-	this.initialize_(this);
+    // execute initialization function
+    this.initialize_(this);
 }
 goog.inherits(ome.ol3.source.Regions, ol.source.Vector);
 
@@ -268,145 +268,145 @@ goog.inherits(ome.ol3.source.Regions, ol.source.Vector);
  * @param {Array.<number>} modes an array of modes
  */
 ome.ol3.source.Regions.prototype.setModes = function(modes) {
-	if (!ome.ol3.utils.Misc.isArray(modes)) return;
+    if (!ome.ol3.utils.Misc.isArray(modes)) return;
 
-	var defaultMode = false;
-	var selectMode = false;
-	var translateMode = false;
-	var modifyMode = false;
-	var drawMode = false;
+    var defaultMode = false;
+    var selectMode = false;
+    var translateMode = false;
+    var modifyMode = false;
+    var drawMode = false;
 
-	// empty present modes, remembering old ones for draw reset
-	var oldModes = this.present_modes_.slice();
-	this.present_modes_ = [];
+    // empty present modes, remembering old ones for draw reset
+    var oldModes = this.present_modes_.slice();
+    this.present_modes_ = [];
 
-	for (var m in modes) {
-		// we have to be a numnber and within the enum range
-		if (typeof(modes[m]) !== 'number' || modes[m] < 0 || modes[m] > 4)
-			continue;
+    for (var m in modes) {
+        // we have to be a numnber and within the enum range
+        if (typeof(modes[m]) !== 'number' || modes[m] < 0 || modes[m] > 4)
+            continue;
 
-		if (modes[m] === ome.ol3.REGIONS_MODE['DEFAULT']) { // DEFAULT
-			defaultMode = true;
-			selectMode = translateMode = modifyMode = drawMode = false;
-			break;
-		}
+        if (modes[m] === ome.ol3.REGIONS_MODE['DEFAULT']) { // DEFAULT
+            defaultMode = true;
+            selectMode = translateMode = modifyMode = drawMode = false;
+            break;
+        }
 
-		if (modes[m] === ome.ol3.REGIONS_MODE['SELECT']) { // SELECT
-			selectMode = true;
-			drawMode = false; // mutally exclusive
-			continue;
-		}
+        if (modes[m] === ome.ol3.REGIONS_MODE['SELECT']) { // SELECT
+            selectMode = true;
+            drawMode = false; // mutally exclusive
+            continue;
+        }
 
-		if (modes[m] === ome.ol3.REGIONS_MODE['TRANSLATE']) { // TRANSLATE
-			selectMode = true; // we need it
-			translateMode = true; // set it
-			drawMode = false; // mutally exclusive
-			continue;
-		}
+        if (modes[m] === ome.ol3.REGIONS_MODE['TRANSLATE']) { // TRANSLATE
+            selectMode = true; // we need it
+            translateMode = true; // set it
+            drawMode = false; // mutally exclusive
+            continue;
+        }
 
-		if (modes[m] === ome.ol3.REGIONS_MODE['MODIFY']) { // MODIFY
-			selectMode = true; // we need it
-			modifyMode = true; // set it
-			drawMode = false; // mutally exclusive
-			continue;
-		}
+        if (modes[m] === ome.ol3.REGIONS_MODE['MODIFY']) { // MODIFY
+            selectMode = true; // we need it
+            modifyMode = true; // set it
+            drawMode = false; // mutally exclusive
+            continue;
+        }
 
-		if (modes[m] === ome.ol3.REGIONS_MODE['DRAW']) { // DRAW
-			selectMode = false; // mutally exclusive
-			translateMode = false; // mutally exclusive
-			modifyMode = false; // mutally exclusive
-			drawMode = true; // we set it
-			continue;
-		}
-	}
+        if (modes[m] === ome.ol3.REGIONS_MODE['DRAW']) { // DRAW
+            selectMode = false; // mutally exclusive
+            translateMode = false; // mutally exclusive
+            modifyMode = false; // mutally exclusive
+            drawMode = true; // we set it
+            continue;
+        }
+    }
 
-	// this section here does the interaction registration/deregistration
-	var removeModifyInteractions = function(keep_select) {
+    // this section here does the interaction registration/deregistration
+    var removeModifyInteractions = function(keep_select) {
         if (typeof keep_select !== 'boolean') keep_select = false;
-		if (this.modify_) {
-			this.viewer_.viewer_.getInteractions().remove(this.modify_);
-			this.modify_.dispose();
-			this.modify_ = null;
-		}
-		if (this.translate_) {
-			this.viewer_.viewer_.getInteractions().remove(this.translate_);
-			this.translate_.dispose();
-			if (this.viewer_.viewer_.getTargetElement())
+        if (this.modify_) {
+            this.viewer_.viewer_.getInteractions().remove(this.modify_);
+            this.modify_.dispose();
+            this.modify_ = null;
+        }
+        if (this.translate_) {
+            this.viewer_.viewer_.getInteractions().remove(this.translate_);
+            this.translate_.dispose();
+            if (this.viewer_.viewer_.getTargetElement())
                 this.viewer_.viewer_.getTargetElement().style.cursor = "";
-			this.translate_ = null;
-		}
-		if (!keep_select && this.select_) {
-			// if multiple (box) select was on, we turn it off now
-			this.viewer_.removeInteractionOrControl("boxSelect");
-			this.select_.clearSelection();
-			this.viewer_.viewer_.getInteractions().remove(this.select_);
-			this.select_.dispose();
-			this.changed();
-			this.select_ = null;
-		}
-	}
+            this.translate_ = null;
+        }
 
-	var removeDrawInteractions = function() {
-		if (this.draw_) {
-			this.draw_.dispose();
-			this.draw_ = null;
-		}
-	}
+        if (!keep_select && this.select_) {
+            // if multiple (box) select was on, we turn it off now
+            this.viewer_.removeInteractionOrControl("boxSelect");
+            this.select_.clearSelection();
+            this.viewer_.viewer_.getInteractions().remove(this.select_);
+            this.select_.dispose();
+            this.changed();
+            this.select_ = null;
+        }
+    }
 
-	var addSelectInteraction = function() {
-		if (this.select_ === null) {
-			this.select_ = new ome.ol3.interaction.Select(this);
-			this.viewer_.viewer_.addInteraction(this.select_);
-			// we also add muliple (box) select by default
-			this.viewer_.addInteraction(
-				"boxSelect",
-				new ome.ol3.interaction.BoxSelect(this));
-		}
-	}
+    var removeDrawInteractions = function() {
+        if (this.draw_) {
+            this.draw_.dispose();
+            this.draw_ = null;
+        }
+    }
 
-	if (defaultMode) { // reset all interactions
-		removeDrawInteractions.call(this);
-		removeModifyInteractions.call(this);
-		this.present_modes_.push(ome.ol3.REGIONS_MODE.DEFAULT);
-		return;
-	}
+    var addSelectInteraction = function() {
+        if (this.select_ === null) {
+            this.select_ = new ome.ol3.interaction.Select(this);
+            this.viewer_.viewer_.addInteraction(this.select_);
+            // we also add muliple (box) select by default
+            this.viewer_.addInteraction(
+                "boxSelect",
+                new ome.ol3.interaction.BoxSelect(this));
+        }
+    }
 
-	if (drawMode) { // remove mutually exclusive interactions
-		removeModifyInteractions.call(this);
-		if (this.draw_ === null) { // no need to do this if we have a draw already
-			this.draw_ = new ome.ol3.interaction.Draw(oldModes, this);
-		}
-		this.present_modes_.push(ome.ol3.REGIONS_MODE.DRAW);
-		return;
-	}
+    if (defaultMode) { // reset all interactions
+        removeDrawInteractions.call(this);
+        removeModifyInteractions.call(this);
+        this.present_modes_.push(ome.ol3.REGIONS_MODE.DEFAULT);
+        return;
+    }
+
+    if (drawMode) { // remove mutually exclusive interactions
+        removeModifyInteractions.call(this);
+        if (this.draw_ === null) // no need to do this if we have a draw already
+            this.draw_ = new ome.ol3.interaction.Draw(oldModes, this);
+        this.present_modes_.push(ome.ol3.REGIONS_MODE.DRAW);
+        return;
+    }
 
     // this gets rid of any existing modifies but leaves select
     removeModifyInteractions.call(this, true);
-	if (modifyMode) { // remove mutually exclusive interactions
-		removeDrawInteractions.call(this);
-		addSelectInteraction.call(this);
-		if (this.modify_ === null) {
-			this.modify_ = new ome.ol3.interaction.Modify(this);
-			this.viewer_.viewer_.addInteraction(this.modify_);
-		}
-		this.present_modes_.push(ome.ol3.REGIONS_MODE.MODIFY);
-	}
+    if (modifyMode) { // remove mutually exclusive interactions
+        removeDrawInteractions.call(this);
+        addSelectInteraction.call(this);
+        if (this.modify_ === null) {
+            this.modify_ = new ome.ol3.interaction.Modify(this);
+            this.viewer_.viewer_.addInteraction(this.modify_);
+        }
+        this.present_modes_.push(ome.ol3.REGIONS_MODE.MODIFY);
+    }
 
-	if (translateMode) { // remove mutually exclusive interactions
-		removeDrawInteractions.call(this);
-		addSelectInteraction.call(this);
-		if (this.translate_ === null) {
-			this.translate_ = new ome.ol3.interaction.Translate(this);
-			this.viewer_.viewer_.addInteraction(this.translate_);
-		}
-		this.present_modes_.push(ome.ol3.REGIONS_MODE.TRANSLATE);
-	}
+    if (translateMode) { // remove mutually exclusive interactions
+        removeDrawInteractions.call(this);
+        addSelectInteraction.call(this);
+        if (this.translate_ === null) {
+            this.translate_ = new ome.ol3.interaction.Translate(this);
+            this.viewer_.viewer_.addInteraction(this.translate_);
+        }
+        this.present_modes_.push(ome.ol3.REGIONS_MODE.TRANSLATE);
+    }
 
-	if (selectMode) { // remove mutually exclusive interactions
-		removeDrawInteractions.call(this);
-		addSelectInteraction.call(this);
-		this.present_modes_.push(ome.ol3.REGIONS_MODE.SELECT);
-	}
+    if (selectMode) { // remove mutually exclusive interactions
+        removeDrawInteractions.call(this);
+        addSelectInteraction.call(this);
+        this.present_modes_.push(ome.ol3.REGIONS_MODE.SELECT);
+    }
 }
 
 /**
@@ -420,34 +420,33 @@ ome.ol3.source.Regions.prototype.setModes = function(modes) {
  * @param {boolean=} request_info force a server request to get the up-to-date rois
  */
 ome.ol3.source.Regions.prototype.updateRegions= function(request_info) {
-	var makeServerRequest = false;
-	if (typeof(request_info) === 'boolean') makeServerRequest = request_info;
+    var makeServerRequest = false;
+    if (typeof(request_info) === 'boolean') makeServerRequest = request_info;
 
-	if (this.select_)
-		this.select_.clearSelection();
-	this.viewer_.removeRegions(true); // removes masks only
+    if (this.select_)
+    this.select_.clearSelection();
+    this.viewer_.removeRegions(true); // removes masks only
 
-	// remember any features we added
-	var allFeatures = this.featuresRtree_.getAll();
-	for (var f in allFeatures) {
+    // remember any features we added
+    var allFeatures = this.featuresRtree_.getAll();
+    for (var f in allFeatures) {
         var feat = allFeatures[f];
-		if (feat['state'] === ome.ol3.REGIONS_STATE.ADDED &&
-                typeof this.new_unsaved_shapes_[feat.getId()] !== 'object')
-			this.new_unsaved_shapes_[feat.getId()] = feat;
+        if (feat['state'] === ome.ol3.REGIONS_STATE.ADDED &&
+            typeof this.new_unsaved_shapes_[feat.getId()] !== 'object')
+                this.new_unsaved_shapes_[feat.getId()] = feat;
     }
 
-	this.clear();
-	if (makeServerRequest) {
-		this.initialize_(this); // simply reinitialize
-		return;
-	}
+    this.clear();
+    if (makeServerRequest) {
+        this.initialize_(this); // simply reinitialize
+        return;
+    }
 
-	// just take the roi info that we had already (and include orphaned additions)
-	var regionsAsFeatures =
-		ome.ol3.utils.Regions.createFeaturesFromRegionsResponse(this, true);
-	if (!ome.ol3.utils.Misc.isArray(regionsAsFeatures)) regionsAsFeatures = [];
-	if (regionsAsFeatures.length > 0)
-		this.addFeatures(regionsAsFeatures);
+    // just take the roi info that we had already (and include orphaned additions)
+    var regionsAsFeatures =
+        ome.ol3.utils.Regions.createFeaturesFromRegionsResponse(this, true);
+    if (!ome.ol3.utils.Misc.isArray(regionsAsFeatures)) regionsAsFeatures = [];
+    if (regionsAsFeatures.length > 0) this.addFeatures(regionsAsFeatures);
 }
 
 /**
@@ -456,11 +455,11 @@ ome.ol3.source.Regions.prototype.updateRegions= function(request_info) {
  * @param {boolean} scaleText a flag whether text should be scaled with resolution changes
  */
 ome.ol3.source.Regions.prototype.setScaleText = function(scaleText) {
-	if (typeof(scaleText) !== 'boolean') return;
+    if (typeof(scaleText) !== 'boolean') return;
 
-	// set member flag
-	this.scale_text_ = scaleText;
-	this.changed();
+    // set member flag
+    this.scale_text_ = scaleText;
+    this.changed();
 }
 
 /**
@@ -469,11 +468,11 @@ ome.ol3.source.Regions.prototype.setScaleText = function(scaleText) {
  * @param {boolean} rotateText a flag whether text should be rotated along with the view
  */
 ome.ol3.source.Regions.prototype.setRotateText = function(rotateText) {
-	if (typeof(rotateText) !== 'boolean') return;
+    if (typeof(rotateText) !== 'boolean') return;
 
-	// set member flag
-	this.rotate_text_ = rotateText;
-	this.changed();
+    // set member flag
+    this.rotate_text_ = rotateText;
+    this.changed();
 }
 
 /**
@@ -523,163 +522,167 @@ ome.ol3.source.Regions.prototype.forEachFeatureInExtent =
  *
  * @param {Object} roisAsJsonObject a populated object for json serialization
  * @param {string} uri a uri to post to for persistance
+ * @param {boolean} omit_client_update an optional flag that's handed back to the client
+ *                  to indicate that a client side update to the response is not needed
  */
-ome.ol3.source.Regions.prototype.storeRegions = function(roisAsJsonObject, uri) {
-	// we need the csrftoken for posting...
-	var csrftoken  = ome.ol3.utils.Misc.getCookie("csrftoken");
-	if (csrftoken === "") return; // post won't be accepted without csrftoken
+ome.ol3.source.Regions.prototype.storeRegions =
+    function(roisAsJsonObject, uri, omit_client_update) {
 
-	// we do this in batches of 250 which will complete in a reasonable time
-	// so that we don't run into a timeout
-	var batch = {
-		"nextRoiId" : "",
-		"nextShapeId" : "",
-		"storedCount" : 0
-	};
-	var imageId = this.viewer_.id_;
+    // we need the csrftoken for posting...
+    var csrftoken  = ome.ol3.utils.Misc.getCookie("csrftoken");
+    if (csrftoken === "") return; // post won't be accepted without csrftoken
 
-	// this method chops up our larger numbers into smaller batches
-	var getJsonForNextBatchToPost = function(batch) {
-		var counter = 0;
-		var rois = {};
-		var json;
-		for (var r in roisAsJsonObject['rois']) {
-			if (batch['nextRoiId'] !== "" && r !== batch['nextRoiId'])
-				continue; // skip forward to out next roi
-			batch['nextRoiId'] = "";
+    // we do this in batches of 250 which will complete in a reasonable time
+    // so that we don't run into a timeout
+    var batch = {
+        "nextRoiId" : "",
+        "nextShapeId" : "",
+        "storedCount" : 0
+    };
+    var imageId = this.viewer_.id_;
 
-			if (counter >= 250) { // we are above batch size => set next roi and shape
-				batch['nextRoiId'] = r;
-				batch['nextShapeId'] = s;
-				break;
-			}
+    // this method chops up our larger numbers into smaller batches
+    var getJsonForNextBatchToPost = function(batch) {
+        var counter = 0;
+        var rois = {};
+        var json;
+        for (var r in roisAsJsonObject['rois']) {
+            if (batch['nextRoiId'] !== "" && r !== batch['nextRoiId'])
+                continue; // skip forward to out next roi
+                batch['nextRoiId'] = "";
 
-			for (var s in roisAsJsonObject['rois'][r]['shapes']) {
-				if (batch['nextShapeId'] !== "" && s !== batch['nextShapeId'])
-					continue; // skip forward to out next shape id
-				batch['nextShapeId'] = "";
+            if (counter >= 250) { // we are above batch size => set next roi and shape
+                batch['nextRoiId'] = r;
+                batch['nextShapeId'] = s;
+                break;
+            }
 
-				// we are above batch size => set next roi and shape
-				if (counter >= 250) { // we are above batch size => set next roi and shape
-					batch['nextRoiId'] = r;
-					batch['nextShapeId'] = s;
-					break;
-				}
+            for (var s in roisAsJsonObject['rois'][r]['shapes']) {
+                if (batch['nextShapeId'] !== "" && s !== batch['nextShapeId'])
+                    continue; // skip forward to out next shape id
+                    batch['nextShapeId'] = "";
 
-				// else add roi/shape
-				if (typeof(rois[r]) !== 'object') {
+                // we are above batch size => set next roi and shape
+                if (counter >= 250) { // we are above batch size => set next roi and shape
+                    batch['nextRoiId'] = r;
+                    batch['nextShapeId'] = s;
+                    break;
+                }
+
+                // else add roi/shape
+                if (typeof(rois[r]) !== 'object') {
                     var newRois = {
-						"@type" : "http://www.openmicroscopy.org/Schemas/OME/2016-06#ROI",
-						"shapes" : []};
+                        "@type" : "http://www.openmicroscopy.org/Schemas/OME/2016-06#ROI",
+                        "shapes" : []
+                    };
                     var roisId = parseInt(r);
                     if (roisId >= 0) newRois['@id'] = roisId;
                     rois[r] = newRois;
                 }
-				rois[r]['shapes'].push(roisAsJsonObject['rois'][r]['shapes'][s]);
-				++counter;
-			}
-		}
-		if (counter < 250) { // we are done
-			// reset
-			batch['nextRoiId'] = "";
-			batch['nextShapeId'] = "";
-		}
-		if (counter === 0) // modulo batch size
-			return "";
+                rois[r]['shapes'].push(roisAsJsonObject['rois'][r]['shapes'][s]);
+                ++counter;
+            }
+        }
 
-		// turn object into json
-		try {
-			// add the image id so that the server knows which image is concerned
-			var objectToStringify = {"imageId" : imageId, "count" : counter};
-			objectToStringify['rois'] = rois;
-			return JSON.stringify(objectToStringify);
-		} catch(jsonStringifyFailed) {
-			return null;
-		}
-	};
+        if (counter < 250) { // we are done
+            // reset
+            batch['nextRoiId'] = "";
+            batch['nextShapeId'] = "";
+        }
+        if (counter === 0) // modulo batch size
+        return "";
 
-	// fetch next batch to process
-	var postContent = getJsonForNextBatchToPost(batch);
+        // turn object into json
+        try {
+            // add the image id so that the server knows which image is concerned
+            var objectToStringify = {"imageId" : imageId, "count" : counter};
+            objectToStringify['rois'] = rois;
+            return JSON.stringify(objectToStringify);
+        } catch(jsonStringifyFailed) {
+            return null;
+        }
+    };
 
-	// set post properties and handlers
-	var properties = {
-		"server" : this.viewer_.getServer(),
-		"uri" : uri,
-		"method" : 'POST',
-		"content" : postContent,
-		"headers" : {"X-CSRFToken" : csrftoken},
-	 "jsonp" : false,
-	 "error" : function(error) {
-		console.error("Failed to store regions: " +
-		 ((error && error.length > 0) ? ("\\n" + error) : ""));
-	 }
+    // fetch next batch to process
+    var postContent = getJsonForNextBatchToPost(batch);
+
+    // set post properties and handlers
+    var properties = {
+        "server" : this.viewer_.getServer(),
+        "uri" : uri,
+        "method" : 'POST',
+        "content" : postContent,
+        "headers" : {"X-CSRFToken" : csrftoken},
+         "jsonp" : false,
+         "error" : function(error) {
+        console.error("Failed to store regions: " +
+         ((error && error.length > 0) ? ("\\n" + error) : ""));
+         }
  	};
 
-	// the success handler for the POST
-	var capturedRegionsReference = this;
-	properties["success"] = function(data) {
-			 if (typeof(data) !== 'string')
-				console.error("Did not receive any data after regions post");
+    // the success handler for the POST
+    var capturedRegionsReference = this;
+    properties["success"] = function(data) {
+        if (typeof(data) !== 'string')
+            console.error("Did not receive any data after regions post");
 
-			 try {
-				 data = JSON.parse(data);
-			 } catch(parseError) {
-				 console.error("Failed to parse json response for regions storage!");
-			 }
-			 if (typeof(data['error']) === 'string') {
-				 console.error("Failed to store rois: " + data['error']);
-				 return;
-			 }
-			 if (typeof(data['ids']) === 'object') {
-				 // synchronize ids and states
-				 for (var id in data['ids']) {
-					 try {
-                         var f = capturedRegionsReference.idIndex_[id];
-                         if (f['state'] === ome.ol3.REGIONS_STATE.REMOVED)
-                            capturedRegionsReference.removeFeature(f);
-						 else {
-                            f['state'] = ome.ol3.REGIONS_STATE.DEFAULT;
-						    f.setId(data['ids'][id]);
-                        }
-						 batch['storedCount']++;
-					 } catch(wrongIndex) {}
-				 }
+        try {
+            data = JSON.parse(data);
+        } catch(parseError) {
+            console.error("Failed to parse json response for regions storage!");
+        }
+        if (typeof(data['error']) === 'string') {
+            console.error("Failed to store rois: " + data['error']);
+            return;
+        }
 
-				 // send off of next batch
-				 if (batch['nextRoiId'] !== "" && batch['nextShapeId'] !== "") {
-					 properties['content'] =
-					 	getJsonForNextBatchToPost(batch);
-						if (properties['content'] === null) {
-							console.error("Failed to construct json for rois request!");
-							return;
-						} else if (properties['content'] === "")
-							return;
+        if (typeof(data['ids']) === 'object') {
+            // synchronize ids and states
+            for (var id in data['ids']) {
+                try {
+                    var f = capturedRegionsReference.idIndex_[id];
+                    if (f['state'] === ome.ol3.REGIONS_STATE.REMOVED)
+                        capturedRegionsReference.removeFeature(f);
+                    else {
+                        f['state'] = ome.ol3.REGIONS_STATE.DEFAULT;
+                        f.setId(data['ids'][id]);
+                    }
+                    batch['storedCount']++;
+                } catch(wrongIndex) {}
+        }
 
-						// send request
-						ome.ol3.utils.Net.sendRequest(properties, this);
-				 }
+        // send off of next batch
+        if (batch['nextRoiId'] !== "" && batch['nextShapeId'] !== "") {
+            properties['content'] = getJsonForNextBatchToPost(batch);
+            if (properties['content'] === null) {
+                console.error("Failed to construct json for rois request!");
+                return;
+            } else if (properties['content'] === "") return;
 
-                 // send out notification with shape ids
-                 var v = capturedRegionsReference.viewer_;
-                 var config_id = v.getTargetId();
-                 var eventbus = v.eventbus_;
-                 if (config_id && eventbus) // publish
-                     setTimeout(function() {
-                         eventbus.publish("REGIONS_STORED_SHAPES",
-                             {"config_id": config_id,
-                                 "shapes": data['ids']});
-                     },25);
-			 }
-		};
+            // send request
+            ome.ol3.utils.Net.sendRequest(properties, this);
+        }
 
-	if (postContent === null) {
-		console.error("Failed to construct json for rois request!");
-		return;
-	} else if (postContent === "")
-		return;
+        // send out notification with shape ids
+        if (typeof omit_client_update !== 'boolean')
+            omit_client_update = false;
+        var v = capturedRegionsReference.viewer_;
+        var config_id = v.getTargetId();
+        var eventbus = v.eventbus_;
+        if (config_id && eventbus) // publish
+            eventbus.publish("REGIONS_STORED_SHAPES",
+            {"config_id": config_id, "shapes": data['ids'],
+             "omit_client_update" : omit_client_update});
+        }
+    };
 
-	// send request
-	ome.ol3.utils.Net.sendRequest(properties, this);
+    if (postContent === null) {
+        console.error("Failed to construct json for rois request!");
+        return;
+    } else if (postContent === "") return;
+
+    // send request
+    ome.ol3.utils.Net.sendRequest(properties, this);
 }
 
 /**
@@ -695,7 +698,7 @@ ome.ol3.source.Regions.prototype.storeRegions = function(roisAsJsonObject, uri) 
 ome.ol3.source.Regions.prototype.setProperty =
     function(roi_shape_ids, property, value, callback) {
 
-	if (!ome.ol3.utils.Misc.isArray(roi_shape_ids) ||
+    if (!ome.ol3.utils.Misc.isArray(roi_shape_ids) ||
         typeof property !== 'string' ||
         typeof value === 'undefined' ||
         typeof this.idIndex_ !== 'object') return;
@@ -863,6 +866,6 @@ ome.ol3.source.Regions.prototype.disposeInternal = function() {
     this.loadedExtentsRtree_ = null;
     this.nullGeometryFeatures_ = null;
     this.history_ = {};
-	this.regions_info_ = null;
-	this.viewer_ = null;
+    this.regions_info_ = null;
+    this.viewer_ = null;
 };

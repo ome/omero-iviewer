@@ -799,3 +799,26 @@ thead, tbody {
     font-size: 12px;
     width: 80%;
 }
+
+.confirmation_dialog .modal-dialog {
+    width: 100%;
+    height: 100%;
+    left: 35%;
+    top: 30%;
+}
+.confirmation_dialog .modal-content {
+    width: 300px;
+}
+.confirmation_dialog .modal-title {
+    margin: 5px;
+}
+.confirmation_dialog .close {
+    margin-top: 5px;
+    margin-right: 8px;
+}
+.confirmation_dialog .modal-header {
+    padding: 2px;
+}
+.confirmation_dialog .modal-footer {
+    padding: 4px;
+}
