@@ -2,6 +2,7 @@
 import {inject,customElement} from 'aurelia-framework';
 import Context from '../app/context';
 import Misc from '../utils/misc';
+import UI from '../utils/ui';
 import {WEBGATEWAY} from '../utils/constants';
 import {REGIONS_STORE_SHAPES, REGIONS_STORED_SHAPES} from '../events/events';
 import {
@@ -179,21 +180,28 @@ export default class ThumbnailSlider extends EventSubscriber {
         // and are not cross domain
         if (conf && conf.regions_info &&
                 conf.regions_info.hasBeenModified() &&
-                !Misc.useJsonp(this.context.server) &&
-                    confirm(
-                        "You have new/deleted/modified ROI(S)." +
-                        "\nDo you want to save your changes?")) {
-            let tmpSub =
-                this.context.eventbus.subscribe(
-                    REGIONS_STORED_SHAPES,
-                    (params={}) => {
-                        this.context.addImageConfig(image_id);
-                        tmpSub.dispose();
-                });
-            this.context.publish(
-                REGIONS_STORE_SHAPES,
-                {config_id : conf.id, selected: false, omit_client_update: true});
-        } else this.context.addImageConfig(image_id);
+                !Misc.useJsonp(this.context.server)) {
+            let saveHandler = () => {
+                let tmpSub =
+                    this.context.eventbus.subscribe(
+                        REGIONS_STORED_SHAPES,
+                        (params={}) => {
+                            this.context.addImageConfig(image_id);
+                            tmpSub.dispose();
+                    });
+                this.context.publish(
+                    REGIONS_STORE_SHAPES,
+                    {config_id : conf.id, selected: false, omit_client_update: true});
+            };
+
+            UI.showConfirmationDialog(
+                'Save ROIS?',
+                'You have new/deleted/modified ROI(S).<br>' +
+                'Do you want to save your changes?',
+                saveHandler, () => this.context.addImageConfig(image_id));
+            return;
+        }
+        this.context.addImageConfig(image_id);
     }
 
     /**
