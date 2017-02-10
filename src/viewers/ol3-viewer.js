@@ -44,6 +44,13 @@ export default class Ol3Viewer extends EventSubscriber {
     image_config = null;
 
     /**
+     * the internal instance of the ol3.Viewer
+     * @memberof Ol3Viewer
+     * @type {ol3.Viewer}
+     */
+    viewer = null;
+
+    /**
      * the info needed for the play loop
      * @memberof Ol3Viewer
      * @type {number}
