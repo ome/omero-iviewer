@@ -1476,12 +1476,13 @@ ome.ol3.Viewer.prototype.getSmallestViewExtent = function() {
  * @param {string} uri a server uri to post to for persistance
  * @param {boolean} omit_client_update an optional flag that's handed back to the client
  *                  to indicate that a client side update to the response is not needed
+ * @return {boolean} true if a storage request was made, false otherwise
  */
 ome.ol3.Viewer.prototype.storeRegions =
 	function(selectedOnly,useSeparateRoiForEachNewShape, uri, omit_client_update) {
 
 	if (!(this.regions_ instanceof ome.ol3.source.Regions))
-		return; // no regions, nothing to persist...
+		return false; // no regions, nothing to persist...
 
 	selectedOnly = typeof(selectedOnly) === 'boolean' ? selectedOnly : false;
 	useSeparateRoiForEachNewShape =
@@ -1499,9 +1500,9 @@ ome.ol3.Viewer.prototype.storeRegions =
 
 	// either something happened or we don't have anything to persist
 	if (roisAsJsonObject === null || roisAsJsonObject['count'] === 0)
-		return;
+		return false;
 
-	this.regions_.storeRegions(roisAsJsonObject, uri, omit_client_update);
+	return this.regions_.storeRegions(roisAsJsonObject, uri, omit_client_update);
 }
 
 /**

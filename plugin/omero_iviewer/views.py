@@ -42,9 +42,6 @@ def persist_rois(request, conn=None, **kwargs):
     image_id = rois_dict.get('imageId', None)
     if image_id is None:
         return JsonResponse({"error": "No image id provided!"})
-    count = rois_dict.get('count', 0)
-    if count == 0:
-        return JsonResponse({"stored": 0})
     rois = rois_dict.get('rois', None)
     if rois is None:
         return JsonResponse({"error": "Could not find rois array!"})

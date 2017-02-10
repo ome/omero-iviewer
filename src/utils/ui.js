@@ -197,4 +197,40 @@ export default class Ui {
             }
         }
     }
+
+    /**
+     * Shows a bootstrap modal message box
+     *
+     * @param {string} title the title of the dialog
+     * @param {string} content goes into the body of the dialog
+     * @param {function} yes a handler that's executed on clicking yes
+     * @param {function} no an optional handler that's executed on clicking no
+     * @static
+     */
+    static showModalMessage(message, ok_button) {
+        if (typeof message !== 'string') message = '';
+        if (typeof ok_button !== 'boolean') ok_button = false;
+
+        let modal = $('.modal-message');
+        if (modal.length === 0) return;
+        modal.find('.modal-body').html(message);
+
+        modal.modal();
+    }
+
+    /**
+     * Hides the bootstrap modal message box
+     *
+     * @param {string} title the title of the dialog
+     * @param {string} content goes into the body of the dialog
+     * @param {function} yes a handler that's executed on clicking yes
+     * @param {function} no an optional handler that's executed on clicking no
+     * @static
+     */
+    static hideModalMessage() {
+        let modal = $('.modal-message');
+        if (modal.length === 0) return;
+        modal.find('.modal-body').html("");
+        modal.modal('hide');
+    }
 }

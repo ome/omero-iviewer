@@ -569,10 +569,12 @@ export default class Ol3Viewer extends EventSubscriber {
         let selectedOnly =
             typeof params.selected === 'boolean' && params.selected;
 
-        this.viewer.storeRegions(
-            selectedOnly, false,
-            this.context.getPrefixedURI(IVIEWER) + '/persist_rois',
-            params.omit_client_update);
+        let requestMade =
+            this.viewer.storeRegions(
+                selectedOnly, false,
+                this.context.getPrefixedURI(IVIEWER) + '/persist_rois',
+                params.omit_client_update);
+        if (requestMade) Ui.showModalMessage("Saving Regions. Please wait...");
     }
 
     /**
@@ -601,6 +603,7 @@ export default class Ol3Viewer extends EventSubscriber {
      * @param {Object} params the event notification parameters
      */
     afterShapeStorage(params = {}) {
+        Ui.hideModalMessage();
         // the event doesn't concern us
         if (params.config_id !== this.config_id ||
                 typeof params.shapes !== 'object' ||
@@ -633,8 +636,6 @@ export default class Ol3Viewer extends EventSubscriber {
                     this.image_config.regions_info.data.delete(id);
             }
         }
-        // reload shapes async
-        //this.image_config.regions_info.requestData(true);
         // for now let's just clear the history
         this.image_config.regions_info.history.resetHistory();
     }
