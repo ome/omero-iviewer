@@ -79,7 +79,7 @@
         </div>
         <div class="drawing-mode-apply">
             <button
-                class="${regions_info.selected_shapes.length === 0 || !propagate ?
+                class="${regions_info === null || regions_info.selected_shapes.length === 0 || !propagate ?
                             'disabled-color' : ''}"
                 click.delegate="propagateSelectedShapes()"
                 disabled.bind="regions_info.selected_shapes.length === 0 || !propagate ">

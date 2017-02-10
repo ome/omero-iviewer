@@ -38,6 +38,8 @@ export default class RegionsEdit {
     /**
      * @constructor
      * @param {Context} context the application context (injected)
+     * @param {Element} element the associated dom element (injected)
+     * @param {BindingEngine} bindingEngine the BindingEngine (injected)
      */
     constructor(context, element, bindingEngine) {
         this.context = context;
@@ -226,12 +228,22 @@ export default class RegionsEdit {
      */
     registerObserver() {
         this.unregisterObserver();
-        this.observer =
+
+        let createSelectedShapeObserver = () =>
             this.bindingEngine.collectionObserver(
                 this.regions_info.selected_shapes)
                     .subscribe(
                         (newValue, oldValue) =>
                             this.adjustEditWidgets());
+        if (this.regions_info === null) {
+             this.observer =
+                this.bindingEngine.propertyObserver(this, 'regions_info')
+                    .subscribe((newValue, oldValue) => {
+                        if (oldValue === null && newValue) {
+                            this.unregisterObserver();
+                            this.observer = createSelectedShapeObserver();
+                    }});
+        } else this.observer = createSelectedShapeObserver();
     }
 
     /**

@@ -191,8 +191,8 @@ export default class ThumbnailSlider extends EventSubscriber {
                     this.context.eventbus.subscribe(
                         REGIONS_STORED_SHAPES,
                         (params={}) => {
-                            navigateToNewImage();
                             tmpSub.dispose();
+                            navigateToNewImage();
                     });
                 this.context.publish(
                     REGIONS_STORE_SHAPES,

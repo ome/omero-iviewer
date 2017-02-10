@@ -24,6 +24,12 @@ import {
 @noView
 export default class Context {
     /**
+     * are we running within the wepback dev server
+     * @type {boolean}
+     */
+    is_dev_server = false;
+
+    /**
      * the aurelia event aggregator
      * @type {EventAggregator}
      */
@@ -207,6 +213,7 @@ export default class Context {
      * @memberof Context
      */
     tweakForDevServer() {
+        this.is_dev_server = true;
         this.prefixed_uris.set(IVIEWER, "");
     }
 
@@ -276,6 +283,10 @@ export default class Context {
             oldPath.replace(old_image_id, image_id);
         if (typeof dataset_id === 'number')
             newPath += '?dataset_id=' + dataset_id;
+        if (this.is_dev_server) {
+            newPath += (newPath.indexOf('?') === -1) ? '?' : '&';
+            newPath += 'haveMadeCrossOriginLogin_';
+        }
         window.history.pushState(
             {image_id: image_id, dataset_id: dataset_id},"",newPath);
     }

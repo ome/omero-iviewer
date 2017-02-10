@@ -121,14 +121,6 @@ export default class Ol3Viewer extends EventSubscriber {
             this.context.getPrefixedURI(IVIEWER, true),
         );
 
-        // instantiate the viewer
-        this.viewer =
-            new ol3.Viewer(this.image_config.image_info.image_id,
-                { eventbus : this.context.eventbus,
-                  server : this.context.server,
-                  initParams :  this.context.initParams,
-                  container: this.container
-                });
         // subscribe
         this.subscribe();
     }
@@ -234,6 +226,16 @@ export default class Ol3Viewer extends EventSubscriber {
      * @memberof Ol3Viewer
      */
     initViewer()  {
+        // create viewer instance
+        this.viewer =
+            new ol3.Viewer(
+                this.image_config.image_info.image_id,
+                { eventbus : this.context.eventbus,
+                  server : this.context.server,
+                  initParams :  this.context.initParams,
+                  container: this.container
+        });
+
         // should we display the scale bar
         this.showScalebar(this.context.show_scalebar);
         // whould we display regions...

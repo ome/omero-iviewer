@@ -242,7 +242,7 @@ export default class Ui {
          if (typeof yes !== 'function') yes = null;
          if (typeof no !== 'function') no = null;
 
-         let dialog = $('.confirmation_dialog');
+         let dialog = $('.confirmation-dialog');
          if (dialog.length === 0) return;
          dialog.find('.modal-title').html(title);
          dialog.find('.modal-body').html(content);

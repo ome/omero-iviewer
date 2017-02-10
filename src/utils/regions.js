@@ -1,7 +1,7 @@
 import {noView} from 'aurelia-framework';
 import {REGIONS_DRAWING_MODE} from './constants';
 import Misc from './misc';
-import {History} from '../model/regions_info';
+import RegionsHistory from '../model/regions_history';
 
 /**
  * Regions Utility Class
@@ -98,7 +98,7 @@ export class Utils {
                 oldVals.push(old_value);
                 shape[prop] = values[i];
             };
-            if (history instanceof History && !allPropertiesEqual) {
+            if (history instanceof RegionsHistory && !allPropertiesEqual) {
                 if (typeof hist_id !== 'number') hist_id = -1;
                 history.addHistory(
                     hist_id, history.action.PROPERTIES,

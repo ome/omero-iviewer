@@ -37,7 +37,7 @@
                         data-toggle="dropdown">Delete
                 </button>
                 <ul class="dropdown-menu">
-                    <li if.bind="regions_info.selected_shapes &&
+                    <li if.bind="regions_info && regions_info.selected_shapes &&
                                     regions_info.selected_shapes.length !== 0"
                         click.delegate="deleteShapes()"><a href="#">Delete</a></li>
                     <li click.delegate="deleteShapes(true)"><a href="#">Delete All</a></li>

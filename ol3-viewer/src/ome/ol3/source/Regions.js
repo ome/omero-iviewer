@@ -529,6 +529,8 @@ ome.ol3.source.Regions.prototype.forEachFeatureInExtent =
 ome.ol3.source.Regions.prototype.storeRegions =
     function(roisAsJsonObject, uri, omit_client_update) {
 
+    if (typeof omit_client_update !== 'boolean') omit_client_update = false;
+
     try {
         // loop over given given shapes, wrapping them
         var rois = {};
@@ -580,13 +582,15 @@ ome.ol3.source.Regions.prototype.storeRegions =
                 data = JSON.parse(data);
 
                 // synchronize ids and states
-                for (var id in data['ids']) {
-                    var f = capturedRegionsReference.idIndex_[id];
-                    if (f['state'] === ome.ol3.REGIONS_STATE.REMOVED)
-                        capturedRegionsReference.removeFeature(f);
-                    else {
-                        f['state'] = ome.ol3.REGIONS_STATE.DEFAULT;
-                        f.setId(data['ids'][id]);
+                if (!omit_client_update) {
+                    for (var id in data['ids']) {
+                        var f = capturedRegionsReference.idIndex_[id];
+                        if (f['state'] === ome.ol3.REGIONS_STATE.REMOVED)
+                            capturedRegionsReference.removeFeature(f);
+                        else {
+                            f['state'] = ome.ol3.REGIONS_STATE.DEFAULT;
+                            f.setId(data['ids'][id]);
+                        }
                     }
                 }
             } catch(err) {
@@ -596,11 +600,8 @@ ome.ol3.source.Regions.prototype.storeRegions =
             var params = {
                 "shapes":
                     typeof data === 'object' &&
-                    ome.ol3.utils.Misc.isArray(data['ids']) ?
-                        data['ids'] : [],
-                "omit_client_update" :
-                    typeof omit_client_update === 'boolean' ?
-                        omit_client_update :false
+                    typeof data['ids'] === 'object' ? data['ids'] : null,
+                "omit_client_update" : omit_client_update
             };
             if (error) params['error'] = error;
 
