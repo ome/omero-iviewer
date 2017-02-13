@@ -32,7 +32,7 @@ goog.require('ol.events.EventType');
  * </ul>
  *
  * Note: Properties plane, time and channels have setters as well
- * 			 since they can change at runtime
+ *       since they can change at runtime
  *
  * @constructor
  * @extends {ol.source.TileImage}
@@ -41,199 +41,199 @@ goog.require('ol.events.EventType');
  *
  */
 ome.ol3.source.Image = function(options) {
-	var opts = options || {};
+    var opts = options || {};
 
-	/**
-	 * the image id used for viewing
-	 * @type {number}
-	 * @private
-	 */
-	 this.id_ = opts.image || -1;
-     if (typeof this.id_ !== 'number' || this.id_ <= 0)
+    /**
+     * the image id used for viewing
+     * @type {number}
+     * @private
+     */
+    this.id_ = opts.image || -1;
+    if (typeof this.id_ !== 'number' || this.id_ <= 0)
         console.error("Image id must be a strictly positive integer");
 
     /**
-	 * an internal cache version which helps us invalidate
+     * an internal cache version which helps us invalidate
      * without clearing so that newer images are rendered 'on top' of olders
-	 * @type {number}
-	 * @private
-	 */
-	 this.cache_version_ = 0;
+     * @type {number}
+     * @private
+     */
+    this.cache_version_ = 0;
 
-	/**
-	 * the image width
-	 * @type {number}
-	 * @private
-	 */
-	this.width_ = opts.width || -1;
+    /**
+     * the image width
+     * @type {number}
+     * @private
+     */
+    this.width_ = opts.width || -1;
     if (typeof this.width_ !== 'number' || this.width_ <= 0)
-       console.error("Image width must be a strictly positive integer");
+        console.error("Image width must be a strictly positive integer");
 
-	/**
-	 * the image height
-	 * @type {number}
-	 * @private
-	 */
-	this.height_ = opts.height || -1;
+    /**
+     * the image height
+     * @type {number}
+     * @private
+     */
+    this.height_ = opts.height || -1;
     if (typeof this.height_ !== 'number' || this.height_ <= 0)
-       console.error("Image height must be a strictly positive integer");
+        console.error("Image height must be a strictly positive integer");
 
-	/**
- 	 * the plane (z) index
- 	 * @type {number}
- 	 * @private
- 	 */
-	this.plane_ = opts.plane || 0;
+    /**
+     * the plane (z) index
+     * @type {number}
+     * @private
+     */
+    this.plane_ = opts.plane || 0;
     if (typeof this.plane_ !== 'number' || this.plane_ < 0)
-       console.error("Image plane must be a non negative integer");
+        console.error("Image plane must be a non negative integer");
 
-	/**
- 	* the time (t) index
- 	* @type {number}
- 	* @private
- 	*/
-	this.time_ = opts.time || 0;
+    /**
+     * the time (t) index
+     * @type {number}
+     * @private
+     */
+    this.time_ = opts.time || 0;
     if (typeof this.time_ !== 'number' || this.time_ < 0)
-       console.error("Image time must be a non negative integer");
-
-	/**
-	 * the channels info
-	 * @type {Array.<Object>}
-	 * @private
-	 */
-	this.channels_info_ =
-        ome.ol3.utils.Misc.isArray(opts.channels) ?
-            [].concat(opts.channels) : [];
+        console.error("Image time must be a non negative integer");
 
     /**
- 	 * should split view be used
- 	 * @type {boolean}
- 	 * @private
- 	 */
-	this.split_ =
-        typeof opts.split === 'boolean' ? opts.split : false;
+     * the channels info
+     * @type {Array.<Object>}
+     * @private
+     */
+    this.channels_info_ =
+        ome.ol3.utils.Misc.isArray(
+            opts.channels) ? [].concat(opts.channels) : [];
 
     /**
- 	 * the omero image projection
- 	 * @type {string}
- 	 * @private
- 	 */
-	this.image_projection_ = "normal";
+     * should split view be used
+     * @type {boolean}
+     * @private
+     */
+    this.split_ = typeof opts.split === 'boolean' ? opts.split : false;
+
+    /**
+     * the omero image projection
+     * @type {string}
+     * @private
+     */
+    this.image_projection_ = "normal";
     this.setImageProjection(opts.img_proj);
 
     /**
- 	 * the omero image model (color: 'c' or greyscale: 'g')
- 	 * @type {string}
- 	 * @private
- 	 */
-	this.image_model_ = "g";
+     * the omero image model (color: 'c' or greyscale: 'g')
+     * @type {string}
+     * @private
+     */
+    this.image_model_ = "g";
     this.setImageModel(opts.img_model);
 
     /**
- 	 * the resolutions array
- 	 * @type {Array.<number>}
- 	 * @private
- 	 */
-     this.resolutions_ =
+     * the resolutions array
+     * @type {Array.<number>}
+     * @private
+     */
+    this.resolutions_ =
         ome.ol3.utils.Misc.isArray(opts.resolutions) ? opts.resolutions : [1];
 
     /**
- 	 * are we treated as a tiled source
- 	 * @type {boolean}
- 	 * @private
- 	 */
-     this.tiled_ = opts.tiled;
+     * are we treated as a tiled source
+     * @type {boolean}
+     * @private
+     */
+    this.tiled_ = opts.tiled;
 
-     /**
-  	 * should we use tiled retrieval methods?
+    /**
+     * should we use tiled retrieval methods?
      * for now use them only for truly tiled/pyramidal sources
      * and images that exceed a size of 1000x1000 pixels
      * split view is excempted as well
-  	 * @type {boolean}
-  	 * @private
-  	 */
-      this.use_tiled_retrieval_ =
+     * @type {boolean}
+     * @private
+     */
+    this.use_tiled_retrieval_ =
         !this.split_ &&
             (this.tiled_ || (this.width_* this.height_) > (1000 * 1000));
-      if (!this.use_tiled_retrieval_) // 1 tile with image dimensions
+    if (!this.use_tiled_retrieval_) // 1 tile with image dimensions
         opts.tile_size = { width: this.width_, height: this.height_};
 
-	/**
- 	 * the omero server information
- 	 * @type {Object}
- 	 * @private
- 	 */
-	this.server_ = opts.server;
+    /**
+     * the omero server information
+     * @type {Object}
+     * @private
+     */
+    this.server_ = opts.server;
     if (this.server_ === null)
         console.error("The given server information is invalid!");
 
-	/**
- 	 * the uri for image requests
- 	 * @type {string}
- 	 * @private
- 	 */
-    this.uri_ =
-        ome.ol3.utils.Net.checkAndSanitizeUri(
-            opts.uri + '/' +
-            (this.split_ ? 'render_split_channel' :
-                this.use_tiled_retrieval_ ?
-                    'render_image_region' : 'render_image'));
-
-	/**
- 	 * the a function that can be called as a post tile load hook
- 	 * @type {function|null}
- 	 * @protected
- 	 */
-	this.postTileLoadFunction_ = null;
+    /**
+     * the uri for image requests
+     * @type {string}
+     * @private
+     */
+    this.uri_ = ome.ol3.utils.Net.checkAndSanitizeUri(
+        opts.uri + '/' + (this.split_ ? 'render_split_channel' :
+        this.use_tiled_retrieval_ ? 'render_image_region' : 'render_image'));
 
     /**
- 	 * the present render status
- 	 * @type {number}
- 	 * @private
- 	 */
+     * the a function that can be called as a post tile load hook
+     * @type {function|null}
+     * @protected
+     */
+    this.postTileLoadFunction_ = null;
+
+    /**
+     * the present render status
+     * @type {number}
+     * @private
+     */
     this.render_status_ = ome.ol3.RENDER_STATUS.NOT_WATCHED;
 
     /**
- 	 * the present render watch handle
- 	 * @type {number}
- 	 * @private
- 	 */
+     * the present render watch handle
+     * @type {number}
+     * @private
+     */
     this.render_watch_ = null;
 
-	// get rest of parameters and instantiate a tile grid
-	var tileSize = opts.tile_size ||
-		{ width: ol.DEFAULT_TILE_SIZE, height: ol.DEFAULT_TILE_SIZE };
-	var extent = [0, -this.height_, this.width_, 0];
-	var tileGrid = new ol.tilegrid.TileGrid({
-		tileSize: [tileSize.width, tileSize.height],
-	    extent: extent,
-	    origin: ol.extent.getTopLeft(extent),
-	    resolutions: this.resolutions_
-	});
+    // get rest of parameters and instantiate a tile grid
+    var tileSize =
+        opts.tile_size ||
+            { width: ol.DEFAULT_TILE_SIZE, height: ol.DEFAULT_TILE_SIZE };
+    var extent = [0, -this.height_, this.width_, 0];
+    var tileGrid = new ol.tilegrid.TileGrid({
+        tileSize: [tileSize.width, tileSize.height],
+        extent: extent,
+        origin: ol.extent.getTopLeft(extent),
+        resolutions: this.resolutions_
+    });
 
-	// a custom tile url function concatinating all image specificiations
-	// needed to retrieve the image from the server
-	var tileUrlFunction =
-		function tileUrlFunction(tileCoord, pixelRatio, projection) {
-			if (!tileCoord) return undefined;
+    // a custom tile url function concatinating all image specificiations
+    // needed to retrieve the image from the server
+    var tileUrlFunction =
+        function tileUrlFunction(tileCoord, pixelRatio, projection) {
+            if (!tileCoord) return undefined;
 
-			var zoom = this.tileGrid.resolutions_.length - tileCoord[0] - 1;
+            var zoom = this.tileGrid.resolutions_.length - tileCoord[0] - 1;
 
-			var url =
-                this.server_['full'] + "/" + this.uri_['full'] + '/' +
-                    this.id_ + '/' + this.plane_ + '/' + this.time_ + '/?';
+            var url =
+            this.server_['full'] + "/" + this.uri_['full'] + '/' +
+            this.id_ + '/' + this.plane_ + '/' + this.time_ + '/?';
 
-            if (!this.split_) { // only for non split view
-    			if (this.tiled_) // for tiles we use &tile
-    				url += 'tile=' + zoom + ',' + tileCoord[1] + ',' + (-tileCoord[2]-1);
+            //non split view and tiled retrieval
+            if (!this.split_ && (this.tiled_ || this.use_tiled_retrieval_)) {
+                if (this.tiled_) // for tiles we use &tile
+                    url += 'tile=' + zoom + ',' + tileCoord[1] + ',' +
+                            (-tileCoord[2]-1);
                 else if (this.use_tiled_retrieval_) // use &region to support 'tiled' behavior
-    				url += 'region=' + (tileCoord[1] * this.tileGrid.tileSize_[0]) + ',' +
-    					((-tileCoord[2]-1) * this.tileGrid.tileSize_[1]);
-    			url += ',' + this.tileGrid.tileSize_[0] + ',' + this.tileGrid.tileSize_[1];
-                url += '&';
+                    url += 'region=' +
+                            (tileCoord[1] * this.tileGrid.tileSize_[0]) + ',' +
+                            ((-tileCoord[2]-1) * this.tileGrid.tileSize_[1]);
+                url += ',' + this.tileGrid.tileSize_[0] + ',' +
+                        this.tileGrid.tileSize_[1] + '&';
             }
 
-			// add channel param
+            // add channel param
             url += 'c=';
             var channelsLength = this.channels_info_.length;
             for (var c=0; c<channelsLength;c++) {
@@ -245,22 +245,22 @@ ome.ol3.source.Image = function(options) {
                 url += "|" + channelInfo['start'] + ":" + channelInfo['end'];
                 if (typeof channelInfo['reverse'] === 'boolean')  // reverse int.
                     url += (channelInfo['reverse'] ? "" : "-") + "r";
-                url += "$" + channelInfo['color']; // color info
+                    url += "$" + channelInfo['color']; // color info
             }
             url += '&m=' + this.image_model_;
             url += '&p=' + (this.split_ ? 'split' : this.image_projection_);
-			url += '&q=0.9';
+            url += '&q=0.9';
 
-			return url;
-		};
+            return url;
+    };
 
-	// call super constructor and set proprerties needed
-	goog.base(this, {
-		crossOrigin: opts.crossOrigin,
-		tileClass:  ome.ol3.tiles.ImageTile,
-		tileGrid: tileGrid,
-		tileUrlFunction: tileUrlFunction,
-	});
+    // call super constructor and set proprerties needed
+    goog.base(this, {
+        crossOrigin: opts.crossOrigin,
+        tileClass:  ome.ol3.tiles.ImageTile,
+        tileGrid: tileGrid,
+        tileUrlFunction: tileUrlFunction,
+    });
 };
 goog.inherits(ome.ol3.source.Image, ol.source.TileImage);
 
@@ -277,29 +277,39 @@ goog.inherits(ome.ol3.source.Image, ol.source.TileImage);
  * @return {ol.Tile} Tile.
  * @private
  */
-ome.ol3.source.Image.prototype.createTile_ = function(z, x, y, pixelRatio, projection, key) {
-  var tileCoord = [z, x, y];
-  var urlTileCoord = this.getTileCoordForTileUrlFunction(tileCoord, projection);
+ome.ol3.source.Image.prototype.createTile_ =
+    function(z, x, y, pixelRatio, projection, key) {
+        var tileCoord = [z, x, y];
+        var urlTileCoord =
+            this.getTileCoordForTileUrlFunction(tileCoord, projection);
 
-	var tileUrl = urlTileCoord ?
-      this.tileUrlFunction(urlTileCoord, pixelRatio, projection) : undefined;
+        var tileUrl =
+            urlTileCoord ?
+                this.tileUrlFunction(urlTileCoord, pixelRatio, projection) :
+                undefined;
 
-	var tile = new this.tileClass(
-      tileCoord,
-      tileUrl !== undefined ? ol.Tile.State.IDLE : ol.Tile.State.EMPTY,
-      tileUrl !== undefined ? tileUrl : '',
-      this.crossOrigin,
-      this.tileLoadFunction);
+        var tile =
+            new this.tileClass(
+                tileCoord,
+                tileUrl !== undefined ?
+                    ol.Tile.State.IDLE : ol.Tile.State.EMPTY,
+                tileUrl !== undefined ? tileUrl : '',
+                this.crossOrigin, this.tileLoadFunction);
 
-	tile.key = key;
-	tile.source = this;
+        tile.key = key;
+        tile.source = this;
 
-	ol.events.listen(tile, ol.events.EventType.CHANGE,
-			this.handleTileChange, this);
+        ol.events.listen(
+            tile, ol.events.EventType.CHANGE, this.handleTileChange, this);
 
-	return tile;
+        return tile;
 };
 
+/**
+ * Overridden getKey
+ *
+ * @return {number} the present cache version
+*/
 ome.ol3.source.Image.prototype.getKey = function() {
     return this.cache_version_;
 }
@@ -310,25 +320,25 @@ ome.ol3.source.Image.prototype.getKey = function() {
  * @return {number} the width (x index)
  */
 ome.ol3.source.Image.prototype.getWidth = function() {
-	  return this.width_;
+    return this.width_;
 }
 
 /**
  * Height (y index) getter
  *
  * @return {number} the height (y index)
- */
+*/
 ome.ol3.source.Image.prototype.getHeight = function() {
-	  return this.height_;
+    return this.height_;
 }
 
 /**
  * Plane (z index) getter
  *
  * @return {number} the plane (z index)
- */
+*/
 ome.ol3.source.Image.prototype.getPlane = function() {
-	  return this.plane_;
+    return this.plane_;
 }
 
 /**
@@ -339,8 +349,8 @@ ome.ol3.source.Image.prototype.getPlane = function() {
  */
 ome.ol3.source.Image.prototype.setPlane = function(value) {
     if (typeof value !== 'number' || value < 0)
-       console.error("Image plane must be a non negative integer");
-	this.plane_ = value;
+        console.error("Image plane must be a non negative integer");
+    this.plane_ = value;
 }
 
 /**
@@ -348,7 +358,7 @@ ome.ol3.source.Image.prototype.setPlane = function(value) {
  * @return {number} the time (t index)
  */
 ome.ol3.source.Image.prototype.getTime = function() {
-	  return this.time_;
+    return this.time_;
 }
 
 /**
@@ -359,8 +369,8 @@ ome.ol3.source.Image.prototype.getTime = function() {
  */
 ome.ol3.source.Image.prototype.setTime = function(value) {
     if (typeof value !== 'number' || value < 0)
-       console.error("Image time must be a non negative integer");
-	this.time_ = value;
+        console.error("Image time must be a non negative integer");
+    this.time_ = value;
 }
 
 /**
@@ -383,11 +393,12 @@ ome.ol3.source.Image.prototype.getChannels = function() {
  * @param {Array.<number>} value the channels array (c indices)
  */
 ome.ol3.source.Image.prototype.setChannels = function(value) {
-	if (!ome.ol3.utils.Misc.isArray(value)) return;
+    if (!ome.ol3.utils.Misc.isArray(value)) return;
+
     var max = this.channels_info_.length;
-	for (var c in value) {
-		if (typeof value[c] !== 'number' ||
-            value[c] < 0 || value[c] >= max) continue;
+    for (var c in value) {
+        if (typeof value[c] !== 'number' || value[c] < 0 || value[c] >= max)
+            continue;
         this.channels_info_[c].active = true;
     }
 }
@@ -399,12 +410,10 @@ ome.ol3.source.Image.prototype.setChannels = function(value) {
  * @param {string} value a string indicating the image projection
  */
 ome.ol3.source.Image.prototype.setImageProjection = function(value) {
-    if (typeof value !== 'string' ||
-        value.length === 0 ||
+    if (typeof value !== 'string' || value.length === 0 ||
         (value.toLowerCase() !== 'normal' &&
-            value.toLowerCase() !== 'split' &&
-            value.toLowerCase() !== 'intmax'))
-            return;
+         value.toLowerCase() !== 'split' &&
+         value.toLowerCase() !== 'intmax')) return;
 
     this.image_projection_ = value.toLowerCase();
     this.forceRender();
@@ -417,13 +426,11 @@ ome.ol3.source.Image.prototype.setImageProjection = function(value) {
  * @param {string} value a string indicating the image model
  */
 ome.ol3.source.Image.prototype.setImageModel = function(value) {
-    if (typeof value !== 'string' ||
-        value.length === 0 ||
+    if (typeof value !== 'string' || value.length === 0 ||
         (value.toLowerCase() !== 'greyscale' &&
-            value.toLowerCase() !== 'color' &&
-            value.toLowerCase() !== 'g' &&
-            value.toLowerCase() !== 'c'))
-            return;
+         value.toLowerCase() !== 'color' &&
+         value.toLowerCase() !== 'g' &&
+         value.toLowerCase() !== 'c')) return;
 
     this.image_model_ = value[0];
     this.forceRender();
@@ -452,20 +459,20 @@ ome.ol3.source.Image.prototype.changeChannelRange = function(ranges, rerender) {
 
         var channel_index = range['index'];
         this.channels_info_[channel_index]['start'] = range['start'];
-		this.channels_info_[channel_index]['end'] = range['end'];
+        this.channels_info_[channel_index]['end'] = range['end'];
 
         // second sanity check for optional color and reverse setting
         // cannot do much more to accomodate lookup table strings
         if (typeof range['color'] === 'string' && range['color'].length !== 0)
             this.channels_info_[channel_index]['color'] = range['color'];
         if (typeof range['reverse'] === 'boolean')
-            this.channels_info_[channel_index]['reverse'] =
-                range['reverse'];
+            this.channels_info_[channel_index]['reverse'] = range['reverse'];
 
         // third sanity check for optional act setting
         if (typeof range['active'] === 'boolean')
-            this.channels_info_[channel_index]['active'] = range['active'];
+        this.channels_info_[channel_index]['active'] = range['active'];
     }
+
     rerender = typeof rerender !== 'boolean' ? true : rerender;
     if (rerender) this.forceRender();
 }
@@ -474,7 +481,7 @@ ome.ol3.source.Image.prototype.changeChannelRange = function(ranges, rerender) {
  * Captures the image settings
  *
  * @return {object} an object populated with the channel_info, model and projection
- */
+*/
 ome.ol3.source.Image.prototype.captureImageSettings = function() {
     var ret = {
         'projection' : this.image_projection_,
@@ -486,19 +493,19 @@ ome.ol3.source.Image.prototype.captureImageSettings = function() {
 
     // loop over channels and add them
     for (var c in this.channels_info_) {
-            var chan = this.channels_info_[c];
-            var chanSnap = {
-                "active" : chan['active'],
-                "color" : chan['color'],
-                "min" : chan['min'],
-                "max" : chan['max'],
-                "start" : chan['start'],
-                "end" : chan['end']
-            };
-            if (typeof chan['reverse'] === 'boolean')
-                chanSnap['reverseIntensity'] = chan['reverse'];
-            ret['channels'].push(chanSnap);
-        }
+        var chan = this.channels_info_[c];
+        var chanSnap = {
+            "active" : chan['active'],
+            "color" : chan['color'],
+            "min" : chan['min'],
+            "max" : chan['max'],
+            "start" : chan['start'],
+            "end" : chan['end']
+        };
+        if (typeof chan['reverse'] === 'boolean')
+            chanSnap['reverseIntensity'] = chan['reverse'];
+        ret['channels'].push(chanSnap);
+    }
 
     return ret;
 }
@@ -509,7 +516,7 @@ ome.ol3.source.Image.prototype.captureImageSettings = function() {
  * @return {ol.TileLoadFunctionType|null} the post tile hook
  */
 ome.ol3.source.Image.prototype.getPostTileLoadFunction = function() {
-	return this.postTileLoadFunction_;
+    return this.postTileLoadFunction_;
 }
 
 /**
@@ -518,39 +525,38 @@ ome.ol3.source.Image.prototype.getPostTileLoadFunction = function() {
  *
  * <pre>
  * function(image) {
- * 		var context = this.getRenderedTileAsContext(image);
- * 		if (context == null) return null;
+ *         var context = this.getRenderedTileAsContext(image);
+ *         if (context == null) return null;
  *
- *		var imageData =
- *			context.getImageData(0,0, context.canvas.width, context.canvas.height);
- * 		var data = imageData.data;
- *	 	for (var i = 0, ii = data.length; i < ii; i++) {
- *	 		var avg = (data[i*4] + data[i*4+1] + data[i*4+2]) /3;
- *			data[i*4] = avg;
- *			data[i*4+1] = avg + 30;
- *			data[i*4+2] = avg;
- *		}
- * 		context.putImageData(imageData, 0, 0);
- *		return context.canvas
+ *        var imageData =
+ *            context.getImageData(0,0, context.canvas.width, context.canvas.height);
+ *         var data = imageData.data;
+ *         for (var i = 0, ii = data.length; i < ii; i++) {
+ *             var avg = (data[i*4] + data[i*4+1] + data[i*4+2]) /3;
+ *            data[i*4] = avg;
+ *            data[i*4+1] = avg + 30;
+ *            data[i*4+2] = avg;
+ *        }
+ *         context.putImageData(imageData, 0, 0);
+ *        return context.canvas
  *}
  *</pre>
  *
  * @param {ol.TileLoadFunctionType} func the post tile load function
- *	with signature: function(tile) {}
+ *    with signature: function(tile) {}
  */
 ome.ol3.source.Image.prototype.setPostTileLoadFunction = function(func) {
-	if (typeof(func) !== 'function')
-		 return;
-	this.postTileLoadFunction_ =  func;
-	this.forceRender();
+    if (typeof(func) !== 'function') return;
+    this.postTileLoadFunction_ =  func;
+    this.forceRender();
 }
 
 /**
  * Removes the post tiling function, forcing a rerender of the layers
  */
 ome.ol3.source.Image.prototype.clearPostTileLoadFunction = function() {
-	this.postTileLoadFunction_ =  null;
-	this.forceRender();
+    this.postTileLoadFunction_ =  null;
+    this.forceRender();
 }
 
 /**
@@ -583,57 +589,60 @@ ome.ol3.source.Image.prototype.forceRender = function(clearCache) {
  */
 ome.ol3.source.Image.prototype.watchRenderStatus =
     function(viewer,stopOnTileLoadError) {
-    if (this.render_watch_ !== null) return false;
+        if (this.render_watch_ !== null) return false;
 
-    if (typeof stopOnTileLoadError !== 'boolean') stopOnTileLoadError = false;
+        if (typeof stopOnTileLoadError !== 'boolean')
+            stopOnTileLoadError = false;
 
-    var tilesToBeLoaded = 0;
-    var tilesLoaded = 0;
+        var tilesToBeLoaded = 0;
+        var tilesLoaded = 0;
 
-    this.render_watch_ = viewer.once("postrender",
-        function(event) {
-            // register tile listeners to keep track of tile load status
-            var incToBeLoaded = function(event) {++tilesToBeLoaded;};
-            var checkLoaded = function(event) {
-                ++tilesLoaded;
-                // we are all rendered
-                if (tilesLoaded >= tilesToBeLoaded) {
-                    this.un("tileloadstart", incToBeLoaded);
-                    this.un("tileloadend", checkLoaded, this);
-                    this.un("tileloaderror", checkLoaded, this);
-                    this.render_status_ = ome.ol3.RENDER_STATUS.RENDERED;
-                    this.render_watch_ = null;
-                }
-            };
-            var checkError = stopOnTileLoadError ?
-                function(event) {
+        this.render_watch_ =
+            viewer.once("postrender",
+            function(event) {
+                // register tile listeners to keep track of tile load status
+                var incToBeLoaded = function(event) {++tilesToBeLoaded;};
+                var checkLoaded = function(event) {
                     ++tilesLoaded;
-                    this.un("tileloadstart", incToBeLoaded);
-                    this.un("tileloadend", checkLoaded, this);
-                    this.un("tileloaderror", checkError, this);
-                    this.render_status_ = ome.ol3.RENDER_STATUS.ERROR;
-                    this.render_watch_ = null;
-                } : checkLoaded;
-
-            this.on("tileloadstart", incToBeLoaded);
-            this.on("tileloadend", checkLoaded, this);
-            this.on("tileloaderror", checkError, this);
-
-            // check if we have tiles loading, otherwise they are in the cache
-            // already. to that end we give a delay of 50 millis
-            this.render_status_ = ome.ol3.RENDER_STATUS.IN_PROGRESS;
-            setTimeout(
-                function() {
-                    if (tilesToBeLoaded === 0) {
+                    // we are all rendered
+                    if (tilesLoaded >= tilesToBeLoaded) {
                         this.un("tileloadstart", incToBeLoaded);
                         this.un("tileloadend", checkLoaded, this);
-                        this.un("tileloaderror", checkError, this);
-                        this.render_status_ = ome.ol3.RENDER_STATUS.NOT_WATCHED;
+                        this.un("tileloaderror", checkLoaded, this);
+                        this.render_status_ = ome.ol3.RENDER_STATUS.RENDERED;
                         this.render_watch_ = null;
-                    };
-                }.bind(this), 50);
-        }, this);
-    return true;
+                    }
+                };
+                var checkError =
+                    stopOnTileLoadError ?
+                        function(event) {
+                            ++tilesLoaded;
+                            this.un("tileloadstart", incToBeLoaded);
+                            this.un("tileloadend", checkLoaded, this);
+                            this.un("tileloaderror", checkError, this);
+                            this.render_status_ = ome.ol3.RENDER_STATUS.ERROR;
+                            this.render_watch_ = null;
+                        } : checkLoaded;
+
+                this.on("tileloadstart", incToBeLoaded);
+                this.on("tileloadend", checkLoaded, this);
+                this.on("tileloaderror", checkError, this);
+
+                // check if we have tiles loading, otherwise they are in the cache
+                // already. to that end we give a delay of 50 millis
+                this.render_status_ = ome.ol3.RENDER_STATUS.IN_PROGRESS;
+                setTimeout(
+                    function() {
+                        if (tilesToBeLoaded === 0) {
+                            this.un("tileloadstart", incToBeLoaded);
+                            this.un("tileloadend", checkLoaded, this);
+                            this.un("tileloaderror", checkError, this);
+                            this.render_status_ = ome.ol3.RENDER_STATUS.NOT_WATCHED;
+                            this.render_watch_ = null;
+                        };
+                    }.bind(this), 50);
+            }, this);
+        return true;
 }
 
 /**
@@ -644,8 +653,10 @@ ome.ol3.source.Image.prototype.watchRenderStatus =
  */
 ome.ol3.source.Image.prototype.getRenderStatus = function(reset) {
     if (typeof reset !== 'boolean') reset = false;
+
     var ret = this.render_status_;
     if (reset) this.render_status_ = ome.ol3.RENDER_STATUS.NOT_WATCHED;
+
     return ret;
 }
 
@@ -654,47 +665,47 @@ ome.ol3.source.Image.prototype.getRenderStatus = function(reset) {
  * Clean up
  */
 ome.ol3.source.Image.prototype.disposeInternal = function() {
-	if (this.tileCache instanceof ol.structs.LRUCache) this.tileCache.clear();
-	this.channels_info_ = [];
+    if (this.tileCache instanceof ol.structs.LRUCache) this.tileCache.clear();
+    this.channels_info_ = [];
 };
 
 
 goog.exportProperty(
-	ome.ol3.source.Image.prototype,
-	'getWidth',
-	ome.ol3.source.Image.prototype.getWidth);
+    ome.ol3.source.Image.prototype,
+    'getWidth',
+    ome.ol3.source.Image.prototype.getWidth);
 
 goog.exportProperty(
-	ome.ol3.source.Image.prototype,
-	'getHeight',
-	ome.ol3.source.Image.prototype.getHeight);
+    ome.ol3.source.Image.prototype,
+    'getHeight',
+    ome.ol3.source.Image.prototype.getHeight);
 
 goog.exportProperty(
-	ome.ol3.source.Image.prototype,
-	'getPlane',
-	ome.ol3.source.Image.prototype.getPlane);
+    ome.ol3.source.Image.prototype,
+    'getPlane',
+    ome.ol3.source.Image.prototype.getPlane);
 
 goog.exportProperty(
-	ome.ol3.source.Image.prototype,
-	'setPlane',
-	ome.ol3.source.Image.prototype.setPlane);
+    ome.ol3.source.Image.prototype,
+    'setPlane',
+    ome.ol3.source.Image.prototype.setPlane);
 
 goog.exportProperty(
-	ome.ol3.source.Image.prototype,
-	'getTime',
-	ome.ol3.source.Image.prototype.getTime);
+    ome.ol3.source.Image.prototype,
+    'getTime',
+    ome.ol3.source.Image.prototype.getTime);
 
 goog.exportProperty(
-	ome.ol3.source.Image.prototype,
-	'setTime',
-	ome.ol3.source.Image.prototype.setTime);
+    ome.ol3.source.Image.prototype,
+    'setTime',
+    ome.ol3.source.Image.prototype.setTime);
 
 goog.exportProperty(
-	ome.ol3.source.Image.prototype,
-	'getChannels',
-	ome.ol3.source.Image.prototype.getChannels);
+    ome.ol3.source.Image.prototype,
+    'getChannels',
+    ome.ol3.source.Image.prototype.getChannels);
 
 goog.exportProperty(
-	ome.ol3.source.Image.prototype,
-	'setChannels',
-	ome.ol3.source.Image.prototype.setChannels);
+    ome.ol3.source.Image.prototype,
+    'setChannels',
+    ome.ol3.source.Image.prototype.setChannels);
