@@ -22,7 +22,7 @@ if (!is_dev_server) {
 /**
  * IViewer bootstrap function
  * @function
- * @param {Object} aurelia the aurealia instance
+ * @param {Object} aurelia the aurelia instance
  */
 bootstrap(function(aurelia) {
   aurelia.use
