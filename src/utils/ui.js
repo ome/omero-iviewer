@@ -210,8 +210,12 @@ export default class Ui {
 
         let modal = $('.modal-message');
         if (modal.length === 0) return;
-        modal.find('.modal-body').html(message);
 
+        let footer = modal.find('.modal-footer');
+        if (ok_button) footer.show();
+        else footer.hide();
+
+        modal.find('.modal-body').html(message);
         modal.modal();
     }
 

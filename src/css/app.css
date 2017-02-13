@@ -801,13 +801,20 @@ thead, tbody {
 }
 
 .modal-dialog {
+    position: absolute;
     width: 100%;
     height: 100%;
-    left: 35%;
-    top: 30%;
+    left: 50%;
+    margin-left: -150px;
+    top: 50%;
+    margin-top:  -100px;
 }
 .modal-content {
     width: 300px;
+    max-height: 200px;
+}
+.modal-message .ok {
+    width: 50px;
 }
 .confirmation_dialog .modal-title {
     margin: 5px;
@@ -819,6 +826,6 @@ thead, tbody {
 .confirmation_dialog .modal-header {
     padding: 2px;
 }
-.confirmation_dialog .modal-footer {
+.modal-footer {
     padding: 4px;
 }
