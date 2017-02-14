@@ -217,6 +217,9 @@ ome.ol3.source.Image = function(options) {
                 url += '&';
             }
 
+            // codomain settings (aka map param)
+            var codomain = [];
+
 			// add channel param
             url += 'c=';
             var channelsLength = this.channels_info_.length;
@@ -227,10 +230,14 @@ ome.ol3.source.Image = function(options) {
                 // amend url with channel info
                 url += (!channelInfo['active'] ? "-" : "") + (c + 1);
                 url += "|" + channelInfo['start'] + ":" + channelInfo['end'];
-                if (typeof channelInfo['reverse'] === 'boolean')  // reverse int.
-                    url += (channelInfo['reverse'] ? "" : "-") + "r";
+                codomain.push(
+                    {"reverse" : { "enabled" :
+                        typeof channelInfo['reverse'] === 'boolean' &&
+                            channelInfo['reverse']}}
+                );
                 url += "$" + channelInfo['color']; // color info
             }
+            url += "&maps=" + JSON.stringify(codomain);
             url += '&m=' + this.image_model_;
             url += '&p=' + (this.split_ ? 'split' : this.image_projection_);
 			url += '&q=0.9';
