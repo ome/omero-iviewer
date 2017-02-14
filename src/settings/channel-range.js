@@ -293,6 +293,12 @@ export default class ChannelRange  {
             }, slide: (event,ui) => {
                 if (ui.values[0] >= ui.values[1]) return false;
 
+                // adjust value in input fields instantly
+                $(this.element).find(".channel-start").spinner(
+                    "value", ui.values[0]);
+                $(this.element).find(".channel-end").spinner(
+                    "value", ui.values[1]);
+
                 let imgConf = this.context.getSelectedImageConfig();
                 if (!imgConf.image_info.has_histogram) return true;
 
