@@ -697,9 +697,11 @@ ome.ol3.Viewer.prototype.addRegions = function(options) {
 	// add a vector layer with the regions
 	if (this.regions_) {
 		this.viewer_.addLayer(new ol.layer.Vector({source : this.regions_}));
-		// enable roi selection by default
+		// enable roi selection by default,
+        // as well as modify and translate
 		this.regions_.setModes(
             [ome.ol3.REGIONS_MODE['SELECT'],
+             ome.ol3.REGIONS_MODE['MODIFY'],
              ome.ol3.REGIONS_MODE['TRANSLATE']]);
 
 		this.onViewRotationListener =

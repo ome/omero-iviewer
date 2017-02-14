@@ -5,8 +5,8 @@ import {Utils} from '../utils/regions';
 import {Converters} from '../utils/converters';
 import {REGIONS_MODE} from '../utils/constants';
 import {
-    REGIONS_CHANGE_MODES, REGIONS_SET_PROPERTY,
-    REGIONS_GENERATE_SHAPES,REGIONS_MODIFY_SHAPES, REGIONS_COPY_SHAPES
+    REGIONS_SET_PROPERTY, REGIONS_GENERATE_SHAPES,
+    REGIONS_MODIFY_SHAPES, REGIONS_COPY_SHAPES
 } from '../events/events';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {spectrum} from 'spectrum-colorpicker';
@@ -442,21 +442,6 @@ export default class RegionsEdit {
                 (color) => this.onColorChange(color.toRgbString(), fill, shape);
 
         return options;
-    }
-
-    /**
-     * Sets edit mode to either modify or translate
-     *
-     * @memberof RegionsEdit
-     */
-    setEditMode(modify=false) {
-        let mode = [REGIONS_MODE.TRANSLATE];
-        if (typeof modify === 'boolean' && modify) mode = [REGIONS_MODE.MODIFY];
-
-        this.context.publish(
-            REGIONS_CHANGE_MODES, {
-                config_id : this.regions_info.image_info.config_id,
-                modes : mode});
     }
 
     /**
