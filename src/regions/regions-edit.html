@@ -21,7 +21,7 @@
                 data-toggle="dropdown">Edit
                 </button>
                 <ul class="dropdown-menu">
-                    <li if.bind="regions_info.selected_shapes &&
+                    <li if.bind="regions_info && regions_info.selected_shapes &&
                                     regions_info.selected_shapes.length !== 0"
                         click.delegate="copyShapes()"><a href="#">Copy</a></li>
                     <li if.bind="regions_info.copied_shapes &&

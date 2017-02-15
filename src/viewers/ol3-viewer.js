@@ -44,6 +44,13 @@ export default class Ol3Viewer extends EventSubscriber {
     image_config = null;
 
     /**
+     * the internal instance of the ol3.Viewer
+     * @memberof Ol3Viewer
+     * @type {ol3.Viewer}
+     */
+    viewer = null;
+
+    /**
      * the info needed for the play loop
      * @memberof Ol3Viewer
      * @type {number}
@@ -121,14 +128,6 @@ export default class Ol3Viewer extends EventSubscriber {
             this.context.getPrefixedURI(IVIEWER, true),
         );
 
-        // instantiate the viewer
-        this.viewer =
-            new ol3.Viewer(this.image_config.image_info.image_id,
-                { eventbus : this.context.eventbus,
-                  server : this.context.server,
-                  initParams :  this.context.initParams,
-                  container: this.container
-                });
         // subscribe
         this.subscribe();
     }
@@ -234,6 +233,16 @@ export default class Ol3Viewer extends EventSubscriber {
      * @memberof Ol3Viewer
      */
     initViewer()  {
+        // create viewer instance
+        this.viewer =
+            new ol3.Viewer(
+                this.image_config.image_info.image_id,
+                { eventbus : this.context.eventbus,
+                  server : this.context.server,
+                  initParams :  this.context.initParams,
+                  container: this.container
+        });
+
         // should we display the scale bar
         this.showScalebar(this.context.show_scalebar);
         // whould we display regions...
@@ -569,9 +578,12 @@ export default class Ol3Viewer extends EventSubscriber {
         let selectedOnly =
             typeof params.selected === 'boolean' && params.selected;
 
-        this.viewer.storeRegions(
-            selectedOnly, false,
-            this.context.getPrefixedURI(IVIEWER) + '/persist_rois');
+        let requestMade =
+            this.viewer.storeRegions(
+                selectedOnly, false,
+                this.context.getPrefixedURI(IVIEWER) + '/persist_rois',
+                params.omit_client_update);
+        if (requestMade) Ui.showModalMessage("Saving Regions. Please wait...");
     }
 
     /**
@@ -600,10 +612,12 @@ export default class Ol3Viewer extends EventSubscriber {
      * @param {Object} params the event notification parameters
      */
     afterShapeStorage(params = {}) {
+        Ui.hideModalMessage();
         // the event doesn't concern us
         if (params.config_id !== this.config_id ||
                 typeof params.shapes !== 'object' ||
-                params.shapes === null) return;
+                params.shapes === null ||
+                params.omit_client_update) return;
 
         // make deep copy to work with
         let ids = Object.assign({}, params.shapes);
@@ -631,8 +645,8 @@ export default class Ol3Viewer extends EventSubscriber {
                     this.image_config.regions_info.data.delete(id);
             }
         }
-        // reload shapes async
-        this.image_config.regions_info.requestData(true);
+        // for now let's just clear the history
+        this.image_config.regions_info.history.resetHistory();
     }
 
     /**
