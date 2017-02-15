@@ -107,7 +107,6 @@ export default class ThumbnailSlider extends EventSubscriber {
 
         $.ajax(
             {url : url,
-            dataType : "jsonp",
             success : (response) => {
                 // we want an array
                 if (!Misc.isArray(response)) return;

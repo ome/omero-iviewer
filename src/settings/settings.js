@@ -266,9 +266,7 @@ export default class Settings extends EventSubscriber {
     * @memberof Settings
     */
     copy(toAll=false) {
-        let dataType = Misc.useJsonp(this.context.server) ? 'jsonp' : 'json';
-
-        if (toAll && dataType === 'jsonp') {
+        if (toAll && Misc.useJsonp(this.context.server)) {
             alert("Saving to All will not work cross-domain!");
             return;
         }
