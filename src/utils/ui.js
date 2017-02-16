@@ -200,7 +200,8 @@ export default class Ui {
     /**
      * Shows a bootstrap modal message box
      *
-     * @param {string} title the title of the dialog
+     * @param {string} message the title of the dialog
+     * @param {boolean} ok_button true will display an ok button, false won't
      * @static
      */
     static showModalMessage(message, ok_button) {
