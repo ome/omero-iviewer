@@ -308,8 +308,7 @@ export default class ChannelRange  {
 
                 // we want to update the histogram on slide so we
                 // need a separate event. we throttle so that
-                // we send only the lastest slider value within a 100ms
-                // window.
+                // we send only the last slider value within a 100ms window.
                 this.lastDelayedTimeout = new Date().getTime();
                 let delayedUpdate = (() => {
                     if (new Date().getTime() < this.lastDelayedTimeout)
