@@ -320,8 +320,6 @@ export default class Histogram extends EventSubscriber {
 
         // fire off ajax request
         $.ajax({url : url,
-            dataType : Misc.useJsonp(server) ? 'jsonp' : 'json',
-            cache : false,
             success : (response) => {
                 // for error and non array data (which is what we want)
                 // we return null and the handler will respond accordingly

@@ -38,13 +38,5 @@ bootstrap(function(aurelia) {
     if (is_dev_server) ctx.tweakForDevServer();
     aurelia.container.registerInstance(Context,ctx);
 
-    $.ajaxSetup({
-        beforeSend: (xhr, settings) => {
-            if (!Misc.useJsonp(ctx.server) &&
-                !(/^(GET|HEAD|OPTIONS|TRACE)$/.test(settings.type)))
-                xhr.setRequestHeader("X-CSRFToken", Misc.getCookie('csrftoken'));
-        }
-    });
-
     aurelia.start().then(() => aurelia.setRoot('app/index', document.body));
 });
