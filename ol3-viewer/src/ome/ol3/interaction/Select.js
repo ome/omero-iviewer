@@ -190,10 +190,11 @@ ome.ol3.interaction.Select.handleEvent = function(mapBrowserEvent) {
  * coordinates.
  * @private
  */
-ome.ol3.interaction.Select.prototype.featuresAtCoords_ = function(pixel) {
+ome.ol3.interaction.Select.prototype.featuresAtCoords_ =
+    function(pixel, tolerance) {
     if (!ome.ol3.utils.Misc.isArray(pixel) || pixel.length !== 2) return;
 
-    var tolerance = 5; // 5 pixel buffer
+    if (typeof tolerance !== 'number') tolerance = 5; // 5 pixel buffer
     var v = this.regions_.viewer_.viewer_;
     var min = v.getCoordinateFromPixel(
                 [pixel[0]-tolerance, pixel[1]+tolerance]);

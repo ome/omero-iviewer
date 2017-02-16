@@ -74,7 +74,7 @@ describe("Regions", function() {
 		assert.instanceOf(feature, ol.Feature);
 		assert.instanceOf(feature.getGeometry(),  ol.geom.Circle);
 		expect(feature.getGeometry().getCenter()).to.eql([10,-25]);
-		expect(feature.getGeometry().getRadius()).to.eql(2);
+		expect(feature.getGeometry().getRadius()).to.eql(5);
 
 		feature = ome.ol3.utils.Regions.featureFactory(label_info);
 		assert.instanceOf(feature, ol.Feature);

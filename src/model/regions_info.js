@@ -57,7 +57,9 @@ export default class RegionsInfo extends EventSubscriber {
      * @memberof RegionsInfo
      * @type {Array.<number>}
      */
-    regions_modes = [REGIONS_MODE.SELECT, REGIONS_MODE.TRANSLATE];
+    regions_modes = [
+        REGIONS_MODE.SELECT, REGIONS_MODE.MODIFY, REGIONS_MODE.TRANSLATE
+    ];
 
     /**
      * the drawing mode
