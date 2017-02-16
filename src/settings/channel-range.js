@@ -236,9 +236,9 @@ export default class ChannelRange  {
      detached() {
          // tear down jquery elements
          try {
-             $(this.element).find(".channel-start").off("input");
+             $(this.element).find(".channel-start").off("blur");
              $(this.element).find(".channel-start").spinner("destroy");
-             $(this.element).find(".channel-end").off("input");
+             $(this.element).find(".channel-end").off("blur");
              $(this.element).find(".channel-end").spinner("destroy");
              $(this.element).find(".channel-slider").slider("destroy");
              $(this.element).find(".spectrum-input").spectrum("destroy");
@@ -265,8 +265,12 @@ export default class ChannelRange  {
          // channel start
          $(this.element).find(".channel-start").spinner(
              {min: minMaxRange.start_min, max: minMaxRange.start_max});
-         $(this.element).find(".channel-start").on("input spinstop",
-            (event, ui) => this.onRangeChange(event.target.value, true));
+         $(this.element).find(".channel-start").on("blur spinstop",
+            (event) => {
+                if (typeof event.keyCode !== 'number' ||
+                    event.keyCode === 13)
+                        this.onRangeChange(event.target.value, true);
+        });
         $(this.element).find(".channel-start").spinner(
             "value", minMaxValues.start_val);
 
@@ -329,8 +333,12 @@ export default class ChannelRange  {
         //channel end
         $(this.element).find(".channel-end").spinner(
             {min: minMaxRange.end_min, max: minMaxRange.end_max});
-        $(this.element).find(".channel-end").on("input spinstop",
-            (event) => this.onRangeChange(event.target.value));
+        $(this.element).find(".channel-end").on("blur spinstop",
+            (event) => {
+                if (typeof event.keyCode !== 'number' ||
+                    event.keyCode === 13)
+                        this.onRangeChange(event.target.value)
+        });
        $(this.element).find(".channel-end").spinner(
            "value",minMaxValues.end_val);
 
