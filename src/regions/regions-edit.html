@@ -10,8 +10,12 @@
                     disabled="disabled"
                 data-toggle="dropdown">&lt;-&gt;</button>
                 <ul class="dropdown-menu">
-                    <li click.delegate="toggleArrow(false)"><a href="#">Start</a></li>
-                    <li click.delegate="toggleArrow(true)"><a href="#">End</a></li>
+                    <li click.delegate="toggleArrow(false)">
+                        <a class="marker_start" href="#">Start</a>
+                    </li>
+                    <li click.delegate="toggleArrow(true)">
+                        <a class="marker_end" href="#">End</a>
+                    </li>
                 </ul>
             </div>
 
