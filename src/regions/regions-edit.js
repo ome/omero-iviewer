@@ -5,8 +5,8 @@ import {Utils} from '../utils/regions';
 import {Converters} from '../utils/converters';
 import {REGIONS_MODE} from '../utils/constants';
 import {
-    REGIONS_SET_PROPERTY, REGIONS_GENERATE_SHAPES,
-    REGIONS_MODIFY_SHAPES, REGIONS_COPY_SHAPES
+    REGIONS_COPY_SHAPES, REGIONS_GENERATE_SHAPES,
+    REGIONS_MODIFY_SHAPES, REGIONS_SET_PROPERTY
 } from '../events/events';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {spectrum} from 'spectrum-colorpicker';
