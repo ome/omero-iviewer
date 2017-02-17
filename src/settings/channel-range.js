@@ -495,33 +495,34 @@ export default class ChannelRange  {
         let sliderMin = is_start ? minMaxValues.start_min : minMaxValues.end_min;
         let sliderMax = is_start ? minMaxValues.start_max : minMaxValues.end_max;
 
-         // clamp
-         let exceededBounds = false;
-         if (value < min) {
-             value = min;
-             exceededBounds = true;
-         }
-         if (value > max) {
-             value = max;
-             exceededBounds = true;
-         }
-         // set new start/end
-         if (!exceededBounds) {
-             let otherClazz = is_start ? '.channel-end' : '.channel-start';
-              $(this.element).children("span").css(
-                  "border-color", "rgb(170,170,170)");
-              if ((is_start && value === this.channel.window.start) ||
+        // clamp
+        let exceededBounds = false;
+        if (value < min) {
+            value = min;
+            exceededBounds = true;
+        }
+        if (value > max) {
+            value = max;
+            exceededBounds = true;
+        }
+        // set new start/end
+        if (!exceededBounds) {
+            let otherClazz = is_start ? '.channel-end' : '.channel-start';
+            $(this.element).children("span").css(
+                "border-color", "rgb(170,170,170)");
+            if ((is_start && value === this.channel.window.start) ||
                 (!is_start && value === this.channel.window.end)) return;
 
-             if (is_start) this.channel.window.start = value;
-             else this.channel.window.end = value;
+            if (is_start) this.channel.window.start = value;
+            else this.channel.window.end = value;
 
-             try {
-                 $(this.element).find(clazz).spinner("value", value);
-                 $(this.element).find(".channel-slider").slider(
-                     "option", "values",
-                     [this.channel.window.start, this.channel.window.end]);
-                 if (is_start) {
+            try {
+                $(this.element).find(clazz).spinner("value", value);
+                $(this.element).find(".channel-slider").slider(
+                    "option", "values",
+                    [this.channel.window.start, this.channel.window.end]);
+
+                if (is_start) {
                     $(this.element).find(otherClazz).spinner("option", "min", value+1);
                     $(this.element).find(".channel-slider").slider(
                         "option", "min", value < sliderMin ? value : sliderMin);
@@ -536,9 +537,10 @@ export default class ChannelRange  {
                         ['image_info', 'channels', '' + this.index,
                         'window', is_start ? 'start' : 'end'],
                         old_val : oldValue, new_val: value, type : "number"});
-             } catch (ignored) {}
-         } else $(this.element).find(clazz).parent().css("border-color", "rgb(255,0,0)");
-     }
+                    } catch (ignored) {}
+        } else $(this.element).find(clazz).parent().css(
+            "border-color", "rgb(255,0,0)");
+    }
 
     /**
      * Overridden aurelia lifecycle method:
