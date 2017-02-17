@@ -265,8 +265,10 @@ export default class ChannelRange  {
          // channel start
          $(this.element).find(".channel-start").spinner(
              {min: minMaxRange.start_min, max: minMaxRange.start_max});
-         $(this.element).find(".channel-start").on("blur spinstop",
-            (event) => {
+             $(this.element).find(".channel-start").on("blur",
+                (event) => this.onRangeChange(event.target.value, true, true));
+         $(this.element).find(".channel-start").on("spinstop",
+            (event, ui) => {
                 if (typeof event.keyCode !== 'number' ||
                     event.keyCode === 13)
                         this.onRangeChange(event.target.value, true);
@@ -332,6 +334,8 @@ export default class ChannelRange  {
         //channel end
         $(this.element).find(".channel-end").spinner(
             {min: minMaxRange.end_min, max: minMaxRange.end_max});
+        $(this.element).find(".channel-end").on("blur",
+            (event) => this.onRangeChange(event.target.value, false, true));
         $(this.element).find(".channel-end").on("blur spinstop",
             (event) => {
                 if (typeof event.keyCode !== 'number' ||
@@ -449,20 +453,43 @@ export default class ChannelRange  {
      *
      * @param {Array.<number>} value the new value
      * @param {boolean} is_start was start of range or not
+     * @param {boolean} replace_empty_value if true we replace an empty string
+     *                                      with the old value
      * @memberof ChannelRange
      */
-     onRangeChange(value, is_start=false) {
-         value = parseInt(value);
-         if (isNaN(value)) return;
+    onRangeChange(value, is_start=false, replace_empty_value=false) {
+        let clazz = is_start ? '.channel-start' : '.channel-end';
+        let oldValue =
+            is_start ? this.channel.window.start : this.channel.window.end;
 
-         // get appropriate min/max for start/end
-         let minMaxRange =
+        // some sanity checks
+        if (typeof value !== 'number' && typeof value !== 'string') return;
+        if (typeof value === 'string') {
+            $(this.element).children("span").css(
+                "border-color", "rgb(170,170,170)");
+            // strip whitespace
+            value = value.replace(/\s/g, "");
+            if (value.length === 0 && replace_empty_value) {
+                // we replace with the old value
+                $(this.element).find(clazz).spinner("value", oldValue);
+                return;
+            }
+            value = parseInt(value);
+            if (isNaN(value)) {
+                $(this.element).find(clazz).parent().css(
+                    "border-color", "rgb(255,0,0)");
+                return;
+            }
+        }
+
+        // get appropriate min/max for start/end
+        let minMaxRange =
             this.context.getSelectedImageConfig().
                 image_info.getChannelMinMaxValues(
                     CHANNEL_SETTINGS_MODE.FULL_RANGE, this.index);
-         let min = is_start ? minMaxRange.start_min : minMaxRange.end_min;
-         let max = is_start ? minMaxRange.start_max : minMaxRange.end_max;
-         let minMaxValues =
+        let min = is_start ? minMaxRange.start_min : minMaxRange.end_min;
+        let max = is_start ? minMaxRange.start_max : minMaxRange.end_max;
+        let minMaxValues =
             this.context.getSelectedImageConfig().
                 image_info.getChannelMinMaxValues(this.mode, this.index);
         let sliderMin = is_start ? minMaxValues.start_min : minMaxValues.end_min;
@@ -479,21 +506,15 @@ export default class ChannelRange  {
              exceededBounds = true;
          }
          // set new start/end
-         let clazz = is_start ? '.channel-start' : '.channel-end';
          if (!exceededBounds) {
              let otherClazz = is_start ? '.channel-end' : '.channel-start';
               $(this.element).children("span").css(
                   "border-color", "rgb(170,170,170)");
               if ((is_start && value === this.channel.window.start) ||
                 (!is_start && value === this.channel.window.end)) return;
-            let oldValue = null;
-             if (is_start) {
-                 oldValue = this.channel.window.start;
-                 this.channel.window.start = value;
-             } else {
-                 oldValue = this.channel.window.end;
-                 this.channel.window.end = value;
-             }
+
+             if (is_start) this.channel.window.start = value;
+             else this.channel.window.end = value;
 
              try {
                  $(this.element).find(clazz).spinner("value", value);
