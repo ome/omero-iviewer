@@ -352,6 +352,7 @@ thumbnail-slider img {
     margin-bottom: 2px;
     margin-left: 2px;
     margin-right: 0px;
+    width: 100%;
 }
 
 .left-hand-panel-hidden {
@@ -726,6 +727,7 @@ thead, tbody {
     min-width: 100px;
     width: 75%;
     float: left;
+    padding-top: 1px;
 }
 .shape-edit-comment input {
     width: 100%;
@@ -733,9 +735,26 @@ thead, tbody {
     height: 28px;
 }
 
+.arrow-button button  {
+    width: 35px;
+}
+.arrow-button button  {
+    background-image: url('images/arrows_dropdown.png')!important;
+    background-repeat: no-repeat!important;
+    background-position: center!important;
+}
 .arrow-button .dropdown-menu {
-    left: 0px;
-    min-width: 20px;
+    left: -10px;
+    min-width: 62px;
+}
+.arrow-button .dropdown-menu span {
+    display: inline-block;
+    margin-left: 2px;
+    width: 12px;
+}
+.arrow-button .dropdown-menu a {
+    display: inline-block;
+    padding-left: 0px;
 }
 .regions-drawing-mode {
     line-height: 30px;

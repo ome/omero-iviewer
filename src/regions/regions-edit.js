@@ -377,16 +377,14 @@ export default class RegionsEdit {
         if (type && type.indexOf('line') >= 0) {
             arrowButton.prop('disabled', false);
             arrowButton.removeClass('disabled-color');
-            $('.marker_start').css(
-                'text-decoration',
+            $('.marker_start').html(
                 typeof this.last_selected['markerStart'] === 'string' &&
                     this.last_selected['markerStart'] === 'Arrow' ?
-                        'none' : 'line-through');
-            $('.marker_end').css(
-                'text-decoration',
+                        '&#10003;' : '&nbsp;');
+            $('.marker_end').html(
                 typeof this.last_selected['markerEnd'] === 'string' &&
                     this.last_selected['markerEnd'] === 'Arrow' ?
-                        'none' : 'line-through');
+                        '&#10003;' : '&nbsp;');
         } else {
             arrowButton.prop('disabled', true);
             arrowButton.addClass('disabled-color');
