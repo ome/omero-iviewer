@@ -130,11 +130,13 @@ export default class ImageInfo {
      * @param {Context} context the application context
      * @param {number} config_id the config id we belong to
      * @param {number} image_id the image id to be queried
+     * @param {number} dataset_id an optional dataset_id
      */
-    constructor(context, config_id, image_id) {
+    constructor(context, config_id, image_id, dataset_id) {
         this.context = context;
         this.config_id = config_id;
         this.image_id = image_id;
+        if (typeof dataset_id === 'number') this.dataset_id = dataset_id;
     }
 
     /**
@@ -175,33 +177,26 @@ export default class ImageInfo {
      * @memberof ImageInfo
      */
     requestData() {
-        let dataType = "json";
-        if (Misc.useJsonp(this.context.server)) dataType += "p";
-
-        let url =
-            this.context.server + this.context.getPrefixedURI(WEBGATEWAY) +
-            "/imgData/" + this.image_id + '/';
-
-        $.ajax(
-            {url : url,
-            dataType : dataType,
-            cache : false,
+        $.ajax({
+            url :
+                this.context.server + this.context.getPrefixedURI(WEBGATEWAY) +
+                "/imgData/" + this.image_id + '/',
             success : (response) => {
-                // remember any associated dataset id
-                if (typeof response.meta === 'object' &&
-                        typeof response.meta.datasetId === 'number')
-                    this.dataset_id = response.meta.datasetId;
-                else this.dataset_id = null;
-
-                // delegate to break up code
+                // read initial request params
                 this.initializeImageInfo(response);
+
+                // check for a dataset id
+                if (typeof this.dataset_id !== 'number') {
+                    if (typeof response.meta === 'object' &&
+                            typeof response.meta.datasetId === 'number')
+                        this.dataset_id = response.meta.datasetId;
+                }
 
                 // fire off the request for the imported data,
                 // can't hurt to have handy when we need it
                 this.requestImportedData();
                 // fetch copied img RDef
                 this.requestImgRDef();
-
                 // notify everyone that we are ready
                 if (this.context)
                     this.context.publish(
@@ -236,6 +231,12 @@ export default class ImageInfo {
      */
     initializeImageInfo(response) {
         // we might have some requested defaults
+        let initialDatasetId =
+            parseInt(
+                this.context.getInitialRequestParam(REQUEST_PARAMS.DATASET_ID));
+        if (typeof initialDatasetId === 'number' &&
+                !isNaN(initialDatasetId) && initialDatasetId >= 0)
+            this.dataset_id = initialDatasetId;
         let initialTime =
             this.context.getInitialRequestParam(REQUEST_PARAMS.TIME);
         let initialPlane =
@@ -334,10 +335,7 @@ export default class ImageInfo {
             }
         $.ajax({
             url : this.context.server +
-                    this.context.getPrefixedURI(WEBGATEWAY) +
-                        "/getImgRDef/",
-            dataType : Misc.useJsonp(this.context.server) ? 'jsonp' : 'json',
-            cache : false,
+                  this.context.getPrefixedURI(WEBGATEWAY) + "/getImgRDef/",
             success : (response) => {
                 if (typeof response !== 'object' || response === null ||
                     typeof response.rdef !== 'object' ||
@@ -364,17 +362,10 @@ export default class ImageInfo {
             return;
         }
 
-        let dataType = "json";
-        if (Misc.useJsonp(this.context.server)) dataType += "p";
-
-        let url =
-            this.context.server + this.context.getPrefixedURI(WEBGATEWAY) +
-            "/imgData/" + this.image_id + '/?getDefaults=true';
-
-        $.ajax(
-            {url : url,
-            dataType : dataType,
-            cache : false,
+        $.ajax({
+            url :
+                this.context.server + this.context.getPrefixedURI(WEBGATEWAY) +
+                "/imgData/" + this.image_id + '/?getDefaults=true',
             success : (response) => {
                 if (typeof response !== 'object' || response === null ||
                     !Misc.isArray(response.channels) ||

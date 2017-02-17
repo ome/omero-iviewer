@@ -326,7 +326,9 @@ ome.ol3.utils.Net.sendSameOrigin = function(
 	// assemble the url from server and uri info
 	var url = server['full'] === "" &&  uri['relative'] ? uri['full'] :
 		server['full'] + "/" + uri['full'];
-	if (uri['query'] === "") url += "/"; // to avoid redirects
+    var timestamp = '_=' + new Date().getTime();
+	if (uri['query'] === "") url += "/?" + timestamp; // to avoid redirects
+    else url += "&" + timestamp;
 	xhr.open(method, url, true);
 
 	for (var h in headers) // add headers (if there)

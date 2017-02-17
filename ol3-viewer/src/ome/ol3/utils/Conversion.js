@@ -235,12 +235,9 @@ ome.ol3.utils.Conversion.checkColorObjectCorrectness = function(color) {
  * @return {number|null} returns the color/alpha info encoded in a signed integer
  */
 ome.ol3.utils.Conversion.convertColorToSignedInteger = function(color, alpha) {
-	if (typeof(alpha) !== 'number') {// check optional alpha argument
-		try {
-			alpha = parseInt(alpha);
-		} catch(notANumber) {
-			alpha = 1.0;
-		}
+    if (typeof(alpha) !== 'number') {
+		alpha = parseInt(alpha);
+		if (isNaN(alpha)) alpha = 1.0;
 	}
 
 	if (typeof(color) == 'string') { // delegate to appropriate conversion
@@ -262,8 +259,8 @@ ome.ol3.utils.Conversion.convertColorToSignedInteger = function(color, alpha) {
         decimalOnly <= 0.5 ?
             Math.floor(decimalMultiplied) : Math.ceil(decimalMultiplied);
 
-    return ((alpha << 24) |
-                (color['red'] << 16) | (color['green'] << 8) | color['blue']);
+    return ((color['red'] << 24) | (color['green'] << 16) | (color['blue'] << 8)
+            | alpha);
 }
 
 /**
@@ -558,9 +555,10 @@ ome.ol3.utils.Conversion.integrateStyleIntoJsonObject = function(feature, jsonOb
 			ome.ol3.utils.Conversion.convertColorToSignedInteger(presentFillColor);
 
 	var presentStrokeStyle =
-		isLabel && presentStyle.getText() && presentStyle.getText().getStroke() ?
-			presentStyle.getText().getStroke().getColor() :
+		isLabel && presentStyle.getText() && presentStyle.getText().getFill() ?
+			presentStyle.getText().getFill().getColor() :
 				((typeof(feature['oldStrokeStyle']) === 'object' &&
+                    feature['oldStrokeStyle'] !== null &&
 					typeof(feature['oldStrokeStyle']['color']) !== 'undefined') ?
 						feature['oldStrokeStyle']['color'] : null);
 

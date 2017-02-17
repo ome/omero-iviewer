@@ -5,8 +5,8 @@ import {Utils} from '../utils/regions';
 import {Converters} from '../utils/converters';
 import {REGIONS_MODE} from '../utils/constants';
 import {
-    REGIONS_CHANGE_MODES, REGIONS_SET_PROPERTY,
-    REGIONS_GENERATE_SHAPES,REGIONS_MODIFY_SHAPES, REGIONS_COPY_SHAPES
+    REGIONS_COPY_SHAPES, REGIONS_GENERATE_SHAPES,
+    REGIONS_MODIFY_SHAPES, REGIONS_SET_PROPERTY
 } from '../events/events';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {spectrum} from 'spectrum-colorpicker';
@@ -38,6 +38,8 @@ export default class RegionsEdit {
     /**
      * @constructor
      * @param {Context} context the application context (injected)
+     * @param {Element} element the associated dom element (injected)
+     * @param {BindingEngine} bindingEngine the BindingEngine (injected)
      */
     constructor(context, element, bindingEngine) {
         this.context = context;
@@ -98,16 +100,15 @@ export default class RegionsEdit {
         let strokeWidthSpinner =
             $(this.element).find(".shape-stroke-width input");
         strokeWidthSpinner.spinner({
-            min: 1, max: 10, disabled: true});
-        strokeWidthSpinner.spinner("value", 10);
+            min: 0, disabled: true});
+        strokeWidthSpinner.spinner("value", 1);
 
         let editComment = $(this.element).find(".shape-edit-comment input");
         editComment.prop("disabled", true);
         editComment.addClass("disabled-color");
         let fontSizeSpinner =
             $(this.element).find(".shape-font-size input");
-        fontSizeSpinner.spinner({
-            min: 1, max: 1000, disabled: true});
+        fontSizeSpinner.spinner({min: 1, disabled: true});
         fontSizeSpinner.spinner("value", 10);
     }
 
@@ -145,8 +146,7 @@ export default class RegionsEdit {
      */
     onStrokeWidthChange(width = 10,shape=null) {
         if (typeof shape !== 'object' || shape === null) return;
-        if (typeof width !== 'number' || isNaN(width) || width < 1 ||
-                width > 10) return;
+        if (typeof width !== 'number' || isNaN(width) || width < 0) return;
 
         let deltaProps = {type: shape.type};
         deltaProps.strokeWidth = width;
@@ -164,8 +164,7 @@ export default class RegionsEdit {
      */
     onFontSizeChange(size = 10,shape=null) {
         if (typeof shape !== 'object' || shape === null) return;
-        if (typeof size !== 'number' || isNaN(size) || size < 10 ||
-                size > 1000) return;
+        if (typeof size !== 'number' || isNaN(size) || size < 1) return;
 
         let deltaProps = {type: shape.type};
         deltaProps.fontStyle =
@@ -229,12 +228,22 @@ export default class RegionsEdit {
      */
     registerObserver() {
         this.unregisterObserver();
-        this.observer =
+
+        let createSelectedShapeObserver = () =>
             this.bindingEngine.collectionObserver(
                 this.regions_info.selected_shapes)
                     .subscribe(
                         (newValue, oldValue) =>
                             this.adjustEditWidgets());
+        if (this.regions_info === null) {
+             this.observer =
+                this.bindingEngine.propertyObserver(this, 'regions_info')
+                    .subscribe((newValue, oldValue) => {
+                        if (oldValue === null && newValue) {
+                            this.unregisterObserver();
+                            this.observer = createSelectedShapeObserver();
+                    }});
+        } else this.observer = createSelectedShapeObserver();
     }
 
     /**
@@ -351,11 +360,13 @@ export default class RegionsEdit {
                 lastSelection.strokeColor : '#FFFFFF';
         let strokeAlpha =
             lastSelection ?
-                lastSelection.strokeAlpha : 0;
+                lastSelection.strokeAlpha : 1.0;
         let strokeWidth =
             lastSelection ?
                 (typeof lastSelection.strokeWidth === 'number' ?
-                    lastSelection.strokeWidth : 10) : 10;
+                    lastSelection.strokeWidth : 1) : 1;
+        if ((type === 'line' || type === 'polyline') && strokeWidth === 0)
+            strokeWidth = 1;
         strokeOptions.color =
             Converters.hexColorToRgba(strokeColor, strokeAlpha);
         strokeSpectrum.spectrum(strokeOptions);
@@ -431,21 +442,6 @@ export default class RegionsEdit {
                 (color) => this.onColorChange(color.toRgbString(), fill, shape);
 
         return options;
-    }
-
-    /**
-     * Sets edit mode to either modify or translate
-     *
-     * @memberof RegionsEdit
-     */
-    setEditMode(modify=false) {
-        let mode = [REGIONS_MODE.TRANSLATE];
-        if (typeof modify === 'boolean' && modify) mode = [REGIONS_MODE.MODIFY];
-
-        this.context.publish(
-            REGIONS_CHANGE_MODES, {
-                config_id : this.regions_info.image_info.config_id,
-                modes : mode});
     }
 
     /**

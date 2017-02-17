@@ -1,198 +1,217 @@
-<project name="ol3-viewer" default="build-for-iviewer">
+<project name="ol3-viewer" default="build">
     <description>
         #################################################
         ####                OL3 VIEWER               ####
         #################################################
     </description>
 
-	<property name="version.major" value="1" />
-	<property name="version.minor" value="0" />
+    <property name="version.major" value="1" />
+    <property name="version.minor" value="0" />
     <property name="ol3-version" value="3.19.1" />
 
-	<property name="closure-compiler.jar" value="${basedir}/closure/compiler.jar" />
-	<property name="closure-calcdeps.py" value="${basedir}/closure/calcdeps.py" />
-	<property name="node_modules" value="${basedir}/node_modules" />
-	<property name="ol.js" value="${node_modules}/openlayers" />
-	<property name="mocha-phantomjs" value="${node_modules}/mocha-phantomjs/bin/mocha-phantomjs" />
-	<property name="jsdoc.js" value="${basedir}/node_modules/jsdoc/jsdoc.js" />
+    <property name="closure-compiler.jar" value="${basedir}/closure/compiler.jar" />
+    <property name="closure-calcdeps.py" value="${basedir}/closure/calcdeps.py" />
+    <property name="node_modules" value="${basedir}/node_modules" />
+    <property name="ol.js" value="${node_modules}/openlayers" />
+    <property name="mocha-phantomjs" value="${node_modules}/mocha-phantomjs/bin/mocha-phantomjs" />
+    <property name="jsdoc.js" value="${basedir}/node_modules/jsdoc/jsdoc.js" />
 
-	<property name="src" value="${basedir}/${ant.project.name}/src" />
-	<property name="build.dir" value="${basedir}/build" />
-	<property name="plugin.dir.static" value="${basedir}/plugin/${ant.project.name}/static/${ant.project.name}" />
+    <property name="src" value="${basedir}/${ant.project.name}/src" />
+    <property name="build.dir" value="${basedir}/build" />
+    <property name="test.build.dir" value="${basedir}/test/build" />
+    <property name="plugin.dir.static" value="${basedir}/plugin/${ant.project.name}/static/${ant.project.name}" />
 
-	<property name="dist.name"
-			value="${build.dir}/ol3-viewer.js" />
-	<property name="debug.name"
-			value="${build.dir}/ol3-viewer-debug.js" />
+    <property name="dist.name"
+            value="${build.dir}/ol3-viewer.js" />
+    <property name="debug.name"
+            value="${build.dir}/ol3-viewer-debug.js" />
+    <property name="test.name"
+            value="${test.build.dir}/ol3-viewer-test.js" />
 
-	<property name="outputwrapper" value="
-		(function (root, factory) {
+    <property name="outputwrapper" value="
+        (function (root, factory) {
             var tmp = null;
             if(typeof module === 'object' &amp;&amp; module.exports) {
                 root = window;
                 tmp =  factory.call(root);
                 module.exports = tmp;
             } else {
-			    tmp = factory.call(root);
+                tmp = factory.call(root);
                 if (typeof root.ome !== 'object') root.ome = {};
                 root.ome = tmp;
             }
-		}(this, function () {
-			var OME = {};
-			if (typeof(this) === 'object' &amp;&amp; typeof(this.ome) === 'object') {
-				OME.ome = this.ome;
-				var ome = this.ome;
-			}
-			%output%
-			return OME.ome;
-		}));" />
+        }(this, function () {
+            var OME = {};
+            if (typeof(this) === 'object' &amp;&amp; typeof(this.ome) === 'object') {
+                OME.ome = this.ome;
+                var ome = this.ome;
+            }
+            %output%
+            return OME.ome;
+        }));" />
 
-	<macrodef name="closure-compile">
-		<attribute name="inputfiles" />
-		<attribute name="outputfile" />
-		<attribute name="compilerjarfile" default="${closure-compiler.jar}" />
-		<attribute name="compilationlevel" default="ADVANCED_OPTIMIZATIONS" />
-		<attribute name="outputmode" default="compiled" />
-		<element name="extraflags" optional="yes" />
-		<element name="extrapaths" optional="yes" />
-		<sequential>
-			<exec executable="python" failonerror="true" logError="true">
-				<arg value="${closure-calcdeps.py}" />
-				<arg line='-i "@{inputfiles}"' />
-				<arg line='--output_file "@{outputfile}"' />
-				<arg line='-p "${node_modules}/closure-util"' />
-				<arg line='-p "${ol.js}/src"' />
-				<arg line='-p "${ol.js}/build/ol.ext"' />
-				<extrapaths />
-				<arg line="-o @{outputmode}" />
-				<arg line='-c "@{compilerjarfile}"' />
-				<arg line='-f "--compilation_level=@{compilationlevel}"' />
-				<extraflags />
-			</exec>
-		</sequential>
-	</macrodef>
+    <macrodef name="closure-compile">
+        <attribute name="inputfiles" />
+        <attribute name="outputfile" />
+        <attribute name="compilerjarfile" default="${closure-compiler.jar}" />
+        <attribute name="compilationlevel" default="ADVANCED_OPTIMIZATIONS" />
+        <attribute name="outputmode" default="compiled" />
+        <element name="extraflags" optional="yes" />
+        <element name="extrapaths" optional="yes" />
+        <sequential>
+            <exec executable="python" failonerror="true" logError="true">
+                <arg value="${closure-calcdeps.py}" />
+                <arg line='-i "@{inputfiles}"' />
+                <arg line='--output_file "@{outputfile}"' />
+                <arg line='-p "${node_modules}/closure-util"' />
+                <arg line='-p "${ol.js}/src"' />
+                <arg line='-p "${ol.js}/build/ol.ext"' />
+                <extrapaths />
+                <arg line="-o @{outputmode}" />
+                <arg line='-c "@{compilerjarfile}"' />
+                <arg line='-f "--compilation_level=@{compilationlevel}"' />
+                <extraflags />
+            </exec>
+        </sequential>
+    </macrodef>
 
-	<target name="clean" description="deletes all build files">
-		<delete dir="${build.dir}" />
-	</target>
+    <target name="clean">
+        <delete dir="${build.dir}" />
+    </target>
 
-	<target name="compile">
-		<mkdir dir="${build.dir}" />
-		<!--WHITESPACE_ONLY -->
-		<echo message="${src}" />
-		<closure-compile  inputfiles="${src}/ome" outputfile="${dist.name}" compilationlevel="ADVANCED_OPTIMIZATIONS">
-			<extraflags>
-				<arg line='-f "--output_wrapper=${outputwrapper}" -f "--externs=${src}/externs.js"' />
-			</extraflags>
-		</closure-compile>
-	</target>
+    <target name="compile">
+        <mkdir dir="${build.dir}" />
+        <echo message="${src}" />
+        <closure-compile  inputfiles="${src}/ome" outputfile="${dist.name}" compilationlevel="ADVANCED_OPTIMIZATIONS">
+            <extraflags>
+                <arg line='-f "--output_wrapper=${outputwrapper}" -f "--externs=${src}/externs.js"' />
+            </extraflags>
+        </closure-compile>
+    </target>
 
-	<target name="compile-debug">
-		<mkdir dir="${build.dir}" />
-		<concat destfile="${debug.name}" overwrite="true">
-			<filelist dir="${ol.js}/dist" files="ol-debug.js" />
-		</concat>
-		<concat destfile="${debug.name}" append="true">
+    <target name="compile-debug">
+        <mkdir dir="${build.dir}" />
+        <concat destfile="${debug.name}" overwrite="true">
+            <filelist dir="${ol.js}/dist" files="ol-debug.js" />
+        </concat>
+        <concat destfile="${debug.name}" append="true">
 
 (function (root, factory) {
-	root.ome = factory(root);
+    root.ome = factory(root);
 }(this, function (ctx) {
-		var OME = {};
-		if (typeof(ctx.ome) !== 'object' || Array.isArray(ctx.ome)
-				|| ctx.ome === null) ctx.ome = undefined;
-		</concat>
-		<concat destfile="${debug.name}" append="true">
-			<fileset file="${src}/ome/ome.js"/>
-			<fileset file="${src}/ome/ol3/ol3.js"/>
-			<fileset file="${src}/ome/ol3/utils/utils.js"/>
-			<fileset file="${src}/ome/ol3/utils/Conversion.js"/>
-			<fileset file="${src}/ome/ol3/utils/Net.js"/>
-			<fileset file="${src}/ome/ol3/utils/Misc.js"/>
-			<fileset file="${src}/ome/ol3/utils/Style.js"/>
-			<fileset file="${src}/ome/ol3/geom/geom.js"/>
-			<fileset file="${src}/ome/ol3/geom/Ellipse.js"/>
-			<fileset file="${src}/ome/ol3/geom/LabelRectangle.js"/>
-			<fileset file="${src}/ome/ol3/geom/Line.js"/>
-			<fileset file="${src}/ome/ol3/interaction/interaction.js"/>
-			<fileset file="${src}/ome/ol3/interaction/Rotate.js"/>
-			<fileset file="${src}/ome/ol3/interaction/BoxSelect.js"/>
-			<fileset file="${src}/ome/ol3/interaction/Select.js"/>
-			<fileset file="${src}/ome/ol3/interaction/Modify.js"/>
-			<fileset file="${src}/ome/ol3/interaction/Translate.js"/>
-			<fileset file="${src}/ome/ol3/interaction/Draw.js"/>
+        var OME = {};
+        if (typeof(ctx.ome) !== 'object' || Array.isArray(ctx.ome)
+                || ctx.ome === null) ctx.ome = undefined;
+        </concat>
+        <concat destfile="${debug.name}" append="true">
+            <fileset file="${src}/ome/ome.js"/>
+            <fileset file="${src}/ome/ol3/ol3.js"/>
+            <fileset file="${src}/ome/ol3/utils/utils.js"/>
+            <fileset file="${src}/ome/ol3/utils/Conversion.js"/>
+            <fileset file="${src}/ome/ol3/utils/Net.js"/>
+            <fileset file="${src}/ome/ol3/utils/Misc.js"/>
+            <fileset file="${src}/ome/ol3/utils/Style.js"/>
+            <fileset file="${src}/ome/ol3/geom/geom.js"/>
+            <fileset file="${src}/ome/ol3/geom/Ellipse.js"/>
+            <fileset file="${src}/ome/ol3/geom/LabelRectangle.js"/>
+            <fileset file="${src}/ome/ol3/geom/Line.js"/>
+            <fileset file="${src}/ome/ol3/interaction/interaction.js"/>
+            <fileset file="${src}/ome/ol3/interaction/Rotate.js"/>
+            <fileset file="${src}/ome/ol3/interaction/BoxSelect.js"/>
+            <fileset file="${src}/ome/ol3/interaction/Select.js"/>
+            <fileset file="${src}/ome/ol3/interaction/Modify.js"/>
+            <fileset file="${src}/ome/ol3/interaction/Translate.js"/>
+            <fileset file="${src}/ome/ol3/interaction/Draw.js"/>
             <fileset file="${src}/ome/ol3/controls/controls.js"/>
             <fileset file="${src}/ome/ol3/controls/BirdsEye.js"/>
             <fileset file="${src}/ome/ol3/controls/Zoom.js"/>
             <fileset file="${src}/ome/ol3/controls/ScaleBar.js"/>
-			<fileset file="${src}/ome/ol3/globals.js"/>
-			<fileset file="${src}/ome/ol3/tiles/tiles.js"/>
-			<fileset file="${src}/ome/ol3/tiles/ImageTile.js"/>
-			<fileset file="${src}/ome/ol3/source/source.js"/>
-			<fileset file="${src}/ome/ol3/source/Image.js"/>
-			<fileset file="${src}/ome/ol3/utils/Regions.js"/>
-			<fileset file="${src}/ome/ol3/source/Regions.js"/>
-			<fileset file="${src}/ome/ol3/Viewer.js"/>
-		</concat>
-		<concat destfile="${debug.name}" append="true">
-	return ome;
+            <fileset file="${src}/ome/ol3/globals.js"/>
+            <fileset file="${src}/ome/ol3/tiles/tiles.js"/>
+            <fileset file="${src}/ome/ol3/tiles/ImageTile.js"/>
+            <fileset file="${src}/ome/ol3/source/source.js"/>
+            <fileset file="${src}/ome/ol3/source/Image.js"/>
+            <fileset file="${src}/ome/ol3/utils/Regions.js"/>
+            <fileset file="${src}/ome/ol3/source/Regions.js"/>
+            <fileset file="${src}/ome/ol3/Viewer.js"/>
+        </concat>
+        <concat destfile="${debug.name}" append="true">
+    return ome;
 }));
-	 </concat>
-	</target>
+        </concat>
+    </target>
 
     <target name="plugin">
-		<delete dir="${plugin.dir.static}/js" />
-		<delete dir="${plugin.dir.static}/css" />
-		<mkdir dir="${plugin.dir.static}/js" />
-		<mkdir dir="${plugin.dir.static}/css" />
+        <delete dir="${plugin.dir.static}/js" />
+        <delete dir="${plugin.dir.static}/css" />
+        <mkdir dir="${plugin.dir.static}/js" />
+        <mkdir dir="${plugin.dir.static}/css" />
         <concat destfile="${build.dir}/viewer.css" overwrite="true" fixlastline="true">
             <fileset file="${ol.js}/dist/ol.css"/>
             <fileset file="${basedir}/src/css/${ant.project.name}.css"/>
         </concat>
-		<copy file="${build.dir}/viewer.css" todir="${plugin.dir.static}/css" overwrite="true"/>
-		<copy file="${debug.name}" todir="${plugin.dir.static}/js" overwrite="true"/>
-		<copy file="${dist.name}" todir="${plugin.dir.static}/js" overwrite="true"/>
-	</target>
+        <copy file="${build.dir}/viewer.css" todir="${plugin.dir.static}/css" overwrite="true"/>
+        <copy file="${debug.name}" todir="${plugin.dir.static}/js" overwrite="true"/>
+        <copy file="${dist.name}" todir="${plugin.dir.static}/js" overwrite="true"/>
+    </target>
 
-	<target name="copy-to-lib">
-		<copy file="${dist.name}" todir="libs" overwrite="true"/>
-	</target>
+    <target name="copy-to-lib">
+        <copy file="${dist.name}" todir="libs" overwrite="true"/>
+    </target>
 
-	<target name="docs" depends="init" description="generates jsdocs">
-		<delete dir="${build.dir}/docs" />
-		<mkdir dir="${build.dir}/docs" />
-		<exec executable="${jsdoc.js}">
-  		<arg line="-r ${src} -d ${build.dir}/docs -p --verbose" />
-		</exec>
-	</target>
+    <target name="docs" depends="init" description="generates jsdocs">
+        <delete dir="${build.dir}/docs" />
+        <mkdir dir="${build.dir}/docs" />
+        <exec executable="${jsdoc.js}">
+          <arg line="-r ${src} -d ${build.dir}/docs -p --verbose" />
+        </exec>
+    </target>
 
-	<target name="init" description="fetches all dependencies via npm">
+    <target name="init">
         <echo>Fetching deps with npm (bulk of stdout swallowed)</echo>
         <echo>May the patience be with you...</echo>
         <exec dir="${basedir}" executable="npm">
             <arg line="install openlayers@${ol3-version}"/>
         </exec>
-	</target>
+    </target>
 
-  <target name="prepare-unit-tests" depends="clean, compile-debug">
-		<exec dir="${basedir}" executable="npm">
-			<arg line="install mocha chai mocha-phantomjs"/>
-		</exec>
-        <copy file="${debug.name}" tofile="${build.dir}/ol3-viewer-test.js"/>
-	</target>
+    <target name="prepare-unit-tests">
+        <echo>Preparing test build directory ....</echo>
+        <delete dir="${test.build.dir}" />
+        <mkdir dir="${test.build.dir}" />
+        <copy file="${debug.name}" tofile="${test.build.dir}/ol3-viewer-debug.js" overwrite="true"/>
+    </target>
 
-	<target name="unit-tests" depends="prepare-unit-tests" description="runs unit tests" >
-		<echo>************************************************************************************</echo>
-		<echo>IF PHANTOM.JS or MOCHA.JS or CHAI.JS CANNOT BE FOUND, RUN: 'ant prepare-unit-tests' </echo>
-		<echo>************************************************************************************</echo>
-		<exec dir="${basedir}/${ant.project.name}/test/unit" executable="${mocha-phantomjs}" >
-			<arg line="suite.html"/>
-		</exec>
-	</target>
+    <target name="unit-tests" depends="build-debug, prepare-unit-tests, unit-tests-only" description="runs unit tests" />
 
-	<target name="build" depends="clean, init, compile" description="builds production version" />
-    <target name="build-for-iviewer" depends="build, copy-to-lib" description="builds production version, copying it to omero_iviewer's lib directory" />
-	<target name="build-debug" depends="clean, init, compile-debug" description="builds debug version" />
-	<target name="build-all" depends="clean,init, compile,compile-debug" description="builds both, production and debug version" />
-	<target name="build-plugin" depends="build-all,plugin" description="builds production version, deploying it into its respective plugin directory" />
+    <target name="unit-tests-only">
+        <echo>Fetching test libraries ....</echo>
+        <exec dir="${basedir}" executable="npm">
+            <arg line="install mocha chai mocha-phantomjs"/>
+        </exec>
+        <echo>Getting rid of js docs and comments in ${test.name} ....</echo>
+        <exec executable="java" >
+            <arg value="-jar"/>
+            <arg line="${closure-compiler.jar} --compilation_level WHITESPACE_ONLY --js ${test.build.dir}/ol3-viewer-debug.js"/>
+            <redirector output="${test.name}"/>
+        </exec>
+        <echo>Running Test Suite ....</echo>
+        <exec dir="${basedir}/test/unit" resultproperty="result" executable="${mocha-phantomjs}" >
+            <arg line="suite.html"/>
+        </exec>
+        <fail status="${result}">
+            <condition>
+                <not>
+                    <equals arg1="${result}" arg2="0"/>
+                </not>
+            </condition>
+        </fail>
+    </target>
+
+    <target name="build" depends="build-all, copy-to-lib" description="builds production and debug version, copying it to omero_iviewer's lib directory" />
+    <target name="build-all" depends="clean, init, compile, compile-debug" description="builds both, production and debug version" />
+    <target name="build-prod" depends="clean, init, compile" description="builds production version" />
+    <target name="build-debug" depends="clean, init, compile-debug" description="builds debug version" />
+    <target name="build-plugin" depends="build-all, plugin" description="builds production version, deploying it into its respective plugin directory" />
 
 </project>

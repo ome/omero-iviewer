@@ -10,12 +10,15 @@
         <div class="row shapes-persistence" style="padding-top: 2px">
             <div class="btn-group" style="margin: 5px;">
                 <button type="button" class="btn btn-default btn-xs"
+                    disabled.bind="!(regions_info.history &&
+                        regions_info.history.history.length > 0 &&
+                        regions_info.history.historyPointer >= 0)"
                     click.delegate="saveShapes()">Save
                 </button>
                 <button type="button"
                     disabled.bind="!(regions_info.history &&
                         regions_info.history.history.length > 0 &&
-                         regions_info.history.historyPointer >= 0)"
+                        regions_info.history.historyPointer >= 0)"
                     class="btn btn-default btn-xs"
                     click.delegate="undoHistory()">Undo
                 </button>
@@ -34,7 +37,7 @@
                         data-toggle="dropdown">Delete
                 </button>
                 <ul class="dropdown-menu">
-                    <li if.bind="regions_info.selected_shapes &&
+                    <li if.bind="regions_info && regions_info.selected_shapes &&
                                     regions_info.selected_shapes.length !== 0"
                         click.delegate="deleteShapes()"><a href="#">Delete</a></li>
                     <li click.delegate="deleteShapes(true)"><a href="#">Delete All</a></li>

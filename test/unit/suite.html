@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <title> Unit Tests </title>
+        <link rel="stylesheet" href="../../node_modules/mocha/mocha.css">
+        <script type="text/javascript" src="../build/ol3-viewer-test.js"></script>
+        <script type="text/javascript" src="../../node_modules/mocha/mocha.js"></script>
+        <script type="text/javascript" src="../../node_modules/chai/chai.js"></script>
+    </head>
+    <body>
+        <div id="mocha"></div>
+
+        <script type="text/javascript">
+            mocha.setup('bdd');
+            mocha.reporter('html');
+            var expect = chai.expect;
+            var assert = chai.assert;
+        </script>
+
+        <script type="text/javascript" src="./utils/conversion.js"></script>
+        <script type="text/javascript" src="./utils/misc.js"></script>
+        <script type="text/javascript" src="./utils/net.js"></script>
+        <script type="text/javascript" src="./utils/regions.js"></script>
+        <script type="text/javascript" src="./utils/style.js"></script>
+        <script type="text/javascript" src="./geom/geometries.js"></script>
+
+        <script type="text/javascript">
+            mocha.run();
+        </script>
+    </body>
+</html>
