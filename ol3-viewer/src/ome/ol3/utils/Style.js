@@ -300,8 +300,8 @@ ome.ol3.utils.Style.updateStyleFunction = function(feature, regions_reference, f
 
                 // determine which arrows we need
                 var arrowsToDo = [];
-                if (geom.has_start_arrow_) arrowsToDo.push(true);
-                if (geom.has_end_arrow_) arrowsToDo.push(false);
+                if (geom.has_end_arrow_) arrowsToDo.push(true);
+                if (geom.has_start_arrow_) arrowsToDo.push(false);
 
                 // create arrow head with styling
                 for (var a in arrowsToDo) {

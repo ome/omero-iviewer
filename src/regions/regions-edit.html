@@ -4,14 +4,21 @@
             <div class="shape-stroke-color"><input class="spectrum-input"/></div>
             <div class="shape-stroke-width"><input /></div>
 
-            <div class="dropdown rois-dropdown arrow-button">
+            <div class="dropdown rois-dropdown arrow-button"
+                 title="Toggle arrow heads">
                 <button type="button"
                     class="btn btn-default btn-sm dropdown-toggle disabled-color"
                     disabled="disabled"
-                data-toggle="dropdown">&lt;-&gt;</button>
+                data-toggle="dropdown">&nbsp;</button>
                 <ul class="dropdown-menu">
-                    <li click.delegate="toggleArrow(true)"><a href="#">Head</a></li>
-                    <li click.delegate="toggleArrow(false)"><a href="#">Tail</a></li>
+                    <li click.delegate="toggleArrow(false)">
+                        <span class="marker_start"></span>
+                        <a href="#">Start</a>
+                    </li>
+                    <li click.delegate="toggleArrow(true)">
+                        <span class="marker_end"></span>
+                        <a href="#">End</a>
+                    </li>
                 </ul>
             </div>
 
