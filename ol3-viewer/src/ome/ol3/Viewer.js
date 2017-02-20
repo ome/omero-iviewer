@@ -480,7 +480,7 @@ ome.ol3.Viewer = function(id, options) {
             if (scope.eventbus_)
                 scope.onEndMoveListener =
                     ol.events.listen(
-                        scope.viewer_, ol.MapEvent.Type.MOVEEND,
+                        scope.viewer_, ol.MapEventType.MOVEEND,
                         function(event) {
                             this.eventbus_.publish(
                                 "IMAGE_INTERACTION",
@@ -808,8 +808,7 @@ ome.ol3.Viewer.prototype.fitRegionOrExtent = function(extent) {
         (!ome.ol3.utils.Misc.isArray(extent) &&
          !(extent instanceof ol.geom.SimpleGeometry))) return;
 
-    regions.viewer_.viewer_.getView().fit(
-        extent, regions.viewer_.viewer_.getSize());
+    regions.viewer_.viewer_.getView().fit(extent);
 }
 
 /**

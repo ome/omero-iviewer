@@ -45,14 +45,14 @@ ome.ol3.interaction.Translate = function(regions_reference) {
     // a listener to react on translate start
     ol.events.listen(
         this,
-        ol.interaction.Translate.EventType.TRANSLATESTART,
+        ol.interaction.TranslateEventType.TRANSLATESTART,
         ome.ol3.interaction.Translate.prototype.handleTranslateStart,
         this);
 
     // a listener to react on translate end
     ol.events.listen(
         this,
-        ol.interaction.Translate.EventType.TRANSLATEEND,
+        ol.interaction.TranslateEventType.TRANSLATEEND,
         ome.ol3.interaction.Translate.prototype.handleTranslateEnd,
         this);
 };
@@ -113,7 +113,7 @@ ome.ol3.interaction.Translate.handleDownEvent_ = function(mapBrowserEvent) {
             this, mapBrowserEvent);
         this.dispatchEvent(
             new ol.interaction.Translate.Event(
-                ol.interaction.Translate.EventType.TRANSLATESTART,
+                ol.interaction.TranslateEventType.TRANSLATESTART,
                 this.features_, mapBrowserEvent.coordinate));
         return true;
     }
@@ -152,7 +152,7 @@ ome.ol3.interaction.Translate.handleUpEvent_ = function(mapBrowserEvent) {
             this, mapBrowserEvent);
         this.dispatchEvent(
             new ol.interaction.Translate.Event(
-                ol.interaction.Translate.EventType.TRANSLATEEND,
+                ol.interaction.TranslateEventType.TRANSLATEEND,
                 this.features_, mapBrowserEvent.coordinate));
         return true;
     }

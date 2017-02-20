@@ -18,6 +18,7 @@ ome.ol3.controls.BirdsEye = function(opt_options) {
 
     this.singleBoxClick = null;
     this.lastBoxCoordinate = null;
+    this.ovmap_.setTarget(this.ovmapDiv_);
 
     this.ovmap_.addInteraction(new ol.interaction.Pointer({
         handleDownEvent : function(event) {
@@ -90,10 +91,12 @@ ome.ol3.controls.BirdsEye.prototype.setMap = function(map) {
     if (oldView) {
       this.unbindView_(oldView);
     }
+    this.ovmap_.setTarget(null);
   }
   ol.control.Control.prototype.setMap.call(this, map);
 
   if (map) {
+     this.ovmap_.setTarget(this.ovmapDiv_);
      this.ovmap_.getView().projection_ =
         map.getView().getProjection();
 
