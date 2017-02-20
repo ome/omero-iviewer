@@ -168,8 +168,10 @@ ome.ol3.interaction.Translate.handleUpEvent_ = function(mapBrowserEvent) {
  */
 ome.ol3.interaction.Translate.prototype.featuresAtCoords_ = function(coord) {
     var hit = this.regions_.select_.featuresAtCoords_(coord, 5);
-    if (hit === null || (typeof this.regions_['is_modified'] === 'boolean' &&
-        this.regions_['is_modified'])) return null;
+    if (hit === null || !(this.features_ instanceof ol.Collection) ||
+        !ol.array.includes(this.features_.getArray(), hit) ||
+        (typeof this.regions_['is_modified'] === 'boolean' &&
+            this.regions_['is_modified'])) return null;
     return hit;
 };
 
