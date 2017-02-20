@@ -14,19 +14,15 @@
     <property name="node_modules" value="${basedir}/node_modules" />
     <property name="ol.js" value="${node_modules}/openlayers" />
     <property name="mocha-phantomjs" value="${node_modules}/mocha-phantomjs/bin/mocha-phantomjs" />
-    <property name="jsdoc.js" value="${basedir}/node_modules/jsdoc/jsdoc.js" />
 
     <property name="src" value="${basedir}/${ant.project.name}/src" />
     <property name="build.dir" value="${basedir}/build" />
     <property name="test.build.dir" value="${basedir}/test/build" />
     <property name="plugin.dir.static" value="${basedir}/plugin/${ant.project.name}/static/${ant.project.name}" />
 
-    <property name="dist.name"
-            value="${build.dir}/ol3-viewer.js" />
-    <property name="debug.name"
-            value="${build.dir}/ol3-viewer-debug.js" />
-    <property name="test.name"
-            value="${test.build.dir}/ol3-viewer-test.js" />
+    <property name="dist.name" value="${build.dir}/ol3-viewer.js" />
+    <property name="debug.name" value="${build.dir}/ol3-viewer-debug.js" />
+    <property name="test.name" value="${test.build.dir}/ol3-viewer-test.js" />
 
     <property name="outputwrapper" value="
         (function (root, factory) {
@@ -157,14 +153,6 @@
 
     <target name="copy-to-lib">
         <copy file="${dist.name}" todir="libs" overwrite="true"/>
-    </target>
-
-    <target name="docs" depends="init" description="generates jsdocs">
-        <delete dir="${build.dir}/docs" />
-        <mkdir dir="${build.dir}/docs" />
-        <exec executable="${jsdoc.js}">
-          <arg line="-r ${src} -d ${build.dir}/docs -p --verbose" />
-        </exec>
     </target>
 
     <target name="init">

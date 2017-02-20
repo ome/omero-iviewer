@@ -226,6 +226,7 @@ export default class RegionsHistory {
      * @param {Object} shape a shape definition
      * @param {Array.<string>} props the properties of the shape to be affected
      * @param {Array.<?>} vals the values that the properties should take on
+     * @param {function} post_update_handler a callback after update
      * @memberof History
      */
     affectHistoryPropertyChange(shape, props, vals, post_update_handler) {

@@ -154,10 +154,10 @@ export default class Settings extends EventSubscriber {
     }
 
     /**
-    * Shows and hides the histogram
-    *
-    * @memberof Settings
-    */
+     * Shows and hides the histogram
+     *
+     * @memberof Settings
+     */
     toggleHistogram(checked) {
         if (this.histogram) {
             this.histogram.toggleHistogramVisibilty(checked);
@@ -165,10 +165,10 @@ export default class Settings extends EventSubscriber {
     }
 
     /**
-    * on model change handler
-    *
-    * @memberof Settings
-    */
+     * on model change handler
+     *
+     * @memberof Settings
+     */
     onModelChange(flag) {
         // add history record
         this.image_config.addHistory({
@@ -179,10 +179,10 @@ export default class Settings extends EventSubscriber {
     }
 
     /**
-    * Persists the rendering settings
-    *
-    * @memberof Settings
-    */
+     * Persists the rendering settings
+     *
+     * @memberof Settings
+     */
     saveImageSettings() {
         $('.save-settings').children('button').blur();
         if (Misc.useJsonp(this.context.server)) {
@@ -225,20 +225,20 @@ export default class Settings extends EventSubscriber {
     }
 
     /**
-    * Tries to persists the rendering settings to all images in the dataset
-    *
-    * @memberof Settings
-    */
+     * Tries to persists the rendering settings to all images in the dataset
+     *
+     * @memberof Settings
+     */
     saveImageSettingsToAll() {
         // we only delegate
         this.copy(true);
     }
 
     /**
-    * Undoes the last change
-    *
-    * @memberof Settings
-    */
+     * Undoes the last change
+     *
+     * @memberof Settings
+     */
     undo() {
         if (this.image_config) {
             this.image_config.undoHistory();
@@ -247,10 +247,10 @@ export default class Settings extends EventSubscriber {
     }
 
     /**
-    * Redoes the last change
-    *
-    * @memberof Settings
-    */
+     * Redoes the last change
+     *
+     * @memberof Settings
+     */
     redo() {
         if (this.image_config) {
             this.image_config.redoHistory();
@@ -259,12 +259,12 @@ export default class Settings extends EventSubscriber {
     }
 
     /**
-    * Copies the rendering settings
-    *
-    * @param {boolean} to_all if true settings will be applied to all,
-    *  otherwise only the present one
-    * @memberof Settings
-    */
+     * Copies the rendering settings
+     *
+     * @param {boolean} toAll if true settings will be applied to all,
+     *                        otherwise only the present one
+     * @memberof Settings
+     */
     copy(toAll=false) {
         if (toAll && Misc.useJsonp(this.context.server)) {
             alert("Saving to All will not work cross-domain!");
@@ -324,12 +324,12 @@ export default class Settings extends EventSubscriber {
     }
 
     /**
-    * Applies the rendering settings, keeping a history of the old settings
-    *
-    * @param {Object} rdef the rendering defintion
-    * @param {boolean} for_pasting true if rdef supplied it for pasting of settings, false otherwise
-    * @memberof Settings
-    */
+     * Applies the rendering settings, keeping a history of the old settings
+     *
+     * @param {Object} rdef the rendering defintion
+     * @param {boolean} for_pasting true if rdef supplied it for pasting of settings, false otherwise
+     * @memberof Settings
+     */
     applyRenderingSettings(rdef, for_pasting=true) {
         if (rdef === null) return;
 
@@ -440,11 +440,11 @@ export default class Settings extends EventSubscriber {
     }
 
     /**
-    * Applies user settings from rdefs[index]
-    *
-    * @param {number} index the index in the rdefs array
-    * @memberof Settings
-    */
+     * Applies user settings from rdefs[index]
+     *
+     * @param {number} index the index in the rdefs array
+     * @memberof Settings
+     */
     applyUserSetting(index) {
         this.applyRenderingSettings(this.rdefs[index], false);
     }
