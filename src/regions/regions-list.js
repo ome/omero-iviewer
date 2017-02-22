@@ -204,6 +204,7 @@ export default class RegionsList {
      * @memberof RegionsList
      */
     selectShape(id, selected, event) {
+        if (this.regions_info.shape_to_be_drawn !== null) return;
         let t = $(event.target);
         if (t.hasClass("shape-show") || t.parent().hasClass("shape-show"))
             return true;
