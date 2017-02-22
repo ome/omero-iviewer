@@ -115,12 +115,7 @@ export default class ChannelSettings extends EventSubscriber {
         if (this.image_config === null ||
                 this.image_config.image_info === null) return;
 
-        // we select the mode based on the channel range values
-        // if they are outside min/max, we need the full range view
-        if (this.image_config.image_info.needsFullRange())
-            this.mode = CHANNEL_SETTINGS_MODE.FULL_RANGE;
-        else
-            this.mode = CHANNEL_SETTINGS_MODE.MIN_MAX;
+        this.mode = CHANNEL_SETTINGS_MODE.MIN_MAX;
     }
 
     /**

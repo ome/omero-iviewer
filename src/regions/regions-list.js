@@ -112,7 +112,7 @@ export default class RegionsList {
     /**
      * Establishes and tears down the handlers for column resize
      *
-     * @param {Object} the th cell that is being resized
+     * @param {Object} cell the cell that is being resized
      * @memberof RegionsList
      */
     enableColumnResize(cell) {

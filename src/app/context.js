@@ -24,6 +24,12 @@ import {
 @noView
 export default class Context {
     /**
+     * are we running within the wepback dev server
+     * @type {boolean}
+     */
+    is_dev_server = false;
+
+    /**
      * the aurelia event aggregator
      * @type {EventAggregator}
      */
@@ -101,6 +107,18 @@ export default class Context {
         this.eventbus = eventbus;
         this.initParams = optParams;
 
+        // set global ajax request properties
+        $.ajaxSetup({
+            cache: false,
+            dataType : Misc.useJsonp(this.server) ? "jsonp" : "json",
+            beforeSend: (xhr, settings) => {
+                if (!Misc.useJsonp(this.server) &&
+                    !(/^(GET|HEAD|OPTIONS|TRACE)$/.test(settings.type)))
+                    xhr.setRequestHeader("X-CSRFToken",
+                        Misc.getCookie('csrftoken'));
+            }
+        });
+
         // we set the initial image as the default (if given)
         let initial_dataset_id =
             parseInt(
@@ -113,7 +131,7 @@ export default class Context {
 
         // set up key listener
         this.establishKeyDownListener();
-
+        // url navigation
         if (this.hasHTML5HistoryFeatures()) {
             window.onpopstate = (e) => {
                 if (e.state === null) window.history.go(0);
@@ -207,6 +225,7 @@ export default class Context {
      * @memberof Context
      */
     tweakForDevServer() {
+        this.is_dev_server = true;
         this.prefixed_uris.set(IVIEWER, "");
     }
 
@@ -276,6 +295,10 @@ export default class Context {
             oldPath.replace(old_image_id, image_id);
         if (typeof dataset_id === 'number')
             newPath += '?dataset_id=' + dataset_id;
+        if (this.is_dev_server) {
+            newPath += (newPath.indexOf('?') === -1) ? '?' : '&';
+            newPath += 'haveMadeCrossOriginLogin_';
+        }
         window.history.pushState(
             {image_id: image_id, dataset_id: dataset_id},"",newPath);
     }

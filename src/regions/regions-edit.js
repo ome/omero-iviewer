@@ -5,8 +5,8 @@ import {Utils} from '../utils/regions';
 import {Converters} from '../utils/converters';
 import {REGIONS_MODE} from '../utils/constants';
 import {
-    REGIONS_CHANGE_MODES, REGIONS_SET_PROPERTY,
-    REGIONS_GENERATE_SHAPES,REGIONS_MODIFY_SHAPES, REGIONS_COPY_SHAPES
+    REGIONS_COPY_SHAPES, REGIONS_GENERATE_SHAPES,
+    REGIONS_MODIFY_SHAPES, REGIONS_SET_PROPERTY
 } from '../events/events';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {spectrum} from 'spectrum-colorpicker';
@@ -36,8 +36,16 @@ export default class RegionsEdit {
     ];
 
     /**
+     * @memberof RegionsEdit
+     * @type {Object}
+     */
+    last_selected = null;
+
+    /**
      * @constructor
      * @param {Context} context the application context (injected)
+     * @param {Element} element the associated dom element (injected)
+     * @param {BindingEngine} bindingEngine the BindingEngine (injected)
      */
     constructor(context, element, bindingEngine) {
         this.context = context;
@@ -226,12 +234,22 @@ export default class RegionsEdit {
      */
     registerObserver() {
         this.unregisterObserver();
-        this.observer =
+
+        let createSelectedShapeObserver = () =>
             this.bindingEngine.collectionObserver(
                 this.regions_info.selected_shapes)
                     .subscribe(
                         (newValue, oldValue) =>
                             this.adjustEditWidgets());
+        if (this.regions_info === null) {
+             this.observer =
+                this.bindingEngine.propertyObserver(this, 'regions_info')
+                    .subscribe((newValue, oldValue) => {
+                        if (oldValue === null && newValue) {
+                            this.unregisterObserver();
+                            this.observer = createSelectedShapeObserver();
+                    }});
+        } else this.observer = createSelectedShapeObserver();
     }
 
     /**
@@ -276,23 +294,20 @@ export default class RegionsEdit {
     }
 
     /**
-     * Gets the last item in the selected_shapes array or null if empty
+     * Sets the last selected shape
      *
-     * @return {Object|null} the last shape in the selected array or null
      * @private
      * @memberof RegionsEdit
      */
-    getLastSelected() {
+    setLastSelected() {
         let lastId =
             this.regions_info.selected_shapes.length === 0 ?
                 -1 :
                 this.regions_info.selected_shapes.length-1;
-        let lastSelection =
+        this.last_selected =
             lastId === -1 ? null :
             this.regions_info.data.get(
                 this.regions_info.selected_shapes[lastId]);
-
-        return lastSelection;
     }
 
     /**
@@ -301,9 +316,9 @@ export default class RegionsEdit {
      * @memberof RegionsEdit
      */
     adjustEditWidgets() {
-        let lastSelection = this.getLastSelected();
+        this.setLastSelected();
         let type =
-            lastSelection ? lastSelection.type.toLowerCase() : null;
+            this.last_selected ? this.last_selected.type.toLowerCase() : null;
 
         // COMMENT
         let editComment = $(this.element).find(".shape-edit-comment input");
@@ -311,48 +326,48 @@ export default class RegionsEdit {
         editComment.prop("disabled", true);
         editComment.addClass("disabled-color");
         editComment.val('Comment');
-        if (lastSelection) {
+        if (this.last_selected) {
             editComment.prop("disabled", false);
             editComment.removeClass("disabled-color");
             editComment.val(
-                typeof lastSelection.textValue === 'string' ?
-                    lastSelection.textValue : '');
+                typeof this.last_selected.textValue === 'string' ?
+                    this.last_selected.textValue : '');
             editComment.on('input',
                 (event) =>
-                    this.onCommentChange(event.target.value, lastSelection));
+                    this.onCommentChange(event.target.value, this.last_selected));
         }
         let fontSize =
-            lastSelection ?
-                (typeof lastSelection.fontSize === 'number' ?
-                lastSelection.fontSize : 10) : 10;
+            this.last_selected ?
+                (typeof this.last_selected.fontSize === 'number' ?
+                this.last_selected.fontSize : 10) : 10;
         let fontSizeSpinner = $(this.element).find(".shape-font-size input");
         fontSizeSpinner.off("input spinstop");
         fontSizeSpinner.spinner("value", fontSize);
         fontSizeSpinner.spinner("disable");
-        if (lastSelection) {
+        if (this.last_selected) {
             fontSizeSpinner.spinner("enable");
             fontSizeSpinner.on("input spinstop",
                (event, ui) => this.onFontSizeChange(
-                   parseInt(event.target.value), lastSelection));
+                   parseInt(event.target.value), this.last_selected));
         } else fontSizeSpinner.spinner("disable");
 
         // STROKE COLOR & WIDTH
         let strokeOptions =
-            this.getColorPickerOptions(false, lastSelection);
+            this.getColorPickerOptions(false, this.last_selected);
         let strokeSpectrum =
             $(this.element).find(".shape-stroke-color .spectrum-input");
         let strokeWidthSpinner =
             $(this.element).find(".shape-stroke-width input");
         let strokeColor =
-            lastSelection ?
-                lastSelection.strokeColor : '#FFFFFF';
+            this.last_selected ?
+                this.last_selected.strokeColor : '#FFFFFF';
         let strokeAlpha =
-            lastSelection ?
-                lastSelection.strokeAlpha : 1.0;
+            this.last_selected ?
+                this.last_selected.strokeAlpha : 1.0;
         let strokeWidth =
-            lastSelection ?
-                (typeof lastSelection.strokeWidth === 'number' ?
-                    lastSelection.strokeWidth : 1) : 1;
+            this.last_selected ?
+                (typeof this.last_selected.strokeWidth === 'number' ?
+                    this.last_selected.strokeWidth : 1) : 1;
         if ((type === 'line' || type === 'polyline') && strokeWidth === 0)
             strokeWidth = 1;
         strokeOptions.color =
@@ -361,12 +376,12 @@ export default class RegionsEdit {
         // STROKE width
         strokeWidthSpinner.off("input spinstop");
         strokeWidthSpinner.spinner("value", strokeWidth);
-        if (lastSelection) {
+        if (this.last_selected) {
             strokeSpectrum.spectrum("enable");
             strokeWidthSpinner.spinner("enable");
             strokeWidthSpinner.on("input spinstop",
                (event, ui) => this.onStrokeWidthChange(
-                   parseInt(event.target.value), lastSelection));
+                   parseInt(event.target.value), this.last_selected));
         } else strokeWidthSpinner.spinner("disable");
 
         // ARROW
@@ -374,13 +389,21 @@ export default class RegionsEdit {
         if (type && type.indexOf('line') >= 0) {
             arrowButton.prop('disabled', false);
             arrowButton.removeClass('disabled-color');
+            $('.marker_start').html(
+                typeof this.last_selected['markerStart'] === 'string' &&
+                    this.last_selected['markerStart'] === 'Arrow' ?
+                        '&#10003;' : '&nbsp;');
+            $('.marker_end').html(
+                typeof this.last_selected['markerEnd'] === 'string' &&
+                    this.last_selected['markerEnd'] === 'Arrow' ?
+                        '&#10003;' : '&nbsp;');
         } else {
             arrowButton.prop('disabled', true);
             arrowButton.addClass('disabled-color');
         }
 
         // FILL COLOR
-        let fillOptions = this.getColorPickerOptions(true, lastSelection);
+        let fillOptions = this.getColorPickerOptions(true, this.last_selected);
         let fillSpectrum =
             $(this.element).find(".shape-fill-color .spectrum-input");
         // set fill (if not disabled)
@@ -391,11 +414,11 @@ export default class RegionsEdit {
             return;
         }
         let fillColor =
-            lastSelection ?
-                lastSelection.fillColor : '#FFFFFF';
+            this.last_selected ?
+                this.last_selected.fillColor : '#FFFFFF';
         let fillAlpha =
-            lastSelection ?
-                lastSelection.fillAlpha : 1.0;
+            this.last_selected ?
+                this.last_selected.fillAlpha : 1.0;
         fillOptions.color = Converters.hexColorToRgba(fillColor, fillAlpha);
         fillSpectrum.spectrum(fillOptions);
         fillSpectrum.spectrum("enable");
@@ -433,38 +456,21 @@ export default class RegionsEdit {
     }
 
     /**
-     * Sets edit mode to either modify or translate
-     *
-     * @memberof RegionsEdit
-     */
-    setEditMode(modify=false) {
-        let mode = [REGIONS_MODE.TRANSLATE];
-        if (typeof modify === 'boolean' && modify) mode = [REGIONS_MODE.MODIFY];
-
-        this.context.publish(
-            REGIONS_CHANGE_MODES, {
-                config_id : this.regions_info.image_info.config_id,
-                modes : mode});
-    }
-
-    /**
      * Toggles if line has an arrow
      *
      * @param {boolean} head if true we append arrow at head, otherwise tail
      * @memberof RegionsEdit
      */
     toggleArrow(head=true) {
+        if (this.last_selected === null) return;
+
         if (typeof head !== 'boolean') head = true;
 
-        let lastSelection = this.getLastSelected();
-        if (lastSelection === null) return;
-
         let deltaProps = {type: 'polyline'};
-
-        let property = head ? 'markerStart' : 'markerEnd';
+        let property = head ? 'markerEnd' : 'markerStart';
         let hasArrowMarker =
-            typeof lastSelection[property] === 'string' &&
-                lastSelection[property] === 'Arrow';
+            typeof this.last_selected[property] === 'string' &&
+                this.last_selected[property] === 'Arrow';
 
         let value = hasArrowMarker ? "" : "Arrow";
         deltaProps[property] = value;

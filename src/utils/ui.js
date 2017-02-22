@@ -163,9 +163,8 @@ export default class Ui {
     }
 
     /**
-     * Collapse
+     * Adjusts the sidebars in case of window resize
      *
-     * @param {boolean} left flag if left sidebar
      * @static
      */
     static adjustSideBarsOnWindowResize() {
@@ -197,4 +196,89 @@ export default class Ui {
             }
         }
     }
+
+    /**
+     * Shows a bootstrap modal message box
+     *
+     * @param {string} message the title of the dialog
+     * @param {boolean} ok_button true will display an ok button, false won't
+     * @static
+     */
+    static showModalMessage(message, ok_button) {
+        if (typeof message !== 'string') message = '';
+        if (typeof ok_button !== 'boolean') ok_button = false;
+
+        let modal = $('.modal-message');
+        if (modal.length === 0) return;
+
+        let footer = modal.find('.modal-footer');
+        if (ok_button) footer.show();
+        else footer.hide();
+
+        modal.find('.modal-body').html(message);
+        modal.modal();
+    }
+
+    /**
+     * Hides the bootstrap modal message box
+     *
+     * @static
+     */
+    static hideModalMessage() {
+        let modal = $('.modal-message');
+        if (modal.length === 0) return;
+        modal.find('.modal-body').html("");
+        modal.modal('hide');
+    }
+
+    /**
+     * Shows a bootstrap modal confirmation dialog
+     *
+     * @param {string} title the title of the dialog
+     * @param {string} content goes into the body of the dialog
+     * @param {function} yes a handler that's executed on clicking yes
+     * @param {function} no an optional handler that's executed on clicking no
+     * @static
+     */
+     static showConfirmationDialog(title='', content='', yes = null, no = null) {
+         if (typeof title !== 'string') title = 'Confirmation';
+         if (typeof content !== 'string') content = '';
+         if (typeof yes !== 'function') yes = null;
+         if (typeof no !== 'function') no = null;
+
+         let dialog = $('.confirmation-dialog');
+         if (dialog.length === 0) return;
+         dialog.find('.modal-title').html(title);
+         dialog.find('.modal-body').html(content);
+
+         // set up handlers and reset routine on close
+         dialog.on('hidden.bs.modal', () => Ui.resetConfirmationDialog());
+         let handlers = [".yes", ".no"];
+         handlers.map((h) => {
+             dialog.find(h).on('click', () => {
+                 if (h === '.yes' && yes) yes();
+                 if (h === '.no' && no) no();
+                dialog.modal("hide");
+             });
+         });
+
+         dialog.modal();
+     }
+
+     /**
+      * Resets the bootstrap modal confirmation dialog
+      *
+      * @static
+      */
+      static resetConfirmationDialog() {
+          let dialog = $('.confirmation_dialog');
+          if (dialog.length === 0) return;
+
+          dialog.find('.modal-title').html("Confirmation");
+          dialog.find('.modal-body').html("");
+
+          dialog.find('.yes').off();
+          dialog.find('.no').off();
+          dialog.off('hidden.bs.modal');
+      }
 }

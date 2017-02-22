@@ -24,7 +24,7 @@ ome.ol3.utils.Regions.FEATURE_FACTORY_LOOKUP_TABLE = {
 		 					(typeof(shape['y']) === 'number' ? shape['y'] : -1);
 
 		var feat = new ol.Feature({"geometry" :
-			new ol.geom.Circle([x, -y], 2)});
+			new ol.geom.Circle([x, -y], 5)});
 		feat['type'] = "point";
 		feat.setStyle(ome.ol3.utils.Style.createFeatureStyle(shape));
 		return feat;
