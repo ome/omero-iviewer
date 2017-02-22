@@ -1,6 +1,7 @@
 {
   "source": "./src",
-  "destination": "./build/docs",
+  "destination": "./build/docs/iviewer",
+  "index": "./esdoc-index.html",
   "plugins": [
     {"name": "esdoc-es7-plugin"}
   ]

@@ -248,6 +248,8 @@ export default class Histogram extends EventSubscriber {
     /**
      * Plots the lines only
      * @param {number} channel the active channel index
+     * @param {number} start a start value
+     * @param {number} end an end value
      * @memberof Histogram
      */
     plotHistogramLines(channel, start, end) {

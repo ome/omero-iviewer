@@ -385,9 +385,10 @@ ome.ol3.Viewer = function(id, options) {
                 img_proj:  initialProjection,
                 img_model:  initialModel,
                 split: scope.split_,
-                tile_size:
-                    scope.image_info_['tile_size'] ?
-                        scope.image_info_['tile_size'] : null
+                tiled: typeof scope.image_info_['tiles'] === 'boolean' &&
+                       scope.image_info_['tiles'],
+                tile_size: scope.image_info_['tile_size'] ?
+                                scope.image_info_['tile_size'] : null
             });
             source.changeChannelRange(initialChannels, false);
 
@@ -1097,7 +1098,7 @@ ome.ol3.Viewer.prototype.setDimensionIndex = function(key, value) {
 
     // we want to affect a rerender,
     // only clearing the cache for tiled sources and channel changes
-    omeroImage.forceRender(omeroImage.tiled_ && key === 'c');
+    omeroImage.forceRender(omeroImage.use_tiled_retrieval_ && key === 'c');
 
     // update regions (if necessary)
     if (this.getRegionsLayer()) this.getRegions().changed();
@@ -1230,7 +1231,7 @@ ome.ol3.Viewer.prototype.getId = function() {
  * Returns the (possibly prefixed) uri for a resource
  *
  * @param {string} resource the resource name
- * @return {string\null} the prefixed URI or null (if not found)
+ * @return {string|null} the prefixed URI or null (if not found)
  */
 ome.ol3.Viewer.prototype.getPrefixedURI = function(resource) {
     if (typeof this.prefixed_uris_[resource] !== 'string') return null;
