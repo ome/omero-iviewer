@@ -42,6 +42,13 @@ export default class RegionsEdit {
     last_selected = null;
 
     /**
+     * the list of observers
+     * @memberof RegionsEdit
+     * @type {Array.<Object>}
+     */
+    observers = [];
+
+    /**
      * @constructor
      * @param {Context} context the application context (injected)
      * @param {Element} element the associated dom element (injected)
@@ -61,7 +68,7 @@ export default class RegionsEdit {
      * @memberof RegionsEdit
      */
     bind() {
-        this.registerObserver();
+        this.registerObservers();
     }
 
     /**
@@ -72,7 +79,7 @@ export default class RegionsEdit {
      * @memberof RegionsEdit
      */
     unbind() {
-        this.unregisterObserver();
+        this.unregisterObservers();
     }
 
     /**
@@ -141,6 +148,30 @@ export default class RegionsEdit {
 
          this.modifyShapes(
              deltaProps, this.createUpdateHandler(properties, values));
+
+        this.setDrawColors(color, fill);
+     }
+
+     /**
+      * Sets default fill/stroke color for drawing
+      *
+      * @param {string} color a color in rgba notation
+      * @param {boolean} fill the fill color if true, the stroke color otherwise
+      * @memberof RegionsEdit
+      */
+     setDrawColors(color, fill=true) {
+         if (typeof fill !== 'boolean') fill = true;
+
+         let values = Converters.rgbaToHexAndAlpha(color);
+         if (!Misc.isArray(values) || values.length !== 2) return;
+
+         if (fill) {
+             this.regions_info.shape_defaults['fillColor'] = values[0];
+             this.regions_info.shape_defaults['fillAlpha'] = values[1];
+         } else {
+             this.regions_info.shape_defaults['strokeColor'] = values[0];
+             this.regions_info.shape_defaults['strokeAlpha'] = values[1];
+         }
      }
 
     /**
@@ -227,41 +258,57 @@ export default class RegionsEdit {
     }
 
     /**
-     * Registers an observer to watch the selected shapes
-     * to adjust the fill and line color options
+     * Registers observers to watch the selected shapes and whether we
+     * are presently drawing for the purpose of adjusting
+     * the fill and line color options
      *
      * @memberof RegionsEdit
      */
-    registerObserver() {
-        this.unregisterObserver();
+    registerObservers() {
+        this.unregisterObservers();
 
-        let createSelectedShapeObserver = () =>
-            this.bindingEngine.collectionObserver(
-                this.regions_info.selected_shapes)
-                    .subscribe(
-                        (newValue, oldValue) =>
-                            this.adjustEditWidgets());
+        let createObservers = () => {
+            this.observers.push(
+                this.bindingEngine.collectionObserver(
+                    this.regions_info.selected_shapes)
+                        .subscribe(
+                            (newValue, oldValue) => {
+                                if (this.regions_info.shape_to_be_drawn === null &&
+                                    this.regions_info.selected_shapes.length === 0)
+                                        this.regions_info.shape_defaults = {};
+                                this.adjustEditWidgets();
+                            }));
+            this.observers.push(
+                this.bindingEngine.propertyObserver(
+                    this.regions_info, 'shape_to_be_drawn')
+                        .subscribe(
+                            (newValue, oldValue) => {
+                                if (oldValue !== null && newValue === null)
+                                    this.regions_info.shape_defaults = {};
+                                this.adjustEditWidgets();
+                            }));
+        };
         if (this.regions_info === null) {
-             this.observer =
+            this.observers.push(
                 this.bindingEngine.propertyObserver(this, 'regions_info')
                     .subscribe((newValue, oldValue) => {
                         if (oldValue === null && newValue) {
-                            this.unregisterObserver();
-                            this.observer = createSelectedShapeObserver();
-                    }});
-        } else this.observer = createSelectedShapeObserver();
+                            this.unregisterObservers();
+                            createObservers();
+                    }}));
+        } else createObservers();
     }
 
     /**
-     * Unregisters the selected shapes observer
+     * Unregisters all observers
      *
      * @memberof RegionsEdit
      */
-    unregisterObserver() {
-        if (this.observer) {
-            this.observer.dispose();
-            this.observer = null;
-        }
+    unregisterObservers() {
+        this.observers.map((o) => {
+            if (o) o.dispose();
+        });
+        this.observers = [];
     }
 
     /**
@@ -360,10 +407,14 @@ export default class RegionsEdit {
             $(this.element).find(".shape-stroke-width input");
         let strokeColor =
             this.last_selected ?
-                this.last_selected.strokeColor : '#FFFFFF';
+                this.last_selected.strokeColor :
+                typeof this.regions_info.shape_defaults.strokeColor === 'string' ?
+                    this.regions_info.shape_defaults.strokeColor : '#0099FF';
         let strokeAlpha =
             this.last_selected ?
-                this.last_selected.strokeAlpha : 1.0;
+                this.last_selected.strokeAlpha :
+                typeof this.regions_info.shape_defaults.strokeAlpha === 'number' ?
+                this.regions_info.shape_defaults.strokeAlpha : 0.9;
         let strokeWidth =
             this.last_selected ?
                 (typeof this.last_selected.strokeWidth === 'number' ?
@@ -376,13 +427,15 @@ export default class RegionsEdit {
         // STROKE width
         strokeWidthSpinner.off("input spinstop");
         strokeWidthSpinner.spinner("value", strokeWidth);
-        if (this.last_selected) {
+        if (this.regions_info.shape_to_be_drawn === null)
             strokeSpectrum.spectrum("enable");
+        if (this.last_selected) {
             strokeWidthSpinner.spinner("enable");
             strokeWidthSpinner.on("input spinstop",
                (event, ui) => this.onStrokeWidthChange(
                    parseInt(event.target.value), this.last_selected));
         } else strokeWidthSpinner.spinner("disable");
+        this.setDrawColors(strokeOptions.color, false);
 
         // ARROW
         let arrowButton = $(this.element).find(".arrow-button button");
@@ -407,20 +460,28 @@ export default class RegionsEdit {
         let fillSpectrum =
             $(this.element).find(".shape-fill-color .spectrum-input");
         // set fill (if not disabled)
-        let fillDisabled = type === null ||
+        let fillDisabled =
+            this.regions_info.shape_to_be_drawn !== null ||
                 type === 'line' || type === 'polyline' || type === 'label';
         if (fillDisabled) {
+            fillOptions.color = 'rgba(255, 255, 255, 0)';
             fillSpectrum.spectrum(fillOptions);
+            fillSpectrum.spectrum("disable");
             return;
         }
         let fillColor =
             this.last_selected ?
-                this.last_selected.fillColor : '#FFFFFF';
+                this.last_selected.fillColor :
+                typeof this.regions_info.shape_defaults.fillColor === 'string' ?
+                    this.regions_info.shape_defaults.fillColor : '#FFFFFF';
         let fillAlpha =
             this.last_selected ?
-                this.last_selected.fillAlpha : 1.0;
+                this.last_selected.fillAlpha :
+                typeof this.regions_info.shape_defaults.fillAlpha === 'number' ?
+                    this.regions_info.shape_defaults.fillAlpha : 0.5;
         fillOptions.color = Converters.hexColorToRgba(fillColor, fillAlpha);
         fillSpectrum.spectrum(fillOptions);
+        this.setDrawColors(fillOptions.color, true);
         fillSpectrum.spectrum("enable");
     }
 
@@ -434,8 +495,8 @@ export default class RegionsEdit {
      */
     getColorPickerOptions(fill=true, shape=null) {
         let options =  {
-            disabled: true,
-            color: 'rgba(255,255,255,0)',
+            disabled: this.regions_info.shape_to_be_drawn !== null,
+            color: fill ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 153, 255, 0.7)',
             showInput: true,
             showAlpha: true,
             showInitial: true,
@@ -451,6 +512,8 @@ export default class RegionsEdit {
         if (shape)
             options.change =
                 (color) => this.onColorChange(color.toRgbString(), fill, shape);
+        else options.change =
+            (color) => this.setDrawColors(color.toRgbString(), fill);
 
         return options;
     }

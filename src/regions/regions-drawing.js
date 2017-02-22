@@ -26,7 +26,7 @@ export default class RegionsDrawing extends EventSubscriber {
     /**
      * a list of supported shapes for iteration
      * @memberof RegionsDrawing
-     * @type {RegionsInfo}
+     * @type {Array.<string>}
      */
     supported_shapes = [
         "arrow",
@@ -48,15 +48,6 @@ export default class RegionsDrawing extends EventSubscriber {
             (params={}) => this.onShapeDrawn(params)],
         [REGIONS_CHANGE_MODES,
             (params={}) => this.onModeChange(params)]];
-
-    /**
-     * the type of shape that is to be drawn,
-     * i.e. a draw interaction is active if non null. value should match
-     * one of supported_shapes
-     * @memberof RegionsDrawing
-     * @type {string|null}
-     */
-    shape_to_be_drawn = null;
 
     /**
      * Handles the viewer's event notification after having drawn a shape
@@ -105,7 +96,8 @@ export default class RegionsDrawing extends EventSubscriber {
         // we continue drawing with the same shape
         if (params.drawn)
             this.onDrawShape(
-                this.supported_shapes.indexOf(this.shape_to_be_drawn), true);
+                this.supported_shapes.indexOf(
+                    this.regions_info.shape_to_be_drawn), true);
         if (!params.drawn || len === 0) return;
 
         // collect dimensions for propagation
@@ -150,19 +142,24 @@ export default class RegionsDrawing extends EventSubscriber {
         // if the shape to be drawn is already active =>
         // abort the drawing, otherwise choose new shape type
         // unless we want to force continuation
-        if (!force && this.shape_to_be_drawn &&
-            this.shape_to_be_drawn === new_shape_type) {
+        if (!force && this.regions_info.shape_to_be_drawn &&
+            this.regions_info.shape_to_be_drawn === new_shape_type) {
             abort = true;
-            this.shape_to_be_drawn = null;
-        } else this.shape_to_be_drawn = new_shape_type;
+            this.regions_info.shape_to_be_drawn = null;
+        } else this.regions_info.shape_to_be_drawn = new_shape_type;
+
+        // define shape to be drawn including any pre-set defaults (e.g. colors)
+        let def =  {type: this.regions_info.shape_to_be_drawn};
+        for (let s in this.regions_info.shape_defaults)
+            def[s] = this.regions_info.shape_defaults[s];
 
         // send drawing notification to ol3 viewer
         this.context.publish(
            REGIONS_DRAW_SHAPE, {
                config_id: this.regions_info.image_info.config_id,
-               shape : this.shape_to_be_drawn, abort: abort,
-                hist_id: this.regions_info.history.getHistoryId(),
-                roi_id: this.regions_info.getNewRegionsId()});
+               shape : def, abort: abort,
+               hist_id: this.regions_info.history.getHistoryId(),
+               roi_id: this.regions_info.getNewRegionsId()});
     }
 
     /**
@@ -176,7 +173,7 @@ export default class RegionsDrawing extends EventSubscriber {
          // if the event is for another config, forget it...
          if (params.config_id !== this.regions_info.image_info.config_id) return;
 
-         this.shape_to_be_drawn = null;
+         this.regions_info.shape_to_be_drawn = null;
          // send drawing abort notification to ol3 viewer
          this.context.publish(
             REGIONS_DRAW_SHAPE, {config_id: params.config_id, abort: true});
