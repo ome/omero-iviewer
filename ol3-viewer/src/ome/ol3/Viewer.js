@@ -772,7 +772,7 @@ ome.ol3.Viewer.prototype.selectShapes = function(
 
     if (roi_shape_ids.length === 1 && typeof center === 'boolean' && center &&
         typeof regions.idIndex_[roi_shape_ids[0]] === 'object')
-            this.fitRegionOrExtent(
+            this.centerOnGeometry(
                 regions.idIndex_[roi_shape_ids[0]].getGeometry());
 }
 
@@ -797,42 +797,52 @@ ome.ol3.Viewer.prototype.deleteShapes = function(roi_shape_ids, undo, callback) 
 }
 
 /**
- * Focuses on something that represents an extent or a simple geometry
- * i.e. center it and zoom in
+ * Centers view on the middle of a geometry
+ * optionally zooming in on a given resolution
  *
- * @param {ol.geom.SimpleGeometry|ol.Extent} extent an extent
+ * @param {ol.geom.Geometry} geometry the geometry
+ * @param {number=} resolution the resolution to zoom in on
  */
-ome.ol3.Viewer.prototype.fitRegionOrExtent = function(extent) {
-    // without a regions layer there will be no select of regions ...
-    var regions = this.getRegions();
-    if (regions === null ||
-        (!ome.ol3.utils.Misc.isArray(extent) &&
-         !(extent instanceof ol.geom.SimpleGeometry))) return;
+ome.ol3.Viewer.prototype.centerOnGeometry = function(geometry, resolution) {
+    if (!(geometry instanceof ol.geom.Geometry)) return;
 
-    regions.viewer_.viewer_.getView().fit(
-        extent, regions.viewer_.viewer_.getSize());
-}
-
-/**
- * Focuses on something that represents an extent or a simple geometry
- * i.e. center it and zoom in
- *
- * @param {string|Array<number>} shape_or_coord
- *              a shape id in roi_id:shape_id form or a coordinate pair array
- */
-ome.ol3.Viewer.prototype.centerOnShapeOrCoordinate = function(shape_or_coord) {
-    if (ome.ol3.utils.Misc.isArray(shape_or_coord)) {
-        this.viewer_.getView().setCenter(shape_or_coord);
-        return;
+    // use given resolution for zoom
+    if (typeof resolution === 'number' && !isNaN(resolution)) {
+        var constrainedResolution =
+            this.viewer_.getView().constrainResolution(resolution);
+        if (typeof constrainedResolution === 'number')
+            this.viewer_.getView().setResolution(constrainedResolution);
     }
 
-    // without a regions layer there will be no select of regions ...
-    var regions = this.getRegions();
-    if (regions === null || regions.idIndex_ === null ||
-        typeof shape_or_coord !== 'string' ||
-        !(regions.idIndex_[shape_or_coord] instanceof ol.Feature)) return;
-
-    this.fitRegionOrExtent(regions.idIndex_[shape_or_coord].getGeometry());
+    // center (taking into account potential rotation)
+    var rot = this.viewer_.getView().getRotation();
+    if (geometry.getType() === ol.geom.GeometryType.CIRCLE) {
+        var ext = geometry.getExtent();
+        geometry = ol.geom.Polygon.fromExtent(ext);
+        geometry.rotate(rot, ol.extent.getCenter(ext));
+    }
+    var coords = geometry.getFlatCoordinates();
+    var cosine = Math.cos(-rot);
+    var sine = Math.sin(-rot);
+    var minRotX = +Infinity;
+    var minRotY = +Infinity;
+    var maxRotX = -Infinity;
+    var maxRotY = -Infinity;
+    var stride = geometry.getStride();
+    for (var i = 0, ii = coords.length; i < ii; i += stride) {
+        var rotX = coords[i] * cosine - coords[i + 1] * sine;
+        var rotY = coords[i] * sine + coords[i + 1] * cosine;
+        minRotX = Math.min(minRotX, rotX);
+        minRotY = Math.min(minRotY, rotY);
+        maxRotX = Math.max(maxRotX, rotX);
+        maxRotY = Math.max(maxRotY, rotY);
+    }
+    sine = -sine;
+    var centerRotX = (minRotX + maxRotX) / 2;
+    var centerRotY = (minRotY + maxRotY) / 2;
+    var centerX = centerRotX * cosine - centerRotY * sine;
+    var centerY = centerRotY * cosine + centerRotX * sine;
+    this.viewer_.getView().setCenter([centerX, centerY]);
 }
 
 /**
@@ -1932,11 +1942,6 @@ goog.exportProperty(
     ome.ol3.Viewer.prototype,
     'selectShapes',
     ome.ol3.Viewer.prototype.selectShapes);
-
-goog.exportProperty(
-    ome.ol3.Viewer.prototype,
-    'centerOnShapeOrCoordinate',
-    ome.ol3.Viewer.prototype.centerOnShapeOrCoordinate);
 
 goog.exportProperty(
     ome.ol3.Viewer.prototype,
