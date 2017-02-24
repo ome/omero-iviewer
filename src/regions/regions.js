@@ -20,7 +20,14 @@ export default class Regions {
     @bindable config_id = null;
 
     /**
-     * a reference to the image config
+     * a reference to the image info
+     * @memberof Regions
+     * @type {ImageInfo}
+     */
+    image_info = null;
+
+    /**
+     * a reference to the regions info
      * @memberof Regions
      * @type {RegionsInfo}
      */
@@ -56,9 +63,10 @@ export default class Regions {
      */
     bind() {
         let img_conf = this.context.getImageConfig(this.config_id);
-        if (img_conf && img_conf.regions_info)
+        if (img_conf && img_conf.regions_info) {
+            this.image_info = img_conf.image_info;
             this.regions_info = img_conf.regions_info;
-
+        }
     }
 
     /**
@@ -184,6 +192,7 @@ export default class Regions {
      * @memberof Regions
      */
     unbind() {
+        this.image_info = null;
         this.regions_info = null;
     }
 }

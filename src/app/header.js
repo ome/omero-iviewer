@@ -73,6 +73,9 @@ export class Header extends EventSubscriber {
         if (flag && selConfig && selConfig.regions_info.data === null)
             selConfig.regions_info.requestData(true);
 
+        if (!flag) $('right-hand-panel .nav a[href="#setting"]').tab("show");
+        else $('right-hand-panel .nav a[href="#rois"]').tab("show");
+
         this.context.publish(
             REGIONS_SET_PROPERTY, {property: "visible", value: flag});
     }
@@ -178,6 +181,7 @@ export class Header extends EventSubscriber {
                 (value === 'split' || value === 'normal')) {
                 let ctx = this.context.getSelectedImageConfig();
                 if (ctx === null) return;
+                $('right-hand-panel .nav a[href="#setting"]').tab("show");
                 this.image_info = ctx.image_info;
                 let makeSplit = (value === 'normal');
                 $(".split_channels").val(makeSplit ? "split" : "normal");
