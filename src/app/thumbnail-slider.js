@@ -25,6 +25,20 @@ export default class ThumbnailSlider extends EventSubscriber {
     dataset_id = null;
 
     /**
+     * a possible gateway prefix for the urls
+     * @memberof ThumbnailSlider
+     * @type {string}
+     */
+    gateway_prefix = '';
+
+    /**
+     * the list of thumbnails we received from the backend
+     * @memberof ThumbnailSlider
+     * @type {Array.<Object>}
+     */
+    thumbnails_response = null;
+
+    /**
      * a list of thumbnails with a url and an id property each
      * @memberof ThumbnailSlider
      * @type {Map}
@@ -37,6 +51,20 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @type {Array.<Object>}
      */
     thumbnail_length = 80;
+
+    /**
+     * the number of thumnails we request in one go
+     * @memberof ThumbnailSlider
+     * @type {number}
+     */
+    thumbnails_request_size = 10;
+
+    /**
+     * the update handle of the setInterval
+     * @memberof ThumbnailSlider
+     * @type {number}
+     */
+    updateHandle = null;
 
     /**
      * our list of events we subscribe to via the EventSubscriber
@@ -57,6 +85,8 @@ export default class ThumbnailSlider extends EventSubscriber {
         super(context.eventbus)
         this.context = context;
         this.element = element;
+
+        this.gateway_prefix = this.context.getPrefixedURI(WEBGATEWAY);
     }
 
     /**
@@ -78,6 +108,7 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @memberof ThumbnailSlider
      */
     unbind() {
+        if (this.updateHandle) clearInterval(this.updateHandle);
         this.unsubscribe();
     }
 
@@ -101,9 +132,8 @@ export default class ThumbnailSlider extends EventSubscriber {
         if (dataset_id  === this.dataset_id) return;
         this.dataset_id = dataset_id;
 
-        let prefixedGateway = this.context.getPrefixedURI(WEBGATEWAY);
         let url =
-            this.context.server + prefixedGateway + "/dataset/" +
+            this.context.server + this.gateway_prefix + "/dataset/" +
                 dataset_id + '/children/';
 
         $.ajax(
@@ -114,31 +144,56 @@ export default class ThumbnailSlider extends EventSubscriber {
 
                 // empty what has been there
                 this.thumbnails.clear();
-                 // traverse results and store them internally
-                 response.map((item) => {
-                     if (typeof item.thumb_url === "string" &&
-                            item.thumb_url.length> 0 &&
-                            typeof item.id === "number") {
-                        // for dev/remote server we take out the prefix
-                        // because the thumb url includes it as well
-                        let thumbUrl = item.thumb_url;
-                        if (this.context.server !== "") {
-                            let prefixStart = thumbUrl.indexOf(prefixedGateway);
-                            if (prefixStart > 0)
-                                thumbUrl = thumbUrl.substring(prefixStart);
-                        }
-                        this.thumbnails.set(
-                            item.id,
-                            {url : thumbUrl + this.thumbnail_length + "/",
-                            revision : 0});
-                     }
-                 });
+                this.thumbnails_response = response;
+                // add thumnails to the map which will trigger the loading
+                this.addThumbnails();
             },
             error : (response) => {
                 this.dataset_id = null;
+                this.thumbnails_response = null;
                 this.hideMe();
             }
         });
+    }
+
+    /**
+     * Adds thumbnails to then be loaded.
+     * We limit ourselves to {@link thumbnails_request_size}.
+     *
+     * @memberof ThumbnailSlider
+     */
+    addThumbnails() {
+        if (this.thumbnails_response === null ||
+            this.thumbnails_response.length === 0) return false;
+
+        let toBeLoaded =
+            this.thumbnails_response.splice(0, this.thumbnails_request_size);
+
+        toBeLoaded.map((item) => {
+            if (typeof item.thumb_url === "string" &&
+                   item.thumb_url.length> 0 &&
+                   typeof item.id === "number") {
+               // for dev/remote server we take out the prefix
+               // because the thumb url includes it as well
+               let thumbUrl = item.thumb_url;
+               if (this.context.server !== "") {
+                   let prefixStart = thumbUrl.indexOf(this.gateway_prefix);
+                   if (prefixStart > 0)
+                       thumbUrl = thumbUrl.substring(prefixStart);
+               }
+               this.thumbnails.set(
+                   item.id,
+                   {
+                       url: thumbUrl + this.thumbnail_length + "/",
+                       title:
+                           typeof item.name === 'string' ? item.name : item.id,
+                       requested: false,
+                       revision : 0
+                   });
+            }
+        });
+
+        return false;
     }
 
     /**
@@ -217,10 +272,28 @@ export default class ThumbnailSlider extends EventSubscriber {
         if (typeof params !== 'object' ||
             !Misc.isArray(params.ids)) return;
 
-        params.ids.map((t) => {
-            let thumb = this.thumbnails.get(t);
-            if (thumb && typeof thumb.revision === 'number')
-                thumb.revision++;
-        });
+        let counter = 0;
+        // we update in batches
+        this.updateHandle = setInterval(
+            () => {
+                let error = false;
+                // affect reload by raising revision number
+                try {
+                    let end = counter + this.thumbnails_request_size;
+                    for (let i=counter;i<end && i<params.ids.length;i++) {
+                        let thumb = this.thumbnails.get(params.ids[i]);
+                        if (thumb && typeof thumb.revision === 'number')
+                            thumb.revision++;
+                        ++counter;
+                    };
+                } catch(err) {
+                    error = true;
+                }
+                // we are done
+                if (counter >= params.ids.length || error) {
+                    clearInterval(this.updateHandle);
+                    return;
+                }
+            }, 2500);
     }
 }
