@@ -164,7 +164,7 @@ export default class ThumbnailSlider extends EventSubscriber {
      */
     addThumbnails() {
         if (this.thumbnails_response === null ||
-            this.thumbnails_response.length === 0) return false;
+            this.thumbnails_response.length === 0) return;
 
         let toBeLoaded =
             this.thumbnails_response.splice(0, this.thumbnails_request_size);
@@ -193,7 +193,7 @@ export default class ThumbnailSlider extends EventSubscriber {
             }
         });
 
-        return false;
+        return;
     }
 
     /**
