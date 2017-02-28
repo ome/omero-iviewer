@@ -295,13 +295,13 @@ export default class ThumbnailSlider extends EventSubscriber {
                     while (updateCount < this.thumbnails_request_size &&
                            position < params.ids.length) {
                         let thumb = this.thumbnails.get(params.ids[position]);
+                        position++;
                         if (thumb && typeof thumb.revision === 'number') {
                             thumb.revision++;
                             updateCount++;
                         }
-                        accUpdateCount += updateCount;
-                        position++;
                     }
+                    accUpdateCount += updateCount;
                 } catch(err) {
                     error = true;
                 }
