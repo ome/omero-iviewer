@@ -161,14 +161,11 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                     geometryFunction : null
         });
 
-        if (shape_type === 'point')
-            this.ol_draw_.mode = this.mode = ol.interaction.Draw.Mode.POINT;
-
         // add start and end handlers for the drawing action
         this.regions_.viewer_.viewer_.addInteraction(this.ol_draw_);
         if (this.abort_polyline_)
             this.ol_draw_.once(
-                ol.interaction.Draw.EventType.DRAWSTART,
+                ol.interaction.DrawEventType.DRAWSTART,
                 function(e) {
                     var f = e.feature;
                     var changeHandler =
@@ -182,7 +179,7 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                         }, this);
                     }, this);
         this.ol_draw_.on(
-            ol.interaction.Draw.EventType.DRAWEND, onDrawEndAction, this);
+            ol.interaction.DrawEventType.DRAWEND, onDrawEndAction, this);
 }
 
 /**
@@ -198,7 +195,7 @@ ome.ol3.interaction.Draw.prototype.drawShape = function(shape, roi_id, hist_id) 
         this.history_id_ = null;
         this.roi_id_ = 0;
         this.dispatchEvent(new ol.interaction.Draw.Event(
-             ol.interaction.Draw.EventType.DRAWEND, null));
+             ol.interaction.DrawEventType.DRAWEND, null));
         return;
     }
 

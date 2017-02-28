@@ -468,6 +468,12 @@ ome.ol3.Viewer = function(id, options) {
                 view: view
             });
 
+            // expand bird's eye view for tiles sources
+            if (source.use_tiled_retrieval_ && scope.viewerState_["birdseye"] &&
+                scope.viewerState_["birdseye"]['ref']
+                    instanceof ome.ol3.controls.BirdsEye)
+                        scope.viewerState_["birdseye"]['ref'].setCollapsed(false);
+
             // listens to resolution changes
             scope.onViewResolutionListener =
                 ol.events.listen( // register a resolution handler for zoom display
@@ -481,7 +487,7 @@ ome.ol3.Viewer = function(id, options) {
             if (scope.eventbus_)
                 scope.onEndMoveListener =
                     ol.events.listen(
-                        scope.viewer_, ol.MapEvent.Type.MOVEEND,
+                        scope.viewer_, ol.MapEventType.MOVEEND,
                         function(event) {
                             this.eventbus_.publish(
                                 "IMAGE_INTERACTION",

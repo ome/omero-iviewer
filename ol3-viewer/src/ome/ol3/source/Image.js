@@ -292,7 +292,7 @@ ome.ol3.source.Image.prototype.createTile_ =
             new this.tileClass(
                 tileCoord,
                 tileUrl !== undefined ?
-                    ol.Tile.State.IDLE : ol.Tile.State.EMPTY,
+                    ol.TileState.IDLE : ol.TileState.EMPTY,
                 tileUrl !== undefined ? tileUrl : '',
                 this.crossOrigin, this.tileLoadFunction);
 

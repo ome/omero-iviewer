@@ -14,7 +14,7 @@ goog.require('ol.Tile')
  * @extends {ol.ImageTile}
  *
  * @param {ol.TileCoord} tileCoord Tile coordinate.
- * @param {ol.Tile.State} state State.
+ * @param {ol.TileState} state State.
  * @param {string} src Image source URI.
  * @param {?string} crossOrigin Cross origin.
  * @param {ol.TileLoadFunctionType} tileLoadFunction Tile load function.
@@ -83,7 +83,7 @@ ome.ol3.tiles.ImageTile.prototype.getImage = function(opt_context) {
 	// call super.getImage
 	var image = goog.base(this, 'getImage', opt_context);
     // we are not loaded yet => good byes
-    if (this.state !== ol.Tile.State.LOADED) return image;
+    if (this.state !== ol.TileState.LOADED) return image;
 
     // do we have the image already (resized or post tile function applied)
     var key = ol.getUid(image);
