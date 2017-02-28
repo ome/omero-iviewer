@@ -281,13 +281,18 @@ export default class Settings extends EventSubscriber {
         url +=  'm=' + imgInf.model[0] + "&p=" + imgInf.projection + "&ia=0&c=";
 
         let i=0;
+        let maps = [];
         imgInf.channels.map(
-            (c) =>
+            (c) => {
                 url+= (i !== 0 ? ',' : '') + (!c.active ? '-' : '') + (++i) +
-                 "|" + c.window.start + ":" + c.window.end +
-                    (typeof c.reverseIntensity === 'boolean' ?
-                        (c.reverseIntensity ? 'r' : '-r') : '') +
-                 "$" + c.color);
+                 "|" + c.window.start + ":" + c.window.end + "$" + c.color;
+                 maps.push(
+                     {"reverse" : { "enabled" :
+                         typeof c.reverseIntensity === 'boolean' &&
+                         c.reverseIntensity}
+                     });
+             });
+        url += "&maps=" + JSON.stringify(maps);
 
         // save to all differs from copy in that it is a POST with data
         // instead of a JSON(P) GET, as well as the success handler
