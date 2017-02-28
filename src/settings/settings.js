@@ -198,14 +198,9 @@ export default class Settings extends EventSubscriber {
             "&p=" + image_info.projection +
             "&t=" + (image_info.dimensions.t+1) +
             "&z=" + (image_info.dimensions.z+1) +
-            "&q=0.9&ia=0&c=";
-        let i=0;
-        image_info.channels.map(
-            (c) =>
-                url+= (i !== 0 ? ',' : '') + (!c.active ? '-' : '') + (++i) +
-                    "|" + c.window.start + ":" + c.window.end +
-                    (typeof  c.reverseIntensity === 'boolean' ?
-                    (c.reverseIntensity ? "r" : "-r") : "") + "$" + c.color);
+            "&q=0.9&ia=0";
+        url = this.appendChannelsAndMapsToQueryString(url);
+
         $.ajax(
             {url : url,
              method: 'POST',
@@ -278,21 +273,8 @@ export default class Settings extends EventSubscriber {
         if (!toAll)
             url += "imageId=" + imgInf.image_id + "&q=0.9&pixel_range=" +
                     imgInf.range[0] + ":" + imgInf.range[1] +"&";
-        url +=  'm=' + imgInf.model[0] + "&p=" + imgInf.projection + "&ia=0&c=";
-
-        let i=0;
-        let maps = [];
-        imgInf.channels.map(
-            (c) => {
-                url+= (i !== 0 ? ',' : '') + (!c.active ? '-' : '') + (++i) +
-                 "|" + c.window.start + ":" + c.window.end + "$" + c.color;
-                 maps.push(
-                     {"reverse" : { "enabled" :
-                         typeof c.reverseIntensity === 'boolean' &&
-                         c.reverseIntensity}
-                     });
-             });
-        url += "&maps=" + JSON.stringify(maps);
+        url +=  'm=' + imgInf.model[0] + "&p=" + imgInf.projection + "&ia=0";
+        url = this.appendChannelsAndMapsToQueryString(url);
 
         // save to all differs from copy in that it is a POST with data
         // instead of a JSON(P) GET, as well as the success handler
@@ -326,6 +308,38 @@ export default class Settings extends EventSubscriber {
         } else params.success =
             (response) => imgInf.requestImgRDef();
         $.ajax(params);
+    }
+
+    /**
+     * Appends the channel and map parameters
+     *
+     * @param {string} url the url to append to
+     * @return string the url with the appended parameters
+     *
+     * @private
+     * @memberof Settings
+     */
+    appendChannelsAndMapsToQueryString(url) {
+        if (typeof url !== 'string') return url;
+
+        let imgInf = this.image_config.image_info;
+        if (!Misc.isArray(imgInf.channels) || imgInf.channels.length === 0)
+            return "";
+
+        url += '&c=';
+        let i=0;
+        let maps = [];
+        imgInf.channels.map(
+            (c) => {
+                url+= (i !== 0 ? ',' : '') + (!c.active ? '-' : '') + (++i) +
+                 "|" + c.window.start + ":" + c.window.end + "$" + c.color;
+                 maps.push(
+                     {"reverse" : { "enabled" :
+                         typeof c.reverseIntensity === 'boolean' &&
+                         c.reverseIntensity}
+                     });
+             });
+        return url + "&maps=" + JSON.stringify(maps);
     }
 
     /**
