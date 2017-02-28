@@ -65,8 +65,8 @@ export class Header extends EventSubscriber {
      *
      * @memberof Header
      */
-    toggleRegions() {
-        let flag = this.context.show_regions;
+    toggleRegions(event) {
+        let flag = event.target.checked;
         let selConfig = this.context.getSelectedImageConfig();
         // should we have requested the regions data successfully before
         // let's do it now
@@ -85,9 +85,9 @@ export class Header extends EventSubscriber {
      *
      * @memberof Header
      */
-    toggleScalebar() {
+    toggleScalebar(event) {
         this.context.publish(IMAGE_VIEWER_SCALEBAR,
-            {visible: this.context.show_scalebar});
+            {visible: event.target.checked});
     }
 
     /**
