@@ -1,5 +1,6 @@
 <template>
-    <div class="thumbnail-scroll-panel">
+    <div class="thumbnail-scroll-panel"
+        show.bind="!requesting_thumbnail_data">
       <img repeat.for="[id, thumb] of thumbnails"
         src="${context.server}${thumb.url}?version=${thumb.revision}"
         title="${thumb.title}"
@@ -10,5 +11,9 @@
         class='expand-down'
         style="width: 100%; margin-top: 5px; margin-bottom: 5px; cursor: pointer"
         title="Show more images"></div>
+    </div>
+    <div class="disabled-color"
+        show.bind="requesting_thumbnail_data">
+            Gathering<br>Thumbnail<br>Info...
     </div>
 </template>
