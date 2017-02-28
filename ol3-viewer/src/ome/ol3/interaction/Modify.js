@@ -48,14 +48,14 @@ ome.ol3.interaction.Modify = function(regions_reference) {
     }
 
     // a listener to react on modify start
-    ol.events.listen(this, ol.interaction.Modify.EventType.MODIFYSTART,
+    ol.events.listen(this, ol.interaction.ModifyEventType.MODIFYSTART,
         function(event) {
             this.hist_id_ =
                 this.regions_.addHistory(event.features.array_, true);
         }, this);
 
     // a listener to react on modify end
-    ol.events.listen(this, ol.interaction.Modify.EventType.MODIFYEND,
+    ol.events.listen(this, ol.interaction.ModifyEventType.MODIFYEND,
         function(event) {
             // complete history entry
             if (this.hist_id_ >= 0) {
@@ -108,7 +108,8 @@ ome.ol3.interaction.Modify.prototype.handlePointerAtPixel_ = function(pixel, map
              node.feature['state'] === ome.ol3.REGIONS_STATE.REMOVED)) return;
 
         // we only continue if we don't have an unmodifyable labels
-        if (!(node.geometry instanceof ome.ol3.geom.Label)) {
+        if (!(node.geometry instanceof ome.ol3.geom.Label) &&
+            !(node.geometry instanceof ol.geom.Circle)) {
             var closestSegment = node.segment;
             var vertex =
                 (ol.coordinate.closestOnSegment(
@@ -309,7 +310,7 @@ ome.ol3.interaction.Modify.handleUpEvent_ = function(mapBrowserEvent) {
     if (this.modified_) {
         this.dispatchEvent(
             new ol.interaction.Modify.Event(
-                ol.interaction.Modify.EventType.MODIFYEND,
+                ol.interaction.ModifyEventType.MODIFYEND,
                 this.features_, mapBrowserEvent));
         this.modified_ = false;
     }
@@ -334,14 +335,14 @@ ome.ol3.interaction.Modify.handleEvent = function(mapBrowserEvent) {
         mapBrowserEvent.originalEvent.which === 3)) return true;
 
     var handled;
-    if (!mapBrowserEvent.map.getView().getHints()[ol.View.Hint.INTERACTING] &&
-        mapBrowserEvent.type == ol.MapBrowserEvent.EventType.POINTERMOVE &&
+    if (!mapBrowserEvent.map.getView().getHints()[ol.ViewHint.INTERACTING] &&
+        mapBrowserEvent.type == ol.MapBrowserEventType.POINTERMOVE &&
         !this.handlingDownUpSequence) {
             this.handlePointerMove_(mapBrowserEvent);
     }
 
     if (this.vertexFeature_ && this.deleteCondition_(mapBrowserEvent)) {
-        if (mapBrowserEvent.type != ol.MapBrowserEvent.EventType.SINGLECLICK ||
+        if (mapBrowserEvent.type != ol.MapBrowserEventType.SINGLECLICK ||
             !this.ignoreNextSingleClick_) {
             // we do not allow to delete any vertex of a rectangle/ellipse
             if (this.features_ instanceof ol.Collection &&
@@ -358,14 +359,14 @@ ome.ol3.interaction.Modify.handleEvent = function(mapBrowserEvent) {
                 handled = this.removeVertex_();
                 this.dispatchEvent(
                     new ol.interaction.Modify.Event(
-                        ol.interaction.Modify.EventType.MODIFYEND,
+                        ol.interaction.ModifyEventType.MODIFYEND,
                         this.features_, mapBrowserEvent));
                 this.modified_ = false;
             }
         } else handled = true;
     }
 
-    if (mapBrowserEvent.type == ol.MapBrowserEvent.EventType.SINGLECLICK) {
+    if (mapBrowserEvent.type == ol.MapBrowserEventType.SINGLECLICK) {
         this.ignoreNextSingleClick_ = false;
     }
 

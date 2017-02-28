@@ -104,7 +104,7 @@ ome.ol3.interaction.Select = function(regions_reference) {
 	this.addListener_ =
         this.regions_.viewer_.eventbus_ ?
             ol.events.listen(
-            this.features_, ol.Collection.EventType.ADD,
+            this.features_, ol.CollectionEventType.ADD,
             propagateSelectionEvent) : null;
 
     /**
@@ -116,7 +116,7 @@ ome.ol3.interaction.Select = function(regions_reference) {
 	this.removeListener_ =
         this.regions_.viewer_.eventbus_ ?
             ol.events.listen(
-            this.features_, ol.Collection.EventType.REMOVE,
+            this.features_, ol.CollectionEventType.REMOVE,
             propagateSelectionEvent) : null;
 };
 goog.inherits(ome.ol3.interaction.Select, ol.interaction.Interaction);

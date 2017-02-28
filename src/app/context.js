@@ -134,7 +134,10 @@ export default class Context {
         // url navigation
         if (this.hasHTML5HistoryFeatures()) {
             window.onpopstate = (e) => {
-                if (e.state === null) window.history.go(0);
+                if (e.state === null) {
+                    window.history.go(0);
+                    return;
+                }
                 this.addImageConfig(e.state.image_id, e.state.dataset_id);
             };
         }
