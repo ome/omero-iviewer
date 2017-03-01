@@ -247,7 +247,10 @@ export default class ImageInfo {
             this.context.getInitialRequestParam(REQUEST_PARAMS.MODEL);
         let initialChannels =
             this.context.getInitialRequestParam(REQUEST_PARAMS.CHANNELS);
-        initialChannels = Misc.parseChannelParameters(initialChannels);
+        let initialMaps =
+            this.context.getInitialRequestParam(REQUEST_PARAMS.MAPS);
+        initialChannels =
+            Misc.parseChannelParameters(initialChannels, initialMaps);
 
         // store channels, pixel_range and dimensions
         if (typeof response.tiles === 'boolean') this.tiled = response.tiles;
@@ -325,7 +328,7 @@ export default class ImageInfo {
         if (callback === null)
             callback = (rdef) => {
                 if (rdef === null || typeof rdef.c !== 'string') return;
-                let channels = Misc.parseChannelParameters(rdef.c);
+                let channels = Misc.parseChannelParameters(rdef.c, rdef.maps);
                 // we only allow copy and paste with same number of channels
                 // and compatible range
                 if (!Misc.isArray(channels) ||

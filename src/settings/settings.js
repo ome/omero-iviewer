@@ -199,7 +199,7 @@ export default class Settings extends EventSubscriber {
             "&t=" + (image_info.dimensions.t+1) +
             "&z=" + (image_info.dimensions.z+1) +
             "&q=0.9&ia=0";
-        url = this.appendChannelsAndMapsToQueryString(url);
+        url = Misc.appendChannelsAndMapsToQueryString(image_info.channels, url);
 
         $.ajax(
             {url : url,
@@ -274,7 +274,7 @@ export default class Settings extends EventSubscriber {
             url += "imageId=" + imgInf.image_id + "&q=0.9&pixel_range=" +
                     imgInf.range[0] + ":" + imgInf.range[1] +"&";
         url +=  'm=' + imgInf.model[0] + "&p=" + imgInf.projection + "&ia=0";
-        url = this.appendChannelsAndMapsToQueryString(url);
+        url = Misc.appendChannelsAndMapsToQueryString(imgInf.channels, url);
 
         // save to all differs from copy in that it is a POST with data
         // instead of a JSON(P) GET, as well as the success handler
@@ -308,38 +308,6 @@ export default class Settings extends EventSubscriber {
         } else params.success =
             (response) => imgInf.requestImgRDef();
         $.ajax(params);
-    }
-
-    /**
-     * Appends the channel and map parameters
-     *
-     * @param {string} url the url to append to
-     * @return string the url with the appended parameters
-     *
-     * @private
-     * @memberof Settings
-     */
-    appendChannelsAndMapsToQueryString(url) {
-        if (typeof url !== 'string') return url;
-
-        let imgInf = this.image_config.image_info;
-        if (!Misc.isArray(imgInf.channels) || imgInf.channels.length === 0)
-            return "";
-
-        url += '&c=';
-        let i=0;
-        let maps = [];
-        imgInf.channels.map(
-            (c) => {
-                url+= (i !== 0 ? ',' : '') + (!c.active ? '-' : '') + (++i) +
-                 "|" + c.window.start + ":" + c.window.end + "$" + c.color;
-                 maps.push(
-                     {"reverse" : { "enabled" :
-                         typeof c.reverseIntensity === 'boolean' &&
-                         c.reverseIntensity}
-                     });
-             });
-        return url + "&maps=" + JSON.stringify(maps);
     }
 
     /**
@@ -377,7 +345,7 @@ export default class Settings extends EventSubscriber {
 
         // copy channel values and add change to history
         let channels = for_pasting ?
-            Misc.parseChannelParameters(rdef.c) : rdef.c;
+            Misc.parseChannelParameters(rdef.c, rdef.maps) : rdef.c;
         let mode = CHANNEL_SETTINGS_MODE.MIN_MAX;
         if (channels)
             for (let i=0;i<channels.length;i++) {

@@ -503,10 +503,12 @@ ome.ol3.source.Image.prototype.captureImageSettings = function() {
         var chanSnap = {
             "active" : chan['active'],
             "color" : chan['color'],
-            "min" : chan['min'],
-            "max" : chan['max'],
-            "start" : chan['start'],
-            "end" : chan['end']
+            "window" : {
+                "min" : chan['min'],
+                "max" : chan['max'],
+                "start" : chan['start'],
+                "end" : chan['end']
+            }
         };
         if (typeof chan['reverse'] === 'boolean')
             chanSnap['reverseIntensity'] = chan['reverse'];
