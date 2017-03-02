@@ -163,6 +163,7 @@
             <arg line="install openlayers@${ol3-version}"/>
         </exec>
         <echo>Applying patches...</echo>
+        <mkdir dir="${ol-patches}" />
         <copy todir="${ol-sources}">
             <fileset dir="${ol-patches}" includes="*.patch"/>
         </copy>
