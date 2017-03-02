@@ -13,6 +13,8 @@
     <property name="closure-calcdeps.py" value="${basedir}/closure/calcdeps.py" />
     <property name="node_modules" value="${basedir}/node_modules" />
     <property name="ol.js" value="${node_modules}/openlayers" />
+    <property name="ol-sources" value="${ol.js}/src" />
+    <property name="ol-patches" value="${ant.project.name}/patches" />
     <property name="mocha-phantomjs" value="${node_modules}/mocha-phantomjs/bin/mocha-phantomjs" />
 
     <property name="src" value="${basedir}/${ant.project.name}/src" />
@@ -60,7 +62,7 @@
                 <arg line='-i "@{inputfiles}"' />
                 <arg line='--output_file "@{outputfile}"' />
                 <arg line='-p "${node_modules}/closure-util"' />
-                <arg line='-p "${ol.js}/src"' />
+                <arg line='-p "${ol-sources}"' />
                 <arg line='-p "${ol.js}/build/ol.ext"' />
                 <extrapaths />
                 <arg line="-o @{outputmode}" />
@@ -156,11 +158,15 @@
     </target>
 
     <target name="init">
-        <echo>Fetching deps with npm (bulk of stdout swallowed)</echo>
-        <echo>May the patience be with you...</echo>
+        <echo>Fetching openlayers release/sources...</echo>
         <exec dir="${basedir}" executable="npm">
             <arg line="install openlayers@${ol3-version}"/>
         </exec>
+        <echo>Applying patches...</echo>
+        <copy todir="${ol-sources}">
+            <fileset dir="${ol-patches}" includes="*.patch"/>
+        </copy>
+        <exec executable="${basedir}/${ant.project.name}/apply_patches.sh" dir="${ol-sources}" failonerror="true" logError="true" />
     </target>
 
     <target name="prepare-unit-tests">
