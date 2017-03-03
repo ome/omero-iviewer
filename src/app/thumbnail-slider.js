@@ -3,7 +3,7 @@ import {inject,customElement} from 'aurelia-framework';
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import UI from '../utils/ui';
-import {WEBGATEWAY} from '../utils/constants';
+import {API_PREFIX, WEBGATEWAY} from '../utils/constants';
 import {REGIONS_STORE_SHAPES, REGIONS_STORED_SHAPES} from '../events/events';
 import {
     IMAGE_CONFIG_UPDATE, THUMBNAILS_UPDATE, EventSubscriber
@@ -25,18 +25,18 @@ export default class ThumbnailSlider extends EventSubscriber {
     dataset_id = null;
 
     /**
+     * the api prefix for requests
+     * @memberof ThumbnailSlider
+     * @type {string}
+     */
+    api_prefix = '';
+
+    /**
      * a possible gateway prefix for the urls
      * @memberof ThumbnailSlider
      * @type {string}
      */
     gateway_prefix = '';
-
-    /**
-     * the list of thumbnails we received from the backend
-     * @memberof ThumbnailSlider
-     * @type {Array.<Object>}
-     */
-    thumbnails_response = null;
 
     /**
      * a list of thumbnails with a url and an id property each
@@ -57,7 +57,14 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @memberof ThumbnailSlider
      * @type {number}
      */
-    thumbnails_request_size = 20;
+    thumbnails_request_size = 10;
+
+    /**
+     * the total number of thumbnails
+     * @memberof ThumbnailSlider
+     * @type {number}
+     */
+    thumbnails_count = 0;
 
     /**
      * the update handle of the setInterval
@@ -94,6 +101,7 @@ export default class ThumbnailSlider extends EventSubscriber {
         this.context = context;
         this.element = element;
 
+        this.api_prefix = this.context.getPrefixedURI(API_PREFIX);
         this.gateway_prefix = this.context.getPrefixedURI(WEBGATEWAY);
     }
 
@@ -140,71 +148,81 @@ export default class ThumbnailSlider extends EventSubscriber {
         if (dataset_id  === this.dataset_id) return;
         this.dataset_id = dataset_id;
 
+        this.requesting_thumbnail_data = true;
+        this.thumbnails.clear();
+        // request first batch of thumbnails
+        this.requestMoreThumbnails(true);
+    }
+
+    /**
+     * Requests next batch of thumbnails
+     *
+     * @param {boolean} first_fetch true if it is the inital batch request
+     * @memberof ThumbnailSlider
+     */
+    requestMoreThumbnails(first_fetch = false) {
         let url =
-            this.context.server + this.gateway_prefix + "/dataset/" +
-                dataset_id + '/children/';
+            this.context.server + this.api_prefix + "/datasets/" +
+            this.dataset_id + '/images/?offset=' + this.thumbnails.size +
+            '&limit=' + this.thumbnails_request_size;
 
         $.ajax(
             {url : url,
             success : (response) => {
                 this.requesting_thumbnail_data = false;
-                // we want an array
-                if (!Misc.isArray(response)) return;
+                if (first_fetch) {
+                    // we want the total count
+                    if (typeof response !== 'object' || response === null ||
+                        typeof response.meta !== 'object' ||
+                        response.meta === null) {
+                            this.dataset_id = null;
+                            this.hideMe();
+                            return;
+                        }
+                    this.thumbnails_count =
+                        typeof response.meta.totalCount === 'number' ?
+                            response.meta.totalCount : 0;
+                }
 
-                // empty what has been there
-                this.thumbnails.clear();
-                this.thumbnails_response = response;
+                // return if count is null or
+                // if data array is not present/zero length
+                if (this.thumbnails_count === 0 ||
+                    !Misc.isArray(response.data) ||
+                    response.data.length === 0) return;
+
                 // add thumnails to the map which will trigger the loading
-                this.addThumbnails();
+                this.addThumbnails(response.data);
             },
             error : (response) => {
                 this.requesting_thumbnail_data = false;
                 this.dataset_id = null;
-                this.thumbnails_response = null;
-                this.hideMe();
+                if (first_fetch) this.hideMe();
             }
         });
-        this.requesting_thumbnail_data = true;
     }
 
     /**
      * Adds thumbnails to then be loaded.
-     * We limit ourselves to {@link thumbnails_request_size}.
      *
+     * @param {Array.<Object>}
      * @memberof ThumbnailSlider
      */
-    addThumbnails() {
-        if (this.thumbnails_response === null ||
-            this.thumbnails_response.length === 0) return;
+    addThumbnails(thumbnails) {
+        // if we are remote we include the server
+        let thumbPrefix =
+            (this.context.server !== "" ? this.context.server + "/" : "") +
+            this.gateway_prefix + "/render_thumbnail/";
 
-        let toBeLoaded =
-            this.thumbnails_response.splice(0, this.thumbnails_request_size);
-
-        toBeLoaded.map((item) => {
-            if (typeof item.thumb_url === "string" &&
-                   item.thumb_url.length> 0 &&
-                   typeof item.id === "number") {
-               // for dev/remote server we take out the prefix
-               // because the thumb url includes it as well
-               let thumbUrl = item.thumb_url;
-               if (this.context.server !== "") {
-                   let prefixStart = thumbUrl.indexOf(this.gateway_prefix);
-                   if (prefixStart > 0)
-                       thumbUrl = thumbUrl.substring(prefixStart);
-               }
-               this.thumbnails.set(
-                   item.id,
-                   {
-                       url: thumbUrl + this.thumbnail_length + "/",
-                       title:
-                           typeof item.name === 'string' ? item.name : item.id,
-                       requested: false,
-                       revision : 0
-                   });
-            }
+        thumbnails.map((item) => {
+            let id = item['@id'];
+            this.thumbnails.set(
+                id,
+                {
+                    url: thumbPrefix + id + "/" + this.thumbnail_length + "/",
+                    title: typeof item.Name === 'string' ? item.Name : id,
+                    revision : 0
+                });
         });
-
-        return;
     }
 
     /**
@@ -216,6 +234,8 @@ export default class ThumbnailSlider extends EventSubscriber {
         $(this.element).hide();
         $('.col-splitter.left-split').css('visibility', 'hidden');
         $('.frame').addClass('left-hand-panel-hidden');
+        $('.frame').css('margin-left', '');
+        $('.frame').css('padding-left', '');
     }
 
     /**

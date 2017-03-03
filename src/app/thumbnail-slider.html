@@ -1,16 +1,16 @@
 <template>
     <div class="thumbnail-scroll-panel"
         show.bind="!requesting_thumbnail_data">
-      <img repeat.for="[id, thumb] of thumbnails"
-        src="${context.server}${thumb.url}?version=${thumb.revision}"
-        title="${thumb.title}"
-        click.delegate="onClick(id)"/>
-      <div
-        if.bind="thumbnails_response && thumbnails_response.length > 0"
-        click.delegate="addThumbnails()"
-        class='expand-down'
-        style="width: 100%; margin-top: 5px; margin-bottom: 5px; cursor: pointer"
-        title="Show more images"></div>
+        <img repeat.for="[id, thumb] of thumbnails"
+             src="${thumb.url}?version=${thumb.revision}"
+             title="${thumb.title}"
+             click.delegate="onClick(id)"/>
+        <div if.bind="thumbnails_count !== thumbnails.size"
+             click.delegate="requestMoreThumbnails()"
+             class='expand-down'
+             style="width: 100%; margin-top: 5px; margin-bottom: 5px; cursor: pointer"
+             title="Show more images">
+        </div>
     </div>
     <div class="disabled-color" style="position: relative;top: 40%;"
          show.bind="requesting_thumbnail_data">

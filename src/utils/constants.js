@@ -12,6 +12,12 @@ export const APP_NAME = 'iViewer';
 export const PLUGIN_NAME = 'omero_iviewer';
 
 /**
+ * a convenience string lookup for API_PREFIX
+ * @type {string}
+ */
+export const API_PREFIX = "API_PREFIX";
+
+/**
  * a convenience string lookup for URI_PREFIX
  * @type {string}
  */

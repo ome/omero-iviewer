@@ -4,8 +4,8 @@ import {IMAGE_CONFIG_SELECT} from '../events/events';
 import Misc from '../utils/misc';
 import ImageConfig from '../model/image_config';
 import {
-    REQUEST_PARAMS,
-    WEBGATEWAY, WEBCLIENT, PLUGIN_NAME, URI_PREFIX, IVIEWER
+    API_PREFIX, IVIEWER, PLUGIN_NAME, REQUEST_PARAMS,
+    WEBCLIENT, WEBGATEWAY, URI_PREFIX
 } from '../utils/constants';
 
 /**
@@ -40,6 +40,12 @@ export default class Context {
      * @type {string}
      */
     server = null;
+
+    /**
+     * api prefix
+     * @type {string}
+     */
+    api_prefix = 'api/v0/m/';
 
     /**
      * a list of potentially prefixes resources
@@ -187,6 +193,7 @@ export default class Context {
             typeof params[URI_PREFIX] === 'string' ?
                 Misc.prepareURI(params[URI_PREFIX]) : "";
         this.prefixed_uris.set(URI_PREFIX, prefix);
+        this.prefixed_uris.set(API_PREFIX, prefix + "/" + this.api_prefix);
         this.prefixed_uris.set(IVIEWER, prefix + "/" + PLUGIN_NAME);
         [WEBGATEWAY, WEBCLIENT].map(
             (key) =>
