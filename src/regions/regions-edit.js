@@ -459,16 +459,6 @@ export default class RegionsEdit {
         let fillOptions = this.getColorPickerOptions(true, this.last_selected);
         let fillSpectrum =
             $(this.element).find(".shape-fill-color .spectrum-input");
-        // set fill (if not disabled)
-        let fillDisabled =
-            this.regions_info.shape_to_be_drawn !== null ||
-                type === 'line' || type === 'polyline' || type === 'label';
-        if (fillDisabled) {
-            fillOptions.color = 'rgba(255, 255, 255, 0)';
-            fillSpectrum.spectrum(fillOptions);
-            fillSpectrum.spectrum("disable");
-            return;
-        }
         let fillColor =
             this.last_selected ?
                 this.last_selected.fillColor :
@@ -481,6 +471,16 @@ export default class RegionsEdit {
                     this.regions_info.shape_defaults.fillAlpha : 0.5;
         fillOptions.color = Converters.hexColorToRgba(fillColor, fillAlpha);
         fillSpectrum.spectrum(fillOptions);
+        // set fill (if not disabled)
+        let fillDisabled =
+            this.regions_info.shape_to_be_drawn !== null ||
+                type === 'line' || type === 'polyline' || type === 'label';
+        if (fillDisabled) {
+            //fillOptions.color = 'rgba(255, 255, 255, 0)';
+            //fillSpectrum.spectrum(fillOptions);
+            fillSpectrum.spectrum("disable");
+            return;
+        }
         this.setDrawColors(fillOptions.color, true);
         fillSpectrum.spectrum("enable");
     }
