@@ -24,6 +24,13 @@ ome.ol3.interaction.Draw =
         console.error("Draw needs Regions instance!");
 
     /**
+     * optional parameters
+     * @type {Object}
+     * @private
+     */
+    this.opts = {};
+
+    /**
      * @type {ome.ol3.source.Regions}
      * @private
      */
@@ -107,10 +114,15 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                 event.feature['type'] = shape_type;
 
                 // set t and z info
+                var unattached =
+                    typeof this.opts['unattached'] === 'boolean' &&
+                    this.opts['unattached'];
                 event.feature['theT'] =
-                    this.regions_.viewer_.getDimensionIndex('t');
+                    unattached ?
+                        -1 : this.regions_.viewer_.getDimensionIndex('t');
                 event.feature['theZ'] =
-                    this.regions_.viewer_.getDimensionIndex('z');
+                    unattached ?
+                        -1 : this.regions_.viewer_.getDimensionIndex('z');
                 event.feature['theC'] = -1;
 
                 // apply style function after setting a default style
@@ -135,7 +147,7 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                         var opts = {
                             "config_id": config_id,
                             "shapes": newRegionsObject['rois'],
-                            "drawn" : true
+                            "drawn" : !unattached
                         };
                         if (typeof hist_id === 'number') opts['hist_id'] = hist_id;
                         if (typeof event.feature['roi_id'] === 'number')
@@ -187,9 +199,12 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
  *
  * @param {Object} shape the shape definition (incl. type)
  * @param {number} roi_id a roi id that gets incorporated into the id (for grouping)
- * @param {number=} hist_id an optional history id that needs to be returned
+ * @param {Object=} opts optional parameters such as:
+ *                       an optional history id (hist_id) to pass through
+ *                       or an optional unattached flag (unattached)
  */
-ome.ol3.interaction.Draw.prototype.drawShape = function(shape, roi_id, hist_id) {
+ome.ol3.interaction.Draw.prototype.drawShape = function(shape, roi_id, opts) {
+    this.opts = opts || {};
     this.abort_polyline_ = false;
 	if (typeof(shape['type']) !== 'string' || shape['type'].length === 0) {
         this.history_id_ = null;
@@ -200,7 +215,7 @@ ome.ol3.interaction.Draw.prototype.drawShape = function(shape, roi_id, hist_id) 
     }
 
     this.roi_id_ = (typeof roi_id === 'number' && roi_id < 0) ? roi_id : -1;
-    if (typeof hist_id === 'number') this.history_id_ = hist_id;
+    if (typeof opts['hist_id'] === 'number') this.history_id_ = opts['hist_id'];
     var typeFunction = null;
     switch(shape['type'].toLowerCase()) {
         case "point" :

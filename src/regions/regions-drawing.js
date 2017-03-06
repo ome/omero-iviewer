@@ -4,7 +4,6 @@ import {inject, customElement, bindable} from 'aurelia-framework';
 import Misc from '../utils/misc';
 import {Utils} from '../utils/regions';
 import {Converters} from '../utils/converters';
-import { REGIONS_MODE, REGIONS_DRAWING_MODE} from '../utils/constants';
 import {
     REGIONS_DRAW_SHAPE, REGIONS_SHAPE_GENERATED,
     REGIONS_GENERATE_SHAPES, REGIONS_CHANGE_MODES, EventSubscriber

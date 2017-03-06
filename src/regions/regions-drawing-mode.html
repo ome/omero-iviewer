@@ -11,53 +11,57 @@
     <div class="regions-drawing-mode">
         <div class="drawing-mode">
             <input class='propagate-mode'
-                click.delegate="onDrawingModeChange(true,$event.target.checked)"
-                type="checkbox" style="margin-top: 10px"/>
+                   click.delegate="onDrawingModeChange(true,$event.target.checked)"
+                   type="checkbox" style="margin-top: 10px"/>
             <span>&nbsp;Propagate</span>
         </div>
         <div class="row regions-propagation-options">
-            <div><input name="propagation-option-1" type="radio"
-                disabled.bind="!propagate"
-                checked="checked"
-                click.delegate= "onPropagationOptionChange(1)">
+            <div>
+                <input name="propagation-option-1" type="radio"
+                       disabled.bind="!propagate"
+                       checked="checked"
+                       click.delegate= "onPropagationOptionChange(1)">
                 <span class="${propagate ? '' : 'disabled-color'}">
                     &nbsp;Attach to all Z and T
                 </span>
             </div>
-            <div><input name="propagation-option-2"
-                    disabled.bind="!propagate"
-                    class="${propagate ? '' : 'disabled-color'}"
-                    type="radio" click.delegate="onPropagationOptionChange(2)">
+            <div>
+                <input name="propagation-option-2"
+                       disabled.bind="!propagate"
+                       class="${propagate ? '' : 'disabled-color'}"
+                       type="radio" click.delegate="onPropagationOptionChange(2)">
                 <span class="${propagate ? '' : 'disabled-color'}">
                     &nbsp;Attach to all Z
                 </span>
             </div>
-            <div><input name="propagation-option-3"
-                    disabled.bind="!propagate"
-                    class="${propagate ? '' : 'disabled-color'}"
-                    type="radio" click.delegate="onPropagationOptionChange(3)">
+            <div>
+                <input name="propagation-option-3"
+                       disabled.bind="!propagate"
+                       class="${propagate ? '' : 'disabled-color'}"
+                       type="radio" click.delegate="onPropagationOptionChange(3)">
                 <span class="${propagate ? '' : 'disabled-color'}">
                     &nbsp;Attach to all T
                 </span>
             </div>
-            <div><input name="propagation-option-4" type="radio"
-                    disabled.bind="!propagate"
-                    class="${propagate ? '' : 'disabled-color'}"
-                    click.delegate="onPropagationOptionChange(4)">
-                    <span class="${propagate ? '' : 'disabled-color'}">
+            <div>
+                <input name="propagation-option-4" type="radio"
+                       disabled.bind="!propagate"
+                       class="${propagate ? '' : 'disabled-color'}"
+                       click.delegate="onPropagationOptionChange(4)">
+                <span class="${propagate ? '' : 'disabled-color'}">
                         &nbsp;Attach to:
-                    </span>
+                </span>
             </div>
             <div>
                 <span class="aligned-text-input
                     ${propagate ? '' : 'disabled-color'}">Z:</span>
                 <input type="input"
-                    disabled.bind="!propagate || regions_info.drawing_mode !== 4"
-                    change.delegate="onDimensionInputChange('z', $event.target)"
-                    class="${!propagate || regions_info.drawing_mode !== 4 ?
+                       disabled.bind="!propagate || regions_info.drawing_mode !== 4"
+                       change.delegate="onDimensionInputChange('z', $event.target)"
+                       class="${!propagate || regions_info.drawing_mode !== 4 ?
                             'disabled-color' : ''}"
-                value="${regions_info.drawing_mode !== 4 ?
-                     'Enter as 4-9 or 3,9,11...' : ''}">
+                       value="${regions_info.drawing_mode !== 4 ?
+                              'Enter as 4-9 or 3,9,11...' : ''}">
             </div>
             <div>
                 <span class="aligned-text-input
@@ -67,15 +71,24 @@
                     change.delegate="onDimensionInputChange('t', $event.target)"
                     class="${!propagate || regions_info.drawing_mode !== 4 ?
                             'disabled-color' : ''}"
-                value="${regions_info.drawing_mode !== 4 ?
-                        'Enter as 4-9 or 3,9,11...' : ''}">
+                    value="${regions_info.drawing_mode !== 4 ?
+                           'Enter as 4-9 or 3,9,11...' : ''}">
+            </div>
+            <div>
+                <input name="propagation-option-5" type="radio"
+                       disabled.bind="!propagate"
+                       class="${propagate ? '' : 'disabled-color'}"
+                       click.delegate="onPropagationOptionChange(5)">
+                <span class="${propagate ? '' : 'disabled-color'}">
+                        &nbsp;Do not attach to Z or T
+                </span>
             </div>
         </div>
         <div class="drawing-mode"><input class='viewed-mode'
-            checked="checked" style="margin-top: 10px"
-            click.delegate="onDrawingModeChange(false,$event.target.checked)"
-                type="checkbox" />
-                <span>&nbsp;Attach to viewed Z and T</span>
+             checked="checked" style="margin-top: 10px"
+             click.delegate="onDrawingModeChange(false,$event.target.checked)"
+             type="checkbox" />
+             <span>&nbsp;Attach to viewed Z and T</span>
         </div>
         <div class="drawing-mode-apply">
             <button

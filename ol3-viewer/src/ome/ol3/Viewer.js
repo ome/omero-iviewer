@@ -1549,9 +1549,11 @@ ome.ol3.Viewer.prototype.enableRegionsContextMenu = function(flag) {
  *
  * @param {Object} shape the shape definition for drawing (incl. type)
  * @param {number} roi_id a roi id that gets incorporated into the id (for grouping)
- * @param {number=} hist_id an optional history id to pass through and return
+ * @param {Object=} opts optional parameters such as:
+ *                       an optional history id (hist_id) to pass through
+ *                       or an optional unattached flag (unattached)
  */
-ome.ol3.Viewer.prototype.drawShape = function(shape, roi_id, hist_id) {
+ome.ol3.Viewer.prototype.drawShape = function(shape, roi_id, opts) {
     if (!(this.regions_ instanceof ome.ol3.source.Regions) ||
         typeof(shape) !== 'object' || typeof(shape) === null ||
         typeof(shape['type']) !== 'string' || shape['type'].length === 0) return;
@@ -1563,7 +1565,7 @@ ome.ol3.Viewer.prototype.drawShape = function(shape, roi_id, hist_id) {
         return;
     }
 
-    this.regions_.draw_.drawShape(shape, roi_id, hist_id);
+    this.regions_.draw_.drawShape(shape, roi_id, opts);
 }
 
 /**
