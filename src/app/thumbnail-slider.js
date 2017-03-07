@@ -39,11 +39,11 @@ export default class ThumbnailSlider extends EventSubscriber {
     gateway_prefix = '';
 
     /**
-     * a list of thumbnails with a url and an id property each
+     * a list of thumbnails objects with a url and an id property each
      * @memberof ThumbnailSlider
-     * @type {Map}
+     * @type {Array}
      */
-    thumbnails = new Map();
+    thumbnails = [];
 
     /**
      * the default thumbnail length
@@ -58,6 +58,20 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @type {number}
      */
     thumbnails_request_size = 10;
+
+    /**
+     * the start index of the displayed thumbnails
+     * @memberof ThumbnailSlider
+     * @type {number}
+     */
+    thumbnails_start_index = 0;
+
+    /**
+     * the end index of the displayed thumbnails
+     * @memberof ThumbnailSlider
+     * @type {number}
+     */
+    thumbnails_end_index = 0;
 
     /**
      * the total number of thumbnails
@@ -149,21 +163,26 @@ export default class ThumbnailSlider extends EventSubscriber {
         this.dataset_id = dataset_id;
 
         this.requesting_thumbnail_data = true;
-        this.thumbnails.clear();
+        this.thumbnails = [];
+
+        // TODO: use path_to_object to get initial index for image in dataset
         // request first batch of thumbnails
-        this.requestMoreThumbnails(true);
+        this.requestMoreThumbnails(true, true);
     }
 
     /**
      * Requests next batch of thumbnails
      *
      * @param {boolean} first_fetch true if it is the inital batch request
+     * @param {boolean} end if true thumbnails after the end index are requested,
+     *                         otherwise before the start index
      * @memberof ThumbnailSlider
      */
-    requestMoreThumbnails(first_fetch = false) {
+    requestMoreThumbnails(first_fetch = false, end = true) {
         let url =
             this.context.server + this.api_prefix + "/datasets/" +
-            this.dataset_id + '/images/?offset=' + this.thumbnails.size +
+            this.dataset_id + '/images/?offset=' +
+            (end ? this.thumbnails_end_index : this.thumbnails_start_index) +
             '&limit=' + this.thumbnails_request_size;
 
         $.ajax(
@@ -191,7 +210,7 @@ export default class ThumbnailSlider extends EventSubscriber {
                     response.data.length === 0) return;
 
                 // add thumnails to the map which will trigger the loading
-                this.addThumbnails(response.data);
+                this.addThumbnails(response.data, end);
             },
             error : (response) => {
                 this.requesting_thumbnail_data = false;
@@ -204,10 +223,12 @@ export default class ThumbnailSlider extends EventSubscriber {
     /**
      * Adds thumbnails to then be loaded.
      *
-     * @param {Array.<Object>}
+     * @param {Array.<Object>} thumbnails the thumbnails to be added
+     * @param {boolean} append if true thumbnails are appended,
+     *                         otherwise inserted at the beginning
      * @memberof ThumbnailSlider
      */
-    addThumbnails(thumbnails) {
+    addThumbnails(thumbnails, append = true) {
         // if we are remote we include the server
         let thumbPrefix =
             (this.context.server !== "" ? this.context.server + "/" : "") +
@@ -215,13 +236,19 @@ export default class ThumbnailSlider extends EventSubscriber {
 
         thumbnails.map((item) => {
             let id = item['@id'];
-            this.thumbnails.set(
-                id,
-                {
-                    url: thumbPrefix + id + "/" + this.thumbnail_length + "/",
-                    title: typeof item.Name === 'string' ? item.Name : id,
-                    revision : 0
-                });
+            let entry = {
+                id: id,
+                url: thumbPrefix + id + "/" + this.thumbnail_length + "/",
+                title: typeof item.Name === 'string' ? item.Name : id,
+                revision : 0
+            }
+            if (append) {
+                this.thumbnails.push(entry);
+                this.thumbnails_end_index++;
+            } else {
+                this.thumbnails.unshift(entry);
+                this.thumbnails_start_index--;
+            }
         });
     }
 
@@ -301,10 +328,13 @@ export default class ThumbnailSlider extends EventSubscriber {
      */
     updateThumbnails(params = {}) {
         if (typeof params !== 'object' ||
-            !Misc.isArray(params.ids)) return;
+            !Misc.isArray(params.ids) && params.ids.length > 0) return;
+
+        // turn array into object for easier lookup
+        let updatedIds = {};
+        params.ids.map((id) => updatedIds[id] = null);
 
         let position = 0;
-        let accUpdateCount = 0;
         // we update in batches
         this.updateHandle = setInterval(
             () => {
@@ -312,24 +342,21 @@ export default class ThumbnailSlider extends EventSubscriber {
                 // affect reload by raising revision number
                 try {
                     let updateCount = 0;
-                    while (updateCount < this.thumbnails_request_size &&
-                           position < params.ids.length) {
-                        let thumb = this.thumbnails.get(params.ids[position]);
-                        position++;
-                        if (thumb && typeof thumb.revision === 'number') {
-                            thumb.revision++;
-                            updateCount++;
-                        }
+                    for (;position<this.thumbnails.length;position++) {
+                        let thumb = this.thumbnails[position];
+                        let hasBeenLoaded =
+                            typeof updatedIds[thumb.id] !== 'undefined';
+                        if (!hasBeenLoaded) continue;
+                        thumb.revision++;
+                        updateCount += 1;
+                        if (updateCount >= this.thumbnails_request_size ||
+                            updateCount >= params.ids.length) break;
                     }
-                    accUpdateCount += updateCount;
                 } catch(err) {
                     error = true;
                 }
                 // we are done if we have updated all displayed thumbnails
-                // (which need not be all thumbnails that have been updated!)
-                // or traversed all thumbnails that need updating
-                if (position >= params.ids.length ||
-                    accUpdateCount >= this.thumbnails.size || error) {
+                if (position >= this.thumbnails.length || error) {
                     clearInterval(this.updateHandle);
                     return;
                 }

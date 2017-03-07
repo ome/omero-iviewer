@@ -1,12 +1,18 @@
 <template>
     <div class="thumbnail-scroll-panel"
         show.bind="!requesting_thumbnail_data">
-        <img repeat.for="[id, thumb] of thumbnails"
+        <div if.bind="thumbnails_start_index > 0"
+             click.delegate="requestMoreThumbnails(false, false)"
+             class='collapse-up'
+             style="width: 100%; margin-top: 5px; margin-bottom: 5px; cursor: pointer"
+             title="Show more images">
+        </div>
+        <img repeat.for="thumb of thumbnails"
              src="${thumb.url}?version=${thumb.revision}"
              title="${thumb.title}"
-             click.delegate="onClick(id)"/>
-        <div if.bind="thumbnails_count !== thumbnails.size"
-             click.delegate="requestMoreThumbnails()"
+             click.delegate="onClick(thumb.id)"/>
+        <div if.bind="thumbnails_end_index < thumbnails_count"
+             click.delegate="requestMoreThumbnails(false, true)"
              class='expand-down'
              style="width: 100%; margin-top: 5px; margin-bottom: 5px; cursor: pointer"
              title="Show more images">
