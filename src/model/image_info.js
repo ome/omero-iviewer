@@ -202,8 +202,10 @@ export default class ImageInfo {
                     this.context.publish(
                         IMAGE_CONFIG_UPDATE,
                             {config_id: this.config_id,
-                                dataset_id: this.dataset_id,
-                            ready: this.ready});
+                             image_id: this.image_id,
+                             dataset_id: this.dataset_id,
+                             ready: this.ready
+                            });
             },
             error : (error) => {
                 this.ready = false;

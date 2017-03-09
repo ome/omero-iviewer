@@ -8,6 +8,8 @@
              title="Show more images">
         </div>
         <img repeat.for="thumb of thumbnails"
+             css="${image_showing === thumb.id ?
+                 'border: 2px solid rgba(0,60,136,0.5)' : 'border: none'}"
              src="${thumb.url}?version=${thumb.revision}"
              title="${thumb.title}"
              click.delegate="onClick(thumb.id)"/>

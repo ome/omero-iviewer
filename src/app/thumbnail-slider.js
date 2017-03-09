@@ -3,7 +3,7 @@ import {inject,customElement} from 'aurelia-framework';
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import UI from '../utils/ui';
-import {API_PREFIX, WEBGATEWAY} from '../utils/constants';
+import {API_PREFIX, WEBCLIENT, WEBGATEWAY} from '../utils/constants';
 import {REGIONS_STORE_SHAPES, REGIONS_STORED_SHAPES} from '../events/events';
 import {
     IMAGE_CONFIG_UPDATE, THUMBNAILS_UPDATE, EventSubscriber
@@ -23,6 +23,13 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @type {number}
      */
     dataset_id = null;
+
+    /**
+     * the id of the present image showing
+     * @memberof ThumbnailSlider
+     * @type {number}
+     */
+    image_showing = null;
 
     /**
      * the api prefix for requests
@@ -102,7 +109,7 @@ export default class ThumbnailSlider extends EventSubscriber {
      */
     sub_list = [
         [IMAGE_CONFIG_UPDATE,
-            (params={}) => this.init(params.dataset_id)],
+            (params={}) => this.init(params.dataset_id, params.image_id)],
         [THUMBNAILS_UPDATE,
             (params={}) => this.updateThumbnails(params)]];
 
@@ -146,11 +153,13 @@ export default class ThumbnailSlider extends EventSubscriber {
      * Issues backend request to retrieve thumbnail information
      *
      * @memberof ThumbnailSlider
-     * @param {number} dataset_id the dataset id needed for the request
+     * @param {number} dataset_id the dataset id used for initialization
+     * @param {number} image_id the id of the image in the dataset
      */
-    init(dataset_id) {
+    init(dataset_id, image_id) {
+        this.image_showing = image_id;
         // we don't have a dataset id => hide us
-        if (typeof dataset_id !== 'number') {
+        if (typeof dataset_id !== 'number' || typeof image_id !== 'number') {
             this.hideMe();
             return;
         }
@@ -165,31 +174,103 @@ export default class ThumbnailSlider extends EventSubscriber {
         this.requesting_thumbnail_data = true;
         this.thumbnails = [];
 
-        // TODO: use path_to_object to get initial index for image in dataset
-        // request first batch of thumbnails
-        this.requestMoreThumbnails(true, true);
+        this.gatherThumbnailMetaInfo(image_id);
+    }
+
+    /**
+     * Initializes thumbnail count and thumbnails_start_index as well as
+     * thumbnails_end_index using /webclient/api/paths_to_object
+     *
+     * @param {number} image_id the id of the image in the dataset
+     * @param {boolean} is_top_thumbnail if true image appears first
+     * @memberof ThumbnailSlider
+     */
+    gatherThumbnailMetaInfo(image_id, is_top_thumbnail = false) {
+        let webclient_prefix = this.context.getPrefixedURI(WEBCLIENT);
+        let url =
+            this.context.server + webclient_prefix + "/api/paths_to_object/?" +
+            "image=" + image_id + "&page_size=" + this.thumbnails_request_size;
+
+        $.ajax(
+            {url : url,
+            success : (response) => {
+                // we need the paths property
+                if (typeof response !== 'object' || response === null ||
+                    !Misc.isArray(response.paths) ||
+                    response.paths.length === 0) {
+                        this.dataset_id = null;
+                        this.hideMe();
+                        return;
+                }
+
+                // find type === dataset
+                // dataset has to match the present dataset id
+                // to ensure that we handle images in multiple datasets as well
+                let path = null;
+                for (let i=0; i<response.paths.length; i++) {
+                    let p = response.paths[i];
+                    for (let j=0; j<p.length; j++)
+                        if (typeof p[j].type === 'string' &&
+                            p[j].type === 'dataset' &&
+                            p[j].id === this.dataset_id) {
+                                if (typeof p[j].childCount === 'number')
+                                    path = p[j];
+                                break;
+                        }
+                }
+
+                let initialize = (path === null);
+                if (path) {
+                    // set count, start and end indices (if count > limit)
+                    this.thumbnails_count = path.childCount;
+                    if (this.thumbnails_count > this.thumbnails_request_size) {
+                        this.thumbnails_start_index =
+                            is_top_thumbnail ?
+                                path.childIndex :
+                                    (path.childPage - 1) *
+                                        this.thumbnails_request_size;
+                    }
+
+                    this.thumbnails_end_index =
+                        this.thumbnails_start_index +
+                        this.thumbnails_request_size;
+                }
+                this.requestMoreThumbnails(initialize, initialize, true);
+            },
+            error : (response) => this.requestMoreThumbnails(true, true)
+        });
     }
 
     /**
      * Requests next batch of thumbnails
      *
-     * @param {boolean} first_fetch true if it is the inital batch request
+     * @param {boolean} init if true we have to perform some init tasks/checks
      * @param {boolean} end if true thumbnails after the end index are requested,
      *                         otherwise before the start index
+     * @param {boolean} skip_decrement if true we don't decrement (first fetch)
      * @memberof ThumbnailSlider
      */
-    requestMoreThumbnails(first_fetch = false, end = true) {
+    requestMoreThumbnails(init = false, end = true, skip_decrement = false) {
+        let offset =
+            end ? this.thumbnails_end_index :
+                skip_decrement ? this.thumbnails_start_index :
+                    this.thumbnails_start_index - this.thumbnails_request_size;
+        let limit = this.thumbnails_request_size;
+        if (offset < 0) {
+            // we want to go beyond the beginning...
+            // only request as much as gets us to the very beginning
+            limit = this.thumbnails_request_size + offset;
+            offset = 0;
+        }
         let url =
             this.context.server + this.api_prefix + "/datasets/" +
-            this.dataset_id + '/images/?offset=' +
-            (end ? this.thumbnails_end_index : this.thumbnails_start_index) +
-            '&limit=' + this.thumbnails_request_size;
+            this.dataset_id + '/images/?offset=' + offset + '&limit=' + limit;
 
         $.ajax(
             {url : url,
             success : (response) => {
                 this.requesting_thumbnail_data = false;
-                if (first_fetch) {
+                if (init) {
                     // we want the total count
                     if (typeof response !== 'object' || response === null ||
                         typeof response.meta !== 'object' ||
@@ -210,12 +291,12 @@ export default class ThumbnailSlider extends EventSubscriber {
                     response.data.length === 0) return;
 
                 // add thumnails to the map which will trigger the loading
-                this.addThumbnails(response.data, end);
+                this.addThumbnails(response.data, end, skip_decrement);
             },
             error : (response) => {
                 this.requesting_thumbnail_data = false;
                 this.dataset_id = null;
-                if (first_fetch) this.hideMe();
+                if (initialize) this.hideMe();
             }
         });
     }
@@ -226,13 +307,15 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @param {Array.<Object>} thumbnails the thumbnails to be added
      * @param {boolean} append if true thumbnails are appended,
      *                         otherwise inserted at the beginning
+     * @param {boolean} skip_decrement if true we don't decrement (first fetch)
      * @memberof ThumbnailSlider
      */
-    addThumbnails(thumbnails, append = true) {
+    addThumbnails(thumbnails, append = true, skip_decrement = false) {
         // if we are remote we include the server
         let thumbPrefix =
             (this.context.server !== "" ? this.context.server + "/" : "") +
             this.gateway_prefix + "/render_thumbnail/";
+        if (!append) thumbnails.reverse();
 
         thumbnails.map((item) => {
             let id = item['@id'];
@@ -247,7 +330,7 @@ export default class ThumbnailSlider extends EventSubscriber {
                 this.thumbnails_end_index++;
             } else {
                 this.thumbnails.unshift(entry);
-                this.thumbnails_start_index--;
+                if (!skip_decrement) this.thumbnails_start_index--;
             }
         });
     }
@@ -289,6 +372,7 @@ export default class ThumbnailSlider extends EventSubscriber {
         let navigateToNewImage = () => {
             this.context.rememberImageConfigChange(image_id, this.dataset_id);
             this.context.addImageConfig(image_id, this.dataset_id);
+            this.image_showing = image_id;
         };
 
         let conf = this.context.getSelectedImageConfig();
@@ -342,15 +426,15 @@ export default class ThumbnailSlider extends EventSubscriber {
                 // affect reload by raising revision number
                 try {
                     let updateCount = 0;
-                    for (;position<this.thumbnails.length;position++) {
-                        let thumb = this.thumbnails[position];
+                    while (position < this.thumbnails.length &&
+                           updateCount < this.thumbnails_request_size &&
+                           updateCount < params.ids.length) {
+                        let thumb = this.thumbnails[position++];
                         let hasBeenLoaded =
                             typeof updatedIds[thumb.id] !== 'undefined';
                         if (!hasBeenLoaded) continue;
                         thumb.revision++;
                         updateCount += 1;
-                        if (updateCount >= this.thumbnails_request_size ||
-                            updateCount >= params.ids.length) break;
                     }
                 } catch(err) {
                     error = true;

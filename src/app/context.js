@@ -301,7 +301,7 @@ export default class Context {
         let newPath =
             oldPath.replace(old_image_id, image_id);
         if (typeof dataset_id === 'number')
-            newPath += '?dataset_id=' + dataset_id;
+            newPath += '?dataset=' + dataset_id;
         if (this.is_dev_server) {
             newPath += (newPath.indexOf('?') === -1) ? '?' : '&';
             newPath += 'haveMadeCrossOriginLogin_';
