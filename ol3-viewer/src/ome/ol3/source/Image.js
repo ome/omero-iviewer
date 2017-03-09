@@ -232,6 +232,8 @@ ome.ol3.source.Image = function(options) {
                 url += ',' + this.tileGrid.tileSize_[0] + ',' +
                         this.tileGrid.tileSize_[1] + '&';
             }
+            // maps parameter (incl. reverse intensity)
+            var maps = [];
 
             // add channel param
             url += 'c=';
@@ -243,10 +245,14 @@ ome.ol3.source.Image = function(options) {
                 // amend url with channel info
                 url += (!channelInfo['active'] ? "-" : "") + (c + 1);
                 url += "|" + channelInfo['start'] + ":" + channelInfo['end'];
-                if (typeof channelInfo['reverse'] === 'boolean')  // reverse int.
-                    url += (channelInfo['reverse'] ? "" : "-") + "r";
-                    url += "$" + channelInfo['color']; // color info
+                url += "$" + channelInfo['color']; // color info
+                maps.push(
+                    {"reverse" : { "enabled" :
+                        typeof channelInfo['reverse'] === 'boolean' &&
+                        channelInfo['reverse']}
+                    });
             }
+            url += "&maps=" + JSON.stringify(maps);
             url += '&m=' + this.image_model_;
             url += '&p=' + (this.split_ ? 'split' : this.image_projection_);
             url += '&q=0.9';
@@ -497,10 +503,12 @@ ome.ol3.source.Image.prototype.captureImageSettings = function() {
         var chanSnap = {
             "active" : chan['active'],
             "color" : chan['color'],
-            "min" : chan['min'],
-            "max" : chan['max'],
-            "start" : chan['start'],
-            "end" : chan['end']
+            "window" : {
+                "min" : chan['min'],
+                "max" : chan['max'],
+                "start" : chan['start'],
+                "end" : chan['end']
+            }
         };
         if (typeof chan['reverse'] === 'boolean')
             chanSnap['reverseIntensity'] = chan['reverse'];

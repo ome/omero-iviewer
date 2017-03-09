@@ -349,8 +349,11 @@ ome.ol3.Viewer = function(id, options) {
             }
             var initialChannels =
                 scope.getInitialRequestParam(ome.ol3.REQUEST_PARAMS.CHANNELS);
+            var initialMaps =
+                scope.getInitialRequestParam(ome.ol3.REQUEST_PARAMS.MAPS);
             initialChannels =
-                ome.ol3.utils.Misc.parseChannelParameters(initialChannels);
+                ome.ol3.utils.Misc.parseChannelParameters(
+                    initialChannels, initialMaps);
 
             // copy needed channels info
             var channels = [];

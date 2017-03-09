@@ -198,14 +198,9 @@ export default class Settings extends EventSubscriber {
             "&p=" + image_info.projection +
             "&t=" + (image_info.dimensions.t+1) +
             "&z=" + (image_info.dimensions.z+1) +
-            "&q=0.9&ia=0&c=";
-        let i=0;
-        image_info.channels.map(
-            (c) =>
-                url+= (i !== 0 ? ',' : '') + (!c.active ? '-' : '') + (++i) +
-                    "|" + c.window.start + ":" + c.window.end +
-                    (typeof  c.reverseIntensity === 'boolean' ?
-                    (c.reverseIntensity ? "r" : "-r") : "") + "$" + c.color);
+            "&q=0.9&ia=0";
+        url = Misc.appendChannelsAndMapsToQueryString(image_info.channels, url);
+
         $.ajax(
             {url : url,
              method: 'POST',
@@ -278,16 +273,8 @@ export default class Settings extends EventSubscriber {
         if (!toAll)
             url += "imageId=" + imgInf.image_id + "&q=0.9&pixel_range=" +
                     imgInf.range[0] + ":" + imgInf.range[1] +"&";
-        url +=  'm=' + imgInf.model[0] + "&p=" + imgInf.projection + "&ia=0&c=";
-
-        let i=0;
-        imgInf.channels.map(
-            (c) =>
-                url+= (i !== 0 ? ',' : '') + (!c.active ? '-' : '') + (++i) +
-                 "|" + c.window.start + ":" + c.window.end +
-                    (typeof c.reverseIntensity === 'boolean' ?
-                        (c.reverseIntensity ? 'r' : '-r') : '') +
-                 "$" + c.color);
+        url +=  'm=' + imgInf.model[0] + "&p=" + imgInf.projection + "&ia=0";
+        url = Misc.appendChannelsAndMapsToQueryString(imgInf.channels, url);
 
         // save to all differs from copy in that it is a POST with data
         // instead of a JSON(P) GET, as well as the success handler
@@ -358,7 +345,7 @@ export default class Settings extends EventSubscriber {
 
         // copy channel values and add change to history
         let channels = for_pasting ?
-            Misc.parseChannelParameters(rdef.c) : rdef.c;
+            Misc.parseChannelParameters(rdef.c, rdef.maps) : rdef.c;
         let mode = CHANNEL_SETTINGS_MODE.MIN_MAX;
         if (channels)
             for (let i=0;i<channels.length;i++) {

@@ -237,16 +237,17 @@ ome.ol3.defaultInteractions = function() {
  * @enum {string}
  */
 ome.ol3.REQUEST_PARAMS = {
-    SERVER : 'SERVER',
+    CHANNELS: 'C',
+    CENTER_X: 'X',
+    CENTER_Y: 'Y',
     IMAGE_ID : 'IMAGE_ID',
-    CHANNELS : 'C',
-    PLANE : 'Z',
-    TIME : 'T',
-    PROJECTION : 'P',
-    MODEL : 'M',
-    CENTER_X : 'X',
-    CENTER_Y : 'Y',
-    ZOOM : 'ZM'
+    MAPS: 'MAPS',
+    MODEL: 'M',
+    PLANE: 'Z',
+    PROJECTION: 'P',
+    SERVER: 'SERVER',
+    TIME: 'T',
+    ZOOM: 'ZM'
 };
 
 /**
