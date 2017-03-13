@@ -4,6 +4,7 @@ import {
     IMAGE_CONFIG_UPDATE, REGIONS_GENERATE_SHAPES, EventSubscriber
 } from '../events/events';
 import Misc from '../utils/misc';
+import {Converters} from '../utils/converters';
 import {REGIONS_MODE, WEBGATEWAY} from '../utils/constants';
 import {REGIONS_DRAWING_MODE} from '../utils/constants';
 
@@ -127,7 +128,10 @@ export default class RegionsInfo extends EventSubscriber {
      */
     unbind() {
         this.unsubscribe();
-        if (this.data instanceof Map) this.data.clear();
+        if (this.data instanceof Map) {
+            this.data.forEach((value, key) => value.clear());
+            this.data.clear();
+        }
         this.history = null;
         this.image_info = null;
     }
@@ -162,8 +166,8 @@ export default class RegionsInfo extends EventSubscriber {
                 typeof value === 'undefined') return;
 
         // if we do not find a matching shape for the id => bye
-        let shape = this.data.get(id);
-        if (typeof shape !== 'object') return;
+        let shape = this.getShape(id);
+        if (typeof shape === null) return;
 
         // if the shape shape has a property of that given name
         // set its new value
@@ -200,20 +204,23 @@ export default class RegionsInfo extends EventSubscriber {
 
                 this.data = new Map();
                 // traverse results and stuff them into the map
-                response.map((item) => {
+                response.map((roi) => {
                      // shapes have to be arrays as well
-                     if (Misc.isArray(item.shapes)) {
+                     if (Misc.isArray(roi.shapes)) {
+                         let shapes = new Map();
+
                           // set shape properties and store the object
-                          item.shapes.map((shape) => {
+                          roi.shapes.map((shape) => {
                               let newShape = Object.assign({}, shape);
-                              newShape.shape_id = "" + item.id + ":" + shape.id;
+                              newShape.shape_id = "" + roi.id + ":" + shape.id;
                               // we add some flags we are going to need
                               newShape.visible = true;
                               newShape.selected = false;
                               newShape.deleted = false;
                               newShape.modified = false;
-                              this.data.set(newShape.shape_id, newShape);
+                              shapes.set(shape.id, newShape);
                           });
+                          this.data.set(roi.id, shapes);
                       }});
                 this.ready = true;
                 }, error : (error) => this.ready = false
@@ -257,14 +264,38 @@ export default class RegionsInfo extends EventSubscriber {
 
         let hasIdsForFilter = Misc.isArray(ids);
         // iterate over all shapes
+
         this.data.forEach(
-            (value, key) => {
-                if (hasIdsForFilter && ids.indexOf(key) !== -1 && filter(value))
-                    ret.push(key);
-                else if (!hasIdsForFilter && filter(value)) ret.push(key);
-        });
+            (value) =>
+                value.forEach(
+                    (value) => {
+                        let id = value.shape_id;
+                        if (hasIdsForFilter &&
+                            ids.indexOf(id) !== -1 && filter(value)) ret.push(id);
+                        else if (!hasIdsForFilter && filter(value)) ret.push(id);
+                    })
+        );
+
 
         return ret;
+    }
+
+    /**
+     * Looks up shape by combined roi:shape id
+     *
+     * @memberof RegionsInfo
+     * @param {string} id the id in the format roi_id:shape_id, e.g. 2:4
+     * @return {Object|null} the shape object or null if none was found
+     */
+    getShape(id) {
+        if (this.data === null) return null;
+
+        let ids = Converters.extractRoiAndShapeId(id);
+        let roi = this.data.get(ids.roi_id);
+        if (!(roi instanceof Map)) return null;
+
+        let shape = roi.get(ids.shape_id);
+        return (typeof shape !== 'undefined') ? shape : null;
     }
 
     /**

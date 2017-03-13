@@ -12,26 +12,29 @@
         <table class="regions-header">
             <thead>
                 <tr>
-                    <th id="reg-col-0" class="shape-id"><div>ID</div></th>
-                    <th id="reg-col-1" class="shape-z"><div>Z</div></th>
-                    <th id="reg-col-2" class="shape-t"><div>T</div></th>
-                    <th id="reg-col-3" class="shape-type"><div>Type</div></th>
-                    <th id="reg-col-4" class="shape-comment"><div>Comment</div></th>
-                    <th id="reg-col-5" class="shape-show"><div>Show</div></th>
+                    <th id="reg-col-0" class="roi-id"><div>Roi</div></th>
+                    <th id="reg-col-1" class="shape-id"><div>ID</div></th>
+                    <th id="reg-col-2" class="shape-z"><div>Z</div></th>
+                    <th id="reg-col-3" class="shape-t"><div>T</div></th>
+                    <th id="reg-col-4" class="shape-type"><div>Type</div></th>
+                    <th id="reg-col-5" class="shape-comment"><div>Comment</div></th>
+                    <th id="reg-col-6" class="shape-show"><div>Show</div></th>
                 </tr>
             </thead>
         </table>
         <table class="regions-table">
             <tbody>
-                <tr repeat.for="[id, shape] of regions_info.data"
+                <template repeat.for="[roi_id, roi] of regions_info.data">
+                <tr repeat.for="[shape_id, shape] of roi"
                     show.bind="!(shape.deleted && shape.is_new)"
-                    id="${'roi-' + id}"
+                    id="${'roi-' + shape.shape_id}"
                     css="${shape.selected ?
                             'background-color: #d0d0ff;' : ''}
                             ${shape.deleted ? 'color: red;' :
                                 (shape.modified ? 'color: blue;' : '')}"
-                    click.delegate="selectShape(id, shape.selected, $event)">
-                    <td class="shape-id"><div>${shape.id}</div></td>
+                    click.delegate="selectShape(shape.shape_id, shape.selected, $event)">
+                    <td class="roi-id"><div>${roi_id}</div></td>
+                    <td class="shape-id"><div>${shape_id}</div></td>
                     <td class="shape-z"><div>
                         ${shape.theZ !== -1 ? (shape.theZ + 1) : ""}</div></td>
                     <td class="shape-t"><div>
@@ -41,9 +44,10 @@
                         ${shape.textValue ? shape.textValue : '&nbsp;'}</div></td>
                     <td class="shape-show">
                         <input type="checkbox" checked.bind="shape.visible"
-                            change.delegate="toggleShapeVisibility(id, shape.visible)"/>
+                            change.delegate="toggleShapeVisibility(shape.shape_id, shape.visible)"/>
                     </td>
                 </tr>
+                </template>
             </tbody>
         </table>
     </div>

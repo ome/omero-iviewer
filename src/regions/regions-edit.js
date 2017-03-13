@@ -306,7 +306,7 @@ export default class RegionsEdit {
                 this.regions_info.selected_shapes.length-1;
         this.last_selected =
             lastId === -1 ? null :
-            this.regions_info.data.get(
+            this.regions_info.getShape(
                 this.regions_info.selected_shapes[lastId]);
     }
 

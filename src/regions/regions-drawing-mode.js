@@ -154,7 +154,7 @@ export default class RegionsDrawingMode {
          this.regions_info.selected_shapes.map(
              (id) => {
                  let shape =
-                     Object.assign({}, this.regions_info.data.get(id));
+                     Object.assign({}, this.regions_info.getShape(id));
                  // collect dimensions for propagation
                  let theDims =
                      Utils.getDimensionsForPropagation(

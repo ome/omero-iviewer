@@ -186,8 +186,8 @@ export default class RegionsHistory {
         for (let i=0; i<entry.records.length;i++) {
             let rec = entry.records[i];
             if (entry.action === this.action.PROPERTIES) {
-                let shape = this.regions_info.data.get(rec.shape_id);
-                if (typeof shape === 'undefined') continue;
+                let shape = this.regions_info.getShape(rec.shape_id);
+                if (shape === null) continue;
                 this.affectHistoryPropertyChange(
                     shape, rec.diffs,
                     undo ? rec.old_vals : rec.new_vals,
