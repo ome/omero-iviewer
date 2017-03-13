@@ -104,6 +104,7 @@ export default class RegionsDrawing extends EventSubscriber {
         let theDims =
             Utils.getDimensionsForPropagation(
                 this.regions_info, newShape.theZ, newShape.theT);
+        if (theDims.length === 0) return;
 
         // for grouping propagated shapes within the same roi
         // we need a common roi. if we have one from the params we use it
@@ -112,17 +113,15 @@ export default class RegionsDrawing extends EventSubscriber {
             (typeof params.roi_id === 'number' && params.roi_id < 0) ?
                 params.roi_id : this.regions_info.getNewRegionsId();
 
-        // trigger generation if we have something to generate/associate with
-        if (theDims.length > 0) {
-            this.context.publish(
-                REGIONS_GENERATE_SHAPES,
-                {config_id : this.regions_info.image_info.config_id,
-                    shapes : [newShape],
-                    number : theDims.length,
-                    random : false, theDims : theDims,
-                    hist_id : params.hist_id, roi_id: roi_id,
-                    propagated: true});
-        }
+        // trigger generation
+        this.context.publish(
+            REGIONS_GENERATE_SHAPES,
+            {config_id : this.regions_info.image_info.config_id,
+                shapes : [newShape],
+                number : theDims.length,
+                random : false, theDims : theDims,
+                hist_id : params.hist_id, roi_id: roi_id,
+                propagated: true});
     }
 
     /**

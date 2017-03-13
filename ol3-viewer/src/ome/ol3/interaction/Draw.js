@@ -147,7 +147,7 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                         var opts = {
                             "config_id": config_id,
                             "shapes": newRegionsObject['rois'],
-                            "drawn" : !unattached
+                            "drawn" : true
                         };
                         if (typeof hist_id === 'number') opts['hist_id'] = hist_id;
                         if (typeof event.feature['roi_id'] === 'number')
