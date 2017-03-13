@@ -370,8 +370,6 @@ export default class RegionsEdit {
         // COMMENT
         let editComment = $(this.element).find(".shape-edit-comment input");
         editComment.off('input');
-        editComment.prop("disabled", true);
-        editComment.addClass("disabled-color");
         editComment.val('Comment');
         if (this.last_selected) {
             editComment.prop("disabled", false);
@@ -382,6 +380,9 @@ export default class RegionsEdit {
             editComment.on('input',
                 (event) =>
                     this.onCommentChange(event.target.value, this.last_selected));
+        } else {
+            editComment.prop("disabled", true);
+            editComment.addClass("disabled-color");
         }
         let fontSize =
             this.last_selected ?
@@ -390,7 +391,6 @@ export default class RegionsEdit {
         let fontSizeSpinner = $(this.element).find(".shape-font-size input");
         fontSizeSpinner.off("input spinstop");
         fontSizeSpinner.spinner("value", fontSize);
-        fontSizeSpinner.spinner("disable");
         if (this.last_selected) {
             fontSizeSpinner.spinner("enable");
             fontSizeSpinner.on("input spinstop",
