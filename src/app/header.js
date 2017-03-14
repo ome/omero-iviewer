@@ -144,7 +144,7 @@ export class Header extends EventSubscriber {
                     settings);
                 // let's add the dataset id if we have one
                 if (typeof selConf.image_info.dataset_id === 'number')
-                    url += "&dataset_id=" + selConf.image_info.dataset_id;
+                    url += "&dataset=" + selConf.image_info.dataset_id;
 
                 // show link and register close button
                 $('.link-url button').blur();

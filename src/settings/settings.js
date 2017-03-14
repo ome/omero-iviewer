@@ -117,7 +117,7 @@ export default class Settings extends EventSubscriber {
         $.ajax({
             url : this.context.server +
                     this.context.getPrefixedURI(WEBGATEWAY) +
-                        "/get_image_rdefs_json/" + img_id,
+                        "/get_image_rdefs_json/" + img_id + '/',
             success : (response) => {
                 if (!Misc.isArray(response.rdefs)) return;
 
