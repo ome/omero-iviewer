@@ -25,15 +25,20 @@
         <table class="regions-table">
             <tbody>
                 <template repeat.for="[roi_id, roi] of regions_info.data">
-                <tr repeat.for="[shape_id, shape] of roi"
-                    show.bind="!(shape.deleted && shape.is_new)"
+                <tr repeat.for="[shape_id, shape] of roi.shapes"
+                    show.bind="!(shape.deleted && shape.is_new) && ($first || roi.show)"
                     id="${'roi-' + shape.shape_id}"
-                    css="${shape.selected ?
-                            'background-color: #d0d0ff;' : ''}
-                            ${shape.deleted ? 'color: red;' :
-                                (shape.modified ? 'color: blue;' : '')}"
+                    css="${shape.selected ? 'background-color: #d0d0ff;' : ''}
+                         ${shape.deleted ? 'color: red;' : (shape.modified ? 'color: blue;' : '')}"
                     click.delegate="selectShape(shape.shape_id, shape.selected, $event)">
-                    <td class="roi-id"><div>${roi_id}</div></td>
+                    <td class="roi-id">
+                        <div css="${roi.shapes.size > 1 && $first ?
+                            'color: blue;text-decoration: underline;cursor: pointer' :
+                            'color: none;text-decoration: none;cursor: default'}"
+                            click.delegate="expandOrCollapseRoi(roi.shapes.size > 1 && $first, roi_id, $event)">
+                            ${roi_id}
+                        </div>
+                    </td>
                     <td class="shape-id"><div>${shape_id}</div></td>
                     <td class="shape-z"><div>
                         ${shape.theZ !== -1 ? (shape.theZ + 1) : ""}</div></td>

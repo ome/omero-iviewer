@@ -76,15 +76,23 @@ export default class RegionsDrawing extends EventSubscriber {
 
         let generatedShapes = [];
         if (Misc.isArray(params.shapes) && params.shapes.length > 0) {
+            // when entering after drawing we'll have a roi_id in the params
+            // which is not the case if we propagate
             if (roi_id === null) {
                 let ids =
                     Converters.extractRoiAndShapeId(params.shapes[0].oldId);
                 roi_id = ids.roi_id;
             }
-            let shapes =
-                params.drawn ? new Map() : this.regions_info.data.get(roi_id);
-            if (!(shapes instanceof Map)) shapes = new Map();
-            this.regions_info.data.set(roi_id, shapes);
+            // check whether we need a new shapes map:
+            // this is the case for newly drawn shapes but not propagated ones
+            let shapes = this.regions_info.data.get(roi_id);
+            if (typeof shapes !== 'undefined' && shapes.shapes instanceof Map)
+                shapes = shapes.shapes;
+            else {
+                shapes = new Map();
+                this.regions_info.data.set(roi_id, {shapes: shapes, show: true});
+            }
+            // add to regions data
             params.shapes.map(
                 (shape) => {
                     let newShape =

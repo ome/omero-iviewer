@@ -636,7 +636,10 @@ export default class Ol3Viewer extends EventSubscriber {
                         this.image_config.regions_info.data.get(
                             newRoiAndShapeId.roi_id);
                     if (typeof newRoi === 'undefined') {
-                        newRoi = new Map();
+                        newRoi = {
+                            shapes: new Map(),
+                            show: false
+                        };
                         this.image_config.regions_info.data.set(
                             newRoiAndShapeId.roi_id, newRoi);
                     }
@@ -644,7 +647,7 @@ export default class Ol3Viewer extends EventSubscriber {
                     let newShape = Object.assign({}, shape);
                     newShape.shape_id = ids[id];
                     newShape.id = newRoiAndShapeId.shape_id;
-                    newRoi.set(newRoiAndShapeId.shape_id, newShape);
+                    newRoi.shapes.set(newRoiAndShapeId.shape_id, newShape);
                     shape.deleted = true; // take out old entry
                 }
                 // we remove shapes flagged deleted=true
@@ -652,8 +655,9 @@ export default class Ol3Viewer extends EventSubscriber {
                     let oldRoi =
                         this.image_config.regions_info.data.get(
                                 oldRoiAndShapeId.roi_id);
-                    if (oldRoi instanceof Map)
-                        oldRoi.delete(oldRoiAndShapeId.shape_id);
+                    if (typeof oldRoi !== 'undefined' &&
+                        oldRoi.shapes instanceof Map)
+                        oldRoi.shapes.delete(oldRoiAndShapeId.shape_id);
                     // remove empty roi as well
                     if (oldRoi.size === 0)
                         this.image_config.regions_info.data.delete(

@@ -129,7 +129,7 @@ export default class RegionsInfo extends EventSubscriber {
     unbind() {
         this.unsubscribe();
         if (this.data instanceof Map) {
-            this.data.forEach((value, key) => value.clear());
+            this.data.forEach((value, key) => value.shapes.clear());
             this.data.clear();
         }
         this.history = null;
@@ -168,13 +168,16 @@ export default class RegionsInfo extends EventSubscriber {
         // if we do not find a matching shape for the id => bye
         let shape = this.getShape(id);
         if (typeof shape === null) return;
+        let ids = Converters.extractRoiAndShapeId(id);
 
         // if the shape shape has a property of that given name
         // set its new value
         if (typeof shape[property] !== 'undefined') shape[property] = value;
         // modify the selected set for actions that influence it
-        if (property === 'selected' && value) this.selected_shapes.push(id);
-        else if ((property === 'selected' && !value) ||
+        if (property === 'selected' && value) {
+            this.selected_shapes.push(id);
+            this.data.get(ids.roi_id).show = true;
+        } else if ((property === 'selected' && !value) ||
                     (property === 'deleted' && value)) {
             let i = this.selected_shapes.indexOf(id);
             if (i !== -1) this.selected_shapes.splice(i, 1);
@@ -220,7 +223,11 @@ export default class RegionsInfo extends EventSubscriber {
                               newShape.modified = false;
                               shapes.set(shape.id, newShape);
                           });
-                          this.data.set(roi.id, shapes);
+                          this.data.set(roi.id,
+                              {
+                                  shapes: shapes,
+                                  show: false
+                              });
                       }});
                 this.ready = true;
                 }, error : (error) => this.ready = false
@@ -267,7 +274,7 @@ export default class RegionsInfo extends EventSubscriber {
 
         this.data.forEach(
             (value) =>
-                value.forEach(
+                value.shapes.forEach(
                     (value) => {
                         let id = value.shape_id;
                         if (hasIdsForFilter &&
@@ -292,9 +299,10 @@ export default class RegionsInfo extends EventSubscriber {
 
         let ids = Converters.extractRoiAndShapeId(id);
         let roi = this.data.get(ids.roi_id);
-        if (!(roi instanceof Map)) return null;
+        if (typeof roi === 'undefined' || !(roi.shapes instanceof Map))
+            return null;
 
-        let shape = roi.get(ids.shape_id);
+        let shape = roi.shapes.get(ids.shape_id);
         return (typeof shape !== 'undefined') ? shape : null;
     }
 

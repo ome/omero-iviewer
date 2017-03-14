@@ -32,6 +32,12 @@ export default class RegionsList {
     dragging_start = null;
 
     /**
+     * @memberof RegionsList
+     * @type {boolean}
+     */
+    initial_load = true;
+
+    /**
      * @constructor
      * @param {Context} context the application context (injected)
      */
@@ -233,5 +239,13 @@ export default class RegionsList {
                config_id: this.regions_info.image_info.config_id,
                property : "visible",
                shapes : [id], value : visible});
+    }
+
+    expandOrCollapseRoi(enabled, roi_id, event) {
+        if (!enabled) return;
+        event.stopPropagation();
+
+        let roi = this.regions_info.data.get(roi_id);
+        roi.show = !roi.show;
     }
 }
