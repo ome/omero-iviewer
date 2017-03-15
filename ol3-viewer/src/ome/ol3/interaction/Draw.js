@@ -70,62 +70,12 @@ ome.ol3.interaction.Draw =
     this.abort_polyline_ = false;
 
     /**
-     * default styling for drawing
+     * the default style used for drawing
      *
-     * @type {function}
+     * @type {Object}
      * @private
      */
-    this.default_style_function_ = function(feature, resolution) {
-        var optSketchFeature = this.ol_draw_.sketchFeature_;
-        var geom = optSketchFeature ?
-                    optSketchFeature.getGeometry() : feature.getGeometry();
-
-        var transWhite = [255,255,255,0.5];
-        var blue = [0, 153, 255, 0.7];
-        var isLabel = geom instanceof ome.ol3.geom.Label;
-        var defaultStyle = new ol.style.Style({
-            fill: isLabel ?
-                    new ol.style.Fill({color: blue}) :
-                    new ol.style.Fill({color: transWhite}),
-            stroke: new ol.style.Stroke({color: blue, width: 1})});
-
-        // we don't have a sketch feature to style
-        if (optSketchFeature === null) return defaultStyle;
-
-        // we show the text when 'drawing' the label
-        var text = isLabel ?
-            new ol.style.Text(
-                { text: "TEXT",
-                  font: "normal " + geom.getHeight() + "px sans-serif",
-                  fill: new ol.style.Fill({color: blue})}) : null;
-        if (text) {
-            //adjust scale and rotation
-            var rot = this.regions_.viewer_.viewer_.getView().getRotation();
-            if (rot !== 0 && !this.regions_.rotate_text_) text.setRotation(rot);
-            text.setScale(1/resolution);
-            optSketchFeature.setStyle(new ol.style.Style({ "text" : text}));
-        }
-
-        // for sketching arrows
-        var ret = [defaultStyle];
-        if (geom instanceof ome.ol3.geom.Line && geom.has_end_arrow_) {
-            var lineStroke = defaultStyle.getStroke();
-            var strokeWidth = lineStroke.getWidth() || 1;
-            var arrowBaseWidth = 15 * resolution;
-
-            var arrowStyle =
-                new ol.style.Style({
-                    geometry:
-                        geom.getArrowGeometry(
-                            true, arrowBaseWidth, arrowBaseWidth),
-                    fill: new ol.style.Fill({'color': lineStroke.getColor()}),
-                    stroke: lineStroke
-            });
-            ret.push(arrowStyle);
-        };
-
-        return ret;
-    }.bind(this);
+    this.default_style_ = null;
 };
 goog.inherits(ome.ol3.interaction.Draw, ome.ol3.interaction);
 
@@ -163,30 +113,8 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                     this.regions_.viewer_.getDimensionIndex('z');
                 event.feature['theC'] = -1;
 
-                var geom = event.feature.getGeometry();
-                var text = null;
-                var white = [255,255,255,0.5];
-                var blue = [0, 153, 255, 0.9];
-
-                // adjust if drawn in rotated state
-                var rot = this.regions_.viewer_.viewer_.getView().getRotation();
-                if (geom instanceof ome.ol3.geom.Label) {
-                    if (rot !== 0 &&
-                        !this.regions_.rotate_text_) geom.rotate(-rot);
-
-                    text = new ol.style.Text(
-                        { text: "TEXT",
-                          font: "normal " + geom.getHeight() + "px sans-serif",
-                          fill: new ol.style.Fill({color: blue})});
-                }
-
                 // apply style function after setting a default style
-                event.feature.setStyle(new ol.style.Style({
-                    fill: text === null ?
-                            new ol.style.Fill({color: white}) : null,
-                    stroke: text === null ?
-                            new ol.style.Stroke({color: blue, width: 1}) : null,
-                    text: text}));
+                event.feature.setStyle(this.default_style_);
                 ome.ol3.utils.Style.updateStyleFunction(
                     event.feature, this.regions_, true);
 
@@ -255,15 +183,15 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
 }
 
 /**
- * This method starts the drawing interaction for a certin shape type.
+ * This method starts the drawing interaction with a shape defintion (incl. type)
  *
- * @param {string} type the shape type
+ * @param {Object} shape the shape definition (incl. type)
  * @param {number} roi_id a roi id that gets incorporated into the id (for grouping)
  * @param {number=} hist_id an optional history id that needs to be returned
  */
-ome.ol3.interaction.Draw.prototype.drawShape = function(type, roi_id, hist_id) {
+ome.ol3.interaction.Draw.prototype.drawShape = function(shape, roi_id, hist_id) {
     this.abort_polyline_ = false;
-	if (typeof(type) !== 'string' || type.length === 0) {
+	if (typeof(shape['type']) !== 'string' || shape['type'].length === 0) {
         this.history_id_ = null;
         this.roi_id_ = 0;
         this.dispatchEvent(new ol.interaction.Draw.Event(
@@ -274,7 +202,7 @@ ome.ol3.interaction.Draw.prototype.drawShape = function(type, roi_id, hist_id) {
     this.roi_id_ = (typeof roi_id === 'number' && roi_id < 0) ? roi_id : -1;
     if (typeof hist_id === 'number') this.history_id_ = hist_id;
     var typeFunction = null;
-    switch(type.toLowerCase()) {
+    switch(shape['type'].toLowerCase()) {
         case "point" :
             typeFunction = ome.ol3.interaction.Draw.prototype.drawPoint_;
             break;
@@ -298,10 +226,112 @@ ome.ol3.interaction.Draw.prototype.drawShape = function(type, roi_id, hist_id) {
             break;
         default:
             this.regions_.setModes(this.previous_modes_);
-            break;
+            return;
     };
-    if (typeFunction) typeFunction.call(this);
+    this.setDefaultDrawingStyle(shape);
+    typeFunction.call(this);
 };
+
+/**
+ * Sets the drawing style using defaults or the shape definition
+ *
+ * @param {Object} shape the shape definition
+ */
+ome.ol3.interaction.Draw.prototype.setDefaultDrawingStyle = function(shape) {
+    // reset previous defaults
+    this.default_style_function_ = null;
+    this.default_style_ = null;
+    // some fallback styles
+    var transWhite = "rgba(255,255,255,0.5)";
+    var blue = "rgba(0, 153, 255, 0.9)";
+    var isLabel = shape['type'] === 'label';
+    var needsStroke =
+        shape['type'] === 'line' || shape['type'] === 'arrow' ||
+        shape['type'] === 'point';
+
+    // determine fill and stroke using defaults if not supplied
+    var defaultFill =
+        typeof shape['fillColor'] === 'string' &&
+        typeof shape['fillAlpha'] === 'number' ?
+            ome.ol3.utils.Conversion.convertHexColorFormatToObject(
+                shape['fillColor'], shape['fillAlpha']) : null;
+    if (defaultFill === null) defaultFill = transWhite;
+    else defaultFill =
+        ome.ol3.utils.Conversion.convertColorObjectToRgba(defaultFill);
+    var defaultStroke = {
+        'color': typeof shape['strokeColor'] === 'string' &&
+                typeof shape['strokeAlpha'] === 'number' ?
+                    ome.ol3.utils.Conversion.convertHexColorFormatToObject(
+                        shape['strokeColor'], shape['strokeAlpha']) : null,
+        'width': typeof shape['strokeWidth'] === 'number' ?
+                    shape['strokeWidth'] : 1,
+        'lineCap': "butt",
+        'lineJoin': "miter",
+        'miterLimit': 20
+    };
+    if (defaultStroke['color'] === null) defaultStroke['color'] = blue;
+    else defaultStroke['color'] =
+        ome.ol3.utils.Conversion.convertColorObjectToRgba(
+            defaultStroke['color']);
+    if (needsStroke && defaultStroke['width'] === 0)
+        defaultStroke['width'] = 1;
+
+    // set default style
+    var defStyle = {
+        'stroke': new ol.style.Stroke(defaultStroke)
+    };
+    if (!isLabel) defStyle['fill'] = new ol.style.Fill({color: defaultFill});
+    this.default_style_ = new ol.style.Style(defStyle);
+
+    // set default style function for sketching
+    this.default_style_function_ = function(feature, resolution) {
+        var optSketchFeature = this.ol_draw_.sketchFeature_;
+        var geom =
+            optSketchFeature ?
+                optSketchFeature.getGeometry() : feature.getGeometry();
+
+        // we don't have a sketch feature to style
+        if (optSketchFeature === null) return null;
+
+        // for sketching labels
+        if (geom instanceof ome.ol3.geom.Label) {
+            var text =
+                new ol.style.Text(
+                    { text: "TEXT",
+                      font: "normal " + geom.getHeight() + "px sans-serif",
+                      fill: new ol.style.Fill(
+                          {color: this.default_style_.getStroke().getColor()})
+                    });
+            //adjust scale and rotation
+            var rot = this.regions_.viewer_.viewer_.getView().getRotation();
+            if (rot !== 0 && !this.regions_.rotate_text_) text.setRotation(rot);
+            text.setScale(1/resolution);
+            this.default_style_.text_ = text;
+        }
+
+        var ret = [this.default_style_];
+        // for sketching arrows
+        if (geom instanceof ome.ol3.geom.Line && geom.has_end_arrow_) {
+            var lineStroke = this.default_style_.getStroke();
+            var strokeWidth = lineStroke.getWidth() || 1;
+            var arrowBaseWidth = 15 * resolution;
+
+            var arrowStyle =
+                new ol.style.Style({
+                    geometry:
+                        geom.getArrowGeometry(
+                            true, arrowBaseWidth, arrowBaseWidth),
+                    fill: new ol.style.Fill({'color': lineStroke.getColor()}),
+                    stroke: lineStroke
+            });
+            ret.push(arrowStyle);
+        };
+
+        optSketchFeature.setStyle(ret);
+        return null;
+    }.bind(this);
+};
+
 
 /**
  * Ends an active drawing interaction

@@ -1539,13 +1539,14 @@ ome.ol3.Viewer.prototype.enableRegionsContextMenu = function(flag) {
  * The types supported are: 'point', 'line', 'rectangle', 'ellipse' and
  * 'polygons'.
  *
- * @param {string} type the shape type to draw
+ * @param {Object} shape the shape definition for drawing (incl. type)
  * @param {number} roi_id a roi id that gets incorporated into the id (for grouping)
  * @param {number=} hist_id an optional history id to pass through and return
  */
-ome.ol3.Viewer.prototype.drawShape = function(type, roi_id, hist_id) {
+ome.ol3.Viewer.prototype.drawShape = function(shape, roi_id, hist_id) {
     if (!(this.regions_ instanceof ome.ol3.source.Regions) ||
-        typeof(type) !== 'string' || type.length === 0) return;
+        typeof(shape) !== 'object' || typeof(shape) === null ||
+        typeof(shape['type']) !== 'string' || shape['type'].length === 0) return;
 
     var oldModes = this.regions_.present_modes_.slice();
     this.setRegionsModes([ome.ol3.REGIONS_MODE.DRAW]);
@@ -1554,7 +1555,7 @@ ome.ol3.Viewer.prototype.drawShape = function(type, roi_id, hist_id) {
         return;
     }
 
-    this.regions_.draw_.drawShape(type, roi_id, hist_id);
+    this.regions_.draw_.drawShape(shape, roi_id, hist_id);
 }
 
 /**
