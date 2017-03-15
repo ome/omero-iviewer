@@ -638,7 +638,8 @@ export default class Ol3Viewer extends EventSubscriber {
                     if (typeof newRoi === 'undefined') {
                         newRoi = {
                             shapes: new Map(),
-                            show: false
+                            show: false,
+                            deleted: 0
                         };
                         this.image_config.regions_info.data.set(
                             newRoiAndShapeId.roi_id, newRoi);

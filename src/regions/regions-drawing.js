@@ -90,7 +90,9 @@ export default class RegionsDrawing extends EventSubscriber {
                 shapes = shapes.shapes;
             else {
                 shapes = new Map();
-                this.regions_info.data.set(roi_id, {shapes: shapes, show: true});
+                this.regions_info.data.set(roi_id, {
+                    shapes: shapes, show: true, deleted: 0
+                });
             }
             // add to regions data
             params.shapes.map(

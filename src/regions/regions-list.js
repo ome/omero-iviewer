@@ -241,8 +241,7 @@ export default class RegionsList {
                shapes : [id], value : visible});
     }
 
-    expandOrCollapseRoi(enabled, roi_id, event) {
-        if (!enabled) return;
+    expandOrCollapseRoi(roi_id, event) {
         event.stopPropagation();
 
         let roi = this.regions_info.data.get(roi_id);

@@ -25,33 +25,42 @@
         <table class="regions-table">
             <tbody>
                 <template repeat.for="[roi_id, roi] of regions_info.data">
-                <tr repeat.for="[shape_id, shape] of roi.shapes"
-                    show.bind="!(shape.deleted && shape.is_new) && ($first || roi.show)"
-                    id="${'roi-' + shape.shape_id}"
-                    css="${shape.selected ? 'background-color: #d0d0ff;' : ''}
-                         ${shape.deleted ? 'color: red;' : (shape.modified ? 'color: blue;' : '')}"
-                    click.delegate="selectShape(shape.shape_id, shape.selected, $event)">
-                    <td class="roi-id">
-                        <div css="${roi.shapes.size > 1 && $first ?
-                            'color: blue;text-decoration: underline;cursor: pointer' :
-                            'color: none;text-decoration: none;cursor: default'}"
-                            click.delegate="expandOrCollapseRoi(roi.shapes.size > 1 && $first, roi_id, $event)">
-                            ${roi_id}
-                        </div>
-                    </td>
-                    <td class="shape-id"><div>${shape_id}</div></td>
-                    <td class="shape-z"><div>
-                        ${shape.theZ !== -1 ? (shape.theZ + 1) : ""}</div></td>
-                    <td class="shape-t"><div>
-                        ${shape.theT !== -1 ? (shape.theT + 1) : ""}</div></td>
-                    <td class="shape-type ${shape.type.toLowerCase()}-icon">&nbsp;</td>
-                    <td class="shape-comment"><div>
-                        ${shape.textValue ? shape.textValue : '&nbsp;'}</div></td>
-                    <td class="shape-show">
-                        <input type="checkbox" checked.bind="shape.visible"
-                            change.delegate="toggleShapeVisibility(shape.shape_id, shape.visible)"/>
-                    </td>
-                </tr>
+                    <template repeat.for="[shape_id, shape] of roi.shapes">
+                        <tr show.bind="(roi.shapes.size - roi.deleted) > 1 &&
+                                       roi.shapes.size > 1 && $first">
+                            <td class="roi-id">
+                                <div title="Click to show/hide shapes"
+                                     style="text-decoration: underline;cursor: pointer"
+                                     click.delegate="expandOrCollapseRoi(roi_id, $event)">
+                                     ${roi_id}
+                                </div>
+                            </td>
+                        </tr>
+                        <tr show.bind="!(shape.deleted && shape.is_new) && !(roi.shapes.size > 1 && !roi.show)"
+                            id="${'roi-' + shape.shape_id}"
+                            css="${shape.selected ? 'background-color: #d0d0ff;' : ''}
+                                 ${shape.deleted ? 'color: red;' : (shape.modified ? 'color: blue;' : '')}"
+                            click.delegate="selectShape(shape.shape_id, shape.selected, $event)">
+                            <td class="roi-id">
+                                <div>${(roi.shapes.size <= 1 ||
+                                       (roi.shapes.size - roi.deleted <= 1)) ?
+                                            roi_id : ''}
+                                </div>
+                            </td>
+                            <td class="shape-id"><div>${shape_id}</div></td>
+                            <td class="shape-z"><div>
+                                ${shape.theZ !== -1 ? (shape.theZ + 1) : ""}</div></td>
+                            <td class="shape-t"><div>
+                                ${shape.theT !== -1 ? (shape.theT + 1) : ""}</div></td>
+                            <td class="shape-type ${shape.type.toLowerCase()}-icon">&nbsp;</td>
+                            <td class="shape-comment"><div>
+                                ${shape.textValue ? shape.textValue : '&nbsp;'}</div></td>
+                            <td class="shape-show">
+                                <input type="checkbox" checked.bind="shape.visible"
+                                    change.delegate="toggleShapeVisibility(shape.shape_id, shape.visible)"/>
+                            </td>
+                        </tr>
+                    </template>
                 </template>
             </tbody>
         </table>

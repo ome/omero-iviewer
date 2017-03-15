@@ -169,6 +169,7 @@ export default class RegionsInfo extends EventSubscriber {
         let shape = this.getShape(id);
         if (typeof shape === null) return;
         let ids = Converters.extractRoiAndShapeId(id);
+        let roi = this.data.get(ids.roi_id);
 
         // if the shape shape has a property of that given name
         // set its new value
@@ -181,7 +182,11 @@ export default class RegionsInfo extends EventSubscriber {
                     (property === 'deleted' && value)) {
             let i = this.selected_shapes.indexOf(id);
             if (i !== -1) this.selected_shapes.splice(i, 1);
-        }
+
+            if (property === 'deleted' && value &&
+                typeof shape.is_new === 'boolean' && shape.is_new)
+                    roi.deleted++;
+        } else if (property === 'deleted' && !value) roi.deleted--;
     }
 
     /**
@@ -226,7 +231,8 @@ export default class RegionsInfo extends EventSubscriber {
                           this.data.set(roi.id,
                               {
                                   shapes: shapes,
-                                  show: false
+                                  show: false,
+                                  deleted: 0
                               });
                       }});
                 this.ready = true;
