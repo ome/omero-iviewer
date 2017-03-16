@@ -278,4 +278,17 @@ export default class RegionsInfo extends EventSubscriber {
     hasBeenModified() {
         return this.history instanceof RegionsHistory && this.history.canUndo();
     }
+
+    /**
+     * Returns the id of the last of the selected shapes
+     *
+     * @return {number|null} the id or null (if no shapes are selected)
+     * @memberof RegionsEdit
+     */
+    getLastSelectedShapeId() {
+        let len = this.selected_shapes.length;
+        if (len === 0) return null;
+
+        return this.selected_shapes[len-1];
+    }
 }

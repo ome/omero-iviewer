@@ -294,29 +294,14 @@ export default class RegionsEdit {
     }
 
     /**
-     * Sets the last selected shape
-     *
-     * @private
-     * @memberof RegionsEdit
-     */
-    setLastSelected() {
-        let lastId =
-            this.regions_info.selected_shapes.length === 0 ?
-                -1 :
-                this.regions_info.selected_shapes.length-1;
-        this.last_selected =
-            lastId === -1 ? null :
-            this.regions_info.data.get(
-                this.regions_info.selected_shapes[lastId]);
-    }
-
-    /**
      * Reacts to shape selections, adjusting the edit widgets accordingly
      *
      * @memberof RegionsEdit
      */
     adjustEditWidgets() {
-        this.setLastSelected();
+        this.last_selected =
+            this.regions_info.data.get(
+                this.regions_info.getLastSelectedShapeId());
         let type =
             this.last_selected ? this.last_selected.type.toLowerCase() : null;
 
