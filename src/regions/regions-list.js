@@ -206,14 +206,9 @@ export default class RegionsList {
      *
      * @param {number} id the shape id
      * @param {boolean} selected the selected state
-     * @param {Object} event event object with additional info
      * @memberof RegionsList
      */
-    selectShape(id, selected, event) {
-        let t = $(event.target);
-        if (t.hasClass("shape-show") || t.parent().hasClass("shape-show"))
-            return true;
-
+    selectShape(id, selected) {
         let multipleSelection =
             typeof event.ctrlKey === 'boolean' && event.ctrlKey;
         let deselect = multipleSelection && selected;
@@ -224,6 +219,25 @@ export default class RegionsList {
                property: 'selected',
                shapes : [id], clear: !multipleSelection,
                value : !deselect, center : !multipleSelection});
+    }
+
+    /**
+     * Select shapes for roi
+     *
+     * @param {number} roi_id the roi id
+     * @memberof RegionsList
+     */
+    selectShapes(roi_id) {
+        let roi = this.regions_info.data.get(roi_id);
+        if (typeof roi === 'undefined') return;
+
+        let ids = [];
+        roi.shapes.forEach((s) => ids.push(s.shape_id));
+        this.context.publish(
+           REGIONS_SET_PROPERTY, {
+               config_id: this.regions_info.image_info.config_id,
+               property: 'selected',
+               shapes : ids, clear: true, value : true, center : true});
     }
 
     /**
@@ -241,6 +255,13 @@ export default class RegionsList {
                shapes : [id], value : visible});
     }
 
+    /**
+     * Show/Hide shapes within roi
+     *
+     * @param {number} roi_id the roi id
+     * @param {Event} event the browser's event object
+     * @memberof RegionsList
+     */
     expandOrCollapseRoi(roi_id, event) {
         event.stopPropagation();
 

@@ -27,12 +27,15 @@
                 <template repeat.for="[roi_id, roi] of regions_info.data">
                     <template repeat.for="[shape_id, shape] of roi.shapes">
                         <tr show.bind="(roi.shapes.size - roi.deleted) > 1 &&
-                                       roi.shapes.size > 1 && $first">
+                                       roi.shapes.size > 1 && $first"
+                            click.delegate="selectShapes(roi_id)">
                             <td class="roi-id">
-                                <div title="Click to show/hide shapes"
-                                     style="text-decoration: underline;cursor: pointer"
-                                     click.delegate="expandOrCollapseRoi(roi_id, $event)">
-                                     ${roi_id}
+                                <div>${roi_id}
+                                    <span title="Click to show/hide shapes"
+                                         style="cursor: pointer"
+                                         click.delegate="expandOrCollapseRoi(roi_id, $event)">
+                                         ${roi.show ? '&#9652;' : '&#9662;'}
+                                     </span>
                                 </div>
                             </td>
                         </tr>
