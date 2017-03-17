@@ -3,6 +3,7 @@
         <div repeat.for="shape of supported_shapes"
             class="draw-icons draw-${shape}-icon
                 ${shape_to_be_drawn === shape ? 'draw-active' : 'draw-inactive'}"
-            click.delegate="onDrawShape($index)" style="margin: 10px;"/>
+            click.delegate="onDrawShape($index)"
+            style="margin: 2px 10px 2px 10px;"/>
     </div>
 </template>

@@ -735,6 +735,20 @@ thead, tbody {
     height: 28px;
 }
 
+.shape-attachments {
+    margin-left: 15px;
+    margin-right: 5px;
+    min-width: 300px;
+    width: 100%;
+    float: left;
+    padding-top: 1px;
+}
+.shape-attachments input[type=text] {
+    width: 50px;
+    line-height: 28px;
+    height: 28px;
+}
+
 .arrow-button button  {
     width: 35px;
 }

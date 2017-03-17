@@ -229,7 +229,7 @@ export default class RegionsEdit {
         if (val !== -1) --val;
 
         let prop = 'the' + dim.toUpperCase();
-        let deltaProps = { type: shape ? shape.type : null };
+        let deltaProps = { type: shape.type };
         deltaProps[prop] = val;
 
         this.modifyShapes(
