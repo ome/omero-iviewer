@@ -188,10 +188,13 @@ export default class RegionsHistory {
             if (entry.action === this.action.PROPERTIES) {
                 let shape = this.regions_info.data.get(rec.shape_id);
                 if (typeof shape === 'undefined') continue;
+                let updates = {
+                    properties: rec.diffs,
+                    values: undo ? rec.old_vals : rec.new_vals
+                };
                 this.affectHistoryPropertyChange(
-                    shape, rec.diffs,
-                    undo ? rec.old_vals : rec.new_vals,
-                    entry.post_update_handler);
+                    shape, updates,
+                    entry.post_update_handler, rec.modifies_attachment);
             } else if (entry.action === this.action.SHAPES) {
                 let generate = undo ? rec.old_vals : rec.new_vals;
                 if (generate) { // we recreate them
@@ -223,27 +226,31 @@ export default class RegionsHistory {
     /**
      * Affects a property change based on the desired history values
      * by triggering the corresponding shape modification event
+     *
      * @param {Object} shape a shape definition
-     * @param {Array.<string>} props the properties of the shape to be affected
-     * @param {Array.<?>} vals the values that the properties should take on
+     * @param {Object} updates the properties and values to be updated
      * @param {function} post_update_handler a callback after update
+      @param {boolean} modifies_attachment true if attachment properties changed
      * @memberof History
      */
-    affectHistoryPropertyChange(shape, props, vals, post_update_handler) {
+    affectHistoryPropertyChange(
+        shape, updates, post_update_handler = null, modifies_attachment = false) {
         if (typeof this.regions_info !== 'object') return;
 
         let def = {type: shape.type};
-        for (let j=0;j<props.length;j++)
-            def[props[j]] = vals[j];
+        for (let j=0;j<updates.properties.length;j++)
+            def[updates.properties[j]] = updates.values[j];
         let callback =
             Utils.createUpdateHandler(
-                props, vals, null, -1, post_update_handler);
+                updates, { hist: null, hist_id: -1},
+                post_update_handler, modifies_attachment);
 
         let image_info = this.regions_info.image_info;
         image_info.context.publish(
            REGIONS_MODIFY_SHAPES, {
            config_id:image_info.config_id,
            shapes : [shape.shape_id],
+           modifies_attachment: modifies_attachment,
            definition: def,
            callback: callback});
     }

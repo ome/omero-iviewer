@@ -70,44 +70,49 @@ export class Utils {
      * Creates a callback function that is intended to be called per shape
      * and modify the properties according to the new values
      *
-     * @param {Array.<string>} properties the properties to be changed
-     * @param {Array.<?>} values the respective values for the properties
-     * @param {History?} history an optional History instance
-     * @param {number?} hist_id an optional history id
-     * @param {function} post_update_handler an optional callback after update
+     * @param {Object} updates contains properties and values to be changed
+     * @param {Object} history an optional history instance and id
+     * @param {function?} post_update_handler an optional callback after update
+     * @param {boolean?} modifies_attachment if true dimension attachment changed
      * @return {function} the update callback
      * @static
      */
      static createUpdateHandler(
-         properties = [], values = [], history=null, hist_id=-1,
-            post_update_handler = null) {
+         updates = {properties: [], values: []},
+         history = {hist: null, hist_id: -1},
+         post_update_handler = null, modifies_attachment = false) {
          // we expect 2 non empty arrays of equal length
-         if (!Misc.isArray(properties) || properties.length === 0 ||
-                !Misc.isArray(values) || values.length !== properties.length)
-            return null;
+         if (!Misc.isArray(updates.properties) ||
+             updates.properties.length === 0 ||
+             !Misc.isArray(updates.values) ||
+             updates.values.length !== updates.properties.length) return null;
 
         let callback = (shape) => {
             if (typeof shape !== 'object' || shape === null) return;
 
             let oldVals = [];
             let allPropertiesEqual = true;
-            for (let i=0;i<properties.length;i++) {
-                let prop = properties[i];
+            for (let i=0;i<updates.properties.length;i++) {
+                let prop = updates.properties[i];
                 let old_value =
                     typeof shape[prop] !== 'undefined' ? shape[prop] : null;
-                if (old_value !== values[i]) allPropertiesEqual = false;
+                if (old_value !== updates.values[i]) allPropertiesEqual = false;
                 oldVals.push(old_value);
-                shape[prop] = values[i];
+                shape[prop] = updates.values[i];
             };
-            if (history instanceof RegionsHistory && !allPropertiesEqual) {
-                if (typeof hist_id !== 'number') hist_id = -1;
-                history.addHistory(
-                    hist_id, history.action.PROPERTIES,
-                    {shape_id: shape.shape_id,
-                        diffs: properties,
-                        old_vals: oldVals, new_vals: values},
-                        typeof post_update_handler === 'function' ?
-                            post_update_handler : null);
+            if (history.hist instanceof RegionsHistory && !allPropertiesEqual) {
+                if (typeof history.hist_id !== 'number') history.hist_id = -1;
+                history.hist.addHistory(
+                    history.hist_id, history.hist.action.PROPERTIES,
+                    {
+                        shape_id: shape.shape_id,
+                        diffs: updates.properties,
+                        modifies_attachment: modifies_attachment,
+                        old_vals: oldVals,
+                        new_vals: updates.values
+                    },
+                    typeof post_update_handler === 'function' ?
+                        post_update_handler : null);
             }
             if (typeof post_update_handler === 'function') post_update_handler();
         }

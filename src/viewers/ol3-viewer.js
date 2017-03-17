@@ -600,9 +600,18 @@ export default class Ol3Viewer extends EventSubscriber {
             typeof params.definition !== 'object' || params.definition === null)
                 return;
 
-        this.viewer.modifyRegionsStyle(
+        let modifies_attachment =
+            typeof params.modifies_attachment === 'boolean' &&
+            params.modifies_attachment;
+        let modify = modifies_attachment ?
+                        this.viewer.modifyShapesAttachment :
+                        this.viewer.modifyRegionsStyle;
+
+        // call modification function
+        modify.call(
+            this.viewer,
             params.definition, params.shapes.slice(),
-                typeof params.callback === 'function' ? params.callback : null);
+            typeof params.callback === 'function' ? params.callback : null);
     }
 
     /**

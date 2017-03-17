@@ -206,22 +206,55 @@ export default class RegionsEdit {
     }
 
     /**
+     * Handles fill/stroke color changes
+     *
+     * @param {string} value the new attachment value
+     * @param {string} dim the dimension we attach to
+     * @param {Object} shape the primary shape that the change was invoked on
+     * @memberof RegionsEdit
+     */
+    onAttachmentChange(value, dim = 't', shape = null) {
+        if (typeof shape !== 'object' || shape === null) return;
+
+        // input value check
+        value = value.replace(/\s/g, "");
+        let val = parseInt(value);
+        if (value === '' || isNaN(val)) return;
+
+        // bounds check
+        let dims = this.regions_info.image_info.dimensions;
+        if (val < -1 || val > dims['max_' + dim]) return;
+        // correct if input is not -1 (unattached)
+        //since user's counting starts at 1, not 0
+        if (val !== -1) --val;
+
+        let prop = 'the' + dim.toUpperCase();
+        let deltaProps = { type: shape ? shape.type : null };
+        deltaProps[prop] = val;
+
+        this.modifyShapes(
+            deltaProps, this.createUpdateHandler([prop], [val], true), true);
+    }
+
+    /**
      * Notifies the viewer to change the shaape according to the new shape
      * definition
      *
      * @param {Object} shape_definition the object definition incl. attributes
      *                                  to be changed
      * @param {function} callback a callback function on success
+     * @param {boolean} modifies_attachment does definition alter z/t attachment
      * @memberof RegionsEdit
      */
-    modifyShapes(shape_definition, callback = null) {
+    modifyShapes(shape_definition, callback = null, modifies_attachment = false) {
         if (typeof shape_definition !== 'object' ||
                 shape_definition === null) return;
 
         this.context.publish(
            REGIONS_MODIFY_SHAPES, {
                config_id: this.regions_info.image_info.config_id,
-               shapes : this.regions_info.selected_shapes,
+               shapes: this.regions_info.selected_shapes,
+               modifies_attachment: modifies_attachment,
                definition: shape_definition,
                 callback: callback});
     }
@@ -467,17 +500,22 @@ export default class RegionsEdit {
     /**
      * Creates a more custom update handler than the standard one
      *
+     * @private
+     * @param {Array.<string>} properties the properties that changed
+     * @param {Array.<?>} value the values of the properties that changed
+     * @param {boolean} modifies_attachment if true dimension attachment changed
      * @return {function} the wrapped standard update handler
      * @memberof RegionsEdit
      */
-    createUpdateHandler(properties, values) {
-        let func =
-            Utils.createUpdateHandler(
-                properties,values,
-                this.regions_info.history,
-                this.regions_info.history.getHistoryId(),
-                this.adjustEditWidgets.bind(this));
-        return func;
+    createUpdateHandler(properties, values, modifies_attachment = false) {
+        let updates = { properties: properties, values: values };
+        let history = {
+            hist: this.regions_info.history,
+            hist_id: this.regions_info.history.getHistoryId()
+        };
+        return Utils.createUpdateHandler(
+                    updates, history,
+                    this.adjustEditWidgets.bind(this), modifies_attachment);
     }
 
     /**
