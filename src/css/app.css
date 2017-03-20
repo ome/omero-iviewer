@@ -735,7 +735,7 @@ thead, tbody {
     height: 28px;
 }
 
-.shape-attachments {
+.shape-edit-attachments {
     margin-left: 15px;
     margin-right: 5px;
     min-width: 300px;
@@ -743,10 +743,24 @@ thead, tbody {
     float: left;
     padding-top: 1px;
 }
-.shape-attachments input[type=text] {
-    width: 50px;
+.shape-edit-attachments input[type=text] {
+    float: left;
+    width: 35px;
     line-height: 28px;
     height: 28px;
+    font-size: 12px;
+}
+.shape-edit-attachments span {
+    float: left;
+    line-height: 30px;
+    height: 30px;
+    margin-left: 5px;
+}
+.shape-edit-attachments input[type=radio] {
+    float: left;
+    line-height: 30px;
+    height: 30px;
+    margin-top: 0px;
 }
 
 .arrow-button button  {

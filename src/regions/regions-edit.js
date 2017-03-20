@@ -116,6 +116,11 @@ export default class RegionsEdit {
             $(this.element).find(".shape-font-size input");
         fontSizeSpinner.spinner({min: 1, disabled: true});
         fontSizeSpinner.spinner("value", 10);
+
+        let shapeAttachments =
+            $(this.element).find(".shape-edit-attachments").children();
+        shapeAttachments.addClass("disabled-color");
+        shapeAttachments.filter('input').prop("disabled", true);
     }
 
      /**
@@ -354,6 +359,7 @@ export default class RegionsEdit {
                 (event) =>
                     this.onCommentChange(event.target.value, this.last_selected));
         }
+        // FONT SIZE
         let fontSize =
             this.last_selected ?
                 (typeof this.last_selected.fontSize === 'number' ?
@@ -368,6 +374,74 @@ export default class RegionsEdit {
                (event, ui) => this.onFontSizeChange(
                    parseInt(event.target.value), this.last_selected));
         } else fontSizeSpinner.spinner("disable");
+
+        // DIMENSION ATTACHMENT
+        let shapeAttachments =
+            $(this.element).find(".shape-edit-attachments").children();
+        shapeAttachments.addClass("disabled-color");
+        let shapeAttachmentsInput = shapeAttachments.filter('input');
+        let shapeAttachmentsTextInput =
+            shapeAttachmentsInput.filter('[type="text"]');
+        let shapeAttachmentsRadioInput =
+            shapeAttachmentsInput.filter('[type="radio"]');
+        shapeAttachmentsInput.prop("disabled", true);
+        shapeAttachmentsInput.off();
+        shapeAttachmentsInput.val('');
+        if (this.last_selected) {
+            // enable
+            shapeAttachmentsInput.prop("disabled", false);
+            shapeAttachments.removeClass("disabled-color");
+            // initialize attachments of last selected shape
+            ['t', 'z'].map(
+                (d) => {
+                    let prop = 'the' + d.toUpperCase();
+                    let unattached = this.last_selected[prop] === -1;
+                    let filter = "[dim='" + d + "']";
+                    shapeAttachmentsRadioInput.filter(
+                        filter)[unattached ? 1 : 0].checked = "checked";
+                    shapeAttachmentsTextInput.filter(filter).val(
+                        unattached ?
+                        this.regions_info.image_info.dimensions[d] + 1 :
+                        this.last_selected[prop] + 1);
+            });
+
+            // set up various event handlers for attachment changes
+            // both for radio buttons (attached/unattached) state as well as
+            // the actual text input changes plus a focus handler for
+            // toggling the attached state if we click into the input field
+            shapeAttachmentsTextInput.on('focus',
+                (event) => {
+                    let radioSelector =
+                        '[name="shape-edit-attachments-' +
+                        event.target.getAttribute('dim') + '"]';
+                    let respectiveRadioInput =
+                        shapeAttachmentsInput.filter(radioSelector);
+                    respectiveRadioInput[0].click();
+
+                });
+            shapeAttachmentsTextInput.on('change',
+                (event) =>
+                    this.onAttachmentChange(
+                        event.target.value,
+                        event.target.getAttribute('dim'),
+                        this.last_selected));
+            shapeAttachmentsRadioInput.on('change',
+                (event) => {
+                    if (!event.target.checked) return;
+                    let attached =
+                        event.target.getAttribute('attached') === 'attached';
+                    let dim = event.target.getAttribute('dim');
+                    let val = "-1";
+                    if (attached) {
+                        let inputSelector = '[dim="' + dim + '"]';
+                        let respectiveTextInput =
+                            shapeAttachmentsTextInput.filter(inputSelector);
+                        val = respectiveTextInput.val();
+                        respectiveTextInput.focus();
+                    };
+                    this.onAttachmentChange(val, dim, this.last_selected);
+                });
+        }
 
         // STROKE COLOR & WIDTH
         let strokeOptions =

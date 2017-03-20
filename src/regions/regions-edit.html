@@ -43,17 +43,25 @@
             <div class="shape-font-size"><input /></div>
         </div>
         <div class="row shapes-edit">
-            <div class="shape-attachments">
-                <input type="radio"/><span>T:</span>
-                <input type="text" value=""/>
-                <input style="margin-left: 10px" type="radio"/>
-                <span>Do not attach to T</span>
+            <div class="shape-edit-attachments">
+                <input name="shape-edit-attachments-t" type="radio"
+                       dim="t" attached="attached" tabindex="-1"/>
+                <span style="width: 15px">T:</span>
+                <input type="text" dim="t" value="" tabindex="-1"/>
+                <input name="shape-edit-attachments-t" tabindex="-1"
+                       dim="t" attached="" checked="checked"
+                       style="margin-left: 15px" type="radio"/>
+                <span tabindex="0">Do not attach to T</span>
             </div>
-            <div class="shape-attachments" style="margin-bottom: 3px">
-                <input type="radio"/><span>Z:</span>
-                <input type="text" value=""/>
-                <input style="margin-left: 10px" type="radio"/>
-                <span>Do not attach to Z</span>
+            <div class="shape-edit-attachments" style="margin-bottom: 3px">
+                <input name="shape-edit-attachments-z" type="radio"
+                       dim="z" attached="attached" tabindex="-1" />
+                <span style="width: 15px">Z:</span>
+                <input type="text" dim="z" value="" tabindex="-1"/>
+                <input name="shape-edit-attachments-z" tabindex="-1"
+                       dim="z" attached="" checked="checked"
+                       style="margin-left: 15px" type="radio"/>
+                <span tabindex="0">Do not attach to Z</span>
             </div>
        </div>
     </div>
