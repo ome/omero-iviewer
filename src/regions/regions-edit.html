@@ -42,8 +42,11 @@
             <div class="shape-edit-comment"><input value="Comment"/></div>
             <div class="shape-font-size"><input /></div>
         </div>
-        <div class="row shapes-edit">
-            <div class="shape-edit-attachments">
+        <div show.bind="regions_info.image_info.dimensions.max_t > 1 ||
+                        regions_info.image_info.dimensions.max_z > 1"
+             class="row shapes-edit">
+            <div show.bind="regions_info.image_info.dimensions.max_t > 1"
+                 class="shape-edit-attachments">
                 <input name="shape-edit-attachments-t" type="radio"
                        dim="t" attached="attached" tabindex="-1"/>
                 <span style="width: 15px">T:</span>
@@ -53,7 +56,8 @@
                        style="margin-left: 15px" type="radio"/>
                 <span tabindex="0">Do not attach to T</span>
             </div>
-            <div class="shape-edit-attachments" style="margin-bottom: 3px">
+            <div show.bind="regions_info.image_info.dimensions.max_z > 1"
+                 class="shape-edit-attachments" style="margin-bottom: 3px">
                 <input name="shape-edit-attachments-z" type="radio"
                        dim="z" attached="attached" tabindex="-1" />
                 <span style="width: 15px">Z:</span>

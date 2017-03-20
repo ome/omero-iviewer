@@ -211,34 +211,57 @@ export default class RegionsEdit {
     }
 
     /**
+     * Runs checks for an attachment input field and its associated value
+     *
+     * @param {Element} input the attachment input field element
+     * @param {boolean} reset if true we reset to the present attachment
+     * @return {number} returns input value or -1 if value was erroneous
+     */
+    checkAttachmentInput(input, reset=false) {
+        let dim = input.attr("dim");
+        let dims = this.regions_info.image_info.dimensions;
+        let presentValue = dims[dim] + 1;
+
+        // input value check
+        let value = input.val().replace(/\s/g, "");
+        if (value === "") {
+            if (reset) input.val(presentValue);
+            return -1;
+        }
+        value = parseInt(value);
+        if (isNaN(value)) {
+            if (reset) input.val(presentValue);
+            return -1;
+        }
+
+        // bounds check
+        if (value < 1 || value > dims['max_' + dim]) {
+            if (reset) input.val(presentValue);
+            return -1;
+        }
+
+        // index for user starts with 1, internally we start at 0
+        return value-1;
+    }
+
+    /**
      * Handles fill/stroke color changes
      *
-     * @param {string} value the new attachment value
+     * @param {number} value the new attachment value
      * @param {string} dim the dimension we attach to
      * @param {Object} shape the primary shape that the change was invoked on
      * @memberof RegionsEdit
      */
     onAttachmentChange(value, dim = 't', shape = null) {
-        if (typeof shape !== 'object' || shape === null) return;
-
-        // input value check
-        value = value.replace(/\s/g, "");
-        let val = parseInt(value);
-        if (value === '' || isNaN(val)) return;
-
-        // bounds check
-        let dims = this.regions_info.image_info.dimensions;
-        if (val < -1 || val > dims['max_' + dim]) return;
-        // correct if input is not -1 (unattached)
-        //since user's counting starts at 1, not 0
-        if (val !== -1) --val;
+        if (typeof value !== 'number' ||
+            typeof shape !== 'object' || shape === null) return;
 
         let prop = 'the' + dim.toUpperCase();
         let deltaProps = { type: shape.type };
-        deltaProps[prop] = val;
+        deltaProps[prop] = value;
 
         this.modifyShapes(
-            deltaProps, this.createUpdateHandler([prop], [val], true), true);
+            deltaProps, this.createUpdateHandler([prop], [value], true), true);
     }
 
     /**
@@ -376,71 +399,92 @@ export default class RegionsEdit {
         } else fontSizeSpinner.spinner("disable");
 
         // DIMENSION ATTACHMENT
-        let shapeAttachments =
-            $(this.element).find(".shape-edit-attachments").children();
-        shapeAttachments.addClass("disabled-color");
-        let shapeAttachmentsInput = shapeAttachments.filter('input');
-        let shapeAttachmentsTextInput =
-            shapeAttachmentsInput.filter('[type="text"]');
-        let shapeAttachmentsRadioInput =
-            shapeAttachmentsInput.filter('[type="radio"]');
-        shapeAttachmentsInput.prop("disabled", true);
-        shapeAttachmentsInput.off();
-        shapeAttachmentsInput.val('');
-        if (this.last_selected) {
-            // enable
-            shapeAttachmentsInput.prop("disabled", false);
-            shapeAttachments.removeClass("disabled-color");
-            // initialize attachments of last selected shape
-            ['t', 'z'].map(
-                (d) => {
-                    let prop = 'the' + d.toUpperCase();
-                    let unattached = this.last_selected[prop] === -1;
-                    let filter = "[dim='" + d + "']";
-                    shapeAttachmentsRadioInput.filter(
-                        filter)[unattached ? 1 : 0].checked = "checked";
-                    shapeAttachmentsTextInput.filter(filter).val(
-                        unattached ?
-                        this.regions_info.image_info.dimensions[d] + 1 :
-                        this.last_selected[prop] + 1);
-            });
+        let dims = this.regions_info.image_info.dimensions;
+        if (dims.max_t > 1 || dims.max_z > 1) {
+            let shapeAttachments =
+                $(this.element).find(".shape-edit-attachments").children();
+            shapeAttachments.addClass("disabled-color");
+            let shapeAttachmentsInput = shapeAttachments.filter('input');
+            let shapeAttachmentsTextInput =
+                shapeAttachmentsInput.filter('[type="text"]');
+            let shapeAttachmentsRadioInput =
+                shapeAttachmentsInput.filter('[type="radio"]');
+            shapeAttachmentsInput.prop("disabled", true);
+            shapeAttachmentsInput.off();
+            shapeAttachmentsInput.val('');
 
-            // set up various event handlers for attachment changes
-            // both for radio buttons (attached/unattached) state as well as
-            // the actual text input changes plus a focus handler for
-            // toggling the attached state if we click into the input field
-            shapeAttachmentsTextInput.on('focus',
-                (event) => {
-                    let radioSelector =
-                        '[name="shape-edit-attachments-' +
-                        event.target.getAttribute('dim') + '"]';
-                    let respectiveRadioInput =
-                        shapeAttachmentsInput.filter(radioSelector);
-                    respectiveRadioInput[0].click();
-
+            if (this.last_selected) {
+                // enable
+                shapeAttachmentsInput.prop("disabled", false);
+                shapeAttachments.removeClass("disabled-color");
+                // initialize attachments of last selected shape
+                ['t', 'z'].map(
+                    (d) => {
+                        let prop = 'the' + d.toUpperCase();
+                        let unattached = this.last_selected[prop] === -1;
+                        let filter = "[dim='" + d + "']";
+                        shapeAttachmentsRadioInput.filter(
+                            filter)[unattached ? 1 : 0].checked = "checked";
+                        shapeAttachmentsTextInput.filter(filter).val(
+                            unattached ?
+                            this.regions_info.image_info.dimensions[d] + 1 :
+                            this.last_selected[prop] + 1);
                 });
-            shapeAttachmentsTextInput.on('change',
-                (event) =>
-                    this.onAttachmentChange(
-                        event.target.value,
-                        event.target.getAttribute('dim'),
-                        this.last_selected));
-            shapeAttachmentsRadioInput.on('change',
-                (event) => {
-                    if (!event.target.checked) return;
-                    let attached =
-                        event.target.getAttribute('attached') === 'attached';
-                    let dim = event.target.getAttribute('dim');
-                    let val = "-1";
-                    if (attached) {
-                        let inputSelector = '[dim="' + dim + '"]';
+
+                // set up various event handlers for attachment changes
+                // both for radio buttons (attached/unattached) state as well as
+                // the actual text input changes plus a focus handler for
+                // toggling the attached state if we click into the input field
+                let checkAttachmentInput0 =
+                    (event, reset = false) => {
+                        let dim = event.target.getAttribute('dim');
                         let respectiveTextInput =
-                            shapeAttachmentsTextInput.filter(inputSelector);
-                        val = respectiveTextInput.val();
-                        respectiveTextInput.focus();
+                            shapeAttachmentsTextInput.filter('[dim="' + dim + '"]');
+                        return this.checkAttachmentInput(respectiveTextInput, reset);
                     };
-                    this.onAttachmentChange(val, dim, this.last_selected);
-                });
+                shapeAttachmentsTextInput.on('focus',
+                    (event) => {
+                        let radioSelector =
+                            '[name="shape-edit-attachments-' +
+                            event.target.getAttribute('dim') + '"]';
+                        let respectiveRadioInput =
+                            shapeAttachmentsInput.filter(radioSelector);
+                        if (!respectiveRadioInput[0].checked)
+                            respectiveRadioInput[0].click();
+                    });
+                // reset on blur (if check of input value check fails)
+                shapeAttachmentsTextInput.on('blur',
+                    (event) => checkAttachmentInput0(event, true));
+                // change attachment value (if input value check succeeds)
+                shapeAttachmentsTextInput.on('change keyup',
+                    (event) => {
+                        if (event.type === 'keyup' && event.keyCode !== 13) return;
+                        let dim = event.target.getAttribute('dim');
+                        let value = checkAttachmentInput0(event);
+                        if (value >= 0)
+                            this.onAttachmentChange(value, dim, this.last_selected);
+                    });
+                // change between un/attached states
+                shapeAttachmentsRadioInput.on('change',
+                    (event) => {
+                        if (!event.target.checked) return;
+                        let attached =
+                            event.target.getAttribute('attached') === 'attached';
+                        let dim = event.target.getAttribute('dim');
+                        let value = -1
+                        if (attached) {
+                            // we switched to attached => check present input value
+                            value = checkAttachmentInput0(event);
+                            let respectiveTextInput =
+                                shapeAttachmentsTextInput.filter(
+                                    '[dim="' + dim + '"]');
+                            if (value === -1) // we fetch the reset value
+                                value = parseInt(respectiveTextInput.val())-1;
+                            setTimeout(() => respectiveTextInput.focus(), 50);
+                        }
+                        this.onAttachmentChange(value, dim, this.last_selected);
+                    });
+            }
         }
 
         // STROKE COLOR & WIDTH
