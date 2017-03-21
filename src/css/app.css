@@ -14,6 +14,8 @@ hr {
     margin-top: 3px;
     margin-bottom: 3px;
     width: 100%;
+    float: left;
+    min-width: 350px;
 }
 
 .container-fluid {
@@ -845,6 +847,7 @@ thead, tbody {
     font-weight: bold;
     font-size: 12px;
     width: 80%;
+    float: left;
 }
 
 .modal-dialog {
