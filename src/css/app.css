@@ -805,19 +805,19 @@ thead, tbody {
     text-align: center;
 }
 
-.regions-propagation-options div {
+.regions-attachment-options div {
     float: left;
     margin-left: 20px;
     width: 100%;
 }
 
-.regions-propagation-options input {
+.regions-attachment-options input {
     float: left;
     height: 28px;
     line-height: 30px;
 }
 
-.regions-propagation-options .aligned-text-input {
+.regions-attachment-options .aligned-text-input {
     float: left;
     margin-left: 20px;
     margin-right: 2px;

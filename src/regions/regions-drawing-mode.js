@@ -19,13 +19,6 @@ export default class RegionsDrawingMode {
     @bindable regions_info = null;
 
     /**
-     * do we propagate or not
-     * @memberof RegionsDrawingMode
-     * @type {RegionsInfo}
-     */
-    propagate = false;
-
-    /**
      * @constructor
      * @param {Context} context the application context (injected)
      */
@@ -101,42 +94,12 @@ export default class RegionsDrawingMode {
     }
 
     /**
-     * Handler for region drawing mode selection (propagation or present Z/T)
+     * Handler for dimension attachment changes
      * @memberof RegionsDrawingMode
-     * @param {boolean} propagate true if we use propagation options
-     * @param {boolean} flag true or false depending on the checkbox status
+     * @param {number} option the chosen attachment option
      */
-    onDrawingModeChange(propagate, flag) {
-        this.propagate = (propagate && flag) || (!propagate && !flag);
-        this.regions_info.drawing_dims.t = [];
-        this.regions_info.drawing_dims.z = [];
-        let opt = REGIONS_DRAWING_MODE.Z_AND_T_VIEWED;
-        if (this.propagate) // find active option
-            $(".regions-propagation-options [type='radio']").each(
-                (i, what) => {
-                    if (what.checked)
-                        opt = parseInt(
-                            what.name.substring(
-                                "propagation-option-".length));
-                });
-        this.regions_info.drawing_mode = opt;
-        $(".propagate-mode").prop("checked", this.propagate);
-        $(".viewed-mode").prop("checked", !this.propagate);
-        return true;
-    }
-
-    /**
-     * Handler for propagation option changes
-     * @memberof RegionsDrawingMode
-     * @param {number} option the chosen propagation option
-     */
-    onPropagationOptionChange(option) {
+    onAttachmentOptionChange(option) {
         this.regions_info.drawing_mode = option;
-        $(".regions-propagation-options [type='radio']").each(
-            (i, what) => {
-                if (what.name !== ('propagation-option-' + option))
-                    what.checked = false;});
-
         return true;
     }
 

@@ -20,9 +20,6 @@ export class Utils {
      * @return {Array.<Object>} an array of objects containing a t and a z
      */
      static getDimensionsForPropagation(regions_info, presentZ=1, presentT=-1) {
-         if (regions_info.drawing_mode ===
-             REGIONS_DRAWING_MODE.Z_AND_T_VIEWED) return [];
-
         // establish what z/ts we use based on the drawing mode,
         // then form the union minus the present z/t already drawn
         let theDims = [];
