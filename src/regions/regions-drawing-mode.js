@@ -44,6 +44,18 @@ export default class RegionsDrawingMode {
     }
 
     /**
+     * Clears information
+     * @memberof RegionsDrawingMode
+     * @param {Element} target the target element (input)
+     */
+    onDimensionInputFocus(target) {
+        if (target.value.indexOf("Enter as") !== -1) {
+            target.value = '';
+            target.style = '';
+        }
+    }
+
+    /**
      * Handles z/t propagation changes, typed in by the user
      * @memberof RegionsDrawingMode
      * @param {string} dim the dimension: 't' or 'z'
@@ -100,6 +112,17 @@ export default class RegionsDrawingMode {
      */
     onAttachmentOptionChange(option) {
         this.regions_info.drawing_mode = option;
+        $('.regions-attachment-choice').html(
+            $(".regions-attachment-option-" + option).text());
+        if (option !== REGIONS_DRAWING_MODE.CUSTOM_Z_AND_T) {
+            let inputs = $('.regions-attachment-options [type="input"]');
+            inputs.val('Enter as 4-9 or 3,9,11...');
+            inputs.css({
+                "filter": "alpha(opacity=65)",
+                "opacity": ".65",
+                "-webkit-box-shadow": "none",
+                "box-shadow": "none"});
+        }
         return true;
     }
 

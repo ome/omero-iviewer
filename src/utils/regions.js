@@ -24,12 +24,12 @@ export class Utils {
         // then form the union minus the present z/t already drawn
         let theDims = [];
         let m = regions_info.drawing_mode;
-        let useZs = m === REGIONS_DRAWING_MODE.SELECTED_Z_AND_T ?
+        let useZs = m === REGIONS_DRAWING_MODE.CUSTOM_Z_AND_T ?
                 regions_info.drawing_dims.z : [];
-        let useTs = m === REGIONS_DRAWING_MODE.SELECTED_Z_AND_T ?
+        let useTs = m === REGIONS_DRAWING_MODE.CUSTOM_Z_AND_T ?
                 regions_info.drawing_dims.t : [];
         // for drawing modes where we don't have custom selections
-        if (m !== REGIONS_DRAWING_MODE.SELECTED_Z_AND_T) {
+        if (m !== REGIONS_DRAWING_MODE.CUSTOM_Z_AND_T) {
             let maxZ = regions_info.image_info.dimensions.max_z;
             let maxT = regions_info.image_info.dimensions.max_t;
             let allZs = Array.from(Array(maxZ).keys());

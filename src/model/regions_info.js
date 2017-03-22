@@ -66,7 +66,7 @@ export default class RegionsInfo extends EventSubscriber {
      * @memberof RegionsInfo
      * @type {number}
      */
-    drawing_mode = REGIONS_DRAWING_MODE.SELECTED_Z_AND_T;
+    drawing_mode = REGIONS_DRAWING_MODE.PRESENT_Z_AND_T;
 
     /**
      * the z/t indices that we draw to
