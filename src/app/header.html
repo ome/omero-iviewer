@@ -24,7 +24,7 @@
             <label class="has_scalebar">
                 <input type="checkbox"
                 checked.bind="context.show_scalebar"
-                change.delegate="toggleScalebar()">&nbsp;Show Scalebar
+                change.delegate="toggleScalebar($event)">&nbsp;Show Scalebar
             </label>
 
             <label class="${image_info === null ||
@@ -33,7 +33,7 @@
                         disabled.bind="image_info === null ||
                             image_info.projection === 'split'"
                checked.bind="context.show_regions"
-              change.delegate="toggleRegions()">&nbsp;Show ROIs</label>
+               change.delegate="toggleRegions($event)">&nbsp;Show ROIs</label>
 
         </div>
     </nav>

@@ -2,20 +2,31 @@
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import {inject, customElement, bindable} from 'aurelia-framework';
-import { REGIONS_SET_PROPERTY, REGIONS_STORED_SHAPES} from '../events/events';
+import {
+    EventSubscriber,
+    REGIONS_SET_PROPERTY, REGIONS_STORED_SHAPES, REGIONS_PROPERTY_CHANGED
+} from '../events/events';
 
 /**
  * Represents the regions list/table in the regions settings/tab
  */
 @customElement('regions-list')
 @inject(Context)
-export default class RegionsList {
+export default class RegionsList extends EventSubscriber {
     /**
      * a reference to the image config
      * @memberof RegionsList
-     * @type {RegionsInfo}
+     * @type {RegionsList}
      */
     @bindable regions_info = null;
+
+    /**
+     * events we subscribe to
+     * @memberof RegionsList
+     * @type {Array.<string,function>}
+     */
+    sub_list = [[REGIONS_PROPERTY_CHANGED,
+                (params={}) => this.actUponSelectionChange(params)]];
 
     /**
      * a flag for the regions list interaction
@@ -42,8 +53,41 @@ export default class RegionsList {
      * @param {Context} context the application context (injected)
      */
     constructor(context) {
+        super(context.eventbus);
         this.context = context;
     }
+
+    /**
+     * Overridden aurelia lifecycle method:
+     * called whenever the view is bound within aurelia
+     * in other words an 'init' hook that happens before 'attached'
+     *
+     * @memberof RegionsList
+     */
+    bind() {
+        this.subscribe();
+    }
+
+    /**
+     * Generates shape for both, pasting and propagation
+     *
+     * @param {Object} params the event notification parameters
+     * @memberof RegionsList
+     */
+     actUponSelectionChange(params = {}) {
+         //we want only notifications that concern us
+         // and select=true notifications with at least one shape
+         let imgConf = this.context.getSelectedImageConfig();
+         if (imgConf === null || imgConf.id !== params.config_id ||
+             typeof params.properties !== 'string' ||
+             params.properties !== 'selected' ||
+             !Misc.isArray(params.shapes) || params.shapes.length === 0 ||
+             typeof params.values !== 'boolean' || !params.values) return;
+
+         let id = params.shapes[0];
+         let offsetTop = document.getElementById("roi-" + id).offsetTop;
+            $('.regions-table').scrollTop(offsetTop);
+     }
 
     /**
      * Hide/Shows tegions table
@@ -267,5 +311,16 @@ export default class RegionsList {
 
         let roi = this.regions_info.data.get(roi_id);
         roi.show = !roi.show;
+    }
+    
+    /*
+     * Overridden aurelia lifecycle method:
+     * called whenever the view is unbound within aurelia
+     * in other words a 'destruction' hook that happens after 'detached'
+     *
+     * @memberof RegionsList
+     */
+    unbind() {
+        this.unsubscribe();
     }
 }

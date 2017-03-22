@@ -65,13 +65,16 @@ export class Header extends EventSubscriber {
      *
      * @memberof Header
      */
-    toggleRegions() {
-        let flag = this.context.show_regions;
+    toggleRegions(event) {
+        let flag = event.target.checked;
         let selConfig = this.context.getSelectedImageConfig();
         // should we have requested the regions data successfully before
         // let's do it now
         if (flag && selConfig && selConfig.regions_info.data === null)
             selConfig.regions_info.requestData(true);
+
+        if (!flag) $('right-hand-panel .nav a[href="#setting"]').tab("show");
+        else $('right-hand-panel .nav a[href="#rois"]').tab("show");
 
         this.context.publish(
             REGIONS_SET_PROPERTY, {property: "visible", value: flag});
@@ -82,9 +85,9 @@ export class Header extends EventSubscriber {
      *
      * @memberof Header
      */
-    toggleScalebar() {
+    toggleScalebar(event) {
         this.context.publish(IMAGE_VIEWER_SCALEBAR,
-            {visible: this.context.show_scalebar});
+            {visible: event.target.checked});
     }
 
     /**
@@ -144,7 +147,7 @@ export class Header extends EventSubscriber {
                     settings);
                 // let's add the dataset id if we have one
                 if (typeof selConf.image_info.dataset_id === 'number')
-                    url += "&dataset_id=" + selConf.image_info.dataset_id;
+                    url += "&dataset=" + selConf.image_info.dataset_id;
 
                 // show link and register close button
                 $('.link-url button').blur();
@@ -178,6 +181,7 @@ export class Header extends EventSubscriber {
                 (value === 'split' || value === 'normal')) {
                 let ctx = this.context.getSelectedImageConfig();
                 if (ctx === null) return;
+                $('right-hand-panel .nav a[href="#setting"]').tab("show");
                 this.image_info = ctx.image_info;
                 let makeSplit = (value === 'normal');
                 $(".split_channels").val(makeSplit ? "split" : "normal");

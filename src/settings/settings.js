@@ -117,7 +117,7 @@ export default class Settings extends EventSubscriber {
         $.ajax({
             url : this.context.server +
                     this.context.getPrefixedURI(WEBGATEWAY) +
-                        "/get_image_rdefs_json/" + img_id,
+                        "/get_image_rdefs_json/" + img_id + '/',
             success : (response) => {
                 if (!Misc.isArray(response.rdefs)) return;
 
@@ -170,12 +170,41 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     onModelChange(flag) {
-        // add history record
-        this.image_config.addHistory({
-            prop: ['image_info', 'model'],
-            old_val : !flag ? 'greyscale' : 'color',
-            new_val: flag ? 'greyscale' : 'color',
-            type: 'string'});
+        let history = [];
+
+        if (flag) {
+            // for change to grayscale:
+            // we take the first one that's active, then disable all others after
+            // if none is active, the first one will be made active
+            let channels = this.image_config.image_info.channels;
+            let firstActive = -1;
+
+            // little helper f updating active flag and history
+            let f = (c, i, a) => {
+                c.active = a;
+                history.push({
+                    prop: ['image_info', 'channels', '' + i, 'active'],
+                    old_val : !a,
+                    new_val: a,
+                    type: 'boolean'});
+            }
+
+            for (let i=0;i<channels.length;i++) {
+                let c = channels[i];
+                if (firstActive < 0 && c.active) firstActive = i;
+                if (i > firstActive && c.active) f(c, i, false);
+
+            };
+            if (firstActive < 0) f(channels[0], 0, true);
+        }
+
+        // add history for model info
+        history.push({
+                prop: ['image_info', 'model'],
+                old_val : !flag ? 'greyscale' : 'color',
+                new_val: flag ? 'greyscale' : 'color',
+                type: 'string'});
+        this.image_config.addHistory(history);
     }
 
     /**

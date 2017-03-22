@@ -362,22 +362,42 @@ export default class ChannelSettings extends EventSubscriber {
     }
 
     /**
-    * Toggles a channel, i.e. sets it active or inactive
-    *
-    * @param {number} index the channel array index
-    * @memberof ChannelSettings
-    */
-   toggleChannel(index) {
-       if (this.image_config.image_info.channels[index].active)
-            this.image_config.image_info.channels[index].active = false;
-        else
-            this.image_config.image_info.channels[index].active = true;
-        // add history record
-        this.image_config.addHistory({
+     * Toggles a channel, i.e. sets it active or inactive
+     *
+     * @param {number} index the channel array index
+     * @memberof ChannelSettings
+     */
+    toggleChannel(index) {
+        // we don't allow to deactivate the only active channel for grayscale
+        if (this.image_config.image_info.model === 'greyscale' &&
+            this.image_config.image_info.channels[index].active) return;
+
+        let history = [];
+
+        // toggle channel active state
+        this.image_config.image_info.channels[index].active =
+            !this.image_config.image_info.channels[index].active;
+        // remember change
+        history.push({
             prop: ['image_info', 'channels', '' + index, 'active'],
-            old_val : !this.image_config.image_info.channels[index].active,
+            old_val :   !this.image_config.image_info.channels[index].active,
             new_val: this.image_config.image_info.channels[index].active,
             type: 'boolean'});
+
+        if (this.image_config.image_info.model === 'greyscale') {
+            // for grayscale: we allow only one active channel
+            let channels = this.image_config.image_info.channels;
+            for (let i=0;i<channels.length;i++) {
+                let c = channels[i];
+                if (i === index || !c.active) continue;
+                // deactivate other channels
+                c.active = false;
+                history.push({
+                    prop: ['image_info', 'channels', '' + i, 'active'],
+                    old_val : true, new_val: false, type: 'boolean'});
+            };
+        };
+        this.image_config.addHistory(history);
     }
 
     /**
