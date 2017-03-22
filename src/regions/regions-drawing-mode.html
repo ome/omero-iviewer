@@ -19,7 +19,7 @@
                 <span title="Enter as 4-9 or 3,9,11...">&nbsp;Attach to:
                 </span>
             </div>
-            <div>
+            <div show.bind="regions_info.image_info.dimensions.max_z > 1">
                 <span class="aligned-text-input">Z:</span>
                 <input type="input"
                     disabled.bind="regions_info.drawing_mode !== 1"
@@ -27,7 +27,7 @@
                     class="${regions_info.drawing_mode !== 1 ? 'disabled-color' : ''}"
                 value="${regions_info.image_info.dimensions.z + 1}">
             </div>
-            <div>
+            <div show.bind="regions_info.image_info.dimensions.max_t > 1">
                 <span class="aligned-text-input">T:</span>
                 <input type="input"
                     disabled.bind="regions_info.drawing_mode !== 1"
@@ -35,20 +35,21 @@
                     class="${regions_info.drawing_mode !== 1 ? 'disabled-color' : ''}"
                 value="${regions_info.image_info.dimensions.t + 1}">
             </div>
-            <div>
+            <div show.bind="regions_info.image_info.dimensions.max_t > 1 &&
+                            regions_info.image_info.dimensions.max_z > 1">
                 <input name="attachment-options"
                        class="attachment-option-2" type="radio"
                        click.delegate= "onAttachmentOptionChange(2)">
                 <span>&nbsp;Attach to all Z and T</span>
             </div>
-            <div>
+            <div show.bind="regions_info.image_info.dimensions.max_z > 1">
                 <input name="attachment-options"
                        class="attachment-option-3"
                        type="radio"
                        click.delegate="onAttachmentOptionChange(3)">
                 <span>&nbsp;Attach to all Z</span>
             </div>
-            <div>
+            <div show.bind="regions_info.image_info.dimensions.max_t > 1">
                 <input name="attachment-options"
                        class="attachment-option-4"
                        type="radio"

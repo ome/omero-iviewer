@@ -62,6 +62,9 @@
 
         <regions-list regions_info.bind="regions_info"></regions-list>
 
-        <regions-drawing-mode regions_info.bind="regions_info"></regions-drawing-mode>
+        <regions-drawing-mode
+            show.bind="regions_info.image_info.dimensions.max_z > 1 ||
+                       regions_info.image_info.dimensions.max_t > 1"
+            regions_info.bind="regions_info"></regions-drawing-mode>
     </div>
 </template>
