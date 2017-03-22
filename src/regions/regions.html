@@ -4,8 +4,8 @@
     <require from="./regions-drawing"></require>
     <require from="./regions-edit"></require>
 
-    <div show.bind="context.show_regions &&
-        regions_info !== null && regions_info.data !== null">
+    <div show.bind="
+            image_info.projection !== 'split' && regions_info.data !== null">
 
         <div class="row shapes-persistence" style="padding-top: 2px">
             <div class="btn-group" style="margin: 5px;">
@@ -60,7 +60,9 @@
         <hr />
         <regions-drawing regions_info.bind="regions_info"></regions-drawing>
 
-        <regions-list regions_info.bind="regions_info"></regions-list>
+        <regions-list
+            class="${regions_info.shape_to_be_drawn !== null ? 'disabled-color' : ''}"
+            regions_info.bind="regions_info"></regions-list>
 
         <regions-drawing-mode regions_info.bind="regions_info"></regions-drawing-mode>
     </div>

@@ -8,7 +8,7 @@ import {Converters} from '../utils/converters';
 import Ui from '../utils/ui';
 import {inject, customElement, bindable} from 'aurelia-framework';
 import {ol3} from '../../libs/ol3-viewer.js';
-import {IVIEWER, RENDER_STATUS} from '../utils/constants';
+import {IVIEWER, REGIONS_DRAWING_MODE, RENDER_STATUS} from '../utils/constants';
 import {
     IMAGE_CONFIG_UPDATE, IMAGE_VIEWER_RESIZE, IMAGE_VIEWER_SCALEBAR,
     IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY, IMAGE_SETTINGS_CHANGE,
@@ -561,7 +561,14 @@ export default class Ol3Viewer extends EventSubscriber {
         }
 
         // let's draw
-        this.viewer.drawShape(params.shape, params.roi_id, params.hist_id);
+        this.viewer.drawShape(
+            params.shape, params.roi_id,
+            {
+                hist_id: params.hist_id,
+                unattached:
+                    this.image_config.regions_info.drawing_mode ===
+                        REGIONS_DRAWING_MODE.NEITHER_Z_NOR_T
+            });
     }
 
     /**

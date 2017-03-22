@@ -256,12 +256,12 @@ ome.ol3.utils.Style.updateStyleFunction = function(feature, regions_reference, f
 				var selStyle = new ol.style.Stroke();
                 var c = feature['oldStrokeStyle'] &&
                     typeof feature['oldStrokeStyle']['color'] !== 'undefined' ?
-                        feature['oldStrokeStyle']['color'] : "rgba(0,153,255,0.7)";
+                        feature['oldStrokeStyle']['color'] : "rgba(0,153,255,0.9)";
                 if (isLabel) {
                     if (textStyle && textStyle.getFill() &&
                         textStyle.getFill().getColor() !== null)
                             c = textStyle.getFill().getColor();
-                    else c = "rgba(0,153,255,0.7)";
+                    else c = "rgba(0,153,255,0.9)";
                 }
                 selStyle.setColor(c)
                 // we use width from old style if (exists)

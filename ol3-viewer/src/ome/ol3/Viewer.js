@@ -781,7 +781,7 @@ ome.ol3.Viewer.prototype.selectShapes = function(
 
     if (roi_shape_ids.length === 1 && typeof center === 'boolean' && center &&
         typeof regions.idIndex_[roi_shape_ids[0]] === 'object')
-            this.fitRegionOrExtent(
+            this.centerOnGeometry(
                 regions.idIndex_[roi_shape_ids[0]].getGeometry());
 }
 
@@ -806,41 +806,52 @@ ome.ol3.Viewer.prototype.deleteShapes = function(roi_shape_ids, undo, callback) 
 }
 
 /**
- * Focuses on something that represents an extent or a simple geometry
- * i.e. center it and zoom in
+ * Centers view on the middle of a geometry
+ * optionally zooming in on a given resolution
  *
- * @param {ol.geom.SimpleGeometry|ol.Extent} extent an extent
+ * @param {ol.geom.Geometry} geometry the geometry
+ * @param {number=} resolution the resolution to zoom in on
  */
-ome.ol3.Viewer.prototype.fitRegionOrExtent = function(extent) {
-    // without a regions layer there will be no select of regions ...
-    var regions = this.getRegions();
-    if (regions === null ||
-        (!ome.ol3.utils.Misc.isArray(extent) &&
-         !(extent instanceof ol.geom.SimpleGeometry))) return;
+ome.ol3.Viewer.prototype.centerOnGeometry = function(geometry, resolution) {
+    if (!(geometry instanceof ol.geom.Geometry)) return;
 
-    regions.viewer_.viewer_.getView().fit(extent);
-}
-
-/**
- * Focuses on something that represents an extent or a simple geometry
- * i.e. center it and zoom in
- *
- * @param {string|Array<number>} shape_or_coord
- *              a shape id in roi_id:shape_id form or a coordinate pair array
- */
-ome.ol3.Viewer.prototype.centerOnShapeOrCoordinate = function(shape_or_coord) {
-    if (ome.ol3.utils.Misc.isArray(shape_or_coord)) {
-        this.viewer_.getView().setCenter(shape_or_coord);
-        return;
+    // use given resolution for zoom
+    if (typeof resolution === 'number' && !isNaN(resolution)) {
+        var constrainedResolution =
+            this.viewer_.getView().constrainResolution(resolution);
+        if (typeof constrainedResolution === 'number')
+            this.viewer_.getView().setResolution(constrainedResolution);
     }
 
-    // without a regions layer there will be no select of regions ...
-    var regions = this.getRegions();
-    if (regions === null || regions.idIndex_ === null ||
-        typeof shape_or_coord !== 'string' ||
-        !(regions.idIndex_[shape_or_coord] instanceof ol.Feature)) return;
-
-    this.fitRegionOrExtent(regions.idIndex_[shape_or_coord].getGeometry());
+    // center (taking into account potential rotation)
+    var rot = this.viewer_.getView().getRotation();
+    if (geometry.getType() === ol.geom.GeometryType.CIRCLE) {
+        var ext = geometry.getExtent();
+        geometry = ol.geom.Polygon.fromExtent(ext);
+        geometry.rotate(rot, ol.extent.getCenter(ext));
+    }
+    var coords = geometry.getFlatCoordinates();
+    var cosine = Math.cos(-rot);
+    var sine = Math.sin(-rot);
+    var minRotX = +Infinity;
+    var minRotY = +Infinity;
+    var maxRotX = -Infinity;
+    var maxRotY = -Infinity;
+    var stride = geometry.getStride();
+    for (var i = 0, ii = coords.length; i < ii; i += stride) {
+        var rotX = coords[i] * cosine - coords[i + 1] * sine;
+        var rotY = coords[i] * sine + coords[i + 1] * cosine;
+        minRotX = Math.min(minRotX, rotX);
+        minRotY = Math.min(minRotY, rotY);
+        maxRotX = Math.max(maxRotX, rotX);
+        maxRotY = Math.max(maxRotY, rotY);
+    }
+    sine = -sine;
+    var centerRotX = (minRotX + maxRotX) / 2;
+    var centerRotY = (minRotY + maxRotY) / 2;
+    var centerX = centerRotX * cosine - centerRotY * sine;
+    var centerY = centerRotY * cosine + centerRotX * sine;
+    this.viewer_.getView().setCenter([centerX, centerY]);
 }
 
 /**
@@ -1539,13 +1550,16 @@ ome.ol3.Viewer.prototype.enableRegionsContextMenu = function(flag) {
  * The types supported are: 'point', 'line', 'rectangle', 'ellipse' and
  * 'polygons'.
  *
- * @param {string} type the shape type to draw
+ * @param {Object} shape the shape definition for drawing (incl. type)
  * @param {number} roi_id a roi id that gets incorporated into the id (for grouping)
- * @param {number=} hist_id an optional history id to pass through and return
+ * @param {Object=} opts optional parameters such as:
+ *                       an optional history id (hist_id) to pass through
+ *                       or an optional unattached flag (unattached)
  */
-ome.ol3.Viewer.prototype.drawShape = function(type, roi_id, hist_id) {
+ome.ol3.Viewer.prototype.drawShape = function(shape, roi_id, opts) {
     if (!(this.regions_ instanceof ome.ol3.source.Regions) ||
-        typeof(type) !== 'string' || type.length === 0) return;
+        typeof(shape) !== 'object' || typeof(shape) === null ||
+        typeof(shape['type']) !== 'string' || shape['type'].length === 0) return;
 
     var oldModes = this.regions_.present_modes_.slice();
     this.setRegionsModes([ome.ol3.REGIONS_MODE.DRAW]);
@@ -1554,7 +1568,7 @@ ome.ol3.Viewer.prototype.drawShape = function(type, roi_id, hist_id) {
         return;
     }
 
-    this.regions_.draw_.drawShape(type, roi_id, hist_id);
+    this.regions_.draw_.drawShape(shape, roi_id, opts);
 }
 
 /**
@@ -1939,11 +1953,6 @@ goog.exportProperty(
     ome.ol3.Viewer.prototype,
     'selectShapes',
     ome.ol3.Viewer.prototype.selectShapes);
-
-goog.exportProperty(
-    ome.ol3.Viewer.prototype,
-    'centerOnShapeOrCoordinate',
-    ome.ol3.Viewer.prototype.centerOnShapeOrCoordinate);
 
 goog.exportProperty(
     ome.ol3.Viewer.prototype,
