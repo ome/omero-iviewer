@@ -580,7 +580,7 @@ export default class RegionsEdit {
             REGIONS_GENERATE_SHAPES,
             {config_id : this.regions_info.image_info.config_id,
                 shapes : this.regions_info.copied_shapes,
-                number : 1, random : true, hist_id : hist_id,
-                propagated: true});
+                number : 1, random : true, hist_id : hist_id
+            });
     }
 }

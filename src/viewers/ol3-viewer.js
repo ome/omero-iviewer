@@ -354,8 +354,8 @@ export default class Ol3Viewer extends EventSubscriber {
           let extent = this.viewer.getSmallestViewExtent();
           if (typeof params.random !== 'boolean') params.random = false;
           if (typeof params.number !== 'number') params.number = 1;
-          if (typeof params.roi_id !== 'number' || params.roi_id > 0)
-            params.roi_id = this.image_config.regions_info.getNewRegionsId();
+          if (typeof params.roi_id !== 'number')
+              params.roi_id = this.image_config.regions_info.getNewRegionsId();
           let theDims =
             Misc.isArray(params.theDims) && params.theDims.length !== 0 ?
                 params.theDims : null;
@@ -374,9 +374,7 @@ export default class Ol3Viewer extends EventSubscriber {
                                 deepCopy =
                                     Converters.makeShapeBackwardsCompatible(upToDateDef);
                           }
-                          // for any generated shape we don't want an id
-                          // it will receive its own, new id
-                          if (params.propagated) delete deepCopy['shape_id'];
+                          delete deepCopy['shape_id'];
                           deepCopy['roi_id'] = params.roi_id;
                           this.viewer.generateShapes(deepCopy,
                               params.number, params.random, extent, theDims,
@@ -667,7 +665,7 @@ export default class Ol3Viewer extends EventSubscriber {
                         oldRoi.shapes instanceof Map)
                         oldRoi.shapes.delete(oldRoiAndShapeId.shape_id);
                     // remove empty roi as well
-                    if (oldRoi.size === 0)
+                    if (oldRoi.shapes.size === 0)
                         this.image_config.regions_info.data.delete(
                             oldRoiAndShapeId.roi_id);
                 }

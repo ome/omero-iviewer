@@ -176,7 +176,7 @@ export class Converters {
         // loop over individual properties
         for (let p in shape) {
             // we skip those
-            if (p === '@type' || p === 'oldId') continue;
+            if (p === '@type' || p === 'oldId' || p === '@id') continue;
             // first letter will be lower case converted
             let pComp = p[0].toLowerCase() + p.substring(1);
             let value = shape[p];

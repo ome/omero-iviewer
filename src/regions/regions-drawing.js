@@ -139,12 +139,13 @@ export default class RegionsDrawing extends EventSubscriber {
         // trigger generation
         this.context.publish(
             REGIONS_GENERATE_SHAPES,
-            {config_id : this.regions_info.image_info.config_id,
+            {
+                config_id : this.regions_info.image_info.config_id,
                 shapes : [newShape],
                 number : theDims.length,
                 random : false, theDims : theDims,
-                hist_id : params.hist_id, roi_id: roi_id,
-                propagated: true});
+                hist_id : params.hist_id, roi_id: roi_id
+            });
     }
 
     /**
