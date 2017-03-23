@@ -45,9 +45,8 @@
                                  ${shape.deleted ? 'color: red;' : (shape.modified ? 'color: blue;' : '')}"
                             click.delegate="selectShape(shape.shape_id, shape.selected, $event)">
                             <td class="roi-id">
-                                <div>${(roi.shapes.size <= 1 ||
-                                       (roi.shapes.size - roi.deleted <= 1)) ?
-                                            roi_id : ''}
+                                <div>${roi.shapes.size &lt;= 1 ||
+                                       (roi.shapes.size - roi.deleted) &lt;= 1 ? roi_id : ''}
                                 </div>
                             </td>
                             <td class="shape-id"><div>${shape_id}</div></td>
