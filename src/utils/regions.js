@@ -20,6 +20,12 @@ export class Utils {
      * @return {Array.<Object>} an array of objects containing a t and a z
      */
      static getDimensionsForPropagation(regions_info, presentZ=1, presentT=-1) {
+         // all unattached states as well as the present z/t mode don't need this
+         if (regions_info.drawing_mode === REGIONS_DRAWING_MODE.PRESENT_Z_AND_T ||
+             (regions_info.drawing_mode > REGIONS_DRAWING_MODE.ALL_T &&
+             regions_info.drawing_mode < REGIONS_DRAWING_MODE.CUSTOM_Z_AND_T))
+                return [];
+
         // establish what z/ts we use based on the drawing mode,
         // then form the union minus the present z/t already drawn
         let theDims = [];
@@ -28,10 +34,11 @@ export class Utils {
                 regions_info.drawing_dims.z : [];
         let useTs = m === REGIONS_DRAWING_MODE.CUSTOM_Z_AND_T ?
                 regions_info.drawing_dims.t : [];
+        let maxZ = regions_info.image_info.dimensions.max_z;
+        let maxT = regions_info.image_info.dimensions.max_t;
+
         // for drawing modes where we don't have custom selections
         if (m !== REGIONS_DRAWING_MODE.CUSTOM_Z_AND_T) {
-            let maxZ = regions_info.image_info.dimensions.max_z;
-            let maxT = regions_info.image_info.dimensions.max_t;
             let allZs = Array.from(Array(maxZ).keys());
             let allTs = Array.from(Array(maxT).keys());
             ['z', 't'].map(
@@ -47,19 +54,21 @@ export class Utils {
         }
         // last but not least, if we have an empty array in one dimension
         // we will use the present value for that from the new shape already
-        // drawn
+        // drawn, same is going to happen for no dim (-1) and exceeding dims
         // i.e. all z means for present t
-        if (useZs.length === 0) useZs.push(presentZ);
-        if (useTs.length === 0) useTs.push(presentT);
+        if (useZs.length === 0 ||
+            presentZ < 0 || presentZ >= maxZ) useZs.push(presentZ);
+        if (useTs.length === 0 ||
+            presentT < 0 || presentT >= maxT) useTs.push(presentT);
         // now finally union them ommitting the present z/t of the new shape
-        for (let i=0;i<useZs.length;i++)
+        for (let i=0;i<useZs.length;i++) {
+            let zIndex = useZs[i];
             for (let j=0;j<useTs.length;j++) {
-                let zIndex = useZs[i];
                 let tIndex = useTs[j];
-                if (zIndex === presentZ && tIndex === presentT)
-                    continue;
+                if (zIndex === presentZ && tIndex === presentT) continue;
                 theDims.push({"z" : zIndex, "t": tIndex});
             }
+        }
         return theDims;
     }
 

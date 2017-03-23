@@ -64,6 +64,9 @@ export default class RegionsDrawingMode {
     onDimensionInputChange(dim, target) {
         if (dim !== 't' && dim !== 'z') return;
 
+        // reset
+        this.regions_info.drawing_dims[dim] = [];
+
         let value = target.value;
         //first eliminate all whitespace
         value = value.replace(/\s/g, '');

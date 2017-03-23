@@ -62,6 +62,21 @@ export default class RegionsInfo extends EventSubscriber {
     ];
 
     /**
+     * the type of shape that is to be drawn,
+     * i.e. a draw interaction is active if non null.
+     * @memberof RegionsInfo
+     * @type {string|null}
+     */
+    shape_to_be_drawn = null;
+
+    /**
+     * any defaults for shape drawing
+     * @memberof RegionsInfo
+     * @type {Object}
+     */
+    shape_defaults = {};
+
+    /**
      * the drawing mode
      * @memberof RegionsInfo
      * @type {number}

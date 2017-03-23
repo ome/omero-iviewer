@@ -622,11 +622,11 @@ ome.ol3.utils.Conversion.integrateMiscInfoIntoJsonObject  = function(feature, js
 				!(feature instanceof ol.Feature))
 		return;
 
-	if (typeof(feature['theT']) === 'number' && feature['theT'] !== -1)
-		jsonObject['TheT'] = feature['theT'];
-	if (typeof(feature['theZ']) === 'number' && feature['theZ'] !== -1)
+	if (typeof(feature['theT']) === 'number')
+        jsonObject['TheT'] = feature['theT'];
+	if (typeof(feature['theZ']) === 'number')
 		jsonObject['TheZ'] = feature['theZ'];
-	if (typeof(feature['theC']) === 'number' && feature['theC'] !== -1)
+	if (typeof(feature['theC']) === 'number')
 		jsonObject['TheC'] = feature['theC'];
 
     if (feature['state'] === ome.ol3.REGIONS_STATE.REMOVED)
