@@ -787,7 +787,7 @@ thead, tbody {
     padding-left: 0px;
 }
 .regions-drawing-mode {
-    margin-left: 5px;
+    margin-left: 10px;
     line-height: 30px;
 }
 .drawing-mode {
@@ -805,10 +805,11 @@ thead, tbody {
 .drawing-mode-apply {
     float: left;
     margin-top: 15px;
+    margin-bottom: 10px;
     text-align: center;
 }
 .drawing-mode-apply button {
-    min-width: 335px;
+    min-width: 300px;
 }
 
 .regions-attachment-options div {

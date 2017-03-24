@@ -12,7 +12,8 @@
         <div class="row regions-attachment-options">
             <div>
                 <div style="float: left;width: 100px;">Attachment:</div>
-                <div class="dropdown" style="margin-bottom: 5px;width: 200px;"
+                <div class="dropup"
+                     style="margin-bottom: 5px;width: 200px;"
                      title="Attachment for Z/T">
                     <button type="button"
                         style="width: 195px;"
@@ -25,9 +26,8 @@
                                 ${regions_info.image_info.dimensions.max_z > 1 ? "Z" : ""}
                             </span>
                     </button>
-                    <ul class="dropdown-menu">
-                        <li show.bind="regions_info.image_info.dimensions.max_t > 1"
-                            class="${regions_info.drawing_mode === 1 ? 'active' : ''}"
+                    <ul class="dropdown-menu" style="min-width: 195px;">
+                        <li class="${regions_info.drawing_mode === 1 ? 'active' : ''}"
                             click.delegate="onAttachmentOptionChange(1)">
                             <a class="regions-attachment-option-1" href="#">
                                 Present ${regions_info.image_info.dimensions.max_t > 1 ? "T" : ""}

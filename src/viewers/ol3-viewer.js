@@ -591,6 +591,9 @@ export default class Ol3Viewer extends EventSubscriber {
                 this.context.getPrefixedURI(IVIEWER) + '/persist_rois',
                 params.omit_client_update);
         if (requestMade) Ui.showModalMessage("Saving Regions. Please wait...");
+        else if (params.omit_client_update)
+            this.context.eventbus.publish(
+                "REGIONS_STORED_SHAPES", { omit_client_update: true});
     }
 
     /**
