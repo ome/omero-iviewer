@@ -85,8 +85,10 @@ export default class RegionsList extends EventSubscriber {
              typeof params.values !== 'boolean' || !params.values) return;
 
          let id = params.shapes[0];
-         let offsetTop = document.getElementById("roi-" + id).offsetTop;
-            $('.regions-table').scrollTop(offsetTop);
+         let el = document.getElementById('roi-' + id);
+         let scroll = () => $('.regions-table').scrollTop(el.offsetTop);
+         setTimeout(scroll,
+             el.className.indexOf("aurelia-hide") !== -1 ? 100 : 0);
      }
 
     /**
@@ -310,9 +312,10 @@ export default class RegionsList extends EventSubscriber {
         event.stopPropagation();
 
         let roi = this.regions_info.data.get(roi_id);
+        if (typeof roi === 'undefined') return;
         roi.show = !roi.show;
     }
-    
+
     /*
      * Overridden aurelia lifecycle method:
      * called whenever the view is unbound within aurelia
