@@ -144,7 +144,6 @@ export default class RegionsInfo extends EventSubscriber {
         this.unsubscribe();
         if (this.data instanceof Map) this.data.clear();
         this.history = null;
-        this.image_info = null;
     }
 
     /**

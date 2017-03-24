@@ -631,7 +631,8 @@ export default class RegionsEdit {
      */
     getColorPickerOptions(fill=true, shape=null) {
         let options =  {
-            disabled: this.regions_info.shape_to_be_drawn !== null,
+            disabled: this.regions_info === null ||
+                      this.regions_info.shape_to_be_drawn !== null,
             color: fill ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 153, 255, 0.7)',
             showInput: true,
             showAlpha: true,
