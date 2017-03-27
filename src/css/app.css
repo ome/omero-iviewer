@@ -553,7 +553,10 @@ thead, tbody {
     overflow: hidden;
 }
 
-.roi-id, .shape-id {
+.roi-id  {
+    width: 15px;
+}
+.shape-id {
     width: 50px;
 }
 
