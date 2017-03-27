@@ -252,9 +252,11 @@ export default class RegionsList extends EventSubscriber {
      *
      * @param {number} id the shape id
      * @param {boolean} selected the selected state
+     * @param {Event} event the browser's event object
      * @memberof RegionsList
      */
-    selectShape(id, selected) {
+    selectShape(id, selected, event) {
+        if (event.target.tagName.toUpperCase() === 'INPUT') return true;
         let multipleSelection =
             typeof event.ctrlKey === 'boolean' && event.ctrlKey;
         let deselect = multipleSelection && selected;
@@ -271,9 +273,14 @@ export default class RegionsList extends EventSubscriber {
      * Select shapes for roi
      *
      * @param {number} roi_id the roi id
+     * @param {Event} event the browser's event object
      * @memberof RegionsList
      */
-    selectShapes(roi_id) {
+    selectShapes(roi_id, event) {
+        if (event.target.className.indexOf("roi_id") !== -1 ||
+            event.target.parentNode.className.indexOf("roi_id") !== -1 )
+                return true;
+
         let roi = this.regions_info.data.get(roi_id);
         if (typeof roi === 'undefined') return;
 
@@ -291,9 +298,11 @@ export default class RegionsList extends EventSubscriber {
      *
      * @param {number} id the shape id
      * @param {boolean} visible the visible state
+     * @param {Event} event the browser's event object
      * @memberof RegionsList
      */
-    toggleShapeVisibility(id, visible) {
+    toggleShapeVisibility(id, visible, event) {
+        event.stopPropagation();
         this.context.publish(
            REGIONS_SET_PROPERTY, {
                config_id: this.regions_info.image_info.config_id,

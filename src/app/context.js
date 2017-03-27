@@ -330,6 +330,10 @@ export default class Context {
         if (typeof image_id !== 'number' || image_id < 0)
             return null;
 
+        // reset
+        this.show_regions = false;
+        this.show_scalebar = false;
+
         // we do not keep the other configs around unless we are in MDI mode.
         if (!this.useMDI)
             for (let [id, conf] of this.image_configs)

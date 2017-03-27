@@ -28,7 +28,7 @@
                     <template repeat.for="[shape_id, shape] of roi.shapes">
                         <tr show.bind="(roi.shapes.size - roi.deleted) > 1 &&
                                        roi.shapes.size > 1 && $first"
-                            click.delegate="selectShapes(roi_id)">
+                            click.delegate="selectShapes(roi_id, $event)">
                             <td class="roi-id">
                                 <div>${roi_id}
                                     <span title="Click to show/hide shapes"
@@ -59,7 +59,7 @@
                                 ${shape.textValue ? shape.textValue : '&nbsp;'}</div></td>
                             <td class="shape-show">
                                 <input type="checkbox" checked.bind="shape.visible"
-                                    change.delegate="toggleShapeVisibility(shape.shape_id, shape.visible)"/>
+                                    change.delegate="toggleShapeVisibility(shape.shape_id, shape.visible, $event)"/>
                             </td>
                         </tr>
                     </template>
