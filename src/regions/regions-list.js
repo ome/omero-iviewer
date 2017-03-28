@@ -1,7 +1,7 @@
 // js
 import Context from '../app/context';
 import Misc from '../utils/misc';
-import {inject, customElement, bindable} from 'aurelia-framework';
+import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {
     EventSubscriber,
     REGIONS_SET_PROPERTY, REGIONS_STORED_SHAPES, REGIONS_PROPERTY_CHANGED
@@ -11,7 +11,7 @@ import {
  * Represents the regions list/table in the regions settings/tab
  */
 @customElement('regions-list')
-@inject(Context)
+@inject(Context, BindingEngine)
 export default class RegionsList extends EventSubscriber {
     /**
      * a reference to the image config
@@ -51,10 +51,12 @@ export default class RegionsList extends EventSubscriber {
     /**
      * @constructor
      * @param {Context} context the application context (injected)
+     * @param {BindingEngine} bindingEngine the BindingEngine (injected)
      */
-    constructor(context) {
+    constructor(context, bindingEngine) {
         super(context.eventbus);
         this.context = context;
+        this.bindingEngine = bindingEngine;
     }
 
     /**
@@ -66,6 +68,40 @@ export default class RegionsList extends EventSubscriber {
      */
     bind() {
         this.subscribe();
+        this.registerObserver();
+    }
+
+    /**
+     * Registers observers to watch whether we are in drawing mode or not
+     *
+     * @memberof RegionsList
+     */
+    registerObserver() {
+        this.unregisterObserver();
+
+        this.observer = this.bindingEngine.propertyObserver(
+            this.regions_info, 'shape_to_be_drawn').subscribe(
+                (newValue, oldValue) => {
+                    if (newValue === null) {
+                        $(".regions-table").removeClass("disabled-color");
+                        $(".regions-table").prop("disabled", false);
+                    } else {
+                        $(".regions-table").addClass("disabled-color");
+                        $(".regions-table").prop("disabled", true);
+                    }
+        });
+    }
+
+    /**
+     * Unregisters observer
+     *
+     * @memberof RegionsList
+     */
+    unregisterObserver() {
+        if (this.observer) {
+            this.observer.dispose();
+            this.observer = null;
+        }
     }
 
     /**
@@ -341,5 +377,6 @@ export default class RegionsList extends EventSubscriber {
      */
     unbind() {
         this.unsubscribe();
+        this.unregisterObserver();
     }
 }
