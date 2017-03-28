@@ -12,13 +12,14 @@
         <table class="regions-header">
             <thead>
                 <tr>
-                    <th id="reg-col-0" class="roi-id"><div>&nbsp;</div></th>
-                    <th id="reg-col-1" class="shape-id"><div>ID</div></th>
-                    <th id="reg-col-2" class="shape-z"><div>Z</div></th>
-                    <th id="reg-col-3" class="shape-t"><div>T</div></th>
-                    <th id="reg-col-4" class="shape-type"><div>Type</div></th>
-                    <th id="reg-col-5" class="shape-comment"><div>Comment</div></th>
-                    <th id="reg-col-6" class="shape-show"><div>Show</div></th>
+                    <th id="reg-col-0" class="roi-toggle"><div>&nbsp;</div></th>
+                    <th id="reg-col-1" class="roi-id"><div>Roi</div></th>
+                    <th id="reg-col-2" class="shape-id"><div>ID</div></th>
+                    <th id="reg-col-3" class="shape-z"><div>Z</div></th>
+                    <th id="reg-col-4" class="shape-t"><div>T</div></th>
+                    <th id="reg-col-5" class="shape-type"><div>Type</div></th>
+                    <th id="reg-col-6" class="shape-comment"><div>Comment</div></th>
+                    <th id="reg-col-7" class="shape-show"><div>Show</div></th>
                 </tr>
             </thead>
         </table>
@@ -29,14 +30,15 @@
                         <tr show.bind="(roi.shapes.size - roi.deleted) > 1 &&
                                        roi.shapes.size > 1 && $first"
                             click.delegate="selectShapes(roi_id, $event)">
-                            <td class="roi-id" title="Click to show/hide shapes">
+                            <td class="roi-toggle">
                                 <div title="Click to show/hide shapes"
                                      style="cursor: pointer"
                                      click.delegate="expandOrCollapseRoi(roi_id, $event)">
                                      ${roi.show ? '&#9660;' : '&#9658;'}
-                                </div>
-                            </td>
-                            <td class="shape-id"><div>${roi_id}</div></td>
+                                 </div>
+                             </td>
+                            <td class="roi-id"><div>${roi_id}</div></td>
+                            <td class="shape-id"><div>&nbsp;</div></td>
                             <td class="shape-z"></td>
                             <td class="shape-t"></td>
                             <td class="shape-type"><div>(${(roi.shapes.size - roi.deleted)})</div></td>
@@ -47,14 +49,9 @@
                             css="${shape.selected ? 'background-color: #d0d0ff;' : ''}
                                  ${shape.deleted ? 'color: red;' : (shape.modified ? 'color: blue;' : '')}"
                             click.delegate="selectShape(shape.shape_id, shape.selected, $event)">
-                            <td class="roi-id"></td>
-                            <td class="shape-id">
-                                <div>
-                                    ${roi.shapes.size &lt;= 1 ||
-                                        (roi.shapes.size - roi.deleted) &lt;= 1 ?
-                                        roi_id : shape_id}
-                               </div>
-                           </td>
+                            <td class="roi-toggle"><div>&nbsp;</div></td>
+                            <td class="roi-id"><div>${roi_id}</div></td>
+                            <td class="shape-id"><div>${shape_id}</div></td>
                             <td class="shape-z"><div>
                                 ${shape.theZ !== -1 ? (shape.theZ + 1) : ""}</div></td>
                             <td class="shape-t"><div>
