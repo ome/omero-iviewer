@@ -86,7 +86,14 @@ export default class RegionsList extends EventSubscriber {
 
          let id = params.shapes[0];
          let el = document.getElementById('roi-' + id);
-         let scroll = () => $('.regions-table').scrollTop(el.offsetTop);
+         let regTable = $('.regions-table');
+         let scrollTop = regTable.scrollTop();
+         let scrollBottom = scrollTop + regTable.outerHeight();
+         let elTop = el.offsetTop;
+         let elBottom = elTop + el.offsetHeight;
+         if (elTop > scrollTop && elBottom < scrollBottom) return;
+
+         let scroll = () => regTable.scrollTop(el.offsetTop);
          setTimeout(scroll,
              el.className.indexOf("aurelia-hide") !== -1 ? 100 : 0);
      }
