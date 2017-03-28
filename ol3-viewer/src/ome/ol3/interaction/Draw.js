@@ -114,14 +114,16 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                 event.feature['type'] = shape_type;
 
                 // set t and z info
-                var unattached =
-                    typeof this.opts['unattached'] === 'boolean' &&
-                    this.opts['unattached'];
+                var hasUnattachedDims =
+                    ome.ol3.utils.Misc.isArray(this.opts['unattached']) &&
+                    this.opts['unattached'].length > 0;
                 event.feature['theT'] =
-                    unattached ?
+                    hasUnattachedDims &&
+                    this.opts['unattached'].indexOf('t') !== -1 ?
                         -1 : this.regions_.viewer_.getDimensionIndex('t');
                 event.feature['theZ'] =
-                    unattached ?
+                    hasUnattachedDims &&
+                    this.opts['unattached'].indexOf('z') !== -1 ?
                         -1 : this.regions_.viewer_.getDimensionIndex('z');
                 event.feature['theC'] = -1;
 
@@ -200,8 +202,8 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
  * @param {Object} shape the shape definition (incl. type)
  * @param {number} roi_id a roi id that gets incorporated into the id (for grouping)
  * @param {Object=} opts optional parameters such as:
- *                       an optional history id (hist_id) to pass through
- *                       or an optional unattached flag (unattached)
+ *                       an history id (hist_id) to pass through
+ *                       or a list of unattached dimensions (unattached)
  */
 ome.ol3.interaction.Draw.prototype.drawShape = function(shape, roi_id, opts) {
     this.opts = opts || {};

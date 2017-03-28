@@ -560,14 +560,26 @@ export default class Ol3Viewer extends EventSubscriber {
             return;
         }
 
-        // let's draw
+        // gather unattached dimensions (if any)
+        let unattached = [];
+        switch (this.image_config.regions_info.drawing_mode) {
+            case REGIONS_DRAWING_MODE.NEITHER_Z_NOR_T:
+                unattached = ['z', 't'];
+                break;
+            case REGIONS_DRAWING_MODE.NOT_Z:
+                unattached.push('z');
+                break;
+            case REGIONS_DRAWING_MODE.NOT_T:
+                unattached.push('t');
+                break;
+        }
+
+        // draw shape
         this.viewer.drawShape(
             params.shape, params.roi_id,
             {
                 hist_id: params.hist_id,
-                unattached:
-                    this.image_config.regions_info.drawing_mode ===
-                        REGIONS_DRAWING_MODE.NEITHER_Z_NOR_T
+                unattached: unattached
             });
     }
 

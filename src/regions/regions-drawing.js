@@ -1,6 +1,6 @@
 // js
 import Context from '../app/context';
-import {inject, customElement, bindable} from 'aurelia-framework';
+import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import Misc from '../utils/misc';
 import {Utils} from '../utils/regions';
 import {Converters} from '../utils/converters';
@@ -13,7 +13,7 @@ import {
  * Represents the regions drawing palette in the right hand panel
  */
 @customElement('regions-drawing')
-@inject(Context)
+@inject(Context, BindingEngine)
 export default class RegionsDrawing extends EventSubscriber {
     /**
      * a bound reference to regions_info
@@ -47,6 +47,49 @@ export default class RegionsDrawing extends EventSubscriber {
             (params={}) => this.onShapeDrawn(params)],
         [REGIONS_CHANGE_MODES,
             (params={}) => this.onModeChange(params)]];
+
+    /**
+     * @constructor
+     * @param {Context} context the application context (injected)
+     * @param {BindingEngine} bindingEngine the BindingEngine (injected)
+     */
+    constructor(context, bindingEngine) {
+        super(context.eventbus);
+        this.context = context;
+        this.bindingEngine = bindingEngine;
+    }
+
+    /**
+     * Registers observer to react to drawing mode changes
+     *
+     * @memberof RegionsDrawing
+     */
+    registerObserver() {
+        this.unregisterObserver();
+
+        this.observer = this.bindingEngine.propertyObserver(
+            this.regions_info, 'drawing_mode')
+                .subscribe(
+                    (newValue, oldValue) => {
+                        let idx =
+                            this.supported_shapes.indexOf(
+                                this.regions_info.shape_to_be_drawn);
+                        if (idx < 0) return;
+                        this.onDrawShape(idx, true);
+        });
+    }
+
+    /**
+     * Unregisters observer
+     *
+     * @memberof RegionsDrawing
+     */
+    unregisterObserver() {
+        if (this.observer) {
+             this.observer.dispose();
+             this.observer = null;
+         }
+    }
 
     /**
      * Handles the viewer's event notification after having drawn a shape
@@ -178,15 +221,6 @@ export default class RegionsDrawing extends EventSubscriber {
      }
 
     /**
-     * @constructor
-     * @param {Context} context the application context (injected)
-     */
-    constructor(context) {
-        super(context.eventbus);
-        this.context = context;
-    }
-
-    /**
      * Overridden aurelia lifecycle method:
      * called whenever the view is bound within aurelia
      * in other words an 'init' hook that happens before 'attached'
@@ -195,6 +229,7 @@ export default class RegionsDrawing extends EventSubscriber {
      */
     bind() {
         this.subscribe();
+        this.registerObserver();
     }
 
     /**
@@ -206,5 +241,6 @@ export default class RegionsDrawing extends EventSubscriber {
      */
     unbind() {
         this.unsubscribe();
+        this.unregisterObserver();
     }
 }
