@@ -1,7 +1,7 @@
 // js
 import Context from '../app/context';
 import Misc from '../utils/misc';
-import {inject, customElement, bindable} from 'aurelia-framework';
+import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {
     EventSubscriber,
     REGIONS_SET_PROPERTY, REGIONS_STORED_SHAPES, REGIONS_PROPERTY_CHANGED
@@ -11,7 +11,7 @@ import {
  * Represents the regions list/table in the regions settings/tab
  */
 @customElement('regions-list')
-@inject(Context)
+@inject(Context, BindingEngine)
 export default class RegionsList extends EventSubscriber {
     /**
      * a reference to the image config
@@ -43,12 +43,20 @@ export default class RegionsList extends EventSubscriber {
     dragging_start = null;
 
     /**
+     * @memberof RegionsList
+     * @type {boolean}
+     */
+    initial_load = true;
+
+    /**
      * @constructor
      * @param {Context} context the application context (injected)
+     * @param {BindingEngine} bindingEngine the BindingEngine (injected)
      */
-    constructor(context) {
+    constructor(context, bindingEngine) {
         super(context.eventbus);
         this.context = context;
+        this.bindingEngine = bindingEngine;
     }
 
     /**
@@ -60,6 +68,40 @@ export default class RegionsList extends EventSubscriber {
      */
     bind() {
         this.subscribe();
+        this.registerObserver();
+    }
+
+    /**
+     * Registers observers to watch whether we are in drawing mode or not
+     *
+     * @memberof RegionsList
+     */
+    registerObserver() {
+        this.unregisterObserver();
+
+        this.observer = this.bindingEngine.propertyObserver(
+            this.regions_info, 'shape_to_be_drawn').subscribe(
+                (newValue, oldValue) => {
+                    if (newValue === null) {
+                        $(".regions-table").removeClass("disabled-color");
+                        $(".regions-table").prop("disabled", false);
+                    } else {
+                        $(".regions-table").addClass("disabled-color");
+                        $(".regions-table").prop("disabled", true);
+                    }
+        });
+    }
+
+    /**
+     * Unregisters observer
+     *
+     * @memberof RegionsList
+     */
+    unregisterObserver() {
+        if (this.observer) {
+            this.observer.dispose();
+            this.observer = null;
+        }
     }
 
     /**
@@ -79,8 +121,17 @@ export default class RegionsList extends EventSubscriber {
              typeof params.values !== 'boolean' || !params.values) return;
 
          let id = params.shapes[0];
-         let offsetTop = document.getElementById("roi-" + id).offsetTop;
-            $('.regions-table').scrollTop(offsetTop);
+         let el = document.getElementById('roi-' + id);
+         let regTable = $('.regions-table');
+         let scrollTop = regTable.scrollTop();
+         let scrollBottom = scrollTop + regTable.outerHeight();
+         let elTop = el.offsetTop;
+         let elBottom = elTop + el.offsetHeight;
+         if (elTop > scrollTop && elBottom < scrollBottom) return;
+
+         let scroll = () => regTable.scrollTop(el.offsetTop);
+         setTimeout(scroll,
+             el.className.indexOf("aurelia-hide") !== -1 ? 100 : 0);
      }
 
     /**
@@ -244,15 +295,11 @@ export default class RegionsList extends EventSubscriber {
      *
      * @param {number} id the shape id
      * @param {boolean} selected the selected state
-     * @param {Object} event event object with additional info
+     * @param {Event} event the browser's event object
      * @memberof RegionsList
      */
     selectShape(id, selected, event) {
-        if (this.regions_info.shape_to_be_drawn !== null) return;
-        let t = $(event.target);
-        if (t.hasClass("shape-show") || t.parent().hasClass("shape-show"))
-            return true;
-
+        if (event.target.tagName.toUpperCase() === 'INPUT') return true;
         let multipleSelection =
             typeof event.ctrlKey === 'boolean' && event.ctrlKey;
         let deselect = multipleSelection && selected;
@@ -266,13 +313,39 @@ export default class RegionsList extends EventSubscriber {
     }
 
     /**
+     * Select shapes for roi
+     *
+     * @param {number} roi_id the roi id
+     * @param {Event} event the browser's event object
+     * @memberof RegionsList
+     */
+    selectShapes(roi_id, event) {
+        if (event.target.className.indexOf("roi_id") !== -1 ||
+            event.target.parentNode.className.indexOf("roi_id") !== -1 )
+                return true;
+
+        let roi = this.regions_info.data.get(roi_id);
+        if (typeof roi === 'undefined') return;
+
+        let ids = [];
+        roi.shapes.forEach((s) => ids.push(s.shape_id));
+        this.context.publish(
+           REGIONS_SET_PROPERTY, {
+               config_id: this.regions_info.image_info.config_id,
+               property: 'selected',
+               shapes : ids, clear: true, value : true, center : true});
+    }
+
+    /**
      * shape visibility toggler
      *
      * @param {number} id the shape id
      * @param {boolean} visible the visible state
+     * @param {Event} event the browser's event object
      * @memberof RegionsList
      */
-    toggleShapeVisibility(id, visible) {
+    toggleShapeVisibility(id, visible, event) {
+        event.stopPropagation();
         this.context.publish(
            REGIONS_SET_PROPERTY, {
                config_id: this.regions_info.image_info.config_id,
@@ -281,6 +354,21 @@ export default class RegionsList extends EventSubscriber {
     }
 
     /**
+     * Show/Hide shapes within roi
+     *
+     * @param {number} roi_id the roi id
+     * @param {Event} event the browser's event object
+     * @memberof RegionsList
+     */
+    expandOrCollapseRoi(roi_id, event) {
+        event.stopPropagation();
+
+        let roi = this.regions_info.data.get(roi_id);
+        if (typeof roi === 'undefined') return;
+        roi.show = !roi.show;
+    }
+
+    /*
      * Overridden aurelia lifecycle method:
      * called whenever the view is unbound within aurelia
      * in other words a 'destruction' hook that happens after 'detached'
@@ -289,5 +377,6 @@ export default class RegionsList extends EventSubscriber {
      */
     unbind() {
         this.unsubscribe();
+        this.unregisterObserver();
     }
 }

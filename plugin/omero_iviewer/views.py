@@ -50,11 +50,13 @@ def persist_rois(request, conn=None, **kwargs):
     image = conn.getObject("Image", image_id)
     if image is None:
         return JsonResponse({"error": "Could not find associated image!"})
+
     # prepare services
     update_service = conn.getUpdateService()
     rois_service = conn.getRoiService()
     if update_service is None or rois_service is None:
         return JsonResponse({"error": "Could not get update/rois service!"})
+
     # loop over the given rois, marshal and persist/delete
     ret_ids = {}
     try:
@@ -64,9 +66,10 @@ def persist_rois(request, conn=None, **kwargs):
             decoder = omero_marshal.get_decoder(roi.get("@type"))
             decoded_roi = decoder.decode(roi)
             decoded_roi.setImage(image._obj)
-            # differentiate between new ones and existing ones
+
+            # differentiate between new rois and existing ones
             if int(r) < 0:
-                # we save the new ones
+                # we save the new ones including all its new shapes
                 decoded_roi = update_service.saveAndReturnObject(decoded_roi)
                 roi_id = decoded_roi.getId().getValue()
                 # we associate them with the ids handed in
@@ -83,32 +86,56 @@ def persist_rois(request, conn=None, **kwargs):
                 if result is None or len(result.rois) != 1:
                     continue
                 existing_rois = result.rois[0]
-                # loop over handed in shapes and add them to the done list
+
+                # loop over decoded shapes (new, deleted and modified)
                 j = 0
                 shapes_done = {}
                 shapes_deleted = 0
+                shapes_to_be_added = []
                 roi_id = decoded_roi.getId().getValue()
                 for s in decoded_roi.copyShapes():
-                    shape_id = s.getId().getValue()
                     old_id = roi['shapes'][j].get('oldId', None)
                     delete = roi['shapes'][j].get('markedForDeletion', None)
+                    j += 1
+                    shape_id = s.getId().getValue()
+                    if shape_id < 0:
+                        # due to deletions/modifications that we store first
+                        # the newly added ones are added afterwards
+                        decoded_roi.removeShape(s)
+                        shapes_to_be_added.append(
+                            {"oldId": old_id, "shape": s})
+                        continue
                     if delete is not None:
                         decoded_roi.removeShape(s)
                         shapes_deleted += 1
                     shapes_done[shape_id] = old_id
-                    j += 1
-                # needed for saving many shapes in same roi
+                # needed for saving multiple shapes in same roi
                 # otherwise the update routine keeps only the modified
                 for e in existing_rois.copyShapes():
                     found = shapes_done.get(e.getId().getValue(), None)
                     if found is None:
                         decoded_roi.addShape(e)
-                # finally persist them
-                update_service.saveAndReturnObject(decoded_roi)
+                # persist deletions and modifications
+                decoded_roi = update_service.saveAndReturnObject(decoded_roi)
+                # now append the new shapes to the existing ones
+                # and persist them
+                for n in shapes_to_be_added:
+                    decoded_roi.addShape(n['shape'])
+                decoded_roi = update_service.saveAndReturnObject(decoded_roi)
+                nr_of_existing_shapes = decoded_roi.sizeOfShapes()
+                nr_of_added_shapes = len(shapes_to_be_added)
                 # if we deleted all shapes in the roi => remove it as well
-                if existing_rois.sizeOfShapes() == shapes_deleted:
+                if nr_of_existing_shapes == 0:
                     conn.deleteObjects("Roi", [roi_id], wait=False)
-                # update the list that contains the success ids
+                elif nr_of_added_shapes > 0:
+                    # gather new ids for newly persisted shapes
+                    start = nr_of_existing_shapes - nr_of_added_shapes
+                    for n in shapes_to_be_added:
+                        n_id = str(roi_id) + ":" +  \
+                            str(decoded_roi.getShape(start).getId().getValue())
+                        ret_ids[str(n['oldId'])] = n_id
+                        start += 1
+                # add to the list that contains the successfully persisted ids
                 for x in shapes_done.values():
                     ret_ids[x] = x
     except Exception as marshalOrPersistenceException:
