@@ -205,7 +205,8 @@ ome.ol3.source.Regions = function(viewerReference, options) {
          // define request settings
          var reqParams = {
              "server" : scope.viewer_.getServer(),
-             "uri" : '../request_rois/' + scope.viewer_.getId(),
+             "uri" : scope.viewer_.getPrefixedURI(ome.ol3.PLUGIN_PREFIX) + 
+                        '/request_rois/' + scope.viewer_.getId(),
              "success" : success,
              "error" : function(error) {
                  console.error("Error retrieving regions info for id: " +

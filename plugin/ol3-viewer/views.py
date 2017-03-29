@@ -1,7 +1,8 @@
 from django.shortcuts import render
 from django.http import JsonResponse
-from omeroweb.decorators import login_required
+from django.core.urlresolvers import reverse
 from django.http import HttpResponse
+from omeroweb.decorators import login_required
 
 import omero_marshal
 from omero.model import MaskI
@@ -16,11 +17,11 @@ def index(request, iid=None, conn=None, **kwargs):
 def plugin(request, iid=None, conn=None, debug=False, **kwargs):
     if iid is None:
         return HttpResponse("Viewer needs an image id!")
-
     params = {}
     for key in request.GET:
         if request.GET[key]:
             params[str(key).upper()] = str(request.GET[key])
+    params['PLUGIN_PREFIX'] = reverse('ol3-viewer-index')
 
     return render(request, 'ol3-viewer/plugin.html',
                   {'image_id': iid, 'debug': debug, 'params': params})
