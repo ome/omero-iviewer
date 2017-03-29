@@ -117,13 +117,13 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                 var unattached =
                     typeof this.opts['unattached'] === 'boolean' &&
                     this.opts['unattached'];
-                event.feature['theT'] =
+                event.feature['TheT'] =
                     unattached ?
                         -1 : this.regions_.viewer_.getDimensionIndex('t');
-                event.feature['theZ'] =
+                event.feature['TheZ'] =
                     unattached ?
                         -1 : this.regions_.viewer_.getDimensionIndex('z');
-                event.feature['theC'] = -1;
+                event.feature['TheC'] = -1;
 
                 // apply style function after setting a default style
                 event.feature.setStyle(this.default_style_);
@@ -266,20 +266,20 @@ ome.ol3.interaction.Draw.prototype.setDefaultDrawingStyle = function(shape) {
 
     // determine fill and stroke using defaults if not supplied
     var defaultFill =
-        typeof shape['fillColor'] === 'string' &&
-        typeof shape['fillAlpha'] === 'number' ?
-            ome.ol3.utils.Conversion.convertHexColorFormatToObject(
-                shape['fillColor'], shape['fillAlpha']) : null;
+        typeof shape['FillColor'] === 'number' ?
+            ome.ol3.utils.Conversion.convertSignedIntegerColorObject(
+                shape['FillColor']) : null;
     if (defaultFill === null) defaultFill = transWhite;
     else defaultFill =
         ome.ol3.utils.Conversion.convertColorObjectToRgba(defaultFill);
     var defaultStroke = {
-        'color': typeof shape['strokeColor'] === 'string' &&
-                typeof shape['strokeAlpha'] === 'number' ?
-                    ome.ol3.utils.Conversion.convertHexColorFormatToObject(
-                        shape['strokeColor'], shape['strokeAlpha']) : null,
-        'width': typeof shape['strokeWidth'] === 'number' ?
-                    shape['strokeWidth'] : 1,
+        'color': typeof shape['StrokeColor'] === 'number' ?
+                    ome.ol3.utils.Conversion.convertSignedIntegerColorObject(
+                        shape['StrokeColor']) : null,
+        'width': (typeof shape_info['StrokeWidth'] === 'object' &&
+                  shape_info['StrokeWidth'] !== null &&
+                  typeof shape_info['StrokeWidth']['Value'] === 'number') ?
+                      shape_info['StrokeWidth']['Value'] : 1,
         'lineCap': "butt",
         'lineJoin': "miter",
         'miterLimit': 20

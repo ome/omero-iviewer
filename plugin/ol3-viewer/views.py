@@ -58,7 +58,7 @@ def request_rois(request, iid, conn=None, **kwargs):
                 rois_to_be_returned['shapes'].append(encoded_shape)
                 ret.append(rois_to_be_returned)
 
-        return JsonResponse({"rois": ret})
+        return JsonResponse(ret, safe=False)
     except Exception as someException:
         return JsonResponse({"error": "Failed to request/marshal rois: " +
                             repr(someException)})

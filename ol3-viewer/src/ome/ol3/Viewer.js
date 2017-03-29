@@ -1373,15 +1373,15 @@ ome.ol3.Viewer.prototype.generateShapes =
         for (var i=0;i<generatedShapes.length;i++) {
             var f = generatedShapes[i];
             // and associate them to the proper dims
-            f['theZ'] =
+            f['TheZ'] =
                 random_placement ? theDims[0]['z'] : theDims[i]['z'];
-            f['theT'] =
+            f['TheT'] =
                 random_placement ? theDims[0]['t'] : theDims[i]['t'];
             var theC =
                 random_placement ? theDims[0]['c'] :
                     (typeof theDims[i]['c'] === 'number' ?
                         theDims[i]['c'] : -1);
-            f['theC'] = theC;
+            f['TheC'] = theC;
             // in case we got created in a rotated view
             var res = this.viewer_.getView().getResolution();
             var rot = this.viewer_.getView().getRotation();
@@ -1460,7 +1460,7 @@ ome.ol3.Viewer.prototype.getSmallestViewExtent = function() {
 /**
  * Modifies the selected shapes with the given shape info, e.g.
  * <pre>
- * {"type" : "label", textValue: 'changed', fontSize: 15, fontStyle: 'italic'}
+ * {"type" : "label", Text: 'changed', FontSize: { Value: 15 }, FontStyle: 'italic'}
  * </pre>
  *
  * @param {Object} shape_info the shape info as received from the json
