@@ -79,30 +79,30 @@ export default class RegionsList extends EventSubscriber {
     registerObserver() {
         this.unregisterObserver();
 
+        let createObserver = () => {
+            this.observer = this.bindingEngine.propertyObserver(
+                this.regions_info, 'shape_to_be_drawn').subscribe(
+                    (newValue, oldValue) => {
+                        if (newValue === null) {
+                            $(".regions-table").removeClass("disabled-color");
+                            $(".regions-table").prop("disabled", false);
+                        } else {
+                            $(".regions-table").addClass("disabled-color");
+                            $(".regions-table").prop("disabled", true);
+                        }
+            });
+        };
+
         if (this.regions_info === null) {
             this.observer =
                 this.bindingEngine.propertyObserver(this, 'regions_info')
                     .subscribe((newValue, oldValue) => {
                         if (oldValue === null && newValue) {
                             this.observer.dispose();
-                            this.observer = this.bindingEngine.propertyObserver(
-                                this.regions_info, 'shape_to_be_drawn').subscribe(
-                                    (newValue, oldValue) => {
-                                        if (newValue === null) {
-                                            $(".regions-table").removeClass(
-                                                    "disabled-color");
-                                            $(".regions-table").prop(
-                                                    "disabled", false);
-                                        } else {
-                                            $(".regions-table").addClass(
-                                                    "disabled-color");
-                                            $(".regions-table").prop(
-                                                    "disabled", true);
-                                        }
-                            });
+                            createObserver();
                         }
                 });
-        }
+        } else createObserver();
     }
 
     /**

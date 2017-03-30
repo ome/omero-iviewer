@@ -67,25 +67,29 @@ export default class RegionsDrawing extends EventSubscriber {
     registerObserver() {
         this.unregisterObserver();
 
+        let createObserver = () => {
+            this.observer = this.bindingEngine.propertyObserver(
+                this.regions_info, 'drawing_mode')
+                    .subscribe(
+                        (newValue, oldValue) => {
+                            let idx =
+                                this.supported_shapes.indexOf(
+                                    this.regions_info.shape_to_be_drawn);
+                            if (idx < 0) return;
+                            this.onDrawShape(idx, true);
+                });
+        };
+
         if (this.regions_info === null) {
             this.observer =
                 this.bindingEngine.propertyObserver(this, 'regions_info')
                     .subscribe((newValue, oldValue) => {
                         if (oldValue === null && newValue) {
                             this.observer.dispose();
-                            this.observer = this.bindingEngine.propertyObserver(
-                                this.regions_info, 'drawing_mode')
-                                    .subscribe(
-                                        (newValue, oldValue) => {
-                                            let idx =
-                                                this.supported_shapes.indexOf(
-                                                    this.regions_info.shape_to_be_drawn);
-                                            if (idx < 0) return;
-                                            this.onDrawShape(idx, true);
-                                });
+                            createObserver();
                         }
                 });
-        }
+        } else createObserver();
     }
 
     /**

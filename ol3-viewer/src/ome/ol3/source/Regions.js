@@ -656,14 +656,9 @@ ome.ol3.source.Regions.prototype.setProperty =
             // as well as the state for removed, modified and rollback deletes
             var presentState = null;
             var hasSelect = (this.select_ instanceof ome.ol3.interaction.Select);
-            if (hasSelect && property === 'selected' && value) {
-                this.select_.getFeatures().getArray().push(this.idIndex_[s]);
-                this.select_.getFeatures().updateLength_();
-                eventProperty = "selected";
-            } else if (hasSelect && !value &&
-                        (property === 'selected' || property === 'visible')) {
-                this.select_.toggleFeatureSelection(this.idIndex_[s], false);
-                eventProperty = "selected";
+            if (hasSelect &&
+                (property === 'selected' || property === 'visible' && !value)) {
+                this.select_.toggleFeatureSelection(this.idIndex_[s], value);
             } else if (property === 'state') {
                 presentState = this.idIndex_[s][property];
                 if (value === ome.ol3.REGIONS_STATE.REMOVED) {
@@ -713,7 +708,7 @@ ome.ol3.source.Regions.prototype.setProperty =
 
     var config_id = this.viewer_.getTargetId();
     var eventbus = this.viewer_.eventbus_;
-    if (config_id && eventbus) // publish
+    if (config_id && eventbus && property === 'state') // publish
         setTimeout(function() {
             eventbus.publish("REGIONS_PROPERTY_CHANGED",
                 {"config_id": config_id,
