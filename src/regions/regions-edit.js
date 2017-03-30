@@ -353,7 +353,7 @@ export default class RegionsEdit {
                 this.regions_info.selected_shapes.length-1;
         this.last_selected =
             lastId === -1 ? null :
-            this.regions_info.data.get(
+            this.regions_info.getShape(
                 this.regions_info.selected_shapes[lastId]);
     }
 
@@ -580,7 +580,7 @@ export default class RegionsEdit {
             REGIONS_GENERATE_SHAPES,
             {config_id : this.regions_info.image_info.config_id,
                 shapes : this.regions_info.copied_shapes,
-                number : 1, random : true, hist_id : hist_id,
-                propagated: true});
+                number : 1, random : true, hist_id : hist_id
+            });
     }
 }

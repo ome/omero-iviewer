@@ -275,15 +275,14 @@ ome.ol3.utils.Regions.generateRegions =
             newFeature['type'] = prototypeFeature['type'];
             newFeature.setStyle(
                 ome.ol3.utils.Style.cloneStyle(prototypeFeature.getStyle()));
-            // we generate an id of the form -1:uid
+            // we generate an id of the form -1:-uid
             if (typeof shape_info['shape_id'] !== 'string' ||
                 shape_info['shape_id'].length === 0 ||
                 shape_info['shape_id'].indexOf(":") === -1)
                     newFeature.setId(
-                        (typeof shape_info['roi_id'] === 'number' &&
-                        shape_info['roi_id'] < 0 ?
+                        (typeof shape_info['roi_id'] === 'number' ?
                             "" + shape_info['roi_id'] + ":" : "-1:") +
-                                ol.getUid(newFeature));
+                                (-ol.getUid(newFeature)));
             else newFeature.setId(shape_info['shape_id']); // state: added
                 newFeature['state'] = ome.ol3.REGIONS_STATE.ADDED;
 

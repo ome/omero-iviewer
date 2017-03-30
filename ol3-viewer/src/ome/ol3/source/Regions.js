@@ -655,12 +655,14 @@ ome.ol3.source.Regions.prototype.setProperty =
             // as well as the state for removed, modified and rollback deletes
             var presentState = null;
             var hasSelect = (this.select_ instanceof ome.ol3.interaction.Select);
-            if (hasSelect && property === 'selected' && value)
-                this.select_.getFeatures().push(this.idIndex_[s]);
-            else if (hasSelect && !value &&
+            if (hasSelect && property === 'selected' && value) {
+                this.select_.getFeatures().getArray().push(this.idIndex_[s]);
+                this.select_.getFeatures().updateLength_();
+                eventProperty = "selected";
+            } else if (hasSelect && !value &&
                         (property === 'selected' || property === 'visible')) {
-                this.select_.toggleFeatureSelection(
-                    this.idIndex_[s], false);
+                this.select_.toggleFeatureSelection(this.idIndex_[s], false);
+                eventProperty = "selected";
             } else if (property === 'state') {
                 presentState = this.idIndex_[s][property];
                 if (value === ome.ol3.REGIONS_STATE.REMOVED) {

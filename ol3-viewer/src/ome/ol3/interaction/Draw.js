@@ -109,7 +109,7 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                 event.feature.setId(
                     (typeof this.roi_id_ === 'number' && this.roi_id_ < 0 ?
                         "" + this.roi_id_ + ":" :
-                        "-1:") + ol.getUid(event.feature));
+                        "-1:") + (-ol.getUid(event.feature)));
                 event.feature['state'] = ome.ol3.REGIONS_STATE.ADDED;
                 event.feature['type'] = shape_type;
 
