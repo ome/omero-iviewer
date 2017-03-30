@@ -60,9 +60,7 @@
         <hr />
         <regions-drawing regions_info.bind="regions_info"></regions-drawing>
 
-        <regions-list
-            class="${regions_info.shape_to_be_drawn !== null ? 'disabled-color' : ''}"
-            regions_info.bind="regions_info"></regions-list>
+        <regions-list regions_info.bind="regions_info"></regions-list>
 
         <regions-drawing-mode
             show.bind="regions_info.image_info.dimensions.max_z > 1 ||

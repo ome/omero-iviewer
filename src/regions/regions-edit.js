@@ -407,9 +407,9 @@ export default class RegionsEdit {
      * @memberof RegionsEdit
      */
     adjustEditWidgets() {
-        this.last_selected =
-            this.regions_info.data.get(
-                this.regions_info.getLastSelectedShapeId());
+        let ids = this.regions_info.getLastSelectedShapeIds();
+        let roi = ids !== null ? this.regions_info.data.get(ids.roi_id) : null;
+        this.last_selected = roi ? roi.shapes.get(ids.shape_id) : null;
         let type =
             this.last_selected ? this.last_selected.type.toLowerCase() : null;
 
@@ -722,7 +722,7 @@ export default class RegionsEdit {
             REGIONS_GENERATE_SHAPES,
             {config_id : this.regions_info.image_info.config_id,
                 shapes : this.regions_info.copied_shapes,
-                number : 1, random : true, hist_id : hist_id,
-                propagated: true});
+                number : 1, random : true, hist_id : hist_id
+            });
     }
 }

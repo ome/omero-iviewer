@@ -555,9 +555,11 @@ thead, tbody {
     overflow: hidden;
 }
 
-
-.shape-id {
-    width: 75px;
+.roi-toggle  {
+    width: 15px;
+}
+.roi-id, .shape-id {
+    width: 50px;
 }
 
 .shape-z {

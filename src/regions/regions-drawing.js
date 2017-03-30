@@ -67,16 +67,25 @@ export default class RegionsDrawing extends EventSubscriber {
     registerObserver() {
         this.unregisterObserver();
 
-        this.observer = this.bindingEngine.propertyObserver(
-            this.regions_info, 'drawing_mode')
-                .subscribe(
-                    (newValue, oldValue) => {
-                        let idx =
-                            this.supported_shapes.indexOf(
-                                this.regions_info.shape_to_be_drawn);
-                        if (idx < 0) return;
-                        this.onDrawShape(idx, true);
-        });
+        if (this.regions_info === null) {
+            this.observer =
+                this.bindingEngine.propertyObserver(this, 'regions_info')
+                    .subscribe((newValue, oldValue) => {
+                        if (oldValue === null && newValue) {
+                            this.observer.dispose();
+                            this.observer = this.bindingEngine.propertyObserver(
+                                this.regions_info, 'drawing_mode')
+                                    .subscribe(
+                                        (newValue, oldValue) => {
+                                            let idx =
+                                                this.supported_shapes.indexOf(
+                                                    this.regions_info.shape_to_be_drawn);
+                                            if (idx < 0) return;
+                                            this.onDrawShape(idx, true);
+                                });
+                        }
+                });
+        }
     }
 
     /**
@@ -101,8 +110,33 @@ export default class RegionsDrawing extends EventSubscriber {
         // if the event is for another config, forget it...
         if (params.config_id !== this.regions_info.image_info.config_id) return;
 
+        // set default for param drawn
+        if (typeof params.drawn !== 'boolean') params.drawn = false;
+
+        // the roi we belong to
+        let roi_id = params.drawn ? params.roi_id : null;
+
         let generatedShapes = [];
-        if (Misc.isArray(params.shapes))
+        if (Misc.isArray(params.shapes) && params.shapes.length > 0) {
+            // when entering after drawing we'll have a roi_id in the params
+            // which is not the case if we propagate
+            if (roi_id === null) {
+                let ids =
+                    Converters.extractRoiAndShapeId(params.shapes[0].oldId);
+                roi_id = ids.roi_id;
+            }
+            // check whether we need a new shapes map:
+            // this is the case for newly drawn shapes but not propagated ones
+            let shapes = this.regions_info.data.get(roi_id);
+            if (typeof shapes !== 'undefined' && shapes.shapes instanceof Map)
+                shapes = shapes.shapes;
+            else {
+                shapes = new Map();
+                this.regions_info.data.set(roi_id, {
+                    shapes: shapes, show: true, deleted: 0
+                });
+            }
+            // add to regions data
             params.shapes.map(
                 (shape) => {
                     let newShape =
@@ -115,10 +149,11 @@ export default class RegionsDrawing extends EventSubscriber {
                         newShape.deleted = false;
                         newShape.modified = true;
                         // add to map
-                        this.regions_info.data.set(newShape.shape_id, newShape);
+                        shapes.set(newShape.id, newShape);
                         generatedShapes.push(Object.assign({}, newShape));
                     }
                 });
+        }
 
         // add a history entry for the drawn shapes, if we have at least one
         // and no directive to not add a history record
@@ -132,10 +167,6 @@ export default class RegionsDrawing extends EventSubscriber {
         }
 
         // we only continue if we have been drawn and intend to propagate
-        // (i.e. drawing mode other that z and t viewed)
-        // these checks are vital otherwise we risk a chain reaction
-        if (typeof params.drawn !== 'boolean') params.drawn = false;
-        // we continue drawing with the same shape
         if (params.drawn)
             this.onDrawShape(
                 this.supported_shapes.indexOf(
@@ -143,6 +174,7 @@ export default class RegionsDrawing extends EventSubscriber {
         if (!params.drawn || len === 0) return;
 
         // collect dimensions for propagation
+        // for drawing mode other that z and t viewed
         let newShape = Object.assign({}, generatedShapes[len-1]);
         let theDims =
             Utils.getDimensionsForPropagation(
@@ -152,19 +184,20 @@ export default class RegionsDrawing extends EventSubscriber {
         // for grouping propagated shapes within the same roi
         // we need a common roi. if we have one from the params we use it
         // otherwise we get a new one
-        let roi_id =
+        roi_id =
             (typeof params.roi_id === 'number' && params.roi_id < 0) ?
                 params.roi_id : this.regions_info.getNewRegionsId();
 
         // trigger generation
         this.context.publish(
             REGIONS_GENERATE_SHAPES,
-            {config_id : this.regions_info.image_info.config_id,
+            {
+                config_id : this.regions_info.image_info.config_id,
                 shapes : [newShape],
                 number : theDims.length,
                 random : false, theDims : theDims,
-                hist_id : params.hist_id, roi_id: roi_id,
-                propagated: true});
+                hist_id : params.hist_id, roi_id: roi_id
+            });
     }
 
     /**

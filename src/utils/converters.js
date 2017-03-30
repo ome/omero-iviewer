@@ -124,6 +124,33 @@ export class Converters {
     }
 
     /**
+     * Extracts the individual roi and shape id from a combined id (roi:shape)
+     *
+     * @static
+     * @param {string} id the id in the format roi_id:shape_id, e.g. 2:4
+     * @return {Object} an object containing the properties roi_id and shape_id
+     */
+     static extractRoiAndShapeId(id) {
+        let ret = {
+            roi_id: null,
+            shape_id: null
+        };
+        if (typeof id !== 'string' || id.length < 3) return ret;
+
+        // dissect roi:shape id
+        let colon = id.indexOf(':');
+        if (colon < 1) return ret;
+
+        // check for numeric
+        let roi_id = parseInt(id.substring(0, colon));
+        if (!isNaN(roi_id)) ret.roi_id = roi_id;
+        let shape_id = parseInt(id.substring(colon+1));
+        if (!isNaN(shape_id)) ret.shape_id = shape_id;
+
+        return ret;
+    }
+
+    /**
      * Makes omero marshal generated objects backwards compatible
      *
      * @static
@@ -140,18 +167,16 @@ export class Converters {
 
         // create shape copy in 'webgateway format'
         let compatibleShape = {type : type}; // type
-        if (typeof shape.oldId === 'string' && shape.oldId.indexOf(":") > 0) {
-            compatibleShape.shape_id = shape.oldId; // dissect id
-            compatibleShape.id =
-                parseInt(
-                    compatibleShape.shape_id.substring(
-                        compatibleShape.shape_id.indexOf(":") + 1));
+        let ids = Converters.extractRoiAndShapeId(shape.oldId);
+        if (ids.shape_id !== null) {
+            compatibleShape.shape_id = shape.oldId;
+            compatibleShape.id = ids.shape_id;
         }
 
         // loop over individual properties
         for (let p in shape) {
             // we skip those
-            if (p === '@type' || p === 'oldId') continue;
+            if (p === '@type' || p === 'oldId' || p === '@id') continue;
             // first letter will be lower case converted
             let pComp = p[0].toLowerCase() + p.substring(1);
             let value = shape[p];
