@@ -65,7 +65,7 @@ export class Utils {
             let zIndex = useZs[i];
             for (let j=0;j<useTs.length;j++) {
                 let tIndex = useTs[j];
-                if (zIndex === presentZ && tIndex === presentT) continue;
+                //if (zIndex === presentZ && tIndex === presentT) continue;
                 theDims.push({"z" : zIndex, "t": tIndex});
             }
         }

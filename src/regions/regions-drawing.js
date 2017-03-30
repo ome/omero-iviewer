@@ -116,6 +116,7 @@ export default class RegionsDrawing extends EventSubscriber {
 
         // set default for param drawn
         if (typeof params.drawn !== 'boolean') params.drawn = false;
+        let add = typeof params.add !== 'boolean' || params.add;
 
         // the roi we belong to
         let roi_id = params.drawn ? params.roi_id : null;
@@ -152,8 +153,8 @@ export default class RegionsDrawing extends EventSubscriber {
                         newShape.selected = false;
                         newShape.deleted = false;
                         newShape.modified = true;
-                        // add to map
-                        shapes.set(newShape.id, newShape);
+                        // add to map (if flag is true)
+                        if (add) shapes.set(newShape.id, newShape);
                         generatedShapes.push(Object.assign({}, newShape));
                     }
                 });
@@ -164,7 +165,7 @@ export default class RegionsDrawing extends EventSubscriber {
         if (typeof params.add_history !== 'boolean') params.add_history = true;
         if (typeof params.hist_id !== 'number') params.hist_id = -1;
         let len = generatedShapes.length;
-        if (len !== 0 && params.add_history) {
+        if (len !== 0 && add && params.add_history) {
             this.regions_info.history.addHistory(
                 params.hist_id, this.regions_info.history.action.SHAPES,
                 { diffs: generatedShapes, old_vals: false, new_vals: true});

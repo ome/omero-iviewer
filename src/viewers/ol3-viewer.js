@@ -559,6 +559,8 @@ export default class Ol3Viewer extends EventSubscriber {
         }
 
         // gather unattached dimensions (if any)
+        // and decide if we add the drawn shape
+        let add = true;
         let unattached = [];
         switch (this.image_config.regions_info.drawing_mode) {
             case REGIONS_DRAWING_MODE.NEITHER_Z_NOR_T:
@@ -570,6 +572,11 @@ export default class Ol3Viewer extends EventSubscriber {
             case REGIONS_DRAWING_MODE.NOT_T:
                 unattached.push('t');
                 break;
+            case REGIONS_DRAWING_MODE.ALL_Z_AND_T:
+            case REGIONS_DRAWING_MODE.ALL_Z:
+            case REGIONS_DRAWING_MODE.ALL_T:
+            case REGIONS_DRAWING_MODE.CUSTOM_Z_AND_T:
+                add = false;
         }
 
         // draw shape
@@ -577,7 +584,8 @@ export default class Ol3Viewer extends EventSubscriber {
             params.shape, params.roi_id,
             {
                 hist_id: params.hist_id,
-                unattached: unattached
+                unattached: unattached,
+                add: add
             });
     }
 
