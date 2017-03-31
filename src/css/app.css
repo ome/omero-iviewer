@@ -540,7 +540,9 @@ thead, tbody {
     box-sizing: border-box;
     white-space: nowrap;
     text-align: center;
-    border: solid 2px rgba(255,255,255,0);
+    border-style: solid;
+    border-color: rgba(255,255,255,0);
+    border-width: 0px 2px 0px 2px;
     border-collapse: collapse;
 }
 .regions-table td div {
