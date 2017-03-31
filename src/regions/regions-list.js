@@ -29,6 +29,13 @@ export default class RegionsList extends EventSubscriber {
                 (params={}) => this.actUponSelectionChange(params)]];
 
     /**
+     * the list of observers
+     * @memberof RegionsEdit
+     * @type {Array.<Object>}
+     */
+    observers = [];
+
+    /**
      * a flag for the regions list interaction
      * @memberof RegionsList
      * @type {boolean}
@@ -68,60 +75,58 @@ export default class RegionsList extends EventSubscriber {
      */
     bind() {
         this.subscribe();
-        this.registerObserver();
+        this.registerObservers();
     }
 
     /**
-     * Registers observers to watch whether we are in drawing mode or not
+     * Registers observers
      *
      * @memberof RegionsList
      */
-    registerObserver() {
-        this.unregisterObserver();
-
+    registerObservers() {
         let createObserver = () => {
-            this.bindingEngine.collectionObserver(
-                this.regions_info.data).subscribe(
-                    (newValue, oldValue) => {
-                        setTimeout(
-                            this.syncColumnsWidthWithHeader, 25);
-            });
+            this.unregisterObservers();
 
-            this.observer = this.bindingEngine.propertyObserver(
-                this.regions_info, 'shape_to_be_drawn').subscribe(
-                    (newValue, oldValue) => {
-                        if (newValue === null) {
-                            $(".regions-table").removeClass("disabled-color");
-                            $(".regions-table").prop("disabled", false);
-                        } else {
-                            $(".regions-table").addClass("disabled-color");
-                            $(".regions-table").prop("disabled", true);
+            this.observers.push(
+                this.bindingEngine.collectionObserver(
+                    this.regions_info.data).subscribe(
+                        (newValue, oldValue) => {
+                            setTimeout(this.syncColumnsWidthWithHeader, 25);
                         }
-            });
+            ));
+            this.observers.push(
+                this.bindingEngine.propertyObserver(
+                    this.regions_info, 'shape_to_be_drawn').subscribe(
+                        (newValue, oldValue) => {
+                            if (newValue === null) {
+                                $(".regions-table").removeClass("disabled-color");
+                                $(".regions-table").prop("disabled", false);
+                            } else {
+                                $(".regions-table").addClass("disabled-color");
+                                $(".regions-table").prop("disabled", true);
+                            }
+                        }
+            ));
         };
 
         if (this.regions_info === null) {
-            this.observer =
-                this.bindingEngine.propertyObserver(this, 'regions_info')
-                    .subscribe((newValue, oldValue) => {
-                        if (oldValue === null && newValue) {
-                            this.observer.dispose();
-                            createObserver();
+            this.observers.push(
+                    this.bindingEngine.propertyObserver(this, 'regions_info')
+                        .subscribe((newValue, oldValue) => {
+                            if (oldValue === null && newValue) createObserver();
                         }
-                });
+            ));
         } else createObserver();
     }
 
     /**
-     * Unregisters observer
+     * Unregisters observers
      *
      * @memberof RegionsList
      */
-    unregisterObserver() {
-        if (this.observer) {
-            this.observer.dispose();
-            this.observer = null;
-        }
+    unregisterObservers() {
+        this.observers.map((o) => o.dispose());
+        this.observers = [];
     }
 
     /**
@@ -424,6 +429,6 @@ export default class RegionsList extends EventSubscriber {
      */
     unbind() {
         this.unsubscribe();
-        this.unregisterObserver();
+        this.unregisterObservers();
     }
 }

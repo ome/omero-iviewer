@@ -73,6 +73,59 @@ export class Utils {
     }
 
     /**
+     * Parses a string for dimension input incl. ranges such as 1-3 as
+     * well as well as comma delimited input eliminating duplicates
+     * as well as values that are below 0 or above max
+     *
+     * @static
+     * @param {string} some_input a string containing dimension info
+     * @param {number} max the upper bound for the dimension
+     * @return {Array.<number>} an array of numbers
+     */
+    static parseDimensionInput(some_input, max) {
+        if (typeof some_input !== 'string' || typeof max !== 'number' || max <=0)
+            return [];
+        some_input = some_input.replace(/\s/g, '');
+        if (some_input.length === 0) return [];
+
+        let tokens = some_input.split(","); // tokenize by ,
+        let vals = [];
+        tokens.map((t) => {
+            let potentialDashPos = t.indexOf("-");
+            if (potentialDashPos === -1) {// single number assumed
+                let temp = parseInt(t);
+                if (typeof temp === 'number' && !isNaN(temp) &&
+                        temp > 0 && temp <= max) vals.push(temp);
+            } else { // we might have a range
+                let start = parseInt(t.substring(0, potentialDashPos));
+                let end = parseInt(t.substring(potentialDashPos+1));
+                if (typeof start === 'number' && typeof end === 'number' &&
+                    !isNaN(start) && !isNaN(end) && start <= end) {
+                         // equal: we increment end
+                        if (start === end) end++;
+                        else {
+                            // we do have a 'range'
+                            for (let i=start;i<end;i++)
+                                if (i > 0 && i <= max) vals.push(i);
+                        }
+                    }
+            }
+        });
+        // eliminating duplicates and decrement by 1 to get internal dim indices
+        vals.sort();
+        let previous = -1;
+        let ret = [];
+        for (let x=0;x<vals.length;x++) {
+            let present = vals[x];
+            if (present === previous) continue;
+            previous = present;
+            ret.push(present-1);
+        }
+
+        return ret;
+     }
+
+    /**
      * Creates a callback function that is intended to be called per shape
      * and modify the properties according to the new values
      *

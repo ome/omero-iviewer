@@ -2,7 +2,7 @@
     <require from="./regions-drawing"></require>
     <hr />
     <div style="min-width: 200px;">
-        <span class="collapsible-regions-header">Drawing & Propagation</span>
+        <span class="collapsible-regions-header">Drawing</span>
         <div click.delegate="toggleRegionsDrawingMode()"
             class="regions-drawing-mode-toggler collapse-up"
             style="margin-right: 5px;">
@@ -89,7 +89,8 @@
                 <div show.bind="regions_info.image_info.dimensions.max_z > 1">
                     <span class="aligned-text-input">Z:</span>
                     <input type="input"
-                        change.delegate="onDimensionInputChange('z', $event.target)"
+                        id="attachment-z-input"
+                        change.delegate="onDimensionInputChange('z', $event.target.value)"
                         style="filter:alpha(opacity=65);opacity:.65;
                                -webkit-box-shadow:none;box-shadow:none;"
                         focus.delegate="onDimensionInputFocus($event.target)"
@@ -98,7 +99,8 @@
                 <div show.bind="regions_info.image_info.dimensions.max_t > 1">
                     <span class="aligned-text-input">T:</span>
                     <input type="input"
-                        change.delegate="onDimensionInputChange('t', $event.target)"
+                        id="attachment-t-input"
+                        change.delegate="onDimensionInputChange('t', $event.target.value)"
                         focus.delegate="onDimensionInputFocus($event.target)"
                         style="filter:alpha(opacity=65);opacity:.65;
                                -webkit-box-shadow:none;box-shadow:none;"

@@ -5,18 +5,19 @@ import {Utils} from '../utils/regions';
 import {Converters} from '../utils/converters';
 import {REGIONS_MODE} from '../utils/constants';
 import {
-    REGIONS_COPY_SHAPES, REGIONS_GENERATE_SHAPES,
-    REGIONS_MODIFY_SHAPES, REGIONS_SET_PROPERTY
+    EventSubscriber, IMAGE_DIMENSION_CHANGE, REGIONS_COPY_SHAPES,
+    REGIONS_GENERATE_SHAPES, REGIONS_MODIFY_SHAPES, REGIONS_SET_PROPERTY
 } from '../events/events';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {spectrum} from 'spectrum-colorpicker';
 
 /**
  * Represents the regions section in the right hand panel
+ * @extends {EventSubscriber}
  */
 @customElement('regions-edit')
 @inject(Context, Element, BindingEngine)
-export default class RegionsEdit {
+export default class RegionsEdit extends EventSubscriber {
     /**
      *a bound reference to regions_info
      * @memberof RegionsEdit
@@ -34,6 +35,13 @@ export default class RegionsEdit {
         { key: 67, func: this.copyShapes},                          // ctrl - c
         { key: 86, func: this.pasteShapes}                          // ctrl - v
     ];
+
+    /**
+     * events we subscribe to
+     * @memberof RegionsEdit
+     * @type {Array.<string,function>}
+     */
+    sub_list = [[IMAGE_DIMENSION_CHANGE, () => this.adjustEditWidgets()]];
 
     /**
      * @memberof RegionsEdit
@@ -55,6 +63,7 @@ export default class RegionsEdit {
      * @param {BindingEngine} bindingEngine the BindingEngine (injected)
      */
     constructor(context, element, bindingEngine) {
+        super(context.eventbus);
         this.context = context;
         this.element = element;
         this.bindingEngine = bindingEngine;
@@ -69,6 +78,7 @@ export default class RegionsEdit {
      */
     bind() {
         this.registerObservers();
+        this.subscribe();
     }
 
     /**
@@ -80,6 +90,7 @@ export default class RegionsEdit {
      */
     unbind() {
         this.unregisterObservers();
+        this.unsubscribe();
     }
 
     /**

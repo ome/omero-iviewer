@@ -4,6 +4,7 @@ import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework'
 import Misc from '../utils/misc';
 import {Utils} from '../utils/regions';
 import {Converters} from '../utils/converters';
+import {REGIONS_DRAWING_MODE} from '../utils/constants';
 import {
     REGIONS_DRAW_SHAPE, REGIONS_SHAPE_GENERATED,
     REGIONS_GENERATE_SHAPES, REGIONS_CHANGE_MODES, EventSubscriber
@@ -179,8 +180,16 @@ export default class RegionsDrawing extends EventSubscriber {
         if (!params.drawn || len === 0) return;
 
         // collect dimensions for propagation
-        // for drawing mode other that z and t viewed
         let newShape = Object.assign({}, generatedShapes[len-1]);
+        if (this.regions_info.drawing_mode ===
+                REGIONS_DRAWING_MODE.CUSTOM_Z_AND_T)
+            ['z','t'].map((d) => {
+                let v = $("#attachment-" + d + "-input").val();
+                if (v.indexOf("Enter") !== -1) v = "";
+                this.regions_info.drawing_dims[d] =
+                    Utils.parseDimensionInput(v,
+                        this.regions_info.image_info.dimensions['max_' + d]);
+            });
         let theDims =
             Utils.getDimensionsForPropagation(
                 this.regions_info, newShape.theZ, newShape.theT);
