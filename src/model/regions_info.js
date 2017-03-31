@@ -181,7 +181,7 @@ export default class RegionsInfo extends EventSubscriber {
 
         // if we do not find a matching shape for the id => bye
         let shape = this.getShape(id);
-        if (typeof shape === null) return;
+        if (shape === null) return;
         let ids = Converters.extractRoiAndShapeId(id);
         let roi = this.data.get(ids.roi_id);
 
