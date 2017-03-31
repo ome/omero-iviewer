@@ -80,6 +80,13 @@ export default class RegionsList extends EventSubscriber {
         this.unregisterObserver();
 
         let createObserver = () => {
+            this.bindingEngine.collectionObserver(
+                this.regions_info.data).subscribe(
+                    (newValue, oldValue) => {
+                        setTimeout(
+                            this.syncColumnsWidthWithHeader, 25);
+            });
+
             this.observer = this.bindingEngine.propertyObserver(
                 this.regions_info, 'shape_to_be_drawn').subscribe(
                     (newValue, oldValue) => {
@@ -312,7 +319,8 @@ export default class RegionsList extends EventSubscriber {
      * @memberof RegionsList
      */
     selectShape(id, selected, event) {
-        if (event.target.tagName.toUpperCase() === 'INPUT') return true;
+        if (event.target.tagName.toUpperCase() === 'INPUT' ||
+            this.regions_info.shape_to_be_drawn !== null) return true;
         let multipleSelection =
             typeof event.ctrlKey === 'boolean' && event.ctrlKey;
         let deselect = multipleSelection && selected;
@@ -334,8 +342,8 @@ export default class RegionsList extends EventSubscriber {
      */
     selectShapes(roi_id, event) {
         if (event.target.className.indexOf("roi_id") !== -1 ||
-            event.target.parentNode.className.indexOf("roi_id") !== -1 )
-                return true;
+            event.target.parentNode.className.indexOf("roi_id") !== -1 ||
+            this.regions_info.shape_to_be_drawn !== null) return true;
 
         let roi = this.regions_info.data.get(roi_id);
         if (typeof roi === 'undefined') return;
@@ -358,6 +366,7 @@ export default class RegionsList extends EventSubscriber {
      * @memberof RegionsList
      */
     toggleShapeVisibility(id, visible, event) {
+        if (this.regions_info.shape_to_be_drawn !== null) return true;
         event.stopPropagation();
         this.context.publish(
            REGIONS_SET_PROPERTY, {
@@ -374,6 +383,7 @@ export default class RegionsList extends EventSubscriber {
      * @memberof RegionsList
      */
     expandOrCollapseRoi(roi_id, event) {
+        if (this.regions_info.shape_to_be_drawn !== null) return true;
         event.stopPropagation();
 
         let roi = this.regions_info.data.get(roi_id);
@@ -381,7 +391,31 @@ export default class RegionsList extends EventSubscriber {
         roi.show = !roi.show;
     }
 
-    /*
+    /**
+     * Synchronizes with of columns (content with header)
+     * @memberof RegionsList
+     */
+    syncColumnsWidthWithHeader() {
+        let colWidths = [];
+        $(".regions-header th").each(
+            (j, col) => colWidths.push($('#' + col.id).width()));
+
+        let tableRows = $(".regions-table tbody").children();
+        tableRows.each((j,row) => {
+            let rowTds = row.childNodes;
+            let i = 0;
+            for (let t=0; t<rowTds.length; t++) {
+                let td = $(rowTds[t]);
+                if (i > colWidths.length ||
+                    typeof td.prop('tagName') !== 'string' ||
+                    td.prop('tagName').toUpperCase() !== 'TD') continue;
+                td.width(colWidths[i]);
+                i++;
+            };
+        });
+    }
+
+    /**
      * Overridden aurelia lifecycle method:
      * called whenever the view is unbound within aurelia
      * in other words a 'destruction' hook that happens after 'detached'

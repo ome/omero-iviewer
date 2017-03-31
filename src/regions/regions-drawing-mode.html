@@ -1,4 +1,5 @@
 <template>
+    <require from="./regions-drawing"></require>
     <hr />
     <div style="min-width: 200px;">
         <span class="collapsible-regions-header">Drawing & Propagation</span>
@@ -9,8 +10,9 @@
     </div>
     <hr />
     <div class="regions-drawing-mode">
+        <regions-drawing regions_info.bind="regions_info"></regions-drawing>
         <div class="row regions-attachment-options">
-            <div>
+            <div style="margin-top: 10px">
                 <div style="float: left;width: 100px;">Attachment:</div>
                 <div class="dropup"
                      style="margin-bottom: 5px;width: 200px;"

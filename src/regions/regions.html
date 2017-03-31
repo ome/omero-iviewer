@@ -1,7 +1,6 @@
 <template>
     <require from="./regions-list"></require>
     <require from="./regions-drawing-mode"></require>
-    <require from="./regions-drawing"></require>
     <require from="./regions-edit"></require>
 
     <div show.bind="
@@ -57,14 +56,13 @@
         <hr />
         <regions-edit regions_info.bind="regions_info"></regions-edit>
 
-        <hr />
-        <regions-drawing regions_info.bind="regions_info"></regions-drawing>
-
-        <regions-list regions_info.bind="regions_info"></regions-list>
-
         <regions-drawing-mode
             show.bind="regions_info.image_info.dimensions.max_z > 1 ||
                        regions_info.image_info.dimensions.max_t > 1"
-            regions_info.bind="regions_info"></regions-drawing-mode>
+            regions_info.bind="regions_info">
+        </regions-drawing-mode>
+
+        <regions-list regions_info.bind="regions_info"></regions-list>
+
     </div>
 </template>

@@ -30,7 +30,7 @@ export default class RegionsInfo extends EventSubscriber {
      * @memberof RegionsInfo
      * @type {Map}
      */
-    data = null;
+    data = new Map();
 
     /**
      * @memberof RegionsInfo
@@ -223,7 +223,6 @@ export default class RegionsInfo extends EventSubscriber {
                 // we want an array
                 if (!Misc.isArray(response)) return;
 
-                this.data = new Map();
                 // traverse results and stuff them into the map
                 response.map((roi) => {
                      // shapes have to be arrays as well
