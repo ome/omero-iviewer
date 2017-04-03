@@ -143,10 +143,7 @@ export default class RegionsInfo extends EventSubscriber {
      */
     unbind() {
         this.unsubscribe();
-        if (this.data instanceof Map) {
-            this.data.forEach((value, key) => value.shapes.clear());
-            this.data.clear();
-        }
+        this.resetRegionsInfo();
         this.history = null;
     }
 
@@ -211,8 +208,8 @@ export default class RegionsInfo extends EventSubscriber {
     requestData(forceUpdate = false) {
         if ((this.ready || !this.image_info.showRegions()) &&
                 !forceUpdate) return;
-        // reset history
-        this.history.resetHistory();
+        // reset regions info data and history
+        this.resetRegionsInfo();
 
         // send request
         $.ajax({
@@ -250,6 +247,19 @@ export default class RegionsInfo extends EventSubscriber {
                 this.ready = true;
                 }, error : (error) => this.ready = false
         });
+    }
+
+    /**
+     * Resets history and data
+     * @private
+     * @memberof RegionsInfo
+\     */
+    resetRegionsInfo() {
+        if (this.history instanceof RegionsHistory) this.history.resetHistory();
+        if (this.data instanceof Map) {
+            this.data.forEach((value, key) => value.shapes.clear());
+            this.data.clear();
+        }
     }
 
     /**
