@@ -9,7 +9,8 @@
                 css="
                     ${image_config.hasLookupTable(channel.color) ?
                         'background-image: url(\'' + luts_png + '\');
-                         background-size: 100% 1110px;
+                         background-size: 100% ' +
+                            (image_config.luts.size * 30) + 'px;
                          background-repeat: no-repeat;
                          background-position: 0 -' +
                            (image_config.luts.get(channel.color).index*30) + 'px' :

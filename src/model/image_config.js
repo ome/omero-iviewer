@@ -130,6 +130,8 @@ export default class ImageConfig extends History {
                             }, l);
                         this.luts.set(mapValue.name, mapValue);
                     });
+                $('.luts-preview').css(
+                    "background-size", "100% " + (this.luts.size * 20) + "px");
                 if (typeof callback === 'function') callback(this.luts);
             }
         });

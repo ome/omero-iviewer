@@ -402,6 +402,7 @@ export default class ChannelRange  {
      */
      setSliderBackgroundAfterColorChange(isLut) {
          if (isLut) {
+             let height = this.luts.size * 20;
              $(this.element).find(".channel-slider").find(".ui-slider-range").css(
              "background", "");
              $(this.element).find(".channel-slider").find(".ui-slider-range").css(
@@ -409,7 +410,7 @@ export default class ChannelRange  {
                     "url('" + this.luts_png + "'",
                   "background-position" : "0 -" +
                     (this.luts.get(this.channel.color).index*20) + "px",
-                  "background-size" : "100% 740px",
+                  "background-size" : "100% " + height + "px",
                   "background-repeat": "no-repeat"});
          } else {
              $(this.element).find(".channel-slider").find(".ui-slider-range").css(
