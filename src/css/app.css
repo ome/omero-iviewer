@@ -751,7 +751,7 @@ thead, tbody {
 }
 .shape-edit-attachments input[type=text] {
     float: left;
-    width: 35px;
+    width: 50px;
     line-height: 28px;
     height: 28px;
     font-size: 12px;
@@ -762,13 +762,6 @@ thead, tbody {
     height: 30px;
     margin-left: 5px;
 }
-.shape-edit-attachments input[type=radio] {
-    float: left;
-    line-height: 30px;
-    height: 30px;
-    margin-top: 0px;
-}
-
 .arrow-button button  {
     width: 35px;
 }

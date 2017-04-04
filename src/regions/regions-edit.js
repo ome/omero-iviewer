@@ -461,60 +461,57 @@ export default class RegionsEdit extends EventSubscriber {
         if (dims.max_t > 1 || dims.max_z > 1) {
             let shapeAttachments =
                 $(this.element).find(".shape-edit-attachments").children();
-            shapeAttachments.addClass("disabled-color");
-            let shapeAttachmentsInput = shapeAttachments.filter('input');
-            let shapeAttachmentsTextInput =
-                shapeAttachmentsInput.filter('[type="text"]');
-            let shapeAttachmentsRadioInput =
-                shapeAttachmentsInput.filter('[type="radio"]');
+            shapeAttachments.addClass('disabled-color');
+            let shapeAttachmentsInput = shapeAttachments.filter("input");
             shapeAttachmentsInput.prop("disabled", true);
             shapeAttachmentsInput.off();
             shapeAttachmentsInput.val('');
+            let shapeAttachmentsLocks = shapeAttachments.filter(
+                "[name='shape-edit-attachments-locks']");
+            shapeAttachmentsLocks.text("UNLOCKED");
+            shapeAttachmentsLocks.off();
 
             if (this.last_selected) {
                 // enable
+                shapeAttachments.removeClass('disabled-color');
                 shapeAttachmentsInput.prop("disabled", false);
-                shapeAttachments.removeClass("disabled-color");
                 // initialize attachments of last selected shape
                 ['t', 'z'].map(
                     (d) => {
                         let prop = 'the' + d.toUpperCase();
                         let unattached = this.last_selected[prop] === -1;
                         let filter = "[dim='" + d + "']";
-                        shapeAttachmentsRadioInput.filter(
-                            filter)[unattached ? 1 : 0].checked = "checked";
-                        shapeAttachmentsTextInput.filter(filter).val(
+                        let respectiveAttachementLock =
+                            shapeAttachmentsLocks.filter(filter);
+                        respectiveAttachementLock.attr(
+                            'locked', unattached ? "" : "locked");
+                        respectiveAttachementLock.text(
+                            unattached ? 'UNLOCKED' : 'LOCKED');
+                        let respectiveDimensionInput =
+                            shapeAttachmentsInput.filter(filter);
+                        respectiveDimensionInput.val(
                             unattached ?
-                            this.regions_info.image_info.dimensions[d] + 1 :
-                            this.last_selected[prop] + 1);
+                                this.regions_info.image_info.dimensions[d] + 1 :
+                                this.last_selected[prop] + 1);
+                        if (this.regions_info.image_info.dimensions['max_' + d] <= 1 ||
+                            unattached) respectiveDimensionInput.prop('disabled', true);
                 });
 
                 // set up various event handlers for attachment changes
-                // both for radio buttons (attached/unattached) state as well as
-                // the actual text input changes plus a focus handler for
-                // toggling the attached state if we click into the input field
                 let checkAttachmentInput0 =
                     (event, reset = false) => {
                         let dim = event.target.getAttribute('dim');
+                        if (this.regions_info.image_info.dimensions[
+                            'max_' + dim] <= 1) return -1;
                         let respectiveTextInput =
-                            shapeAttachmentsTextInput.filter('[dim="' + dim + '"]');
+                            shapeAttachmentsInput.filter('[dim="' + dim + '"]');
                         return this.checkAttachmentInput(respectiveTextInput, reset);
                     };
-                shapeAttachmentsTextInput.on('focus',
-                    (event) => {
-                        let radioSelector =
-                            '[name="shape-edit-attachments-' +
-                            event.target.getAttribute('dim') + '"]';
-                        let respectiveRadioInput =
-                            shapeAttachmentsInput.filter(radioSelector);
-                        if (!respectiveRadioInput[0].checked)
-                            respectiveRadioInput[0].click();
-                    });
                 // reset on blur (if check of input value check fails)
-                shapeAttachmentsTextInput.on('blur',
+                shapeAttachmentsInput.on('blur',
                     (event) => checkAttachmentInput0(event, true));
                 // change attachment value (if input value check succeeds)
-                shapeAttachmentsTextInput.on('change keyup',
+                shapeAttachmentsInput.on('change keyup',
                     (event) => {
                         if (event.type === 'keyup' && event.keyCode !== 13) return;
                         let dim = event.target.getAttribute('dim');
@@ -522,25 +519,25 @@ export default class RegionsEdit extends EventSubscriber {
                         if (value >= 0)
                             this.onAttachmentChange(value, dim, this.last_selected);
                     });
-                // change between un/attached states
-                shapeAttachmentsRadioInput.on('change',
+                // click handler on locks
+                shapeAttachmentsLocks.on('click',
                     (event) => {
-                        if (!event.target.checked) return;
-                        let attached =
-                            event.target.getAttribute('attached') === 'attached';
                         let dim = event.target.getAttribute('dim');
-                        let value = -1
-                        if (attached) {
-                            // we switched to attached => check present input value
-                            value = checkAttachmentInput0(event);
-                            let respectiveTextInput =
-                                shapeAttachmentsTextInput.filter(
-                                    '[dim="' + dim + '"]');
-                            if (value === -1) // we fetch the reset value
-                                value = parseInt(respectiveTextInput.val())-1;
-                            setTimeout(() => respectiveTextInput.focus(), 50);
+                        if (this.regions_info.image_info.dimensions[
+                            'max_' + dim] <= 1) return;
+                        let locked = event.target.getAttribute('locked');
+                        if (locked) {
+                            this.onAttachmentChange(-1, dim, this.last_selected);
+                            event.target.textContent = 'UNLOCKED'
+                        } else {
+                            let val = checkAttachmentInput0(event, true);
+                            if (val < 0) return;
+                            this.onAttachmentChange(
+                                val, dim, this.last_selected);
+                            event.target.textContent = 'LOCKED';
                         }
-                        this.onAttachmentChange(value, dim, this.last_selected);
+                        event.target.setAttribute(
+                            "locked", locked === 'locked' ? "" : "locked");
                     });
             }
         }

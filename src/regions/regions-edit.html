@@ -43,31 +43,20 @@
             <div class="shape-edit-comment"><input value="Comment"/></div>
             <div class="shape-font-size"><input /></div>
         </div>
-        <div show.bind="regions_info.image_info.dimensions.max_t > 1 ||
-                        regions_info.image_info.dimensions.max_z > 1"
-             class="row shapes-edit">
-            <div show.bind="regions_info.image_info.dimensions.max_t > 1"
-                 class="shape-edit-attachments">
-                <input name="shape-edit-attachments-t" type="radio"
-                       dim="t" attached="attached" tabindex="-1"/>
+        <div class="row shapes-edit">
+            <div class="shape-edit-attachments">
                 <span style="width: 15px">T:</span>
                 <input type="text" dim="t" value="" tabindex="-1"/>
-                <input name="shape-edit-attachments-t" tabindex="-1"
-                       dim="t" attached="" checked="checked"
-                       style="margin-left: 15px" type="radio"/>
-                <span tabindex="0">Do not attach to T</span>
-            </div>
-            <div show.bind="regions_info.image_info.dimensions.max_z > 1"
-                 class="shape-edit-attachments">
-                <input name="shape-edit-attachments-z" type="radio"
-                       dim="z" attached="attached" tabindex="-1" />
-                <span style="width: 15px">Z:</span>
+                <span name="shape-edit-attachments-locks" tabindex="-1"
+                       dim="t" locked="">UNLOCKED
+                </span>
+                <span style="margin-left: 10px; width: 15px">Z:</span>
                 <input type="text" dim="z" value="" tabindex="-1"/>
-                <input name="shape-edit-attachments-z" tabindex="-1"
-                       dim="z" attached="" checked="checked"
-                       style="margin-left: 15px" type="radio"/>
-                <span tabindex="0">Do not attach to Z</span>
+                <span name="shape-edit-attachments-locks" tabindex="-1"
+                       dim="z" locked="">UNLOCKED
+                </span>
             </div>
+            <span tabindex="1"></span>
        </div>
     </div>
 </template>
