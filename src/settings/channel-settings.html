@@ -8,9 +8,9 @@
                 title="${channel.label}"
                 css="
                     ${image_config.hasLookupTable(channel.color) ?
-                        'background-image: url(\'' + luts_png + '\');
+                        'background-image: url(\'' + image_config.luts_png.url + '\');
                          background-size: 100% ' +
-                            (image_config.luts.size * 30) + 'px;
+                            (image_config.luts_png.height * 3) + 'px;
                          background-repeat: no-repeat;
                          background-position: 0 -' +
                            (image_config.luts.get(channel.color).index*30) + 'px' :
@@ -26,7 +26,7 @@
                 channel.bind="channel" revision.bind="image_config.revision"
                 mode.bind="mode"
                 luts.bind="image_config.luts"
-                luts_png.bind="luts_png"
+                luts_png.bind="image_config.luts_png"
                 range.bind="image_config.image_info.range"
                 change_mode.call="onModeChange($event)">
             </channel-range>

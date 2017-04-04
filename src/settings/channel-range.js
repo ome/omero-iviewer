@@ -43,11 +43,14 @@ export default class ChannelRange  {
     @bindable mode = 0;
 
     /**
-     * the luts png uri
+     * the luts png properties
      * @memberof ChannelRange
-     * @type {string}
+     * @type {Object}
      */
-    @bindable luts_png = '';
+    @bindable luts_png = {
+        url: '',
+        height: 0
+    };
 
     /**
      * the channels settings change mode handler
@@ -112,6 +115,9 @@ export default class ChannelRange  {
      */
     registerObservers() {
         this.unregisterObservers();
+        this.observers.push(
+            this.bindingEngine.propertyObserver(this.luts_png, 'height')
+                .subscribe((newValue, oldValue) => this.updateUI()));
         this.observers.push(
             this.bindingEngine.propertyObserver(this, 'mode')
                 .subscribe((newValue, oldValue) =>
@@ -391,6 +397,7 @@ export default class ChannelRange  {
          this.context.getSelectedImageConfig().addHistory({
              prop: ['image_info', 'channels', '' + this.index,'reverseIntensity'],
              old_val : !value, new_val: value, type: 'boolean'});
+         this.updateUI();
      }
 
      /**
@@ -402,24 +409,26 @@ export default class ChannelRange  {
      */
      setSliderBackgroundAfterColorChange(isLut) {
          if (isLut) {
-             let height = this.luts.size * 20;
              $(this.element).find(".channel-slider").find(".ui-slider-range").css(
              "background", "");
              $(this.element).find(".channel-slider").find(".ui-slider-range").css(
                  {"background-image" :
-                    "url('" + this.luts_png + "'",
+                    "url('" + this.luts_png.url + "'",
                   "background-position" : "0 -" +
                     (this.luts.get(this.channel.color).index*20) + "px",
-                  "background-size" : "100% " + height + "px",
-                  "background-repeat": "no-repeat"});
+                  "background-size" : "100% " + (this.luts_png.height * 2) + "px",
+                  "background-repeat": "no-repeat",
+                  "transform": this.channel.reverseIntensity ? "scaleX(-1)" : "none"
+                 });
          } else {
              $(this.element).find(".channel-slider").find(".ui-slider-range").css(
                  {"background-image" :"",
                   "background-position" : "",
                   "background-size" : "",
-                  "background-repeat": ""});
-             $(this.element).find(".channel-slider").find(".ui-slider-range").css(
-             "background", "#" + this.channel.color);
+                  "background-repeat": "",
+                  "background": "#" + this.channel.color,
+                  "transform": this.channel.reverseIntensity ? "scaleX(-1)" : "none"
+                 });
          }
      }
 
