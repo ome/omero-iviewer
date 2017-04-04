@@ -760,7 +760,18 @@ thead, tbody {
     line-height: 30px;
     height: 30px;
     margin-left: 5px;
+    background-repeat: no-repeat;
+    background-position: center;
 }
+.dim_locked {
+    background-image: url('images/dim_locked.png');
+    width: 24px;
+}
+.dim_unlocked {
+    background-image: url('images/dim_unlocked.png');
+    width: 24px;
+}
+
 .arrow-button button  {
     width: 35px;
 }

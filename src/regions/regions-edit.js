@@ -468,7 +468,8 @@ export default class RegionsEdit extends EventSubscriber {
             shapeAttachmentsInput.val('');
             let shapeAttachmentsLocks = shapeAttachments.filter(
                 "[name='shape-edit-attachments-locks']");
-            shapeAttachmentsLocks.text("UNLOCKED");
+            shapeAttachmentsLocks.removeClass("dim_locked");
+            shapeAttachmentsLocks.addClass("dim_unlocked");
             shapeAttachmentsLocks.off();
 
             if (this.last_selected) {
@@ -485,16 +486,22 @@ export default class RegionsEdit extends EventSubscriber {
                             shapeAttachmentsLocks.filter(filter);
                         respectiveAttachementLock.attr(
                             'locked', unattached ? "" : "locked");
-                        respectiveAttachementLock.text(
-                            unattached ? 'UNLOCKED' : 'LOCKED');
+                        respectiveAttachementLock.get(0).className =
+                            unattached ? "dim_unlocked" : "dim_locked";
                         let respectiveDimensionInput =
                             shapeAttachmentsInput.filter(filter);
                         respectiveDimensionInput.val(
                             unattached ?
                                 this.regions_info.image_info.dimensions[d] + 1 :
                                 this.last_selected[prop] + 1);
-                        if (this.regions_info.image_info.dimensions['max_' + d] <= 1 ||
-                            unattached) respectiveDimensionInput.prop('disabled', true);
+                        let hasOnlyOneEntry =
+                            this.regions_info.image_info.dimensions['max_' + d] <= 1;
+                        if (hasOnlyOneEntry || unattached) {
+                            respectiveDimensionInput.prop('disabled', true);
+                            if (hasOnlyOneEntry)
+                                respectiveAttachementLock.addClass(
+                                    "disabled-color");
+                        }
                 });
 
                 // set up various event handlers for attachment changes
@@ -528,13 +535,13 @@ export default class RegionsEdit extends EventSubscriber {
                         let locked = event.target.getAttribute('locked');
                         if (locked) {
                             this.onAttachmentChange(-1, dim, this.last_selected);
-                            event.target.textContent = 'UNLOCKED'
+                            event.target.className = 'dim_unlocked';
                         } else {
                             let val = checkAttachmentInput0(event, true);
                             if (val < 0) return;
                             this.onAttachmentChange(
                                 val, dim, this.last_selected);
-                            event.target.textContent = 'LOCKED';
+                            event.target.className = 'dim_locked';
                         }
                         event.target.setAttribute(
                             "locked", locked === 'locked' ? "" : "locked");
