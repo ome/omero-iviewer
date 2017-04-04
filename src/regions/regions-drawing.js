@@ -50,6 +50,13 @@ export default class RegionsDrawing extends EventSubscriber {
             (params={}) => this.onModeChange(params)]];
 
     /**
+     * the list of observers
+     * @memberof RegionsDrawing
+     * @type {Array.<Object>}
+     */
+    observers = [];
+
+    /**
      * @constructor
      * @param {Context} context the application context (injected)
      * @param {BindingEngine} bindingEngine the BindingEngine (injected)
@@ -61,48 +68,48 @@ export default class RegionsDrawing extends EventSubscriber {
     }
 
     /**
-     * Registers observer to react to drawing mode changes
+     * Registers observers to react to drawing mode & shape_defaults changes
      *
      * @memberof RegionsDrawing
      */
-    registerObserver() {
-        this.unregisterObserver();
-
-        let createObserver = () => {
-            this.observer = this.bindingEngine.propertyObserver(
-                this.regions_info, 'drawing_mode')
-                    .subscribe(
-                        (newValue, oldValue) => {
-                            let idx =
-                                this.supported_shapes.indexOf(
-                                    this.regions_info.shape_to_be_drawn);
-                            if (idx < 0) return;
-                            this.onDrawShape(idx, true);
-                });
+    registerObservers() {
+        let createObservers = () => {
+            this.unregisterObservers();
+            let action = () => {
+                let idx =
+                    this.supported_shapes.indexOf(
+                        this.regions_info.shape_to_be_drawn);
+                if (idx < 0) return;
+                this.onDrawShape(idx, true);
+            };
+            this.observers.push(
+                this.bindingEngine.propertyObserver(
+                    this.regions_info, "drawing_mode")
+                        .subscribe((newValue, oldValue) => action()));
+            for (let p in this.regions_info.shape_defaults)
+                this.observers.push(
+                    this.bindingEngine.propertyObserver(
+                        this.regions_info.shape_defaults, p)
+                            .subscribe((newValue, oldValue) => action()));
         };
 
         if (this.regions_info === null) {
-            this.observer =
+            this.observers.push(
                 this.bindingEngine.propertyObserver(this, 'regions_info')
                     .subscribe((newValue, oldValue) => {
-                        if (oldValue === null && newValue) {
-                            this.observer.dispose();
-                            createObserver();
-                        }
-                });
-        } else createObserver();
+                        if (oldValue === null && newValue) createObservers();
+                }));
+        } else createObservers();
     }
 
     /**
-     * Unregisters observer
+     * Unregisters observers
      *
      * @memberof RegionsDrawing
      */
-    unregisterObserver() {
-        if (this.observer) {
-             this.observer.dispose();
-             this.observer = null;
-         }
+    unregisterObservers() {
+        this.observers.map((o) => o.dispose());
+        this.observers = [];
     }
 
     /**
@@ -276,7 +283,7 @@ export default class RegionsDrawing extends EventSubscriber {
      */
     bind() {
         this.subscribe();
-        this.registerObserver();
+        this.registerObservers();
     }
 
     /**
@@ -288,6 +295,6 @@ export default class RegionsDrawing extends EventSubscriber {
      */
     unbind() {
         this.unsubscribe();
-        this.unregisterObserver();
+        this.unregisterObservers();
     }
 }

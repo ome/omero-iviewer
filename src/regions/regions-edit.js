@@ -347,7 +347,7 @@ export default class RegionsEdit extends EventSubscriber {
                             (newValue, oldValue) => {
                                 if (this.regions_info.shape_to_be_drawn === null &&
                                     this.regions_info.selected_shapes.length === 0)
-                                        this.regions_info.shape_defaults = {};
+                                        this.regions_info.resetShapeDefaults();
                                 this.adjustEditWidgets();
                             }));
             this.observers.push(
@@ -356,7 +356,7 @@ export default class RegionsEdit extends EventSubscriber {
                         .subscribe(
                             (newValue, oldValue) => {
                                 if (oldValue !== null && newValue === null)
-                                    this.regions_info.shape_defaults = {};
+                                    this.regions_info.resetShapeDefaults();
                                 this.adjustEditWidgets();
                             }));
         };
@@ -574,8 +574,6 @@ export default class RegionsEdit extends EventSubscriber {
         // STROKE width
         strokeWidthSpinner.off("input spinstop");
         strokeWidthSpinner.spinner("value", strokeWidth);
-        if (this.regions_info.shape_to_be_drawn === null)
-            strokeSpectrum.spectrum("enable");
         if (this.last_selected) {
             strokeWidthSpinner.spinner("enable");
             strokeWidthSpinner.on("input spinstop",
@@ -606,25 +604,26 @@ export default class RegionsEdit extends EventSubscriber {
         let fillOptions = this.getColorPickerOptions(true, this.last_selected);
         let fillSpectrum =
             $(this.element).find(".shape-fill-color .spectrum-input");
-        let fillColor =
-            this.last_selected ?
-                this.last_selected.fillColor :
-                typeof this.regions_info.shape_defaults.fillColor === 'string' ?
-                    this.regions_info.shape_defaults.fillColor : '#FFFFFF';
-        let fillAlpha =
-            this.last_selected ?
-                this.last_selected.fillAlpha :
-                typeof this.regions_info.shape_defaults.fillAlpha === 'number' ?
-                    this.regions_info.shape_defaults.fillAlpha : 0.5;
+        let fillColor = '#FFFFFF';
+        let fillAlpha = 0.5;
+        let fillDisabled =
+                type === 'line' || type === 'polyline' || type === 'label';
+        if (!fillDisabled) {
+            fillColor =
+                this.last_selected ?
+                    this.last_selected.fillColor :
+                        typeof this.regions_info.shape_defaults.fillColor === 'string' ?
+                            this.regions_info.shape_defaults.fillColor : '#FFFFFF';
+            fillAlpha =
+                this.last_selected ?
+                    this.last_selected.fillAlpha :
+                        typeof this.regions_info.shape_defaults.fillAlpha === 'number' ?
+                            this.regions_info.shape_defaults.fillAlpha : 0.5;
+        }
         fillOptions.color = Converters.hexColorToRgba(fillColor, fillAlpha);
         fillSpectrum.spectrum(fillOptions);
         // set fill (if not disabled)
-        let fillDisabled =
-            this.regions_info.shape_to_be_drawn !== null ||
-                type === 'line' || type === 'polyline' || type === 'label';
         if (fillDisabled) {
-            //fillOptions.color = 'rgba(255, 255, 255, 0)';
-            //fillSpectrum.spectrum(fillOptions);
             fillSpectrum.spectrum("disable");
             return;
         }
@@ -642,8 +641,7 @@ export default class RegionsEdit extends EventSubscriber {
      */
     getColorPickerOptions(fill=true, shape=null) {
         let options =  {
-            disabled: this.regions_info === null ||
-                      this.regions_info.shape_to_be_drawn !== null,
+            disabled: this.regions_info === null,
             color: fill ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 153, 255, 0.7)',
             showInput: true,
             showAlpha: true,

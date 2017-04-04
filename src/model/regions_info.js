@@ -123,6 +123,8 @@ export default class RegionsInfo extends EventSubscriber {
                 JSON.parse(
                     window.localStorage.getItem("omero_iviewer.copied_shapes"));
         } catch(ignored) {}
+        // init default shape colors
+        this.resetShapeDefaults();
     }
 
     /**
@@ -357,5 +359,17 @@ export default class RegionsInfo extends EventSubscriber {
         if (len === 0) return null;
 
         return Converters.extractRoiAndShapeId(this.selected_shapes[len-1]);
+    }
+
+    /**
+     * Resets to default fill/stroke color settings
+     *
+     * @memberof RegionsEdit
+     */
+    resetShapeDefaults() {
+        this.shape_defaults['strokeColor'] = "#0099FF";
+        this.shape_defaults['strokeAlpha'] = 0.9;
+        this.shape_defaults['fillColor'] = "FFFFFF";
+        this.shape_defaults['fillAlpha'] = 0.5;
     }
 }
