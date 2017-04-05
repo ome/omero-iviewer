@@ -267,14 +267,14 @@ ome.ol3.interaction.Draw.prototype.setDefaultDrawingStyle = function(shape) {
     // determine fill and stroke using defaults if not supplied
     var defaultFill =
         typeof shape['FillColor'] === 'number' ?
-            ome.ol3.utils.Conversion.convertSignedIntegerColorObject(
+            ome.ol3.utils.Conversion.convertSignedIntegerToColorObject(
                 shape['FillColor']) : null;
     if (defaultFill === null) defaultFill = transWhite;
     else defaultFill =
         ome.ol3.utils.Conversion.convertColorObjectToRgba(defaultFill);
     var defaultStroke = {
         'color': typeof shape['StrokeColor'] === 'number' ?
-                    ome.ol3.utils.Conversion.convertSignedIntegerColorObject(
+                    ome.ol3.utils.Conversion.convertSignedIntegerToColorObject(
                         shape['StrokeColor']) : null,
         'width': (typeof shape['StrokeWidth'] === 'object' &&
                   shape['StrokeWidth'] !== null &&

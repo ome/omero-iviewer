@@ -33,7 +33,7 @@ ome.ol3.utils.Style.createFeatureStyle = function(shape_info, is_label, fill_in_
     if (typeof(shape_info['FillColor']) === 'number') {
         // we need hex +alpha to rgba conversion via color object
         tmpColor =
-            ome.ol3.utils.Conversion.convertSignedIntegerColorObject(
+            ome.ol3.utils.Conversion.convertSignedIntegerToColorObject(
                 shape_info['FillColor']);
         fill['color'] = ome.ol3.utils.Conversion.convertColorObjectToRgba(tmpColor);
         if (fill['color'] != null) fill['count']++;
@@ -43,7 +43,7 @@ ome.ol3.utils.Style.createFeatureStyle = function(shape_info, is_label, fill_in_
     if (typeof(shape_info['StrokeColor']) === 'number') {
         // we need hex +alpha to rgba conversion via color object
         tmpColor =
-            ome.ol3.utils.Conversion.convertSignedIntegerColorObject(
+            ome.ol3.utils.Conversion.convertSignedIntegerToColorObject(
                 shape_info['StrokeColor']);
         stroke['color'] = ome.ol3.utils.Conversion.convertColorObjectToRgba(tmpColor);
         if (stroke['color'] != null) stroke['count']++;

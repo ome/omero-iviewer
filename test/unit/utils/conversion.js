@@ -72,12 +72,12 @@ describe("Conversion", function() {
         assert.equal(signedInteger,-9405774);
     });
 
-    it('convertSignedIntegerColorObject', function() {
+    it('convertSignedIntegerToColorObject', function() {
         var color = {red : 123, green : 200, blue: 22, alpha: 0.321};
         var signedInteger =
             ome.ol3.utils.Conversion.convertColorToSignedInteger(color);
         var color2 =
-            ome.ol3.utils.Conversion.convertSignedIntegerColorObject(
+            ome.ol3.utils.Conversion.convertSignedIntegerToColorObject(
                 signedInteger);
         // truncate for floating point deviations
         color2.alpha = Math.floor(color2.alpha * 1000) / 1000;

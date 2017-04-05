@@ -211,7 +211,7 @@ ome.ol3.utils.Conversion.checkColorObjectCorrectness = function(color) {
  * @param {number} signed_integer the signed integer in RGBA
  * @return {object|null} returns the color as an object or null in case of errors
  */
-ome.ol3.utils.Conversion.convertSignedIntegerColorObject =
+ome.ol3.utils.Conversion.convertSignedIntegerToColorObject =
     function(signed_integer) {
         if (typeof signed_integer !== 'number') return null;
 
