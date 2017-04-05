@@ -101,13 +101,9 @@ export class Utils {
                 let end = parseInt(t.substring(potentialDashPos+1));
                 if (typeof start === 'number' && typeof end === 'number' &&
                     !isNaN(start) && !isNaN(end) && start <= end) {
-                         // equal: we increment end
-                        if (start === end) end++;
-                        else {
-                            // we do have a 'range'
-                            for (let i=start;i<end;i++)
-                                if (i > 0 && i <= max) vals.push(i);
-                        }
+                        // we do have a 'range'
+                        for (let i=start;i<=end;i++)
+                            if (i > 0 && i <= max) vals.push(i);
                     }
             }
         });
