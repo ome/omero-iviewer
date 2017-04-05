@@ -200,6 +200,7 @@ export default class Context {
         let iViewerPrefixed = prefix + "/" + PLUGIN_NAME;
         this.prefixed_uris.set(IVIEWER, iViewerPrefixed);
         this.prefixed_uris.set(PLUGIN_PREFIX, iViewerPrefixed);
+        params[PLUGIN_PREFIX] = iViewerPrefixed;
         [WEBGATEWAY, WEBCLIENT].map(
             (key) =>
                 this.prefixed_uris.set(
