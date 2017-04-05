@@ -139,29 +139,25 @@ ome.ol3.geom.Ellipse.prototype.getPolygonCoords = function() {
 }
 
 /**
- * Turns a transformation string - matrix (....) - into an array and stores it
- * @param {string} transform the transformation info as a string
+ * Sets the transformation matrix from a transformation object
+ * @param {Object} transform a transformation object with properties A00-A12
  */
 ome.ol3.geom.Ellipse.prototype.setTransform = function(transform) {
-    if (typeof transform !== 'string') {
+    if (typeof transform !== 'object' ||
+        transform === null || typeof transform['@type'] !== 'string' ||
+        transform['@type'].indexOf("#AffineTransform") === -1) {
         this.transform_ = null;
         return;
     }
 
-    // dissect the string to get our 3*3 transform matrix
-    // cut out tokens 'matrix, ( and )'
-    var strippedTransform = transform.replace(/\matrix|\(|\)/g, "");
-    var flatMatrixEntries =
-        strippedTransform.split(" ").filter( // we want just the numbers
-            function(entry) {
-                if (entry.trim() === "") return false;
-                else return true;})
-    // we have to have 6 entries
-    if (flatMatrixEntries.length === 6)
-        this.transform_ =
-            flatMatrixEntries.map(
-                function(entry) { return parseFloat(entry);});
-    else this.transform_ = null;
+    try {
+        this.transform_ = [
+            transform['A00'], transform['A10'], transform['A01'],
+            transform['A11'], transform['A02'], transform['A12']
+        ];
+    } catch(err) {
+        console.error("failed to set tranform");
+    }
 }
 
 /**

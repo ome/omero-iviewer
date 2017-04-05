@@ -26,13 +26,11 @@ ome.ol3.utils.Regions.FEATURE_FACTORY_LOOKUP_TABLE = {
         return feat;
     },
     "ellipse" : function(shape) {
-        // TODO: do transform
-        var trans =
-            typeof shape['transform'] === 'string' ? shape['transform'] : null;
         var feat =
             new ol.Feature({"geometry" : new ome.ol3.geom.Ellipse(
                 shape['X'], -shape['Y'], shape['RadiusX'], shape['RadiusY'],
-                trans)});
+                typeof shape['Transform'] === 'object' ?
+                    shape['Transform'] : null)});
         feat['type'] = "ellipse";
         feat.setStyle(ome.ol3.utils.Style.createFeatureStyle(shape));
         return feat;

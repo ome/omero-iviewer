@@ -784,7 +784,7 @@ ome.ol3.utils.Conversion.convertPointStringIntoCoords = function(points) {
     var ret = [];
     for (var t in tokens) {
         var c = tokens[t].split(",");
-        if (c.length !== 2) return null;
+        if (c.length < 2) return null;
         ret.push([parseInt(c[0]), -parseInt(c[1])]);
     }
 
