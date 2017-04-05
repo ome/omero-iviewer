@@ -372,7 +372,7 @@ export default class Ol3Viewer extends EventSubscriber {
                                 this.viewer.getShapeDefinition(deepCopy.shape_id);
                               if (upToDateDef)
                                 deepCopy =
-                                    Converters.makeShapeBackwardsCompatible(upToDateDef);
+                                    Converters.amendShapeDefinition(upToDateDef);
                           }
                           delete deepCopy['shape_id'];
                           deepCopy['roi_id'] = params.roi_id;
@@ -423,12 +423,12 @@ export default class Ol3Viewer extends EventSubscriber {
             let viewerZ = this.viewer.getDimensionIndex('z');
             let shape =
                 this.image_config.regions_info.getShape(params.shapes[0]);
-            let shapeT = typeof shape.theT === 'number' ? shape.theT : -1;
+            let shapeT = typeof shape.TheT === 'number' ? shape.TheT : -1;
             if (shapeT !== -1 && shapeT !== viewerT) {
                 this.image_config.image_info.dimensions.t = shapeT;
                 delay += 25;
             }
-            let shapeZ = typeof shape.theZ === 'number' ? shape.theZ : -1;
+            let shapeZ = typeof shape.TheZ === 'number' ? shape.TheZ : -1;
             if (shapeZ !== -1 && shapeZ !== viewerZ) {
                 this.image_config.image_info.dimensions.z = shapeZ;
                 delay += 25;
@@ -652,7 +652,7 @@ export default class Ol3Viewer extends EventSubscriber {
                     delete shape['is_new'];
                     let newShape = Object.assign({}, shape);
                     newShape.shape_id = ids[id];
-                    newShape.id = newRoiAndShapeId.shape_id;
+                    newShape['@id'] = newRoiAndShapeId.shape_id;
                     newRoi.shapes.set(newRoiAndShapeId.shape_id, newShape);
                     shape.deleted = true; // take out old entry
                 }
@@ -753,7 +753,7 @@ export default class Ol3Viewer extends EventSubscriber {
                     this.viewer.getShapeDefinition(deepCopy.shape_id);
                   if (upToDateDef)
                     deepCopy =
-                        Converters.makeShapeBackwardsCompatible(upToDateDef);
+                        Converters.amendShapeDefinition(upToDateDef);
                 }
                 this.image_config.regions_info.copied_shapes.push(deepCopy)});
 

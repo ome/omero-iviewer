@@ -138,16 +138,14 @@ export default class RegionsEdit {
          if (typeof fill !== 'boolean') fill = true;
 
          let deltaProps = {type: shape.type};
-         let properties =
-             fill ? ['fillColor', 'fillAlpha'] : ['strokeColor', 'strokeAlpha'];
-         let values = Converters.rgbaToHexAndAlpha(color);
-         if (!Misc.isArray(values) || values.length !== 2) return;
+         let property = fill ? 'FillColor' : 'StrokeColor';
+         let value = Converters.rgbaToSignedInteger(color);
+         if (typeof value !== 'number') return;
 
-         for (let i=0;i<properties.length;i++)
-             deltaProps[properties[i]] = values[i];
+         deltaProps[property] = value;
 
          this.modifyShapes(
-             deltaProps, this.createUpdateHandler(properties, values));
+             deltaProps, this.createUpdateHandler([property], [value]));
 
         this.setDrawColors(color, fill);
      }
@@ -162,16 +160,11 @@ export default class RegionsEdit {
      setDrawColors(color, fill=true) {
          if (typeof fill !== 'boolean') fill = true;
 
-         let values = Converters.rgbaToHexAndAlpha(color);
-         if (!Misc.isArray(values) || values.length !== 2) return;
+         let value = Converters.rgbaToSignedInteger(color);
+         if (typeof value !== 'number') return;
 
-         if (fill) {
-             this.regions_info.shape_defaults['fillColor'] = values[0];
-             this.regions_info.shape_defaults['fillAlpha'] = values[1];
-         } else {
-             this.regions_info.shape_defaults['strokeColor'] = values[0];
-             this.regions_info.shape_defaults['strokeAlpha'] = values[1];
-         }
+         this.regions_info.shape_defaults[fill ? 'FillColor' : 'StrokeColor'] =
+            value;
      }
 
     /**
@@ -186,10 +179,16 @@ export default class RegionsEdit {
         if (typeof width !== 'number' || isNaN(width) || width < 0) return;
 
         let deltaProps = {type: shape.type};
-        deltaProps.strokeWidth = width;
+        deltaProps.StrokeWidth = {
+            '@type': 'TBD#LengthI',
+            'Unit': 'PIXEL',
+            'Symbol': 'pixel',
+            'Value': width
+        };
 
         this.modifyShapes(
-            deltaProps, this.createUpdateHandler(['strokeWidth'], [width]));
+            deltaProps, this.createUpdateHandler(
+                ['StrokeWidth'], [Object.assign({}, deltaProps.StrokeWidth)]));
     }
 
     /**
@@ -204,17 +203,23 @@ export default class RegionsEdit {
         if (typeof size !== 'number' || isNaN(size) || size < 1) return;
 
         let deltaProps = {type: shape.type};
-        deltaProps.fontStyle =
-            typeof shape.fontStyle === 'string' ? shape.fontStyle : 'normal';
-        deltaProps.fontFamily =
-            typeof shape.fontFamily === 'string' ?
-                shape.fontFamily : 'sans-serif';
-        deltaProps.fontSize = size;
+        deltaProps.FontStyle =
+            typeof shape.FontStyle === 'string' ? shape.FontStyle : 'normal';
+        deltaProps.FontFamily =
+            typeof shape.FontFamily === 'string' ?
+                shape.FontFamily : 'sans-serif';
+        deltaProps.FontSize = {
+            '@type': 'TBD#LengthI',
+            'Unit': 'PIXEL',
+            'Symbol': 'pixel',
+            'Value': size
+        };
 
         this.modifyShapes(
             deltaProps, this.createUpdateHandler(
-                ['fontSize', 'fontStyle', 'fontFamily'],
-                [size, deltaProps.fontStyle, deltaProps.fontFamily]));
+                ['FontSize', 'FontStyle', 'FontFamily'],
+                [Object.assign({}, deltaProps.FontSize),
+                 deltaProps.FontStyle, deltaProps.FontFamily]));
     }
 
     /**
@@ -229,11 +234,11 @@ export default class RegionsEdit {
         if (typeof comment !== 'string') return;
 
         let deltaProps = {type: shape.type};
-        deltaProps.textValue = comment;
+        deltaProps.Text = comment;
 
         this.modifyShapes(
             deltaProps,
-            this.createUpdateHandler(['textValue'], [comment]));
+            this.createUpdateHandler(['Text'], [comment]));
     }
 
     /**
@@ -375,8 +380,8 @@ export default class RegionsEdit {
             editComment.prop("disabled", false);
             editComment.removeClass("disabled-color");
             editComment.val(
-                typeof this.last_selected.textValue === 'string' ?
-                    this.last_selected.textValue : '');
+                typeof this.last_selected.Text === 'string' ?
+                    this.last_selected.Text : '');
             editComment.on('input',
                 (event) =>
                     this.onCommentChange(event.target.value, this.last_selected));
@@ -386,8 +391,10 @@ export default class RegionsEdit {
         }
         let fontSize =
             this.last_selected ?
-                (typeof this.last_selected.fontSize === 'number' ?
-                this.last_selected.fontSize : 10) : 10;
+                (typeof this.last_selected.FontSize === 'object' &&
+                 this.last_selected.FontSize !== null &&
+                 typeof this.last_selected.FontSize.Value === 'number' ?
+                this.last_selected.FontSize.Value : 10) : 10;
         let fontSizeSpinner = $(this.element).find(".shape-font-size input");
         fontSizeSpinner.off("input spinstop");
         fontSizeSpinner.spinner("value", fontSize);
@@ -407,22 +414,18 @@ export default class RegionsEdit {
             $(this.element).find(".shape-stroke-width input");
         let strokeColor =
             this.last_selected ?
-                this.last_selected.strokeColor :
-                typeof this.regions_info.shape_defaults.strokeColor === 'string' ?
-                    this.regions_info.shape_defaults.strokeColor : '#0099FF';
-        let strokeAlpha =
-            this.last_selected ?
-                this.last_selected.strokeAlpha :
-                typeof this.regions_info.shape_defaults.strokeAlpha === 'number' ?
-                this.regions_info.shape_defaults.strokeAlpha : 0.9;
+                this.last_selected.StrokeColor :
+                typeof this.regions_info.shape_defaults.StrokeColor === 'number' ?
+                    this.regions_info.shape_defaults.StrokeColor : 10092517;
         let strokeWidth =
             this.last_selected ?
-                (typeof this.last_selected.strokeWidth === 'number' ?
-                    this.last_selected.strokeWidth : 1) : 1;
+                (typeof this.last_selected.StrokeWidth === 'object' &&
+                 this.last_selected.StrokeWidth !== null &&
+                 typeof this.last_selected.StrokeWidth.Value === 'number' ?
+                    this.last_selected.StrokeWidth.Value : 1) : 1;
         if ((type === 'line' || type === 'polyline') && strokeWidth === 0)
             strokeWidth = 1;
-        strokeOptions.color =
-            Converters.hexColorToRgba(strokeColor, strokeAlpha);
+        strokeOptions.color = Converters.signedIntegerToRgba(strokeColor);
         strokeSpectrum.spectrum(strokeOptions);
         // STROKE width
         strokeWidthSpinner.off("input spinstop");
@@ -443,12 +446,12 @@ export default class RegionsEdit {
             arrowButton.prop('disabled', false);
             arrowButton.removeClass('disabled-color');
             $('.marker_start').html(
-                typeof this.last_selected['markerStart'] === 'string' &&
-                    this.last_selected['markerStart'] === 'Arrow' ?
+                typeof this.last_selected['MarkerStart'] === 'string' &&
+                    this.last_selected['MarkerStart'] === 'Arrow' ?
                         '&#10003;' : '&nbsp;');
             $('.marker_end').html(
-                typeof this.last_selected['markerEnd'] === 'string' &&
-                    this.last_selected['markerEnd'] === 'Arrow' ?
+                typeof this.last_selected['MarkerEnd'] === 'string' &&
+                    this.last_selected['MarkerEnd'] === 'Arrow' ?
                         '&#10003;' : '&nbsp;');
         } else {
             arrowButton.prop('disabled', true);
@@ -461,23 +464,16 @@ export default class RegionsEdit {
             $(this.element).find(".shape-fill-color .spectrum-input");
         let fillColor =
             this.last_selected ?
-                this.last_selected.fillColor :
-                typeof this.regions_info.shape_defaults.fillColor === 'string' ?
-                    this.regions_info.shape_defaults.fillColor : '#FFFFFF';
-        let fillAlpha =
-            this.last_selected ?
-                this.last_selected.fillAlpha :
-                typeof this.regions_info.shape_defaults.fillAlpha === 'number' ?
-                    this.regions_info.shape_defaults.fillAlpha : 0.5;
-        fillOptions.color = Converters.hexColorToRgba(fillColor, fillAlpha);
+                this.last_selected.FillColor :
+                typeof this.regions_info.shape_defaults.FillColor === 'number' ?
+                    this.regions_info.shape_defaults.FillColor : -129;
+        fillOptions.color = Converters.signedIntegerToRgba(fillColor);
         fillSpectrum.spectrum(fillOptions);
         // set fill (if not disabled)
         let fillDisabled =
             this.regions_info.shape_to_be_drawn !== null ||
                 type === 'line' || type === 'polyline' || type === 'label';
         if (fillDisabled) {
-            //fillOptions.color = 'rgba(255, 255, 255, 0)';
-            //fillSpectrum.spectrum(fillOptions);
             fillSpectrum.spectrum("disable");
             return;
         }
@@ -530,7 +526,7 @@ export default class RegionsEdit {
         if (typeof head !== 'boolean') head = true;
 
         let deltaProps = {type: 'polyline'};
-        let property = head ? 'markerEnd' : 'markerStart';
+        let property = head ? 'MarkerEnd' : 'MarkerStart';
         let hasArrowMarker =
             typeof this.last_selected[property] === 'string' &&
                 this.last_selected[property] === 'Arrow';

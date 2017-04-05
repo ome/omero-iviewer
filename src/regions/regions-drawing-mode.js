@@ -158,7 +158,7 @@ export default class RegionsDrawingMode {
                  // collect dimensions for propagation
                  let theDims =
                      Utils.getDimensionsForPropagation(
-                         this.regions_info, shape.theZ, shape.theT);
+                         this.regions_info, shape.TheZ, shape.TheT);
                  if (theDims.length > 0)
                      this.context.publish(
                          REGIONS_GENERATE_SHAPES,

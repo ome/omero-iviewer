@@ -5,8 +5,9 @@ import {
 } from '../events/events';
 import Misc from '../utils/misc';
 import {Converters} from '../utils/converters';
-import {REGIONS_MODE, WEBGATEWAY} from '../utils/constants';
-import {REGIONS_DRAWING_MODE} from '../utils/constants';
+import {
+    PLUGIN_PREFIX, REGIONS_DRAWING_MODE, REGIONS_MODE, IVIEWER
+} from '../utils/constants';
 
 /**
  * Holds region information
@@ -219,8 +220,8 @@ export default class RegionsInfo extends EventSubscriber {
         // send request
         $.ajax({
             url : this.image_info.context.server +
-                  this.image_info.context.getPrefixedURI(WEBGATEWAY) +
-                  "/get_rois_json/" + this.image_info.image_id + '/',
+                  this.image_info.context.getPrefixedURI(IVIEWER) +
+                  "/request_rois/" + this.image_info.image_id + '/',
             success : (response) => {
                 // we want an array
                 if (!Misc.isArray(response)) return;
@@ -233,17 +234,21 @@ export default class RegionsInfo extends EventSubscriber {
                          let shapes = new Map();
 
                           // set shape properties and store the object
+                          let roiId = roi['@id'];
                           roi.shapes.map((shape) => {
-                              let newShape = Object.assign({}, shape);
-                              newShape.shape_id = "" + roi.id + ":" + shape.id;
+                              let newShape =
+                                Converters.amendShapeDefinition(
+                                    Object.assign({}, shape));
+                              let shapeId = newShape['@id']
+                              newShape.shape_id = "" + roiId + ":" + shapeId;
                               // we add some flags we are going to need
                               newShape.visible = true;
                               newShape.selected = false;
                               newShape.deleted = false;
                               newShape.modified = false;
-                              shapes.set(shape.id, newShape);
+                              shapes.set(shapeId, newShape);
                           });
-                          this.data.set(roi.id,
+                          this.data.set(roiId,
                               {
                                   shapes: shapes,
                                   show: false,

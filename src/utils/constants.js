@@ -42,6 +42,12 @@ export const WEBGATEWAY = "WEBGATEWAY";
 export const WEBCLIENT = "WEBCLIENT";
 
 /**
+ * a convenience string lookup for PLUGIN_PREFIX
+ * @type {string}
+ */
+export const PLUGIN_PREFIX = "PLUGIN_PREFIX";
+
+/**
  * the possible request params that we accept
  * @type {Object}
  */

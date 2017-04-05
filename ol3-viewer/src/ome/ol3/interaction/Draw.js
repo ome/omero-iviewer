@@ -276,10 +276,10 @@ ome.ol3.interaction.Draw.prototype.setDefaultDrawingStyle = function(shape) {
         'color': typeof shape['StrokeColor'] === 'number' ?
                     ome.ol3.utils.Conversion.convertSignedIntegerColorObject(
                         shape['StrokeColor']) : null,
-        'width': (typeof shape_info['StrokeWidth'] === 'object' &&
-                  shape_info['StrokeWidth'] !== null &&
-                  typeof shape_info['StrokeWidth']['Value'] === 'number') ?
-                      shape_info['StrokeWidth']['Value'] : 1,
+        'width': (typeof shape['StrokeWidth'] === 'object' &&
+                  shape['StrokeWidth'] !== null &&
+                  typeof shape['StrokeWidth']['Value'] === 'number') ?
+                      shape['StrokeWidth']['Value'] : 1,
         'lineCap': "butt",
         'lineJoin': "miter",
         'miterLimit': 20

@@ -88,7 +88,7 @@ export default class RegionsDrawing extends EventSubscriber {
             params.shapes.map(
                 (shape) => {
                     let newShape =
-                        Converters.makeShapeBackwardsCompatible(shape);
+                        Converters.amendShapeDefinition(shape);
                     if (newShape) {
                         // we also want these flags
                         newShape.is_new = true;
@@ -97,7 +97,7 @@ export default class RegionsDrawing extends EventSubscriber {
                         newShape.deleted = false;
                         newShape.modified = true;
                         // add to map
-                        shapes.set(newShape.id, newShape);
+                        shapes.set(newShape['@id'], newShape);
                         generatedShapes.push(Object.assign({}, newShape));
                     }
                 });
@@ -126,7 +126,7 @@ export default class RegionsDrawing extends EventSubscriber {
         let newShape = Object.assign({}, generatedShapes[len-1]);
         let theDims =
             Utils.getDimensionsForPropagation(
-                this.regions_info, newShape.theZ, newShape.theT);
+                this.regions_info, newShape.TheZ, newShape.TheT);
         if (theDims.length === 0) return;
 
         // for grouping propagated shapes within the same roi

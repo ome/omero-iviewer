@@ -217,7 +217,7 @@ ome.ol3.utils.Conversion.convertSignedIntegerColorObject =
 
         // prepare integer to be converted to hex for easier dissection
         if (signed_integer < 0) signed_integer = signed_integer >>> 0;
-        let intAsHex = signed_integer.toString(16);
+        var intAsHex = signed_integer.toString(16);
         // pad with zeros to have 8 digits
         intAsHex = ("00" + intAsHex).slice(-8);
 
