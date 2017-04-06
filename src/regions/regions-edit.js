@@ -123,8 +123,7 @@ export default class RegionsEdit extends EventSubscriber {
 
         let strokeWidthSpinner =
             $(this.element).find(".shape-stroke-width input");
-        strokeWidthSpinner.spinner({
-            min: 0, disabled: true});
+        strokeWidthSpinner.spinner({min: 0, disabled: false});
         strokeWidthSpinner.spinner("value", 1);
 
         let editComment = $(this.element).find(".shape-edit-comment input");
@@ -139,6 +138,8 @@ export default class RegionsEdit extends EventSubscriber {
             $(this.element).find(".shape-edit-attachments").children();
         shapeAttachments.addClass("disabled-color");
         shapeAttachments.filter('input').prop("disabled", true);
+
+        this.adjustEditWidgets();
     }
 
      /**
@@ -198,7 +199,10 @@ export default class RegionsEdit extends EventSubscriber {
      * @memberof RegionsEdit
      */
     onStrokeWidthChange(width = 10,shape=null) {
-        if (typeof shape !== 'object' || shape === null) return;
+        if (typeof shape !== 'object' || shape === null) {
+            this.regions_info.shape_defaults.strokeWidth = width
+            return;
+        }
         if (typeof width !== 'number' || isNaN(width) || width < 0) return;
 
         let deltaProps = {type: shape.type};
@@ -345,9 +349,6 @@ export default class RegionsEdit extends EventSubscriber {
                     this.regions_info.selected_shapes)
                         .subscribe(
                             (newValue, oldValue) => {
-                                if (this.regions_info.shape_to_be_drawn === null &&
-                                    this.regions_info.selected_shapes.length === 0)
-                                        this.regions_info.resetShapeDefaults();
                                 this.adjustEditWidgets();
                             }));
             this.observers.push(
@@ -355,8 +356,6 @@ export default class RegionsEdit extends EventSubscriber {
                     this.regions_info, 'shape_to_be_drawn')
                         .subscribe(
                             (newValue, oldValue) => {
-                                if (oldValue !== null && newValue === null)
-                                    this.regions_info.resetShapeDefaults();
                                 this.adjustEditWidgets();
                             }));
         };
@@ -569,21 +568,28 @@ export default class RegionsEdit extends EventSubscriber {
         let strokeWidth =
             this.last_selected ?
                 (typeof this.last_selected.strokeWidth === 'number' ?
-                    this.last_selected.strokeWidth : 1) : 1;
+                    this.last_selected.strokeWidth : 1) :
+                        typeof this.regions_info.shape_defaults.strokeWidth === 'number' ?
+                            this.regions_info.shape_defaults.strokeWidth : 1;
         if ((type === 'line' || type === 'polyline') && strokeWidth === 0)
             strokeWidth = 1;
+        else if (type === 'label') strokeWidth = 0;
         strokeOptions.color =
             Converters.hexColorToRgba(strokeColor, strokeAlpha);
         strokeSpectrum.spectrum(strokeOptions);
         // STROKE width
         strokeWidthSpinner.off("input spinstop");
-        strokeWidthSpinner.spinner("value", strokeWidth);
-        if (this.last_selected) {
+        if (type === 'label') {
+            strokeWidthSpinner.spinner("value", 0);
+            strokeWidthSpinner.spinner("disable");
+        } else {
             strokeWidthSpinner.spinner("enable");
+            strokeWidthSpinner.spinner("value", strokeWidth);
             strokeWidthSpinner.on("input spinstop",
                (event, ui) => this.onStrokeWidthChange(
                    parseInt(event.target.value), this.last_selected));
-        } else strokeWidthSpinner.spinner("disable");
+            this.regions_info.shape_defaults.strokeWidth = strokeWidth;
+        }
         this.setDrawColors(strokeOptions.color, false);
 
         // ARROW

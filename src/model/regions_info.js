@@ -371,5 +371,6 @@ export default class RegionsInfo extends EventSubscriber {
         this.shape_defaults['strokeAlpha'] = 0.9;
         this.shape_defaults['fillColor'] = "FFFFFF";
         this.shape_defaults['fillAlpha'] = 0.5;
+        this.shape_defaults['strokeWidth'] = 1;
     }
 }

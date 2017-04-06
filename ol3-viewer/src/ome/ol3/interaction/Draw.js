@@ -294,6 +294,7 @@ ome.ol3.interaction.Draw.prototype.setDefaultDrawingStyle = function(shape) {
             defaultStroke['color']);
     if (needsStroke && defaultStroke['width'] === 0)
         defaultStroke['width'] = 1;
+    else if (isLabel) defaultStroke['width'] = 0;
 
     // set default style
     var defStyle = {
