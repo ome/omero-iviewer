@@ -560,9 +560,6 @@ thead, tbody {
 .roi-toggle  {
     width: 15px;
 }
-.roi-id, .shape-id {
-    width: 50px;
-}
 
 .shape-z {
     width: 50px;
@@ -613,6 +610,7 @@ thead, tbody {
     height:100%;
     float:left;
     width: 25px;
+    margin: 2px 8px 2px 8px;
 }
 
 .draw-active {
@@ -625,6 +623,10 @@ thead, tbody {
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
+}
+
+.draw-select-icon {
+    background-image: url('images/select.png');
 }
 
 .draw-rectangle-icon {

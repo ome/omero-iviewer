@@ -1,11 +1,16 @@
 <template>
     <div class="row regions-drawing">
+        <div class="draw-icons draw-select-icon
+                    ${regions_info.shape_to_be_drawn === null ?
+                        'draw-active' : 'draw-inactive'}"
+             title="Select shape(s)"
+             click.delegate="onDrawShape(-1)">
+        </div>
         <div repeat.for="shape of supported_shapes"
             class="draw-icons draw-${shape}-icon
                 ${regions_info.shape_to_be_drawn === shape ?
                     'draw-active' : 'draw-inactive'}"
             click.delegate="onDrawShape($index)"
-            title="Draw ${shape}"
-            style="margin: 2px 10px 2px 10px;"/>
+            title="Draw ${shape}" />
     </div>
 </template>

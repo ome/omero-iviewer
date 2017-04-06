@@ -29,10 +29,10 @@ export default class RegionsDrawing extends EventSubscriber {
      * @type {Array.<string>}
      */
     supported_shapes = [
-        "arrow",
         "rectangle",
         "ellipse",
         "point",
+        "arrow",
         "line",
         "polygon",
         "label"
@@ -80,7 +80,7 @@ export default class RegionsDrawing extends EventSubscriber {
                     this.supported_shapes.indexOf(
                         this.regions_info.shape_to_be_drawn);
                 if (idx < 0) return;
-                this.onDrawShape(idx, true);
+                this.onDrawShape(idx);
             };
             this.observers.push(
                 this.bindingEngine.propertyObserver(
@@ -227,21 +227,16 @@ export default class RegionsDrawing extends EventSubscriber {
      *
      * @memberof RegionsDrawing
      * @param {number} index the index matching an entry in the supported_shapes array
-     * @param {boolean} force we force drawing continuation
      */
-    onDrawShape(index, force) {
-        if (typeof force !== 'boolean') force = false;
-        let new_shape_type = this.supported_shapes[index];
+    onDrawShape(index) {
+        // combined abort (index = -1) and bounds check
         let abort = false;
-
-        // if the shape to be drawn is already active =>
-        // abort the drawing, otherwise choose new shape type
-        // unless we want to force continuation
-        if (!force && this.regions_info.shape_to_be_drawn &&
-            this.regions_info.shape_to_be_drawn === new_shape_type) {
+        if (index < 0 || index >= this.supported_shapes.length) {
             abort = true;
             this.regions_info.shape_to_be_drawn = null;
-        } else this.regions_info.shape_to_be_drawn = new_shape_type;
+        } else {
+            this.regions_info.shape_to_be_drawn = this.supported_shapes[index];
+        }
 
         // define shape to be drawn including any pre-set defaults (e.g. colors)
         let def =  {type: this.regions_info.shape_to_be_drawn};
