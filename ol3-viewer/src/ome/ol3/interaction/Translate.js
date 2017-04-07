@@ -23,6 +23,12 @@ ome.ol3.interaction.Translate = function(regions_reference) {
     this.regions_ = regions_reference;
 
     /**
+     * @type {Array.<ol.Feature>}
+     * @private
+     */
+    this.translatedFeatures_ = [];
+
+    /**
      * @type {number}
      * @private
      */
@@ -46,8 +52,23 @@ ome.ol3.interaction.Translate = function(regions_reference) {
     ol.events.listen(
         this,
         ol.interaction.TranslateEventType.TRANSLATESTART,
-        ome.ol3.interaction.Translate.prototype.handleTranslateStart,
+        function(event) {
+            this.translatedFeatures_ = event.features.array_;
+        },
         this);
+
+    // a listener to note whether there was an actual translate ...
+    ol.events.listen(
+        this,
+        ol.interaction.TranslateEventType.TRANSLATING,
+        function(event) {
+            // start the history for the translate
+            // if we haven't done so already
+            if (this.hist_id_ >= 0 ||
+                this.translatedFeatures_.length === 0) return;
+            this.hist_id_ =
+                this.regions_.addHistory(this.translatedFeatures_, true);
+        }, this);
 
     // a listener to react on translate end
     ol.events.listen(
@@ -63,6 +84,10 @@ goog.inherits(ome.ol3.interaction.Translate, ol.interaction.Translate);
  * @param {ol.interaction.Translate.Event} event a translate event.
  */
 ome.ol3.interaction.Translate.prototype.handleTranslateEnd = function(event) {
+    // reset original feature array
+    this.translatedFeatures_ = [];
+
+    // snapshot present features
     var featuresTranslated = event.features.array_;
     var ids = [];
     for (var f in featuresTranslated) {
@@ -73,24 +98,17 @@ ome.ol3.interaction.Translate.prototype.handleTranslateEnd = function(event) {
             );
         ids.push(featuresTranslated[f].getId());
     }
+
+    if (this.hist_id_ < 0) return;
+
     // complete history entry
-    if (this.hist_id_ >= 0) {
-        this.regions_.addHistory(featuresTranslated, false, this.hist_id_);
-        this.regions_.sendHistoryNotification(this.hist_id_);
-        this.hist_id_ = -1; // reset
-    }
+    this.regions_.addHistory(featuresTranslated, false, this.hist_id_);
+    this.regions_.sendHistoryNotification(this.hist_id_);
+    this.hist_id_ = -1; // reset
+
     // set modified flag
     if (ids.length > 0) this.regions_.setProperty(
         ids, "state", ome.ol3.REGIONS_STATE.MODIFIED);
-}
-
-/**
- * We want to react to the start of translation for some features
- * @param {ol.interaction.Translate.Event} event a translate event.
- */
-ome.ol3.interaction.Translate.prototype.handleTranslateStart = function(event) {
-    // start the history for the translate, snapshotting the geometry as is
-    this.hist_id_ = this.regions_.addHistory(event.features.array_, true);
 }
 
 /**

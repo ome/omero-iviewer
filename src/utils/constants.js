@@ -87,12 +87,14 @@ export const REGIONS_MODE = {
  * @type {Object}
  */
 export const REGIONS_DRAWING_MODE = {
-    Z_AND_T_VIEWED: 0,
-    ALL_Z_AND_T: 1,
-    ALL_Z: 2,
-    ALL_T: 3,
-    SELECTED_Z_AND_T: 4,
-    NEITHER_Z_NOR_T: 5
+    PRESENT_Z_AND_T: 1,
+    ALL_Z_AND_T: 2,
+    ALL_Z: 3,
+    ALL_T: 4,
+    NEITHER_Z_NOR_T: 5,
+    NOT_Z: 6,
+    NOT_T: 7,
+    CUSTOM_Z_AND_T: 8
 }
 
 /**
