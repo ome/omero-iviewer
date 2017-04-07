@@ -188,15 +188,6 @@ export default class RegionsDrawing extends EventSubscriber {
 
         // collect dimensions for propagation
         let newShape = Object.assign({}, generatedShapes[len-1]);
-        if (this.regions_info.drawing_mode ===
-                REGIONS_DRAWING_MODE.CUSTOM_Z_AND_T)
-            ['z','t'].map((d) => {
-                let v = $("#attachment-" + d + "-input").val();
-                if (v.indexOf("Enter") !== -1) v = "";
-                this.regions_info.drawing_dims[d] =
-                    Utils.parseDimensionInput(v,
-                        this.regions_info.image_info.dimensions['max_' + d]);
-            });
         let theDims =
             Utils.getDimensionsForPropagation(
                 this.regions_info, newShape.theZ, newShape.theT);

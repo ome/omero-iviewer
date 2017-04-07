@@ -3,9 +3,10 @@ import Context from '../app/context';
 import Misc from '../utils/misc';
 import {Utils} from '../utils/regions';
 import {Converters} from '../utils/converters';
-import {REGIONS_MODE} from '../utils/constants';
+import {REGIONS_MODE, REGIONS_DRAWING_MODE} from '../utils/constants';
 import {
-    EventSubscriber, IMAGE_DIMENSION_CHANGE, REGIONS_COPY_SHAPES,
+    EventSubscriber,
+    IMAGE_CONFIG_UPDATE, IMAGE_DIMENSION_CHANGE, REGIONS_COPY_SHAPES,
     REGIONS_GENERATE_SHAPES, REGIONS_MODIFY_SHAPES, REGIONS_SET_PROPERTY
 } from '../events/events';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
@@ -41,7 +42,9 @@ export default class RegionsEdit extends EventSubscriber {
      * @memberof RegionsEdit
      * @type {Array.<string,function>}
      */
-    sub_list = [[IMAGE_DIMENSION_CHANGE, () => this.adjustEditWidgets()]];
+    sub_list = [
+        [IMAGE_CONFIG_UPDATE,() => this.adjustEditWidgets()],
+        [IMAGE_DIMENSION_CHANGE, () => this.adjustEditWidgets()]];
 
     /**
      * @memberof RegionsEdit
@@ -133,13 +136,6 @@ export default class RegionsEdit extends EventSubscriber {
             $(this.element).find(".shape-font-size input");
         fontSizeSpinner.spinner({min: 1, disabled: true});
         fontSizeSpinner.spinner("value", 10);
-
-        let shapeAttachments =
-            $(this.element).find(".shape-edit-attachments").children();
-        shapeAttachments.addClass("disabled-color");
-        shapeAttachments.filter('input').prop("disabled", true);
-
-        this.adjustEditWidgets();
     }
 
      /**
@@ -299,10 +295,31 @@ export default class RegionsEdit extends EventSubscriber {
      * @memberof RegionsEdit
      */
     onAttachmentChange(value, dim = 't', shape = null) {
-        if (typeof value !== 'number' ||
-            typeof shape !== 'object' || shape === null) return;
+        if (typeof value !== 'number' || typeof dim !== 'string') return;
+        let upperDim = dim.toUpperCase();
+        if (typeof shape !== 'object' || shape === null) {
+            // we haven't got any selection so this is a (potential) drawing mode
+            // adjustment
+            let otherDim = dim === 't' ? 'Z' : 'T';
+            if (value < 0) {
+                this.regions_info.drawing_mode =
+                    (this.regions_info.drawing_mode ===
+                        REGIONS_DRAWING_MODE['NOT_' + otherDim]) ?
+                            REGIONS_DRAWING_MODE.NEITHER_Z_NOR_T :
+                            REGIONS_DRAWING_MODE['NOT_' + upperDim];
+            } else if (this.regions_info.drawing_mode ===
+                            REGIONS_DRAWING_MODE['NOT_' + otherDim] ||
+                       this.regions_info.drawing_mode ===
+                            REGIONS_DRAWING_MODE.NEITHER_Z_NOR_T) {
+                                this.regions_info.drawing_mode =
+                                    REGIONS_DRAWING_MODE['NOT_' + otherDim];
+            } else this.regions_info.drawing_mode =
+                        REGIONS_DRAWING_MODE.PRESENT_Z_AND_T;
 
-        let prop = 'the' + dim.toUpperCase();
+            return;
+        }
+        // selected shape(s) need changing
+        let prop = 'the' + upperDim;
         let deltaProps = { type: shape.type };
         deltaProps[prop] = value;
 
@@ -457,12 +474,13 @@ export default class RegionsEdit extends EventSubscriber {
 
         // DIMENSION ATTACHMENT
         let dims = this.regions_info.image_info.dimensions;
+        let shapeAttachments =
+            $(this.element).find(".shape-edit-attachments").children();
+        let shapeAttachmentsInput = shapeAttachments.filter("input");
+        shapeAttachments.removeClass('disabled-color');
+        shapeAttachmentsInput.prop("disabled", false);
+
         if (dims.max_t > 1 || dims.max_z > 1) {
-            let shapeAttachments =
-                $(this.element).find(".shape-edit-attachments").children();
-            shapeAttachments.addClass('disabled-color');
-            let shapeAttachmentsInput = shapeAttachments.filter("input");
-            shapeAttachmentsInput.prop("disabled", true);
             shapeAttachmentsInput.off();
             shapeAttachmentsInput.val('');
             let shapeAttachmentsLocks = shapeAttachments.filter(
@@ -471,81 +489,90 @@ export default class RegionsEdit extends EventSubscriber {
             shapeAttachmentsLocks.addClass("dim_unlocked");
             shapeAttachmentsLocks.off();
 
-            if (this.last_selected) {
-                // enable
-                shapeAttachments.removeClass('disabled-color');
-                shapeAttachmentsInput.prop("disabled", false);
-                // initialize attachments of last selected shape
-                ['t', 'z'].map(
-                    (d) => {
-                        let prop = 'the' + d.toUpperCase();
-                        let unattached = this.last_selected[prop] === -1;
-                        let filter = "[dim='" + d + "']";
-                        let respectiveAttachementLock =
-                            shapeAttachmentsLocks.filter(filter);
-                        respectiveAttachementLock.attr(
-                            'locked', unattached ? "" : "locked");
-                        respectiveAttachementLock.get(0).className =
-                            unattached ? "dim_unlocked" : "dim_locked";
-                        let respectiveDimensionInput =
-                            shapeAttachmentsInput.filter(filter);
-                        respectiveDimensionInput.val(
-                            unattached ?
-                                this.regions_info.image_info.dimensions[d] + 1 :
-                                this.last_selected[prop] + 1);
-                        let hasOnlyOneEntry =
-                            this.regions_info.image_info.dimensions['max_' + d] <= 1;
-                        if (hasOnlyOneEntry || unattached) {
-                            respectiveDimensionInput.prop('disabled', true);
-                            if (hasOnlyOneEntry)
-                                respectiveAttachementLock.addClass(
-                                    "disabled-color");
-                        }
-                });
+            // initialize attachments of last selected shape
+            ['t', 'z'].map(
+                (d) => {
+                    let prop = 'the' + d.toUpperCase();
+                    let filter = "[dim='" + d + "']";
+                    let respectiveAttachementLock =
+                        shapeAttachmentsLocks.filter(filter);
+                    let unattached =
+                        this.last_selected ?
+                            this.last_selected[prop] === -1 :
+                            respectiveAttachementLock.attr("locked") === "";
+                    respectiveAttachementLock.attr(
+                        'locked', unattached ? "" : "locked");
+                    respectiveAttachementLock.get(0).className =
+                        unattached ? "dim_unlocked" : "dim_locked";
+                    let respectiveDimensionInput =
+                        shapeAttachmentsInput.filter(filter);
+                    respectiveDimensionInput.val(
+                        unattached ?
+                            this.regions_info.image_info.dimensions[d] + 1 :
+                            this.last_selected ?
+                                this.last_selected[prop] + 1 :
+                                    this.regions_info.image_info.dimensions[d] + 1);
+                    let hasOnlyOneEntry =
+                        this.regions_info.image_info.dimensions['max_' + d] <= 1;
+                    if (hasOnlyOneEntry || unattached ||
+                        this.last_selected === null) {
+                        respectiveDimensionInput.prop('disabled', true);
+                        if (hasOnlyOneEntry)
+                            respectiveAttachementLock.addClass(
+                                "disabled-color");
+                    }
+            });
 
-                // set up various event handlers for attachment changes
-                let checkAttachmentInput0 =
-                    (event, reset = false) => {
-                        let dim = event.target.getAttribute('dim');
-                        if (this.regions_info.image_info.dimensions[
-                            'max_' + dim] <= 1) return -1;
-                        let respectiveTextInput =
-                            shapeAttachmentsInput.filter('[dim="' + dim + '"]');
-                        return this.checkAttachmentInput(respectiveTextInput, reset);
-                    };
-                // reset on blur (if check of input value check fails)
-                shapeAttachmentsInput.on('blur',
-                    (event) => checkAttachmentInput0(event, true));
-                // change attachment value (if input value check succeeds)
-                shapeAttachmentsInput.on('change keyup',
-                    (event) => {
-                        if (event.type === 'keyup' && event.keyCode !== 13) return;
-                        let dim = event.target.getAttribute('dim');
-                        let value = checkAttachmentInput0(event);
-                        if (value >= 0)
-                            this.onAttachmentChange(value, dim, this.last_selected);
-                    });
-                // click handler on locks
-                shapeAttachmentsLocks.on('click',
-                    (event) => {
-                        let dim = event.target.getAttribute('dim');
-                        if (this.regions_info.image_info.dimensions[
-                            'max_' + dim] <= 1) return;
-                        let locked = event.target.getAttribute('locked');
-                        if (locked) {
-                            this.onAttachmentChange(-1, dim, this.last_selected);
-                            event.target.className = 'dim_unlocked';
-                        } else {
-                            let val = checkAttachmentInput0(event, true);
-                            if (val < 0) return;
-                            this.onAttachmentChange(
-                                val, dim, this.last_selected);
-                            event.target.className = 'dim_locked';
-                        }
-                        event.target.setAttribute(
-                            "locked", locked === 'locked' ? "" : "locked");
-                    });
-            }
+            // set up various event handlers for attachment changes
+            let checkAttachmentInput0 =
+                (event, reset = false) => {
+                    let dim = event.target.getAttribute('dim');
+                    if (this.regions_info.image_info.dimensions[
+                        'max_' + dim] <= 1) return -1;
+                    let respectiveTextInput =
+                        shapeAttachmentsInput.filter('[dim="' + dim + '"]');
+                    return this.checkAttachmentInput(respectiveTextInput, reset);
+                };
+            // reset on blur (if check of input value check fails)
+            shapeAttachmentsInput.on('blur',
+                (event) => checkAttachmentInput0(event, true));
+            // change attachment value (if input value check succeeds)
+            shapeAttachmentsInput.on('change keyup',
+                (event) => {
+                    if (event.type === 'keyup' && event.keyCode !== 13) return;
+                    let dim = event.target.getAttribute('dim');
+                    let value = checkAttachmentInput0(event);
+                    if (value >= 0)
+                        this.onAttachmentChange(value, dim, this.last_selected);
+                });
+            // click handler on locks
+            shapeAttachmentsLocks.on('click',
+                (event) => {
+                    let dim = event.target.getAttribute('dim');
+                    if (this.regions_info.image_info.dimensions[
+                        'max_' + dim] <= 1) return;
+                    let locked = event.target.getAttribute('locked');
+                    if (locked) {
+                        this.onAttachmentChange(-1, dim, this.last_selected);
+                        event.target.className = 'dim_unlocked';
+                    } else {
+                        let val = checkAttachmentInput0(event, true);
+                        if (val < 0) return;
+                        this.onAttachmentChange(
+                            val, dim, this.last_selected);
+                        event.target.className = 'dim_locked';
+                    }
+                    event.target.setAttribute(
+                        "locked", locked === 'locked' ? "" : "locked");
+                    let respectiveTextInput =
+                        shapeAttachmentsInput.filter('[dim="' + dim + '"]');
+                    respectiveTextInput.prop(
+                        'disabled', locked === 'locked' ||
+                        this.last_selected === null);
+                });
+        } else {
+            shapeAttachments.addClass('disabled-color');
+            shapeAttachmentsInput.prop("disabled", true);
         }
 
         // STROKE COLOR & WIDTH
