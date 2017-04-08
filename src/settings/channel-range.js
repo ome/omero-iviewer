@@ -414,7 +414,6 @@ export default class ChannelRange  {
              $(this.element).find(".channel-slider").find(".ui-slider-range").css(
                  {"background-image" :
                     "url('" + this.luts_png.url + "')",
-                    "url('" + this.luts_png + "')",
                   "background-position" : "0 -" +
                     (this.luts.get(this.channel.color).index*20) + "px",
                   "background-size" : "100% " + (this.luts_png.height * 2) + "px",
