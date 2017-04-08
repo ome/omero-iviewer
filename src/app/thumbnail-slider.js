@@ -296,7 +296,7 @@ export default class ThumbnailSlider extends EventSubscriber {
             error : (response) => {
                 this.requesting_thumbnail_data = false;
                 this.dataset_id = null;
-                if (initialize) this.hideMe();
+                if (init) this.hideMe();
             }
         });
     }

@@ -269,6 +269,7 @@ ome.ol3.utils.Style.updateStyleFunction = function(feature, regions_reference, f
                     feature['oldStrokeStyle'] &&
                         typeof feature['oldStrokeStyle']['width'] === 'number' ?
                             feature['oldStrokeStyle']['width'] : 1;
+                if (isLabel) w = 1;
 				selStyle.setWidth(w);
 				selStyle.setLineDash([5, 5]);
                 oldStyle.stroke_ = selStyle;

@@ -90,8 +90,8 @@ export default class ImageConfig extends History {
      * @memberof ImageConfig
      */
     unbind() {
-        this.image_info.unbind();
         this.regions_info.unbind();
+        this.image_info.unbind();
     }
 
     /**
