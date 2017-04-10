@@ -117,11 +117,11 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                 var hasUnattachedDims =
                     ome.ol3.utils.Misc.isArray(this.opts['unattached']) &&
                     this.opts['unattached'].length > 0;
-                event.feature['theT'] =
+                event.feature['TheT'] =
                     hasUnattachedDims &&
                     this.opts['unattached'].indexOf('t') !== -1 ?
                         -1 : this.regions_.viewer_.getDimensionIndex('t');
-                event.feature['theZ'] =
+                event.feature['TheZ'] =
                     hasUnattachedDims &&
                     this.opts['unattached'].indexOf('z') !== -1 ?
                         -1 : this.regions_.viewer_.getDimensionIndex('z');

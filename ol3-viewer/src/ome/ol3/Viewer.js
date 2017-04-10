@@ -1518,7 +1518,7 @@ ome.ol3.Viewer.prototype.getSmallestViewExtent = function() {
 
          if (col === null) return;
 
-         var dims = ['theT', 'theZ', 'theC'];
+         var dims = ['TheT', 'TheZ', 'TheC'];
          col.forEach(function(f) {
              for (var p in shape_info)
                 if (dims.indexOf(p) !== -1 &&

@@ -324,7 +324,7 @@ export default class RegionsEdit extends EventSubscriber {
             return;
         }
         // selected shape(s) need changing
-        let prop = 'the' + upperDim;
+        let prop = 'The' + upperDim;
         let deltaProps = { type: shape.type };
         deltaProps[prop] = value;
 
@@ -499,7 +499,7 @@ export default class RegionsEdit extends EventSubscriber {
             // initialize attachments of last selected shape
             ['t', 'z'].map(
                 (d) => {
-                    let prop = 'the' + d.toUpperCase();
+                    let prop = 'The' + d.toUpperCase();
                     let filter = "[dim='" + d + "']";
                     let respectiveAttachementLock =
                         shapeAttachmentsLocks.filter(filter);
