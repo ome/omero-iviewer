@@ -14,6 +14,8 @@ hr {
     margin-top: 3px;
     margin-bottom: 3px;
     width: 100%;
+    float: left;
+    min-width: 350px;
 }
 
 .container-fluid {
@@ -538,7 +540,9 @@ thead, tbody {
     box-sizing: border-box;
     white-space: nowrap;
     text-align: center;
-    border: solid 2px rgba(255,255,255,0);
+    border-style: solid;
+    border-color: rgba(255,255,255,0);
+    border-width: 0px 2px 0px 2px;
     border-collapse: collapse;
 }
 .regions-table td div {
@@ -555,9 +559,6 @@ thead, tbody {
 
 .roi-toggle  {
     width: 15px;
-}
-.roi-id, .shape-id {
-    width: 50px;
 }
 
 .shape-z {
@@ -609,6 +610,7 @@ thead, tbody {
     height:100%;
     float:left;
     width: 25px;
+    margin: 2px 8px 2px 8px;
 }
 
 .draw-active {
@@ -621,6 +623,10 @@ thead, tbody {
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
+}
+
+.draw-select-icon {
+    background-image: url('images/select.png');
 }
 
 .draw-rectangle-icon {
@@ -737,6 +743,37 @@ thead, tbody {
     height: 28px;
 }
 
+.shape-edit-attachments {
+    margin: 5px 5px 0px 15px;
+    min-width: 300px;
+    width: 100%;
+    float: left;
+    padding-top: 1px;
+}
+.shape-edit-attachments input[type=text] {
+    float: left;
+    width: 50px;
+    line-height: 28px;
+    height: 28px;
+    font-size: 12px;
+}
+.shape-edit-attachments span {
+    float: left;
+    line-height: 30px;
+    height: 30px;
+    margin-left: 5px;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+.dim_locked {
+    background-image: url('images/dim_locked.png');
+    width: 24px;
+}
+.dim_unlocked {
+    background-image: url('images/dim_unlocked.png');
+    width: 24px;
+}
+
 .arrow-button button  {
     width: 35px;
 }
@@ -759,6 +796,7 @@ thead, tbody {
     padding-left: 0px;
 }
 .regions-drawing-mode {
+    margin-left: 10px;
     line-height: 30px;
 }
 .drawing-mode {
@@ -774,24 +812,29 @@ thead, tbody {
     float: left;
 }
 .drawing-mode-apply {
+    float: left;
+    margin-top: 15px;
+    margin-bottom: 10px;
     text-align: center;
 }
+.drawing-mode-apply button {
+    min-width: 300px;
+}
 
-.regions-propagation-options div {
+.regions-attachment-options div {
     float: left;
-    margin-left: 20px;
     width: 100%;
 }
 
-.regions-propagation-options input {
+.regions-attachment-options input {
     float: left;
     height: 28px;
     line-height: 30px;
 }
 
-.regions-propagation-options .aligned-text-input {
+.regions-attachment-options .aligned-text-input {
     float: left;
-    margin-left: 20px;
+    margin-left: 0px;
     margin-right: 2px;
     width: 15px;
 }
@@ -819,6 +862,7 @@ thead, tbody {
     font-weight: bold;
     font-size: 12px;
     width: 80%;
+    float: left;
 }
 
 .modal-dialog {

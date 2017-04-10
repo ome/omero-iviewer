@@ -3,20 +3,22 @@ import Context from '../app/context';
 import Misc from '../utils/misc';
 import {Utils} from '../utils/regions';
 import {Converters} from '../utils/converters';
-import {REGIONS_MODE} from '../utils/constants';
+import {REGIONS_MODE, REGIONS_DRAWING_MODE} from '../utils/constants';
 import {
-    REGIONS_COPY_SHAPES, REGIONS_GENERATE_SHAPES,
-    REGIONS_MODIFY_SHAPES, REGIONS_SET_PROPERTY
+    EventSubscriber,
+    IMAGE_CONFIG_UPDATE, IMAGE_DIMENSION_CHANGE, REGIONS_COPY_SHAPES,
+    REGIONS_GENERATE_SHAPES, REGIONS_MODIFY_SHAPES, REGIONS_SET_PROPERTY
 } from '../events/events';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {spectrum} from 'spectrum-colorpicker';
 
 /**
  * Represents the regions section in the right hand panel
+ * @extends {EventSubscriber}
  */
 @customElement('regions-edit')
 @inject(Context, Element, BindingEngine)
-export default class RegionsEdit {
+export default class RegionsEdit extends EventSubscriber {
     /**
      *a bound reference to regions_info
      * @memberof RegionsEdit
@@ -34,6 +36,15 @@ export default class RegionsEdit {
         { key: 67, func: this.copyShapes},                          // ctrl - c
         { key: 86, func: this.pasteShapes}                          // ctrl - v
     ];
+
+    /**
+     * events we subscribe to
+     * @memberof RegionsEdit
+     * @type {Array.<string,function>}
+     */
+    sub_list = [
+        [IMAGE_CONFIG_UPDATE,() => this.adjustEditWidgets()],
+        [IMAGE_DIMENSION_CHANGE, () => this.adjustEditWidgets()]];
 
     /**
      * @memberof RegionsEdit
@@ -55,6 +66,7 @@ export default class RegionsEdit {
      * @param {BindingEngine} bindingEngine the BindingEngine (injected)
      */
     constructor(context, element, bindingEngine) {
+        super(context.eventbus);
         this.context = context;
         this.element = element;
         this.bindingEngine = bindingEngine;
@@ -69,6 +81,7 @@ export default class RegionsEdit {
      */
     bind() {
         this.registerObservers();
+        this.subscribe();
     }
 
     /**
@@ -80,6 +93,7 @@ export default class RegionsEdit {
      */
     unbind() {
         this.unregisterObservers();
+        this.unsubscribe();
     }
 
     /**
@@ -112,8 +126,7 @@ export default class RegionsEdit {
 
         let strokeWidthSpinner =
             $(this.element).find(".shape-stroke-width input");
-        strokeWidthSpinner.spinner({
-            min: 0, disabled: true});
+        strokeWidthSpinner.spinner({min: 0, disabled: false});
         strokeWidthSpinner.spinner("value", 1);
 
         let editComment = $(this.element).find(".shape-edit-comment input");
@@ -175,7 +188,10 @@ export default class RegionsEdit {
      * @memberof RegionsEdit
      */
     onStrokeWidthChange(width = 10,shape=null) {
-        if (typeof shape !== 'object' || shape === null) return;
+        if (typeof shape !== 'object' || shape === null) {
+            this.regions_info.shape_defaults.strokeWidth = width
+            return;
+        }
         if (typeof width !== 'number' || isNaN(width) || width < 0) return;
 
         let deltaProps = {type: shape.type};
@@ -242,22 +258,99 @@ export default class RegionsEdit {
     }
 
     /**
+     * Runs checks for an attachment input field and its associated value
+     *
+     * @param {Element} input the attachment input field element
+     * @param {boolean} reset if true we reset to the present attachment
+     * @return {number} returns input value or -1 if value was erroneous
+     */
+    checkAttachmentInput(input, reset=false) {
+        let dim = input.attr("dim");
+        let dims = this.regions_info.image_info.dimensions;
+        let presentValue = dims[dim] + 1;
+
+        // input value check
+        let value = input.val().replace(/\s/g, "");
+        if (value === "") {
+            if (reset) input.val(presentValue);
+            return -1;
+        }
+        value = parseInt(value);
+        if (isNaN(value)) {
+            if (reset) input.val(presentValue);
+            return -1;
+        }
+
+        // bounds check
+        if (value < 1 || value > dims['max_' + dim]) {
+            if (reset) input.val(presentValue);
+            return -1;
+        }
+
+        // index for user starts with 1, internally we start at 0
+        return value-1;
+    }
+
+    /**
+     * Handles fill/stroke color changes
+     *
+     * @param {number} value the new attachment value
+     * @param {string} dim the dimension we attach to
+     * @param {Object} shape the primary shape that the change was invoked on
+     * @memberof RegionsEdit
+     */
+    onAttachmentChange(value, dim = 't', shape = null) {
+        if (typeof value !== 'number' || typeof dim !== 'string') return;
+        let upperDim = dim.toUpperCase();
+        if (typeof shape !== 'object' || shape === null) {
+            // we haven't got any selection so this is a (potential) drawing mode
+            // adjustment
+            let otherDim = dim === 't' ? 'Z' : 'T';
+            if (value < 0) {
+                this.regions_info.drawing_mode =
+                    (this.regions_info.drawing_mode ===
+                        REGIONS_DRAWING_MODE['NOT_' + otherDim]) ?
+                            REGIONS_DRAWING_MODE.NEITHER_Z_NOR_T :
+                            REGIONS_DRAWING_MODE['NOT_' + upperDim];
+            } else if (this.regions_info.drawing_mode ===
+                            REGIONS_DRAWING_MODE['NOT_' + otherDim] ||
+                       this.regions_info.drawing_mode ===
+                            REGIONS_DRAWING_MODE.NEITHER_Z_NOR_T) {
+                                this.regions_info.drawing_mode =
+                                    REGIONS_DRAWING_MODE['NOT_' + otherDim];
+            } else this.regions_info.drawing_mode =
+                        REGIONS_DRAWING_MODE.PRESENT_Z_AND_T;
+
+            return;
+        }
+        // selected shape(s) need changing
+        let prop = 'the' + upperDim;
+        let deltaProps = { type: shape.type };
+        deltaProps[prop] = value;
+
+        this.modifyShapes(
+            deltaProps, this.createUpdateHandler([prop], [value], true), true);
+    }
+
+    /**
      * Notifies the viewer to change the shaape according to the new shape
      * definition
      *
      * @param {Object} shape_definition the object definition incl. attributes
      *                                  to be changed
      * @param {function} callback a callback function on success
+     * @param {boolean} modifies_attachment does definition alter z/t attachment
      * @memberof RegionsEdit
      */
-    modifyShapes(shape_definition, callback = null) {
+    modifyShapes(shape_definition, callback = null, modifies_attachment = false) {
         if (typeof shape_definition !== 'object' ||
                 shape_definition === null) return;
 
         this.context.publish(
            REGIONS_MODIFY_SHAPES, {
                config_id: this.regions_info.image_info.config_id,
-               shapes : this.regions_info.selected_shapes,
+               shapes: this.regions_info.selected_shapes,
+               modifies_attachment: modifies_attachment,
                definition: shape_definition,
                 callback: callback});
     }
@@ -278,9 +371,6 @@ export default class RegionsEdit {
                     this.regions_info.selected_shapes)
                         .subscribe(
                             (newValue, oldValue) => {
-                                if (this.regions_info.shape_to_be_drawn === null &&
-                                    this.regions_info.selected_shapes.length === 0)
-                                        this.regions_info.shape_defaults = {};
                                 this.adjustEditWidgets();
                             }));
             this.observers.push(
@@ -288,8 +378,6 @@ export default class RegionsEdit {
                     this.regions_info, 'shape_to_be_drawn')
                         .subscribe(
                             (newValue, oldValue) => {
-                                if (oldValue !== null && newValue === null)
-                                    this.regions_info.shape_defaults = {};
                                 this.adjustEditWidgets();
                             }));
         };
@@ -346,29 +434,14 @@ export default class RegionsEdit {
     }
 
     /**
-     * Sets the last selected shape
-     *
-     * @private
-     * @memberof RegionsEdit
-     */
-    setLastSelected() {
-        let lastId =
-            this.regions_info.selected_shapes.length === 0 ?
-                -1 :
-                this.regions_info.selected_shapes.length-1;
-        this.last_selected =
-            lastId === -1 ? null :
-            this.regions_info.getShape(
-                this.regions_info.selected_shapes[lastId]);
-    }
-
-    /**
      * Reacts to shape selections, adjusting the edit widgets accordingly
      *
      * @memberof RegionsEdit
      */
     adjustEditWidgets() {
-        this.setLastSelected();
+        let ids = this.regions_info.getLastSelectedShapeIds();
+        let roi = ids !== null ? this.regions_info.data.get(ids.roi_id) : null;
+        this.last_selected = roi ? roi.shapes.get(ids.shape_id) : null;
         let type =
             this.last_selected ? this.last_selected.type.toLowerCase() : null;
 
@@ -389,6 +462,7 @@ export default class RegionsEdit {
             editComment.prop("disabled", true);
             editComment.addClass("disabled-color");
         }
+        // FONT SIZE
         let fontSize =
             this.last_selected ?
                 (typeof this.last_selected.FontSize === 'object' &&
@@ -404,6 +478,109 @@ export default class RegionsEdit {
                (event, ui) => this.onFontSizeChange(
                    parseInt(event.target.value), this.last_selected));
         } else fontSizeSpinner.spinner("disable");
+
+        // DIMENSION ATTACHMENT
+        let dims = this.regions_info.image_info.dimensions;
+        let shapeAttachments =
+            $(this.element).find(".shape-edit-attachments").children();
+        let shapeAttachmentsInput = shapeAttachments.filter("input");
+        shapeAttachments.removeClass('disabled-color');
+        shapeAttachmentsInput.prop("disabled", false);
+
+        if (dims.max_t > 1 || dims.max_z > 1) {
+            shapeAttachmentsInput.off();
+            shapeAttachmentsInput.val('');
+            let shapeAttachmentsLocks = shapeAttachments.filter(
+                "[name='shape-edit-attachments-locks']");
+            shapeAttachmentsLocks.removeClass("dim_locked");
+            shapeAttachmentsLocks.addClass("dim_unlocked");
+            shapeAttachmentsLocks.off();
+
+            // initialize attachments of last selected shape
+            ['t', 'z'].map(
+                (d) => {
+                    let prop = 'the' + d.toUpperCase();
+                    let filter = "[dim='" + d + "']";
+                    let respectiveAttachementLock =
+                        shapeAttachmentsLocks.filter(filter);
+                    let unattached =
+                        this.last_selected ?
+                            this.last_selected[prop] === -1 :
+                            respectiveAttachementLock.attr("locked") === "";
+                    respectiveAttachementLock.attr(
+                        'locked', unattached ? "" : "locked");
+                    respectiveAttachementLock.get(0).className =
+                        unattached ? "dim_unlocked" : "dim_locked";
+                    let respectiveDimensionInput =
+                        shapeAttachmentsInput.filter(filter);
+                    respectiveDimensionInput.val(
+                        unattached ?
+                            this.regions_info.image_info.dimensions[d] + 1 :
+                            this.last_selected ?
+                                this.last_selected[prop] + 1 :
+                                    this.regions_info.image_info.dimensions[d] + 1);
+                    let hasOnlyOneEntry =
+                        this.regions_info.image_info.dimensions['max_' + d] <= 1;
+                    if (hasOnlyOneEntry || unattached ||
+                        this.last_selected === null) {
+                        respectiveDimensionInput.prop('disabled', true);
+                        if (hasOnlyOneEntry)
+                            respectiveAttachementLock.addClass(
+                                "disabled-color");
+                    }
+            });
+
+            // set up various event handlers for attachment changes
+            let checkAttachmentInput0 =
+                (event, reset = false) => {
+                    let dim = event.target.getAttribute('dim');
+                    if (this.regions_info.image_info.dimensions[
+                        'max_' + dim] <= 1) return -1;
+                    let respectiveTextInput =
+                        shapeAttachmentsInput.filter('[dim="' + dim + '"]');
+                    return this.checkAttachmentInput(respectiveTextInput, reset);
+                };
+            // reset on blur (if check of input value check fails)
+            shapeAttachmentsInput.on('blur',
+                (event) => checkAttachmentInput0(event, true));
+            // change attachment value (if input value check succeeds)
+            shapeAttachmentsInput.on('change keyup',
+                (event) => {
+                    if (event.type === 'keyup' && event.keyCode !== 13) return;
+                    let dim = event.target.getAttribute('dim');
+                    let value = checkAttachmentInput0(event);
+                    if (value >= 0)
+                        this.onAttachmentChange(value, dim, this.last_selected);
+                });
+            // click handler on locks
+            shapeAttachmentsLocks.on('click',
+                (event) => {
+                    let dim = event.target.getAttribute('dim');
+                    if (this.regions_info.image_info.dimensions[
+                        'max_' + dim] <= 1) return;
+                    let locked = event.target.getAttribute('locked');
+                    if (locked) {
+                        this.onAttachmentChange(-1, dim, this.last_selected);
+                        event.target.className = 'dim_unlocked';
+                    } else {
+                        let val = checkAttachmentInput0(event, true);
+                        if (val < 0) return;
+                        this.onAttachmentChange(
+                            val, dim, this.last_selected);
+                        event.target.className = 'dim_locked';
+                    }
+                    event.target.setAttribute(
+                        "locked", locked === 'locked' ? "" : "locked");
+                    let respectiveTextInput =
+                        shapeAttachmentsInput.filter('[dim="' + dim + '"]');
+                    respectiveTextInput.prop(
+                        'disabled', locked === 'locked' ||
+                        this.last_selected === null);
+                });
+        } else {
+            shapeAttachments.addClass('disabled-color');
+            shapeAttachmentsInput.prop("disabled", true);
+        }
 
         // STROKE COLOR & WIDTH
         let strokeOptions =
@@ -425,19 +602,22 @@ export default class RegionsEdit {
                     this.last_selected.StrokeWidth.Value : 1) : 1;
         if ((type === 'line' || type === 'polyline') && strokeWidth === 0)
             strokeWidth = 1;
+        else if (type === 'label') strokeWidth = 0;
         strokeOptions.color = Converters.signedIntegerToRgba(strokeColor);
         strokeSpectrum.spectrum(strokeOptions);
         // STROKE width
         strokeWidthSpinner.off("input spinstop");
-        strokeWidthSpinner.spinner("value", strokeWidth);
-        if (this.regions_info.shape_to_be_drawn === null)
-            strokeSpectrum.spectrum("enable");
-        if (this.last_selected) {
+        if (type === 'label') {
+            strokeWidthSpinner.spinner("value", 0);
+            strokeWidthSpinner.spinner("disable");
+        } else {
             strokeWidthSpinner.spinner("enable");
+            strokeWidthSpinner.spinner("value", strokeWidth);
             strokeWidthSpinner.on("input spinstop",
                (event, ui) => this.onStrokeWidthChange(
                    parseInt(event.target.value), this.last_selected));
-        } else strokeWidthSpinner.spinner("disable");
+            this.regions_info.shape_defaults.strokeWidth = strokeWidth;
+        }
         this.setDrawColors(strokeOptions.color, false);
 
         // ARROW
@@ -462,17 +642,19 @@ export default class RegionsEdit {
         let fillOptions = this.getColorPickerOptions(true, this.last_selected);
         let fillSpectrum =
             $(this.element).find(".shape-fill-color .spectrum-input");
-        let fillColor =
-            this.last_selected ?
-                this.last_selected.FillColor :
-                typeof this.regions_info.shape_defaults.FillColor === 'number' ?
-                    this.regions_info.shape_defaults.FillColor : -129;
+        let fillColor = -129;
+        let fillDisabled =
+                type === 'line' || type === 'polyline' || type === 'label';
+        if (!fillDisabled) {
+            fillColor =
+                this.last_selected ?
+                    this.last_selected.FillColor :
+                    typeof this.regions_info.shape_defaults.FillColor === 'number' ?
+                        this.regions_info.shape_defaults.FillColor : -129;
+        }
         fillOptions.color = Converters.signedIntegerToRgba(fillColor);
         fillSpectrum.spectrum(fillOptions);
         // set fill (if not disabled)
-        let fillDisabled =
-            this.regions_info.shape_to_be_drawn !== null ||
-                type === 'line' || type === 'polyline' || type === 'label';
         if (fillDisabled) {
             fillSpectrum.spectrum("disable");
             return;
@@ -491,7 +673,7 @@ export default class RegionsEdit {
      */
     getColorPickerOptions(fill=true, shape=null) {
         let options =  {
-            disabled: this.regions_info.shape_to_be_drawn !== null,
+            disabled: this.regions_info === null,
             color: fill ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 153, 255, 0.7)',
             showInput: true,
             showAlpha: true,
@@ -541,17 +723,22 @@ export default class RegionsEdit {
     /**
      * Creates a more custom update handler than the standard one
      *
+     * @private
+     * @param {Array.<string>} properties the properties that changed
+     * @param {Array.<?>} value the values of the properties that changed
+     * @param {boolean} modifies_attachment if true dimension attachment changed
      * @return {function} the wrapped standard update handler
      * @memberof RegionsEdit
      */
-    createUpdateHandler(properties, values) {
-        let func =
-            Utils.createUpdateHandler(
-                properties,values,
-                this.regions_info.history,
-                this.regions_info.history.getHistoryId(),
-                this.adjustEditWidgets.bind(this));
-        return func;
+    createUpdateHandler(properties, values, modifies_attachment = false) {
+        let updates = { properties: properties, values: values };
+        let history = {
+            hist: this.regions_info.history,
+            hist_id: this.regions_info.history.getHistoryId()
+        };
+        return Utils.createUpdateHandler(
+                    updates, history,
+                    this.adjustEditWidgets.bind(this), modifies_attachment);
     }
 
     /**

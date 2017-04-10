@@ -114,14 +114,16 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                 event.feature['type'] = shape_type;
 
                 // set t and z info
-                var unattached =
-                    typeof this.opts['unattached'] === 'boolean' &&
-                    this.opts['unattached'];
-                event.feature['TheT'] =
-                    unattached ?
+                var hasUnattachedDims =
+                    ome.ol3.utils.Misc.isArray(this.opts['unattached']) &&
+                    this.opts['unattached'].length > 0;
+                event.feature['theT'] =
+                    hasUnattachedDims &&
+                    this.opts['unattached'].indexOf('t') !== -1 ?
                         -1 : this.regions_.viewer_.getDimensionIndex('t');
-                event.feature['TheZ'] =
-                    unattached ?
+                event.feature['theZ'] =
+                    hasUnattachedDims &&
+                    this.opts['unattached'].indexOf('z') !== -1 ?
                         -1 : this.regions_.viewer_.getDimensionIndex('z');
                 event.feature['TheC'] = -1;
 
@@ -130,7 +132,9 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                 ome.ol3.utils.Style.updateStyleFunction(
                     event.feature, this.regions_, true);
 
-                this.regions_.addFeature(event.feature);
+                var add =
+                    typeof this.opts['add'] !== 'boolean' || this.opts['add'];
+                if (add) this.regions_.addFeature(event.feature);
 
                 var eventbus = this.regions_.viewer_.eventbus_;
                 var config_id = this.regions_.viewer_.getTargetId();
@@ -147,7 +151,7 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                         var opts = {
                             "config_id": config_id,
                             "shapes": newRegionsObject['rois'],
-                            "drawn" : true
+                            "drawn" : true, "add": add
                         };
                         if (typeof hist_id === 'number') opts['hist_id'] = hist_id;
                         if (typeof event.feature['roi_id'] === 'number')
@@ -165,7 +169,6 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
         if (this.ol_draw_)
             this.regions_.viewer_.viewer_.removeInteraction(this.ol_draw_);
         this.ol_draw_ = new ol.interaction.Draw({
-            source: this.regions_,
             style: this.default_style_function_,
             type: ol_shape,
             geometryFunction:
@@ -200,8 +203,9 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
  * @param {Object} shape the shape definition (incl. type)
  * @param {number} roi_id a roi id that gets incorporated into the id (for grouping)
  * @param {Object=} opts optional parameters such as:
- *                       an optional history id (hist_id) to pass through
- *                       or an optional unattached flag (unattached)
+ *                       an history id (hist_id) to pass through,
+ *                       a list of unattached dimensions (unattached) or
+ *                       a flag to not add the new shape (add)
  */
 ome.ol3.interaction.Draw.prototype.drawShape = function(shape, roi_id, opts) {
     this.opts = opts || {};
@@ -290,6 +294,7 @@ ome.ol3.interaction.Draw.prototype.setDefaultDrawingStyle = function(shape) {
             defaultStroke['color']);
     if (needsStroke && defaultStroke['width'] === 0)
         defaultStroke['width'] = 1;
+    else if (isLabel) defaultStroke['width'] = 0;
 
     // set default style
     var defStyle = {

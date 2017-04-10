@@ -20,24 +20,25 @@ export class Utils {
      * @return {Array.<Object>} an array of objects containing a t and a z
      */
      static getDimensionsForPropagation(regions_info, presentZ=1, presentT=-1) {
-         if (regions_info.drawing_mode ===
-             REGIONS_DRAWING_MODE.Z_AND_T_VIEWED ||
-             regions_info.drawing_mode ===
-                 REGIONS_DRAWING_MODE.NEITHER_Z_NOR_T) return [];
+         // all unattached states as well as the present z/t mode don't need this
+         if (regions_info.drawing_mode === REGIONS_DRAWING_MODE.PRESENT_Z_AND_T ||
+             (regions_info.drawing_mode > REGIONS_DRAWING_MODE.ALL_T &&
+             regions_info.drawing_mode < REGIONS_DRAWING_MODE.CUSTOM_Z_AND_T))
+                return [];
 
         // establish what z/ts we use based on the drawing mode,
         // then form the union minus the present z/t already drawn
         let theDims = [];
         let m = regions_info.drawing_mode;
-        let useZs = m === REGIONS_DRAWING_MODE.SELECTED_Z_AND_T ?
+        let useZs = m === REGIONS_DRAWING_MODE.CUSTOM_Z_AND_T ?
                 regions_info.drawing_dims.z : [];
-        let useTs = m === REGIONS_DRAWING_MODE.SELECTED_Z_AND_T ?
+        let useTs = m === REGIONS_DRAWING_MODE.CUSTOM_Z_AND_T ?
                 regions_info.drawing_dims.t : [];
         let maxZ = regions_info.image_info.dimensions.max_z;
         let maxT = regions_info.image_info.dimensions.max_t;
 
         // for drawing modes where we don't have custom selections
-        if (m !== REGIONS_DRAWING_MODE.SELECTED_Z_AND_T) {
+        if (m !== REGIONS_DRAWING_MODE.CUSTOM_Z_AND_T) {
             let allZs = Array.from(Array(maxZ).keys());
             let allTs = Array.from(Array(maxT).keys());
             ['z', 't'].map(
@@ -64,7 +65,7 @@ export class Utils {
             let zIndex = useZs[i];
             for (let j=0;j<useTs.length;j++) {
                 let tIndex = useTs[j];
-                if (zIndex === presentZ && tIndex === presentT) continue;
+                //if (zIndex === presentZ && tIndex === presentT) continue;
                 theDims.push({"z" : zIndex, "t": tIndex});
             }
         }
@@ -72,47 +73,101 @@ export class Utils {
     }
 
     /**
+     * Parses a string for dimension input incl. ranges such as 1-3 as
+     * well as well as comma delimited input eliminating duplicates
+     * as well as values that are below 0 or above max
+     *
+     * @static
+     * @param {string} some_input a string containing dimension info
+     * @param {number} max the upper bound for the dimension
+     * @return {Array.<number>} an array of numbers
+     */
+    static parseDimensionInput(some_input, max) {
+        if (typeof some_input !== 'string' || typeof max !== 'number' || max <=0)
+            return [];
+        some_input = some_input.replace(/\s/g, '');
+        if (some_input.length === 0) return [];
+
+        let tokens = some_input.split(","); // tokenize by ,
+        let vals = [];
+        tokens.map((t) => {
+            let potentialDashPos = t.indexOf("-");
+            if (potentialDashPos === -1) {// single number assumed
+                let temp = parseInt(t);
+                if (typeof temp === 'number' && !isNaN(temp) &&
+                        temp > 0 && temp <= max) vals.push(temp);
+            } else { // we might have a range
+                let start = parseInt(t.substring(0, potentialDashPos));
+                let end = parseInt(t.substring(potentialDashPos+1));
+                if (typeof start === 'number' && typeof end === 'number' &&
+                    !isNaN(start) && !isNaN(end) && start <= end) {
+                        // we do have a 'range'
+                        for (let i=start;i<=end;i++)
+                            if (i > 0 && i <= max) vals.push(i);
+                    }
+            }
+        });
+        // eliminating duplicates and decrement by 1 to get internal dim indices
+        vals.sort();
+        let previous = -1;
+        let ret = [];
+        for (let x=0;x<vals.length;x++) {
+            let present = vals[x];
+            if (present === previous) continue;
+            previous = present;
+            ret.push(present-1);
+        }
+
+        return ret;
+     }
+
+    /**
      * Creates a callback function that is intended to be called per shape
      * and modify the properties according to the new values
      *
-     * @param {Array.<string>} properties the properties to be changed
-     * @param {Array.<?>} values the respective values for the properties
-     * @param {History?} history an optional History instance
-     * @param {number?} hist_id an optional history id
-     * @param {function} post_update_handler an optional callback after update
+     * @param {Object} updates contains properties and values to be changed
+     * @param {Object} history an optional history instance and id
+     * @param {function?} post_update_handler an optional callback after update
+     * @param {boolean?} modifies_attachment if true dimension attachment changed
      * @return {function} the update callback
      * @static
      */
      static createUpdateHandler(
-         properties = [], values = [], history=null, hist_id=-1,
-            post_update_handler = null) {
+         updates = {properties: [], values: []},
+         history = {hist: null, hist_id: -1},
+         post_update_handler = null, modifies_attachment = false) {
          // we expect 2 non empty arrays of equal length
-         if (!Misc.isArray(properties) || properties.length === 0 ||
-                !Misc.isArray(values) || values.length !== properties.length)
-            return null;
+         if (!Misc.isArray(updates.properties) ||
+             updates.properties.length === 0 ||
+             !Misc.isArray(updates.values) ||
+             updates.values.length !== updates.properties.length) return null;
 
         let callback = (shape) => {
             if (typeof shape !== 'object' || shape === null) return;
 
             let oldVals = [];
             let allPropertiesEqual = true;
-            for (let i=0;i<properties.length;i++) {
-                let prop = properties[i];
+            for (let i=0;i<updates.properties.length;i++) {
+                let prop = updates.properties[i];
                 let old_value =
                     typeof shape[prop] !== 'undefined' ? shape[prop] : null;
-                if (old_value !== values[i]) allPropertiesEqual = false;
+                if (old_value !== updates.values[i]) allPropertiesEqual = false;
                 oldVals.push(old_value);
-                shape[prop] = values[i];
+                shape[prop] = updates.values[i];
             };
-            if (history instanceof RegionsHistory && !allPropertiesEqual) {
-                if (typeof hist_id !== 'number') hist_id = -1;
-                history.addHistory(
-                    hist_id, history.action.PROPERTIES,
-                    {shape_id: shape.shape_id,
-                        diffs: properties,
-                        old_vals: oldVals, new_vals: values},
-                        typeof post_update_handler === 'function' ?
-                            post_update_handler : null);
+            if (history.hist instanceof RegionsHistory && !allPropertiesEqual) {
+                if (typeof history.hist_id !== 'number') history.hist_id = -1;
+                history.hist.addHistory(
+                    history.hist_id, history.hist.action.PROPERTIES,
+                    {
+                        shape_id: shape.shape_id,
+                        diffs: updates.properties,
+                        modifies_attachment: modifies_attachment,
+                        old_vals: oldVals,
+                        new_vals: updates.values
+                    },
+                    typeof post_update_handler === 'function' ?
+                        post_update_handler : null);
             }
             if (typeof post_update_handler === 'function') post_update_handler();
         }

@@ -558,14 +558,34 @@ export default class Ol3Viewer extends EventSubscriber {
             return;
         }
 
-        // let's draw
+        // gather unattached dimensions (if any)
+        // and decide if we add the drawn shape
+        let add = true;
+        let unattached = [];
+        switch (this.image_config.regions_info.drawing_mode) {
+            case REGIONS_DRAWING_MODE.NEITHER_Z_NOR_T:
+                unattached = ['z', 't'];
+                break;
+            case REGIONS_DRAWING_MODE.NOT_Z:
+                unattached.push('z');
+                break;
+            case REGIONS_DRAWING_MODE.NOT_T:
+                unattached.push('t');
+                break;
+            case REGIONS_DRAWING_MODE.ALL_Z_AND_T:
+            case REGIONS_DRAWING_MODE.ALL_Z:
+            case REGIONS_DRAWING_MODE.ALL_T:
+            case REGIONS_DRAWING_MODE.CUSTOM_Z_AND_T:
+                add = false;
+        }
+
+        // draw shape
         this.viewer.drawShape(
             params.shape, params.roi_id,
             {
                 hist_id: params.hist_id,
-                unattached:
-                    this.image_config.regions_info.drawing_mode ===
-                        REGIONS_DRAWING_MODE.NEITHER_Z_NOR_T
+                unattached: unattached,
+                add: add
             });
     }
 
@@ -589,6 +609,9 @@ export default class Ol3Viewer extends EventSubscriber {
                 this.context.getPrefixedURI(IVIEWER) + '/persist_rois',
                 params.omit_client_update);
         if (requestMade) Ui.showModalMessage("Saving Regions. Please wait...");
+        else if (params.omit_client_update)
+            this.context.eventbus.publish(
+                "REGIONS_STORED_SHAPES", { omit_client_update: true});
     }
 
     /**
@@ -605,9 +628,18 @@ export default class Ol3Viewer extends EventSubscriber {
             typeof params.definition !== 'object' || params.definition === null)
                 return;
 
-        this.viewer.modifyRegionsStyle(
+        let modifies_attachment =
+            typeof params.modifies_attachment === 'boolean' &&
+            params.modifies_attachment;
+        let modify = modifies_attachment ?
+                        this.viewer.modifyShapesAttachment :
+                        this.viewer.modifyRegionsStyle;
+
+        // call modification function
+        modify.call(
+            this.viewer,
             params.definition, params.shapes.slice(),
-                typeof params.callback === 'function' ? params.callback : null);
+            typeof params.callback === 'function' ? params.callback : null);
     }
 
     /**

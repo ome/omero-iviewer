@@ -1,9 +1,10 @@
 // js
 import Context from '../app/context';
-import {inject, customElement, bindable} from 'aurelia-framework';
+import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import Misc from '../utils/misc';
 import {Utils} from '../utils/regions';
 import {Converters} from '../utils/converters';
+import {REGIONS_DRAWING_MODE} from '../utils/constants';
 import {
     REGIONS_DRAW_SHAPE, REGIONS_SHAPE_GENERATED,
     REGIONS_GENERATE_SHAPES, REGIONS_CHANGE_MODES, EventSubscriber
@@ -13,7 +14,7 @@ import {
  * Represents the regions drawing palette in the right hand panel
  */
 @customElement('regions-drawing')
-@inject(Context)
+@inject(Context, BindingEngine)
 export default class RegionsDrawing extends EventSubscriber {
     /**
      * a bound reference to regions_info
@@ -28,10 +29,10 @@ export default class RegionsDrawing extends EventSubscriber {
      * @type {Array.<string>}
      */
     supported_shapes = [
-        "arrow",
         "rectangle",
         "ellipse",
         "point",
+        "arrow",
         "line",
         "polygon",
         "label"
@@ -49,6 +50,69 @@ export default class RegionsDrawing extends EventSubscriber {
             (params={}) => this.onModeChange(params)]];
 
     /**
+     * the list of observers
+     * @memberof RegionsDrawing
+     * @type {Array.<Object>}
+     */
+    observers = [];
+
+    /**
+     * @constructor
+     * @param {Context} context the application context (injected)
+     * @param {BindingEngine} bindingEngine the BindingEngine (injected)
+     */
+    constructor(context, bindingEngine) {
+        super(context.eventbus);
+        this.context = context;
+        this.bindingEngine = bindingEngine;
+    }
+
+    /**
+     * Registers observers to react to drawing mode & shape_defaults changes
+     *
+     * @memberof RegionsDrawing
+     */
+    registerObservers() {
+        let createObservers = () => {
+            this.unregisterObservers();
+            let action = () => {
+                let idx =
+                    this.supported_shapes.indexOf(
+                        this.regions_info.shape_to_be_drawn);
+                if (idx < 0) return;
+                this.onDrawShape(idx);
+            };
+            this.observers.push(
+                this.bindingEngine.propertyObserver(
+                    this.regions_info, "drawing_mode")
+                        .subscribe((newValue, oldValue) => action()));
+            for (let p in this.regions_info.shape_defaults)
+                this.observers.push(
+                    this.bindingEngine.propertyObserver(
+                        this.regions_info.shape_defaults, p)
+                            .subscribe((newValue, oldValue) => action()));
+        };
+
+        if (this.regions_info === null) {
+            this.observers.push(
+                this.bindingEngine.propertyObserver(this, 'regions_info')
+                    .subscribe((newValue, oldValue) => {
+                        if (oldValue === null && newValue) createObservers();
+                }));
+        } else createObservers();
+    }
+
+    /**
+     * Unregisters observers
+     *
+     * @memberof RegionsDrawing
+     */
+    unregisterObservers() {
+        this.observers.map((o) => o.dispose());
+        this.observers = [];
+    }
+
+    /**
      * Handles the viewer's event notification after having drawn a shape
      *
      * @memberof RegionsDrawing
@@ -60,6 +124,7 @@ export default class RegionsDrawing extends EventSubscriber {
 
         // set default for param drawn
         if (typeof params.drawn !== 'boolean') params.drawn = false;
+        let add = typeof params.add !== 'boolean' || params.add;
 
         // the roi we belong to
         let roi_id = params.drawn ? params.roi_id : null;
@@ -96,8 +161,8 @@ export default class RegionsDrawing extends EventSubscriber {
                         newShape.selected = false;
                         newShape.deleted = false;
                         newShape.modified = true;
-                        // add to map
-                        shapes.set(newShape['@id'], newShape);
+                        // add to map (if flag is true)
+                        if (add) shapes.set(newShape['@id'], newShape);
                         generatedShapes.push(Object.assign({}, newShape));
                     }
                 });
@@ -108,7 +173,7 @@ export default class RegionsDrawing extends EventSubscriber {
         if (typeof params.add_history !== 'boolean') params.add_history = true;
         if (typeof params.hist_id !== 'number') params.hist_id = -1;
         let len = generatedShapes.length;
-        if (len !== 0 && params.add_history) {
+        if (len !== 0 && add && params.add_history) {
             this.regions_info.history.addHistory(
                 params.hist_id, this.regions_info.history.action.SHAPES,
                 { diffs: generatedShapes, old_vals: false, new_vals: true});
@@ -122,7 +187,6 @@ export default class RegionsDrawing extends EventSubscriber {
         if (!params.drawn || len === 0) return;
 
         // collect dimensions for propagation
-        // for drawing mode other that z and t viewed
         let newShape = Object.assign({}, generatedShapes[len-1]);
         let theDims =
             Utils.getDimensionsForPropagation(
@@ -154,21 +218,16 @@ export default class RegionsDrawing extends EventSubscriber {
      *
      * @memberof RegionsDrawing
      * @param {number} index the index matching an entry in the supported_shapes array
-     * @param {boolean} force we force drawing continuation
      */
-    onDrawShape(index, force) {
-        if (typeof force !== 'boolean') force = false;
-        let new_shape_type = this.supported_shapes[index];
+    onDrawShape(index) {
+        // combined abort (index = -1) and bounds check
         let abort = false;
-
-        // if the shape to be drawn is already active =>
-        // abort the drawing, otherwise choose new shape type
-        // unless we want to force continuation
-        if (!force && this.regions_info.shape_to_be_drawn &&
-            this.regions_info.shape_to_be_drawn === new_shape_type) {
+        if (index < 0 || index >= this.supported_shapes.length) {
             abort = true;
             this.regions_info.shape_to_be_drawn = null;
-        } else this.regions_info.shape_to_be_drawn = new_shape_type;
+        } else {
+            this.regions_info.shape_to_be_drawn = this.supported_shapes[index];
+        }
 
         // define shape to be drawn including any pre-set defaults (e.g. colors)
         let def =  {type: this.regions_info.shape_to_be_drawn};
@@ -202,15 +261,6 @@ export default class RegionsDrawing extends EventSubscriber {
      }
 
     /**
-     * @constructor
-     * @param {Context} context the application context (injected)
-     */
-    constructor(context) {
-        super(context.eventbus);
-        this.context = context;
-    }
-
-    /**
      * Overridden aurelia lifecycle method:
      * called whenever the view is bound within aurelia
      * in other words an 'init' hook that happens before 'attached'
@@ -219,6 +269,7 @@ export default class RegionsDrawing extends EventSubscriber {
      */
     bind() {
         this.subscribe();
+        this.registerObservers();
     }
 
     /**
@@ -230,5 +281,6 @@ export default class RegionsDrawing extends EventSubscriber {
      */
     unbind() {
         this.unsubscribe();
+        this.unregisterObservers();
     }
 }

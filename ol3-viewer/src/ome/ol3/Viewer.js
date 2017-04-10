@@ -1458,34 +1458,82 @@ ome.ol3.Viewer.prototype.getSmallestViewExtent = function() {
 }
 
 /**
+ * Helper to gather the ol3 features based on an array of given ids
+ *
+ * @private
+ * @param {Array<string>} ids an array of ids (roi_id:shape_id)
+ * @return {ol.Collection|null} a collection of features or null
+ */
+ ome.ol3.Viewer.prototype.getFeatureCollection = function(ids) {
+    if (!ome.ol3.utils.Misc.isArray(ids) || ids.length === 0 ||
+        this.regions_.idIndex_ === null) return null;
+
+    var col = new ol.Collection();
+    for (var id in ids)
+        if (this.regions_.idIndex_[ids[id]] instanceof ol.Feature &&
+            this.regions_.idIndex_[ids[id]]['state'] !==
+                ome.ol3.REGIONS_STATE.REMOVED)
+                    col.push(this.regions_.idIndex_[ids[id]]);
+
+    return col;
+}
+
+/**
  * Modifies the selected shapes with the given shape info, e.g.
  * <pre>
  * {"type" : "label", Text: 'changed', FontSize: { Value: 15 }, FontStyle: 'italic'}
  * </pre>
  *
  * @param {Object} shape_info the shape info as received from the json
- * @param {Array<string>} ids an optional array of ids (roi_id:shape_id)
- * @param {function=} callback a success handler
+ * @param {Array<string>} ids an array of ids (roi_id:shape_id)
+ * @param {function=} callback an optional success handler
  */
  ome.ol3.Viewer.prototype.modifyRegionsStyle =
     function(shape_info, ids, callback) {
         if (!(this.regions_ instanceof ome.ol3.source.Regions) ||
             typeof(shape_info) !== 'object' || shape_info === null) return;
 
-        var col = null;
-        if (ome.ol3.utils.Misc.isArray(ids) && ids.length > 0 &&
-            this.regions_.idIndex_) {
-                col = new ol.Collection();
-                for (var id in ids)
-                    if (this.regions_.idIndex_[ids[id]] instanceof ol.Feature &&
-                        this.regions_.idIndex_[ids[id]]['state'] !==
-                        ome.ol3.REGIONS_STATE.REMOVED)
-                            col.push(this.regions_.idIndex_[ids[id]]);
-        }
-
         ome.ol3.utils.Style.modifyStyles(
-            shape_info, this.regions_, col, callback);
+            shape_info, this.regions_,
+            this.getFeatureCollection(ids), callback);
  }
+
+ /**
+  * Modifies the selected shapes dimension attachment
+  * <pre>
+  * {"type" : "label", theT: 0, theZ: -1}
+  * </pre>
+  *
+  * @param {Object} shape_info the shape info as received from the json
+  * @param {Array<string>} ids an array of ids (roi_id:shape_id)
+  * @param {function=} callback an optional success handler
+  */
+  ome.ol3.Viewer.prototype.modifyShapesAttachment =
+     function(shape_info, ids, callback) {
+         if (!(this.regions_ instanceof ome.ol3.source.Regions) ||
+             typeof(shape_info) !== 'object' || shape_info === null) return;
+
+         var updatedShapeIds = [];
+         var col = this.getFeatureCollection(ids);
+
+         if (col === null) return;
+
+         var dims = ['theT', 'theZ', 'theC'];
+         col.forEach(function(f) {
+             for (var p in shape_info)
+                if (dims.indexOf(p) !== -1 &&
+                     typeof shape_info[p] === 'number' &&
+                     shape_info[p] >= -1 && f[p] !== shape_info[p]) {
+                         f[p] = shape_info[p];
+                         updatedShapeIds.push(f.getId());
+                }
+         });
+
+         if (updatedShapeIds.length > 0)
+             this.regions_.setProperty(
+                 updatedShapeIds, "state",
+                 ome.ol3.REGIONS_STATE.MODIFIED, callback);
+  }
 
 /**
  * Persists modified/added shapes
@@ -1553,8 +1601,8 @@ ome.ol3.Viewer.prototype.enableRegionsContextMenu = function(flag) {
  * @param {Object} shape the shape definition for drawing (incl. type)
  * @param {number} roi_id a roi id that gets incorporated into the id (for grouping)
  * @param {Object=} opts optional parameters such as:
- *                       an optional history id (hist_id) to pass through
- *                       or an optional unattached flag (unattached)
+ *                       an a history id (hist_id) to pass through
+ *                       or a list of unattached dimensions (unattached)
  */
 ome.ol3.Viewer.prototype.drawShape = function(shape, roi_id, opts) {
     if (!(this.regions_ instanceof ome.ol3.source.Regions) ||
@@ -1923,6 +1971,11 @@ goog.exportProperty(
     ome.ol3.Viewer.prototype,
     'modifyRegionsStyle',
     ome.ol3.Viewer.prototype.modifyRegionsStyle);
+
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
+    'modifyShapesAttachment',
+    ome.ol3.Viewer.prototype.modifyShapesAttachment);
 
 goog.exportProperty(
     ome.ol3.Viewer.prototype,

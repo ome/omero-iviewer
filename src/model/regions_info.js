@@ -31,7 +31,7 @@ export default class RegionsInfo extends EventSubscriber {
      * @memberof RegionsInfo
      * @type {Map}
      */
-    data = null;
+    data = new Map();
 
     /**
      * @memberof RegionsInfo
@@ -83,7 +83,7 @@ export default class RegionsInfo extends EventSubscriber {
      * @memberof RegionsInfo
      * @type {number}
      */
-    drawing_mode = REGIONS_DRAWING_MODE.Z_AND_T_VIEWED;
+    drawing_mode = REGIONS_DRAWING_MODE.PRESENT_Z_AND_T;
 
     /**
      * the z/t indices that we draw to
@@ -124,6 +124,8 @@ export default class RegionsInfo extends EventSubscriber {
                 JSON.parse(
                     window.localStorage.getItem("omero_iviewer.copied_shapes"));
         } catch(ignored) {}
+        // init default shape colors
+        this.resetShapeDefaults();
     }
 
     /**
@@ -144,12 +146,8 @@ export default class RegionsInfo extends EventSubscriber {
      */
     unbind() {
         this.unsubscribe();
-        if (this.data instanceof Map) {
-            this.data.forEach((value, key) => value.shapes.clear());
-            this.data.clear();
-        }
+        this.resetRegionsInfo();
         this.history = null;
-        this.image_info = null;
     }
 
     /**
@@ -183,7 +181,7 @@ export default class RegionsInfo extends EventSubscriber {
 
         // if we do not find a matching shape for the id => bye
         let shape = this.getShape(id);
-        if (typeof shape === null) return;
+        if (shape === null) return;
         let ids = Converters.extractRoiAndShapeId(id);
         let roi = this.data.get(ids.roi_id);
 
@@ -198,7 +196,6 @@ export default class RegionsInfo extends EventSubscriber {
                     (property === 'deleted' && value)) {
             let i = this.selected_shapes.indexOf(id);
             if (i !== -1) this.selected_shapes.splice(i, 1);
-
             if (property === 'deleted' && value &&
                 typeof shape.is_new === 'boolean' && shape.is_new)
                     roi.deleted++;
@@ -214,8 +211,8 @@ export default class RegionsInfo extends EventSubscriber {
     requestData(forceUpdate = false) {
         if ((this.ready || !this.image_info.showRegions()) &&
                 !forceUpdate) return;
-        // reset history
-        this.history.resetHistory();
+        // reset regions info data and history
+        this.resetRegionsInfo();
 
         // send request
         $.ajax({
@@ -226,7 +223,6 @@ export default class RegionsInfo extends EventSubscriber {
                 // we want an array
                 if (!Misc.isArray(response)) return;
 
-                this.data = new Map();
                 // traverse results and stuff them into the map
                 response.map((roi) => {
                      // shapes have to be arrays as well
@@ -258,6 +254,19 @@ export default class RegionsInfo extends EventSubscriber {
                 this.ready = true;
                 }, error : (error) => this.ready = false
         });
+    }
+
+    /**
+     * Resets history and data
+     * @private
+     * @memberof RegionsInfo
+\     */
+    resetRegionsInfo() {
+        if (this.history instanceof RegionsHistory) this.history.resetHistory();
+        if (this.data instanceof Map) {
+            this.data.forEach((value, key) => value.shapes.clear());
+            this.data.clear();
+        }
     }
 
     /**
@@ -342,5 +351,31 @@ export default class RegionsInfo extends EventSubscriber {
      */
     hasBeenModified() {
         return this.history instanceof RegionsHistory && this.history.canUndo();
+    }
+
+    /**
+     * Returns the ids (roi/shape) of the last of the selected shapes
+     *
+     * @return {Object|null} the ids or null (if no shapes are selected)
+     * @memberof RegionsEdit
+     */
+    getLastSelectedShapeIds() {
+        let len = this.selected_shapes.length;
+        if (len === 0) return null;
+
+        return Converters.extractRoiAndShapeId(this.selected_shapes[len-1]);
+    }
+
+    /**
+     * Resets to default fill/stroke color settings
+     *
+     * @memberof RegionsEdit
+     */
+    resetShapeDefaults() {
+        this.shape_defaults['strokeColor'] = "#0099FF";
+        this.shape_defaults['strokeAlpha'] = 0.9;
+        this.shape_defaults['fillColor'] = "FFFFFF";
+        this.shape_defaults['fillAlpha'] = 0.5;
+        this.shape_defaults['strokeWidth'] = 1;
     }
 }

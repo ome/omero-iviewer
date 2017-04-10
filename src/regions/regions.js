@@ -183,16 +183,4 @@ export default class Regions {
     redoHistory() {
         this.regions_info.history.redoHistory();
     }
-
-    /**
-     * Overridden aurelia lifecycle method:
-     * called whenever the view is unbound within aurelia
-     * in other words a 'destruction' hook that happens after 'detached'
-     *
-     * @memberof Regions
-     */
-    unbind() {
-        this.image_info = null;
-        this.regions_info = null;
-    }
 }
