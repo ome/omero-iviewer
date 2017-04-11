@@ -609,12 +609,11 @@ ome.ol3.utils.Conversion.integrateMiscInfoIntoJsonObject  = function(feature, js
     if (typeof(jsonObject) !== 'object' || !(feature instanceof ol.Feature))
         return;
 
-    if (typeof(feature['TheT']) === 'number')
-        jsonObject['TheT'] = feature['TheT'];
-    if (typeof(feature['TheZ']) === 'number')
-        jsonObject['TheZ'] = feature['TheZ'];
-    if (typeof(feature['TheC']) === 'number')
-        jsonObject['TheC'] = feature['TheC'];
+    ['TheZ', 'TheT', 'TheC'].map((d) => {
+        if (typeof feature[d] === 'number') {
+            if (feature[d] >= 0) jsonObject[d] = feature[d];
+        }
+    });
 
     if (feature['state'] === ome.ol3.REGIONS_STATE.REMOVED)
         jsonObject['markedForDeletion'] = true;

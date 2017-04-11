@@ -117,7 +117,8 @@ export class Converters {
     /**
      * All this routine does after switching to omero marshal json
      * is to extract the type in a easily readable/comparable manner
-     * as well as setting the ids from the oldId after saving
+     * as well as setting the ids from the oldId after saving and
+     * rewritting unattached dimensions to use -1 internally
      *
      * @static
      * @param {object} shape a shape definition in omero marshal json
@@ -139,6 +140,11 @@ export class Converters {
             shape.shape_id = shape.oldId;
             shape['@id'] = ids.shape_id;
         }
+
+        // unattached dimensions will be treated as -1 internally
+        ['TheZ', 'TheT', 'TheC'].map((d) => {
+            if (typeof shape[d] !== 'number') shape[d] = -1;
+        });
 
         return shape;
      }
