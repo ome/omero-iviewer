@@ -705,6 +705,15 @@ export default class Ol3Viewer extends EventSubscriber {
         }
         // for now let's just clear the history
         this.image_config.regions_info.history.resetHistory();
+        // error handling: will probably be adjusted
+        if (typeof params.error === 'string') {
+            let msg = "Saving of Rois/Shapes failed.";
+            if (params.error.indexOf("SecurityViolation") !== -1)
+                msg = "Insufficient Permissions to save some Rois/Shapes.";
+            Ui.showModalMessage(msg, true);
+            console.error(params.error);
+            return;
+        }
     }
 
     /**

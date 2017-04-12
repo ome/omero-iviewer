@@ -45,7 +45,7 @@ def request_rois(request, iid, conn=None, **kwargs):
 
     ret = []
     try:
-        result = roi_service.findByImage(long(iid), None)
+        result = roi_service.findByImage(long(iid), None, conn.SERVICE_OPTS)
         for roi in result.rois:
             rois_to_be_returned = {"@id": roi.getId().val, "shapes": []}
             for shape in roi.copyShapes():
@@ -61,5 +61,4 @@ def request_rois(request, iid, conn=None, **kwargs):
 
         return JsonResponse(ret, safe=False)
     except Exception as someException:
-        return JsonResponse({"error": "Failed to request/marshal rois: " +
-                            repr(someException)})
+        return JsonResponse({"error": repr(someException)})

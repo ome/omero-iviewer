@@ -48,7 +48,7 @@ def persist_rois(request, conn=None, **kwargs):
         return JsonResponse({"error": "Could not find rois array!"})
 
     # get the associated image and an instance of the update service
-    image = conn.getObject("Image", image_id)
+    image = conn.getObject("Image", image_id, opts=conn.SERVICE_OPTS)
     if image is None:
         return JsonResponse({"error": "Could not find associated image!"})
 
@@ -57,6 +57,9 @@ def persist_rois(request, conn=None, **kwargs):
     rois_service = conn.getRoiService()
     if update_service is None or rois_service is None:
         return JsonResponse({"error": "Could not get update/rois service!"})
+
+    # when persisting we use the specific group context
+    conn.SERVICE_OPTS['omero.group'] = image.getDetails().getGroup().getId()
 
     # loop over the given rois, marshal and persist/delete
     ret_ids = {}
@@ -71,7 +74,8 @@ def persist_rois(request, conn=None, **kwargs):
             # differentiate between new rois and existing ones
             if int(r) < 0:
                 # we save the new ones including all its new shapes
-                decoded_roi = update_service.saveAndReturnObject(decoded_roi)
+                decoded_roi = update_service.saveAndReturnObject(
+                    decoded_roi, conn.SERVICE_OPTS)
                 roi_id = decoded_roi.getId().getValue()
                 # we associate them with the ids handed in
                 i = 0
@@ -82,7 +86,8 @@ def persist_rois(request, conn=None, **kwargs):
                     i += 1
             else:
                 # we fetch the existing ones
-                result = rois_service.findByRoi(long(r), None)
+                result = rois_service.findByRoi(
+                    long(r), None, conn.SERVICE_OPTS)
                 # we need to have one only for each id
                 if result is None or len(result.rois) != 1:
                     continue
@@ -117,12 +122,14 @@ def persist_rois(request, conn=None, **kwargs):
                     if found is None:
                         decoded_roi.addShape(e)
                 # persist deletions and modifications
-                decoded_roi = update_service.saveAndReturnObject(decoded_roi)
+                decoded_roi = update_service.saveAndReturnObject(
+                    decoded_roi, conn.SERVICE_OPTS)
                 # now append the new shapes to the existing ones
                 # and persist them
                 for n in shapes_to_be_added:
                     decoded_roi.addShape(n['shape'])
-                decoded_roi = update_service.saveAndReturnObject(decoded_roi)
+                decoded_roi = update_service.saveAndReturnObject(
+                    decoded_roi, conn.SERVICE_OPTS)
                 nr_of_existing_shapes = decoded_roi.sizeOfShapes()
                 nr_of_added_shapes = len(shapes_to_be_added)
                 # if we deleted all shapes in the roi => remove it as well
@@ -143,8 +150,7 @@ def persist_rois(request, conn=None, **kwargs):
         # we return all successfully stored rois up to the error
         # as well as the error message
         return JsonResponse({'ids': ret_ids,
-                            'error': "Failed to marshal/save rois: " +
-                             repr(marshalOrPersistenceException)})
+                            'error': repr(marshalOrPersistenceException)})
 
     return JsonResponse({"ids": ret_ids})
 
@@ -160,9 +166,12 @@ def request_rois(request, iid, conn=None, **kwargs):
         return JsonResponse({"error":
                             "Could not get rois instance of roi service!"})
 
+    # when querying we want cross groups
+    conn.SERVICE_OPTS['omero.group'] = -1
+
     ret = []
     try:
-        result = roi_service.findByImage(long(iid), None)
+        result = roi_service.findByImage(long(iid), None, conn.SERVICE_OPTS)
         for roi in result.rois:
             rois_to_be_returned = {"@id": roi.getId().val, "shapes": []}
             for shape in roi.copyShapes():
@@ -178,5 +187,4 @@ def request_rois(request, iid, conn=None, **kwargs):
 
         return JsonResponse(ret, safe=False)
     except Exception as someException:
-        return JsonResponse({"error": "Failed to request/marshal rois: " +
-                            repr(someException)})
+        return JsonResponse({"error": repr(someException)})

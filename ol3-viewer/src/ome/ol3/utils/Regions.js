@@ -460,6 +460,19 @@ ome.ol3.utils.Regions.createFeaturesFromRegionsResponse =
                 actualFeature['TheZ'] = shapeZindex;
                 actualFeature['TheC'] = shapeCindex;
                 actualFeature['state'] = ome.ol3.REGIONS_STATE.DEFAULT;
+                // append permissions
+                if (typeof shape['omero:details'] !== 'object' ||
+                    shape['omero:details'] === null ||
+                    typeof shape['omero:details']['permissions'] !== 'object' ||
+                    shape['omero:details']['permissions'] === null) {
+                        // permissions are mandatory
+                        // otherwise we don't add the shape
+                        console.error("Missing persmissons for shape " +
+                            actualFeature.getId());
+                        continue;
+                    }
+                actualFeature['permissions'] =
+                    shape['omero:details']['permissions'];
                 // add us to the return array
                 ret.push(actualFeature);
             }

@@ -205,7 +205,7 @@ ome.ol3.source.Regions = function(viewerReference, options) {
          // define request settings
          var reqParams = {
              "server" : scope.viewer_.getServer(),
-             "uri" : scope.viewer_.getPrefixedURI(ome.ol3.PLUGIN_PREFIX) + 
+             "uri" : scope.viewer_.getPrefixedURI(ome.ol3.PLUGIN_PREFIX) +
                         '/request_rois/' + scope.viewer_.getId(),
              "success" : success,
              "error" : function(error) {
@@ -592,6 +592,7 @@ ome.ol3.source.Regions.prototype.storeRegions =
                         }
                     }
                 }
+                if (typeof data['error'] === 'string') error = data['error'];
             } catch(err) {
                 error = err;
             }
