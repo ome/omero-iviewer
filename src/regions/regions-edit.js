@@ -188,19 +188,21 @@ export default class RegionsEdit extends EventSubscriber {
      * @memberof RegionsEdit
      */
     onStrokeWidthChange(width = 10,shape=null) {
-        if (typeof shape !== 'object' || shape === null) {
-            this.regions_info.shape_defaults.strokeWidth = width
-            return;
-        }
-        if (typeof width !== 'number' || isNaN(width) || width < 0) return;
-
-        let deltaProps = {type: shape.type};
-        deltaProps.StrokeWidth = {
+        let strokeWidth = {
             '@type': 'TBD#LengthI',
             'Unit': 'PIXEL',
             'Symbol': 'pixel',
             'Value': width
         };
+        if (typeof shape !== 'object' || shape === null) {
+            this.regions_info.shape_defaults.StrokeWidth =
+                Object.assign({}, strokeWidth);
+            return;
+        }
+        if (typeof width !== 'number' || isNaN(width) || width < 0) return;
+
+        let deltaProps = {type: shape.type};
+        deltaProps.StrokeWidth = strokeWidth;
 
         this.modifyShapes(
             deltaProps, this.createUpdateHandler(
@@ -599,7 +601,8 @@ export default class RegionsEdit extends EventSubscriber {
                 (typeof this.last_selected.StrokeWidth === 'object' &&
                  this.last_selected.StrokeWidth !== null &&
                  typeof this.last_selected.StrokeWidth.Value === 'number' ?
-                    this.last_selected.StrokeWidth.Value : 1) : 1;
+                    this.last_selected.StrokeWidth.Value : 1) :
+                        this.regions_info.shape_defaults.StrokeWidth.Value;
         if ((type === 'line' || type === 'polyline') && strokeWidth === 0)
             strokeWidth = 1;
         else if (type === 'label') strokeWidth = 0;
@@ -616,7 +619,6 @@ export default class RegionsEdit extends EventSubscriber {
             strokeWidthSpinner.on("input spinstop",
                (event, ui) => this.onStrokeWidthChange(
                    parseInt(event.target.value), this.last_selected));
-            this.regions_info.shape_defaults.strokeWidth = strokeWidth;
         }
         this.setDrawColors(strokeOptions.color, false);
 

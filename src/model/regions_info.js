@@ -372,10 +372,13 @@ export default class RegionsInfo extends EventSubscriber {
      * @memberof RegionsEdit
      */
     resetShapeDefaults() {
-        this.shape_defaults['strokeColor'] = "#0099FF";
-        this.shape_defaults['strokeAlpha'] = 0.9;
-        this.shape_defaults['fillColor'] = "FFFFFF";
-        this.shape_defaults['fillAlpha'] = 0.5;
-        this.shape_defaults['strokeWidth'] = 1;
+        this.shape_defaults['StrokeColor'] = 10092517;
+        this.shape_defaults['FillColor'] = -129
+        this.shape_defaults['StrokeWidth'] = {
+            '@type': 'TBD#LengthI',
+            'Unit': 'PIXEL',
+            'Symbol': 'pixel',
+            'Value': 1
+        };
     }
 }
