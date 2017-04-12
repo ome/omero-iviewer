@@ -1,9 +1,13 @@
 <template>
     <require from="../settings/settings"></require>
     <require from="../regions/regions"></require>
+    <require from="../info/info"></require>
 
     <ul class="nav nav-tabs" role="tablist">
         <li class="active">
+            <a href="#info" role="tab">Details</a>
+        </li>
+        <li>
             <a href="#setting" role="tab">Settings</a>
         </li>
         <li>
@@ -11,8 +15,11 @@
         </li>
     </ul>
 
-    <div class="tab-content regions-tabs">
-        <div role="tabpanel" class="regions-tabs tab-pane active" id="setting">
+    <div class="tab-content">
+        <div role="tabpanel" class="tab-pane active" id="info">
+            <info class="container-fluid" config_id.bind="config_id"></info>
+        </div>
+        <div role="tabpanel" class="tab-pane" id="setting">
             <settings class="container-fluid" config_id.bind="config_id"></settings>
         </div>
         <div role="tabpanel" class="regions-tabs tab-pane" id="rois">
