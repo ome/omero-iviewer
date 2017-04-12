@@ -1,0 +1,29 @@
+<template>
+    <table class="table">
+        <tbody>
+            <tr><td>
+                <div class="col-sm-6">Image ID:</div>
+                <div class="col-sm-6"><small>${image_info.image_id}</small></div>
+                <div class="col-sm-6">Name:</div>
+                <div class="col-sm-6"><small>${image_info.image_name}</small></div>
+                <div class="col-sm-6">Owner:</div>
+                <div class="col-sm-6"><small>${image_info.author}</small></div>
+				<div class="col-sm-6">Acquisition Date:</div>
+				<div class="col-sm-6"><small>${image_info.image_acquisition_date}</small></div>
+                <div class="col-sm-6">Pixels Type:</div>
+                <div class="col-sm-6"><small>${image_info.image_pixels_type}</small></div>
+				<div class="col-sm-6">Pixels Size (XYZ):</div>
+                <div class="col-sm-6"><small>${image_info.pixels_size_display}</small></div>
+                <div class="col-sm-6">Z-sections:</div>
+                <div class="col-sm-6"><small>${image_info.dimensions.max_z}</small></div>
+                <div class="col-sm-6">Timepoints:</div>
+                <div class="col-sm-6"><small>${image_info.dimensions.max_t}</small></div>
+                <div class="clearfix"></div>
+                <div class="col-sm-6">Channels:</div>
+                <div repeat.for="channel of image_info.channels">
+                	<span>${channel.label}</span>
+        		</div>
+            </td></tr>
+        </tbody>
+    </table>
+</template>
