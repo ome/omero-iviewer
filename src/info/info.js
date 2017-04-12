@@ -33,13 +33,23 @@ export default class Info {
      * called whenever the view is bound within aurelia
      * in other words an 'init' hook that happens before 'attached'
      *
-     * @memberof Regions
+     * @memberof Info
      */
     bind() {
         let img_conf = this.context.getImageConfig(this.config_id);
         if (img_conf) {
             this.image_info = img_conf.image_info;
-            //this.pixels_size_display = s;
         }
+    }
+
+    /**
+     * Overridden aurelia lifecycle method:
+     * called whenever the view is unbound within aurelia
+     * in other words a 'destruction' hook that happens after 'detached'
+     *
+     * @memberof Info
+     */
+    unbind() {
+        this.image_config = null;
     }
 }
