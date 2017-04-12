@@ -20,8 +20,10 @@
                 <div class="col-sm-6"><small>${image_info.dimensions.max_t}</small></div>
                 <div class="clearfix"></div>
                 <div class="col-sm-6">Channels:</div>
-                <div repeat.for="channel of image_info.channels">
-                	<span>${channel.label}</span>
+                <div>
+    				<template repeat.for="channel of image_info.channels">
+                		<span>${channel.label}</span>
+                	</template>
         		</div>
             </td></tr>
         </tbody>
