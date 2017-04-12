@@ -57,7 +57,29 @@ export default class ImageInfo {
     image_name = null;
 
     /**
+<<<<<<< 5a99b35d5150a21d441153ef9021ca3efb6e07b4
      * the canAnnotate permission
+=======
+     * the acquisition date in the json response
+     * @memberof ImageInfo
+     * @type {string}
+     */
+    image_acquisition_date = null;
+
+    /**
+     * the pixels type in the json response
+     * @memberof ImageInfo
+     * @type {string}
+     */
+    image_pixels_type = null;
+
+    image_pixels_size = null;
+
+    pixels_size_display = "";
+
+    /**
+     * a flag for whether we are allowed to save the settings
+>>>>>>> Add new variables
      * @memberof ImageInfo
      * @type {boolean}
      */
@@ -275,6 +297,28 @@ export default class ImageInfo {
             this.author = response.meta.imageAuthor;
         if (typeof response.meta.imageName === 'string')
             this.image_name = response.meta.imageName;
+        if (typeof response.meta.pixelsType === 'string')
+            this.image_pixels_type = response.meta.pixelsType;
+        this.image_acquisition_date = new Date(response.meta.imageTimestamp * 1000).toISOString().slice(-25, -14);;
+        this.image_pixels_size = response.pixel_size
+        if (typeof this.image_pixels_size === 'object') {
+                if (typeof response.pixel_size.x == 'number') {
+                    this.pixels_size_display += response.pixel_size.x;
+                } else {
+                    this.pixels_size_display += "-";
+                }
+                this.pixels_size_display += " x ";
+                if (typeof response.pixel_size.y == 'number')
+                    this.pixels_size_display += response.pixel_size.y;
+                else
+                    this.pixels_size_display += "-";
+                this.pixels_size_display += " x ";
+                if (typeof response.pixel_size.z == 'number')
+                    this.pixels_size_display += response.pixel_size.z;
+                else
+                    this.pixels_size_display += "-";
+            }
+        console.log(this.image_pixels_size)
         this.sanityCheckInitialValues();
 
         // signal that we are ready and
