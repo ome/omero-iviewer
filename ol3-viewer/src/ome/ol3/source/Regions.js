@@ -650,48 +650,62 @@ ome.ol3.source.Regions.prototype.setProperty =
     var eventProperty = null;
     for (var r in roi_shape_ids) {
         var s = roi_shape_ids[r];
-
-        if (this.idIndex_[s] instanceof ol.Feature) {
+        var f = this.idIndex_[s];
+        if (f instanceof ol.Feature) {
             // we allow to toggle the selected state
             // as well as the state for removed, modified and rollback deletes
             var presentState = null;
             var hasSelect = (this.select_ instanceof ome.ol3.interaction.Select);
             if (hasSelect &&
                 (property === 'selected' || property === 'visible' && !value)) {
-                this.select_.toggleFeatureSelection(this.idIndex_[s], value);
+                this.select_.toggleFeatureSelection(f, value);
             } else if (property === 'state') {
-                presentState = this.idIndex_[s][property];
+                presentState = f[property];
                 if (value === ome.ol3.REGIONS_STATE.REMOVED) {
+                    // check delete permissions
+                    if (typeof f['permissions'] === 'object' &&
+                        f['permissions'] !== null &&
+                        typeof f['permissions']['canDelete'] === 'boolean' &&
+                        !f['permissions']['canDelete']) continue;
                     if (hasSelect)
-                        this.select_.toggleFeatureSelection(
-                            this.idIndex_[s], false);
+                        this.select_.toggleFeatureSelection(f[s], false);
                     // we have already done this
                     if (presentState !== ome.ol3.REGIONS_STATE.REMOVED &&
-                        (typeof this.idIndex_[s]["old_state"] !== 'number' ||
-                            this.idIndex_[s]["old_state"] !== ome.ol3.REGIONS_STATE.ADDED))
-                                this.idIndex_[s]["old_state"] = presentState;
+                        (typeof f["old_state"] !== 'number' ||
+                         f["old_state"] !== ome.ol3.REGIONS_STATE.ADDED))
+                            f["old_state"] = presentState;
                     eventProperty = "deleted";
                 } else if (value === ome.ol3.REGIONS_STATE.MODIFIED) {
+                    // check edit permissions
+                    if (typeof f['permissions'] === 'object' &&
+                        f['permissions'] !== null &&
+                        typeof f['permissions']['canEdit'] === 'boolean' &&
+                        !f['permissions']['canEdit']) continue;
                     // we are presently deleted
                     // so all we do is remember the modification as the
                     // 'old_state' in case of a rollback
                     if (presentState === ome.ol3.REGIONS_STATE.REMOVED) {
-                        this.idIndex_[s]["old_state"] = value;
+                        f["old_state"] = value;
                         continue;
                     } else if (presentState === ome.ol3.REGIONS_STATE.ADDED)
                         // we maintain the added state at all times
-                        this.idIndex_[s]["old_state"] = presentState;
+                        f["old_state"] = presentState;
                     eventProperty = "modified";
-                } else if (value === ome.ol3.REGIONS_STATE.ROLLBACK)
+                } else if (value === ome.ol3.REGIONS_STATE.ROLLBACK) {
+                    // check delete permissions
+                    if (typeof f['permissions'] === 'object' &&
+                        f['permissions'] !== null &&
+                        typeof f['permissions']['canDelete'] === 'boolean' &&
+                        !f['permissions']['canDelete']) continue;
                     eventProperty = "rollback";
+                }
             }
 
             // set new value
-            this.idIndex_[s][property] =
+            f[property] =
                 (property === 'state' && value === ome.ol3.REGIONS_STATE.ROLLBACK) ?
-                    (typeof this.idIndex_[s]["old_state"] === 'number' ?
-                        this.idIndex_[s]["old_state"] :
-                        ome.ol3.REGIONS_STATE.DEFAULT) : value;
+                    (typeof f["old_state"] === 'number' ?
+                        f["old_state"] : ome.ol3.REGIONS_STATE.DEFAULT) : value;
 
             // gather info for event response
             changedFeatures.push(s);

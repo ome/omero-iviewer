@@ -1335,9 +1335,10 @@ ome.ol3.Viewer.prototype.generateShapes =
      function(shape_info, number, random_placement, extent, theDims, add_history, hist_id) {
         // we don't do generation any more for the case where we don't
         // have a regions layer, nor do we do it without shape definition or
-        // if the given number is nonsensical
-        if (this.getRegionsLayer() === null || typeof shape_info !== 'object' ||
-                typeof number !== 'number' || number <= 0) return;
+        // if the given number is nonsensical or if we don't have permission
+        if (!this.image_info_['perms']['canAnnotate'] ||
+            this.getRegionsLayer() === null || typeof shape_info !== 'object' ||
+            typeof number !== 'number' || number <= 0) return;
 
         // more checks
         // default to false for random_placement if not provided/wrong type
@@ -1469,11 +1470,17 @@ ome.ol3.Viewer.prototype.getSmallestViewExtent = function() {
         this.regions_.idIndex_ === null) return null;
 
     var col = new ol.Collection();
-    for (var id in ids)
-        if (this.regions_.idIndex_[ids[id]] instanceof ol.Feature &&
-            this.regions_.idIndex_[ids[id]]['state'] !==
-                ome.ol3.REGIONS_STATE.REMOVED)
-                    col.push(this.regions_.idIndex_[ids[id]]);
+    for (var id in ids) {
+        try {
+            var f = this.regions_.idIndex_[ids[id]];
+            if (f['state'] === ome.ol3.REGIONS_STATE.REMOVED ||
+                (typeof f['permissions'] === 'object' &&
+                    f['permissions'] !== null &&
+                    typeof f['permissions']['canEdit'] === 'boolean' &&
+                    !f['permissions']['canEdit'])) continue;
+            col.push(f);
+        } catch(ignored) {}
+    }
 
     return col;
 }
@@ -1605,7 +1612,8 @@ ome.ol3.Viewer.prototype.enableRegionsContextMenu = function(flag) {
  *                       or a list of unattached dimensions (unattached)
  */
 ome.ol3.Viewer.prototype.drawShape = function(shape, roi_id, opts) {
-    if (!(this.regions_ instanceof ome.ol3.source.Regions) ||
+    if (!this.image_info_['perms']['canAnnotate'] ||
+        !(this.regions_ instanceof ome.ol3.source.Regions) ||
         typeof(shape) !== 'object' || typeof(shape) === null ||
         typeof(shape['type']) !== 'string' || shape['type'].length === 0) return;
 

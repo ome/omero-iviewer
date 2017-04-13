@@ -28,7 +28,7 @@ ome.ol3.interaction.Draw =
      * @type {Object}
      * @private
      */
-    this.opts = {};
+    this.opts_ = {};
 
     /**
      * @type {ome.ol3.source.Regions}
@@ -115,15 +115,15 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
 
                 // set t and z info
                 var hasUnattachedDims =
-                    ome.ol3.utils.Misc.isArray(this.opts['unattached']) &&
-                    this.opts['unattached'].length > 0;
+                    ome.ol3.utils.Misc.isArray(this.opts_['unattached']) &&
+                    this.opts_['unattached'].length > 0;
                 event.feature['TheT'] =
                     hasUnattachedDims &&
-                    this.opts['unattached'].indexOf('t') !== -1 ?
+                    this.opts_['unattached'].indexOf('t') !== -1 ?
                         -1 : this.regions_.viewer_.getDimensionIndex('t');
                 event.feature['TheZ'] =
                     hasUnattachedDims &&
-                    this.opts['unattached'].indexOf('z') !== -1 ?
+                    this.opts_['unattached'].indexOf('z') !== -1 ?
                         -1 : this.regions_.viewer_.getDimensionIndex('z');
                 event.feature['TheC'] = -1;
 
@@ -133,7 +133,7 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                     event.feature, this.regions_, true);
 
                 var add =
-                    typeof this.opts['add'] !== 'boolean' || this.opts['add'];
+                    typeof this.opts_['add'] !== 'boolean' || this.opts_['add'];
                 if (add) this.regions_.addFeature(event.feature);
 
                 var eventbus = this.regions_.viewer_.eventbus_;
@@ -208,7 +208,7 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
  *                       a flag to not add the new shape (add)
  */
 ome.ol3.interaction.Draw.prototype.drawShape = function(shape, roi_id, opts) {
-    this.opts = opts || {};
+    this.opts_ = opts || {};
     this.abort_polyline_ = false;
 	if (typeof(shape['type']) !== 'string' || shape['type'].length === 0) {
         this.history_id_ = null;
@@ -219,7 +219,8 @@ ome.ol3.interaction.Draw.prototype.drawShape = function(shape, roi_id, opts) {
     }
 
     this.roi_id_ = (typeof roi_id === 'number' && roi_id < 0) ? roi_id : -1;
-    if (typeof opts['hist_id'] === 'number') this.history_id_ = opts['hist_id'];
+    if (typeof this.opts_['hist_id'] === 'number')
+        this.history_id_ = this.opts_['hist_id'];
     var typeFunction = null;
     switch(shape['type'].toLowerCase()) {
         case "point" :

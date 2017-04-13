@@ -288,17 +288,31 @@ export default class RegionsInfo extends EventSubscriber {
      * @memberof RegionsInfo
      * @param {Array.<string>} properties an array of property names
      * @param {number|string|Array|boolean|Object} values the values to filter for
+     * @param {string} perms the permissions to check, e.g. edit or delete
      * @param {Array.<string>|null} ids an optional array of ids of the form: roi:shape-id
      * @return {Array.<string>} an array of ids that satisfy the filter
      */
-    unsophisticatedShapeFilter(properties=[], values=[], ids=null) {
+    unsophisticatedShapeFilter(properties=[], values=[], perms=[], ids=null) {
         let ret = [];
         if (!Misc.isArray(properties) || !Misc.isArray(values) ||
-                properties.length !== values.length) return ret;
+            !Misc.isArray(perms) || properties.length !== values.length ||
+            properties.length !== perms.length) return ret;
 
         let filter = (value) => {
             for (let i=0;i<properties.length;i++) {
                 if (typeof value[properties[i]] === 'undefined') continue;
+                // check permission
+                if (typeof value['permissions'] === 'object' &&
+                    value['permissions'] !== null) {
+                        let perm =
+                            typeof perms[i] === 'string' &&
+                            perms[i].length > 0 ?
+                                "can" + perms[i][0].toUpperCase() +
+                                perms[i].substring(1).toLowerCase() : null;
+                        if (perm &&
+                            typeof value['permissions'][perm] === 'boolean' &&
+                            !value['permissions'][perm]) return false;
+                }
                 if (value[properties[i]] !== values[i]) return false;
             }
             return true;
@@ -354,16 +368,16 @@ export default class RegionsInfo extends EventSubscriber {
     }
 
     /**
-     * Returns the ids (roi/shape) of the last of the selected shapes
+     * Returns the last of the selected shapes
      *
-     * @return {Object|null} the ids or null (if no shapes are selected)
+     * @return {Object|null} the last selected shape or null (if no shapes are selected)
      * @memberof RegionsEdit
      */
-    getLastSelectedShapeIds() {
+    getLastSelectedShape() {
         let len = this.selected_shapes.length;
         if (len === 0) return null;
 
-        return Converters.extractRoiAndShapeId(this.selected_shapes[len-1]);
+        return this.getShape(this.selected_shapes[len-1]);
     }
 
     /**

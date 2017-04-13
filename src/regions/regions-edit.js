@@ -2,6 +2,7 @@
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import {Utils} from '../utils/regions';
+import Ui from '../utils/ui';
 import {Converters} from '../utils/converters';
 import {REGIONS_MODE, REGIONS_DRAWING_MODE} from '../utils/constants';
 import {
@@ -188,18 +189,17 @@ export default class RegionsEdit extends EventSubscriber {
      * @memberof RegionsEdit
      */
     onStrokeWidthChange(width = 10,shape=null) {
+        if (typeof width !== 'number' || isNaN(width) || width < 0) return;
+
         let strokeWidth = {
             '@type': 'TBD#LengthI',
             'Unit': 'PIXEL',
             'Symbol': 'pixel',
             'Value': width
         };
-        if (typeof shape !== 'object' || shape === null) {
-            this.regions_info.shape_defaults.StrokeWidth =
-                Object.assign({}, strokeWidth);
-            return;
-        }
-        if (typeof width !== 'number' || isNaN(width) || width < 0) return;
+        this.regions_info.shape_defaults.StrokeWidth =
+            Object.assign({}, strokeWidth);
+        if (typeof shape !== 'object' || shape === null) return;
 
         let deltaProps = {type: shape.type};
         deltaProps.StrokeWidth = strokeWidth;
@@ -441,9 +441,13 @@ export default class RegionsEdit extends EventSubscriber {
      * @memberof RegionsEdit
      */
     adjustEditWidgets() {
-        let ids = this.regions_info.getLastSelectedShapeIds();
-        let roi = ids !== null ? this.regions_info.data.get(ids.roi_id) : null;
-        this.last_selected = roi ? roi.shapes.get(ids.shape_id) : null;
+        this.last_selected = this.regions_info.getLastSelectedShape();
+        let canEdit =
+            this.last_selected &&
+            !(typeof this.last_selected['permissions'] === 'object' &&
+            this.last_selected['permissions'] !== null &&
+            typeof this.last_selected['permissions']['canEdit'] === 'boolean' &&
+            !this.last_selected['permissions']['canEdit']);
         let type =
             this.last_selected ? this.last_selected.type.toLowerCase() : null;
 
@@ -451,18 +455,20 @@ export default class RegionsEdit extends EventSubscriber {
         let editComment = $(this.element).find(".shape-edit-comment input");
         editComment.off('input');
         editComment.val('Comment');
+        editComment.prop("disabled", true);
+        editComment.addClass("disabled-color");
         if (this.last_selected) {
-            editComment.prop("disabled", false);
-            editComment.removeClass("disabled-color");
             editComment.val(
                 typeof this.last_selected.Text === 'string' ?
                     this.last_selected.Text : '');
             editComment.on('input',
                 (event) =>
-                    this.onCommentChange(event.target.value, this.last_selected));
-        } else {
-            editComment.prop("disabled", true);
-            editComment.addClass("disabled-color");
+                    this.onCommentChange(
+                        event.target.value, this.last_selected));
+            if (canEdit) {
+                editComment.prop("disabled", false);
+                editComment.removeClass("disabled-color");
+            }
         }
         // FONT SIZE
         let fontSize =
@@ -474,12 +480,11 @@ export default class RegionsEdit extends EventSubscriber {
         let fontSizeSpinner = $(this.element).find(".shape-font-size input");
         fontSizeSpinner.off("input spinstop");
         fontSizeSpinner.spinner("value", fontSize);
-        if (this.last_selected) {
-            fontSizeSpinner.spinner("enable");
-            fontSizeSpinner.on("input spinstop",
-               (event, ui) => this.onFontSizeChange(
-                   parseInt(event.target.value), this.last_selected));
-        } else fontSizeSpinner.spinner("disable");
+        fontSizeSpinner.on("input spinstop",
+           (event, ui) => this.onFontSizeChange(
+               parseInt(event.target.value), this.last_selected));
+        fontSizeSpinner.spinner(
+            this.last_selected && canEdit ? "enable" : "disable");
 
         // DIMENSION ATTACHMENT
         let dims = this.regions_info.image_info.dimensions;
@@ -614,11 +619,12 @@ export default class RegionsEdit extends EventSubscriber {
             strokeWidthSpinner.spinner("value", 0);
             strokeWidthSpinner.spinner("disable");
         } else {
-            strokeWidthSpinner.spinner("enable");
             strokeWidthSpinner.spinner("value", strokeWidth);
             strokeWidthSpinner.on("input spinstop",
                (event, ui) => this.onStrokeWidthChange(
                    parseInt(event.target.value), this.last_selected));
+            strokeWidthSpinner.spinner(
+                this.last_selected === null || canEdit ? "enable" : "disable");
         }
         this.setDrawColors(strokeOptions.color, false);
 
@@ -760,6 +766,10 @@ export default class RegionsEdit extends EventSubscriber {
      * @memberof RegionsEdit
      */
     pasteShapes() {
+        if (!this.regions_info.image_info.can_annotate) {
+                Ui.showModalMessage("You don't have permission to paste", true);
+                return;
+        }
         let hist_id = this.regions_info.history.getHistoryId();
         this.context.publish(
             REGIONS_GENERATE_SHAPES,

@@ -11,13 +11,15 @@
                 <button type="button" class="btn btn-default btn-xs"
                     disabled.bind="!(regions_info.history &&
                         regions_info.history.history.length > 0 &&
-                        regions_info.history.historyPointer >= 0)"
+                        regions_info.history.historyPointer >= 0) ||
+                        !regions_info.image_info.can_annotate"
                     click.delegate="saveShapes()">Save
                 </button>
                 <button type="button"
                     disabled.bind="!(regions_info.history &&
                         regions_info.history.history.length > 0 &&
-                        regions_info.history.historyPointer >= 0)"
+                        regions_info.history.historyPointer >= 0) ||
+                        !regions_info.image_info.can_annotate"
                     class="btn btn-default btn-xs"
                     click.delegate="undoHistory()">Undo
                 </button>
@@ -25,14 +27,18 @@
                     disabled.bind="!(regions_info.history &&
                         regions_info.history.history.length > 0 &&
                         regions_info.history.historyPointer <
-                        regions_info.history.history.length-1)"
+                        regions_info.history.history.length-1) ||
+                        !regions_info.image_info.can_annotate"
                     class="btn btn-default btn-xs"
                     click.delegate="redoHistory()">Redo
                 </button>
             </div>
 
             <div class="dropdown rois-dropdown" style="margin: 5px;">
-                <button type="button" class="btn btn-default btn-xs dropdown-toggle"
+                <button type="button"
+                        disabled.bind="regions_info === null ||
+                                       !regions_info.image_info.can_annotate"
+                        class="btn btn-default btn-xs dropdown-toggle"
                         data-toggle="dropdown">Delete
                 </button>
                 <ul class="dropdown-menu">
@@ -53,11 +59,20 @@
 
         </div>
 
-        <hr />
-        <regions-edit regions_info.bind="regions_info"></regions-edit>
+        <hr show.bind="regions_info !== null &&
+                       regions_info.image_info.can_annotate"/>
+        <regions-edit show.bind="regions_info !== null &&
+                                 regions_info.image_info.can_annotate"
+                      regions_info.bind="regions_info">
+        </regions-edit>
 
-        <hr />
-        <regions-drawing regions_info.bind="regions_info"></regions-drawing>
+        <hr show.bind="regions_info !== null &&
+                       regions_info.image_info.can_annotate"
+            regions_info.bind="regions_info" />
+        <regions-drawing show.bind="regions_info !== null &&
+                                    regions_info.image_info.can_annotate"
+                         regions_info.bind="regions_info">
+        </regions-drawing>
         <regions-list regions_info.bind="regions_info"></regions-list>
 
     </div>

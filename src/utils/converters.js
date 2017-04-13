@@ -134,6 +134,15 @@ export class Converters {
         let type = shape['@type'].substring(typePos + 1).toLowerCase();
         shape.type = type;
 
+        // use permissions
+        if (typeof shape['omero:details'] === 'object' &&
+            shape['omero:details'] !== null &&
+            typeof shape['omero:details']['permissions'] === 'object' &&
+            shape['omero:details']['permissions'] !== null) {
+                shape.permissions = shape['omero:details']['permissions'];
+                delete shape['omero:details'];
+        }
+
         // if there is an oldId (after storage), set ids from it
         let ids = Converters.extractRoiAndShapeId(shape.oldId);
         if (ids.shape_id !== null) {

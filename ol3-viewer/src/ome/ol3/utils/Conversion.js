@@ -670,13 +670,21 @@ ome.ol3.utils.Conversion.toJsonObject = function(
             continue;
         }
 
-        // we don't want newly added but immediately deleted shapes
-        if (feature['state'] === ome.ol3.REGIONS_STATE.REMOVED &&
-            (roiId < 0 || shapeId < 0)) continue;
-
         var roiIdToBeUsed = roiId;
-        // we decrement to have a unique roi id for each shape
-        if (feature['state'] === ome.ol3.REGIONS_STATE.ADDED &&
+        // check for respective permissions
+        if (feature['state'] === ome.ol3.REGIONS_STATE.REMOVED) {
+            // we don't want newly added but immediately deleted shapes either
+            if ((roiId < 0 || shapeId < 0) ||
+                (typeof feature['permissions'] === 'object' &&
+                 feature['permissions'] !== null &&
+                 typeof feature['permissions']['canDelete'] === 'boolean' &&
+                 !feature['permissions']['canDelete'])) continue;
+        } else if (feature['state'] === ome.ol3.REGIONS_STATE.REMOVED &&
+                   typeof feature['permissions'] === 'object' &&
+                   feature['permissions'] !== null &&
+                   typeof feature['permissions']['canEdit'] === 'boolean' &&
+                   !feature['permissions']['canEdit']) continue;
+        else if (feature['state'] === ome.ol3.REGIONS_STATE.ADDED &&
             newRoisForEachNewShape) roiIdToBeUsed = currentNewId--;
 
         var roiContainer = null;
