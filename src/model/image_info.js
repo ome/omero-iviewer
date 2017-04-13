@@ -303,20 +303,22 @@ export default class ImageInfo {
         this.image_pixels_size = response.pixel_size
         if (typeof this.image_pixels_size === 'object') {
                 if (typeof response.pixel_size.x == 'number') {
-                    this.pixels_size_display += response.pixel_size.x;
+                    this.pixels_size_display += Number(response.pixel_size.x).toFixed(2);
                 } else {
                     this.pixels_size_display += "-";
                 }
                 this.pixels_size_display += " x ";
-                if (typeof response.pixel_size.y == 'number')
-                    this.pixels_size_display += response.pixel_size.y;
-                else
+                if (typeof response.pixel_size.y == 'number') {
+                    this.pixels_size_display += Number(response.pixel_size.y).toFixed(2);
+                } else {
                     this.pixels_size_display += "-";
+                }
                 this.pixels_size_display += " x ";
-                if (typeof response.pixel_size.z == 'number')
-                    this.pixels_size_display += response.pixel_size.z;
-                else
+                if (typeof response.pixel_size.z == 'number') {
+                    this.pixels_size_display += Number(response.pixel_size.z).toFixed(2);
+                } else {
                     this.pixels_size_display += "-";
+                }
             }
         console.log(this.image_pixels_size)
         this.sanityCheckInitialValues();
