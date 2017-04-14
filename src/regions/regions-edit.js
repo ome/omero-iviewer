@@ -248,8 +248,8 @@ export default class RegionsEdit extends EventSubscriber {
      * @memberof RegionsEdit
      */
     onCommentChange(comment = '',shape=null) {
-        if (typeof shape !== 'object' || shape === null) return;
-        if (typeof comment !== 'string') return;
+        if (typeof shape !== 'object' || shape === null ||
+            typeof comment !== 'string') return;
 
         let deltaProps = {type: shape.type};
         deltaProps.Text = comment;
@@ -455,8 +455,6 @@ export default class RegionsEdit extends EventSubscriber {
         let editComment = $(this.element).find(".shape-edit-comment input");
         editComment.off('input');
         editComment.val('Comment');
-        editComment.prop("disabled", true);
-        editComment.addClass("disabled-color");
         if (this.last_selected) {
             editComment.val(
                 typeof this.last_selected.Text === 'string' ?
@@ -469,7 +467,11 @@ export default class RegionsEdit extends EventSubscriber {
                 editComment.prop("disabled", false);
                 editComment.removeClass("disabled-color");
             }
+        } else {
+            editComment.prop("disabled", true);
+            editComment.addClass("disabled-color");
         }
+
         // FONT SIZE
         let fontSize =
             this.last_selected ?
