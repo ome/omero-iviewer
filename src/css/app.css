@@ -340,7 +340,7 @@ thumbnail-slider img {
 .right-hand-panel {
     width: 350px;
     max-width: 800px;
-    overflow-y: auto;
+    overflow-y: hidden;
 }
 
 .right-hand-panel li a {
@@ -483,7 +483,7 @@ thumbnail-slider img {
 
 .regions-list {
     padding-top: 5px;
-    height: 80%!important;
+    float: left;
 }
 
 .regions-header {
@@ -674,7 +674,7 @@ thead, tbody {
 .delete-rois>.dropdown-menu {
     background-color: #f8f8f8;
 }
-.rois-dropdown {
+.rois-dropdown, .before-rois-list {
     float: left;
 }
 .rois-dropdown>.dropdown-menu>li>a:hover,
@@ -722,6 +722,7 @@ thead, tbody {
     max-width: 38px;
 }
 .shapes-edit {
+    float: left;
     line-height: 30px;
     margin: 5px;
 }
@@ -744,7 +745,7 @@ thead, tbody {
 }
 
 .shape-edit-attachments {
-    margin: 5px 5px 0px 15px;
+    margin: 0px 5px 0px 15px;
     min-width: 300px;
     width: 100%;
     float: left;

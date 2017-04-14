@@ -3,7 +3,7 @@ import Context from '../app/context';
 import Misc from '../utils/misc';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {
-    EventSubscriber,
+    EventSubscriber, IMAGE_VIEWER_RESIZE,
     REGIONS_SET_PROPERTY, REGIONS_STORED_SHAPES, REGIONS_PROPERTY_CHANGED
 } from '../events/events';
 
@@ -26,7 +26,9 @@ export default class RegionsList extends EventSubscriber {
      * @type {Array.<string,function>}
      */
     sub_list = [[REGIONS_PROPERTY_CHANGED,
-                (params={}) => this.actUponSelectionChange(params)]];
+                    (params={}) => this.actUponSelectionChange(params)],
+                [IMAGE_VIEWER_RESIZE,
+                    (params={}) => this.adjustTableHeight()]];
 
     /**
      * the list of observers
@@ -87,6 +89,12 @@ export default class RegionsList extends EventSubscriber {
         let createObserver = () => {
             this.unregisterObservers();
 
+            this.observers.push(
+                this.bindingEngine.propertyObserver(
+                    this.context, "show_regions").subscribe(
+                        (newValue, oldValue) =>
+                            setTimeout(this.adjustTableHeight, 25)
+            ));
             this.observers.push(
                 this.bindingEngine.collectionObserver(
                     this.regions_info.data).subscribe(
@@ -418,6 +426,21 @@ export default class RegionsList extends EventSubscriber {
                 i++;
             };
         });
+    }
+
+    /**
+     * Adjusts table height
+     * @memberof RegionsList
+     */
+    adjustTableHeight() {
+        let availableHeight =
+            $("right-hand-panel").outerHeight() -
+            $("header .navbar").outerHeight() -
+            $(".before-rois-list").outerHeight() -
+            $('.regions-header').outerHeight();
+        if (!isNaN(availableHeight))
+            $(".regions-table").css(
+                'max-height', availableHeight);
     }
 
     /**
