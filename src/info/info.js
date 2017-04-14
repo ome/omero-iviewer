@@ -1,7 +1,7 @@
-// js
 //css and images
 require('../css/images/link.png');
 require('../css/images/close.gif');
+// js
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import {WEBCLIENT} from '../utils/constants';
@@ -43,6 +43,20 @@ export class Info extends EventSubscriber {
      */
     image_info = null;
 
+    /**
+     * Formatted acquisition date.
+     * @memberof Info
+     * @type {String}
+     */
+    acquisition_date = null;
+
+    /**
+     * Formatted pixels size.
+     * @memberof Info
+     * @type {String}
+     */
+    pixels_size = "";
+
 	/**
      * @constructor
      * @param {Context} context the application context (injected)
@@ -63,7 +77,7 @@ export class Info extends EventSubscriber {
         this.subscribe();
     }
 
-/**
+    /**
      * Toggles regions visibility
      *
      * @memberof Header
@@ -102,17 +116,36 @@ export class Info extends EventSubscriber {
      * @memberof Header
      * @param {Object} params the event notification parameters
      */
-     onImageConfigChange(params = {}) {
-         let conf = this.context.getImageConfig(params.config_id);
+    onImageConfigChange(params = {}) {
+        let conf = this.context.getImageConfig(params.config_id);
 
-         if (conf === null) return;
-         this.image_info = conf.image_info;
-
-         if (!this.image_info.has_scalebar) {
-             this.context.show_scalebar = false;
-             $(".has_scalebar").addClass("disabled-color");
-             $(".has_scalebar input").prop('disabled', true);
-         } else {
+        if (conf === null) return;
+        this.image_info = conf.image_info;
+        this.acquisition_date = new Date(this.image_info.image_timestamp * 1000).toISOString().slice(-25, -14);
+        if (typeof this.image_info.image_pixels_size === 'object') {
+            if (typeof this.image_info.image_pixels_size.x == 'number') {
+                this.pixels_size += Number(this.image_info.image_pixels_size.x).toFixed(2);
+            } else {
+               this.pixels_size += "-";
+            }
+            this.pixels_size += " x ";
+            if (typeof this.image_info.image_pixels_size.y == 'number') {
+                this.pixels_size += Number(this.image_info.image_pixels_size.y).toFixed(2);
+            } else {
+                this.pixels_size += "-";
+            }
+            this.pixels_size += " x ";
+            if (typeof this.image_info.image_pixels_size.z == 'number') {
+                this.pixels_size += Number(this.image_info.image_pixels_size.z).toFixed(2);
+            } else {
+                this.pixels_size += "-";
+            }
+        }
+        if (!this.image_info.has_scalebar) {
+            this.context.show_scalebar = false;
+            $(".has_scalebar").addClass("disabled-color");
+            $(".has_scalebar input").prop('disabled', true);
+        } else {
             $(".has_scalebar").removeClass("disabled-color");
             $(".has_scalebar input").prop('disabled', false);
         }
@@ -129,19 +162,20 @@ export class Info extends EventSubscriber {
             $(".split_channels").prop('disabled', true);
             $(".split_channels").html("Normal");
         }
-     }
+    }
 
-     /**
-      * Displays link to present image (with present settings)
-      *
-      * @memberof Header
-      */
-     displayLink() {
-         let selConf = this.context.getSelectedImageConfig();
-         if (selConf === null) return;
 
-         let callback = ((settings) => {
-             let url =
+    /**
+     * Displays link to present image (with present settings)
+     *
+     * @memberof Header
+     */
+    displayLink() {
+        let selConf = this.context.getSelectedImageConfig();
+        if (selConf === null) return;
+
+        let callback = ((settings) => {
+            let url =
                 Misc.assembleImageLink(
                     this.context.server,
                     this.context.getPrefixedURI(WEBCLIENT),
@@ -163,41 +197,40 @@ export class Info extends EventSubscriber {
                 $('.link-url img').on("click",
                     () => {linkDiv.hide(); $('.link-url img').off("click")});
                 linkDiv.show();
-         });
+        });
 
-         // fetch settings and execute callback once we have them
-         this.context.publish(
-             VIEWER_IMAGE_SETTINGS,
-            {config_id : this.context.selected_config,
-             callback :callback});
+        // fetch settings and execute callback once we have them
+        this.context.publish(
+            VIEWER_IMAGE_SETTINGS,
+            {config_id : this.context.selected_config, callback : callback});
      }
 
-     /**
-      * Toggles the view: split channels or normal
-      *
-      * @memberof Header
-      */
-      toggleSplitChannels() {
-          let value = $(".split_channels").val();
-          if (typeof value === 'string' &&
-                (value === 'split' || value === 'normal')) {
-                let ctx = this.context.getSelectedImageConfig();
-                if (ctx === null) return;
-                $('right-hand-panel .nav a[href="#setting"]').tab("show");
-                this.image_info = ctx.image_info;
-                let makeSplit = (value === 'normal');
-                $(".split_channels").val(makeSplit ? "split" : "normal");
-                $(".split_channels").html(makeSplit ? "Normal" : "Split Channels");
-                this.image_info.projection = makeSplit ? "split" : "normal";
-                if (makeSplit) {
-                    this.context.show_regions = false;
-                    ctx.regions_info.requestData(true);
-                }
-                this.context.publish(
-                    IMAGE_VIEWER_SPLIT_VIEW,
-                        {config_id : ctx.id, split : makeSplit});
+    /**
+     * Toggles the view: split channels or normal
+     *
+     * @memberof Info
+     */
+    toggleSplitChannels() {
+        let value = $(".split_channels").val();
+        if (typeof value === 'string' &&
+            (value === 'split' || value === 'normal')) {
+            let ctx = this.context.getSelectedImageConfig();
+            if (ctx === null) return;
+            $('right-hand-panel .nav a[href="#setting"]').tab("show");
+            this.image_info = ctx.image_info;
+            let makeSplit = (value === 'normal');
+            $(".split_channels").val(makeSplit ? "split" : "normal");
+            $(".split_channels").html(makeSplit ? "Normal" : "Split Channels");
+            this.image_info.projection = makeSplit ? "split" : "normal";
+            if (makeSplit) {
+                this.context.show_regions = false;
+                ctx.regions_info.requestData(true);
+            }
+            this.context.publish(
+                IMAGE_VIEWER_SPLIT_VIEW,
+                    {config_id : ctx.id, split : makeSplit});
           }
-      }
+    }
 
     /**
      * Overridden aurelia lifecycle method:
@@ -209,4 +242,5 @@ export class Info extends EventSubscriber {
     unbind() {
         this.unsubscribe();
     }
+
 }

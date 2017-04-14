@@ -64,7 +64,7 @@ export default class ImageInfo {
      * @memberof ImageInfo
      * @type {string}
      */
-    image_acquisition_date = null;
+    image_timestamp = null;
 
     /**
      * the pixels type in the json response
@@ -74,8 +74,6 @@ export default class ImageInfo {
     image_pixels_type = null;
 
     image_pixels_size = null;
-
-    pixels_size_display = "";
 
     /**
      * a flag for whether we are allowed to save the settings
@@ -299,27 +297,8 @@ export default class ImageInfo {
             this.image_name = response.meta.imageName;
         if (typeof response.meta.pixelsType === 'string')
             this.image_pixels_type = response.meta.pixelsType;
-        this.image_acquisition_date = new Date(response.meta.imageTimestamp * 1000).toISOString().slice(-25, -14);;
-        this.image_pixels_size = response.pixel_size
-        if (typeof this.image_pixels_size === 'object') {
-                if (typeof response.pixel_size.x == 'number') {
-                    this.pixels_size_display += Number(response.pixel_size.x).toFixed(2);
-                } else {
-                    this.pixels_size_display += "-";
-                }
-                this.pixels_size_display += " x ";
-                if (typeof response.pixel_size.y == 'number') {
-                    this.pixels_size_display += Number(response.pixel_size.y).toFixed(2);
-                } else {
-                    this.pixels_size_display += "-";
-                }
-                this.pixels_size_display += " x ";
-                if (typeof response.pixel_size.z == 'number') {
-                    this.pixels_size_display += Number(response.pixel_size.z).toFixed(2);
-                } else {
-                    this.pixels_size_display += "-";
-                }
-            }
+        this.image_timestamp = response.meta.imageTimestamp;
+        this.image_pixels_size = response.pixel_size;
         console.log(this.image_pixels_size)
         this.sanityCheckInitialValues();
 
