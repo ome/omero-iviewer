@@ -232,7 +232,7 @@ export default class Misc {
         channels.map(
             (c) => {
                 url+= (i !== 0 ? ',' : '') + (!c.active ? '-' : '') + (++i) +
-                 "|" + c.window.start + ":" + c.window.end + "$" + c.color;
+                 "|" + c.start + ":" + c.end + "$" + c.color;
                  maps.push(
                      {"reverse" : { "enabled" :
                          typeof c.reverseIntensity === 'boolean' &&
