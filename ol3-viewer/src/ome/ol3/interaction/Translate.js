@@ -40,6 +40,7 @@ ome.ol3.interaction.Translate = function(regions_reference) {
     // we use our event handlers altogether
     this.handleDownEvent_ = ome.ol3.interaction.Translate.handleDownEvent_;
     this.handleMoveEvent_ = ome.ol3.interaction.Translate.handleMoveEvent_;
+    this.handleDragEvent_ = ome.ol3.interaction.Translate.handleDragEvent_;
     this.handleUpEvent_ = ome.ol3.interaction.Translate.handleUpEvent_;
 
     /**
@@ -197,7 +198,7 @@ ome.ol3.interaction.Translate.handleUpEvent_ = function(mapBrowserEvent) {
  * @this {ol.interaction.Translate}
  * @private
  */
-ol.interaction.Translate.handleDragEvent_ = function(event) {
+ome.ol3.interaction.Translate.handleDragEvent_ = function(event) {
   if (this.lastCoordinate_) {
     var newCoordinate = event.coordinate;
     var deltaX = newCoordinate[0] - this.lastCoordinate_[0];
