@@ -657,8 +657,8 @@ ome.ol3.source.Regions.prototype.setProperty =
             var presentState = null;
             var hasSelect = (this.select_ instanceof ome.ol3.interaction.Select);
             if (hasSelect &&
-                (property === 'selected' || property === 'visible' && !value)) {
-                this.select_.toggleFeatureSelection(f, value);
+                (property === 'selected' || (property === 'visible' && !value))) {
+                    this.select_.toggleFeatureSelection(f, value);
             } else if (property === 'state') {
                 presentState = f[property];
                 if (value === ome.ol3.REGIONS_STATE.REMOVED) {
