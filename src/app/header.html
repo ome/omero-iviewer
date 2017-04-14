@@ -1,40 +1,5 @@
 <template>
     <nav class="navbar navbar-default navbar-fixed-top fixed-header">
-
-        <div class="col-xs-3 link-url">
-            <button class="btn btn-link" click.delegate="displayLink()">
-                <img src="../css/images/link.png" />
-            </button>
-            <div>
-                <input type="text" value="some link"/>
-                <img src="../css/images/close.gif"/>
-            </div>
-        </div>
-
-        <div class="header-content col-xs-9">
-            <button
-                disabled="disabled"
-                class="btn btn-default btn-sm split_channels disabled-color"
-                click.delegate="toggleSplitChannels()"
-                style="line-height: 20px;margin-bottom:5px"
-                value="normal">
-                Split Channels
-            </button>
-
-            <label class="has_scalebar">
-                <input type="checkbox"
-                checked.bind="context.show_scalebar"
-                change.delegate="toggleScalebar($event)">&nbsp;Show Scalebar
-            </label>
-
-            <label class="${image_info === null ||
-                 image_info.projection === 'split' ? 'disabled-color' : ''}">
-                 <input type="checkbox"
-                        disabled.bind="image_info === null ||
-                            image_info.projection === 'split'"
-               checked.bind="context.show_regions"
-               change.delegate="toggleRegions($event)">&nbsp;Show ROIs</label>
-
-        </div>
+        <div class="col-xs-3"><strong>${image_info.image_name}</strong></div>
     </nav>
 </template>
