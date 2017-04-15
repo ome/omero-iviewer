@@ -24,11 +24,11 @@ export default class Misc {
 
     /**
      * A rudimentary check for when we send an ajax request using jsonp.
-     * In essence, anything that is not localhost or an empty string
-     * (relative assumed) should be handled via jsonp
+     * In essence, anything apart from an empty string (i.e. relative)
+     * and matching location/port should be handled via jsonp
      *
      * @static
-     * @return {boolean} true if we regard the server string not localhost
+     * @return {boolean} true if we regard the server string remote
      */
     static useJsonp(server="") {
         if (typeof server !== 'string') return false;

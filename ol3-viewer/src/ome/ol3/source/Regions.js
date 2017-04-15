@@ -566,6 +566,7 @@ ome.ol3.source.Regions.prototype.storeRegions =
         var capturedRegionsReference = this;
         // the event notification
         var sendEventNotification = function(viewer, params) {
+            if (!(viewer instanceof ome.ol3.Viewer)) return;
             var config_id = viewer.getTargetId();
             var eventbus = viewer.eventbus_;
             if (config_id && eventbus) {
@@ -658,6 +659,7 @@ ome.ol3.source.Regions.prototype.setProperty =
             var hasSelect = (this.select_ instanceof ome.ol3.interaction.Select);
             if (hasSelect &&
                 (property === 'selected' || (property === 'visible' && !value))) {
+                    eventProperty = property;
                     this.select_.toggleFeatureSelection(f, value);
             } else if (property === 'state') {
                 presentState = f[property];
@@ -713,7 +715,7 @@ ome.ol3.source.Regions.prototype.setProperty =
             if (eventProperty === 'rollback') {
                 eventProperty = 'deleted';
                 val = false;
-            }
+            } else val = value;
             changedProperties.push(eventProperty);
             changedValues.push(val);
         }
@@ -722,7 +724,7 @@ ome.ol3.source.Regions.prototype.setProperty =
 
     var config_id = this.viewer_.getTargetId();
     var eventbus = this.viewer_.eventbus_;
-    if (config_id && eventbus && property === 'state') // publish
+    if (config_id && eventbus) // publish
         setTimeout(function() {
             eventbus.publish("REGIONS_PROPERTY_CHANGED",
                 {"config_id": config_id,

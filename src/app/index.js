@@ -43,7 +43,9 @@ export class Index  {
             if (Misc.useJsonp(this.context.server)) return null;
             let conf = this.context.getSelectedImageConfig();
             if (conf && conf.regions_info &&
-                conf.regions_info.hasBeenModified())
+                !Misc.useJsonp(this.context.server) &&
+                conf.regions_info.hasBeenModified() &&
+                conf.regions_info.image_info.can_annotate)
                     return "You have new/deleted/modified ROI(S).\n" +
                            "If you leave you'll lose your changes.";
             return null;

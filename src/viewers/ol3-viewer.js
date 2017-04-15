@@ -305,7 +305,7 @@ export default class Ol3Viewer extends EventSubscriber {
                 let value = Misc.isArray(params.values) ?
                                 params.values[i] : params.values;
                 if (prop === 'selected' || prop === 'modified' ||
-                        prop === 'deleted')
+                        prop === 'deleted' || prop === 'visible')
                     this.image_config.regions_info.setPropertyForShape(
                         shape, prop, value);
                 // in the case of new shapes that get deleted we will need

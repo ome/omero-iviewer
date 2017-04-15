@@ -148,10 +148,13 @@ export default class RegionsList extends EventSubscriber {
          // and select=true notifications with at least one shape
          let imgConf = this.context.getSelectedImageConfig();
          if (imgConf === null || imgConf.id !== params.config_id ||
-             typeof params.properties !== 'string' ||
-             params.properties !== 'selected' ||
+             !Misc.isArray(params.properties) ||
+             params.properties.length === 0 ||
+             !Misc.isArray(params.values) || params.values.length === 0 ||
              !Misc.isArray(params.shapes) || params.shapes.length === 0 ||
-             typeof params.values !== 'boolean' || !params.values) return;
+             typeof params.properties[0] !== 'string' ||
+             params.properties[0] !== 'selected' ||
+             typeof params.values[0] !== 'boolean' || !params.values[0]) return;
 
          let id = params.shapes[0];
          let el = document.getElementById('roi-' + id);

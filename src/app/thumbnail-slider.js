@@ -379,9 +379,11 @@ export default class ThumbnailSlider extends EventSubscriber {
         // pop up dialog to ask whether user wants to store rois changes
         // if we have a regions history, we have modifications
         // and are not cross domain
-        if (conf && conf.regions_info &&
-                conf.regions_info.hasBeenModified() &&
-                !Misc.useJsonp(this.context.server)) {
+        if (conf &&
+            conf.regions_info &&
+            conf.regions_info.hasBeenModified() &&
+            !Misc.useJsonp(this.context.server) &&
+            conf.regions_info.image_info.can_annotate) {
             let saveHandler = () => {
                 let tmpSub =
                     this.context.eventbus.subscribe(

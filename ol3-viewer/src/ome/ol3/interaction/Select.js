@@ -79,45 +79,6 @@ ome.ol3.interaction.Select = function(regions_reference) {
     if (this.enableContextMenu_)
         ome.ol3.interaction.Select.prototype.enableContextMenu.call(
             this, true);
-
-    var config_id = this.regions_.viewer_.getTargetId();
-    var propagateSelectionEvent = function(event) {
-        if (this.regions_ === null) return;
-        var eventbus = this.regions_.viewer_.eventbus_;
-
-        if (typeof eventbus !== 'object' || eventbus === null) return;
-        setTimeout(function() {
-            eventbus.publish(
-                "REGIONS_PROPERTY_CHANGED",
-                { "config_id": config_id ,
-                    "shapes": [event.element.getId()],
-                    "properties" : "selected",
-                    "values" : event.type === "add"
-                });
-        },25);
-    }.bind(this);
-
-    /**
-     * an add listener for propagating select events to the outside
-     * only active if we have an eventbus registered
-     * @private
-     * @type {function}
-     */
-    this.addListener_ =
-        ol.events.listen(
-        this.features_, ol.CollectionEventType.ADD,
-        propagateSelectionEvent);
-
-    /**
-     * a remove listener for propagating select events to the outside
-     * only active if we have an eventbus registered
-     * @private
-     * @type {function}
-     */
-    this.removeListener_ =
-        ol.events.listen(
-        this.features_, ol.CollectionEventType.REMOVE,
-        propagateSelectionEvent);
 };
 goog.inherits(ome.ol3.interaction.Select, ol.interaction.Interaction);
 
@@ -126,12 +87,13 @@ goog.inherits(ome.ol3.interaction.Select, ol.interaction.Interaction);
  *
  */
 ome.ol3.interaction.Select.prototype.clearSelection = function() {
+    // delegate
+    var ids = []
     this.getFeatures().forEach(
         function(feature) {
-            feature['selected'] = false;
+            ids.push(feature.getId());
     }, this);
-    this.getFeatures().clear();
-    this.regions_.changed();
+    this.regions_.setProperty(ids, "selected", false);
 }
 
 /**
@@ -175,9 +137,7 @@ ome.ol3.interaction.Select.handleEvent = function(mapBrowserEvent) {
         this.clearSelection();
         if (selected === null) return;
     }
-
-    this.toggleFeatureSelection(selected, !oldSelectedFlag);
-    this.regions_.changed();
+    this.regions_.setProperty([selected.getId()], "selected", !oldSelectedFlag);
 
     return ol.events.condition.pointerMove(mapBrowserEvent);
 };
