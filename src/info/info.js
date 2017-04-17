@@ -121,7 +121,12 @@ export class Info extends EventSubscriber {
 
         if (conf === null) return;
         this.image_info = conf.image_info;
-        this.acquisition_date = new Date(this.image_info.image_timestamp * 1000).toISOString().slice(-25, -14);
+        if (typeof this.image_info.image_pixels_size.x == 'number') {
+            this.acquisition_date = new Date(this.image_info.image_timestamp * 1000).toISOString().slice(-25, -14);
+        } else {
+            this.acquisition_date = "-";
+        }
+        
         if (typeof this.image_info.image_pixels_size === 'object') {
             if (typeof this.image_info.image_pixels_size.x == 'number') {
                 this.pixels_size += Number(this.image_info.image_pixels_size.x).toFixed(2);
