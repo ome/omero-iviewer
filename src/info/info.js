@@ -21,6 +21,18 @@ import {
 @customElement('info')
 @inject(Context)
 export class Info extends EventSubscriber {
+
+    viewing_options = [{
+        id: 'normal',
+        title: 'Normal'
+    }, {
+        id: 'split',
+        title: 'Split View'
+    }, {
+        id: 'intmax',
+        title: 'Projection Max Intensity'
+    }];
+
     /**
      * events we subscribe to
      * @memberof Header
@@ -57,6 +69,7 @@ export class Info extends EventSubscriber {
      */
     pixels_size = "";
 
+    viewing_option = 1;
 	/**
      * @constructor
      * @param {Context} context the application context (injected)
@@ -169,7 +182,6 @@ export class Info extends EventSubscriber {
         }
     }
 
-
     /**
      * Displays link to present image (with present settings)
      *
@@ -208,33 +220,29 @@ export class Info extends EventSubscriber {
         this.context.publish(
             VIEWER_IMAGE_SETTINGS,
             {config_id : this.context.selected_config, callback : callback});
-     }
-
+    }
+ 
     /**
-     * Toggles the view: split channels or normal
-     *
+     * Changes the view: split channel, normal, projection.
+     * 
      * @memberof Info
      */
-    toggleSplitChannels() {
-        let value = $(".split_channels").val();
-        if (typeof value === 'string' &&
-            (value === 'split' || value === 'normal')) {
+    changeViewOptions() {
+        if (this.viewing_option === 'split' || this.viewing_option === 'normal') {
             let ctx = this.context.getSelectedImageConfig();
             if (ctx === null) return;
-            $('right-hand-panel .nav a[href="#setting"]').tab("show");
             this.image_info = ctx.image_info;
-            let makeSplit = (value === 'normal');
-            $(".split_channels").val(makeSplit ? "split" : "normal");
-            $(".split_channels").html(makeSplit ? "Normal" : "Split Channels");
-            this.image_info.projection = makeSplit ? "split" : "normal";
-            if (makeSplit) {
+            this.image_info.projection = this.viewing_option;
+            if (this.viewing_option === 'split') {
                 this.context.show_regions = false;
                 ctx.regions_info.requestData(true);
             }
+            let makeSplit = (this.viewing_option === 'split');
             this.context.publish(
                 IMAGE_VIEWER_SPLIT_VIEW,
                     {config_id : ctx.id, split : makeSplit});
-          }
+        } 
+
     }
 
     /**

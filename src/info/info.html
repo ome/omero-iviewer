@@ -9,16 +9,12 @@
                 <img src="../css/images/close.gif"/>
             </div>
     </div>
-    <div class="header-content col-xs-9">
-            <button
-                disabled="disabled"
-                class="btn btn-default btn-sm split_channels disabled-color"
-                click.delegate="toggleSplitChannels()"
-                style="line-height: 20px;margin-bottom:5px"
-                value="normal">
-                Split Channels
-            </button>
-        </div>
+
+    <div>Viewing options
+    <select class="form-control" value.bind="viewing_option" change.trigger="changeViewOptions()">
+        <option repeat.for="item of viewing_options" model.bind="item.id">${item.title}</option>
+    </select>
+  </div>
     <div class="row">
         <hr/>
         <div class="col-sm-6">Image ID:</div>
