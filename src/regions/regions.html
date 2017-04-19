@@ -3,10 +3,11 @@
     <require from="./regions-drawing"></require>
     <require from="./regions-edit"></require>
 
-    <div show.bind="
+    <div class="regions-container"
+         show.bind="
             image_info.projection !== 'split' && regions_info.data !== null">
 
-        <div class="before-rois-list">
+        <div class="regions-tools">
             <div class="row shapes-persistence" style="padding-top: 2px">
                 <div class="btn-group" style="margin: 5px;">
                     <button type="button" class="btn btn-default btn-xs"
@@ -68,6 +69,7 @@
                                         regions_info.image_info.can_annotate"
                              regions_info.bind="regions_info">
             </regions-drawing>
+            <hr />
         </div>
         <regions-list regions_info.bind="regions_info"></regions-list>
 

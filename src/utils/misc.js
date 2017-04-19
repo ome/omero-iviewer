@@ -292,4 +292,14 @@ export default class Misc {
 
         return url;
     }
+
+    /**
+     * Tries to detect IE based on user agent
+     *
+     * @static
+     * @return {boolean} true if browser is IE, false otherwise
+     */
+    static isIE() {
+        return (new RegExp('MSIE|Trident|Edge')).test(navigator.userAgent);
+    }
 }

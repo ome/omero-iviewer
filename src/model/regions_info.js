@@ -190,9 +190,9 @@ export default class RegionsInfo extends EventSubscriber {
         if (typeof shape[property] !== 'undefined') shape[property] = value;
         // modify the selected set for actions that influence it
         if (property === 'selected' && value) {
+            this.data.get(ids.roi_id).show = true;
             let i = this.selected_shapes.indexOf(id);
             if (i === -1) this.selected_shapes.push(id);
-            this.data.get(ids.roi_id).show = true;
         } else if ((property === 'selected' && !value) ||
                     (property === 'visible' && !value) ||
                     (property === 'deleted' && value)) {

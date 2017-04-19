@@ -55,12 +55,13 @@ export default class Ui {
                 eventbus.publish(IMAGE_VIEWER_RESIZE,
                     {config_id: -1, is_dragging: true, window_resize: false});
             });
-        });
 
-        $(document).mouseup((e) => {
-            $(document).unbind('mousemove');
-            eventbus.publish(IMAGE_VIEWER_RESIZE,
-                {config_id: -1, is_dragging: false, window_resize: false});
+            $(document).mouseup((e) => {
+                $(document).unbind('mousemove');
+                $(document).unbind('mouseup');
+                eventbus.publish(IMAGE_VIEWER_RESIZE,
+                    {config_id: -1, is_dragging: false, window_resize: false});
+            });
         });
     }
 
@@ -281,4 +282,26 @@ export default class Ui {
           dialog.find('.no').off();
           dialog.off('hidden.bs.modal');
       }
+
+      /**
+       * Measures the browser's scrollbar width
+       *
+       * @static
+       */
+      static measureScrollbarWidth() {
+          let outer = document.createElement("div");
+          outer.style.visibility = "hidden";
+          outer.style.width = "100px";
+          document.body.appendChild(outer);
+
+          let widthNoScroll = outer.offsetWidth;
+          outer.style.overflow = "scroll";
+          let inner = document.createElement("div");
+          inner.style.width = "100%";
+          outer.appendChild(inner);
+          let widthWithScroll = inner.offsetWidth;
+          outer.parentNode.removeChild(outer);
+
+          return widthNoScroll - widthWithScroll;
+    }
 }
