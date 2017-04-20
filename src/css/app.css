@@ -528,6 +528,7 @@ thumbnail-slider img {
     border-style: solid;
     border-color: rgba(255,255,255,0);
     border-width: 0px 2px 0px 2px;
+    font-size: 13px;
     overflow: hidden;
 }
 
