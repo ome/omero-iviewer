@@ -15,7 +15,9 @@
                             regions_info.history.history.length > 0 &&
                             regions_info.history.historyPointer >= 0) ||
                             !regions_info.image_info.can_annotate"
-                        click.delegate="saveShapes()">Save
+                        click.delegate="saveShapes()"
+                        title="${!regions_info.image_info.can_annotate ?
+                                    'No permission to save' : ''}">Save
                     </button>
                     <button type="button"
                         disabled.bind="!(regions_info.history &&
@@ -38,13 +40,17 @@
                     <button type="button"
                             disabled.bind="regions_info === null ||
                                            !regions_info.image_info.can_annotate"
+                            title="${!regions_info.image_info.can_annotate ?
+                                        'No permission to delete' : ''}"
                             class="btn btn-default btn-xs dropdown-toggle"
                             data-toggle="dropdown">Delete
                     </button>
-                    <ul class="dropdown-menu">
-                        <li if.bind="regions_info && regions_info.selected_shapes &&
-                                        regions_info.selected_shapes.length !== 0"
-                            click.delegate="deleteShapes()"><a href="#">Delete</a></li>
+                    <ul class="dropdown-menu"
+                        title="Rois/shapes that cannot be deleted (permissions) are skipped">
+                        <li if.bind="regions_info &&
+                                     regions_info.selected_shapes.length !== 0"
+                            click.delegate="deleteShapes()"><a href="#">Delete</a>
+                        </li>
                         <li click.delegate="deleteShapes(true)"><a href="#">Delete All</a></li>
                     </ul>
                 </div>

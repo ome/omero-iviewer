@@ -371,16 +371,31 @@ export default class RegionsInfo extends EventSubscriber {
     }
 
     /**
-     * Returns the last of the selected shapes
+     * Returns the last of the selected shapes (taking into account permissions)
      *
-     * @return {Object|null} the last selected shape or null (if no shapes are selected)
+     * @return {Object|null} the last selected shape with(out) permission
+     *                       or null (if no shapes are selected)
      * @memberof RegionsEdit
      */
     getLastSelectedShape() {
         let len = this.selected_shapes.length;
         if (len === 0) return null;
 
-        return this.getShape(this.selected_shapes[len-1]);
+        let hasPermission = (shape) =>
+            this.image_info.can_annotate &&
+                !(typeof shape['permissions'] === 'object' &&
+                shape['permissions'] !== null &&
+                typeof shape['permissions']['canEdit'] === 'boolean' &&
+                !shape['permissions']['canEdit']);
+
+        let ret =  this.getShape(this.selected_shapes[len-1]);
+        if (hasPermission(ret)) return ret;
+        // look for the next one that has permissions and return it
+        for (let i=len-2;i>=0;i--) {
+            let s = this.getShape(this.selected_shapes[i]);
+            if (hasPermission(s)) return s;
+        }
+        return ret;
     }
 
     /**

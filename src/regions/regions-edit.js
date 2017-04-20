@@ -443,11 +443,16 @@ export default class RegionsEdit extends EventSubscriber {
     adjustEditWidgets() {
         this.last_selected = this.regions_info.getLastSelectedShape();
         let canEdit =
-            this.last_selected &&
+            this.regions_info.image_info.can_annotate &&
+            this.last_selected !== null &&
             !(typeof this.last_selected['permissions'] === 'object' &&
             this.last_selected['permissions'] !== null &&
             typeof this.last_selected['permissions']['canEdit'] === 'boolean' &&
             !this.last_selected['permissions']['canEdit']);
+        let showAsPermissionDisabled =
+            !this.regions_info.image_info.can_annotate ||
+            (this.regions_info.selected_shapes.length >= 1 && !canEdit);
+        let permissionsTooltip = "No permission to edit";
         let type =
             this.last_selected ? this.last_selected.type.toLowerCase() : null;
 
@@ -455,6 +460,8 @@ export default class RegionsEdit extends EventSubscriber {
         let editComment = $(this.element).find(".shape-edit-comment input");
         editComment.off('input');
         editComment.val('Comment');
+        editComment.attr('title',"");
+        editComment.removeClass("disabled-color");
         if (this.last_selected) {
             editComment.val(
                 typeof this.last_selected.Text === 'string' ?
@@ -463,9 +470,10 @@ export default class RegionsEdit extends EventSubscriber {
                 (event) =>
                     this.onCommentChange(
                         event.target.value, this.last_selected));
-            if (canEdit) {
-                editComment.prop("disabled", false);
-                editComment.removeClass("disabled-color");
+            editComment.prop("disabled", showAsPermissionDisabled);
+            if (showAsPermissionDisabled) {
+                editComment.addClass("disabled-color");
+                editComment.attr('title', permissionsTooltip);
             }
         } else {
             editComment.prop("disabled", true);
@@ -485,22 +493,24 @@ export default class RegionsEdit extends EventSubscriber {
         fontSizeSpinner.on("input spinstop",
            (event, ui) => this.onFontSizeChange(
                parseInt(event.target.value), this.last_selected));
-        fontSizeSpinner.spinner(
-            this.last_selected && canEdit ? "enable" : "disable");
+        fontSizeSpinner.spinner(canEdit ? "enable" : "disable");
+        fontSizeSpinner.attr(
+            'title', showAsPermissionDisabled ? permissionsTooltip : "");
 
         // DIMENSION ATTACHMENT
         let dims = this.regions_info.image_info.dimensions;
         let shapeAttachments =
             $(this.element).find(".shape-edit-attachments").children();
         let shapeAttachmentsInput = shapeAttachments.filter("input");
-        shapeAttachments.removeClass('disabled-color');
-        shapeAttachmentsInput.prop("disabled", false);
+        let shapeAttachmentsLocks = shapeAttachments.filter(
+            "[name='shape-edit-attachments-locks']");
+        shapeAttachmentsLocks.addClass('disabled-color');
+        shapeAttachments.attr("title", "");
+        shapeAttachmentsInput.prop("disabled", true);
 
         if (dims.max_t > 1 || dims.max_z > 1) {
             shapeAttachmentsInput.off();
             shapeAttachmentsInput.val('');
-            let shapeAttachmentsLocks = shapeAttachments.filter(
-                "[name='shape-edit-attachments-locks']");
             shapeAttachmentsLocks.removeClass("dim_locked");
             shapeAttachmentsLocks.addClass("dim_unlocked");
             shapeAttachmentsLocks.off();
@@ -518,8 +528,10 @@ export default class RegionsEdit extends EventSubscriber {
                             respectiveAttachementLock.attr("locked") === "";
                     respectiveAttachementLock.attr(
                         'locked', unattached ? "" : "locked");
-                    respectiveAttachementLock.get(0).className =
-                        unattached ? "dim_unlocked" : "dim_locked";
+                    respectiveAttachementLock.removeClass(
+                        unattached ? "dim_locked" : "dim_unlocked");
+                    respectiveAttachementLock.addClass(
+                        unattached ? "dim_unlocked" : "dim_locked");
                     let respectiveDimensionInput =
                         shapeAttachmentsInput.filter(filter);
                     respectiveDimensionInput.val(
@@ -528,67 +540,71 @@ export default class RegionsEdit extends EventSubscriber {
                             this.last_selected ?
                                 this.last_selected[prop] + 1 :
                                     this.regions_info.image_info.dimensions[d] + 1);
-                    let hasOnlyOneEntry =
-                        this.regions_info.image_info.dimensions['max_' + d] <= 1;
-                    if (hasOnlyOneEntry || unattached ||
-                        this.last_selected === null) {
-                        respectiveDimensionInput.prop('disabled', true);
-                        if (hasOnlyOneEntry)
-                            respectiveAttachementLock.addClass(
-                                "disabled-color");
+                    let hasMoreThanOneEntry =
+                        this.regions_info.image_info.dimensions['max_' + d] > 1;
+                    if (hasMoreThanOneEntry && (!showAsPermissionDisabled ||
+                        this.last_selected === null)) {
+                            respectiveAttachementLock.removeClass("disabled-color");
+                            if (!unattached)
+                                respectiveDimensionInput.prop("disabled", false);
+                    }
+                    if (showAsPermissionDisabled) {
+                        respectiveDimensionInput.attr("title", permissionsTooltip);
+                        respectiveAttachementLock.attr("title", permissionsTooltip);
                     }
             });
 
-            // set up various event handlers for attachment changes
-            let checkAttachmentInput0 =
-                (event, reset = false) => {
-                    let dim = event.target.getAttribute('dim');
-                    if (this.regions_info.image_info.dimensions[
-                        'max_' + dim] <= 1) return -1;
-                    let respectiveTextInput =
-                        shapeAttachmentsInput.filter('[dim="' + dim + '"]');
-                    return this.checkAttachmentInput(respectiveTextInput, reset);
-                };
-            // reset on blur (if check of input value check fails)
-            shapeAttachmentsInput.on('blur',
-                (event) => checkAttachmentInput0(event, true));
-            // change attachment value (if input value check succeeds)
-            shapeAttachmentsInput.on('change keyup',
-                (event) => {
-                    if (event.type === 'keyup' && event.keyCode !== 13) return;
-                    let dim = event.target.getAttribute('dim');
-                    let value = checkAttachmentInput0(event);
-                    if (value >= 0)
-                        this.onAttachmentChange(value, dim, this.last_selected);
-                });
-            // click handler on locks
-            shapeAttachmentsLocks.on('click',
-                (event) => {
-                    let dim = event.target.getAttribute('dim');
-                    if (this.regions_info.image_info.dimensions[
-                        'max_' + dim] <= 1) return;
-                    let locked = event.target.getAttribute('locked');
-                    if (locked) {
-                        this.onAttachmentChange(-1, dim, this.last_selected);
-                        event.target.className = 'dim_unlocked';
-                    } else {
-                        let val = checkAttachmentInput0(event, true);
-                        if (val < 0) return;
-                        this.onAttachmentChange(
-                            val, dim, this.last_selected);
-                        event.target.className = 'dim_locked';
-                    }
-                    event.target.setAttribute(
-                        "locked", locked === 'locked' ? "" : "locked");
-                    let respectiveTextInput =
-                        shapeAttachmentsInput.filter('[dim="' + dim + '"]');
-                    respectiveTextInput.prop(
-                        'disabled', locked === 'locked' ||
-                        this.last_selected === null);
-                });
-        } else {
-            shapeAttachments.addClass('disabled-color');
-            shapeAttachmentsInput.prop("disabled", true);
+            if (this.regions_info.image_info.can_annotate) {
+                // set up various event handlers for attachment changes
+                let checkAttachmentInput0 =
+                    (event, reset = false) => {
+                        if (!this.regions_info.image_info.can_annotate) return;
+                        let dim = event.target.getAttribute('dim');
+                        if (this.regions_info.image_info.dimensions[
+                            'max_' + dim] <= 1) return -1;
+                        let respectiveTextInput =
+                            shapeAttachmentsInput.filter('[dim="' + dim + '"]');
+                        return this.checkAttachmentInput(respectiveTextInput, reset);
+                    };
+                // reset on blur (if check of input value check fails)
+                shapeAttachmentsInput.on('blur',
+                    (event) => checkAttachmentInput0(event, true));
+                // change attachment value (if input value check succeeds)
+                shapeAttachmentsInput.on('change keyup',
+                    (event) => {
+                        if (event.type === 'keyup' && event.keyCode !== 13) return;
+                        let dim = event.target.getAttribute('dim');
+                        let value = checkAttachmentInput0(event);
+                        if (value >= 0)
+                            this.onAttachmentChange(value, dim, this.last_selected);
+                    });
+                // click handler on locks
+                shapeAttachmentsLocks.on('click',
+                    (event) => {
+                        if (showAsPermissionDisabled) return;
+                        let dim = event.target.getAttribute('dim');
+                        if (this.regions_info.image_info.dimensions[
+                            'max_' + dim] <= 1) return;
+                        let locked =
+                            event.target.getAttribute('locked') === 'locked';
+                        if (locked) {
+                            this.onAttachmentChange(-1, dim, this.last_selected);
+                            event.target.className = 'dim_unlocked';
+                        } else {
+                            let val = checkAttachmentInput0(event, true);
+                            if (val < 0) return;
+                            this.onAttachmentChange(
+                                val, dim, this.last_selected);
+                            event.target.className = 'dim_locked';
+                        }
+                        event.target.setAttribute(
+                            "locked", locked ? "" : "locked");
+                        let respectiveTextInput =
+                            shapeAttachmentsInput.filter('[dim="' + dim + '"]');
+                        respectiveTextInput.prop(
+                            'disabled', locked || this.last_selected === null);
+                    });
+            }
         }
 
         // STROKE COLOR & WIDTH
@@ -596,8 +612,8 @@ export default class RegionsEdit extends EventSubscriber {
             this.getColorPickerOptions(false, this.last_selected);
         let strokeSpectrum =
             $(this.element).find(".shape-stroke-color .spectrum-input");
-        let strokeWidthSpinner =
-            $(this.element).find(".shape-stroke-width input");
+        $(".shape-stroke-color").attr('title', '');
+        strokeSpectrum.spectrum("enable");
         let strokeColor =
             this.last_selected ?
                 this.last_selected.StrokeColor :
@@ -616,7 +632,11 @@ export default class RegionsEdit extends EventSubscriber {
         strokeOptions.color = Converters.signedIntegerToRgba(strokeColor);
         strokeSpectrum.spectrum(strokeOptions);
         // STROKE width
+        let strokeWidthSpinner =
+            $(this.element).find(".shape-stroke-width input");
         strokeWidthSpinner.off("input spinstop");
+        strokeWidthSpinner.attr("title", "");
+        strokeWidthSpinner.spinner("enable");
         if (type === 'label') {
             strokeWidthSpinner.spinner("value", 0);
             strokeWidthSpinner.spinner("disable");
@@ -625,14 +645,19 @@ export default class RegionsEdit extends EventSubscriber {
             strokeWidthSpinner.on("input spinstop",
                (event, ui) => this.onStrokeWidthChange(
                    parseInt(event.target.value), this.last_selected));
-            strokeWidthSpinner.spinner(
-                this.last_selected === null || canEdit ? "enable" : "disable");
         }
         this.setDrawColors(strokeOptions.color, false);
-
+        if (showAsPermissionDisabled) {
+            strokeSpectrum.spectrum("disable");
+            strokeWidthSpinner.spinner("disable");
+            strokeWidthSpinner.attr('title', permissionsTooltip);
+            $(".shape-stroke-color").attr('title', permissionsTooltip);
+        }
         // ARROW
         let arrowButton = $(this.element).find(".arrow-button button");
-        if (type && type.indexOf('line') >= 0) {
+        arrowButton.attr(
+            'title', showAsPermissionDisabled ? permissionsTooltip : "");
+        if (type && type.indexOf('line') >= 0 && !showAsPermissionDisabled) {
             arrowButton.prop('disabled', false);
             arrowButton.removeClass('disabled-color');
             $('.marker_start').html(
@@ -653,8 +678,8 @@ export default class RegionsEdit extends EventSubscriber {
         let fillSpectrum =
             $(this.element).find(".shape-fill-color .spectrum-input");
         let fillColor = -129;
-        let fillDisabled =
-                type === 'line' || type === 'polyline' || type === 'label';
+        let fillDisabled = showAsPermissionDisabled || type === 'line' ||
+             type === 'polyline' || type === 'label';
         if (!fillDisabled) {
             fillColor =
                 this.last_selected ?
@@ -664,8 +689,11 @@ export default class RegionsEdit extends EventSubscriber {
         }
         fillOptions.color = Converters.signedIntegerToRgba(fillColor);
         fillSpectrum.spectrum(fillOptions);
+        $(".shape-fill-color").attr('title', '');
         // set fill (if not disabled)
         if (fillDisabled) {
+            if (showAsPermissionDisabled)
+                $(".shape-fill-color").attr('title', permissionsTooltip);
             fillSpectrum.spectrum("disable");
             return;
         }
