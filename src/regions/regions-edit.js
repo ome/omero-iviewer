@@ -543,7 +543,8 @@ export default class RegionsEdit extends EventSubscriber {
                     let hasMoreThanOneEntry =
                         this.regions_info.image_info.dimensions['max_' + d] > 1;
                     if (hasMoreThanOneEntry && (!showAsPermissionDisabled ||
-                        this.last_selected === null)) {
+                        (this.regions_info.image_info.can_annotate &&
+                         this.last_selected === null))) {
                             respectiveAttachementLock.removeClass("disabled-color");
                             if (!unattached)
                                 respectiveDimensionInput.prop("disabled", false);
