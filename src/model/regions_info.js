@@ -381,19 +381,12 @@ export default class RegionsInfo extends EventSubscriber {
         let len = this.selected_shapes.length;
         if (len === 0) return null;
 
-        let hasPermission = (shape) =>
-            this.image_info.can_annotate &&
-                !(typeof shape['permissions'] === 'object' &&
-                shape['permissions'] !== null &&
-                typeof shape['permissions']['canEdit'] === 'boolean' &&
-                !shape['permissions']['canEdit']);
-
         let ret =  this.getShape(this.selected_shapes[len-1]);
-        if (hasPermission(ret)) return ret;
+        if (this.checkShapeForPermission(ret, "canEdit")) return ret;
         // look for the next one that has permissions and return it
         for (let i=len-2;i>=0;i--) {
             let s = this.getShape(this.selected_shapes[i]);
-            if (hasPermission(s)) return s;
+            if (this.checkShapeForPermission(s, "canEdit")) return s;
         }
         return ret;
     }
@@ -413,4 +406,27 @@ export default class RegionsInfo extends EventSubscriber {
             'Value': 1
         };
     }
+
+    /**
+     * Checks if handed in permission is on shape
+     *
+     * @param {Object} shape the shape object
+     * @param {string} permission the permission to check for
+     * @param {boolean} true if permission is on given shape, false otherwise
+     * @memberof RegionsEdit
+     */
+    checkShapeForPermission(shape, permission) {
+        if (typeof shape !== 'object' || shape === null ||
+            typeof permission !== 'string' ||
+                (permission !== 'canAnnotate' &&
+                permission !== 'canEdit' &&
+                permission !== 'canDelete')) return false;
+
+        return this.image_info.can_annotate &&
+                !(typeof shape['permissions'] === 'object' &&
+                shape['permissions'] !== null &&
+                typeof shape['permissions'][permission] === 'boolean' &&
+                !shape['permissions'][permission]);
+    }
+
 }

@@ -105,13 +105,8 @@ export default class RegionsList extends EventSubscriber {
             this.observers.push(
                 this.bindingEngine.collectionObserver(
                     this.regions_info.selected_shapes).subscribe(
-                        (newValue, oldValue) => {
-                            if (!Misc.isArray(newValue) ||
-                                newValue.length === 0 ||
-                                newValue[0].addedCount === 0) return;
-                            this.actUponSelectionChange(newValue[0].index);
-                        }
-            ));
+                        (newValue, oldValue) =>
+                            this.actUponSelectionChange()));
             this.observers.push(
                 this.bindingEngine.propertyObserver(
                     this.context, "show_regions").subscribe(
@@ -154,30 +149,22 @@ export default class RegionsList extends EventSubscriber {
     }
 
     /**
-     * Scrolls to selected row (if outside of visible portion)
+     * Scrolls to selected row
      *
-     * @param {number} index the index in the selected shapes
      * @memberof RegionsList
      */
-     actUponSelectionChange(index) {
-         let id = null;
-         try {
-             id = this.regions_info.selected_shapes[index];
-         } catch(ignored) {}
-         if (typeof id !== 'string') return;
+     actUponSelectionChange() {
+         if (this.regions_info.selected_shapes.length === 0) return;
+         let nrOfSelShapes = this.regions_info.selected_shapes.length;
+         let idOflastEntry = this.regions_info.selected_shapes[nrOfSelShapes-1];
+         let lastSelShape = this.regions_info.getLastSelectedShape();
+         let lastCanEdit =
+            this.regions_info.checkShapeForPermission(lastSelShape, "canEdit");
 
-         let el = document.getElementById('roi-' + id);
-         if (el === null) return;
+         // exception: mixed permissions - don't scroll for canEdit=false
+         if (idOflastEntry !== lastSelShape.shape_id && !lastCanEdit) return;
 
-         let regTable = $('.regions-table');
-         let offsetRegTable = regTable.prop("offsetTop");
-         let scrollTop = regTable.scrollTop();
-         let scrollBottom = scrollTop + regTable.outerHeight();
-         let elTop = el.offsetTop - offsetRegTable;
-         let elBottom = elTop + el.offsetHeight;
-         if (elTop > scrollTop && elBottom < scrollBottom) return;
-
-         regTable.scrollTop(elTop);
+         Ui.scrollRegionsTable(lastSelShape.shape_id);
      }
 
     /**

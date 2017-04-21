@@ -443,12 +443,8 @@ export default class RegionsEdit extends EventSubscriber {
     adjustEditWidgets() {
         this.last_selected = this.regions_info.getLastSelectedShape();
         let canEdit =
-            this.regions_info.image_info.can_annotate &&
-            this.last_selected !== null &&
-            !(typeof this.last_selected['permissions'] === 'object' &&
-            this.last_selected['permissions'] !== null &&
-            typeof this.last_selected['permissions']['canEdit'] === 'boolean' &&
-            !this.last_selected['permissions']['canEdit']);
+            this.regions_info.checkShapeForPermission(
+                this.last_selected, "canEdit");
         let showAsPermissionDisabled =
             !this.regions_info.image_info.can_annotate ||
             (this.regions_info.selected_shapes.length >= 1 && !canEdit);
@@ -679,8 +675,8 @@ export default class RegionsEdit extends EventSubscriber {
         let fillSpectrum =
             $(this.element).find(".shape-fill-color .spectrum-input");
         let fillColor = -129;
-        let fillDisabled = showAsPermissionDisabled || type === 'line' ||
-             type === 'polyline' || type === 'label';
+        let fillDisabled =
+            type === 'line' || type === 'polyline' || type === 'label';
         if (!fillDisabled) {
             fillColor =
                 this.last_selected ?
@@ -692,7 +688,7 @@ export default class RegionsEdit extends EventSubscriber {
         fillSpectrum.spectrum(fillOptions);
         $(".shape-fill-color").attr('title', '');
         // set fill (if not disabled)
-        if (fillDisabled) {
+        if (fillDisabled || showAsPermissionDisabled) {
             if (showAsPermissionDisabled)
                 $(".shape-fill-color").attr('title', permissionsTooltip);
             fillSpectrum.spectrum("disable");

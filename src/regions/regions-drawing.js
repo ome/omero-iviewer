@@ -2,6 +2,7 @@
 import Context from '../app/context';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import Misc from '../utils/misc';
+import Ui from '../utils/ui';
 import {Utils} from '../utils/regions';
 import {Converters} from '../utils/converters';
 import {REGIONS_DRAWING_MODE} from '../utils/constants';
@@ -184,6 +185,13 @@ export default class RegionsDrawing extends EventSubscriber {
             this.onDrawShape(
                 this.supported_shapes.indexOf(
                     this.regions_info.shape_to_be_drawn), true);
+        // scroll to end of list
+        if (len !== 0)
+            setTimeout(
+                Ui.scrollRegionsTable.bind(
+                    null,generatedShapes[len-1].shape_id), 50);
+
+        // only if we have to generate more shapes we continue
         if (!params.drawn || len === 0) return;
 
         // collect dimensions for propagation

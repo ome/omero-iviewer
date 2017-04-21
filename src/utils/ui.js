@@ -284,6 +284,30 @@ export default class Ui {
       }
 
       /**
+       * Scrolls the regions table to the row with the given id
+       * if the row is outside the visible portion of the table
+       *
+       * @param {string} id a row id of the form roi_id:shape_id
+       * @static
+       */
+      static scrollRegionsTable(id) {
+          if (typeof id !== 'string') return;
+
+          let el = document.getElementById('roi-' + id);
+          if (el === null) return;
+
+          let regTable = $('.regions-table');
+          let offsetRegTable = regTable.prop("offsetTop");
+          let scrollTop = regTable.scrollTop();
+          let scrollBottom = scrollTop + regTable.outerHeight();
+          let elTop = el.offsetTop - offsetRegTable;
+          let elBottom = elTop + el.offsetHeight;
+          if (elTop > scrollTop && elBottom < scrollBottom) return;
+
+          regTable.scrollTop(elTop);
+      }
+
+      /**
        * Measures the browser's scrollbar width
        *
        * @static

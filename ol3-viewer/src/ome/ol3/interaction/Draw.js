@@ -162,7 +162,7 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                 this.rois_id_ = 0;
             }
 
-            this.endDrawingInteraction();
+            this.endDrawingInteraction(false);
         };
 
         // create a new draw interaction removing possible existing ones first
@@ -356,12 +356,14 @@ ome.ol3.interaction.Draw.prototype.setDefaultDrawingStyle = function(shape) {
 
 /**
  * Ends an active drawing interaction
+ * @param {boolean} reset if true (default) we reset back to the previous mode
  */
-ome.ol3.interaction.Draw.prototype.endDrawingInteraction = function() {
+ome.ol3.interaction.Draw.prototype.endDrawingInteraction = function(reset) {
     if (this.ol_draw_) {
         this.regions_.viewer_.viewer_.removeInteraction(this.ol_draw_);
         this.ol_draw_ = null;
-        this.regions_.setModes(this.previous_modes_);
+        if (typeof reset !== 'boolean' || reset)
+            this.regions_.setModes(this.previous_modes_);
     }
 };
 
