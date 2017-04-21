@@ -22,15 +22,21 @@ import {
 @inject(Context)
 export class Info extends EventSubscriber {
 
-    viewing_options = [{
-        id: 'normal',
-        title: 'Normal'
+    download_options = [{
+        id: '0',
+        title: 'Download...'
     }, {
-        id: 'split',
-        title: 'Split View'
+        id: '1',
+        title: 'Export as OME-TIFF...'
     }, {
-        id: 'intmax',
-        title: 'Projection Max Intensity'
+        id: '2',
+        title: 'Export as JPEG...'
+    }, {
+        id: '3',
+        title: 'Export as PNG...'
+    }, {
+        id: '4',
+        title: 'Export as TIFF...'
     }];
 
     /**
@@ -201,6 +207,9 @@ export class Info extends EventSubscriber {
             {config_id : this.context.selected_config, callback : callback});
     }
 
+    exportImage(index) {
+        console.log(index);
+    }
     /**
      * Overridden aurelia lifecycle method:
      * called whenever the view is unbound within aurelia
