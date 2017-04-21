@@ -69,7 +69,6 @@ export class Info extends EventSubscriber {
      */
     pixels_size = "";
 
-    viewing_option = 1;
 	/**
      * @constructor
      * @param {Context} context the application context (injected)
@@ -134,6 +133,7 @@ export class Info extends EventSubscriber {
 
         if (conf === null) return;
         this.image_info = conf.image_info;
+        console.log(this.image_info);
         if (typeof this.image_info.image_pixels_size.x == 'number') {
             this.acquisition_date = new Date(this.image_info.image_timestamp * 1000).toISOString().slice(-25, -14);
         } else {
@@ -158,27 +158,6 @@ export class Info extends EventSubscriber {
             } else {
                 this.pixels_size += "-";
             }
-        }
-        if (!this.image_info.has_scalebar) {
-            this.context.show_scalebar = false;
-            $(".has_scalebar").addClass("disabled-color");
-            $(".has_scalebar input").prop('disabled', true);
-        } else {
-            $(".has_scalebar").removeClass("disabled-color");
-            $(".has_scalebar input").prop('disabled', false);
-        }
-        $(".split_channels").val(this.image_info.projection);
-        if (!this.image_info.tiled &&
-                Misc.isArray(this.image_info.channels) &&
-                this.image_info.channels.length > 1) {
-            $(".split_channels").removeClass("disabled-color");
-            $(".split_channels").prop('disabled', false);
-            $(".split_channels").html(
-                this.image_info.projection === 'split' ? "Normal" :"Split Channels");
-        } else {
-            $(".split_channels").addClass("disabled-color");
-            $(".split_channels").prop('disabled', true);
-            $(".split_channels").html("Normal");
         }
     }
 
@@ -220,29 +199,6 @@ export class Info extends EventSubscriber {
         this.context.publish(
             VIEWER_IMAGE_SETTINGS,
             {config_id : this.context.selected_config, callback : callback});
-    }
- 
-    /**
-     * Changes the view: split channel, normal, projection.
-     * 
-     * @memberof Info
-     */
-    changeViewOptions() {
-        if (this.viewing_option === 'split' || this.viewing_option === 'normal') {
-            let ctx = this.context.getSelectedImageConfig();
-            if (ctx === null) return;
-            this.image_info = ctx.image_info;
-            this.image_info.projection = this.viewing_option;
-            if (this.viewing_option === 'split') {
-                this.context.show_regions = false;
-                ctx.regions_info.requestData(true);
-            }
-            let makeSplit = (this.viewing_option === 'split');
-            this.context.publish(
-                IMAGE_VIEWER_SPLIT_VIEW,
-                    {config_id : ctx.id, split : makeSplit});
-        } 
-
     }
 
     /**

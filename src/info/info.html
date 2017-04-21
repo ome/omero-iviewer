@@ -10,11 +10,6 @@
             </div>
     </div>
 
-    <div>Viewing options
-    <select class="form-control" value.bind="viewing_option" change.trigger="changeViewOptions()">
-        <option repeat.for="item of viewing_options" model.bind="item.id">${item.title}</option>
-    </select>
-  </div>
     <div class="row">
         <hr/>
         <div class="col-sm-6">Image ID:</div>
@@ -35,26 +30,10 @@
         <div class="col-sm-6"><small>${image_info.dimensions.max_t}</small></div>
         <div class="clearfix"></div>
         <div class="col-sm-6">Channels:</div>
-        <div>
+        <div class="col-sm-6">
             <template repeat.for="channel of image_info.channels">
                 <span>${channel.label}</span>
             </template>
         </div>
-    </div>
-    <div class="col-sm-6">
-        <hr/>
-        <label class="has_scalebar">
-            <input type="checkbox"
-                checked.bind="context.show_scalebar"
-                change.delegate="toggleScalebar($event)">&nbsp;Show Scalebar
-        </label>
-        <label class="${image_info === null ||
-                 image_info.projection === 'split' ? 'disabled-color' : ''}">
-            <input type="checkbox" disabled.bind="image_info === null ||
-                    image_info.projection === 'split'"
-                    checked.bind="context.show_regions"
-                    change.delegate="toggleRegions($event)">&nbsp;Show ROIs
-        </label>
-
     </div>
 </template>
