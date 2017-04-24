@@ -147,9 +147,10 @@ export default class Histogram extends EventSubscriber {
      * @memberof Histogram
      */
     handleSettingsChanges(params = {}) {
-        // find first active channel
+        // find first active channel (if handed in channel was not supplied)
         let channel = 0;
-        if (Misc.isArray(this.image_info.channels))
+        if (typeof params.channel === 'number') channel = params.channel;
+        else if (Misc.isArray(this.image_info.channels))
             for (let i in this.image_info.channels)
                 if (this.image_info.channels[i].active) {
                     channel = parseInt(i);
@@ -163,11 +164,15 @@ export default class Histogram extends EventSubscriber {
         let plotHistogram =
             (typeof params.prop !== 'string' ||
                 params.prop === 'active' ||
-                params.prop === 'color');
+                params.prop === 'color' ||
+                channel !== this.last_active_channel);
 
-        // special case: active toggle that doesn't affect the first active channel
-        if (plotHistogram && params.prop === "active" &&
-                channel === this.last_active_channel) return;
+        // special cases when we don't need to update the histogram
+        if (plotHistogram &&
+                ((params.prop === "active" &&
+                  channel === this.last_active_channel) ||
+                 (params.prop === "color" &&
+                  channel !== this.last_active_channel))) return;
         // update last active channel
         this.last_active_channel = channel;
         if (plotHistogram) this.plotHistogram(channel);
