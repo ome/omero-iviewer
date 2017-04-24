@@ -5,14 +5,14 @@
     <div class="btn-group save-settings" style="margin: 5px">
         <button type="button"
             disabled.bind="!(image_config && image_config.image_info &&
-                image_config.image_info.can_save_settings &&
+                image_config.image_info.can_annotate &&
                 image_config.history.length > 0 && image_config.historyPointer >= 0)"
             class="btn btn-default btn-xs"
             click.delegate="saveImageSettings()">Save
         </button>
         <button type="button"
             disabled.bind="!(image_config && image_config.image_info &&
-                image_config.image_info.can_save_settings)"
+                image_config.image_info.can_annotate)"
             class="btn btn-default btn-xs"
             click.delegate="saveImageSettingsToAll()">Save to All
         </button>
@@ -69,7 +69,7 @@
         <div repeat.for="rdef of rdefs"
             class="user-settings"
             click.delegate="applyUserSetting($index)">
-            <img src="${getRdefThumbUrl()}/90/?rdefId=${rdef.id}&${revision}" />
+            <img src.bind="getRdefThumbUrl() + '/90/?rdefId=' + rdef.id + '&' + revision" />
             <div>${rdef.owner.firstName + ' ' + rdef.owner.lastName}</div>
         </div>
     </div>

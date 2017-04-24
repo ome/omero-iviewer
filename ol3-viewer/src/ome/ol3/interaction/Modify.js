@@ -105,7 +105,11 @@ ome.ol3.interaction.Modify.prototype.handlePointerAtPixel_ = function(pixel, map
         if ((typeof node.feature['visible'] === 'boolean' &&
              !node.feature['visible']) ||
              (typeof node.feature['state'] === 'number' &&
-             node.feature['state'] === ome.ol3.REGIONS_STATE.REMOVED)) return;
+             node.feature['state'] === ome.ol3.REGIONS_STATE.REMOVED) ||
+             (typeof node.feature['permissions'] === 'object' &&
+                node.feature['permissions'] !== null &&
+                typeof node.feature['permissions']['canEdit'] === 'boolean' &&
+                !node.feature['permissions']['canEdit'])) return;
 
         // we only continue if we don't have an unmodifyable labels
         if (!(node.geometry instanceof ome.ol3.geom.Label) &&

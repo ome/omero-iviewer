@@ -28,7 +28,7 @@ ome.ol3.interaction.Draw =
      * @type {Object}
      * @private
      */
-    this.opts = {};
+    this.opts_ = {};
 
     /**
      * @type {ome.ol3.source.Regions}
@@ -115,17 +115,17 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
 
                 // set t and z info
                 var hasUnattachedDims =
-                    ome.ol3.utils.Misc.isArray(this.opts['unattached']) &&
-                    this.opts['unattached'].length > 0;
-                event.feature['theT'] =
+                    ome.ol3.utils.Misc.isArray(this.opts_['unattached']) &&
+                    this.opts_['unattached'].length > 0;
+                event.feature['TheT'] =
                     hasUnattachedDims &&
-                    this.opts['unattached'].indexOf('t') !== -1 ?
+                    this.opts_['unattached'].indexOf('t') !== -1 ?
                         -1 : this.regions_.viewer_.getDimensionIndex('t');
-                event.feature['theZ'] =
+                event.feature['TheZ'] =
                     hasUnattachedDims &&
-                    this.opts['unattached'].indexOf('z') !== -1 ?
+                    this.opts_['unattached'].indexOf('z') !== -1 ?
                         -1 : this.regions_.viewer_.getDimensionIndex('z');
-                event.feature['theC'] = -1;
+                event.feature['TheC'] = -1;
 
                 // apply style function after setting a default style
                 event.feature.setStyle(this.default_style_);
@@ -133,7 +133,7 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                     event.feature, this.regions_, true);
 
                 var add =
-                    typeof this.opts['add'] !== 'boolean' || this.opts['add'];
+                    typeof this.opts_['add'] !== 'boolean' || this.opts_['add'];
                 if (add) this.regions_.addFeature(event.feature);
 
                 var eventbus = this.regions_.viewer_.eventbus_;
@@ -162,7 +162,7 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                 this.rois_id_ = 0;
             }
 
-            this.endDrawingInteraction();
+            this.endDrawingInteraction(false);
         };
 
         // create a new draw interaction removing possible existing ones first
@@ -208,7 +208,7 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
  *                       a flag to not add the new shape (add)
  */
 ome.ol3.interaction.Draw.prototype.drawShape = function(shape, roi_id, opts) {
-    this.opts = opts || {};
+    this.opts_ = opts || {};
     this.abort_polyline_ = false;
 	if (typeof(shape['type']) !== 'string' || shape['type'].length === 0) {
         this.history_id_ = null;
@@ -219,7 +219,8 @@ ome.ol3.interaction.Draw.prototype.drawShape = function(shape, roi_id, opts) {
     }
 
     this.roi_id_ = (typeof roi_id === 'number' && roi_id < 0) ? roi_id : -1;
-    if (typeof opts['hist_id'] === 'number') this.history_id_ = opts['hist_id'];
+    if (typeof this.opts_['hist_id'] === 'number')
+        this.history_id_ = this.opts_['hist_id'];
     var typeFunction = null;
     switch(shape['type'].toLowerCase()) {
         case "point" :
@@ -270,20 +271,20 @@ ome.ol3.interaction.Draw.prototype.setDefaultDrawingStyle = function(shape) {
 
     // determine fill and stroke using defaults if not supplied
     var defaultFill =
-        typeof shape['fillColor'] === 'string' &&
-        typeof shape['fillAlpha'] === 'number' ?
-            ome.ol3.utils.Conversion.convertHexColorFormatToObject(
-                shape['fillColor'], shape['fillAlpha']) : null;
+        typeof shape['FillColor'] === 'number' ?
+            ome.ol3.utils.Conversion.convertSignedIntegerToColorObject(
+                shape['FillColor']) : null;
     if (defaultFill === null) defaultFill = transWhite;
     else defaultFill =
         ome.ol3.utils.Conversion.convertColorObjectToRgba(defaultFill);
     var defaultStroke = {
-        'color': typeof shape['strokeColor'] === 'string' &&
-                typeof shape['strokeAlpha'] === 'number' ?
-                    ome.ol3.utils.Conversion.convertHexColorFormatToObject(
-                        shape['strokeColor'], shape['strokeAlpha']) : null,
-        'width': typeof shape['strokeWidth'] === 'number' ?
-                    shape['strokeWidth'] : 1,
+        'color': typeof shape['StrokeColor'] === 'number' ?
+                    ome.ol3.utils.Conversion.convertSignedIntegerToColorObject(
+                        shape['StrokeColor']) : null,
+        'width': (typeof shape['StrokeWidth'] === 'object' &&
+                  shape['StrokeWidth'] !== null &&
+                  typeof shape['StrokeWidth']['Value'] === 'number') ?
+                      shape['StrokeWidth']['Value'] : 1,
         'lineCap': "butt",
         'lineJoin': "miter",
         'miterLimit': 20
@@ -355,12 +356,14 @@ ome.ol3.interaction.Draw.prototype.setDefaultDrawingStyle = function(shape) {
 
 /**
  * Ends an active drawing interaction
+ * @param {boolean} reset if true (default) we reset back to the previous mode
  */
-ome.ol3.interaction.Draw.prototype.endDrawingInteraction = function() {
+ome.ol3.interaction.Draw.prototype.endDrawingInteraction = function(reset) {
     if (this.ol_draw_) {
         this.regions_.viewer_.viewer_.removeInteraction(this.ol_draw_);
         this.ol_draw_ = null;
-        this.regions_.setModes(this.previous_modes_);
+        if (typeof reset !== 'boolean' || reset)
+            this.regions_.setModes(this.previous_modes_);
     }
 };
 

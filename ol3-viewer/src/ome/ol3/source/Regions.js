@@ -28,7 +28,7 @@ goog.require('ol.proj.Projection');
  * and whether it should get rotated if the rest of the view was rotated
  * (doesn't happen by default), e.g:
  * <pre>
- *	{ 'rotateText' : false, 'scaleText' : true}
+ *  { 'rotateText' : false, 'scaleText' : true}
  *</pre>
  *
  * @constructor
@@ -80,7 +80,7 @@ ome.ol3.source.Regions = function(viewerReference, options) {
      * @type {boolean}
      * @private
      */
-     this.show_comments_ = false;
+    this.show_comments_ = false;
 
     /**
      * the associated regions information
@@ -88,14 +88,14 @@ ome.ol3.source.Regions = function(viewerReference, options) {
      * @type {Object}
      * @private
      */
-     this.regions_info_ = null;
+    this.regions_info_ = null;
 
-     /**
-      * used as a lookup container for new, unsaved shapes
- 	  * @type {Object}
- 	  * @private
- 	  */
- 	 this.new_unsaved_shapes_ = {};
+    /**
+     * used as a lookup container for new, unsaved shapes
+     * @type {Object}
+     * @private
+     */
+    this.new_unsaved_shapes_ = {};
 
     /**
      * the viewer reference
@@ -103,79 +103,79 @@ ome.ol3.source.Regions = function(viewerReference, options) {
      * @type {ome.ol3.Viewer}
      * @private
      */
-     this.viewer_ = viewerReference;
+    this.viewer_ = viewerReference;
 
-     /**
- 	 * a select interaction
- 	 *
- 	 * @type {ome.ol3.interaction.Select}
- 	 * @private
- 	 */
- 	 this.select_ = null;
+    /**
+     * a select interaction
+     *
+     * @type {ome.ol3.interaction.Select}
+     * @private
+     */
+    this.select_ = null;
 
-     /**
- 	 * a translate interaction
- 	 *
- 	 * @type {ome.ol3.interaction.Translate}
- 	 * @private
- 	 */
- 	 this.translate_ = null;
+    /**
+     * a translate interaction
+     *
+     * @type {ome.ol3.interaction.Translate}
+     * @private
+     */
+    this.translate_ = null;
 
-     /**
- 	 * a modify interaction
- 	 *
- 	 * @type {ome.ol3.interaction.Modify}
- 	 * @private
- 	 */
- 	 this.modify_ = null;
+    /**
+     * a modify interaction
+     *
+     * @type {ome.ol3.interaction.Modify}
+     * @private
+     */
+    this.modify_ = null;
 
-     /**
- 	 * a draw interaction
- 	 *
- 	 * @type {ome.ol3.interaction.Draw}
- 	 * @private
- 	 */
- 	 this.draw_ = null;
+    /**
+     * a draw interaction
+     *
+     * @type {ome.ol3.interaction.Draw}
+     * @private
+     */
+    this.draw_ = null;
 
-     /**
- 	 * array of moded presently used
- 	 *
- 	 * @type {Array}
- 	 * @private
- 	 */
-     this.present_modes_ = [];
+    /**
+     * array of moded presently used
+     *
+     * @type {Array}
+     * @private
+     */
+    this.present_modes_ = [];
 
-     /**
- 	 * a history for translations and modifications
+    /**
+     * a history for translations and modifications
      * keeping old and new versions of the respective geometries
- 	 *
- 	 * @type {Object}
- 	 * @private
- 	 */
-     this.history_ = {};
+     *
+     * @type {Object}
+     * @private
+     */
+    this.history_ = {};
 
-     /**
- 	  * an autoincremented history id
- 	  * @type {number}
- 	  * @private
- 	  */
-     this.history_id_ = 0;
+    /**
+     * an autoincremented history id
+     * @type {number}
+     * @private
+     */
+    this.history_id_ = 0;
 
     /**
      * The initialization function performs the following steps:
      * 1. Request regions data as json and store it internally
      * 2. Convert the json response into open layers objects
-     * 		(ol.Feature and ol.geom.Geometry) and add them to its internal collection
+     *    (ol.Feature and ol.geom.Geometry) and add them to its internal collection
      * 3. Instantiate a regions layer (ol.vector.Regions) and add it to the map
      *
      * Note: steps 2 and 3 are done asynchroniously after the regions data
-     * 			has been received.
- 	 *
- 	 * @function
+     *       has been received.
+     *
+     * @function
      * @param {Object} scope the java script context
- 	 * @private
- 	 */
- 	this.initialize_ = function(scope) {
+     * @private
+     */
+    this.initialize_ = function(scope) {
         // the success handler that creates the vector layer and adds it to
         // the open layers map
         var success = function(data) {
@@ -186,7 +186,7 @@ ome.ol3.source.Regions = function(viewerReference, options) {
                     console.error("Failed to parse json response!");
                 }
             }
-            if (typeof(data) !== 'object') {
+            if (typeof(data) !== 'object' || data === null) {
                 console.error("Regions Request did not receive proper response!");
                 return;
             }
@@ -205,9 +205,8 @@ ome.ol3.source.Regions = function(viewerReference, options) {
          // define request settings
          var reqParams = {
              "server" : scope.viewer_.getServer(),
-             "uri" : scope.viewer_.getPrefixedURI(ome.ol3.WEBGATEWAY) +
-                     '/get_rois_json/' + scope.viewer_.getId(),
-             "jsonp" : true, // this will only count if we are cross-domain
+             "uri" : scope.viewer_.getPrefixedURI(ome.ol3.PLUGIN_PREFIX) +
+                        '/request_rois/' + scope.viewer_.getId(),
              "success" : success,
              "error" : function(error) {
                  console.error("Error retrieving regions info for id: " +
@@ -500,9 +499,9 @@ ome.ol3.source.Regions.prototype.forEachFeatureInExtent =
         var viewerT = this.viewer_.getDimensionIndex('t');
         var viewerZ = this.viewer_.getDimensionIndex('z');
         var viewerCs = this.viewer_.getDimensionIndex('c');
-        var shapeT = typeof feature['theT'] === 'number' ? feature['theT'] : -1;
-        var shapeZ = typeof feature['theZ'] === 'number' ? feature['theZ'] : -1;
-        var shapeC = typeof feature['theC'] === 'number' ? feature['theC'] : -1;
+        var shapeT = typeof feature['TheT'] === 'number' ? feature['TheT'] : -1;
+        var shapeZ = typeof feature['TheZ'] === 'number' ? feature['TheZ'] : -1;
+        var shapeC = typeof feature['TheC'] === 'number' ? feature['TheC'] : -1;
 
         // whenever we have a dimension that the shape belongs but doesn't
         // correspond with the viewer's present settings
@@ -562,11 +561,12 @@ ome.ol3.source.Regions.prototype.storeRegions =
             "content" : JSON.stringify(postContent),
             "headers" : {"X-CSRFToken" : ome.ol3.utils.Misc.getCookie("csrftoken")},
             "jsonp" : false
-     	};
+        };
 
         var capturedRegionsReference = this;
         // the event notification
         var sendEventNotification = function(viewer, params) {
+            if (!(viewer instanceof ome.ol3.Viewer)) return;
             var config_id = viewer.getTargetId();
             var eventbus = viewer.eventbus_;
             if (config_id && eventbus) {
@@ -593,6 +593,7 @@ ome.ol3.source.Regions.prototype.storeRegions =
                         }
                     }
                 }
+                if (typeof data['error'] === 'string') error = data['error'];
             } catch(err) {
                 error = err;
             }
@@ -650,48 +651,63 @@ ome.ol3.source.Regions.prototype.setProperty =
     var eventProperty = null;
     for (var r in roi_shape_ids) {
         var s = roi_shape_ids[r];
-
-        if (this.idIndex_[s] instanceof ol.Feature) {
+        var f = this.idIndex_[s];
+        if (f instanceof ol.Feature) {
             // we allow to toggle the selected state
             // as well as the state for removed, modified and rollback deletes
             var presentState = null;
             var hasSelect = (this.select_ instanceof ome.ol3.interaction.Select);
             if (hasSelect &&
-                (property === 'selected' || property === 'visible' && !value)) {
-                this.select_.toggleFeatureSelection(this.idIndex_[s], value);
+                (property === 'selected' || (property === 'visible' && !value))) {
+                    eventProperty = property;
+                    this.select_.toggleFeatureSelection(f, value);
             } else if (property === 'state') {
-                presentState = this.idIndex_[s][property];
+                presentState = f[property];
                 if (value === ome.ol3.REGIONS_STATE.REMOVED) {
+                    // check delete permissions
+                    if (typeof f['permissions'] === 'object' &&
+                        f['permissions'] !== null &&
+                        typeof f['permissions']['canDelete'] === 'boolean' &&
+                        !f['permissions']['canDelete']) continue;
                     if (hasSelect)
-                        this.select_.toggleFeatureSelection(
-                            this.idIndex_[s], false);
+                        this.select_.toggleFeatureSelection(f[s], false);
                     // we have already done this
                     if (presentState !== ome.ol3.REGIONS_STATE.REMOVED &&
-                        (typeof this.idIndex_[s]["old_state"] !== 'number' ||
-                            this.idIndex_[s]["old_state"] !== ome.ol3.REGIONS_STATE.ADDED))
-                                this.idIndex_[s]["old_state"] = presentState;
+                        (typeof f["old_state"] !== 'number' ||
+                         f["old_state"] !== ome.ol3.REGIONS_STATE.ADDED))
+                            f["old_state"] = presentState;
                     eventProperty = "deleted";
                 } else if (value === ome.ol3.REGIONS_STATE.MODIFIED) {
+                    // check edit permissions
+                    if (typeof f['permissions'] === 'object' &&
+                        f['permissions'] !== null &&
+                        typeof f['permissions']['canEdit'] === 'boolean' &&
+                        !f['permissions']['canEdit']) continue;
                     // we are presently deleted
                     // so all we do is remember the modification as the
                     // 'old_state' in case of a rollback
                     if (presentState === ome.ol3.REGIONS_STATE.REMOVED) {
-                        this.idIndex_[s]["old_state"] = value;
+                        f["old_state"] = value;
                         continue;
                     } else if (presentState === ome.ol3.REGIONS_STATE.ADDED)
                         // we maintain the added state at all times
-                        this.idIndex_[s]["old_state"] = presentState;
+                        f["old_state"] = presentState;
                     eventProperty = "modified";
-                } else if (value === ome.ol3.REGIONS_STATE.ROLLBACK)
+                } else if (value === ome.ol3.REGIONS_STATE.ROLLBACK) {
+                    // check delete permissions
+                    if (typeof f['permissions'] === 'object' &&
+                        f['permissions'] !== null &&
+                        typeof f['permissions']['canDelete'] === 'boolean' &&
+                        !f['permissions']['canDelete']) continue;
                     eventProperty = "rollback";
+                }
             }
 
             // set new value
-            this.idIndex_[s][property] =
+            f[property] =
                 (property === 'state' && value === ome.ol3.REGIONS_STATE.ROLLBACK) ?
-                    (typeof this.idIndex_[s]["old_state"] === 'number' ?
-                        this.idIndex_[s]["old_state"] :
-                        ome.ol3.REGIONS_STATE.DEFAULT) : value;
+                    (typeof f["old_state"] === 'number' ?
+                        f["old_state"] : ome.ol3.REGIONS_STATE.DEFAULT) : value;
 
             // gather info for event response
             changedFeatures.push(s);
@@ -699,7 +715,7 @@ ome.ol3.source.Regions.prototype.setProperty =
             if (eventProperty === 'rollback') {
                 eventProperty = 'deleted';
                 val = false;
-            }
+            } else val = value;
             changedProperties.push(eventProperty);
             changedValues.push(val);
         }
@@ -708,7 +724,7 @@ ome.ol3.source.Regions.prototype.setProperty =
 
     var config_id = this.viewer_.getTargetId();
     var eventbus = this.viewer_.eventbus_;
-    if (config_id && eventbus && property === 'state') // publish
+    if (config_id && eventbus) // publish
         setTimeout(function() {
             eventbus.publish("REGIONS_PROPERTY_CHANGED",
                 {"config_id": config_id,
