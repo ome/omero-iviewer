@@ -1,7 +1,7 @@
 <template>
     <hr />
     <div style="min-width: 200px;">
-        <span class="collapsible-regions-header">Drawing Mode & Propagation</span>
+        <span class="collapsible-regions-header">Drawing</span>
         <div click.delegate="toggleRegionsDrawingMode()"
             class="regions-drawing-mode-toggler collapse-up"
             style="margin-right: 5px;">
@@ -9,82 +9,118 @@
     </div>
     <hr />
     <div class="regions-drawing-mode">
-        <div class="drawing-mode">
-            <input class='propagate-mode'
-                click.delegate="onDrawingModeChange(true,$event.target.checked)"
-                type="checkbox" style="margin-top: 10px"/>
-            <span>&nbsp;Propagate</span>
+        <div class="row regions-attachment-options">
+            <div style="margin-top: 10px">
+                <div style="float: left;width: 100px;">Attachment:</div>
+                <div class="dropup"
+                     style="margin-bottom: 5px;width: 200px;"
+                     title="Attachment for Z/T">
+                    <button type="button"
+                        style="width: 195px;"
+                        tabindex="-1"
+                        class="btn btn-default btn-sm dropdown-toggle"
+                        data-toggle="dropdown">
+                            <span class="regions-attachment-choice">
+                                Present ${regions_info.image_info.dimensions.max_t > 1 ? "T" : ""}
+                                ${regions_info.image_info.dimensions.max_t > 1 &&
+                                    regions_info.image_info.dimensions.max_z > 1 ? "/" : ""}
+                                ${regions_info.image_info.dimensions.max_z > 1 ? "Z" : ""}
+                            </span>
+                    </button>
+                    <ul class="dropdown-menu" style="min-width: 195px;">
+                        <li class="${regions_info.drawing_mode === 1 ? 'active' : ''}"
+                            click.delegate="onAttachmentOptionChange(1)">
+                            <a class="regions-attachment-option-1" href="#">
+                                Present ${regions_info.image_info.dimensions.max_t > 1 ? "T" : ""}
+                                ${regions_info.image_info.dimensions.max_t > 1 &&
+                                    regions_info.image_info.dimensions.max_z > 1 ? "/" : ""}
+                                ${regions_info.image_info.dimensions.max_z > 1 ? "Z" : ""}</a>
+                        </li>
+                        <li role="separator" class="divider"></li>
+                        <li show.bind="regions_info.image_info.dimensions.max_t > 1 &&
+                                       regions_info.image_info.dimensions.max_z > 1"
+                            class="${regions_info.drawing_mode === 2 ? 'active' : ''}"
+                            click.delegate="onAttachmentOptionChange(2)">
+                            <a class="regions-attachment-option-2" href="#">Attach to all Z and T</a>
+                        </li>
+                        <li show.bind="regions_info.image_info.dimensions.max_z > 1"
+                            class="${regions_info.drawing_mode === 3 ? 'active' : ''}"
+                            click.delegate="onAttachmentOptionChange(3)">
+                            <a class="regions-attachment-option-3" href="#">Attach to all Z</a>
+                        </li>
+                        <li show.bind="regions_info.image_info.dimensions.max_t > 1"
+                            class="${regions_info.drawing_mode === 4 ? 'active' : ''}"
+                            click.delegate="onAttachmentOptionChange(4)">
+                            <a class="regions-attachment-option-4" href="#">Attach to all T</a>
+                        </li>
+                        <li role="separator" class="divider"></li>
+                        <li show.bind="regions_info.image_info.dimensions.max_t > 1 &&
+                                        regions_info.image_info.dimensions.max_z > 1"
+                            class="${regions_info.drawing_mode === 5 ? 'active' : ''}"
+                            click.delegate="onAttachmentOptionChange(5)">
+                            <a class="regions-attachment-option-5" href="#">Do not attach to either Z or T</a>
+                        </li>
+                        <li show.bind="regions_info.image_info.dimensions.max_z > 1"
+                            class="${regions_info.drawing_mode === 6 ? 'active' : ''}"
+                            click.delegate="onAttachmentOptionChange(6)">
+                            <a class="regions-attachment-option-6" href="#">Do not attach to Z</a>
+                        </li>
+                        <li show.bind="regions_info.image_info.dimensions.max_t > 1"
+                            class="${regions_info.drawing_mode === 7 ? 'active' : ''}"
+                            click.delegate="onAttachmentOptionChange(7)">
+                            <a class="regions-attachment-option-7" href="#">Do not attach to T</a>
+                        </li>
+                        <li role="separator" class="divider"></li>
+                        <li class="${regions_info.drawing_mode === 8 ? 'active' : ''}"
+                            click.delegate="onAttachmentOptionChange(8)">
+                            <a class="regions-attachment-option-8" href="#">Custom
+                                ${regions_info.image_info.dimensions.max_t > 1 ? "T" : ""}
+                                ${regions_info.image_info.dimensions.max_t > 1 &&
+                                    regions_info.image_info.dimensions.max_z > 1 ? "/" : ""}
+                                ${regions_info.image_info.dimensions.max_z > 1 ? "Z" : ""}
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div style="margin-left: 100px"
+                 show.bind="regions_info.drawing_mode === 8">
+                <div show.bind="regions_info.image_info.dimensions.max_z > 1">
+                    <span class="aligned-text-input">Z:</span>
+                    <input type="input"
+                        id="attachment-z-input"
+                        change.delegate="onDimensionInputChange('z', $event.target.value)"
+                        style="filter:alpha(opacity=65);opacity:.65;
+                               -webkit-box-shadow:none;box-shadow:none;"
+                        focus.delegate="onDimensionInputFocus($event.target)"
+                        value="Enter as 4-9 or 3,9,11...">
+                </div>
+                <div show.bind="regions_info.image_info.dimensions.max_t > 1">
+                    <span class="aligned-text-input">T:</span>
+                    <input type="input"
+                        id="attachment-t-input"
+                        change.delegate="onDimensionInputChange('t', $event.target.value)"
+                        focus.delegate="onDimensionInputFocus($event.target)"
+                        style="filter:alpha(opacity=65);opacity:.65;
+                               -webkit-box-shadow:none;box-shadow:none;"
+                        value="Enter as 4-9 or 3,9,11...">
+                </div>
+            </div>
         </div>
-        <div class="row regions-propagation-options">
-            <div><input name="propagation-option-1" type="radio"
-                disabled.bind="!propagate"
-                checked="checked"
-                click.delegate= "onPropagationOptionChange(1)">
-                <span class="${propagate ? '' : 'disabled-color'}">
-                    &nbsp;Attach to all Z and T
-                </span>
-            </div>
-            <div><input name="propagation-option-2"
-                    disabled.bind="!propagate"
-                    class="${propagate ? '' : 'disabled-color'}"
-                    type="radio" click.delegate="onPropagationOptionChange(2)">
-                <span class="${propagate ? '' : 'disabled-color'}">
-                    &nbsp;Attach to all Z
-                </span>
-            </div>
-            <div><input name="propagation-option-3"
-                    disabled.bind="!propagate"
-                    class="${propagate ? '' : 'disabled-color'}"
-                    type="radio" click.delegate="onPropagationOptionChange(3)">
-                <span class="${propagate ? '' : 'disabled-color'}">
-                    &nbsp;Attach to all T
-                </span>
-            </div>
-            <div><input name="propagation-option-4" type="radio"
-                    disabled.bind="!propagate"
-                    class="${propagate ? '' : 'disabled-color'}"
-                    click.delegate="onPropagationOptionChange(4)">
-                    <span class="${propagate ? '' : 'disabled-color'}">
-                        &nbsp;Attach to:
-                    </span>
-            </div>
-            <div>
-                <span class="aligned-text-input
-                    ${propagate ? '' : 'disabled-color'}">Z:</span>
-                <input type="input"
-                    disabled.bind="!propagate || regions_info.drawing_mode !== 4"
-                    change.delegate="onDimensionInputChange('z', $event.target)"
-                    class="${!propagate || regions_info.drawing_mode !== 4 ?
-                            'disabled-color' : ''}"
-                value="${regions_info.drawing_mode !== 4 ?
-                     'Enter as 4-9 or 3,9,11...' : ''}">
-            </div>
-            <div>
-                <span class="aligned-text-input
-                    ${propagate ? '' : 'disabled-color'}">T:</span>
-                <input type="input"
-                    disabled.bind="!propagate || regions_info.drawing_mode !== 4"
-                    change.delegate="onDimensionInputChange('t', $event.target)"
-                    class="${!propagate || regions_info.drawing_mode !== 4 ?
-                            'disabled-color' : ''}"
-                value="${regions_info.drawing_mode !== 4 ?
-                        'Enter as 4-9 or 3,9,11...' : ''}">
-            </div>
-        </div>
-        <div class="drawing-mode"><input class='viewed-mode'
-            checked="checked" style="margin-top: 10px"
-            click.delegate="onDrawingModeChange(false,$event.target.checked)"
-                type="checkbox" />
-                <span>&nbsp;Attach to viewed Z and T</span>
-        </div>
-        <div class="drawing-mode-apply">
+        <!--div class="drawing-mode-apply">
             <button
-                class="${regions_info.selected_shapes.length === 0 || !propagate ?
-                            'disabled-color' : ''}"
+                class="${regions_info.selected_shapes.length === 0 ||
+                         regions_info.drawing_mode === 1 ||
+                         (regions_info.drawing_mode > 4 &&
+                          regions_info.drawing_mode < 8) ?
+                                'disabled-color' : ''}"
                 click.delegate="propagateSelectedShapes()"
-                disabled.bind="regions_info.selected_shapes.length === 0 || !propagate ">
+                disabled.bind="regions_info.selected_shapes.length === 0 ||
+                         regions_info.drawing_mode === 1 ||
+                         (regions_info.drawing_mode > 4 &&
+                          regions_info.drawing_mode < 8)">
                 Propagate Selected Shapes
             </button>
-        </div>
+        </div-->
     </div>
 </template>

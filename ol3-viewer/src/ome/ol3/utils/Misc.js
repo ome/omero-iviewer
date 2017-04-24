@@ -101,108 +101,6 @@ ome.ol3.utils.Misc.prepareResolutions = function(resolutions) {
 	return newRes;
 };
 
-/**
- * Parses a given svg path for polylines and polygons and
- * returns a coordinates array
- *
- * @static
- * @function
- * @param {string} svg_path a svg path
- * @return {Array.<Array.<number>>|null} returns the coordinates as x,y tuples or null
- */
-ome.ol3.utils.Misc.parseSvgStringForPolyShapes = function(svg_path) {
-	if (typeof(svg_path) != 'string' || svg_path.length == 0)
-		return null;
-
-	var c=0;
-	var len=svg_path.length;
-	var coords = [];
-	var start = -1;
-
-	var usesComma = svg_path.indexOf(",") > 0;
-
-	while (len-c > 0) { // get rid of anything that is not M,L or z
-		if (svg_path[c] == ' ') {
-			if (c+1 >= len) break;
-
-			if (!usesComma || (usesComma && svg_path[c+1] === ' ')) {
-				c++;
-				if (usesComma) continue;
-			}
-		}
-
-		var v = svg_path[c].toLowerCase();
-		if (v === 'm' || v === 'l' || v === 'z' || v === ' ') {
-			if (start < 0) {
-				while (c+1 < len && v === ' ' &&
-					(svg_path[c+1] === ' ' || svg_path[c+1].toLowerCase() === 'z'))
-					v = svg_path[++c].toLowerCase();
-				if (v == 'z') {
-					coords.push(coords[0]);
-					start = -1;
-					break;
-				}
-				start = c+1;
-				while (len-c > 0 && (svg_path[++c] === ' ' || svg_path[c] === 'M'))
-					start++;
-			} else {
-				try {
-					var tok =
-						svg_path.substring(start,
-							usesComma ? c : c-1).split(usesComma ? "," : " ");
-					if (typeof(tok) != 'object' || tok.length < 2)
-							return null;
-
-					var c1 = null;
-					var c2 = null;
-					for (var t in tok) {
-						if (tok[t] === "")
-							continue;
-						if (c1 === null)
-							c1 = tok[t];
-						else if (c2 === null)
-							c2 = tok[t];
-						else break;
-					}
-					if (c1 === null && c2 === null) return null;
-					coords.push([parseInt(c1), -parseInt(c2)]);
-					start = -1;
-					c--;
-				} catch(err) {
-					return null;
-				}
-			}
-		}
-		c++;
-	}
-	if (start !== -1) { // we have the end point left over (e.g. line)
-		try {
-			var tok = svg_path.substring(start, len).split(usesComma ? "," : " ");
-			if (typeof(tok) != 'object' || tok.length < 2)
-				return null;
-
-			var c1 = null;
-			var c2 = null;
-			for (var t in tok) {
-				if (tok[t] === "")
-					continue;
-				if (c1 === null)
-					c1 = tok[t];
-				else if (c2 === null)
-					c2 = tok[t];
-				else break;
-			}
-			if (c1 === null && c2 === null) return null;
-
-			coords.push([parseInt(c1), -parseInt(c2)]);
-		} catch(err) {
-			return null;
-		}
-	}
-
-	return coords;
-};
-
 
 /**
  * Deals with multiple features under the same coordinate
@@ -320,23 +218,26 @@ ome.ol3.utils.Misc.getCookie = function(name) {
  * Takes a string with channel information in the form:
  * -1|111:343$808080,2|0:255$FF0000 and parses it into an object that contains
  * the respective channel information/properties
+ * Likewise it will take map information in json format and add the reverse
+ * intensity to the channels
  *
  * @static
  * @function
- * @param {string} some_string a string containing encoded channel info
+ * @param {string} channel_info a string containing encoded channel info
+ * @param {string} maps_info a string in json format containing reverse intensity
  * @return {Array|null} an array of channel objects or null
  */
-ome.ol3.utils.Misc.parseChannelParameters = function(some_string) {
-    if (typeof some_string !== 'string' || some_string.length === 0)
+ome.ol3.utils.Misc.parseChannelParameters = function(channel_info, maps_info) {
+    if (typeof channel_info !== 'string' || channel_info.length === 0)
         return null;
 
     var ret = [];
 
     // first remove any whitespace there may be
-    some_string = some_string.replace(/\s/g, "");
+    channel_info = channel_info.replace(/\s/g, "");
 
     // split up into channels
-    var chans = some_string.split(',');
+    var chans = channel_info.split(',');
     if (chans.length === 0) return null;
 
     // iterate over channel tokens
@@ -361,27 +262,35 @@ ome.ol3.utils.Misc.parseChannelParameters = function(some_string) {
         var rTok = c.substring(0, pos).split(':');
         if (rTok.length !== 2) continue; // we need start and end
         var rStart = parseInt(rTok[0]);
-        var rEnd = rTok[1].toLowerCase();
-        // account for reverse flag
-        var rPos = rEnd.indexOf("r");
-        if (rPos != -1) {
-            tmp['reverse'] =
-                rEnd.substring(rPos-1, rPos) === '-' ? false : true;
-            rEnd =
-                parseInt(rEnd.substring(0, tmp['reverse'] ? rPos : rPos-1));
-        } else  rEnd = parseInt(rEnd);
+        var rEnd = parseInt(rTok[1]);
         if (isNaN(rStart) || isNaN(rEnd)) continue;
         tmp['start'] = rStart;
         tmp['end'] = rEnd;
-
         // extract last bit: color tokens
         c = c.substring(pos+1); // shave off range info
-        //if (c.length !== 3 && c.length !== 6) continue; // we need hex notation length
         tmp['color'] = c;
 
         // add to return
         ret.push(tmp);
     }
+
+    // integrate maps info for reverse intensity
+    if (typeof maps_info !== 'string' || maps_info.length === 0)
+        return ret;
+    try {
+        maps_info = maps_info.replace(/&quot;/g, '"');
+        var maps = JSON.parse(maps_info);
+        if (!ome.ol3.utils.Misc.isArray(maps)) return ret;
+        var len = ret.length;
+        for (var i=0;i<len && i<maps.length;i++) {
+            var m = maps[i];
+            if (typeof m !== 'object' || m === null) continue;
+            ret[i]['reverse'] =
+                typeof m['reverse'] === 'object' && m['reverse'] &&
+                typeof m['reverse']['enabled'] === 'boolean' &&
+                m['reverse']['enabled'];
+        }
+    } catch(malformedJson) {}
 
     return ret;
 }

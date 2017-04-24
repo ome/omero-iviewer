@@ -20,44 +20,50 @@ ome.ol3.interaction.Modify = function(regions_reference) {
         console.error("Select needs a Select instance!");
 
     /**
-   * @type {ome.ol3.source.Regions}
-   * @private
-   */
+     * @type {ome.ol3.source.Regions}
+     * @private
+     */
     this.regions_ = regions_reference;
 
     /**
-   * @type {number}
-   * @private
-   */
-	this.hist_id_ = -1;
+     * @type {number}
+     * @private
+     */
+    this.hist_id_ = -1;
 
-    goog.base(this, {features : this.regions_.select_.getFeatures()}); // call super
+    // call super
+    goog.base(
+        this, {
+            pixelTolerance : 5,
+            features : this.regions_.select_.getFeatures()
+        });
 
-	this.handleDragEvent_ = ome.ol3.interaction.Modify.handleDragEvent_;
-	this.handleEvent = ome.ol3.interaction.Modify.handleEvent;
-	this.handleUpEvent_ = ome.ol3.interaction.Modify.handleUpEvent_;
+    this.handleDragEvent_ = ome.ol3.interaction.Modify.handleDragEvent_;
+    this.handleEvent = ome.ol3.interaction.Modify.handleEvent;
+    this.handleUpEvent_ = ome.ol3.interaction.Modify.handleUpEvent_;
 
-	this.deleteCondition_ = function(mapBrowserEvent) {
-		return ol.events.condition.noModifierKeys(mapBrowserEvent) &&
-			ol.events.condition.click(mapBrowserEvent);
-	}
+    this.deleteCondition_ = function(mapBrowserEvent) {
+        return ol.events.condition.noModifierKeys(mapBrowserEvent) &&
+               ol.events.condition.click(mapBrowserEvent);
+    }
 
     // a listener to react on modify start
-    ol.events.listen(this, ol.interaction.Modify.EventType.MODIFYSTART,
+    ol.events.listen(this, ol.interaction.ModifyEventType.MODIFYSTART,
         function(event) {
             this.hist_id_ =
-                this.regions_.addHistory(event.features.array_, true)},
-        this);
+                this.regions_.addHistory(event.features.array_, true);
+        }, this);
 
     // a listener to react on modify end
-    ol.events.listen(this, ol.interaction.Modify.EventType.MODIFYEND,
+    ol.events.listen(this, ol.interaction.ModifyEventType.MODIFYEND,
         function(event) {
             // complete history entry
             if (this.hist_id_ >= 0) {
                 this.regions_.addHistory(
                     event.features.array_, false, this.hist_id_);
                 this.regions_.sendHistoryNotification(this.hist_id_);
-            }},this);
+            }
+        },this);
 };
 goog.inherits(ome.ol3.interaction.Modify, ol.interaction.Modify);
 
@@ -69,90 +75,104 @@ goog.inherits(ome.ol3.interaction.Modify, ol.interaction.Modify);
  * @private
  */
 ome.ol3.interaction.Modify.prototype.handlePointerAtPixel_ = function(pixel, map) {
-	if (!(this.features_ instanceof ol.Collection) || this.features_.getLength() === 0)
-		return;
+    if (!(this.features_ instanceof ol.Collection) ||
+          this.features_.getLength() === 0) return;
 
-	var pixelCoordinate = map.getCoordinateFromPixel(pixel);
-	var sortByDistance = function(a, b) {
-		return ol.coordinate.squaredDistanceToSegment(pixelCoordinate, a.segment) -
-			ol.coordinate.squaredDistanceToSegment(pixelCoordinate, b.segment);
-	};
+    var pixelCoordinate = map.getCoordinateFromPixel(pixel);
+    var sortByDistance = function(a, b) {
+        return ol.coordinate.squaredDistanceToSegment(
+                    pixelCoordinate, a.segment) -
+                    ol.coordinate.squaredDistanceToSegment(
+                        pixelCoordinate, b.segment);
+    };
 
-	var lowerLeft = map.getCoordinateFromPixel(
-		[pixel[0] - this.pixelTolerance_, pixel[1] + this.pixelTolerance_]);
-	var upperRight = map.getCoordinateFromPixel(
-		[pixel[0] + this.pixelTolerance_, pixel[1] - this.pixelTolerance_]);
-	var box = ol.extent.boundingExtent([lowerLeft, upperRight]);
+    var lowerLeft =
+        map.getCoordinateFromPixel(
+            [pixel[0] - this.pixelTolerance_, pixel[1] + this.pixelTolerance_]);
+    var upperRight =
+        map.getCoordinateFromPixel(
+            [pixel[0] + this.pixelTolerance_, pixel[1] - this.pixelTolerance_]);
+    var box = ol.extent.boundingExtent([lowerLeft, upperRight]);
 
-	var rBush = this.rBush_;
-	var nodes = rBush.getInExtent(box);
+    var rBush = this.rBush_;
+    var nodes = rBush.getInExtent(box);
 
-	// we are within a feature's bounding box
-	if (nodes.length > 0) {
-		nodes.sort(sortByDistance);
-		// get closest node
-		var node = nodes[0];
+    // we are within a feature's bounding box
+    if (nodes.length > 0) {
+        nodes.sort(sortByDistance);
+        // get closest node
+        var node = nodes[0];
         if ((typeof node.feature['visible'] === 'boolean' &&
-            !node.feature['visible']) ||
-            (typeof node.feature['state'] === 'number' &&
-            node.feature['state'] === ome.ol3.REGIONS_STATE.REMOVED)) return;
+             !node.feature['visible']) ||
+             (typeof node.feature['state'] === 'number' &&
+             node.feature['state'] === ome.ol3.REGIONS_STATE.REMOVED) ||
+             (typeof node.feature['permissions'] === 'object' &&
+                node.feature['permissions'] !== null &&
+                typeof node.feature['permissions']['canEdit'] === 'boolean' &&
+                !node.feature['permissions']['canEdit'])) return;
 
-		// we only continue if we don't have an unmodifyable labels
-		if (!(node.geometry instanceof ome.ol3.geom.Label)) {
-			var closestSegment = node.segment;
-			var vertex = (ol.coordinate.closestOnSegment(pixelCoordinate,
-				closestSegment));
-			var vertexPixel = map.getPixelFromCoordinate(vertex);
+        // we only continue if we don't have an unmodifyable labels
+        if (!(node.geometry instanceof ome.ol3.geom.Label) &&
+            !(node.geometry instanceof ol.geom.Circle)) {
+            var closestSegment = node.segment;
+            var vertex =
+                (ol.coordinate.closestOnSegment(
+                    pixelCoordinate,closestSegment));
+            var vertexPixel = map.getPixelFromCoordinate(vertex);
 
-			if (Math.sqrt(ol.coordinate.squaredDistance(pixel, vertexPixel)) <=
-				this.pixelTolerance_) {
-				var pixel1 = map.getPixelFromCoordinate(closestSegment[0]);
-				var pixel2 = map.getPixelFromCoordinate(closestSegment[1]);
-				var squaredDist1 = ol.coordinate.squaredDistance(vertexPixel, pixel1);
-				var squaredDist2 = ol.coordinate.squaredDistance(vertexPixel, pixel2);
-				var dist = Math.sqrt(Math.min(squaredDist1, squaredDist2));
-				this.snappedToVertex_ = dist <= this.pixelTolerance_;
+            if (Math.sqrt(ol.coordinate.squaredDistance(pixel, vertexPixel)) <=
+                this.pixelTolerance_) {
+                    var pixel1 = map.getPixelFromCoordinate(closestSegment[0]);
+                    var pixel2 = map.getPixelFromCoordinate(closestSegment[1]);
+                    var squaredDist1 =
+                        ol.coordinate.squaredDistance(vertexPixel, pixel1);
+                    var squaredDist2 =
+                        ol.coordinate.squaredDistance(vertexPixel, pixel2);
+                    var dist = Math.sqrt(Math.min(squaredDist1, squaredDist2));
+                    this.snappedToVertex_ = dist <= this.pixelTolerance_;
 
-				// for rectangles we force snap to vertex to only be able to drag them
-				// at one of the vertices
-				if ((node.geometry instanceof ome.ol3.geom.Rectangle ||
-							node.geometry instanceof ome.ol3.geom.Ellipse)
-					&& !this.snappedToVertex_)
-						return;
+                    // for rectangles we force snap to vertex
+                    // to only be able to drag them at one of the vertices
+                    if ((node.geometry instanceof ome.ol3.geom.Rectangle ||
+                         node.geometry instanceof ome.ol3.geom.Ellipse ||
+                         node.geometry instanceof ome.ol3.geom.Line) &&
+                         !this.snappedToVertex_) return;
 
-				if (this.snappedToVertex_) {
-					vertex = squaredDist1 > squaredDist2 ?
-						closestSegment[1] : closestSegment[0];
-				}
+                    if (this.snappedToVertex_) {
+                        vertex = squaredDist1 > squaredDist2 ?
+                        closestSegment[1] : closestSegment[0];
+                    }
 
-				this.createOrUpdateVertexFeature_(vertex);
-				var vertexSegments = {};
-				vertexSegments[ol.getUid(closestSegment)] = true;
-				var segment;
-				for (var i = 1, ii = nodes.length; i < ii; ++i) {
-					segment = nodes[i].segment;
-					if ((ol.coordinate.equals(closestSegment[0], segment[0]) &&
-						ol.coordinate.equals(closestSegment[1], segment[1]) ||
-						(ol.coordinate.equals(closestSegment[0], segment[1]) &&
-						ol.coordinate.equals(closestSegment[1], segment[0])))) {
-							vertexSegments[ol.getUid(segment)] = true;
-					} else {
-						break;
-					}
-				}
-				this.vertexSegments_ = vertexSegments;
-				return;
-	    }
-	  }
-	}
+                    this.createOrUpdateVertexFeature_(vertex);
+                    var vertexSegments = {};
+                    vertexSegments[ol.getUid(closestSegment)] = true;
+                    var segment;
+                    for (var i = 1, ii = nodes.length; i < ii; ++i) {
+                        segment = nodes[i].segment;
+                        if ((ol.coordinate.equals(
+                            closestSegment[0], segment[0]) &&
+                            ol.coordinate.equals(
+                                closestSegment[1], segment[1]) ||
+                            (ol.coordinate.equals(
+                                closestSegment[0], segment[1]) &&
+                            ol.coordinate.equals(
+                                closestSegment[1], segment[0])))) {
+                                    vertexSegments[ol.getUid(segment)] = true;
+                        } else break;
+                    }
+                    this.vertexSegments_ = vertexSegments;
+                    this.regions_['is_modified'] = true;
+                    return;
+            }
+        }
+    }
 
-	// remove if we are not within a feature's bounding box
-	if (this.vertexFeature_) {
-		//this.removeFeature_(this.vertexFeature_);
-		//this.removeFeatureSegmentData_(this.vertexFeature_);
-		this.overlay_.getSource().removeFeature(this.vertexFeature_);
-		this.vertexFeature_ = null;
-	}
+    // remove if we are not within a feature's bounding box
+    if (this.vertexFeature_) {
+        this.regions_['is_modified'] = false;
+        this.overlay_.getSource().removeFeature(this.vertexFeature_);
+        this.vertexFeature_ = null;
+    }
 };
 
 /**
@@ -163,92 +183,96 @@ ome.ol3.interaction.Modify.prototype.handlePointerAtPixel_ = function(pixel, map
  * @private
  */
 ome.ol3.interaction.Modify.handleDragEvent_ = function(mapBrowserEvent) {
-	// short circuit right for click context menu
-	if (mapBrowserEvent instanceof ol.MapBrowserPointerEvent &&
-			mapBrowserEvent.originalEvent instanceof MouseEvent &&
-				typeof(mapBrowserEvent.originalEvent.which) === 'number' &&
-				mapBrowserEvent.originalEvent.which === 3)
-		return;
+    // short circuit right for click context menu
+    if (mapBrowserEvent instanceof ol.MapBrowserPointerEvent &&
+        mapBrowserEvent.originalEvent instanceof MouseEvent &&
+        typeof(mapBrowserEvent.originalEvent.which) === 'number' &&
+        mapBrowserEvent.originalEvent.which === 3) return;
 
-  this.ignoreNextSingleClick_ = false;
-  this.willModifyFeatures_(mapBrowserEvent);
+    this.ignoreNextSingleClick_ = false;
+    this.willModifyFeatures_(mapBrowserEvent);
 
-	var vertex = mapBrowserEvent.coordinate;
-	for (var i = 0, ii = this.dragSegments_.length; i < ii; ++i) {
-		var dragSegment = this.dragSegments_[i];
-		var segmentData = dragSegment[0];
-		var depth = segmentData.depth;
-		var geometry = segmentData.geometry;
-		var coordinates = geometry.getCoordinates();
-		var segment = segmentData.segment;
-		var index = dragSegment[1];
+    var vertex = mapBrowserEvent.coordinate;
+    for (var i = 0, ii = this.dragSegments_.length; i < ii; ++i) {
+        var dragSegment = this.dragSegments_[i];
+        var segmentData = dragSegment[0];
+        var depth = segmentData.depth;
+        var geometry = segmentData.geometry;
+        var coordinates = geometry.getCoordinates();
+        var segment = segmentData.segment;
+        var index = dragSegment[1];
 
-		while (vertex.length < geometry.getStride()) {
-			vertex.push(0);
-		}
+        while (vertex.length < geometry.getStride()) vertex.push(0);
 
-		if (geometry instanceof ol.geom.Point) {
-			coordinates = vertex;
-			segment[0] = segment[1] = vertex;
-		} else if (geometry instanceof ol.geom.MultiPoint) {
-			coordinates[segmentData.index] = vertex;
-			segment[0] = segment[1] = vertex;
-		} else if (geometry instanceof ol.geom.LineString) {
-			coordinates[segmentData.index + index] = vertex;
-			segment[index] = vertex;
-		} else if (geometry instanceof ol.geom.MultiLineString) {
-			coordinates[depth[0]][segmentData.index + index] = vertex;
-			segment[index] = vertex;
-		} else if (geometry instanceof ome.ol3.geom.Ellipse) {
+        if (geometry instanceof ol.geom.Point) {
+            coordinates = vertex;
+            segment[0] = segment[1] = vertex;
+        } else if (geometry instanceof ol.geom.MultiPoint) {
+            coordinates[segmentData.index] = vertex;
+            segment[0] = segment[1] = vertex;
+        } else if (geometry instanceof ol.geom.LineString) {
+            coordinates[segmentData.index + index] = vertex;
+            segment[index] = vertex;
+        } else if (geometry instanceof ol.geom.MultiLineString) {
+            coordinates[depth[0]][segmentData.index + index] = vertex;
+            segment[index] = vertex;
+        } else if (geometry instanceof ome.ol3.geom.Ellipse) {
             var potentialTransform = geometry.getTransform();
             var v = vertex;
             if (potentialTransform)
                 v = geometry.applyInverseTransform([v[0], v[1]]);
-			geometry.rx_ = Math.abs(geometry.cx_-v[0]);
-			geometry.ry_ = Math.abs(geometry.cy_-v[1]);
-			var tmp = new ome.ol3.geom.Ellipse(
-				geometry.cx_, geometry.cy_,
-                geometry.rx_, geometry.ry_,
-                potentialTransform);
-			coordinates = tmp.getCoordinates();
-		} else if (geometry instanceof ome.ol3.geom.Rectangle) {
-			var vertexBeingDragged =
-				this.vertexFeature_.getGeometry().getCoordinates();
-			if (this.oppVertBeingDragged == null)
-				for (var j=0;j<coordinates[depth[0]].length;j++)
-					if (coordinates[depth[0]][j][0] !=  vertexBeingDragged[0] &&
-							coordinates[depth[0]][j][1] !=  vertexBeingDragged[1]) {
-								this.oppVertBeingDragged = coordinates[depth[0]][j];
-								break;
-					}
+            geometry.rx_ = Math.abs(geometry.cx_-v[0]);
+            geometry.ry_ = Math.abs(geometry.cy_-v[1]);
+            var tmp =
+                new ome.ol3.geom.Ellipse(
+                    geometry.cx_, geometry.cy_,
+                    geometry.rx_, geometry.ry_,
+                    potentialTransform);
+            coordinates = tmp.getCoordinates();
+        } else if (geometry instanceof ome.ol3.geom.Rectangle) {
+            var vertexBeingDragged =
+                this.vertexFeature_.getGeometry().getCoordinates();
+            if (this.oppVertBeingDragged == null)
+                for (var j=0;j<coordinates[depth[0]].length;j++)
+                    if (coordinates[depth[0]][j][0] !=  vertexBeingDragged[0] &&
+                        coordinates[depth[0]][j][1] !=  vertexBeingDragged[1]) {
+                            this.oppVertBeingDragged = coordinates[depth[0]][j];
+                            break;
+                    }
 
-			var minX =
-				vertex[0] < this.oppVertBeingDragged[0] ? vertex[0] : this.oppVertBeingDragged[0];
-			var maxX =
-				vertex[0] > this.oppVertBeingDragged[0] ? vertex[0] : this.oppVertBeingDragged[0];
-			var minY =
-				-vertex[1] < -this.oppVertBeingDragged[1] ? vertex[1] : this.oppVertBeingDragged[1];
-			var maxY =
-				-vertex[1] > -this.oppVertBeingDragged[1] ? vertex[1] : this.oppVertBeingDragged[1];
+                var minX =
+                    vertex[0] < this.oppVertBeingDragged[0] ?
+                        vertex[0] : this.oppVertBeingDragged[0];
+                var maxX =
+                    vertex[0] > this.oppVertBeingDragged[0] ?
+                        vertex[0] : this.oppVertBeingDragged[0];
+                var minY =
+                    -vertex[1] < -this.oppVertBeingDragged[1] ?
+                        vertex[1] : this.oppVertBeingDragged[1];
+                var maxY =
+                    -vertex[1] > -this.oppVertBeingDragged[1] ?
+                        vertex[1] : this.oppVertBeingDragged[1];
 
-			// set new top left corner
-			coordinates[depth[0]][0] = [minX, minY];
-			coordinates[depth[0]][1] = [maxX, minY];
-			coordinates[depth[0]][2] = [maxX, maxY];
-			coordinates[depth[0]][3] = [minX, maxY];
-			coordinates[depth[0]][4] = [minX, minY];
+                // set new top left corner
+                coordinates[depth[0]][0] = [minX, minY];
+                coordinates[depth[0]][1] = [maxX, minY];
+                coordinates[depth[0]][2] = [maxX, maxY];
+                coordinates[depth[0]][3] = [minX, maxY];
+                coordinates[depth[0]][4] = [minX, minY];
 
-			segment[index] = geometry.getExtent().slice(index*2, (index+1)*2);
-		} else if (geometry instanceof ol.geom.Polygon) {
-			coordinates[depth[0]][segmentData.index + index] = vertex;
-			segment[index] = vertex;
-		} else if (geometry instanceof ol.geom.MultiPolygon) {
-			coordinates[depth[1]][depth[0]][segmentData.index + index] = vertex;
-			segment[index] = vertex;
-		}
-    this.setGeometryCoordinates_(geometry, coordinates);
-  }
-  this.createOrUpdateVertexFeature_(vertex);
+                segment[index] =
+                    geometry.getExtent().slice(index*2, (index+1)*2);
+            } else if (geometry instanceof ol.geom.Polygon) {
+                coordinates[depth[0]][segmentData.index + index] = vertex;
+                segment[index] = vertex;
+            } else if (geometry instanceof ol.geom.MultiPolygon) {
+                coordinates[depth[1]][depth[0]][segmentData.index + index] =
+                    vertex;
+                segment[index] = vertex;
+            }
+            this.setGeometryCoordinates_(geometry, coordinates);
+        }
+        this.createOrUpdateVertexFeature_(vertex);
 };
 
 /**
@@ -259,45 +283,44 @@ ome.ol3.interaction.Modify.handleDragEvent_ = function(mapBrowserEvent) {
  * @private
  */
 ome.ol3.interaction.Modify.handleUpEvent_ = function(mapBrowserEvent) {
-	// short circuit right for click context menu
-	if (mapBrowserEvent instanceof ol.MapBrowserPointerEvent &&
-			mapBrowserEvent.originalEvent instanceof MouseEvent &&
-				typeof(mapBrowserEvent.originalEvent.which) === 'number' &&
-				mapBrowserEvent.originalEvent.which === 3)
-		return false;
+    // short circuit right for click context menu
+    if (mapBrowserEvent instanceof ol.MapBrowserPointerEvent &&
+        mapBrowserEvent.originalEvent instanceof MouseEvent &&
+        typeof(mapBrowserEvent.originalEvent.which) === 'number' &&
+        mapBrowserEvent.originalEvent.which === 3) return false;
 
-	this.oppVertBeingDragged = null;
-	var segmentData;
+    this.oppVertBeingDragged = null;
+    var segmentData;
 
     var id = null;
-	for (var i = this.dragSegments_.length - 1; i >= 0; --i) {
-		segmentData = this.dragSegments_[i][0];
+    for (var i = this.dragSegments_.length - 1; i >= 0; --i) {
+        segmentData = this.dragSegments_[i][0];
 
-		if (segmentData.geometry instanceof ome.ol3.geom.Rectangle ||
-				segmentData.geometry instanceof ome.ol3.geom.Ellipse) {
-			this.removeFeatureSegmentData_(segmentData.feature);
-			this.writePolygonGeometry_(segmentData.feature, segmentData.geometry);
-		} else {
-			this.rBush_.update(
-				ol.extent.boundingExtent(segmentData.segment),
-				segmentData);
-			if (this.vertexFeature_) {
-				this.features_.remove(this.vertexFeature_);
-			}
-		}
+        if (segmentData.geometry instanceof ome.ol3.geom.Rectangle ||
+            segmentData.geometry instanceof ome.ol3.geom.Ellipse) {
+                this.removeFeatureSegmentData_(segmentData.feature);
+                this.writePolygonGeometry_(
+                    segmentData.feature, segmentData.geometry);
+        } else {
+            this.rBush_.update(
+                ol.extent.boundingExtent(segmentData.segment), segmentData);
+            if (this.vertexFeature_) this.features_.remove(this.vertexFeature_);
+        }
         id = segmentData.feature.getId();
-	}
+    }
 
     if (id) this.regions_.setProperty(
         [id], "state", ome.ol3.REGIONS_STATE.MODIFIED);
-	if (this.modified_) {
-		this.dispatchEvent(new ol.interaction.Modify.Event(
-			ol.interaction.Modify.EventType.MODIFYEND, this.features_, mapBrowserEvent));
-		this.modified_ = false;
-	}
+    if (this.modified_) {
+        this.dispatchEvent(
+            new ol.interaction.Modify.Event(
+                ol.interaction.ModifyEventType.MODIFYEND,
+                this.features_, mapBrowserEvent));
+        this.modified_ = false;
+    }
     this.hist_id_ = -1; // reset
 
-	return false;
+    return false;
 };
 
 /**
@@ -309,49 +332,48 @@ ome.ol3.interaction.Modify.handleUpEvent_ = function(mapBrowserEvent) {
  * @api
  */
 ome.ol3.interaction.Modify.handleEvent = function(mapBrowserEvent) {
-	// short circuit right for click context menu
-	if (!(mapBrowserEvent instanceof ol.MapBrowserPointerEvent) ||
-			(mapBrowserEvent.originalEvent instanceof MouseEvent &&
-				typeof(mapBrowserEvent.originalEvent.which) === 'number' &&
-				mapBrowserEvent.originalEvent.which === 3))
-		return true;
+    // short circuit right for click context menu
+    if (!(mapBrowserEvent instanceof ol.MapBrowserPointerEvent) ||
+        (mapBrowserEvent.originalEvent instanceof MouseEvent &&
+        typeof(mapBrowserEvent.originalEvent.which) === 'number' &&
+        mapBrowserEvent.originalEvent.which === 3)) return true;
 
-  var handled;
-  if (!mapBrowserEvent.map.getView().getHints()[ol.View.Hint.INTERACTING] &&
-      mapBrowserEvent.type == ol.MapBrowserEvent.EventType.POINTERMOVE &&
-      !this.handlingDownUpSequence) {
-    this.handlePointerMove_(mapBrowserEvent);
-  }
-
-  if (this.vertexFeature_ && this.deleteCondition_(mapBrowserEvent)) {
-    if (mapBrowserEvent.type != ol.MapBrowserEvent.EventType.SINGLECLICK ||
-        !this.ignoreNextSingleClick_) {
-
-			// we do not allow to delete any vertex of a rectangle/ellipse
-			if (this.features_ instanceof ol.Collection &&
-				this.features_.getLength() > 0 &&
-					(this.features_.item(0).getGeometry() instanceof ome.ol3.geom.Rectangle ||
-					this.features_.item(0).getGeometry() instanceof ome.ol3.geom.Ellipse))
-					handled = true;
-			else {
-	      var geometry = this.vertexFeature_.getGeometry();
-          if (!(geometry instanceof ol.geom.Point))
-              console.error("geometry should be an ol.geom.Point!");
-	      this.willModifyFeatures_(mapBrowserEvent);
-	      handled = this.removeVertex_();
-	      this.dispatchEvent(new ol.interaction.Modify.Event(
-	          ol.interaction.Modify.EventType.MODIFYEND, this.features_, mapBrowserEvent));
-	      this.modified_ = false;
-			}
-    } else {
-      handled = true;
+    var handled;
+    if (!mapBrowserEvent.map.getView().getHints()[ol.ViewHint.INTERACTING] &&
+        mapBrowserEvent.type == ol.MapBrowserEventType.POINTERMOVE &&
+        !this.handlingDownUpSequence) {
+            this.handlePointerMove_(mapBrowserEvent);
     }
-  }
 
-  if (mapBrowserEvent.type == ol.MapBrowserEvent.EventType.SINGLECLICK) {
-    this.ignoreNextSingleClick_ = false;
-  }
+    if (this.vertexFeature_ && this.deleteCondition_(mapBrowserEvent)) {
+        if (mapBrowserEvent.type != ol.MapBrowserEventType.SINGLECLICK ||
+            !this.ignoreNextSingleClick_) {
+            // we do not allow to delete any vertex of a rectangle/ellipse
+            if (this.features_ instanceof ol.Collection &&
+                this.features_.getLength() > 0 &&
+                (this.features_.item(0).getGeometry()
+                    instanceof ome.ol3.geom.Rectangle ||
+                 this.features_.item(0).getGeometry()
+                    instanceof ome.ol3.geom.Ellipse)) handled = true;
+            else {
+                var geometry = this.vertexFeature_.getGeometry();
+                if (!(geometry instanceof ol.geom.Point))
+                    console.error("geometry should be an ol.geom.Point!");
+                this.willModifyFeatures_(mapBrowserEvent);
+                handled = this.removeVertex_();
+                this.dispatchEvent(
+                    new ol.interaction.Modify.Event(
+                        ol.interaction.ModifyEventType.MODIFYEND,
+                        this.features_, mapBrowserEvent));
+                this.modified_ = false;
+            }
+        } else handled = true;
+    }
 
-  return ol.interaction.Pointer.handleEvent.call(this, mapBrowserEvent) &&
-      !handled;
+    if (mapBrowserEvent.type == ol.MapBrowserEventType.SINGLECLICK) {
+        this.ignoreNextSingleClick_ = false;
+    }
+
+    return ol.interaction.Pointer.handleEvent.call(this, mapBrowserEvent) &&
+            !handled;
 };

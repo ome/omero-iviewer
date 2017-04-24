@@ -8,7 +8,7 @@ import {Converters} from '../utils/converters';
 import Ui from '../utils/ui';
 import {inject, customElement, bindable} from 'aurelia-framework';
 import {ol3} from '../../libs/ol3-viewer.js';
-import {IVIEWER, RENDER_STATUS} from '../utils/constants';
+import {IVIEWER, REGIONS_DRAWING_MODE, RENDER_STATUS} from '../utils/constants';
 import {
     IMAGE_CONFIG_UPDATE, IMAGE_VIEWER_RESIZE, IMAGE_VIEWER_SCALEBAR,
     IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY, IMAGE_SETTINGS_CHANGE,
@@ -42,6 +42,13 @@ export default class Ol3Viewer extends EventSubscriber {
      * @type {ImageConfig}
      */
     image_config = null;
+
+    /**
+     * the internal instance of the ol3.Viewer
+     * @memberof Ol3Viewer
+     * @type {ol3.Viewer}
+     */
+    viewer = null;
 
     /**
      * the info needed for the play loop
@@ -121,14 +128,6 @@ export default class Ol3Viewer extends EventSubscriber {
             this.context.getPrefixedURI(IVIEWER, true),
         );
 
-        // instantiate the viewer
-        this.viewer =
-            new ol3.Viewer(this.image_config.image_info.image_id,
-                { eventbus : this.context.eventbus,
-                  server : this.context.server,
-                  initParams :  this.context.initParams,
-                  container: this.container
-                });
         // subscribe
         this.subscribe();
     }
@@ -234,6 +233,16 @@ export default class Ol3Viewer extends EventSubscriber {
      * @memberof Ol3Viewer
      */
     initViewer()  {
+        // create viewer instance
+        this.viewer =
+            new ol3.Viewer(
+                this.image_config.image_info.image_id,
+                { eventbus : this.context.eventbus,
+                  server : this.context.server,
+                  initParams :  this.context.initParams,
+                  container: this.container
+        });
+
         // should we display the scale bar
         this.showScalebar(this.context.show_scalebar);
         // whould we display regions...
@@ -290,13 +299,13 @@ export default class Ol3Viewer extends EventSubscriber {
                 let shape = params.shapes[i];
                 let refOrCopy =
                     this.image_config.regions_info.data ?
-                        this.image_config.regions_info.data.get(shape) : null;
+                        this.image_config.regions_info.getShape(shape) : null;
                 let prop = Misc.isArray(params.properties) ?
                                 params.properties[i] : params.properties;
                 let value = Misc.isArray(params.values) ?
                                 params.values[i] : params.values;
                 if (prop === 'selected' || prop === 'modified' ||
-                        prop === 'deleted')
+                        prop === 'deleted' || prop === 'visible')
                     this.image_config.regions_info.setPropertyForShape(
                         shape, prop, value);
                 // in the case of new shapes that get deleted we will need
@@ -345,8 +354,8 @@ export default class Ol3Viewer extends EventSubscriber {
           let extent = this.viewer.getSmallestViewExtent();
           if (typeof params.random !== 'boolean') params.random = false;
           if (typeof params.number !== 'number') params.number = 1;
-          if (typeof params.roi_id !== 'number' || params.roi_id > 0)
-            params.roi_id = this.image_config.regions_info.getNewRegionsId();
+          if (typeof params.roi_id !== 'number')
+              params.roi_id = this.image_config.regions_info.getNewRegionsId();
           let theDims =
             Misc.isArray(params.theDims) && params.theDims.length !== 0 ?
                 params.theDims : null;
@@ -363,11 +372,9 @@ export default class Ol3Viewer extends EventSubscriber {
                                 this.viewer.getShapeDefinition(deepCopy.shape_id);
                               if (upToDateDef)
                                 deepCopy =
-                                    Converters.makeShapeBackwardsCompatible(upToDateDef);
+                                    Converters.amendShapeDefinition(upToDateDef);
                           }
-                          // for any generated shape we don't want an id
-                          // it will receive its own, new id
-                          if (params.propagated) delete deepCopy['shape_id'];
+                          delete deepCopy['shape_id'];
                           deepCopy['roi_id'] = params.roi_id;
                           this.viewer.generateShapes(deepCopy,
                               params.number, params.random, extent, theDims,
@@ -415,13 +422,13 @@ export default class Ol3Viewer extends EventSubscriber {
             let viewerT = this.viewer.getDimensionIndex('t');
             let viewerZ = this.viewer.getDimensionIndex('z');
             let shape =
-                this.image_config.regions_info.data.get(params.shapes[0]);
-            let shapeT = typeof shape.theT === 'number' ? shape.theT : -1;
+                this.image_config.regions_info.getShape(params.shapes[0]);
+            let shapeT = typeof shape.TheT === 'number' ? shape.TheT : -1;
             if (shapeT !== -1 && shapeT !== viewerT) {
                 this.image_config.image_info.dimensions.t = shapeT;
                 delay += 25;
             }
-            let shapeZ = typeof shape.theZ === 'number' ? shape.theZ : -1;
+            let shapeZ = typeof shape.TheZ === 'number' ? shape.TheZ : -1;
             if (shapeZ !== -1 && shapeZ !== viewerZ) {
                 this.image_config.image_info.dimensions.z = shapeZ;
                 delay += 25;
@@ -551,8 +558,35 @@ export default class Ol3Viewer extends EventSubscriber {
             return;
         }
 
-        // let's draw
-        this.viewer.drawShape(params.shape, params.roi_id, params.hist_id);
+        // gather unattached dimensions (if any)
+        // and decide if we add the drawn shape
+        let add = true;
+        let unattached = [];
+        switch (this.image_config.regions_info.drawing_mode) {
+            case REGIONS_DRAWING_MODE.NEITHER_Z_NOR_T:
+                unattached = ['z', 't'];
+                break;
+            case REGIONS_DRAWING_MODE.NOT_Z:
+                unattached.push('z');
+                break;
+            case REGIONS_DRAWING_MODE.NOT_T:
+                unattached.push('t');
+                break;
+            case REGIONS_DRAWING_MODE.ALL_Z_AND_T:
+            case REGIONS_DRAWING_MODE.ALL_Z:
+            case REGIONS_DRAWING_MODE.ALL_T:
+            case REGIONS_DRAWING_MODE.CUSTOM_Z_AND_T:
+                add = false;
+        }
+
+        // draw shape
+        this.viewer.drawShape(
+            params.shape, params.roi_id,
+            {
+                hist_id: params.hist_id,
+                unattached: unattached,
+                add: add
+            });
     }
 
     /**
@@ -569,9 +603,15 @@ export default class Ol3Viewer extends EventSubscriber {
         let selectedOnly =
             typeof params.selected === 'boolean' && params.selected;
 
-        this.viewer.storeRegions(
-            selectedOnly, false,
-            this.context.getPrefixedURI(IVIEWER) + '/persist_rois');
+        let requestMade =
+            this.viewer.storeRegions(
+                selectedOnly, false,
+                this.context.getPrefixedURI(IVIEWER) + '/persist_rois',
+                params.omit_client_update);
+        if (requestMade) Ui.showModalMessage("Saving Regions. Please wait...");
+        else if (params.omit_client_update)
+            this.context.eventbus.publish(
+                "REGIONS_STORED_SHAPES", { omit_client_update: true});
     }
 
     /**
@@ -588,9 +628,18 @@ export default class Ol3Viewer extends EventSubscriber {
             typeof params.definition !== 'object' || params.definition === null)
                 return;
 
-        this.viewer.modifyRegionsStyle(
+        let modifies_attachment =
+            typeof params.modifies_attachment === 'boolean' &&
+            params.modifies_attachment;
+        let modify = modifies_attachment ?
+                        this.viewer.modifyShapesAttachment :
+                        this.viewer.modifyRegionsStyle;
+
+        // call modification function
+        modify.call(
+            this.viewer,
             params.definition, params.shapes.slice(),
-                typeof params.callback === 'function' ? params.callback : null);
+            typeof params.callback === 'function' ? params.callback : null);
     }
 
     /**
@@ -600,39 +649,71 @@ export default class Ol3Viewer extends EventSubscriber {
      * @param {Object} params the event notification parameters
      */
     afterShapeStorage(params = {}) {
+        Ui.hideModalMessage();
         // the event doesn't concern us
         if (params.config_id !== this.config_id ||
                 typeof params.shapes !== 'object' ||
-                params.shapes === null) return;
+                params.shapes === null ||
+                params.omit_client_update) return;
 
         // make deep copy to work with
         let ids = Object.assign({}, params.shapes);
         params.shapes = null;
         // we iterate over the ids given and reset states accordingly
         for (let id in ids) {
-            let shape = this.image_config.regions_info.data.get(id);
+            let shape = this.image_config.regions_info.getShape(id);
             if (shape) {
+                let oldRoiAndShapeId = Converters.extractRoiAndShapeId(id);
+                let newRoiAndShapeId = Converters.extractRoiAndShapeId(ids[id]);
                 // we reset modifed
                 shape.modified = false;
                 // new ones are stored under their newly created ids
                 if (typeof shape.is_new === 'boolean') {
+                    let newRoi =
+                        this.image_config.regions_info.data.get(
+                            newRoiAndShapeId.roi_id);
+                    if (typeof newRoi === 'undefined') {
+                        newRoi = {
+                            shapes: new Map(),
+                            show: false,
+                            deleted: 0
+                        };
+                        this.image_config.regions_info.data.set(
+                            newRoiAndShapeId.roi_id, newRoi);
+                    }
                     delete shape['is_new'];
                     let newShape = Object.assign({}, shape);
                     newShape.shape_id = ids[id];
-                    newShape.id =
-                      parseInt(newShape.shape_id.substring(
-                                newShape.shape_id.indexOf(":") + 1));
-                    this.image_config.regions_info.data.set(
-                        newShape.shape_id, newShape);
+                    newShape['@id'] = newRoiAndShapeId.shape_id;
+                    newRoi.shapes.set(newRoiAndShapeId.shape_id, newShape);
                     shape.deleted = true; // take out old entry
                 }
-                // we remove deleted
-                if (shape.deleted)
-                    this.image_config.regions_info.data.delete(id);
+                // we remove shapes flagged deleted=true
+                if (shape.deleted) {
+                    let oldRoi =
+                        this.image_config.regions_info.data.get(
+                                oldRoiAndShapeId.roi_id);
+                    if (typeof oldRoi !== 'undefined' &&
+                        oldRoi.shapes instanceof Map)
+                        oldRoi.shapes.delete(oldRoiAndShapeId.shape_id);
+                    // remove empty roi as well
+                    if (oldRoi.shapes.size === 0)
+                        this.image_config.regions_info.data.delete(
+                            oldRoiAndShapeId.roi_id);
+                }
             }
         }
-        // reload shapes async
-        this.image_config.regions_info.requestData(true);
+        // for now let's just clear the history
+        this.image_config.regions_info.history.resetHistory();
+        // error handling: will probably be adjusted
+        if (typeof params.error === 'string') {
+            let msg = "Saving of Rois/Shapes failed.";
+            if (params.error.indexOf("SecurityViolation") !== -1)
+                msg = "Insufficient Permissions to save some Rois/Shapes.";
+            Ui.showModalMessage(msg, true);
+            console.error(params.error);
+            return;
+        }
     }
 
     /**
@@ -705,7 +786,7 @@ export default class Ol3Viewer extends EventSubscriber {
             (id) => {
                 let deepCopy =
                     Object.assign({},
-                    this.image_config.regions_info.data.get(id));
+                    this.image_config.regions_info.getShape(id));
                 // if we have been modified we get an up-to-date def
                 // from the viewer
                 if (deepCopy.modified) {
@@ -713,7 +794,7 @@ export default class Ol3Viewer extends EventSubscriber {
                     this.viewer.getShapeDefinition(deepCopy.shape_id);
                   if (upToDateDef)
                     deepCopy =
-                        Converters.makeShapeBackwardsCompatible(upToDateDef);
+                        Converters.amendShapeDefinition(upToDateDef);
                 }
                 this.image_config.regions_info.copied_shapes.push(deepCopy)});
 

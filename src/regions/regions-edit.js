@@ -2,21 +2,24 @@
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import {Utils} from '../utils/regions';
+import Ui from '../utils/ui';
 import {Converters} from '../utils/converters';
-import {REGIONS_MODE} from '../utils/constants';
+import {REGIONS_MODE, REGIONS_DRAWING_MODE} from '../utils/constants';
 import {
-    REGIONS_CHANGE_MODES, REGIONS_SET_PROPERTY,
-    REGIONS_GENERATE_SHAPES,REGIONS_MODIFY_SHAPES, REGIONS_COPY_SHAPES
+    EventSubscriber,
+    IMAGE_CONFIG_UPDATE, IMAGE_DIMENSION_CHANGE, REGIONS_COPY_SHAPES,
+    REGIONS_GENERATE_SHAPES, REGIONS_MODIFY_SHAPES, REGIONS_SET_PROPERTY
 } from '../events/events';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {spectrum} from 'spectrum-colorpicker';
 
 /**
  * Represents the regions section in the right hand panel
+ * @extends {EventSubscriber}
  */
 @customElement('regions-edit')
 @inject(Context, Element, BindingEngine)
-export default class RegionsEdit {
+export default class RegionsEdit extends EventSubscriber {
     /**
      *a bound reference to regions_info
      * @memberof RegionsEdit
@@ -36,10 +39,35 @@ export default class RegionsEdit {
     ];
 
     /**
+     * events we subscribe to
+     * @memberof RegionsEdit
+     * @type {Array.<string,function>}
+     */
+    sub_list = [
+        [IMAGE_CONFIG_UPDATE,() => this.adjustEditWidgets()],
+        [IMAGE_DIMENSION_CHANGE, () => this.adjustEditWidgets()]];
+
+    /**
+     * @memberof RegionsEdit
+     * @type {Object}
+     */
+    last_selected = null;
+
+    /**
+     * the list of observers
+     * @memberof RegionsEdit
+     * @type {Array.<Object>}
+     */
+    observers = [];
+
+    /**
      * @constructor
      * @param {Context} context the application context (injected)
+     * @param {Element} element the associated dom element (injected)
+     * @param {BindingEngine} bindingEngine the BindingEngine (injected)
      */
     constructor(context, element, bindingEngine) {
+        super(context.eventbus);
         this.context = context;
         this.element = element;
         this.bindingEngine = bindingEngine;
@@ -53,7 +81,8 @@ export default class RegionsEdit {
      * @memberof RegionsEdit
      */
     bind() {
-        this.registerObserver();
+        this.registerObservers();
+        this.subscribe();
     }
 
     /**
@@ -64,7 +93,8 @@ export default class RegionsEdit {
      * @memberof RegionsEdit
      */
     unbind() {
-        this.unregisterObserver();
+        this.unregisterObservers();
+        this.unsubscribe();
     }
 
     /**
@@ -97,8 +127,7 @@ export default class RegionsEdit {
 
         let strokeWidthSpinner =
             $(this.element).find(".shape-stroke-width input");
-        strokeWidthSpinner.spinner({
-            min: 0, disabled: true});
+        strokeWidthSpinner.spinner({min: 0, disabled: false});
         strokeWidthSpinner.spinner("value", 1);
 
         let editComment = $(this.element).find(".shape-edit-comment input");
@@ -123,16 +152,33 @@ export default class RegionsEdit {
          if (typeof fill !== 'boolean') fill = true;
 
          let deltaProps = {type: shape.type};
-         let properties =
-             fill ? ['fillColor', 'fillAlpha'] : ['strokeColor', 'strokeAlpha'];
-         let values = Converters.rgbaToHexAndAlpha(color);
-         if (!Misc.isArray(values) || values.length !== 2) return;
+         let property = fill ? 'FillColor' : 'StrokeColor';
+         let value = Converters.rgbaToSignedInteger(color);
+         if (typeof value !== 'number') return;
 
-         for (let i=0;i<properties.length;i++)
-             deltaProps[properties[i]] = values[i];
+         deltaProps[property] = value;
 
          this.modifyShapes(
-             deltaProps, this.createUpdateHandler(properties, values));
+             deltaProps, this.createUpdateHandler([property], [value]));
+
+        this.setDrawColors(color, fill);
+     }
+
+     /**
+      * Sets default fill/stroke color for drawing
+      *
+      * @param {string} color a color in rgba notation
+      * @param {boolean} fill the fill color if true, the stroke color otherwise
+      * @memberof RegionsEdit
+      */
+     setDrawColors(color, fill=true) {
+         if (typeof fill !== 'boolean') fill = true;
+
+         let value = Converters.rgbaToSignedInteger(color);
+         if (typeof value !== 'number') return;
+
+         this.regions_info.shape_defaults[fill ? 'FillColor' : 'StrokeColor'] =
+            value;
      }
 
     /**
@@ -143,14 +189,24 @@ export default class RegionsEdit {
      * @memberof RegionsEdit
      */
     onStrokeWidthChange(width = 10,shape=null) {
-        if (typeof shape !== 'object' || shape === null) return;
         if (typeof width !== 'number' || isNaN(width) || width < 0) return;
 
+        let strokeWidth = {
+            '@type': 'TBD#LengthI',
+            'Unit': 'PIXEL',
+            'Symbol': 'pixel',
+            'Value': width
+        };
+        this.regions_info.shape_defaults.StrokeWidth =
+            Object.assign({}, strokeWidth);
+        if (typeof shape !== 'object' || shape === null) return;
+
         let deltaProps = {type: shape.type};
-        deltaProps.strokeWidth = width;
+        deltaProps.StrokeWidth = strokeWidth;
 
         this.modifyShapes(
-            deltaProps, this.createUpdateHandler(['strokeWidth'], [width]));
+            deltaProps, this.createUpdateHandler(
+                ['StrokeWidth'], [Object.assign({}, deltaProps.StrokeWidth)]));
     }
 
     /**
@@ -165,17 +221,23 @@ export default class RegionsEdit {
         if (typeof size !== 'number' || isNaN(size) || size < 1) return;
 
         let deltaProps = {type: shape.type};
-        deltaProps.fontStyle =
-            typeof shape.fontStyle === 'string' ? shape.fontStyle : 'normal';
-        deltaProps.fontFamily =
-            typeof shape.fontFamily === 'string' ?
-                shape.fontFamily : 'sans-serif';
-        deltaProps.fontSize = size;
+        deltaProps.FontStyle =
+            typeof shape.FontStyle === 'string' ? shape.FontStyle : 'normal';
+        deltaProps.FontFamily =
+            typeof shape.FontFamily === 'string' ?
+                shape.FontFamily : 'sans-serif';
+        deltaProps.FontSize = {
+            '@type': 'TBD#LengthI',
+            'Unit': 'PIXEL',
+            'Symbol': 'pixel',
+            'Value': size
+        };
 
         this.modifyShapes(
             deltaProps, this.createUpdateHandler(
-                ['fontSize', 'fontStyle', 'fontFamily'],
-                [size, deltaProps.fontStyle, deltaProps.fontFamily]));
+                ['FontSize', 'FontStyle', 'FontFamily'],
+                [Object.assign({}, deltaProps.FontSize),
+                 deltaProps.FontStyle, deltaProps.FontFamily]));
     }
 
     /**
@@ -186,15 +248,90 @@ export default class RegionsEdit {
      * @memberof RegionsEdit
      */
     onCommentChange(comment = '',shape=null) {
-        if (typeof shape !== 'object' || shape === null) return;
-        if (typeof comment !== 'string') return;
+        if (typeof shape !== 'object' || shape === null ||
+            typeof comment !== 'string') return;
 
         let deltaProps = {type: shape.type};
-        deltaProps.textValue = comment;
+        deltaProps.Text = comment;
 
         this.modifyShapes(
             deltaProps,
-            this.createUpdateHandler(['textValue'], [comment]));
+            this.createUpdateHandler(['Text'], [comment]));
+    }
+
+    /**
+     * Runs checks for an attachment input field and its associated value
+     *
+     * @param {Element} input the attachment input field element
+     * @param {boolean} reset if true we reset to the present attachment
+     * @return {number} returns input value or -1 if value was erroneous
+     */
+    checkAttachmentInput(input, reset=false) {
+        let dim = input.attr("dim");
+        let dims = this.regions_info.image_info.dimensions;
+        let presentValue = dims[dim] + 1;
+
+        // input value check
+        let value = input.val().replace(/\s/g, "");
+        if (value === "") {
+            if (reset) input.val(presentValue);
+            return -1;
+        }
+        value = parseInt(value);
+        if (isNaN(value)) {
+            if (reset) input.val(presentValue);
+            return -1;
+        }
+
+        // bounds check
+        if (value < 1 || value > dims['max_' + dim]) {
+            if (reset) input.val(presentValue);
+            return -1;
+        }
+
+        // index for user starts with 1, internally we start at 0
+        return value-1;
+    }
+
+    /**
+     * Handles fill/stroke color changes
+     *
+     * @param {number} value the new attachment value
+     * @param {string} dim the dimension we attach to
+     * @param {Object} shape the primary shape that the change was invoked on
+     * @memberof RegionsEdit
+     */
+    onAttachmentChange(value, dim = 't', shape = null) {
+        if (typeof value !== 'number' || typeof dim !== 'string') return;
+        let upperDim = dim.toUpperCase();
+        if (typeof shape !== 'object' || shape === null) {
+            // we haven't got any selection so this is a (potential) drawing mode
+            // adjustment
+            let otherDim = dim === 't' ? 'Z' : 'T';
+            if (value < 0) {
+                this.regions_info.drawing_mode =
+                    (this.regions_info.drawing_mode ===
+                        REGIONS_DRAWING_MODE['NOT_' + otherDim]) ?
+                            REGIONS_DRAWING_MODE.NEITHER_Z_NOR_T :
+                            REGIONS_DRAWING_MODE['NOT_' + upperDim];
+            } else if (this.regions_info.drawing_mode ===
+                            REGIONS_DRAWING_MODE['NOT_' + otherDim] ||
+                       this.regions_info.drawing_mode ===
+                            REGIONS_DRAWING_MODE.NEITHER_Z_NOR_T) {
+                                this.regions_info.drawing_mode =
+                                    REGIONS_DRAWING_MODE['NOT_' + otherDim];
+            } else this.regions_info.drawing_mode =
+                        REGIONS_DRAWING_MODE.PRESENT_Z_AND_T;
+
+            return;
+        }
+        // selected shape(s) need changing
+        let prop = 'The' + upperDim;
+        let deltaProps = { type: shape.type };
+        deltaProps[prop] = value;
+
+        this.modifyShapes(
+            deltaProps, this.createUpdateHandler([prop], [value], true), true);
     }
 
     /**
@@ -204,46 +341,69 @@ export default class RegionsEdit {
      * @param {Object} shape_definition the object definition incl. attributes
      *                                  to be changed
      * @param {function} callback a callback function on success
+     * @param {boolean} modifies_attachment does definition alter z/t attachment
      * @memberof RegionsEdit
      */
-    modifyShapes(shape_definition, callback = null) {
+    modifyShapes(shape_definition, callback = null, modifies_attachment = false) {
         if (typeof shape_definition !== 'object' ||
                 shape_definition === null) return;
 
         this.context.publish(
            REGIONS_MODIFY_SHAPES, {
                config_id: this.regions_info.image_info.config_id,
-               shapes : this.regions_info.selected_shapes,
+               shapes: this.regions_info.selected_shapes,
+               modifies_attachment: modifies_attachment,
                definition: shape_definition,
                 callback: callback});
     }
 
     /**
-     * Registers an observer to watch the selected shapes
-     * to adjust the fill and line color options
+     * Registers observers to watch the selected shapes and whether we
+     * are presently drawing for the purpose of adjusting
+     * the fill and line color options
      *
      * @memberof RegionsEdit
      */
-    registerObserver() {
-        this.unregisterObserver();
-        this.observer =
-            this.bindingEngine.collectionObserver(
-                this.regions_info.selected_shapes)
-                    .subscribe(
-                        (newValue, oldValue) =>
-                            this.adjustEditWidgets());
+    registerObservers() {
+        this.unregisterObservers();
+
+        let createObservers = () => {
+            this.observers.push(
+                this.bindingEngine.collectionObserver(
+                    this.regions_info.selected_shapes)
+                        .subscribe(
+                            (newValue, oldValue) => {
+                                this.adjustEditWidgets();
+                            }));
+            this.observers.push(
+                this.bindingEngine.propertyObserver(
+                    this.regions_info, 'shape_to_be_drawn')
+                        .subscribe(
+                            (newValue, oldValue) => {
+                                this.adjustEditWidgets();
+                            }));
+        };
+        if (this.regions_info === null) {
+            this.observers.push(
+                this.bindingEngine.propertyObserver(this, 'regions_info')
+                    .subscribe((newValue, oldValue) => {
+                        if (oldValue === null && newValue) {
+                            this.unregisterObservers();
+                            createObservers();
+                    }}));
+        } else createObservers();
     }
 
     /**
-     * Unregisters the selected shapes observer
+     * Unregisters all observers
      *
      * @memberof RegionsEdit
      */
-    unregisterObserver() {
-        if (this.observer) {
-            this.observer.dispose();
-            this.observer = null;
-        }
+    unregisterObservers() {
+        this.observers.map((o) => {
+            if (o) o.dispose();
+        });
+        this.observers = [];
     }
 
     /**
@@ -276,128 +436,265 @@ export default class RegionsEdit {
     }
 
     /**
-     * Gets the last item in the selected_shapes array or null if empty
-     *
-     * @return {Object|null} the last shape in the selected array or null
-     * @private
-     * @memberof RegionsEdit
-     */
-    getLastSelected() {
-        let lastId =
-            this.regions_info.selected_shapes.length === 0 ?
-                -1 :
-                this.regions_info.selected_shapes.length-1;
-        let lastSelection =
-            lastId === -1 ? null :
-            this.regions_info.data.get(
-                this.regions_info.selected_shapes[lastId]);
-
-        return lastSelection;
-    }
-
-    /**
      * Reacts to shape selections, adjusting the edit widgets accordingly
      *
      * @memberof RegionsEdit
      */
     adjustEditWidgets() {
-        let lastSelection = this.getLastSelected();
+        this.last_selected = this.regions_info.getLastSelectedShape();
+        let canEdit =
+            this.regions_info.checkShapeForPermission(
+                this.last_selected, "canEdit");
+        let showAsPermissionDisabled =
+            !this.regions_info.image_info.can_annotate ||
+            (this.regions_info.selected_shapes.length >= 1 && !canEdit);
+        let permissionsTooltip = "No permission to edit";
         let type =
-            lastSelection ? lastSelection.type.toLowerCase() : null;
+            this.last_selected ? this.last_selected.type.toLowerCase() : null;
 
         // COMMENT
         let editComment = $(this.element).find(".shape-edit-comment input");
         editComment.off('input');
-        editComment.prop("disabled", true);
-        editComment.addClass("disabled-color");
         editComment.val('Comment');
-        if (lastSelection) {
-            editComment.prop("disabled", false);
-            editComment.removeClass("disabled-color");
+        editComment.attr('title',"");
+        editComment.removeClass("disabled-color");
+        if (this.last_selected) {
             editComment.val(
-                typeof lastSelection.textValue === 'string' ?
-                    lastSelection.textValue : '');
+                typeof this.last_selected.Text === 'string' ?
+                    this.last_selected.Text : '');
             editComment.on('input',
                 (event) =>
-                    this.onCommentChange(event.target.value, lastSelection));
+                    this.onCommentChange(
+                        event.target.value, this.last_selected));
+            editComment.prop("disabled", showAsPermissionDisabled);
+            if (showAsPermissionDisabled) {
+                editComment.addClass("disabled-color");
+                editComment.attr('title', permissionsTooltip);
+            }
+        } else {
+            editComment.prop("disabled", true);
+            editComment.addClass("disabled-color");
         }
+
+        // FONT SIZE
         let fontSize =
-            lastSelection ?
-                (typeof lastSelection.fontSize === 'number' ?
-                lastSelection.fontSize : 10) : 10;
+            this.last_selected ?
+                (typeof this.last_selected.FontSize === 'object' &&
+                 this.last_selected.FontSize !== null &&
+                 typeof this.last_selected.FontSize.Value === 'number' ?
+                this.last_selected.FontSize.Value : 10) : 10;
         let fontSizeSpinner = $(this.element).find(".shape-font-size input");
         fontSizeSpinner.off("input spinstop");
         fontSizeSpinner.spinner("value", fontSize);
-        fontSizeSpinner.spinner("disable");
-        if (lastSelection) {
-            fontSizeSpinner.spinner("enable");
-            fontSizeSpinner.on("input spinstop",
-               (event, ui) => this.onFontSizeChange(
-                   parseInt(event.target.value), lastSelection));
-        } else fontSizeSpinner.spinner("disable");
+        fontSizeSpinner.on("input spinstop",
+           (event, ui) => this.onFontSizeChange(
+               parseInt(event.target.value), this.last_selected));
+        fontSizeSpinner.spinner(canEdit ? "enable" : "disable");
+        fontSizeSpinner.attr(
+            'title', showAsPermissionDisabled ? permissionsTooltip : "");
+
+        // DIMENSION ATTACHMENT
+        let dims = this.regions_info.image_info.dimensions;
+        let shapeAttachments =
+            $(this.element).find(".shape-edit-attachments").children();
+        let shapeAttachmentsInput = shapeAttachments.filter("input");
+        let shapeAttachmentsLocks = shapeAttachments.filter(
+            "[name='shape-edit-attachments-locks']");
+        shapeAttachmentsLocks.addClass('disabled-color');
+        shapeAttachments.attr("title", "");
+        shapeAttachmentsInput.prop("disabled", true);
+
+        if (dims.max_t > 1 || dims.max_z > 1) {
+            shapeAttachmentsInput.off();
+            shapeAttachmentsInput.val('');
+            shapeAttachmentsLocks.removeClass("dim_locked");
+            shapeAttachmentsLocks.addClass("dim_unlocked");
+            shapeAttachmentsLocks.off();
+
+            // initialize attachments of last selected shape
+            ['t', 'z'].map(
+                (d) => {
+                    let prop = 'The' + d.toUpperCase();
+                    let filter = "[dim='" + d + "']";
+                    let respectiveAttachementLock =
+                        shapeAttachmentsLocks.filter(filter);
+                    let unattached =
+                        this.last_selected ?
+                            this.last_selected[prop] === -1 :
+                            respectiveAttachementLock.attr("locked") === "";
+                    respectiveAttachementLock.attr(
+                        'locked', unattached ? "" : "locked");
+                    respectiveAttachementLock.removeClass(
+                        unattached ? "dim_locked" : "dim_unlocked");
+                    respectiveAttachementLock.addClass(
+                        unattached ? "dim_unlocked" : "dim_locked");
+                    let respectiveDimensionInput =
+                        shapeAttachmentsInput.filter(filter);
+                    respectiveDimensionInput.val(
+                        unattached ?
+                            this.regions_info.image_info.dimensions[d] + 1 :
+                            this.last_selected ?
+                                this.last_selected[prop] + 1 :
+                                    this.regions_info.image_info.dimensions[d] + 1);
+                    let hasMoreThanOneEntry =
+                        this.regions_info.image_info.dimensions['max_' + d] > 1;
+                    if (hasMoreThanOneEntry && (!showAsPermissionDisabled ||
+                        (this.regions_info.image_info.can_annotate &&
+                         this.last_selected === null))) {
+                            respectiveAttachementLock.removeClass("disabled-color");
+                            if (!unattached)
+                                respectiveDimensionInput.prop("disabled", false);
+                    }
+                    if (showAsPermissionDisabled) {
+                        respectiveDimensionInput.attr("title", permissionsTooltip);
+                        respectiveAttachementLock.attr("title", permissionsTooltip);
+                    }
+            });
+
+            if (this.regions_info.image_info.can_annotate) {
+                // set up various event handlers for attachment changes
+                let checkAttachmentInput0 =
+                    (event, reset = false) => {
+                        if (!this.regions_info.image_info.can_annotate) return;
+                        let dim = event.target.getAttribute('dim');
+                        if (this.regions_info.image_info.dimensions[
+                            'max_' + dim] <= 1) return -1;
+                        let respectiveTextInput =
+                            shapeAttachmentsInput.filter('[dim="' + dim + '"]');
+                        return this.checkAttachmentInput(respectiveTextInput, reset);
+                    };
+                // reset on blur (if check of input value check fails)
+                shapeAttachmentsInput.on('blur',
+                    (event) => checkAttachmentInput0(event, true));
+                // change attachment value (if input value check succeeds)
+                shapeAttachmentsInput.on('change keyup',
+                    (event) => {
+                        if (event.type === 'keyup' && event.keyCode !== 13) return;
+                        let dim = event.target.getAttribute('dim');
+                        let value = checkAttachmentInput0(event);
+                        if (value >= 0)
+                            this.onAttachmentChange(value, dim, this.last_selected);
+                    });
+                // click handler on locks
+                shapeAttachmentsLocks.on('click',
+                    (event) => {
+                        if (showAsPermissionDisabled) return;
+                        let dim = event.target.getAttribute('dim');
+                        if (this.regions_info.image_info.dimensions[
+                            'max_' + dim] <= 1) return;
+                        let locked =
+                            event.target.getAttribute('locked') === 'locked';
+                        if (locked) {
+                            this.onAttachmentChange(-1, dim, this.last_selected);
+                            event.target.className = 'dim_unlocked';
+                        } else {
+                            let val = checkAttachmentInput0(event, true);
+                            if (val < 0) return;
+                            this.onAttachmentChange(
+                                val, dim, this.last_selected);
+                            event.target.className = 'dim_locked';
+                        }
+                        event.target.setAttribute(
+                            "locked", locked ? "" : "locked");
+                        let respectiveTextInput =
+                            shapeAttachmentsInput.filter('[dim="' + dim + '"]');
+                        respectiveTextInput.prop(
+                            'disabled', locked || this.last_selected === null);
+                    });
+            }
+        }
 
         // STROKE COLOR & WIDTH
         let strokeOptions =
-            this.getColorPickerOptions(false, lastSelection);
+            this.getColorPickerOptions(false, this.last_selected);
         let strokeSpectrum =
             $(this.element).find(".shape-stroke-color .spectrum-input");
-        let strokeWidthSpinner =
-            $(this.element).find(".shape-stroke-width input");
+        $(".shape-stroke-color").attr('title', '');
+        strokeSpectrum.spectrum("enable");
         let strokeColor =
-            lastSelection ?
-                lastSelection.strokeColor : '#FFFFFF';
-        let strokeAlpha =
-            lastSelection ?
-                lastSelection.strokeAlpha : 1.0;
+            this.last_selected ?
+                this.last_selected.StrokeColor :
+                typeof this.regions_info.shape_defaults.StrokeColor === 'number' ?
+                    this.regions_info.shape_defaults.StrokeColor : 10092517;
         let strokeWidth =
-            lastSelection ?
-                (typeof lastSelection.strokeWidth === 'number' ?
-                    lastSelection.strokeWidth : 1) : 1;
+            this.last_selected ?
+                (typeof this.last_selected.StrokeWidth === 'object' &&
+                 this.last_selected.StrokeWidth !== null &&
+                 typeof this.last_selected.StrokeWidth.Value === 'number' ?
+                    this.last_selected.StrokeWidth.Value : 1) :
+                        this.regions_info.shape_defaults.StrokeWidth.Value;
         if ((type === 'line' || type === 'polyline') && strokeWidth === 0)
             strokeWidth = 1;
-        strokeOptions.color =
-            Converters.hexColorToRgba(strokeColor, strokeAlpha);
+        else if (type === 'label') strokeWidth = 0;
+        strokeOptions.color = Converters.signedIntegerToRgba(strokeColor);
         strokeSpectrum.spectrum(strokeOptions);
         // STROKE width
+        let strokeWidthSpinner =
+            $(this.element).find(".shape-stroke-width input");
         strokeWidthSpinner.off("input spinstop");
-        strokeWidthSpinner.spinner("value", strokeWidth);
-        if (lastSelection) {
-            strokeSpectrum.spectrum("enable");
-            strokeWidthSpinner.spinner("enable");
+        strokeWidthSpinner.attr("title", "");
+        strokeWidthSpinner.spinner("enable");
+        if (type === 'label') {
+            strokeWidthSpinner.spinner("value", 0);
+            strokeWidthSpinner.spinner("disable");
+        } else {
+            strokeWidthSpinner.spinner("value", strokeWidth);
             strokeWidthSpinner.on("input spinstop",
                (event, ui) => this.onStrokeWidthChange(
-                   parseInt(event.target.value), lastSelection));
-        } else strokeWidthSpinner.spinner("disable");
-
+                   parseInt(event.target.value), this.last_selected));
+        }
+        this.setDrawColors(strokeOptions.color, false);
+        if (showAsPermissionDisabled) {
+            strokeSpectrum.spectrum("disable");
+            strokeWidthSpinner.spinner("disable");
+            strokeWidthSpinner.attr('title', permissionsTooltip);
+            $(".shape-stroke-color").attr('title', permissionsTooltip);
+        }
         // ARROW
         let arrowButton = $(this.element).find(".arrow-button button");
-        if (type && type.indexOf('line') >= 0) {
+        arrowButton.attr(
+            'title', showAsPermissionDisabled ? permissionsTooltip : "");
+        if (type && type.indexOf('line') >= 0 && !showAsPermissionDisabled) {
             arrowButton.prop('disabled', false);
             arrowButton.removeClass('disabled-color');
+            $('.marker_start').html(
+                typeof this.last_selected['MarkerStart'] === 'string' &&
+                    this.last_selected['MarkerStart'] === 'Arrow' ?
+                        '&#10003;' : '&nbsp;');
+            $('.marker_end').html(
+                typeof this.last_selected['MarkerEnd'] === 'string' &&
+                    this.last_selected['MarkerEnd'] === 'Arrow' ?
+                        '&#10003;' : '&nbsp;');
         } else {
             arrowButton.prop('disabled', true);
             arrowButton.addClass('disabled-color');
         }
 
         // FILL COLOR
-        let fillOptions = this.getColorPickerOptions(true, lastSelection);
+        let fillOptions = this.getColorPickerOptions(true, this.last_selected);
         let fillSpectrum =
             $(this.element).find(".shape-fill-color .spectrum-input");
+        let fillColor = -129;
+        let fillDisabled =
+            type === 'line' || type === 'polyline' || type === 'label';
+        if (!fillDisabled) {
+            fillColor =
+                this.last_selected ?
+                    this.last_selected.FillColor :
+                    typeof this.regions_info.shape_defaults.FillColor === 'number' ?
+                        this.regions_info.shape_defaults.FillColor : -129;
+        }
+        fillOptions.color = Converters.signedIntegerToRgba(fillColor);
+        fillSpectrum.spectrum(fillOptions);
+        $(".shape-fill-color").attr('title', '');
         // set fill (if not disabled)
-        let fillDisabled = type === null ||
-                type === 'line' || type === 'polyline' || type === 'label';
-        if (fillDisabled) {
-            fillSpectrum.spectrum(fillOptions);
+        if (fillDisabled || showAsPermissionDisabled) {
+            if (showAsPermissionDisabled)
+                $(".shape-fill-color").attr('title', permissionsTooltip);
+            fillSpectrum.spectrum("disable");
             return;
         }
-        let fillColor =
-            lastSelection ?
-                lastSelection.fillColor : '#FFFFFF';
-        let fillAlpha =
-            lastSelection ?
-                lastSelection.fillAlpha : 1.0;
-        fillOptions.color = Converters.hexColorToRgba(fillColor, fillAlpha);
-        fillSpectrum.spectrum(fillOptions);
+        this.setDrawColors(fillOptions.color, true);
         fillSpectrum.spectrum("enable");
     }
 
@@ -411,8 +708,8 @@ export default class RegionsEdit {
      */
     getColorPickerOptions(fill=true, shape=null) {
         let options =  {
-            disabled: true,
-            color: 'rgba(255,255,255,0)',
+            disabled: this.regions_info === null,
+            color: fill ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 153, 255, 0.7)',
             showInput: true,
             showAlpha: true,
             showInitial: true,
@@ -428,23 +725,10 @@ export default class RegionsEdit {
         if (shape)
             options.change =
                 (color) => this.onColorChange(color.toRgbString(), fill, shape);
+        else options.change =
+            (color) => this.setDrawColors(color.toRgbString(), fill);
 
         return options;
-    }
-
-    /**
-     * Sets edit mode to either modify or translate
-     *
-     * @memberof RegionsEdit
-     */
-    setEditMode(modify=false) {
-        let mode = [REGIONS_MODE.TRANSLATE];
-        if (typeof modify === 'boolean' && modify) mode = [REGIONS_MODE.MODIFY];
-
-        this.context.publish(
-            REGIONS_CHANGE_MODES, {
-                config_id : this.regions_info.image_info.config_id,
-                modes : mode});
     }
 
     /**
@@ -454,17 +738,15 @@ export default class RegionsEdit {
      * @memberof RegionsEdit
      */
     toggleArrow(head=true) {
+        if (this.last_selected === null) return;
+
         if (typeof head !== 'boolean') head = true;
 
-        let lastSelection = this.getLastSelected();
-        if (lastSelection === null) return;
-
         let deltaProps = {type: 'polyline'};
-
-        let property = head ? 'markerStart' : 'markerEnd';
+        let property = head ? 'MarkerEnd' : 'MarkerStart';
         let hasArrowMarker =
-            typeof lastSelection[property] === 'string' &&
-                lastSelection[property] === 'Arrow';
+            typeof this.last_selected[property] === 'string' &&
+                this.last_selected[property] === 'Arrow';
 
         let value = hasArrowMarker ? "" : "Arrow";
         deltaProps[property] = value;
@@ -476,17 +758,22 @@ export default class RegionsEdit {
     /**
      * Creates a more custom update handler than the standard one
      *
+     * @private
+     * @param {Array.<string>} properties the properties that changed
+     * @param {Array.<?>} value the values of the properties that changed
+     * @param {boolean} modifies_attachment if true dimension attachment changed
      * @return {function} the wrapped standard update handler
      * @memberof RegionsEdit
      */
-    createUpdateHandler(properties, values) {
-        let func =
-            Utils.createUpdateHandler(
-                properties,values,
-                this.regions_info.history,
-                this.regions_info.history.getHistoryId(),
-                this.adjustEditWidgets.bind(this));
-        return func;
+    createUpdateHandler(properties, values, modifies_attachment = false) {
+        let updates = { properties: properties, values: values };
+        let history = {
+            hist: this.regions_info.history,
+            hist_id: this.regions_info.history.getHistoryId()
+        };
+        return Utils.createUpdateHandler(
+                    updates, history,
+                    this.adjustEditWidgets.bind(this), modifies_attachment);
     }
 
     /**
@@ -506,12 +793,16 @@ export default class RegionsEdit {
      * @memberof RegionsEdit
      */
     pasteShapes() {
+        if (!this.regions_info.image_info.can_annotate) {
+                Ui.showModalMessage("You don't have permission to paste", true);
+                return;
+        }
         let hist_id = this.regions_info.history.getHistoryId();
         this.context.publish(
             REGIONS_GENERATE_SHAPES,
             {config_id : this.regions_info.image_info.config_id,
                 shapes : this.regions_info.copied_shapes,
-                number : 1, random : true, hist_id : hist_id,
-                propagated: true});
+                number : 1, random : true, hist_id : hist_id
+            });
     }
 }

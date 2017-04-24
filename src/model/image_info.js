@@ -64,11 +64,11 @@ export default class ImageInfo {
     image_name = null;
 
     /**
-     * a flag for whether we are allowed to save the settings
+     * the canAnnotate permission
      * @memberof ImageInfo
      * @type {boolean}
      */
-    can_save_settings = false;
+    can_annotate = false;
 
     /**
      *  rendering settings as imported
@@ -177,17 +177,10 @@ export default class ImageInfo {
      * @memberof ImageInfo
      */
     requestData() {
-        let dataType = "json";
-        if (Misc.useJsonp(this.context.server)) dataType += "p";
-
-        let url =
-            this.context.server + this.context.getPrefixedURI(WEBGATEWAY) +
-            "/imgData/" + this.image_id + '/';
-
-        $.ajax(
-            {url : url,
-            dataType : dataType,
-            cache : false,
+        $.ajax({
+            url :
+                this.context.server + this.context.getPrefixedURI(WEBGATEWAY) +
+                "/imgData/" + this.image_id + '/',
             success : (response) => {
                 // read initial request params
                 this.initializeImageInfo(response);
@@ -209,8 +202,10 @@ export default class ImageInfo {
                     this.context.publish(
                         IMAGE_CONFIG_UPDATE,
                             {config_id: this.config_id,
-                                dataset_id: this.dataset_id,
-                            ready: this.ready});
+                             image_id: this.image_id,
+                             dataset_id: this.dataset_id,
+                             ready: this.ready
+                            });
             },
             error : (error) => {
                 this.ready = false;
@@ -254,7 +249,10 @@ export default class ImageInfo {
             this.context.getInitialRequestParam(REQUEST_PARAMS.MODEL);
         let initialChannels =
             this.context.getInitialRequestParam(REQUEST_PARAMS.CHANNELS);
-        initialChannels = Misc.parseChannelParameters(initialChannels);
+        let initialMaps =
+            this.context.getInitialRequestParam(REQUEST_PARAMS.MAPS);
+        initialChannels =
+            Misc.parseChannelParameters(initialChannels, initialMaps);
 
         // store channels, pixel_range and dimensions
         if (typeof response.tiles === 'boolean') this.tiled = response.tiles;
@@ -282,8 +280,8 @@ export default class ImageInfo {
         this.model = initialModel !== null ?
             initialModel.toLowerCase() : response.rdefs.model;
 
-        // author and can Annotate means we are allowed to store
-        this.can_save_settings = response.perms.canAnnotate;
+        // set can annotate and author information
+        this.can_annotate = response.perms.canAnnotate;
         if (typeof response.meta.imageAuthor === 'string')
             this.author = response.meta.imageAuthor;
         if (typeof response.meta.imageName === 'string')
@@ -332,7 +330,7 @@ export default class ImageInfo {
         if (callback === null)
             callback = (rdef) => {
                 if (rdef === null || typeof rdef.c !== 'string') return;
-                let channels = Misc.parseChannelParameters(rdef.c);
+                let channels = Misc.parseChannelParameters(rdef.c, rdef.maps);
                 // we only allow copy and paste with same number of channels
                 // and compatible range
                 if (!Misc.isArray(channels) ||
@@ -342,10 +340,7 @@ export default class ImageInfo {
             }
         $.ajax({
             url : this.context.server +
-                    this.context.getPrefixedURI(WEBGATEWAY) +
-                        "/getImgRDef/",
-            dataType : Misc.useJsonp(this.context.server) ? 'jsonp' : 'json',
-            cache : false,
+                  this.context.getPrefixedURI(WEBGATEWAY) + "/getImgRDef/",
             success : (response) => {
                 if (typeof response !== 'object' || response === null ||
                     typeof response.rdef !== 'object' ||
@@ -372,17 +367,10 @@ export default class ImageInfo {
             return;
         }
 
-        let dataType = "json";
-        if (Misc.useJsonp(this.context.server)) dataType += "p";
-
-        let url =
-            this.context.server + this.context.getPrefixedURI(WEBGATEWAY) +
-            "/imgData/" + this.image_id + '/?getDefaults=true';
-
-        $.ajax(
-            {url : url,
-            dataType : dataType,
-            cache : false,
+        $.ajax({
+            url :
+                this.context.server + this.context.getPrefixedURI(WEBGATEWAY) +
+                "/imgData/" + this.image_id + '/?getDefaults=true',
             success : (response) => {
                 if (typeof response !== 'object' || response === null ||
                     !Misc.isArray(response.channels) ||
@@ -427,8 +415,8 @@ export default class ImageInfo {
      * response
      *
      * @memberof ImageInfo
-     * @param {Array.<Object>} an array of existing channels (from response)
-     * @param {Array.<Object>} an array of initial settings per channel
+     * @param {Array.<Object>} channels the existing channels (response)
+     * @param {Array.<Object>} initialChannels initial channel settings (request)
      * @return {Array.<Object>} an array of mixed-in channel objects
      */
     initAndMixChannelsWithInitialSettings(channels, initialChannels) {
@@ -476,6 +464,7 @@ export default class ImageInfo {
         let start_min,start_max,end_min,end_max,start_val,end_val;
         let c = this.channels[index];
         switch(mode) {
+            case CHANNEL_SETTINGS_MODE.IMPORTED:
             case CHANNEL_SETTINGS_MODE.MIN_MAX:
                 start_min = c.window.min;
                 start_max = c.window.end-1;
@@ -492,23 +481,9 @@ export default class ImageInfo {
                 start_max = c.window.end-1;
                 end_min = c.window.start+1;
                 end_max = this.range[1];
-                start_val = this.initial_values ?
-                     c.window.start : this.range[0];
-                end_val =
-                    this.initial_values ?
-                         c.window.end : this.range[1];
+                start_val = this.range[0];
+                end_val = this.range[1];
                 break;
-
-            case CHANNEL_SETTINGS_MODE.IMPORTED:
-            default:
-               let ch =
-                   this.context.getSelectedImageConfig().image_info.imported_settings.c;
-                start_min = ch[index].window.min;
-                start_max = ch[index].window.end-1;
-                end_min = ch[index].window.start+1;
-                end_max = ch[index].window.max;
-                start_val = ch[index].window.start;
-                end_val = ch[index].window.end;
         }
 
         return {
@@ -519,24 +494,5 @@ export default class ImageInfo {
             start_val: start_val,
             end_val: end_val
         }
-    }
-
-    /**
-     * Helper to determine if the present channel data might need the full range
-     * mode to be displayed, i.e. start/end are outsided of min/max
-     *
-     * @return {Object|null} returns object with the respective min,max properties or null
-     * @memberof ChannelRange
-     */
-    needsFullRange() {
-        let ret = false;
-
-        if (!Misc.isArray(this.channels)) return false;
-
-        this.channels.map((c) => {
-            if (c.window.start < c.window.min || c.window.end > c.window.max)
-                ret = true;});
-
-        return ret;
     }
 }

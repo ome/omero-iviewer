@@ -77,8 +77,8 @@ export default class ImageConfig extends History {
      * @memberof ImageConfig
      */
     unbind() {
-        this.image_info.unbind();
         this.regions_info.unbind();
+        this.image_info.unbind();
     }
 
     /**
@@ -114,8 +114,6 @@ export default class ImageConfig extends History {
         let uri_prefix =  this.image_info.context.getPrefixedURI(WEBGATEWAY);
         $.ajax(
             {url : server + uri_prefix + "/luts/",
-            dataType : Misc.useJsonp(server) ? "jsonp" : "json",
-            cache : false,
             success : (response) => {
                 if (typeof response !== 'object' || response === null ||
                     !Misc.isArray(response.luts)) return;

@@ -1,6 +1,7 @@
 // js
 import Context from '../app/context';
 import {Utils} from '../utils/regions';
+import {Converters} from '../utils/converters';
 import {REGIONS_DRAWING_MODE} from '../utils/constants';
 import {REGIONS_GENERATE_SHAPES} from '../events/events';
 import {inject, customElement, bindable} from 'aurelia-framework';
@@ -17,13 +18,6 @@ export default class RegionsDrawingMode {
      * @type {RegionsInfo}
      */
     @bindable regions_info = null;
-
-    /**
-     * do we propagate or not
-     * @memberof RegionsDrawingMode
-     * @type {RegionsInfo}
-     */
-    propagate = false;
 
     /**
      * @constructor
@@ -51,92 +45,49 @@ export default class RegionsDrawingMode {
     }
 
     /**
-     * Handles z/t propagation changes, typed in by the user
+     * Clears information
      * @memberof RegionsDrawingMode
-     * @param {string} dim the dimension: 't' or 'z'
      * @param {Element} target the target element (input)
      */
-    onDimensionInputChange(dim, target) {
-        if (dim !== 't' && dim !== 'z') return;
-
-        let value = target.value;
-        //first eliminate all whitespace
-        value = value.replace(/\s/g, '');
-        if (value.length === 0) return;
-
-        let tokens = value.split(","); // tokenize by ,
-        let max = this.regions_info.image_info.dimensions['max_' + dim];
-        let vals = [];
-        tokens.map((t) => {
-            let potentialDashPos = t.indexOf("-");
-            if (potentialDashPos === -1) {// single number assumed
-                let temp = parseInt(t);
-                if (typeof temp === 'number' && !isNaN(temp) &&
-                        temp > 0 && temp <= max) vals.push(temp);
-            } else { // we might have a range
-                let start = parseInt(t.substring(0, potentialDashPos));
-                let end = parseInt(t.substring(potentialDashPos+1));
-                if (typeof start === 'number' && typeof end === 'number' &&
-                    !isNaN(start) && !isNaN(end) && start <= end) {
-                         // equal: we increment end
-                        if (start === end) end++;
-                        else {
-                            // we do have a 'range'
-                            for (let i=start;i<end;i++)
-                                if (i > 0 && i <= max) vals.push(i);
-                        }
-                    }
-            }
-        });
-        // now let's add to our actual list that is applied for propagation
-        // eliminating duplicates and decrementing by 1 to get true dim indices
-        vals.sort();
-        let previous = -1;
-        for (let x=0;x<vals.length;x++) {
-            let present = vals[x];
-            if (present === previous) continue;
-            previous = present;
-            this.regions_info.drawing_dims[dim].push(present-1);
+    onDimensionInputFocus(target) {
+        if (target.value.indexOf("Enter as") !== -1) {
+            target.value = '';
+            target.style = '';
         }
     }
 
     /**
-     * Handler for region drawing mode selection (propagation or present Z/T)
+     * Handles z/t propagation changes, typed in by the user
      * @memberof RegionsDrawingMode
-     * @param {boolean} propagate true if we use propagation options
-     * @param {boolean} flag true or false depending on the checkbox status
+     * @param {string} dim the dimension: 't' or 'z'
+     * @param {string} value the input value
      */
-    onDrawingModeChange(propagate, flag) {
-        this.propagate = (propagate && flag) || (!propagate && !flag);
-        this.regions_info.drawing_dims.t = [];
-        this.regions_info.drawing_dims.z = [];
-        let opt = REGIONS_DRAWING_MODE.Z_AND_T_VIEWED;
-        if (this.propagate) // find active option
-            $(".regions-propagation-options [type='radio']").each(
-                (i, what) => {
-                    if (what.checked)
-                        opt = parseInt(
-                            what.name.substring(
-                                "propagation-option-".length));
-                });
-        this.regions_info.drawing_mode = opt;
-        $(".propagate-mode").prop("checked", this.propagate);
-        $(".viewed-mode").prop("checked", !this.propagate);
-        return true;
+    onDimensionInputChange(dim, value) {
+        if (dim !== 't' && dim !== 'z') return;
+
+        this.regions_info.drawing_dims[dim] =
+            Utils.parseDimensionInput(
+                value, this.regions_info.image_info.dimensions['max_' + dim]);
     }
 
     /**
-     * Handler for propagation option changes
+     * Handler for dimension attachment changes
      * @memberof RegionsDrawingMode
-     * @param {number} option the chosen propagation option
+     * @param {number} option the chosen attachment option
      */
-    onPropagationOptionChange(option) {
+    onAttachmentOptionChange(option) {
         this.regions_info.drawing_mode = option;
-        $(".regions-propagation-options [type='radio']").each(
-            (i, what) => {
-                if (what.name !== ('propagation-option-' + option))
-                    what.checked = false;});
-
+        $('.regions-attachment-choice').html(
+            $(".regions-attachment-option-" + option).text());
+        if (option !== REGIONS_DRAWING_MODE.CUSTOM_Z_AND_T) {
+            let inputs = $('.regions-attachment-options [type="input"]');
+            inputs.val('Enter as 4-9 or 3,9,11...');
+            inputs.css({
+                "filter": "alpha(opacity=65)",
+                "opacity": ".65",
+                "-webkit-box-shadow": "none",
+                "box-shadow": "none"});
+        }
         return true;
     }
 
@@ -147,26 +98,25 @@ export default class RegionsDrawingMode {
      */
     propagateSelectedShapes() {
         let hist_id = this.regions_info.history.getHistoryId();
-         let roi_id = this.regions_info.getNewRegionsId();
-         // we loop over all selected shapes and propagate them individually
-         // since they could be in different t/z so that the propagation won't
-         // be the same for each of them
          this.regions_info.selected_shapes.map(
              (id) => {
                  let shape =
-                     Object.assign({}, this.regions_info.data.get(id));
+                     Object.assign({}, this.regions_info.getShape(id));
                  // collect dimensions for propagation
                  let theDims =
                      Utils.getDimensionsForPropagation(
-                         this.regions_info, shape.theZ, shape.theT);
+                         this.regions_info, shape.TheZ, shape.TheT);
                  if (theDims.length > 0)
                      this.context.publish(
                          REGIONS_GENERATE_SHAPES,
-                         {config_id : this.regions_info.image_info.config_id,
-                             shapes : [shape],
+                         {
+                             config_id: this.regions_info.image_info.config_id,
+                             shapes: [shape],
                              number : theDims.length, random : false,
-                             roi_id: roi_id, hist_id: hist_id,
-                             theDims : theDims, propagated: true});
+                             roi_id: Converters.extractRoiAndShapeId(id).roi_id,
+                             hist_id: hist_id,
+                             theDims : theDims
+                         });
              });
     }
 }

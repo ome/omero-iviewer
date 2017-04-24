@@ -12,6 +12,12 @@ export const APP_NAME = 'iViewer';
 export const PLUGIN_NAME = 'omero_iviewer';
 
 /**
+ * a convenience string lookup for API_PREFIX
+ * @type {string}
+ */
+export const API_PREFIX = "API_PREFIX";
+
+/**
  * a convenience string lookup for URI_PREFIX
  * @type {string}
  */
@@ -36,21 +42,28 @@ export const WEBGATEWAY = "WEBGATEWAY";
 export const WEBCLIENT = "WEBCLIENT";
 
 /**
+ * a convenience string lookup for PLUGIN_PREFIX
+ * @type {string}
+ */
+export const PLUGIN_PREFIX = "PLUGIN_PREFIX";
+
+/**
  * the possible request params that we accept
  * @type {Object}
  */
 export const REQUEST_PARAMS = {
-    DATASET_ID : 'DATASET',
-    SERVER : 'SERVER',
-    IMAGE_ID : 'IMAGE_ID',
-    CHANNELS : 'C',
-    PLANE : 'Z',
-    TIME : 'T',
-    PROJECTION : 'P',
-    MODEL : 'M',
-    CENTER_X : 'X',
-    CENTER_Y : 'Y',
-    ZOOM : 'ZM'
+    CHANNELS: 'C',
+    CENTER_X: 'X',
+    CENTER_Y: 'Y',
+    DATASET_ID: 'DATASET',
+    IMAGE_ID: 'IMAGE_ID',
+    MAPS: 'MAPS',
+    MODEL: 'M',
+    PLANE: 'Z',
+    PROJECTION: 'P',
+    SERVER: 'SERVER',
+    TIME: 'T',
+    ZOOM: 'ZM'
 }
 
 /**
@@ -58,9 +71,9 @@ export const REQUEST_PARAMS = {
  * @type {Object}
  */
 export const CHANNEL_SETTINGS_MODE = {
-    MIN_MAX : 0,
-    FULL_RANGE : 1,
-    IMPORTED : 2
+    MIN_MAX: 0,
+    FULL_RANGE: 1,
+    IMPORTED: 2
 }
 
 /**
@@ -68,11 +81,11 @@ export const CHANNEL_SETTINGS_MODE = {
  * @type {Object}
  */
 export const REGIONS_MODE = {
-    DEFAULT : 0,
-    SELECT : 1,
-    TRANSLATE : 2,
-    MODIFY : 3,
-    DRAW : 4
+    DEFAULT: 0,
+    SELECT: 1,
+    TRANSLATE: 2,
+    MODIFY: 3,
+    DRAW: 4
 }
 
 /**
@@ -80,12 +93,14 @@ export const REGIONS_MODE = {
  * @type {Object}
  */
 export const REGIONS_DRAWING_MODE = {
-    Z_AND_T_VIEWED : 0,
-    ALL_Z_AND_T : 1,
-    ALL_Z: 2,
-    ALL_T : 3,
-    SELECTED_Z_AND_T : 4,
-    NEITHER_Z_NOR_T : 5
+    PRESENT_Z_AND_T: 1,
+    ALL_Z_AND_T: 2,
+    ALL_Z: 3,
+    ALL_T: 4,
+    NEITHER_Z_NOR_T: 5,
+    NOT_Z: 6,
+    NOT_T: 7,
+    CUSTOM_Z_AND_T: 8
 }
 
 /**
@@ -93,8 +108,8 @@ export const REGIONS_DRAWING_MODE = {
  * @type {Object}
  */
 export const RENDER_STATUS = {
-    NOT_WATCHED : 0,
-    IN_PROGRESS : 1,
-    RENDERED : 2,
-    ERROR : 3
+    NOT_WATCHED: 0,
+    IN_PROGRESS: 1,
+    RENDERED: 2,
+    ERROR: 3
 }

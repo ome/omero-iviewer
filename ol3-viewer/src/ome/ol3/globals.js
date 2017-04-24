@@ -14,6 +14,13 @@ goog.require('ol.interaction.DragBox');
 goog.require('ol.events.condition');
 
 /**
+ * a simple string lookup constant for PLUGIN_PRFIX
+ * @const
+ * @type {string}
+ */
+ome.ol3.PLUGIN_PREFIX = 'PLUGIN_PREFIX';
+
+/**
  * a simple string lookup constant for WEBGATEWAY
  * @const
  * @type {string}
@@ -33,7 +40,8 @@ ome.ol3.WEBCLIENT = 'WEBCLIENT';
  * @const
  * @type {Array.<string>}
  */
-ome.ol3.PREFIXED_URIS = [ome.ol3.WEBGATEWAY, ome.ol3.WEBCLIENT];
+ome.ol3.PREFIXED_URIS =
+    [ome.ol3.PLUGIN_PREFIX, ome.ol3.WEBCLIENT, ome.ol3.WEBGATEWAY];
 
 /**
  * A lookup table to get or set dimension indices
@@ -98,7 +106,7 @@ ome.ol3.AVAILABLE_VIEWER_CONTROLS = {
 		"links" : []},
     "birdseye" :
         {"clazz" : ome.ol3.controls.BirdsEye,
-        "options": {collapsed : false, collapseLabel : "»", label: "«"},
+        "options": {collapsed : true, collapseLabel : "»", label: "«"},
         "defaults": true,
         "enabled": true,
         "links" : []},
@@ -237,16 +245,17 @@ ome.ol3.defaultInteractions = function() {
  * @enum {string}
  */
 ome.ol3.REQUEST_PARAMS = {
-    SERVER : 'SERVER',
+    CHANNELS: 'C',
+    CENTER_X: 'X',
+    CENTER_Y: 'Y',
     IMAGE_ID : 'IMAGE_ID',
-    CHANNELS : 'C',
-    PLANE : 'Z',
-    TIME : 'T',
-    PROJECTION : 'P',
-    MODEL : 'M',
-    CENTER_X : 'X',
-    CENTER_Y : 'Y',
-    ZOOM : 'ZM'
+    MAPS: 'MAPS',
+    MODEL: 'M',
+    PLANE: 'Z',
+    PROJECTION: 'P',
+    SERVER: 'SERVER',
+    TIME: 'T',
+    ZOOM: 'ZM'
 };
 
 /**

@@ -20,7 +20,14 @@ export default class Regions {
     @bindable config_id = null;
 
     /**
-     * a reference to the image config
+     * a reference to the image info
+     * @memberof Regions
+     * @type {ImageInfo}
+     */
+    image_info = null;
+
+    /**
+     * a reference to the regions info
      * @memberof Regions
      * @type {RegionsInfo}
      */
@@ -56,9 +63,10 @@ export default class Regions {
      */
     bind() {
         let img_conf = this.context.getImageConfig(this.config_id);
-        if (img_conf && img_conf.regions_info)
+        if (img_conf && img_conf.regions_info) {
+            this.image_info = img_conf.image_info;
             this.regions_info = img_conf.regions_info;
-
+        }
     }
 
     /**
@@ -120,9 +128,9 @@ export default class Regions {
 
         // if we don't want all we only take the selected and not yet deleted
         if (all || undo) ids = this.regions_info.unsophisticatedShapeFilter(
-            ["deleted"], [false]);
+            ["deleted"], [false], ["delete"]);
         else ids = this.regions_info.unsophisticatedShapeFilter(
-                        ["deleted"], [false],
+                        ["deleted"], [false], ["delete"],
                         this.regions_info.selected_shapes);
 
         if (ids.length === 0) return;
@@ -174,16 +182,5 @@ export default class Regions {
      */
     redoHistory() {
         this.regions_info.history.redoHistory();
-    }
-
-    /**
-     * Overridden aurelia lifecycle method:
-     * called whenever the view is unbound within aurelia
-     * in other words a 'destruction' hook that happens after 'detached'
-     *
-     * @memberof Regions
-     */
-    unbind() {
-        this.regions_info = null;
     }
 }

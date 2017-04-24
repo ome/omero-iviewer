@@ -1,12 +1,13 @@
 import {noView} from 'aurelia-framework';
+import RegionsHistory from './regions_history';
 import {
-    IMAGE_CONFIG_UPDATE, REGIONS_MODIFY_SHAPES,
-    REGIONS_SET_PROPERTY,REGIONS_GENERATE_SHAPES, REGIONS_HISTORY_ACTION,
-    EventSubscriber} from '../events/events';
+    IMAGE_CONFIG_UPDATE, REGIONS_GENERATE_SHAPES, EventSubscriber
+} from '../events/events';
 import Misc from '../utils/misc';
-import {Utils} from '../utils/regions';
-import {REGIONS_MODE, WEBGATEWAY} from '../utils/constants';
-import {REGIONS_DRAWING_MODE} from '../utils/constants';
+import {Converters} from '../utils/converters';
+import {
+    PLUGIN_PREFIX, REGIONS_DRAWING_MODE, REGIONS_MODE, IVIEWER
+} from '../utils/constants';
 
 /**
  * Holds region information
@@ -30,11 +31,11 @@ export default class RegionsInfo extends EventSubscriber {
      * @memberof RegionsInfo
      * @type {Map}
      */
-    data = null;
+    data = new Map();
 
     /**
      * @memberof RegionsInfo
-     * @type {History}
+     * @type {RegionsHistory}
      */
     history = null;
 
@@ -58,14 +59,31 @@ export default class RegionsInfo extends EventSubscriber {
      * @memberof RegionsInfo
      * @type {Array.<number>}
      */
-    regions_modes = [REGIONS_MODE.SELECT, REGIONS_MODE.TRANSLATE];
+    regions_modes = [
+        REGIONS_MODE.SELECT, REGIONS_MODE.MODIFY, REGIONS_MODE.TRANSLATE
+    ];
+
+    /**
+     * the type of shape that is to be drawn,
+     * i.e. a draw interaction is active if non null.
+     * @memberof RegionsInfo
+     * @type {string|null}
+     */
+    shape_to_be_drawn = null;
+
+    /**
+     * any defaults for shape drawing
+     * @memberof RegionsInfo
+     * @type {Object}
+     */
+    shape_defaults = {};
 
     /**
      * the drawing mode
      * @memberof RegionsInfo
      * @type {number}
      */
-    drawing_mode = REGIONS_DRAWING_MODE.Z_AND_T_VIEWED;
+    drawing_mode = REGIONS_DRAWING_MODE.PRESENT_Z_AND_T;
 
     /**
      * the z/t indices that we draw to
@@ -98,7 +116,7 @@ export default class RegionsInfo extends EventSubscriber {
         super(image_info.context.eventbus);
         this.image_info = image_info;
         // we want history
-        this.history = new History(this);
+        this.history = new RegionsHistory(this);
 
         // try to restore localstorage copied shapes
         try {
@@ -106,6 +124,8 @@ export default class RegionsInfo extends EventSubscriber {
                 JSON.parse(
                     window.localStorage.getItem("omero_iviewer.copied_shapes"));
         } catch(ignored) {}
+        // init default shape colors
+        this.resetShapeDefaults();
     }
 
     /**
@@ -126,9 +146,8 @@ export default class RegionsInfo extends EventSubscriber {
      */
     unbind() {
         this.unsubscribe();
-        if (this.data instanceof Map) this.data.clear();
+        this.resetRegionsInfo();
         this.history = null;
-        this.image_info = null;
     }
 
     /**
@@ -161,19 +180,29 @@ export default class RegionsInfo extends EventSubscriber {
                 typeof value === 'undefined') return;
 
         // if we do not find a matching shape for the id => bye
-        let shape = this.data.get(id);
-        if (typeof shape !== 'object') return;
+        let shape = this.getShape(id);
+        if (shape === null) return;
+        let ids = Converters.extractRoiAndShapeId(id);
+        let roi = this.data.get(ids.roi_id);
 
         // if the shape shape has a property of that given name
         // set its new value
         if (typeof shape[property] !== 'undefined') shape[property] = value;
         // modify the selected set for actions that influence it
-        if (property === 'selected' && value) this.selected_shapes.push(id);
-        else if ((property === 'selected' && !value) ||
+        if (property === 'selected' && value) {
+            this.data.get(ids.roi_id).show = true;
+            let i = this.selected_shapes.indexOf(id);
+            if (i === -1) this.selected_shapes.push(id);
+        } else if ((property === 'selected' && !value) ||
+                    (property === 'visible' && !value) ||
                     (property === 'deleted' && value)) {
             let i = this.selected_shapes.indexOf(id);
             if (i !== -1) this.selected_shapes.splice(i, 1);
-        }
+            if (property === 'visible') shape.selected = false;
+            if (property === 'deleted' &&
+                typeof shape.is_new === 'boolean' && shape.is_new)
+                    roi.deleted++;
+        } else if (property === 'deleted' && !value) roi.deleted--;
     }
 
     /**
@@ -185,45 +214,62 @@ export default class RegionsInfo extends EventSubscriber {
     requestData(forceUpdate = false) {
         if ((this.ready || !this.image_info.showRegions()) &&
                 !forceUpdate) return;
-        // reset history
-        this.history.resetHistory();
+        // reset regions info data and history
+        this.resetRegionsInfo();
 
-        // assmeble url
-        let url =
-            this.image_info.context.server +
-                this.image_info.context.getPrefixedURI(WEBGATEWAY) +
-                    "/get_rois_json/" + this.image_info.image_id + '/';
-        let dataType = "json";
-        if (Misc.useJsonp(this.image_info.context.server)) dataType += "p";
-
-        $.ajax(
-            {url : url,
-            dataType : dataType,
-            cache : false,
+        // send request
+        $.ajax({
+            url : this.image_info.context.server +
+                  this.image_info.context.getPrefixedURI(IVIEWER) +
+                  "/request_rois/" + this.image_info.image_id + '/',
             success : (response) => {
                 // we want an array
                 if (!Misc.isArray(response)) return;
 
-                this.data = new Map();
                 // traverse results and stuff them into the map
-                response.map((item) => {
+                response.map((roi) => {
                      // shapes have to be arrays as well
-                     if (Misc.isArray(item.shapes)) {
+                     if (Misc.isArray(roi.shapes)) {
+                         let shapes = new Map();
+
                           // set shape properties and store the object
-                          item.shapes.map((shape) => {
-                              let newShape = Object.assign({}, shape);
-                              newShape.shape_id = "" + item.id + ":" + shape.id;
+                          let roiId = roi['@id'];
+                          roi.shapes.map((shape) => {
+                              let newShape =
+                                Converters.amendShapeDefinition(
+                                    Object.assign({}, shape));
+                              let shapeId = newShape['@id']
+                              newShape.shape_id = "" + roiId + ":" + shapeId;
                               // we add some flags we are going to need
                               newShape.visible = true;
                               newShape.selected = false;
                               newShape.deleted = false;
                               newShape.modified = false;
-                              this.data.set(newShape.shape_id, newShape);
+                              shapes.set(shapeId, newShape);
                           });
+                          this.data.set(roiId,
+                              {
+                                  shapes: shapes,
+                                  show: false,
+                                  deleted: 0
+                              });
                       }});
                 this.ready = true;
                 }, error : (error) => this.ready = false
         });
+    }
+
+    /**
+     * Resets history and data
+     * @private
+     * @memberof RegionsInfo
+\     */
+    resetRegionsInfo() {
+        if (this.history instanceof RegionsHistory) this.history.resetHistory();
+        if (this.data instanceof Map) {
+            this.data.forEach((value, key) => value.shapes.clear());
+            this.data.clear();
+        }
     }
 
     /**
@@ -245,17 +291,31 @@ export default class RegionsInfo extends EventSubscriber {
      * @memberof RegionsInfo
      * @param {Array.<string>} properties an array of property names
      * @param {number|string|Array|boolean|Object} values the values to filter for
-     * @param {Array.<ids>|null} an optional array of ids of the form: roi:shape-id
-     * @return {Array.<ids>} an array of ids for shapes that satisfy the filter
+     * @param {string} perms the permissions to check, e.g. edit or delete
+     * @param {Array.<string>|null} ids an optional array of ids of the form: roi:shape-id
+     * @return {Array.<string>} an array of ids that satisfy the filter
      */
-    unsophisticatedShapeFilter(properties=[], values=[], ids=null) {
+    unsophisticatedShapeFilter(properties=[], values=[], perms=[], ids=null) {
         let ret = [];
         if (!Misc.isArray(properties) || !Misc.isArray(values) ||
-                properties.length !== values.length) return ret;
+            !Misc.isArray(perms) || properties.length !== values.length ||
+            properties.length !== perms.length) return ret;
 
         let filter = (value) => {
             for (let i=0;i<properties.length;i++) {
                 if (typeof value[properties[i]] === 'undefined') continue;
+                // check permission
+                if (typeof value['permissions'] === 'object' &&
+                    value['permissions'] !== null) {
+                        let perm =
+                            typeof perms[i] === 'string' &&
+                            perms[i].length > 0 ?
+                                "can" + perms[i][0].toUpperCase() +
+                                perms[i].substring(1).toLowerCase() : null;
+                        if (perm &&
+                            typeof value['permissions'][perm] === 'boolean' &&
+                            !value['permissions'][perm]) return false;
+                }
                 if (value[properties[i]] !== values[i]) return false;
             }
             return true;
@@ -263,288 +323,110 @@ export default class RegionsInfo extends EventSubscriber {
 
         let hasIdsForFilter = Misc.isArray(ids);
         // iterate over all shapes
+
         this.data.forEach(
-            (value, key) => {
-                if (hasIdsForFilter && ids.indexOf(key) !== -1 && filter(value))
-                    ret.push(key);
-                else if (!hasIdsForFilter && filter(value)) ret.push(key);
-        });
+            (value) =>
+                value.shapes.forEach(
+                    (value) => {
+                        let id = value.shape_id;
+                        if (hasIdsForFilter &&
+                            ids.indexOf(id) !== -1 && filter(value)) ret.push(id);
+                        else if (!hasIdsForFilter && filter(value)) ret.push(id);
+                    })
+        );
+
 
         return ret;
     }
-}
-
-/**
- * a history specifically for Regions/Shapes user interaction
- */
-@noView
-export class History {
-    /**
-     * we need a more fine grained history (compared to the settings)
-     * for which we need to distinguish a certain type of action the history
-     * record is for:
-     * e.g. 'PROPERTIES' for a shape definition's property changes/diffs
-     * e.g. 'SHAPES' for entire shape object changes (drawing/propagation/deletion)
-     * e.g. 'OL_ACTION' for modifiction/translation of geometries
-     * @memberof History
-     * @type {Object}
-     */
-    action = {
-        PROPERTIES : 0,
-        SHAPES : 1,
-        OL_ACTION : 2
-    };
 
     /**
-     * a simple autoincrement property
-     * @memberof History
-     * @type {number}
+     * Looks up shape by combined roi:shape id
+     *
+     * @memberof RegionsInfo
+     * @param {string} id the id in the format roi_id:shape_id, e.g. 2:4
+     * @return {Object|null} the shape object or null if none was found
      */
-    hist_id = 0;
+    getShape(id) {
+        if (this.data === null) return null;
+
+        let ids = Converters.extractRoiAndShapeId(id);
+        let roi = this.data.get(ids.roi_id);
+        if (typeof roi === 'undefined' || !(roi.shapes instanceof Map))
+            return null;
+
+        let shape = roi.shapes.get(ids.shape_id);
+        return (typeof shape !== 'undefined') ? shape : null;
+    }
 
     /**
-     * @memberof History
-     * @type {Array.<Object>}
+     * Any shape modification, addition or deletion results in a history entry.
+     * Therefore if our history is empty or the present pointer at the beginning
+     * we can say that nothing has changed, otherwise the opposite
+     *
+     * @memberof RegionsInfo
+     * @return {boolean} true if shapes have been modified, otherwise false
      */
-    history = [];
+    hasBeenModified() {
+        return this.history instanceof RegionsHistory && this.history.canUndo();
+    }
 
     /**
-     * @memberof History
-     * @type {number}
+     * Returns the last of the selected shapes (taking into account permissions)
+     *
+     * @return {Object|null} the last selected shape with(out) permission
+     *                       or null (if no shapes are selected)
+     * @memberof RegionsEdit
      */
-    historyPointer = -1;
+    getLastSelectedShape() {
+        let len = this.selected_shapes.length;
+        if (len === 0) return null;
 
-    /**
-     * a reference to RegionsInfo
-     * @memberof History
-     * @type {RegionsInfo}
-     */
-    regions_info = null;
-
-    /**
-     * @constructor
-     * @param {RegionsInfo} regions_info a reference to RegionsInfo
-     */
-     constructor(regions_info) {
-         this.regions_info = regions_info
-     }
-
-     /**
-      * Increments and returns the next history id
-      * @return {number} the next number up
-      * @memberof History
-      */
-      getHistoryId() {
-          return this.hist_id++;
-      }
-
-    /**
-     * Add 1-n history records for a given action (and id)
-     * @param {number} hist_id a history id
-     * @param {number} action an action to categorize the history entry
-     * @param {Object|Array.<Object>} record an object (see default value) or array of objects
-     * @param {function} post_update_handler a function that is stored with the history for post update
-     * @memberof History
-     */
-     addHistory(
-         hist_id = -1, action = 0,
-         record = {shape_id: null, diffs: [], old_vals: [], new_vals: []},
-            post_update_handler = null) {
-         // we allow since records as well as arrays
-         let entries = [];
-         if (Misc.isArray(record)) entries = record;
-         else entries.push(record);
-         if (entries.length === 0) return;
-
-         // set hist_id if not given and check action
-         if (action !== this.action.PROPERTIES &&
-             action !== this.action.SHAPES &&
-             action !== this.action.OL_ACTION) return;
-
-        // we allow appending to existing history entries
-        let existingEntry = null;
-         if (typeof hist_id !== 'number' || hist_id < 0) {
-            hist_id = this.getHistoryId();
-        } else // find existing entry
-            this.history.map((e) => {
-                if (e.hist_id === hist_id) existingEntry = e;
-            });
-
-
-         // loop over entries
-         let tmp = [];
-         for (let i=0; i<entries.length;i++) {
-             let rec = entries[i];
-
-             if (action === this.action.PROPERTIES) {
-                 // some basic checks
-                 // we have to have an array of diffs and old and new vals
-                 // with a respective length
-                 if (!Misc.isArray(rec.diffs) || rec.diffs.length === 0 ||
-                        !Misc.isArray(rec.old_vals) ||
-                        !Misc.isArray(rec.new_vals) ||
-                        rec.old_vals.length !== rec.diffs.length ||
-                        rec.new_vals.length !== rec.diffs.length ||
-                        typeof rec.shape_id !== 'string') continue;
-                tmp.push(rec);
-            } else if (action === this.action.SHAPES) {
-                if (!Misc.isArray(rec.diffs) || rec.diffs.length === 0 ||
-                    typeof rec.old_vals !== 'boolean' ||
-                    typeof rec.new_vals !== 'boolean') continue;
-                tmp.push(rec);
-            } else if (action === this.action.OL_ACTION) {
-                if (typeof rec.hist_id !== 'number') continue;
-                tmp.push(rec);
-            }
+        let ret =  this.getShape(this.selected_shapes[len-1]);
+        if (this.checkShapeForPermission(ret, "canEdit")) return ret;
+        // look for the next one that has permissions and return it
+        for (let i=len-2;i>=0;i--) {
+            let s = this.getShape(this.selected_shapes[i]);
+            if (this.checkShapeForPermission(s, "canEdit")) return s;
         }
-
-        // append to existing entry or add an own entry
-        if (existingEntry)
-            existingEntry.records = existingEntry.records.concat(tmp);
-        else {
-            let opts = {hist_id : hist_id, action: action, records: tmp};
-            if (typeof post_update_handler === 'function')
-                opts.post_update_handler = post_update_handler;
-            // add entries now
-            this.history.splice(
-                this.historyPointer+1,
-                this.history.length-this.historyPointer, opts);
-            this.historyPointer++;
-        }
-     }
+        return ret;
+    }
 
     /**
-     * Undoes the last action
-     * @memberof History
+     * Resets to default fill/stroke color settings
+     *
+     * @memberof RegionsEdit
      */
-    undoHistory() {
-        if (!this.canUndo()) return;
-
-        let entry = this.history[this.historyPointer];
-        // converge
-        this.doHistory(entry, true);
-        //adjust pointer
-        this.historyPointer--;
+    resetShapeDefaults() {
+        this.shape_defaults['StrokeColor'] = 10092517;
+        this.shape_defaults['FillColor'] = -129
+        this.shape_defaults['StrokeWidth'] = {
+            '@type': 'TBD#LengthI',
+            'Unit': 'PIXEL',
+            'Symbol': 'pixel',
+            'Value': 1
+        };
     }
 
     /**
-     * Redoes the last action
-     * @memberof History
+     * Checks if handed in permission is on shape
+     *
+     * @param {Object} shape the shape object
+     * @param {string} permission the permission to check for
+     * @param {boolean} true if permission is on given shape, false otherwise
+     * @memberof RegionsEdit
      */
-    redoHistory() {
-        if (!this.canRedo()) return;
+    checkShapeForPermission(shape, permission) {
+        if (typeof shape !== 'object' || shape === null ||
+            typeof permission !== 'string' ||
+                (permission !== 'canAnnotate' &&
+                permission !== 'canEdit' &&
+                permission !== 'canDelete')) return false;
 
-        let entry = this.history[this.historyPointer+1];
-        // converge
-        this.doHistory(entry, false);
-        //adjust pointer
-        this.historyPointer++;
+        return this.image_info.can_annotate &&
+                !(typeof shape['permissions'] === 'object' &&
+                shape['permissions'] !== null &&
+                typeof shape['permissions'][permission] === 'boolean' &&
+                !shape['permissions'][permission]);
     }
 
-    /**
-     * common code undo and redo converge on
-     * @private
-     * @param {Object} entry a history entry
-     * @param {boolean} undo undo if true, redo otherwise
-     * @memberof History
-     */
-    doHistory(entry, undo) {
-        // loop over entries
-        let imgInfo = this.regions_info.image_info;
-        for (let i=0; i<entry.records.length;i++) {
-            let rec = entry.records[i];
-            if (entry.action === this.action.PROPERTIES) {
-                let shape = this.regions_info.data.get(rec.shape_id);
-                if (typeof shape === 'undefined') continue;
-                this.affectHistoryPropertyChange(
-                    shape, rec.diffs,
-                    undo ? rec.old_vals : rec.new_vals,
-                    entry.post_update_handler);
-            } else if (entry.action === this.action.SHAPES) {
-                let generate = undo ? rec.old_vals : rec.new_vals;
-                if (generate) { // we recreate them
-                    rec.diffs.map((shape) => {
-                        imgInfo.context.publish(
-                            REGIONS_SET_PROPERTY,
-                                {config_id : imgInfo.config_id,
-                                    property: 'state',
-                                    shapes : [shape.shape_id],
-                                    value: 'undo'});
-                    });
-                } else { // we delete them
-                    let ids = [];
-                    rec.diffs.map((shape) => ids.push(shape.shape_id));
-                    imgInfo.context.publish(
-                        REGIONS_SET_PROPERTY,
-                            {config_id : imgInfo.config_id,
-                             property: 'state', shapes : ids, value: 'delete'});
-                }
-            } else if (entry.action === this.action.OL_ACTION) {
-                imgInfo.context.publish(
-                    REGIONS_HISTORY_ACTION,
-                        {config_id : imgInfo.config_id,
-                         hist_id: rec.hist_id, undo: undo});
-            }
-        }
-    }
-
-    /**
-     * Affects a property change based on the desired history values
-     * by triggering the corresponding shape modification event
-     * @param {Object} shape a shape definition
-     * @param {Array.<string>} props the properties of the shape to be affected
-     * @param {Array.<?>} vals the values that the properties should take on
-     * @memberof History
-     */
-    affectHistoryPropertyChange(shape, props, vals, post_update_handler) {
-        if (typeof this.regions_info !== 'object') return;
-
-        let def = {type: shape.type};
-        for (let j=0;j<props.length;j++)
-            def[props[j]] = vals[j];
-        let callback =
-            Utils.createUpdateHandler(
-                props, vals, null, -1, post_update_handler);
-
-        let image_info = this.regions_info.image_info;
-        image_info.context.publish(
-           REGIONS_MODIFY_SHAPES, {
-           config_id:image_info.config_id,
-           shapes : [shape.shape_id],
-           definition: def,
-           callback: callback});
-    }
-
-    /**
-    * @return {boolean} true if we are not at the end of the history
-    * @memberof History
-    */
-    canRedo() {
-       return this.hasHistory() && this.historyPointer < this.history.length-1;
-    }
-
-    /**
-    * @return {boolean} true if we are not at the beginning of the history
-    * @memberof History
-    */
-    canUndo() {
-        return this.hasHistory() && this.historyPointer >= 0;
-    }
-
-    /**
-    * @return {boolean} true if we have at least one record, false otherwise
-    * @memberof History
-    */
-    hasHistory() {
-       return this.history.length > 0;
-    }
-
-    /**
-    * Resets history
-    * @memberof History
-    */
-    resetHistory() {
-       this.history = [];
-       this.historyPointer = -1;
-    }
 }

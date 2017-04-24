@@ -1,6 +1,7 @@
 // js
 import {inject, bindable, customElement} from 'aurelia-framework';
 import Context from './context';
+import {REGIONS_SET_PROPERTY} from '../events/events';
 import 'bootstrap';
 
 
@@ -43,11 +44,16 @@ export class RightHandPanel {
             // we don't allow clicking the regions if we don't show them
             // or if the rgions info is not present
             let img_conf = this.context.getImageConfig(this.config_id);
-            if (hash === '#rois' && (
-                !this.context.show_regions || img_conf === null ||
-                    img_conf.regions_info === null ||
-                    img_conf.regions_info.data === null)) return;
+            if (hash === '#rois' &&
+                (img_conf === null || img_conf.regions_info === null ||
+                 img_conf.regions_info.data === null ||
+                 img_conf.image_info.projection === 'split')) return;
 
+            if (!this.context.show_regions) {
+                this.context.show_regions = true;
+                this.context.publish(
+                    REGIONS_SET_PROPERTY, {property: "visible", value: true});
+            }
             $(e.currentTarget).tab('show');
         });
     }

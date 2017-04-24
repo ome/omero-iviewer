@@ -19,6 +19,11 @@ if (!is_dev_server) {
     __webpack_public_path__ = prefix + '/static/' + PLUGIN_NAME + '/';
 }
 
+/**
+ * IViewer bootstrap function
+ * @function
+ * @param {Object} aurelia the aurelia instance
+ */
 bootstrap(function(aurelia) {
   aurelia.use
     .standardConfiguration()
@@ -37,14 +42,6 @@ bootstrap(function(aurelia) {
     let ctx = new Context(aurelia.container.get(EventAggregator), init_id, req);
     if (is_dev_server) ctx.tweakForDevServer();
     aurelia.container.registerInstance(Context,ctx);
-
-    $.ajaxSetup({
-        beforeSend: (xhr, settings) => {
-            if (!Misc.useJsonp(ctx.server) &&
-                !(/^(GET|HEAD|OPTIONS|TRACE)$/.test(settings.type)))
-                xhr.setRequestHeader("X-CSRFToken", Misc.getCookie('csrftoken'));
-        }
-    });
 
     aurelia.start().then(() => aurelia.setRoot('app/index', document.body));
 });

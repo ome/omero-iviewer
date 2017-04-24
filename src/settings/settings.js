@@ -117,9 +117,7 @@ export default class Settings extends EventSubscriber {
         $.ajax({
             url : this.context.server +
                     this.context.getPrefixedURI(WEBGATEWAY) +
-                        "/get_image_rdefs_json/" + img_id,
-            dataType : Misc.useJsonp(this.context.server) ? 'jsonp' : 'json',
-            cache : false,
+                        "/get_image_rdefs_json/" + img_id + '/',
             success : (response) => {
                 if (!Misc.isArray(response.rdefs)) return;
 
@@ -156,10 +154,10 @@ export default class Settings extends EventSubscriber {
     }
 
     /**
-    * Shows and hides the histogram
-    *
-    * @memberof Settings
-    */
+     * Shows and hides the histogram
+     *
+     * @memberof Settings
+     */
     toggleHistogram(checked) {
         if (this.histogram) {
             this.histogram.toggleHistogramVisibilty(checked);
@@ -167,24 +165,53 @@ export default class Settings extends EventSubscriber {
     }
 
     /**
-    * on model change handler
-    *
-    * @memberof Settings
-    */
+     * on model change handler
+     *
+     * @memberof Settings
+     */
     onModelChange(flag) {
-        // add history record
-        this.image_config.addHistory({
-            prop: ['image_info', 'model'],
-            old_val : !flag ? 'greyscale' : 'color',
-            new_val: flag ? 'greyscale' : 'color',
-            type: 'string'});
+        let history = [];
+
+        if (flag) {
+            // for change to grayscale:
+            // we take the first one that's active, then disable all others after
+            // if none is active, the first one will be made active
+            let channels = this.image_config.image_info.channels;
+            let firstActive = -1;
+
+            // little helper f updating active flag and history
+            let f = (c, i, a) => {
+                c.active = a;
+                history.push({
+                    prop: ['image_info', 'channels', '' + i, 'active'],
+                    old_val : !a,
+                    new_val: a,
+                    type: 'boolean'});
+            }
+
+            for (let i=0;i<channels.length;i++) {
+                let c = channels[i];
+                if (firstActive < 0 && c.active) firstActive = i;
+                if (i > firstActive && c.active) f(c, i, false);
+
+            };
+            if (firstActive < 0) f(channels[0], 0, true);
+        }
+
+        // add history for model info
+        history.push({
+                prop: ['image_info', 'model'],
+                old_val : !flag ? 'greyscale' : 'color',
+                new_val: flag ? 'greyscale' : 'color',
+                type: 'string'});
+        this.image_config.addHistory(history);
     }
 
     /**
-    * Persists the rendering settings
-    *
-    * @memberof Settings
-    */
+     * Persists the rendering settings
+     *
+     * @memberof Settings
+     */
     saveImageSettings() {
         $('.save-settings').children('button').blur();
         if (Misc.useJsonp(this.context.server)) {
@@ -200,14 +227,9 @@ export default class Settings extends EventSubscriber {
             "&p=" + image_info.projection +
             "&t=" + (image_info.dimensions.t+1) +
             "&z=" + (image_info.dimensions.z+1) +
-            "&q=0.9&ia=0&c=";
-        let i=0;
-        image_info.channels.map(
-            (c) =>
-                url+= (i !== 0 ? ',' : '') + (!c.active ? '-' : '') + (++i) +
-                    "|" + c.window.start + ":" + c.window.end +
-                    (typeof  c.reverseIntensity === 'boolean' ?
-                    (c.reverseIntensity ? "r" : "-r") : "") + "$" + c.color);
+            "&q=0.9&ia=0";
+        url = Misc.appendChannelsAndMapsToQueryString(image_info.channels, url);
+
         $.ajax(
             {url : url,
              method: 'POST',
@@ -227,20 +249,20 @@ export default class Settings extends EventSubscriber {
     }
 
     /**
-    * Tries to persists the rendering settings to all images in the dataset
-    *
-    * @memberof Settings
-    */
+     * Tries to persists the rendering settings to all images in the dataset
+     *
+     * @memberof Settings
+     */
     saveImageSettingsToAll() {
         // we only delegate
         this.copy(true);
     }
 
     /**
-    * Undoes the last change
-    *
-    * @memberof Settings
-    */
+     * Undoes the last change
+     *
+     * @memberof Settings
+     */
     undo() {
         if (this.image_config) {
             this.image_config.undoHistory();
@@ -249,10 +271,10 @@ export default class Settings extends EventSubscriber {
     }
 
     /**
-    * Redoes the last change
-    *
-    * @memberof Settings
-    */
+     * Redoes the last change
+     *
+     * @memberof Settings
+     */
     redo() {
         if (this.image_config) {
             this.image_config.redoHistory();
@@ -261,16 +283,14 @@ export default class Settings extends EventSubscriber {
     }
 
     /**
-    * Copies the rendering settings
-    *
-    * @param {boolean} to_all if true settings will be applied to all,
-    *  otherwise only the present one
-    * @memberof Settings
-    */
+     * Copies the rendering settings
+     *
+     * @param {boolean} toAll if true settings will be applied to all,
+     *                        otherwise only the present one
+     * @memberof Settings
+     */
     copy(toAll=false) {
-        let dataType = Misc.useJsonp(this.context.server) ? 'jsonp' : 'json';
-
-        if (toAll && dataType === 'jsonp') {
+        if (toAll && Misc.useJsonp(this.context.server)) {
             alert("Saving to All will not work cross-domain!");
             return;
         }
@@ -282,37 +302,24 @@ export default class Settings extends EventSubscriber {
         if (!toAll)
             url += "imageId=" + imgInf.image_id + "&q=0.9&pixel_range=" +
                     imgInf.range[0] + ":" + imgInf.range[1] +"&";
-        url +=  'm=' + imgInf.model[0] + "&p=" + imgInf.projection + "&ia=0&c=";
-
-        let i=0;
-        imgInf.channels.map(
-            (c) =>
-                url+= (i !== 0 ? ',' : '') + (!c.active ? '-' : '') + (++i) +
-                 "|" + c.window.start + ":" + c.window.end +
-                    (typeof c.reverseIntensity === 'boolean' ?
-                        (c.reverseIntensity ? 'r' : '-r') : '') +
-                 "$" + c.color);
+        url +=  'm=' + imgInf.model[0] + "&p=" + imgInf.projection + "&ia=0";
+        url = Misc.appendChannelsAndMapsToQueryString(imgInf.channels, url);
 
         // save to all differs from copy in that it is a POST with data
         // instead of a JSON(P) GET, as well as the success handler
         let params = {
             url : url,
             method: toAll ? 'POST' : 'GET',
-            cache: false,
             error : (error) => {}
         };
 
-        if (!toAll) {
-            params.dataType = dataType;
-            params.success =
-                (response) => imgInf.requestImgRDef();
-        }else {
+        if (toAll) {
             params.data={
+                dataType: 'json',
                 toids: imgInf.dataset_id,
                 to_type: 'dataset',
                 imageId: imgInf.image_id
             };
-            params.dataType = "json";
             params.success =
                 (response) => {
                     let thumbIds = [imgInf.image_id];
@@ -327,17 +334,18 @@ export default class Settings extends EventSubscriber {
                                 { config_id : this.config_id, ids: thumbIds}));
                     this.requestAllRenderingDefs(action);
                 }
-        }
+        } else params.success =
+            (response) => imgInf.requestImgRDef();
         $.ajax(params);
     }
 
     /**
-    * Applies the rendering settings, keeping a history of the old settings
-    *
-    * @param {Object} rdef the rendering defintion
-    * @param {boolean} for_pasting true if rdef supplied it for pasting of settings, false otherwise
-    * @memberof Settings
-    */
+     * Applies the rendering settings, keeping a history of the old settings
+     *
+     * @param {Object} rdef the rendering defintion
+     * @param {boolean} for_pasting true if rdef supplied it for pasting of settings, false otherwise
+     * @memberof Settings
+     */
     applyRenderingSettings(rdef, for_pasting=true) {
         if (rdef === null) return;
 
@@ -366,7 +374,7 @@ export default class Settings extends EventSubscriber {
 
         // copy channel values and add change to history
         let channels = for_pasting ?
-            Misc.parseChannelParameters(rdef.c) : rdef.c;
+            Misc.parseChannelParameters(rdef.c, rdef.maps) : rdef.c;
         let mode = CHANNEL_SETTINGS_MODE.MIN_MAX;
         if (channels)
             for (let i=0;i<channels.length;i++) {
@@ -448,11 +456,11 @@ export default class Settings extends EventSubscriber {
     }
 
     /**
-    * Applies user settings from rdefs[index]
-    *
-    * @param {number} index the index in the rdefs array
-    * @memberof Settings
-    */
+     * Applies user settings from rdefs[index]
+     *
+     * @param {number} index the index in the rdefs array
+     * @memberof Settings
+     */
     applyUserSetting(index) {
         this.applyRenderingSettings(this.rdefs[index], false);
     }

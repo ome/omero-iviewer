@@ -10,6 +10,7 @@ require('../../node_modules/jquery-ui/themes/base/images/ui-icons_ffffff_256x240
 // js
 import {inject} from 'aurelia-framework';
 import Context from './context';
+import Misc from '../utils/misc';
 import {IMAGE_VIEWER_RESIZE} from '../events/events';
 
 /**
@@ -36,8 +37,19 @@ export class Index  {
      */
     attached() {
         window.onresize =
-        () => this.context.publish(IMAGE_VIEWER_RESIZE,
+            () => this.context.publish(IMAGE_VIEWER_RESIZE,
                 {config_id: -1, is_dragging: false, window_resize: true});
+        window.onbeforeunload = () => {
+            if (Misc.useJsonp(this.context.server)) return null;
+            let conf = this.context.getSelectedImageConfig();
+            if (conf && conf.regions_info &&
+                !Misc.useJsonp(this.context.server) &&
+                conf.regions_info.hasBeenModified() &&
+                conf.regions_info.image_info.can_annotate)
+                    return "You have new/deleted/modified ROI(S).\n" +
+                           "If you leave you'll lose your changes.";
+            return null;
+        };
     }
 
     /**
@@ -49,5 +61,6 @@ export class Index  {
      */
     detached() {
         window.onresize = null;
+        window.onbeforeunload = null;
     }
 }

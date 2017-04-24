@@ -4,8 +4,8 @@ import {IMAGE_CONFIG_SELECT} from '../events/events';
 import Misc from '../utils/misc';
 import ImageConfig from '../model/image_config';
 import {
-    REQUEST_PARAMS,
-    WEBGATEWAY, WEBCLIENT, PLUGIN_NAME, URI_PREFIX, IVIEWER
+    API_PREFIX, IVIEWER, PLUGIN_NAME, PLUGIN_PREFIX, REQUEST_PARAMS,
+    WEBCLIENT, WEBGATEWAY, URI_PREFIX
 } from '../utils/constants';
 
 /**
@@ -24,6 +24,12 @@ import {
 @noView
 export default class Context {
     /**
+     * are we running within the wepback dev server
+     * @type {boolean}
+     */
+    is_dev_server = false;
+
+    /**
      * the aurelia event aggregator
      * @type {EventAggregator}
      */
@@ -34,6 +40,12 @@ export default class Context {
      * @type {string}
      */
     server = null;
+
+    /**
+     * api prefix
+     * @type {string}
+     */
+    api_prefix = 'api/v0/m/';
 
     /**
      * a list of potentially prefixes resources
@@ -101,6 +113,18 @@ export default class Context {
         this.eventbus = eventbus;
         this.initParams = optParams;
 
+        // set global ajax request properties
+        $.ajaxSetup({
+            cache: false,
+            dataType : Misc.useJsonp(this.server) ? "jsonp" : "json",
+            beforeSend: (xhr, settings) => {
+                if (!Misc.useJsonp(this.server) &&
+                    !(/^(GET|HEAD|OPTIONS|TRACE)$/.test(settings.type)))
+                    xhr.setRequestHeader("X-CSRFToken",
+                        Misc.getCookie('csrftoken'));
+            }
+        });
+
         // we set the initial image as the default (if given)
         let initial_dataset_id =
             parseInt(
@@ -113,10 +137,13 @@ export default class Context {
 
         // set up key listener
         this.establishKeyDownListener();
-
+        // url navigation
         if (this.hasHTML5HistoryFeatures()) {
             window.onpopstate = (e) => {
-                if (e.state === null) window.history.go(0);
+                if (e.state === null) {
+                    window.history.go(0);
+                    return;
+                }
                 this.addImageConfig(e.state.image_id, e.state.dataset_id);
             };
         }
@@ -169,7 +196,11 @@ export default class Context {
             typeof params[URI_PREFIX] === 'string' ?
                 Misc.prepareURI(params[URI_PREFIX]) : "";
         this.prefixed_uris.set(URI_PREFIX, prefix);
-        this.prefixed_uris.set(IVIEWER, prefix + "/" + PLUGIN_NAME);
+        this.prefixed_uris.set(API_PREFIX, prefix + "/" + this.api_prefix);
+        let iViewerPrefixed = prefix + "/" + PLUGIN_NAME;
+        this.prefixed_uris.set(IVIEWER, iViewerPrefixed);
+        this.prefixed_uris.set(PLUGIN_PREFIX, iViewerPrefixed);
+        params[PLUGIN_PREFIX] = iViewerPrefixed;
         [WEBGATEWAY, WEBCLIENT].map(
             (key) =>
                 this.prefixed_uris.set(
@@ -207,6 +238,7 @@ export default class Context {
      * @memberof Context
      */
     tweakForDevServer() {
+        this.is_dev_server = true;
         this.prefixed_uris.set(IVIEWER, "");
     }
 
@@ -275,7 +307,11 @@ export default class Context {
         let newPath =
             oldPath.replace(old_image_id, image_id);
         if (typeof dataset_id === 'number')
-            newPath += '?dataset_id=' + dataset_id;
+            newPath += '?dataset=' + dataset_id;
+        if (this.is_dev_server) {
+            newPath += (newPath.indexOf('?') === -1) ? '?' : '&';
+            newPath += 'haveMadeCrossOriginLogin_';
+        }
         window.history.pushState(
             {image_id: image_id, dataset_id: dataset_id},"",newPath);
     }
@@ -296,6 +332,10 @@ export default class Context {
     addImageConfig(image_id, dataset_id) {
         if (typeof image_id !== 'number' || image_id < 0)
             return null;
+
+        // reset
+        this.show_regions = false;
+        this.show_scalebar = false;
 
         // we do not keep the other configs around unless we are in MDI mode.
         if (!this.useMDI)

@@ -1,21 +1,40 @@
 // js
 import Context from '../app/context';
 import Misc from '../utils/misc';
-import {inject, customElement, bindable} from 'aurelia-framework';
-import { REGIONS_SET_PROPERTY, REGIONS_STORED_SHAPES} from '../events/events';
+import Ui from '../utils/ui';
+import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
+import {
+    EventSubscriber,
+    IMAGE_VIEWER_RESIZE, REGIONS_SET_PROPERTY, REGIONS_STORED_SHAPES
+} from '../events/events';
 
 /**
  * Represents the regions list/table in the regions settings/tab
  */
 @customElement('regions-list')
-@inject(Context)
-export default class RegionsList {
+@inject(Context, BindingEngine)
+export default class RegionsList extends EventSubscriber {
     /**
      * a reference to the image config
      * @memberof RegionsList
-     * @type {RegionsInfo}
+     * @type {RegionsList}
      */
     @bindable regions_info = null;
+
+    /**
+     * events we subscribe to
+     * @memberof RegionsList
+     * @type {Array.<string,function>}
+     */
+    sub_list = [[IMAGE_VIEWER_RESIZE,
+                    (params={}) => this.adjustTableHeight()]];
+
+    /**
+     * the list of observers
+     * @memberof RegionsEdit
+     * @type {Array.<Object>}
+     */
+    observers = [];
 
     /**
      * a flag for the regions list interaction
@@ -32,12 +51,121 @@ export default class RegionsList {
     dragging_start = null;
 
     /**
+     * the index of the column that is being resized
+     * @memberof RegionsList
+     * @type {number}
+     */
+    column_resized = 0;
+
+    /**
+     * the browser's scrollbar width
+     * @memberof RegionsList
+     * @type {number}
+     */
+    scrollbar_width = 0;
+
+    /**
+     * @memberof RegionsList
+     * @type {boolean}
+     */
+    initial_load = true;
+
+    /**
      * @constructor
      * @param {Context} context the application context (injected)
+     * @param {BindingEngine} bindingEngine the BindingEngine (injected)
      */
-    constructor(context) {
+    constructor(context, bindingEngine) {
+        super(context.eventbus);
         this.context = context;
+        this.bindingEngine = bindingEngine;
     }
+
+    /**
+     * Overridden aurelia lifecycle method:
+     * called whenever the view is bound within aurelia
+     * in other words an 'init' hook that happens before 'attached'
+     *
+     * @memberof RegionsList
+     */
+    bind() {
+        this.subscribe();
+        this.registerObservers();
+    }
+
+    /**
+     * Registers observers
+     *
+     * @memberof RegionsList
+     */
+    registerObservers() {
+        let createObserver = () => {
+            this.unregisterObservers();
+
+            this.observers.push(
+                this.bindingEngine.collectionObserver(
+                    this.regions_info.selected_shapes).subscribe(
+                        (newValue, oldValue) =>
+                            this.actUponSelectionChange()));
+            this.observers.push(
+                this.bindingEngine.propertyObserver(
+                    this.context, "show_regions").subscribe(
+                        (newValue, oldValue) =>
+                            setTimeout(this.adjustTableHeight.bind(this), 25)
+            ));
+            this.observers.push(
+                this.bindingEngine.propertyObserver(
+                    this.regions_info, 'shape_to_be_drawn').subscribe(
+                        (newValue, oldValue) => {
+                            if (newValue === null) {
+                                $(".regions-table").removeClass("disabled-color");
+                                $(".regions-table").prop("disabled", false);
+                            } else {
+                                $(".regions-table").addClass("disabled-color");
+                                $(".regions-table").prop("disabled", true);
+                            }
+                        }
+            ));
+        };
+
+        if (this.regions_info === null) {
+            this.observers.push(
+                    this.bindingEngine.propertyObserver(this, 'regions_info')
+                        .subscribe((newValue, oldValue) => {
+                            if (oldValue === null && newValue) createObserver();
+                        }
+            ));
+        } else createObserver();
+    }
+
+    /**
+     * Unregisters observers
+     *
+     * @memberof RegionsList
+     */
+    unregisterObservers() {
+        this.observers.map((o) => o.dispose());
+        this.observers = [];
+    }
+
+    /**
+     * Scrolls to selected row
+     *
+     * @memberof RegionsList
+     */
+     actUponSelectionChange() {
+         if (this.regions_info.selected_shapes.length === 0) return;
+         let nrOfSelShapes = this.regions_info.selected_shapes.length;
+         let idOflastEntry = this.regions_info.selected_shapes[nrOfSelShapes-1];
+         let lastSelShape = this.regions_info.getLastSelectedShape();
+         let lastCanEdit =
+            this.regions_info.checkShapeForPermission(lastSelShape, "canEdit");
+
+         // exception: mixed permissions - don't scroll for canEdit=false
+         if (idOflastEntry !== lastSelShape.shape_id && !lastCanEdit) return;
+
+         Ui.scrollRegionsTable(lastSelShape.shape_id);
+     }
 
     /**
      * Hide/Shows tegions table
@@ -63,100 +191,119 @@ export default class RegionsList {
      * @memberof RegionsList
      */
     attached() {
-        // this keeps the header aligned with the table on horizontal scroll
-        $(".regions-table").on("scroll", (e) => {
-                $('.regions-header').css(
-                    "margin-left", "-" +
-                     e.currentTarget.scrollLeft + "px");
-        });
-        // the hover detects the border and enables the column resize handling
-        // as well as changes the cursor symbol
-        $('.regions-header th').hover((e) => {
-            let cell = $(e.target);
-
-            let index = null;
-            try {
-                index =
-                    cell.prop("tagName").toLowerCase() === 'th' ?
-                        cell.attr("id").substring("reg-col-".length) :
-                        cell.parent().attr("id").substring("reg-col-".length);
-            } catch(noindex) {
-                index = -1;
-            }
-            var border = parseInt(cell.css('border-top-width'));
-            if (isNaN(border)) return;
-
-            // we allow right hand border dragging
-            if(!this.is_dragging &&
-                e.offsetX > 0 &&
-                e.offsetX <= border &&
-                e.offsetY > 0 &&
-                e.offsetY < cell.outerHeight()) {
-                    if (index > 0) {
-                        cell.css("cursor", "col-resize");
-                        cell = $("#reg-col-" + (index-1));
-                        this.enableColumnResize(cell);
-                    }
-            } else if(!this.is_dragging &&
-                e.offsetX >= cell.innerWidth() &&
-                e.offsetX <= cell.outerWidth() &&
-                e.offsetY > 0 &&
-                e.offsetY < cell.outerHeight()) {
-                    cell.css("cursor", "col-resize");
-                    this.enableColumnResize(cell);
-             } else cell.css("cursor", "default");
-        });
-        this.adjustColumnWidths();
+        this.scrollbar_width = Ui.measureScrollbarWidth();
+        this.enableTableResize();
     }
 
     /**
      * Establishes and tears down the handlers for column resize
      *
-     * @param {Object} the th cell that is being resized
      * @memberof RegionsList
      */
-    enableColumnResize(cell) {
-        // we need a mouse-down to start dragging
-        cell.mousedown((e) => {
-            e.preventDefault();
-            cell.unbind('mousedown');
-
-            this.is_dragging = true;
+    enableColumnResize(e) {
+        if (!((typeof e.buttons === 'undefined' && e.which === 1) ||
+                e.buttons === 1)) {
             this.dragging_start = e.pageX;
+            this.is_dragging = false;
+            return;
+        }
 
-            // we need a mouse-move while dragging
-            $(".regions-header").mousemove((e) => {
-                e.preventDefault();
+        let cell = $("#reg-col-" + this.column_resized);
 
-                let delta = e.pageX - this.dragging_start;
-                let minWidth = parseInt(cell.css("min-width"));
-                let newWidth = cell.width() + delta;
-                // each column has a minimum width and won't go below
-                if (isNaN(minWidth) ||
-                        newWidth < minWidth) {
-                    this.is_dragging = false;
-                    return;
-                }
+        // extend width temporarily for resize
+        let extendedWidth = $('.regions-header').width() + 500;
+        $('.regions-header, .regions-table').width(
+            extendedWidth + this.scrollbar_width);
+        cell.css("max-width", 500);
+        $(".regions-table .regions-table-row").first().find(
+            ".regions-table-col:nth-child(" +
+            (this.column_resized+1) + ")").css("max-width", 500);
+        this.is_dragging = true;
+    }
 
-                // remember new start and set column widh
-                this.dragging_start = e.pageX;
-                let clazz = "." + cell.attr("class");
-                $(clazz).width(newWidth);
-                $(clazz + " *").width(newWidth);
-            });
-        });
+    /**
+     * Makes it possible to resize the table columns
+     *
+     * @memberof RegionsList
+     */
+    enableTableResize() {
+        $('.regions-header').off("mouseleave");
+        $('.regions-header').mouseleave((e) => this.is_dragging = false);
+        $('.regions-header .regions-table-col').off("mousemove");
+        $('.regions-header .regions-table-col').mousemove((e) => {
+            e.preventDefault();
+             // column selection/grabbing
+            if(!this.is_dragging) {
+                let cell = $(e.target);
+                let index =
+                    parseInt(cell.attr("id").substring("reg-col-".length));
+                var border = parseInt(cell.css('border-left-width'));
+                if (isNaN(border)) return;
 
-        // the mouse-up event determines the end of the dragging action
-        $(".regions-list").on(
-            'mouseup',(e) => {
-                // reset states and unbind handlers
+                // we only allow right border dragging
+                if (e.offsetX >= -border && e.offsetX <= border &&
+                   e.offsetY > 0 && e.offsetY < cell.outerHeight() &&
+                   index > 0) {
+                       this.column_resized = index-1;
+                       cell.css("cursor", "col-resize");
+                       this.enableColumnResize(e);
+                } else if(!this.is_dragging &&
+                          e.offsetX >= cell.innerWidth() &&
+                          e.offsetX <= cell.outerWidth() &&
+                          e.offsetY > 0 &&
+                          e.offsetY < cell.outerHeight()) {
+                              this.column_resized = index;
+                              cell.css("cursor", "col-resize");
+                              this.enableColumnResize(e);
+                } else cell.css("cursor", "default");
+                return;
+            }
+
+            // column dragging / table resizing
+            let delta = e.pageX - this.dragging_start;
+            let cell = $("#reg-col-" + this.column_resized);
+            let index =
+                parseInt(cell.attr("id").substring("reg-col-".length)) + 1;
+            let tableColumn =
+                $(".regions-table .regions-table-row").first().find(
+                ".regions-table-col:nth-child(" + index + ")");
+            // finish off after drag stop, setting new max-widths
+            if (!((typeof e.buttons === 'undefined' && e.which === 1) ||
+                    e.buttons === 1)) {
                 this.is_dragging = false;
-                this.dragging_start = null;
-                cell.css("cursor", "default");
-                $(".regions-header").unbind('mousemove');
-                $(".regions-list").unbind('mouseup');
+                cell.css("max-width",  cell.outerWidth());
+                tableColumn.css("max-width",  cell.outerWidth());
                 this.adjustColumnWidths();
+                return;
+            }
+
+            // remember new start and set new column widhts
+            let newWidth =  cell.width() + delta;
+            // prevent from going under min width
+            let minWidth = parseInt(cell.css("min-width"));
+            if (newWidth < minWidth) return;
+
+            this.dragging_start = e.pageX;
+            cell.width(newWidth);
+            tableColumn.width(newWidth);
         });
+    }
+
+    /**
+     * Adjusts table height
+     * @memberof RegionsList
+     */
+    adjustTableHeight() {
+        if (!this.context.show_regions) return;
+        let availableHeight =
+            $(".regions-container").outerHeight() -
+            $(".regions-tools").outerHeight() -
+            $('.regions-header').outerHeight() -
+            $('.header-content').outerHeight();
+        if (Misc.isIE()) availableHeight -= this.scrollbar_width;
+
+        if (!isNaN(availableHeight))
+            $(".regions-table").css('max-height', availableHeight);
     }
 
     /**
@@ -167,21 +314,18 @@ export default class RegionsList {
      */
     adjustColumnWidths() {
         let combinedWidth = 0;
-        let hits = $(".regions-header th");
+        let cols = $(".regions-header .regions-table-col");
 
         // we have to go through all header columns
-        for (let i=0;i<hits.length;i++){
-            let outW = parseInt($(hits[i]).outerWidth());
-            let border = parseInt($(hits[i]).css("border-left-width"));
-            if (!isNaN(outW) && !isNaN(border))
-                combinedWidth += (outW + border);
-
-        };
-
-        if (combinedWidth !== 0) {
-            combinedWidth += 100;
-            $(".regions-header tr, .regions-table tr").width(combinedWidth);
-        }
+        for (let i=0;i<cols.length;i++)
+            combinedWidth += parseInt($(cols[i]).outerWidth());
+        if (isNaN(combinedWidth) || combinedWidth === 0)
+            combinedWidth = "auto";
+        let missingOuterBorder =
+            parseInt($(cols[0]).css("border-left-width")) * 2;
+        combinedWidth += missingOuterBorder;
+        $(".regions-header").width(combinedWidth);
+        $(".regions-table").width(combinedWidth + this.scrollbar_width);
     }
 
     /**
@@ -200,14 +344,12 @@ export default class RegionsList {
      *
      * @param {number} id the shape id
      * @param {boolean} selected the selected state
-     * @param {Object} event event object with additional info
+     * @param {Event} event the browser's event object
      * @memberof RegionsList
      */
     selectShape(id, selected, event) {
-        let t = $(event.target);
-        if (t.hasClass("shape-show") || t.parent().hasClass("shape-show"))
-            return true;
-
+        if (event.target.tagName.toUpperCase() === 'INPUT' ||
+            this.regions_info.shape_to_be_drawn !== null) return true;
         let multipleSelection =
             typeof event.ctrlKey === 'boolean' && event.ctrlKey;
         let deselect = multipleSelection && selected;
@@ -221,17 +363,73 @@ export default class RegionsList {
     }
 
     /**
+     * Select shapes for roi
+     *
+     * @param {number} roi_id the roi id
+     * @param {Event} event the browser's event object
+     * @memberof RegionsList
+     */
+    selectShapes(roi_id, event) {
+        event.stopPropagation();
+        if (event.target.className.indexOf("roi_id") !== -1 ||
+            event.target.parentNode.className.indexOf("roi_id") !== -1 ||
+            this.regions_info.shape_to_be_drawn !== null) return true;
+
+        let roi = this.regions_info.data.get(roi_id);
+        if (typeof roi === 'undefined') return;
+
+        let ids = [];
+        roi.shapes.forEach((s) => ids.push(s.shape_id));
+        this.context.publish(
+           REGIONS_SET_PROPERTY, {
+               config_id: this.regions_info.image_info.config_id,
+               property: 'selected',
+               shapes : ids, clear: true, value : true, center : true});
+    }
+
+    /**
      * shape visibility toggler
      *
      * @param {number} id the shape id
      * @param {boolean} visible the visible state
+     * @param {Event} event the browser's event object
      * @memberof RegionsList
      */
-    toggleShapeVisibility(id, visible) {
+    toggleShapeVisibility(id, visible, event) {
+        if (this.regions_info.shape_to_be_drawn !== null) return true;
+        event.stopPropagation();
         this.context.publish(
            REGIONS_SET_PROPERTY, {
                config_id: this.regions_info.image_info.config_id,
                property : "visible",
                shapes : [id], value : visible});
+    }
+
+    /**
+     * Show/Hide shapes within roi
+     *
+     * @param {number} roi_id the roi id
+     * @param {Event} event the browser's event object
+     * @memberof RegionsList
+     */
+    expandOrCollapseRoi(roi_id, event) {
+        if (this.regions_info.shape_to_be_drawn !== null) return true;
+        event.stopPropagation();
+
+        let roi = this.regions_info.data.get(roi_id);
+        if (typeof roi === 'undefined') return;
+        roi.show = !roi.show;
+    }
+
+    /**
+     * Overridden aurelia lifecycle method:
+     * called whenever the view is unbound within aurelia
+     * in other words a 'destruction' hook that happens after 'detached'
+     *
+     * @memberof RegionsList
+     */
+    unbind() {
+        this.unsubscribe();
+        this.unregisterObservers();
     }
 }

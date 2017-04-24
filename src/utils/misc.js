@@ -24,11 +24,11 @@ export default class Misc {
 
     /**
      * A rudimentary check for when we send an ajax request using jsonp.
-     * In essence, anything that is not localhost or an empty string
-     * (relative assumed) should be handled via jsonp
+     * In essence, anything apart from an empty string (i.e. relative)
+     * and matching location/port should be handled via jsonp
      *
      * @static
-     * @return {boolean} true if we regard the server string not localhost
+     * @return {boolean} true if we regard the server string remote
      */
     static useJsonp(server="") {
         if (typeof server !== 'string') return false;
@@ -105,22 +105,28 @@ export default class Misc {
      * Takes a string with channel information in the form:
      * -1|111:343$808080,2|0:255$FF0000 and parses it into an object that contains
      * the respective channel information/properties
+     * Likewise it will take map information in json format and add the reverse
+     * intensity to the channels
+     *
+     * @param {string} channel_info a string containing encoded channel info
+     * @param {string|Array.<Object>} maps_info
+     *                    a string in json format containing reverse intensity
+     *                    or an array of alrady parsed json (for convenience)
      *
      * @static
-     * @param {string} some_string a string containing encoded channel info
      * @return {Array|null} an array of channel objects or null
      */
-    static parseChannelParameters(some_string="") {
-        if (typeof some_string !== 'string' || some_string.length === 0)
+    static parseChannelParameters(channel_info="", maps_info="") {
+        if (typeof channel_info !== 'string' || channel_info.length === 0)
             return null;
 
         let ret = [];
 
         // first remove any whitespace there may be
-        some_string = some_string.replace(/\s/g, "");
+        channel_info = channel_info.replace(/\s/g, "");
 
         // split up into channels
-        let chans = some_string.split(',');
+        let chans = channel_info.split(',');
         if (chans.length === 0) return null;
 
         // iterate over channel tokens
@@ -145,15 +151,7 @@ export default class Misc {
             let rTok = c.substring(0, pos).split(':');
             if (rTok.length !== 2) continue; // we need start and end
             let rStart = parseInt(rTok[0]);
-            let rEnd = rTok[1].toLowerCase();
-            // account for reverse flag
-            let rPos = rEnd.indexOf("r");
-            if (rPos != -1) {
-                tmp['reverseIntensity'] =
-                    rEnd.substring(rPos-1, rPos) === '-' ? false : true;
-                rEnd =
-                    parseInt(rEnd.substring(0, tmp['reverseIntensity'] ? rPos : rPos-1));
-            } else rEnd = parseInt(rEnd);
+            let rEnd = parseInt(rTok[1]);
             if (isNaN(rStart) || isNaN(rEnd)) continue;
             tmp['start'] = rStart;
             tmp['end'] = rEnd;
@@ -167,7 +165,81 @@ export default class Misc {
             ret.push(tmp);
         }
 
+        // integrate reverse intensity from maps
+        if (Misc.isArray(maps_info)) // we have an array of parsed objects
+            return Misc.integrateReverseIntensityIntoChannels(ret, maps_info);
+
+        // we need to parse the json still
+        if (typeof maps_info !== 'string' || maps_info.length === 0)
+            return ret;
+        try {
+            maps_info = maps_info.replace(/&quot;/g, '"');
+            return Misc.integrateReverseIntensityIntoChannels(
+                ret, JSON.parse(maps_info));
+        } catch(malformedJson) {
+            console.error("Error parsing maps json");
+        }
+
         return ret;
+    }
+
+    /**
+     * Integrate the reverse intensity from the maps contents into the channels
+     *
+     * @param {Array.<Object>} channels array with channels info
+     * @param {Array.<Object>} maps array with maps info
+     *
+     * @static
+     * @private
+     * @return {Array} the channels with reverse intensity integrated
+     */
+    static integrateReverseIntensityIntoChannels(channels, maps) {
+        if (!Misc.isArray(channels) || !Misc.isArray(maps) ||
+            channels.length === 0 || maps.length === 0) return channels;
+
+        let len = channels.length;
+        for (let i=0;i<len && i<maps.length;i++) {
+            let m = maps[i];
+            if (typeof m !== 'object' || m === null) continue;
+            channels[i]['reverseIntensity'] =
+                typeof m['reverse'] === 'object' && m['reverse'] &&
+                typeof m['reverse']['enabled'] === 'boolean' &&
+                m['reverse']['enabled'];
+        }
+
+        return channels;
+    }
+
+    /**
+     * Appends the channels and maps parameters
+     *
+     * @param {Array.<Object>} channels array with channel information
+     * @param {string} url the url to append to
+     * @return string the url with the appended parameters
+     *
+     * @static
+     * @memberof Settings
+     */
+    static appendChannelsAndMapsToQueryString(channels, url) {
+        if (typeof url !== 'string') return url;
+
+        if (!Misc.isArray(channels) || channels.length === 0) return url;
+
+        let lastChar = url[url.length-1];
+        url += ((lastChar !== '?' && lastChar !== '&') ? '&' : '') + 'c=';
+        let i=0;
+        let maps = [];
+        channels.map(
+            (c) => {
+                url+= (i !== 0 ? ',' : '') + (!c.active ? '-' : '') + (++i) +
+                 "|" + c.window.start + ":" + c.window.end + "$" + c.color;
+                 maps.push(
+                     {"reverse" : { "enabled" :
+                         typeof c.reverseIntensity === 'boolean' &&
+                         c.reverseIntensity}
+                     });
+             });
+        return url + "&maps=" + JSON.stringify(maps);
     }
 
     /**
@@ -197,41 +269,37 @@ export default class Misc {
                 else server = hostname;
             }
         }
+
         // the base url
         let url = server + prefixed_uri + "/img_detail/" + image_id + '/?';
-
-        // append channel info
-        if (Misc.isArray(settings.channels)) {
-            url += "c="
-            let count = 0;
-            settings.channels.map((chan) => {
-                if (count !== 0) url += ",";
-                url += (chan.active ? "" : "-") + (count+1) + "|" +
-                    chan.start + ":" + chan.end +
-                    (typeof chan.reverseIntensity === 'boolean' ?
-                        (chan.reverseIntensity ? 'r' : '-r')  : '') + "$" +
-                chan.color;
-                count++;
-            });
-            url+= "&";
-        }
+        // append channels and maps parameters
+        url = Misc.appendChannelsAndMapsToQueryString(settings.channels, url);
         // append time and plane
         if (typeof settings.plane === 'number')
-            url += "z=" + (settings.plane+1) + "&";
+            url += "&z=" + (settings.plane+1);
         if (typeof settings.time === 'number')
-            url += "t=" + (settings.time+1) + "&";
+            url += "&t=" + (settings.time+1);
         // append projection and model
         if (typeof settings.projection === 'string')
-            url += "p=" + settings.projection + "&";
+            url += "&p=" + settings.projection;
         if (typeof settings.model === 'string')
-            url += "m=" + settings.model + "&";
+            url += "&m=" + settings.model;
         // append resolution and and center
         if (typeof settings.resolution === 'number')
-            url += "zm=" + parseInt((1 / settings.resolution) * 100) + "&";
+            url += "&zm=" + parseInt((1 / settings.resolution) * 100);
         if (Misc.isArray(settings.center))
-            url += "x=" + settings.center[0] + "&y=" + settings.center[1] + "&";
+            url += "&x=" + settings.center[0] + "&y=" + settings.center[1];
 
-        // take off trailing & for last param
-        return url.substring(0, url.length-1);
+        return url;
+    }
+
+    /**
+     * Tries to detect IE based on user agent
+     *
+     * @static
+     * @return {boolean} true if browser is IE, false otherwise
+     */
+    static isIE() {
+        return (new RegExp('MSIE|Trident|Edge')).test(navigator.userAgent);
     }
 }

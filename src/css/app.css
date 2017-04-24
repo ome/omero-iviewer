@@ -14,6 +14,8 @@ hr {
     margin-top: 3px;
     margin-bottom: 3px;
     width: 100%;
+    float: left;
+    min-width: 350px;
 }
 
 .container-fluid {
@@ -338,7 +340,7 @@ thumbnail-slider img {
 .right-hand-panel {
     width: 350px;
     max-width: 800px;
-    overflow-y: auto;
+    overflow-y: hidden;
 }
 
 .right-hand-panel li a {
@@ -352,6 +354,7 @@ thumbnail-slider img {
     margin-bottom: 2px;
     margin-left: 2px;
     margin-right: 0px;
+    width: 100%;
 }
 
 .left-hand-panel-hidden {
@@ -478,104 +481,78 @@ thumbnail-slider img {
     color: blue;
 }
 
+.regions-tabs, .regions-container {
+    height: 100%;
+}
+
 .regions-list {
-    padding-top: 5px;
-    height: 80%!important;
+    float: left;
+    height: auto!important;
+    min-width: 0px!important;
+    overflow-x: auto;
+    overflow-y: hidden
 }
 
 .regions-header {
-    table-layout: fixed;
-    width: 100%;
-    min-width: 350px;
-}
-
-thead, tbody {
-    width:100%;
-    height:100%;
-    display: block
-}
-
-.regions-header tr {
-    height: 30px;
-    display: block;
-    width: 150%;
-}
-
-.regions-header th {
-    box-sizing: border-box;
-    white-space: nowrap;
-    border: solid 2px;
     border-collapse: collapse;
+    height: 40px;
 }
-
-.regions-header th div {
-    line-height: 30px;
-    white-space: nowrap;
-    overflow: hidden;
+.regions-header .regions-table-col {
+    border: solid 2px;
+    height: 36px;
+    line-height: 36px;
+    font-weight: bold;
     font-size: 13px;
-    text-align: center;
 }
 
 .regions-table {
-    margin-top: 5px;
-    table-layout: fixed;
-    min-width:350px;
-    max-width:800px;
+    border-collapse: collapse;
     max-height: 300px;
-    display: block;
-    overflow-x: scroll;
-    overflow-y: auto;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    height: 100%;
 }
 
-.regions-table tr {
-    width: 150%;
-    display: block;
+.regions-table-row {
+    display: table-row;
+    line-height: 25px;
+    height: 25px;
 }
 
-.regions-table td {
+.regions-table-col {
+    display: table-cell;
     min-width: 10px;
     box-sizing: border-box;
     white-space: nowrap;
     text-align: center;
-    border: solid 2px rgba(255,255,255,0);
-    border-collapse: collapse;
-}
-.regions-table td div {
-    white-space: nowrap;
-    overflow: hidden;
+    border-style: solid;
+    border-color: rgba(255,255,255,0);
+    border-width: 0px 2px 0px 2px;
     font-size: 13px;
-    text-align: center;
-}
-
-.regions-table td input {
-    white-space: nowrap;
     overflow: hidden;
 }
 
-
-.shape-id {
-    width: 75px;
+.roi-toggle {
+    min-width: 15px;
+    max-width: 15px;
 }
-
-.shape-z {
-    width: 50px;
+.shape-z, .shape-t {
+    min-width: 40px;
+    max-width: 40px;
 }
-.shape-t {
-    width: 50px;
-}
-
 .shape-type {
-    width: 35px;
+    min-width: 35px;
+    max-width: 35px;
     background-repeat: no-repeat;
     background-position: center;
 }
-
 .shape-comment {
-    width: 150px;
+    min-width: 150px;
+    max-width: 150px;
 }
-
 .shape-show {
-    width: 40px;
+    min-width: 40px;
+    max-width: 40px;
 }
 
 .rectangle-icon {
@@ -606,6 +583,7 @@ thead, tbody {
     height:100%;
     float:left;
     width: 25px;
+    margin: 2px 8px 2px 8px;
 }
 
 .draw-active {
@@ -618,6 +596,10 @@ thead, tbody {
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
+}
+
+.draw-select-icon {
+    background-image: url('images/select.png');
 }
 
 .draw-rectangle-icon {
@@ -665,7 +647,7 @@ thead, tbody {
 .delete-rois>.dropdown-menu {
     background-color: #f8f8f8;
 }
-.rois-dropdown {
+.rois-dropdown, .regions-tools {
     float: left;
 }
 .rois-dropdown>.dropdown-menu>li>a:hover,
@@ -713,6 +695,7 @@ thead, tbody {
     max-width: 38px;
 }
 .shapes-edit {
+    float: left;
     line-height: 30px;
     margin: 5px;
 }
@@ -726,6 +709,7 @@ thead, tbody {
     min-width: 100px;
     width: 75%;
     float: left;
+    padding-top: 1px;
 }
 .shape-edit-comment input {
     width: 100%;
@@ -733,11 +717,63 @@ thead, tbody {
     height: 28px;
 }
 
+.shape-edit-attachments {
+    margin: 0px 5px 0px 15px;
+    min-width: 300px;
+    width: 100%;
+    float: left;
+    padding-top: 1px;
+}
+.shape-edit-attachments input[type=text] {
+    float: left;
+    width: 50px;
+    line-height: 28px;
+    height: 28px;
+    font-size: 12px;
+}
+.shape-edit-attachments span {
+    float: left;
+    line-height: 30px;
+    height: 30px;
+    margin-left: 5px;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+.dim_locked {
+    background-image: url('images/dim_locked.png');
+    width: 24px;
+}
+.dim_unlocked {
+    background-image: url('images/dim_unlocked.png');
+    width: 24px;
+}
+
+.arrow-button button  {
+    width: 35px;
+}
+.arrow-button button  {
+    background-image: url('images/arrows_dropdown.png')!important;
+    background-repeat: no-repeat!important;
+    background-position: center!important;
+}
 .arrow-button .dropdown-menu {
-    left: -5px;
-    min-width: 20px;
+    left: -10px;
+    min-width: 62px;
+}
+.arrow-button .dropdown-menu span {
+    display: inline-block;
+    margin-left: 2px;
+    width: 12px;
+}
+.arrow-button .dropdown-menu a {
+    display: inline-block;
+    padding-left: 0px;
+}
+.regions-drawing {
+    float: left;
 }
 .regions-drawing-mode {
+    margin-left: 10px;
     line-height: 30px;
 }
 .drawing-mode {
@@ -753,24 +789,29 @@ thead, tbody {
     float: left;
 }
 .drawing-mode-apply {
+    float: left;
+    margin-top: 15px;
+    margin-bottom: 10px;
     text-align: center;
 }
+.drawing-mode-apply button {
+    min-width: 300px;
+}
 
-.regions-propagation-options div {
+.regions-attachment-options div {
     float: left;
-    margin-left: 20px;
     width: 100%;
 }
 
-.regions-propagation-options input {
+.regions-attachment-options input {
     float: left;
     height: 28px;
     line-height: 30px;
 }
 
-.regions-propagation-options .aligned-text-input {
+.regions-attachment-options .aligned-text-input {
     float: left;
-    margin-left: 20px;
+    margin-left: 0px;
     margin-right: 2px;
     width: 15px;
 }
@@ -798,4 +839,35 @@ thead, tbody {
     font-weight: bold;
     font-size: 12px;
     width: 80%;
+    float: left;
+}
+
+.modal-dialog {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    left: 50%;
+    margin-left: -150px;
+    top: 50%;
+    margin-top:  -100px;
+}
+.modal-content {
+    width: 300px;
+    max-height: 200px;
+}
+.modal-message .ok {
+    width: 50px;
+}
+.confirmation_dialog .modal-title {
+    margin: 5px;
+}
+.confirmation_dialog .close {
+    margin-top: 5px;
+    margin-right: 8px;
+}
+.confirmation_dialog .modal-header {
+    padding: 2px;
+}
+.modal-footer {
+    padding: 4px;
 }
