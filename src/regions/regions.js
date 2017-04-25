@@ -128,9 +128,9 @@ export default class Regions {
 
         // if we don't want all we only take the selected and not yet deleted
         if (all || undo) ids = this.regions_info.unsophisticatedShapeFilter(
-            ["deleted"], [false]);
+            ["deleted"], [false], ["delete"]);
         else ids = this.regions_info.unsophisticatedShapeFilter(
-                        ["deleted"], [false],
+                        ["deleted"], [false], ["delete"],
                         this.regions_info.selected_shapes);
 
         if (ids.length === 0) return;

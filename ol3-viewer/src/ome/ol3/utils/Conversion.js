@@ -30,12 +30,11 @@ ome.ol3.utils.Conversion.convertRgbaColorFormatToObject = function(rgba, alpha) 
 
         // prepare return object
         var ret = {'red' : 255, 'green' : 255, 'blue' : 255, 'alpha' : alpha};
-
         ret['red'] = parseInt(tokens[0], 10);
         ret['green'] = parseInt(tokens[1], 10);
         ret['blue'] = parseInt(tokens[2], 10);
-        if (tokens.length > 3) // optional alpha
-        	ret['alpha'] = parseFloat(tokens[3], 10);
+        // optional alpha
+        if (tokens.length > 3) ret['alpha'] = parseFloat(tokens[3], 10);
     } catch (parse_error) {
         return null;
     }
@@ -103,9 +102,9 @@ ome.ol3.utils.Conversion.convertHexColorFormatToObject = function(hex, alpha) {
         var strippedHex = hex.replace(/#|\s/g, "");
         if (strippedHex.length === 3)
             strippedHex = '' +
-                strippedHex[0] + strippedHex[0] +
-                strippedHex[1] + strippedHex[1] +
-                strippedHex[2] + strippedHex[2];
+            strippedHex[0] + strippedHex[0] +
+            strippedHex[1] + strippedHex[1] +
+            strippedHex[2] + strippedHex[2];
         if (strippedHex.length != 6) return null;
 
         // prepare return object
@@ -138,9 +137,9 @@ ome.ol3.utils.Conversion.convertColorObjectToHex = function(color) {
     if (checkedColorObject == null) return null;
 
     var ret = "#";
-    ret +=  ("00" + checkedColorObject['red'].toString(16)).substr(-2);
-    ret +=  ("00" + checkedColorObject['green'].toString(16)).substr(-2);
-    ret +=  ("00" + checkedColorObject['blue'].toString(16)).substr(-2);
+    ret += ("00" + checkedColorObject['red'].toString(16)).substr(-2);
+    ret += ("00" + checkedColorObject['green'].toString(16)).substr(-2);
+    ret += ("00" + checkedColorObject['blue'].toString(16)).substr(-2);
 
     return ret;
 }
@@ -202,6 +201,37 @@ ome.ol3.utils.Conversion.checkColorObjectCorrectness = function(color) {
 }
 
 /**
+ * Converts a color encoded as a signed integer (assuming RGBA order)
+ * into an internal color object looking like this:
+ *<pre>
+ * { red: 255, green: 255, blue: 255, alpha: 0.75 }
+ *</pre>
+ *
+ * @static
+ * @param {number} signed_integer the signed integer in RGBA
+ * @return {object|null} returns the color as an object or null in case of errors
+ */
+ome.ol3.utils.Conversion.convertSignedIntegerToColorObject =
+    function(signed_integer) {
+        if (typeof signed_integer !== 'number') return null;
+
+        // prepare integer to be converted to hex for easier dissection
+        if (signed_integer < 0) signed_integer = signed_integer >>> 0;
+        var intAsHex = signed_integer.toString(16);
+        // pad with zeros to have 8 digits
+        intAsHex = ("00" + intAsHex).slice(-8);
+
+        // we expect RGBA
+        return {
+            "red": parseInt(intAsHex.substring(0, 2), 16),
+            "green": parseInt(intAsHex.substring(2, 4), 16),
+            "blue": parseInt(intAsHex.substring(4, 6), 16),
+            "alpha": parseInt(intAsHex.substring(6, 8), 16) / 255
+        };
+ }
+
+
+/**
  * Omero Server api wants RGBA information for regions as a signed integer
  * while open layers works with ol.style.Style objects that accept color/alpha
  * as rgba(255,255,255, 0.75) as well as hex rgb colors, i.e. #ffffff.
@@ -235,25 +265,25 @@ ome.ol3.utils.Conversion.convertColorToSignedInteger = function(color, alpha) {
 
     if (typeof(color) == 'string') { // delegate to appropriate conversion
         if (color.indexOf('rgba') != -1)
-        color =
-            ome.ol3.utils.Conversion.convertRgbaColorFormatToObject(color, alpha);
+            color = ome.ol3.utils.Conversion.convertRgbaColorFormatToObject(
+                        color, alpha);
         else
             color = ome.ol3.utils.Conversion.convertHexColorFormatToObject(
                         color, alpha);
     } else if (ome.ol3.utils.Misc.isArray(color))
         color = ome.ol3.utils.Conversion.convertColorArrayToObject(color, alpha);
 
+    if (typeof color === 'object' && color !== null &&
+        typeof color['alpha'] !== 'number')
+            color['alpha'] = alpha;
     if ((typeof(color) !== 'object') || // last check of correctness
-        typeof(
-            (color =
-                ome.ol3.utils.Conversion.checkColorObjectCorrectness(
-                    color))) !== 'object') return null;
+        typeof((color = ome.ol3.utils.Conversion.checkColorObjectCorrectness(
+                color))) !== 'object') return null;
 
     var decimalMultiplied = color['alpha'] * 255;
     var decimalOnly = decimalMultiplied - parseInt(decimalMultiplied);
-    alpha =
-        decimalOnly <= 0.5 ?
-            Math.floor(decimalMultiplied) : Math.ceil(decimalMultiplied);
+    alpha = decimalOnly <= 0.5 ?
+                Math.floor(decimalMultiplied) : Math.ceil(decimalMultiplied);
 
     return ((color['red'] << 24) | (color['green'] << 16) | (color['blue'] << 8)
             | alpha);
@@ -359,6 +389,7 @@ ome.ol3.utils.Conversion.lineToJsonObject = function(geometry, shape_id) {
     if (geometry.isPolyline())
         return ome.ol3.utils.Conversion.polylineToJsonObject.call(
             null, geometry, shape_id);
+
     ret['@type'] = "http://www.openmicroscopy.org/Schemas/OME/2016-06#Line";
     ret['X1'] = flatCoords[0];
     ret['X2'] = flatCoords[2];
@@ -404,6 +435,7 @@ ome.ol3.utils.Conversion.polylineToJsonObject = function(geometry, shape_id) {
 
     return ret;
 }
+
 
 /**
  * Turns a shape of type label (ome.ol3.geom.Label) into json
@@ -486,12 +518,13 @@ ome.ol3.utils.Conversion.integrateStyleIntoJsonObject = function(feature, jsonOb
         typeof(jsonObject['@type']) !== 'string' ||
         !(feature instanceof ol.Feature) ||
         (!(feature.getStyle() instanceof ol.style.Style) &&
-            typeof(feature.getStyle()) !== 'function')) return;
+        typeof(feature.getStyle()) !== 'function')) return;
 
     // we now have an array of styles (due to arrows)
     var presentStyle = feature.getStyle();
     if (typeof(presentStyle) === 'function') presentStyle = presentStyle(1);
-    if (ome.ol3.utils.Misc.isArray(presentStyle)) presentStyle = presentStyle[0];
+    if (ome.ol3.utils.Misc.isArray(presentStyle))
+        presentStyle = presentStyle[0];
     if (!(presentStyle instanceof ol.style.Style)) return;
 
     var isLabel =
@@ -503,7 +536,8 @@ ome.ol3.utils.Conversion.integrateStyleIntoJsonObject = function(feature, jsonOb
                 presentStyle.getFill() ? presentStyle.getFill().getColor() : null;
     if (presentFillColor)
         jsonObject['FillColor'] =
-            ome.ol3.utils.Conversion.convertColorToSignedInteger(presentFillColor);
+            ome.ol3.utils.Conversion.convertColorToSignedInteger(
+                presentFillColor);
 
     var presentStrokeStyle =
         isLabel && presentStyle.getText() && presentStyle.getText().getFill() ?
@@ -522,7 +556,7 @@ ome.ol3.utils.Conversion.integrateStyleIntoJsonObject = function(feature, jsonOb
         (typeof(feature['oldStrokeStyle']) === 'object' &&
         feature['oldStrokeStyle'] !== null &&
         typeof(feature['oldStrokeStyle']['width']) === 'number') ?
-            feature['oldStrokeStyle']['width'] : 1;
+        feature['oldStrokeStyle']['width'] : 1;
 
     jsonObject['StrokeWidth'] = {
         '@type': 'TBD#LengthI',
@@ -531,7 +565,8 @@ ome.ol3.utils.Conversion.integrateStyleIntoJsonObject = function(feature, jsonOb
         'Value':
             isLabel && presentStyle.getText() &&
             presentStyle.getText().getStroke() ?
-                presentStyle.getText().getStroke().getWidth() : presentStrokeWidth
+                presentStyle.getText().getStroke().getWidth() :
+                    presentStrokeWidth
     };
 
     var presentText = presentStyle.getText();
@@ -549,7 +584,8 @@ ome.ol3.utils.Conversion.integrateStyleIntoJsonObject = function(feature, jsonOb
                         '@type': 'TBD#LengthI',
                         'Unit': 'PIXEL',
                         'Symbol': 'px',
-                        'Value': parseInt(fontTokens[1])};
+                        'Value': parseInt(fontTokens[1])
+                    };
                     jsonObject['FontFamily'] = fontTokens[2];
                 } catch(notANumber) {
                     // nothing we can do
@@ -573,12 +609,11 @@ ome.ol3.utils.Conversion.integrateMiscInfoIntoJsonObject  = function(feature, js
     if (typeof(jsonObject) !== 'object' || !(feature instanceof ol.Feature))
         return;
 
-    if (typeof(feature['theT']) === 'number')
-        jsonObject['TheT'] = feature['theT'];
-    if (typeof(feature['theZ']) === 'number')
-        jsonObject['TheZ'] = feature['theZ'];
-    if (typeof(feature['theC']) === 'number')
-        jsonObject['TheC'] = feature['theC'];
+    ['TheZ', 'TheT', 'TheC'].map((d) => {
+        if (typeof feature[d] === 'number') {
+            if (feature[d] >= 0) jsonObject[d] = feature[d];
+        }
+    });
 
     if (feature['state'] === ome.ol3.REGIONS_STATE.REMOVED)
         jsonObject['markedForDeletion'] = true;
@@ -597,8 +632,8 @@ ome.ol3.utils.Conversion.integrateMiscInfoIntoJsonObject  = function(feature, js
  */
 ome.ol3.utils.Conversion.toJsonObject = function(
     features, storeNewShapesInSeparateRois,returnFlattenedArray) {
-        if (!(features instanceof ol.Collection) || features.getLength() === 0)
-            return null;
+    if (!(features instanceof ol.Collection) || features.getLength() === 0)
+        return null;
 
     var newRoisForEachNewShape =
         typeof(storeNewShapesInSeparateRois) === 'boolean' ?
@@ -635,13 +670,21 @@ ome.ol3.utils.Conversion.toJsonObject = function(
             continue;
         }
 
-        // we don't want newly added but immediately deleted shapes
-        if (feature['state'] === ome.ol3.REGIONS_STATE.REMOVED &&
-            (roiId < 0 || shapeId < 0)) continue;
-
         var roiIdToBeUsed = roiId;
-        // we decrement to have a unique roi id for each shape
-        if (feature['state'] === ome.ol3.REGIONS_STATE.ADDED &&
+        // check for respective permissions
+        if (feature['state'] === ome.ol3.REGIONS_STATE.REMOVED) {
+            // we don't want newly added but immediately deleted shapes either
+            if ((roiId < 0 || shapeId < 0) ||
+                (typeof feature['permissions'] === 'object' &&
+                 feature['permissions'] !== null &&
+                 typeof feature['permissions']['canDelete'] === 'boolean' &&
+                 !feature['permissions']['canDelete'])) continue;
+        } else if (feature['state'] === ome.ol3.REGIONS_STATE.REMOVED &&
+                   typeof feature['permissions'] === 'object' &&
+                   feature['permissions'] !== null &&
+                   typeof feature['permissions']['canEdit'] === 'boolean' &&
+                   !feature['permissions']['canEdit']) continue;
+        else if (feature['state'] === ome.ol3.REGIONS_STATE.ADDED &&
             newRoisForEachNewShape) roiIdToBeUsed = currentNewId--;
 
         var roiContainer = null;
@@ -659,6 +702,7 @@ ome.ol3.utils.Conversion.toJsonObject = function(
             ome.ol3.utils.Conversion.featureToJsonObject(
                 feature, shapeId, roiIdToBeUsed);
         if (jsonObject === null) continue;
+
         // we like to keep the old id for later synchronization
         jsonObject['oldId'] = feature.getId();
         roiContainer['shapes'].push(jsonObject);
@@ -727,4 +771,29 @@ ome.ol3.utils.Conversion.featureToJsonObject = function(feature, shape_id, roi_i
             ") into json => " + conversion_error);
         return null;
     }
+}
+
+/**
+ * Takes a string representing poly shapes and turns it into an
+ * array of coordinate pairs such that openlayers can work with it
+ *
+ * @static
+ * @function
+ * @param {string} points a string of points (x,y) separated by space
+ * @return {Array.<Array.<number,number>>} returns an array of coordinate pairs
+ */
+ome.ol3.utils.Conversion.convertPointStringIntoCoords = function(points) {
+    if (typeof points !== 'string') return null;
+
+    var tokens = points.split(" ");
+    if (tokens.length === 0) return null;
+
+    var ret = [];
+    for (var t in tokens) {
+        var c = tokens[t].split(",");
+        if (c.length < 2) return null;
+        ret.push([parseInt(c[0]), -parseInt(c[1])]);
+    }
+
+    return ret;
 }

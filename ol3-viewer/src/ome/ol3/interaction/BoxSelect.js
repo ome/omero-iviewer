@@ -57,13 +57,14 @@ ome.ol3.interaction.BoxSelect = function(regions_reference) {
    this.boxEndFunction_ = function() {
         if (this.regions_.select_ === null) return;
 
+        var ids = [];
         var extent = this.getGeometry().getExtent();
         this.regions_.forEachFeatureInExtent(
             extent, function(feature) {
                 if (feature.getGeometry().intersectsExtent(extent))
-                    this.select_.toggleFeatureSelection(feature, true);
+                    ids.push(feature.getId());
             });
-        this.regions_.changed();
+        this.regions_.setProperty(ids, "selected", true);
 	};
 	this.boxEndListener_ = null;
 

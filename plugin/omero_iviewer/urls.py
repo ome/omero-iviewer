@@ -7,4 +7,7 @@ urlpatterns = patterns('django.views.generic.simple',
                        url(r'^(?P<iid>[0-9]+)?/?$', views.index,
                            name='omero_iviewer_index'),
                        url(r'^persist_rois/?$', views.persist_rois,
-                           name='omero_iviewer_persist_rois'))
+                           name='omero_iviewer_persist_rois'),
+                       url(r'^request_rois/(?P<iid>[0-9]+)?/?$',
+                           views.request_rois,
+                           name='omero_iviewer_request_rois'))

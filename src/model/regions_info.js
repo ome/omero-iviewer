@@ -5,8 +5,9 @@ import {
 } from '../events/events';
 import Misc from '../utils/misc';
 import {Converters} from '../utils/converters';
-import {REGIONS_MODE, WEBGATEWAY} from '../utils/constants';
-import {REGIONS_DRAWING_MODE} from '../utils/constants';
+import {
+    PLUGIN_PREFIX, REGIONS_DRAWING_MODE, REGIONS_MODE, IVIEWER
+} from '../utils/constants';
 
 /**
  * Holds region information
@@ -189,13 +190,16 @@ export default class RegionsInfo extends EventSubscriber {
         if (typeof shape[property] !== 'undefined') shape[property] = value;
         // modify the selected set for actions that influence it
         if (property === 'selected' && value) {
-            this.selected_shapes.push(id);
             this.data.get(ids.roi_id).show = true;
+            let i = this.selected_shapes.indexOf(id);
+            if (i === -1) this.selected_shapes.push(id);
         } else if ((property === 'selected' && !value) ||
+                    (property === 'visible' && !value) ||
                     (property === 'deleted' && value)) {
             let i = this.selected_shapes.indexOf(id);
             if (i !== -1) this.selected_shapes.splice(i, 1);
-            if (property === 'deleted' && value &&
+            if (property === 'visible') shape.selected = false;
+            if (property === 'deleted' &&
                 typeof shape.is_new === 'boolean' && shape.is_new)
                     roi.deleted++;
         } else if (property === 'deleted' && !value) roi.deleted--;
@@ -216,8 +220,8 @@ export default class RegionsInfo extends EventSubscriber {
         // send request
         $.ajax({
             url : this.image_info.context.server +
-                  this.image_info.context.getPrefixedURI(WEBGATEWAY) +
-                  "/get_rois_json/" + this.image_info.image_id + '/',
+                  this.image_info.context.getPrefixedURI(IVIEWER) +
+                  "/request_rois/" + this.image_info.image_id + '/',
             success : (response) => {
                 // we want an array
                 if (!Misc.isArray(response)) return;
@@ -229,17 +233,21 @@ export default class RegionsInfo extends EventSubscriber {
                          let shapes = new Map();
 
                           // set shape properties and store the object
+                          let roiId = roi['@id'];
                           roi.shapes.map((shape) => {
-                              let newShape = Object.assign({}, shape);
-                              newShape.shape_id = "" + roi.id + ":" + shape.id;
+                              let newShape =
+                                Converters.amendShapeDefinition(
+                                    Object.assign({}, shape));
+                              let shapeId = newShape['@id']
+                              newShape.shape_id = "" + roiId + ":" + shapeId;
                               // we add some flags we are going to need
                               newShape.visible = true;
                               newShape.selected = false;
                               newShape.deleted = false;
                               newShape.modified = false;
-                              shapes.set(shape.id, newShape);
+                              shapes.set(shapeId, newShape);
                           });
-                          this.data.set(roi.id,
+                          this.data.set(roiId,
                               {
                                   shapes: shapes,
                                   show: false,
@@ -283,17 +291,31 @@ export default class RegionsInfo extends EventSubscriber {
      * @memberof RegionsInfo
      * @param {Array.<string>} properties an array of property names
      * @param {number|string|Array|boolean|Object} values the values to filter for
+     * @param {string} perms the permissions to check, e.g. edit or delete
      * @param {Array.<string>|null} ids an optional array of ids of the form: roi:shape-id
      * @return {Array.<string>} an array of ids that satisfy the filter
      */
-    unsophisticatedShapeFilter(properties=[], values=[], ids=null) {
+    unsophisticatedShapeFilter(properties=[], values=[], perms=[], ids=null) {
         let ret = [];
         if (!Misc.isArray(properties) || !Misc.isArray(values) ||
-                properties.length !== values.length) return ret;
+            !Misc.isArray(perms) || properties.length !== values.length ||
+            properties.length !== perms.length) return ret;
 
         let filter = (value) => {
             for (let i=0;i<properties.length;i++) {
                 if (typeof value[properties[i]] === 'undefined') continue;
+                // check permission
+                if (typeof value['permissions'] === 'object' &&
+                    value['permissions'] !== null) {
+                        let perm =
+                            typeof perms[i] === 'string' &&
+                            perms[i].length > 0 ?
+                                "can" + perms[i][0].toUpperCase() +
+                                perms[i].substring(1).toLowerCase() : null;
+                        if (perm &&
+                            typeof value['permissions'][perm] === 'boolean' &&
+                            !value['permissions'][perm]) return false;
+                }
                 if (value[properties[i]] !== values[i]) return false;
             }
             return true;
@@ -349,16 +371,24 @@ export default class RegionsInfo extends EventSubscriber {
     }
 
     /**
-     * Returns the ids (roi/shape) of the last of the selected shapes
+     * Returns the last of the selected shapes (taking into account permissions)
      *
-     * @return {Object|null} the ids or null (if no shapes are selected)
+     * @return {Object|null} the last selected shape with(out) permission
+     *                       or null (if no shapes are selected)
      * @memberof RegionsEdit
      */
-    getLastSelectedShapeIds() {
+    getLastSelectedShape() {
         let len = this.selected_shapes.length;
         if (len === 0) return null;
 
-        return Converters.extractRoiAndShapeId(this.selected_shapes[len-1]);
+        let ret =  this.getShape(this.selected_shapes[len-1]);
+        if (this.checkShapeForPermission(ret, "canEdit")) return ret;
+        // look for the next one that has permissions and return it
+        for (let i=len-2;i>=0;i--) {
+            let s = this.getShape(this.selected_shapes[i]);
+            if (this.checkShapeForPermission(s, "canEdit")) return s;
+        }
+        return ret;
     }
 
     /**
@@ -367,10 +397,36 @@ export default class RegionsInfo extends EventSubscriber {
      * @memberof RegionsEdit
      */
     resetShapeDefaults() {
-        this.shape_defaults['strokeColor'] = "#0099FF";
-        this.shape_defaults['strokeAlpha'] = 0.9;
-        this.shape_defaults['fillColor'] = "FFFFFF";
-        this.shape_defaults['fillAlpha'] = 0.5;
-        this.shape_defaults['strokeWidth'] = 1;
+        this.shape_defaults['StrokeColor'] = 10092517;
+        this.shape_defaults['FillColor'] = -129
+        this.shape_defaults['StrokeWidth'] = {
+            '@type': 'TBD#LengthI',
+            'Unit': 'PIXEL',
+            'Symbol': 'pixel',
+            'Value': 1
+        };
     }
+
+    /**
+     * Checks if handed in permission is on shape
+     *
+     * @param {Object} shape the shape object
+     * @param {string} permission the permission to check for
+     * @param {boolean} true if permission is on given shape, false otherwise
+     * @memberof RegionsEdit
+     */
+    checkShapeForPermission(shape, permission) {
+        if (typeof shape !== 'object' || shape === null ||
+            typeof permission !== 'string' ||
+                (permission !== 'canAnnotate' &&
+                permission !== 'canEdit' &&
+                permission !== 'canDelete')) return false;
+
+        return this.image_info.can_annotate &&
+                !(typeof shape['permissions'] === 'object' &&
+                shape['permissions'] !== null &&
+                typeof shape['permissions'][permission] === 'boolean' &&
+                !shape['permissions'][permission]);
+    }
+
 }

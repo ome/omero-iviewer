@@ -3,61 +3,80 @@
     <require from="./regions-drawing"></require>
     <require from="./regions-edit"></require>
 
-    <div show.bind="
+    <div class="regions-container"
+         show.bind="
             image_info.projection !== 'split' && regions_info.data !== null">
 
-        <div class="row shapes-persistence" style="padding-top: 2px">
-            <div class="btn-group" style="margin: 5px;">
-                <button type="button" class="btn btn-default btn-xs"
-                    disabled.bind="!(regions_info.history &&
-                        regions_info.history.history.length > 0 &&
-                        regions_info.history.historyPointer >= 0)"
-                    click.delegate="saveShapes()">Save
-                </button>
-                <button type="button"
-                    disabled.bind="!(regions_info.history &&
-                        regions_info.history.history.length > 0 &&
-                        regions_info.history.historyPointer >= 0)"
-                    class="btn btn-default btn-xs"
-                    click.delegate="undoHistory()">Undo
-                </button>
-                <button type="button"
-                    disabled.bind="!(regions_info.history &&
-                        regions_info.history.history.length > 0 &&
-                        regions_info.history.historyPointer <
-                        regions_info.history.history.length-1)"
-                    class="btn btn-default btn-xs"
-                    click.delegate="redoHistory()">Redo
-                </button>
+        <div class="regions-tools">
+            <div class="row shapes-persistence" style="padding-top: 2px">
+                <div class="btn-group" style="margin: 5px;">
+                    <button type="button" class="btn btn-default btn-xs"
+                        disabled.bind="!(regions_info.history &&
+                            regions_info.history.history.length > 0 &&
+                            regions_info.history.historyPointer >= 0) ||
+                            !regions_info.image_info.can_annotate"
+                        click.delegate="saveShapes()"
+                        title="${!regions_info.image_info.can_annotate ?
+                                    'No permission to save' : ''}">Save
+                    </button>
+                    <button type="button"
+                        disabled.bind="!(regions_info.history &&
+                            regions_info.history.history.length > 0 &&
+                            regions_info.history.historyPointer >= 0)"
+                        class="btn btn-default btn-xs"
+                        click.delegate="undoHistory()">Undo
+                    </button>
+                    <button type="button"
+                        disabled.bind="!(regions_info.history &&
+                            regions_info.history.history.length > 0 &&
+                            regions_info.history.historyPointer <
+                            regions_info.history.history.length-1)"
+                        class="btn btn-default btn-xs"
+                        click.delegate="redoHistory()">Redo
+                    </button>
+                </div>
+
+                <div class="dropdown rois-dropdown" style="margin: 5px;">
+                    <button type="button"
+                            disabled.bind="regions_info === null ||
+                                           !regions_info.image_info.can_annotate"
+                            title="${!regions_info.image_info.can_annotate ?
+                                        'No permission to delete' : ''}"
+                            class="btn btn-default btn-xs dropdown-toggle"
+                            data-toggle="dropdown">Delete
+                    </button>
+                    <ul class="dropdown-menu"
+                        title="Rois/shapes that cannot be deleted (permissions) are skipped">
+                        <li if.bind="regions_info &&
+                                     regions_info.selected_shapes.length !== 0"
+                            click.delegate="deleteShapes()"><a href="#">Delete</a>
+                        </li>
+                        <li click.delegate="deleteShapes(true)"><a href="#">Delete All</a></li>
+                    </ul>
+                </div>
+
+                <div class="checkbox checkbox-settings" style="line-height: 20px;">
+                    <label>
+                        <input style="line-height: 20px;" type="checkbox"
+                        change.delegate="showComments($event.target.checked)">
+                        Show Comments
+                    </label>
+                </div>
+
             </div>
 
-            <div class="dropdown rois-dropdown" style="margin: 5px;">
-                <button type="button" class="btn btn-default btn-xs dropdown-toggle"
-                        data-toggle="dropdown">Delete
-                </button>
-                <ul class="dropdown-menu">
-                    <li if.bind="regions_info && regions_info.selected_shapes &&
-                                    regions_info.selected_shapes.length !== 0"
-                        click.delegate="deleteShapes()"><a href="#">Delete</a></li>
-                    <li click.delegate="deleteShapes(true)"><a href="#">Delete All</a></li>
-                </ul>
-            </div>
+            <hr/>
+            <regions-edit regions_info.bind="regions_info"></regions-edit>
 
-            <div class="checkbox checkbox-settings" style="line-height: 20px;">
-                <label>
-                    <input style="line-height: 20px;" type="checkbox"
-                    change.delegate="showComments($event.target.checked)">
-                    Show Comments
-                </label>
-            </div>
-
+            <hr show.bind="regions_info !== null &&
+                           regions_info.image_info.can_annotate"
+                regions_info.bind="regions_info" />
+            <regions-drawing show.bind="regions_info !== null &&
+                                        regions_info.image_info.can_annotate"
+                             regions_info.bind="regions_info">
+            </regions-drawing>
+            <hr />
         </div>
-
-        <hr />
-        <regions-edit regions_info.bind="regions_info"></regions-edit>
-
-        <hr />
-        <regions-drawing regions_info.bind="regions_info"></regions-drawing>
         <regions-list regions_info.bind="regions_info"></regions-list>
 
     </div>

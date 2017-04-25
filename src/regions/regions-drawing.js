@@ -2,6 +2,7 @@
 import Context from '../app/context';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import Misc from '../utils/misc';
+import Ui from '../utils/ui';
 import {Utils} from '../utils/regions';
 import {Converters} from '../utils/converters';
 import {REGIONS_DRAWING_MODE} from '../utils/constants';
@@ -153,7 +154,7 @@ export default class RegionsDrawing extends EventSubscriber {
             params.shapes.map(
                 (shape) => {
                     let newShape =
-                        Converters.makeShapeBackwardsCompatible(shape);
+                        Converters.amendShapeDefinition(shape);
                     if (newShape) {
                         // we also want these flags
                         newShape.is_new = true;
@@ -162,7 +163,7 @@ export default class RegionsDrawing extends EventSubscriber {
                         newShape.deleted = false;
                         newShape.modified = true;
                         // add to map (if flag is true)
-                        if (add) shapes.set(newShape.id, newShape);
+                        if (add) shapes.set(newShape['@id'], newShape);
                         generatedShapes.push(Object.assign({}, newShape));
                     }
                 });
@@ -184,13 +185,20 @@ export default class RegionsDrawing extends EventSubscriber {
             this.onDrawShape(
                 this.supported_shapes.indexOf(
                     this.regions_info.shape_to_be_drawn), true);
+        // scroll to end of list
+        if (len !== 0)
+            setTimeout(
+                Ui.scrollRegionsTable.bind(
+                    null,generatedShapes[len-1].shape_id), 50);
+
+        // only if we have to generate more shapes we continue
         if (!params.drawn || len === 0) return;
 
         // collect dimensions for propagation
         let newShape = Object.assign({}, generatedShapes[len-1]);
         let theDims =
             Utils.getDimensionsForPropagation(
-                this.regions_info, newShape.theZ, newShape.theT);
+                this.regions_info, newShape.TheZ, newShape.TheT);
         if (theDims.length === 0) return;
 
         // for grouping propagated shapes within the same roi
