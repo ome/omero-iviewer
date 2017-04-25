@@ -57,9 +57,6 @@ export default class ImageInfo {
     image_name = null;
 
     /**
-<<<<<<< 5a99b35d5150a21d441153ef9021ca3efb6e07b4
-     * the canAnnotate permission
-=======
      * the acquisition date in the json response
      * @memberof ImageInfo
      * @type {string}
@@ -77,7 +74,6 @@ export default class ImageInfo {
 
     /**
      * a flag for whether we are allowed to save the settings
->>>>>>> Add new variables
      * @memberof ImageInfo
      * @type {boolean}
      */
@@ -299,7 +295,6 @@ export default class ImageInfo {
             this.image_pixels_type = response.meta.pixelsType;
         this.image_timestamp = response.meta.imageTimestamp;
         this.image_pixels_size = response.pixel_size;
-        console.log(this.image_pixels_size)
         this.sanityCheckInitialValues();
 
         // signal that we are ready and
