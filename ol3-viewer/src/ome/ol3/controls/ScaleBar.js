@@ -14,15 +14,25 @@ ome.ol3.controls.ScaleBar = function(opt_options) {
     if (typeof(opt_options) !== 'object') opt_options = {};
 
     /**
-	 * list available units for display incl. symbol and
-     * micron multiplicator
+	 * list available units for display incl. symbol, threshold for usage
+     * and micron multiplication factor
 	 *
 	 * @type {Array.<objects>}
 	 * @private
 	 */
     this.UNITS = [
-        { unit: 'micron', multiplier: 1, symbol: 'µm'},
-        { unit: 'millimeter', multiplier: 1000, symbol: 'mm'}];
+        { unit: 'angstrom',
+          threshold: 0.1, multiplier: 10000, symbol: '\u212B'},
+        { unit: 'nanometer',
+          threshold: 1, multiplier: 1000, symbol: 'nm'},
+        { unit: 'micron',
+          threshold: 1000, multiplier: 1, symbol:  '\u00B5m'},
+        { unit: 'millimeter',
+          threshold: 100000, multiplier: 0.001, symbol: 'mm'},
+        { unit: 'centimeter',
+          threshold: 1000000, multiplier: 0.0001, symbol: 'cm'},
+        { unit: 'meter',
+          threshold: 100000000, multiplier: 0.000001, symbol: 'm'}];
 
     /**
 	 * default scale bar width in pixels
@@ -51,26 +61,21 @@ ome.ol3.controls.ScaleBar.prototype.updateElement_ = function() {
     return;
   }
 
-  var micronsPerUnit = viewState.projection.getMetersPerUnit();
+  var micronsPerPixel = viewState.projection.getMetersPerUnit();
   var resolution = viewState.resolution;
-
-  var totalMicronsForBarWidth =
-    micronsPerUnit * this.bar_width_ * resolution;
-  var choosenUnit = this.UNITS[0];
+  var scaleBarLengthInUnits = micronsPerPixel * this.bar_width_ * resolution;
+  var symbol = '\u00B5m';
   for (var u=0;u<this.UNITS.length;u++) {
-      if (u+1 === this.UNITS.length) break;
-
-      var nextUnit = this.UNITS[u+1];
-      if (totalMicronsForBarWidth / nextUnit.multiplier > 1) {
-          choosenUnit = nextUnit;
-          totalMicronsForBarWidth /= nextUnit.multiplier;
-          continue;
+      var unit = this.UNITS[u];
+      if (scaleBarLengthInUnits < unit.threshold) {
+          scaleBarLengthInUnits *= unit.multiplier;
+          symbol = unit.symbol;
+          break;
       }
-      break;
   }
 
-  var html = totalMicronsForBarWidth.toFixed(5) + ' ' + choosenUnit.symbol;
-  if (this.renderedHTML_ != html) {
+  var html = scaleBarLengthInUnits.toFixed(5) + ' ' + symbol;
+  if (this.renderedHTML_ !== html) {
     this.innerElement_.innerHTML = html;
     this.renderedHTML_ = html;
   }
