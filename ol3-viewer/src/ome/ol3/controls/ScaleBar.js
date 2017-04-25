@@ -14,12 +14,12 @@ ome.ol3.controls.ScaleBar = function(opt_options) {
     if (typeof(opt_options) !== 'object') opt_options = {};
 
     /**
-	 * list available units for display incl. symbol, threshold for usage
+     * list available units for display incl. symbol, threshold for usage
      * and micron multiplication factor
-	 *
-	 * @type {Array.<objects>}
-	 * @private
-	 */
+     *
+     * @type {Array.<objects>}
+     * @private
+     */
     this.UNITS = [
         { unit: 'angstrom',
           threshold: 0.1, multiplier: 10000, symbol: '\u212B'},
@@ -35,10 +35,10 @@ ome.ol3.controls.ScaleBar = function(opt_options) {
           threshold: 100000000, multiplier: 0.000001, symbol: 'm'}];
 
     /**
-	 * default scale bar width in pixels
-	 * @type {number}
-	 * @private
-	 */
+     * default scale bar width in pixels
+     * @type {number}
+     * @private
+     */
     this.bar_width_ = 100;
 
     goog.base(this, opt_options);
