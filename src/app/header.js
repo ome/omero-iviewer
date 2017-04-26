@@ -32,6 +32,13 @@ export class Header extends EventSubscriber {
     image_info = null;
 
     /**
+     * shorter version of the image name
+     * @memberof Header
+     * @type {String}
+     */
+     short_image_name = ""
+
+    /**
      * Overridden aurelia lifecycle method:
      * called whenever the view is bound within aurelia
      * in other words an 'init' hook that happens before 'attached'
@@ -62,6 +69,8 @@ export class Header extends EventSubscriber {
 
         if (conf === null) return;
         this.image_info = conf.image_info;
+        var fields = this.image_info.image_name.split("/");
+        this.short_image_name = fields[fields.length-1];
      }
 
     /**
