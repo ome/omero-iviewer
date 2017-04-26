@@ -38,18 +38,10 @@ export class Info extends EventSubscriber {
     image_info = null;
 
     /**
-     * Formatted acquisition date.
+     * Values to display
      * @memberof Info
-     * @type {String}
      */
-    acquisition_date = null;
-
-    /**
-     * Formatted pixels size.
-     * @memberof Info
-     * @type {String}
-     */
-    pixels_size = "";
+    columns = null;
 
     /**
      * @constructor
@@ -82,31 +74,56 @@ export class Info extends EventSubscriber {
 
         if (conf === null) return;
         this.image_info = conf.image_info;
+        let acquisition_date = "-";
         if (typeof this.image_info.image_pixels_size.x == 'number') {
-            this.acquisition_date = new Date(this.image_info.image_timestamp * 1000).toISOString().slice(-25, -14);
-        } else {
-            this.acquisition_date = "-";
+            acquisition_date = new Date(this.image_info.image_timestamp * 1000).toISOString().slice(-25, -14);
         }
-        
+        let pixels_size = "";
         if (typeof this.image_info.image_pixels_size === 'object') {
             if (typeof this.image_info.image_pixels_size.x == 'number') {
-                this.pixels_size += Number(this.image_info.image_pixels_size.x).toFixed(2);
+                pixels_size += Number(this.image_info.image_pixels_size.x).toFixed(2);
             } else {
-               this.pixels_size += "-";
+               pixels_size += "-";
             }
-            this.pixels_size += " x ";
+            pixels_size += " x ";
             if (typeof this.image_info.image_pixels_size.y == 'number') {
-                this.pixels_size += Number(this.image_info.image_pixels_size.y).toFixed(2);
+                pixels_size += Number(this.image_info.image_pixels_size.y).toFixed(2);
             } else {
-                this.pixels_size += "-";
+                pixels_size += "-";
             }
-            this.pixels_size += " x ";
+            pixels_size += " x ";
             if (typeof this.image_info.image_pixels_size.z == 'number') {
-                this.pixels_size += Number(this.image_info.image_pixels_size.z).toFixed(2);
+                pixels_size += Number(this.image_info.image_pixels_size.z).toFixed(2);
             } else {
-                this.pixels_size += "-";
+                pixels_size += "-";
             }
         }
+        this.columns = [
+            {"label": "Image ID:",
+             "value": this.image_info.image_id,
+            },
+            {"label": "Name:",
+             "value": this.image_info.image_name,
+            },
+            {"label": "Owner:",
+             "value": this.image_info.author,
+            },
+            {"label": "Acquisition Date:",
+             "value": acquisition_date,
+            },
+            {"label": "Pixels Type:",
+             "value": this.image_info.image_pixels_type,
+            },
+            {"label": "Pixels Size (XYZ):",
+             "value": pixels_size,
+            },
+            {"label": "Z-sections:",
+             "value": this.image_info.dimensions.max_z,
+            },
+            {"label": "Timepoints:",
+             "value": this.image_info.dimensions.max_t,
+            }
+        ];
     }
 
     /**
@@ -118,6 +135,8 @@ export class Info extends EventSubscriber {
      */
     unbind() {
         this.unsubscribe();
+        this.image_info = null;
+        this.columns = [];
     }
 
 }
