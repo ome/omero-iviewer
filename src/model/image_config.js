@@ -2,7 +2,7 @@ import {noView} from 'aurelia-framework';
 import ImageInfo from '../model/image_info';
 import RegionsInfo from '../model/regions_info';
 import Misc from '../utils/misc';
-import {WEBGATEWAY} from '../utils/constants';
+import {LUTS_NAMES, WEBGATEWAY} from '../utils/constants';
 import History from './history';
 
 /**
@@ -142,13 +142,15 @@ export default class ImageConfig extends History {
                 let i=0;
                 response.luts.map(
                     (l) => {
+                        let idx = LUTS_NAMES.indexOf(l.name);
                         let mapValue =
                             Object.assign({
                                 nice_name :
                                     l.name.replace(/.lut/g, "").replace(/_/g, " "),
-                                index : i++
+                                index : idx
                             }, l);
                         this.luts.set(mapValue.name, mapValue);
+                        if (idx >= 0) i++;
                     });
                 if (typeof callback === 'function') callback(this.luts);
             }

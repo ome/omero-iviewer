@@ -51,10 +51,11 @@
             <div class="luts-item" repeat.for="[id, lut] of luts"
                 click.delegate="chooseLut(id)">
                 <div class="luts-preview"
-                     css="background-image:
-                            url('${luts_png.url}');
-                            background-size: 100% ${luts_png.height * 2}px;
-                            background-position: 0 -${lut.index*20}px">
+                     css="${lut.index >= 0 ?
+                            'background-image: url(\'' + luts_png.url + '\');
+                            background-size: 100% ' + (luts_png.height*2) +
+                            'px;background-position: 0 -' + (lut.index*20+1) +
+                            'px' : ''}">
                     <div class="luts-name">${lut.nice_name}</div>
                 </div>
             </div>

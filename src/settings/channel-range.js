@@ -408,27 +408,28 @@ export default class ChannelRange  {
      * @memberof ChannelRange
      */
      setSliderBackgroundAfterColorChange(isLut) {
+         let height = this.luts_png.height * 2;
+         let blackGradientOffset = height - 19;
+         let css = {
+             "background-image" : "url('" + this.luts_png.url + "')",
+             "background-size" : "100% " + height + "px",
+             "background-repeat": "no-repeat",
+             "background-position" : "0 -" + blackGradientOffset + "px",
+             "transform":
+                this.channel.reverseIntensity ? "scaleX(-1)" : "none",
+             "background-color": ""
+         };
          if (isLut) {
-             $(this.element).find(".channel-slider").find(".ui-slider-range").css(
-             "background", "");
-             $(this.element).find(".channel-slider").find(".ui-slider-range").css(
-                 {"background-image" :
-                    "url('" + this.luts_png.url + "')",
-                  "background-position" : "0 -" +
-                    (this.luts.get(this.channel.color).index*20) + "px",
-                  "background-size" : "100% " + (this.luts_png.height * 2) + "px",
-                  "background-repeat": "no-repeat",
-                  "transform": this.channel.reverseIntensity ? "scaleX(-1)" : "none"
-                 });
+             let idx = this.luts.get(this.channel.color).index;
+             if (idx >= 0) idx = idx * 20 + 1;
+             else idx = blackGradientOffset;
+             css['background-position'] = "0 -" + idx + "px";
+             $(this.element).find(".channel-slider").find(
+                 ".ui-slider-range").css(css);
          } else {
-             $(this.element).find(".channel-slider").find(".ui-slider-range").css(
-                 {"background-image" :"",
-                  "background-position" : "",
-                  "background-size" : "",
-                  "background-repeat": "",
-                  "background": "#" + this.channel.color,
-                  "transform": this.channel.reverseIntensity ? "scaleX(-1)" : "none"
-                 });
+             css['background-color'] = "#" + this.channel.color;
+             $(this.element).find(".channel-slider").find(
+                 ".ui-slider-range").css(css);
          }
      }
 

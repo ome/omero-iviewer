@@ -426,6 +426,7 @@ thumbnail-slider img {
     background-repeat: no-repeat;
     height: 13px;
     width: 100px;
+    image-rendering: pixelated;
 }
 .luts-name {
     position: relative;
