@@ -385,7 +385,9 @@ thumbnail-slider img {
     margin-left: 7px;
     margin-right: 1px;
 }
-
+.channel-slider .ui-slider-range {
+    image-rendering: pixelated;
+}
 .channel-slider .ui-slider-handle {
     width: 10px;
 }
