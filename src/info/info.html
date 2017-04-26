@@ -2,12 +2,12 @@
 
     <div class="row">
         <template repeat.for="column of columns">
-            <div class="col-sm-6">${column.label}</div>
+            <div class="col-sm-6 text-weight-bold">${column.label}</div>
             <div class="col-sm-6">${column.value}</div>
         </template>
     </div>
     <div class="row">
-        <div class="col-sm-6">Channels:</div>
+        <div class="col-sm-6 text-weight-bold">Channels:</div>
         <div class="col-sm-6">
             <template repeat.for="channel of image_info.channels">
                 <span>${channel.label}</span>

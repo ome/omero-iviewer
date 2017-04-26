@@ -880,3 +880,7 @@ thumbnail-slider img {
 .modal-footer {
     padding: 4px;
 }
+
+.text-weight-bold {
+   font-weight: 700;
+ }
