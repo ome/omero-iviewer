@@ -69,7 +69,8 @@ export class Header extends EventSubscriber {
 
         if (conf === null) return;
         this.image_info = conf.image_info;
-        var fields = this.image_info.image_name.split("/");
+        let result = this.image_info.image_name.replace("\\", "/");
+        let fields = result.split("/");
         this.short_image_name = fields[fields.length-1];
      }
 
