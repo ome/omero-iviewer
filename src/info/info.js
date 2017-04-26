@@ -82,7 +82,6 @@ export class Info extends EventSubscriber {
 
         if (conf === null) return;
         this.image_info = conf.image_info;
-        console.log(this.image_info);
         if (typeof this.image_info.image_pixels_size.x == 'number') {
             this.acquisition_date = new Date(this.image_info.image_timestamp * 1000).toISOString().slice(-25, -14);
         } else {
