@@ -1,5 +1,7 @@
 /** whenever an image config has been updated */
 export const IMAGE_CONFIG_UPDATE = "IMAGE_CONFIG_UPDATE";
+/** after the image viewer has been created */
+export const IMAGE_VIEWER_INIT = "IMAGE_VIEWER_INIT";
 /** whenever an image config has been selected */
 export const IMAGE_CONFIG_SELECT = "IMAGE_CONFIG_SELECT";
 /** whenever the image viewer needs to be resized */

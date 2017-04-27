@@ -17,6 +17,7 @@
     left: 8px;
     padding: 2px;
     position: absolute;
+    cursor: pointer;
 }
 .ol-scale-line-inner {
     border: 1px solid #eee;
