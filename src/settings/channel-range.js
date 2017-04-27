@@ -414,7 +414,7 @@ export default class ChannelRange  {
              "background-image" : "url('" + this.luts_png.url + "')",
              "background-size" : "100% " + height + "px",
              "background-repeat": "no-repeat",
-             "background-position" : "0 -" + blackGradientOffset + "px",
+             "background-position" : "0px -" + blackGradientOffset + "px",
              "transform":
                 this.channel.reverseIntensity ? "scaleX(-1)" : "none",
              "background-color": ""
@@ -423,7 +423,7 @@ export default class ChannelRange  {
              let idx = this.luts.get(this.channel.color).index;
              if (idx >= 0) idx = idx * 20 + 1;
              else idx = blackGradientOffset;
-             css['background-position'] = "0 -" + idx + "px";
+             css['background-position'] = "0px -" + idx + "px";
              $(this.element).find(".channel-slider").find(
                  ".ui-slider-range").css(css);
          } else {
