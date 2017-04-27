@@ -41,7 +41,46 @@ ome.ol3.controls.ScaleBar = function(opt_options) {
      */
     this.bar_width_ = 100;
 
+    /**
+     * the scalebar 'drag' listener
+     * @type {number}
+     * @private
+     */
+    this.drag_listener_ = null;
+
     goog.base(this, opt_options);
+
+    // give element a tooltip
+    this.element_.title = "Click and drag to move scalebar";
+
+    // register 'drag' listener
+    ol.events.listen(
+        this.element_, "mousedown",
+        function(start) {
+            if (!(this.map_ instanceof ol.Map)) return;
+            if (this.drag_listener_ !== null) {
+                ol.events.unlistenByKey(this.drag_listener_);
+                this.drag_listener_ = null;
+            }
+            var offsetX = -start.offsetX;
+            var offsetY = -start.offsetY;
+            this.drag_listener_ =
+                ol.events.listen(this.map_, "pointermove",
+                    function(move) {
+                        var e = move.originalEvent;
+                        if (!((typeof e.buttons === 'undefined' &&
+                            e.which === 1) || e.buttons === 1)) {
+                                ol.events.unlistenByKey(this.drag_listener_);
+                                this.drag_listener_ = null;
+                                return;
+                            }
+                        this.element_.style.bottom = "auto";
+                        this.element_.style.left =
+                            (move.pixel[0] + offsetX) + "px";
+                        this.element_.style.top =
+                            (move.pixel[1] + offsetY) + "px";
+                    }, this);
+     }, this);
 }
 goog.inherits(ome.ol3.controls.ScaleBar, ol.control.ScaleLine);
 
