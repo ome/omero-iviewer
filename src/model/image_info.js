@@ -70,6 +70,10 @@ export default class ImageInfo {
      */
     image_pixels_type = null;
 
+    /** 
+     * the pixels size, defaul in macrons
+     * @memberof ImageInfo
+     */ 
     image_pixels_size = null;
 
     /**
