@@ -30,6 +30,13 @@ export default class Histogram extends EventSubscriber {
     visible = false;
 
     /**
+     * we keep already requested c/z/t data
+     * @memberof Histogram
+     * @type {Map}
+     */
+    data_cache = new Map();
+
+    /**
      * we piggyback onto image settings and dimensions changes
      * to get notified for channel property and dimension changes
      * that result in histogram/line plotting
@@ -244,9 +251,17 @@ export default class Histogram extends EventSubscriber {
             this.plotHistogramLines(channel);
         };
 
-        // if we got data already (in the case of the initial request) => use it
-        // otherwise issue the ajax request
-        if (Misc.isArray(data)) plotHandler(data);
+        // try to reuse handed in/already requested data
+        if (Misc.isArray(data)) {
+            plotHandler(data);
+            return;
+        }
+        let time = this.image_info.dimensions.t;
+        let plane = this.image_info.dimensions.z;
+        let key = "" + channel + "/" + plane + "/" + time;
+        let alreadyRequested = this.data_cache.get(key);
+
+        if (alreadyRequested) plotHandler(alreadyRequested);
         else this.requestHistogramJson(channel, plotHandler);
     }
 
@@ -333,6 +348,9 @@ export default class Histogram extends EventSubscriber {
                 let data =
                     typeof response === 'object' &&
                         Misc.isArray(response.data) ? response.data : null;
+                if (data) // store requested data
+                    this.data_cache.set(
+                        "" + channel + "/" + plane + "/" + time, data);
                 handler(data);
             },
             error : () => handler(null)});
