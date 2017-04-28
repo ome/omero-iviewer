@@ -45,11 +45,14 @@ ome.ol3.controls.Zoom = function(opt_options) {
 
     var element = document.createElement('div');
     element.className = cssClasses;
-    element.appendChild(this.addZoomButton_(true));
-    element.appendChild(this.addOneToOneButton_());
-    element.appendChild(this.addDisplayField_());
-    element.appendChild(this.addFitToExtentButton_());
-    element.appendChild(this.addZoomButton_(false));
+    var buttonGroup = document.createElement('div');
+    buttonGroup.className = "btn-group btn-group-sm";
+    buttonGroup.appendChild(this.addZoomButton_(false));
+    buttonGroup.appendChild(this.addZoomButton_(true));
+    buttonGroup.appendChild(this.addFitToExtentButton_());
+    buttonGroup.appendChild(this.addOneToOneButton_());
+    element.appendChild(buttonGroup);
+    element.appendChild(this.addZoomPercentage_());
 
     ol.control.Control.call(this, {
         element: element,
@@ -70,7 +73,8 @@ ome.ol3.controls.Zoom.prototype.addZoomButton_ = function(zoom_in) {
     var title = 'Zoom ' + (zoom_in ? 'in' : 'out');
 
     var element = document.createElement('button');
-    element.className = this.class_name_ + (zoom_in ? '-in' : '-out');
+    element.className =
+        this.class_name_ + (zoom_in ? '-in' : '-out') + " btn btn-default";
     element.setAttribute('type', 'button');
     element.title = title;
     element.appendChild(document.createTextNode(label));
@@ -83,13 +87,14 @@ ome.ol3.controls.Zoom.prototype.addZoomButton_ = function(zoom_in) {
 };
 
 /**
- * Adds an input field for zoom values for both, display and changing
+ * Adds an input field for entering and displaying zoom values (in percent)
  * @private
  */
-ome.ol3.controls.Zoom.prototype.addDisplayField_ = function() {
+ome.ol3.controls.Zoom.prototype.addZoomPercentage_ = function() {
     var zoomDisplayElement = document.createElement('input');
     zoomDisplayElement.className = this.class_name_ + '-display';
     zoomDisplayElement.setAttribute('type', 'input');
+    zoomDisplayElement.className = 'form-control ol-zoom-display';
     ol.events.listen(
         zoomDisplayElement, "keyup",
         function(event) {
@@ -98,7 +103,7 @@ ome.ol3.controls.Zoom.prototype.addDisplayField_ = function() {
         },this);
 
     var percent = document.createElement('button');
-    percent.className = 'ol-zoom-percent';
+    percent.className = 'btn btn-default ol-zoom-percent';
     percent.title = 'Click to apply Zoom Value';
     percent.appendChild(document.createTextNode("%"));
     ol.events.listen(
@@ -107,9 +112,13 @@ ome.ol3.controls.Zoom.prototype.addDisplayField_ = function() {
             this.changeResolution_(parseInt(zoomDisplayElement.value));
         },this);
 
+    var span = document.createElement('span');
+    span.className = "input-group-btn input-group-sm";
+    span.appendChild(percent);
     var element = document.createElement('div');
+    element.className = "input-group ol-zoom-percentage";
     element.appendChild(zoomDisplayElement);
-    element.appendChild(percent);
+    element.appendChild(span);
 
     return element;
 }
@@ -141,7 +150,7 @@ ome.ol3.controls.Zoom.prototype.changeResolution_ = function(value) {
  */
 ome.ol3.controls.Zoom.prototype.addOneToOneButton_ = function() {
     var oneToOneElement = document.createElement('button');
-    oneToOneElement.className = this.class_name_ + '-1-1';
+    oneToOneElement.className = this.class_name_ + '-1-1' + " btn btn-default";
     oneToOneElement.setAttribute('type', 'button');
     oneToOneElement.title = "Actual Size";
     oneToOneElement.appendChild(document.createTextNode("1:1"));
@@ -164,7 +173,7 @@ ome.ol3.controls.Zoom.prototype.addOneToOneButton_ = function() {
  */
 ome.ol3.controls.Zoom.prototype.addFitToExtentButton_ = function() {
     var oneToOneElement = document.createElement('button');
-    oneToOneElement.className = this.class_name_ + '-fit';
+    oneToOneElement.className = this.class_name_ + '-fit' + " btn btn-default";
     oneToOneElement.setAttribute('type', 'button');
     oneToOneElement.title = "Zoom Image to Fit";
     oneToOneElement.appendChild(document.createTextNode("FIT"));

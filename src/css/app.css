@@ -128,6 +128,7 @@ a.ui-button:active,
 }
 /** SPECTRUM colorpicker adjustments END **/
 
+/** APP SPECIFIC STYLES SECTION **/
 .disabled-color {
     cursor:not-allowed;
     filter:alpha(opacity=65);
