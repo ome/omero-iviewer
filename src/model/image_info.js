@@ -34,13 +34,6 @@ export default class ImageInfo {
     tiled = false;
 
     /**
-     * a flag that signals whether we a pixe_size and hence a scalebar
-     * @memberof ImageInfo
-     * @type {boolean}
-     */
-    has_scalebar = false;
-
-    /**
      * a flag that signals whether the histogram is enabled or not
      * this will be set accordingly by the histogram but due to its
      * more global nature we want the flag here.
@@ -268,10 +261,6 @@ export default class ImageInfo {
                 (parseInt(initialPlane)-1) : response.rdefs.defaultZ,
             max_z : response.size.z
         };
-        // do we have a scalebar
-        if (typeof response.pixel_size === 'object' &&
-            typeof response.pixel_size.x === 'number')
-            this.has_scalebar = true;
 
         // store projection and model
         this.projection =

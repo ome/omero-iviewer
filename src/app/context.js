@@ -81,9 +81,9 @@ export default class Context {
 
     /**
      * the global flag for showing the scalebar
-     * @type {boolean}
+     * @type {boolean|null}
      */
-     show_scalebar = false;
+     show_scalebar = null;
 
      /**
       * application wide keyhandlers.
@@ -335,7 +335,7 @@ export default class Context {
 
         // reset
         this.show_regions = false;
-        this.show_scalebar = false;
+        this.show_scalebar = null;
 
         // we do not keep the other configs around unless we are in MDI mode.
         if (!this.useMDI)
