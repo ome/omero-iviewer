@@ -63,6 +63,7 @@ a.ui-button:active,
     margin: 0px;
     width: 40px;
     font-size: 11px;
+    float: left;
 }
 .ui-spinner a {
     width: 12px;
