@@ -235,29 +235,42 @@
     box-sizing: content-box;
     top: .5em;
     left: .5em;
+    background-color: transparent;
 }
 .ol-zoom * {
     float:left;
 }
-.ol-zoom button {
-    font-size: 12px;
+.ol-zoom-buttons .ol-zoom-1-1,
+.ol-zoom-buttons .ol-zoom-in,
+.ol-zoom-buttons .ol-zoom-out,
+.ol-zoom-buttons .ol-zoom-fit {
+    background-color: #fff;
+    font-size: 13px;
+    top: 0px;
     height: 30px;
     min-width: 30px;
-    padding: 0px!important;
-    font-weight: normal;
+    padding: 0px;
+    font-weight: bold;
 }
-.ol-zoom-display {
-    font-size: 12px;
-    font-weight: normal;
-    height: 30px;
-    width: 42px!important;
-    padding: 6px;
-    box-sizing: border-box;
+.ol-zoom-buttons .ol-zoom-1-1 {
+    font-size: 15px;
 }
+
 .ol-zoom-percentage {
     margin-left: 5px;
 }
-.ol-zoom-percent {
+.ol-zoom-percentage .ol-zoom-display {
+    font-size: 12px;
+    font-weight: normal;
+    height: 30px;
+    padding: 6px;
+    box-sizing: border-box;
+    width: 42px;
+}
+.ol-zoom-percentage .ol-zoom-percent {
+    background-color: #fff;
+    font-size: 15px;
+    height: 30px;
     text-align: center;
-    padding-left: 5px;
+    font-weight: bold;
 }

@@ -46,7 +46,7 @@ ome.ol3.controls.Zoom = function(opt_options) {
     var element = document.createElement('div');
     element.className = cssClasses;
     var buttonGroup = document.createElement('div');
-    buttonGroup.className = "btn-group btn-group-sm";
+    buttonGroup.className = "btn-group btn-group-sm ol-zoom-buttons";
     buttonGroup.appendChild(this.addZoomButton_(false));
     buttonGroup.appendChild(this.addZoomButton_(true));
     buttonGroup.appendChild(this.addFitToExtentButton_());
@@ -69,15 +69,14 @@ ol.inherits(ome.ol3.controls.Zoom, ol.control.Control);
 ome.ol3.controls.Zoom.prototype.addZoomButton_ = function(zoom_in) {
     if (typeof zoom_in !== 'boolean') zoom_in = false;
 
-    var label = zoom_in ? '+' : '\u2212';
     var title = 'Zoom ' + (zoom_in ? 'in' : 'out');
-
     var element = document.createElement('button');
     element.className =
-        this.class_name_ + (zoom_in ? '-in' : '-out') + " btn btn-default";
+        this.class_name_ + (zoom_in ? '-in' : '-out') +
+        " btn btn-default glyphicon " +
+        (zoom_in ? 'glyphicon-plus' : 'glyphicon-minus');
     element.setAttribute('type', 'button');
     element.title = title;
-    element.appendChild(document.createTextNode(label));
 
     ol.events.listen(element, ol.events.EventType.CLICK,
         ome.ol3.controls.Zoom.prototype.handleClick_,
@@ -173,10 +172,11 @@ ome.ol3.controls.Zoom.prototype.addOneToOneButton_ = function() {
  */
 ome.ol3.controls.Zoom.prototype.addFitToExtentButton_ = function() {
     var oneToOneElement = document.createElement('button');
-    oneToOneElement.className = this.class_name_ + '-fit' + " btn btn-default";
+    oneToOneElement.className =
+        this.class_name_ + '-fit' +
+        " btn btn-default glyphicon glyphicon-fullscreen";
     oneToOneElement.setAttribute('type', 'button');
     oneToOneElement.title = "Zoom Image to Fit";
-    oneToOneElement.appendChild(document.createTextNode("FIT"));
     ol.events.listen(oneToOneElement, ol.events.EventType.CLICK,
         function() {
             var map = this.getMap();
