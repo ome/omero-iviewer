@@ -9,10 +9,7 @@
     <div class="row">
         <div class="col-sm-6 text-weight-bold">Channels:</div>
         <div class="col-sm-6">
-            <template repeat.for="channel of image_info.channels">
-                <span if.bind="!$last">${channel.label},</span>
-                <span if.bind="$last">${channel.label}</span>
-            </template>
+            <span repeat.for="channel of image_info.channels">${channel.label}${!$last ? ', ' : ''}</span>
         </div>
     </div>
 
