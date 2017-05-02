@@ -2,7 +2,7 @@ import {noView} from 'aurelia-framework';
 import ImageInfo from '../model/image_info';
 import RegionsInfo from '../model/regions_info';
 import Misc from '../utils/misc';
-import {WEBGATEWAY} from '../utils/constants';
+import {LUTS_NAMES, WEBGATEWAY} from '../utils/constants';
 import History from './history';
 
 /**
@@ -44,6 +44,15 @@ export default class ImageConfig extends History {
     luts = null;
 
     /**
+     * @memberof ImageConfig
+     * @type {Object}
+     */
+    luts_png = {
+        url : '',
+        height : 0
+    }
+
+    /**
      * @constructor
      * @param {Context} context the application context
      * @param {number} image_id the image id to be queried
@@ -56,6 +65,10 @@ export default class ImageConfig extends History {
         // go create the data objects for an image and its associated region
         this.image_info = new ImageInfo(context, this.id, image_id, dataset_id);
         this.regions_info = new RegionsInfo(this.image_info)
+        // set luts png url
+        this.luts_png.url =
+            context.server + context.getPrefixedURI(WEBGATEWAY, true) +
+            '/img/luts_10.png';
     }
 
     /**
@@ -109,7 +122,14 @@ export default class ImageConfig extends History {
             if (typeof callback === 'function') callback(this.luts);
             return;
         }
+        // determine the luts png height
+        let lutsPng = new Image();
+        lutsPng.onload = (e) => {
+            this.luts_png.height = e.target.naturalHeight;
+        }
+        lutsPng.src = this.luts_png.url;
 
+        // now query the luts list
         let server = this.image_info.context.server;
         let uri_prefix =  this.image_info.context.getPrefixedURI(WEBGATEWAY);
         $.ajax(
@@ -122,13 +142,15 @@ export default class ImageConfig extends History {
                 let i=0;
                 response.luts.map(
                     (l) => {
+                        let idx = LUTS_NAMES.indexOf(l.name);
                         let mapValue =
                             Object.assign({
                                 nice_name :
                                     l.name.replace(/.lut/g, "").replace(/_/g, " "),
-                                index : i++
+                                index : idx
                             }, l);
                         this.luts.set(mapValue.name, mapValue);
+                        if (idx >= 0) i++;
                     });
                 if (typeof callback === 'function') callback(this.luts);
             }

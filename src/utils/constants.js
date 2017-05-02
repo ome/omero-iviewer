@@ -120,5 +120,49 @@ export const RENDER_STATUS = {
  */
 export const PERMISSION_TOOLTIPS = {
     CANNOT_EDIT: "No permission to edit",
-    CANNOT_DELETE: "No permission to delete",
+    CANNOT_DELETE: "No permission to delete"
 }
+
+/*
+ * luts list for pre-generated png
+ * @type {Object}
+ */
+export const LUTS_NAMES = [
+    '16_colors.lut',
+    '3-3-2_rgb.lut',
+    '5_ramps.lut',
+    '6_shades.lut',
+    'blue_orange_icb.lut',
+    'brgbcmyw.lut',
+    'cool.lut',
+    'cyan_hot.lut',
+    'edges.lut',
+    'fire.lut',
+    'gem.lut',
+    'glasbey.lut',
+    'glasbey_inverted.lut',
+    'glow.lut',
+    'grays.lut',
+    'green_fire_blue.lut',
+    'hilo.lut',
+    'ica.lut',
+    'ica2.lut',
+    'ica3.lut',
+    'ice.lut',
+    'magenta_hot.lut',
+    'orange_hot.lut',
+    'phase.lut',
+    'physics.lut',
+    'rainbow_rgb.lut',
+    'red-green.lut',
+    'red_hot.lut',
+    'royal.lut',
+    'sepia.lut',
+    'smart.lut',
+    'spectrum.lut',
+    'thal.lut',
+    'thallium.lut',
+    'thermal.lut',
+    'unionjack.lut',
+    'yellow_hot.lut'
+];
