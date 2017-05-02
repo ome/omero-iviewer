@@ -6,15 +6,19 @@
 
             <button type="button"
                 title="${channel.label}"
-                css="
-                    ${image_config.hasLookupTable(channel.color) ?
-                        'background-image: url(\'' + luts_png + '\');
-                         background-size: 100% 1110px;
-                         background-repeat: no-repeat;
-                         background-position: 0 -' +
-                           (image_config.luts.get(channel.color).index*30) + 'px' :
+                css="${image_config.hasLookupTable(channel.color) ?
+                        (image_config.luts.get(channel.color).index >= 0 ?
+                            'background-image: url(\'' +
+                            image_config.luts_png.url + '\');
+                            background-size: 100% ' +
+                            (image_config.luts_png.height * 3) + 'px;
+                            background-repeat: no-repeat;
+                            background-position: 0px -' +
+                            (image_config.luts.get(channel.color).index*30+1) +
+                            'px' : '') :
                         'background-color: #' + channel.color}
-                    ${channel.active ? ';border-style: inset' : ';border-style: outset'}"
+                    ${channel.active ? ';border-style: inset' : ';border-style: outset'}
+                    ;image-rendering: pixelated"
                 class="btn btn-default btn-xs channel-active"
                 click.delegate="toggleChannel($index)">
                 ${channel.label}
@@ -25,7 +29,7 @@
                 channel.bind="channel" revision.bind="image_config.revision"
                 mode.bind="mode"
                 luts.bind="image_config.luts"
-                luts_png.bind="luts_png"
+                luts_png.bind="image_config.luts_png"
                 range.bind="image_config.image_info.range"
                 change_mode.call="onModeChange($event)">
             </channel-range>

@@ -391,7 +391,9 @@ thumbnail-slider img {
     margin-left: 7px;
     margin-right: 1px;
 }
-
+.channel-slider .ui-slider-range {
+    image-rendering: pixelated;
+}
 .channel-slider .ui-slider-handle {
     width: 10px;
 }
@@ -429,10 +431,10 @@ thumbnail-slider img {
 }
 .luts-preview {
     margin-right: 2px;
-    background-size: 100% 740px;
     background-repeat: no-repeat;
     height: 13px;
     width: 100px;
+    image-rendering: pixelated;
 }
 .luts-name {
     position: relative;
