@@ -36,7 +36,12 @@ export class RightHandPanel {
      * @memberof RightHandPanel
      * @type {number}
      */
-    @bindable config_id=null;
+    @bindable config_id = null;
+ 
+    /**
+     * the selected tab
+     */
+     selected_tab = null;
 
     /**
      * @constructor
@@ -45,6 +50,7 @@ export class RightHandPanel {
     constructor(context, element) {
         this.context = context;
         this.element = element;
+        this.selected_tab = "#settings"
     }
 
     /**
@@ -57,17 +63,17 @@ export class RightHandPanel {
         $(this.element).find("a").click((e) => {
             e.preventDefault();
 
-            let hash = e.currentTarget.hash;
+            this.selected_tab = e.currentTarget.hash;
 
             // we don't allow clicking the regions if we don't show them
             // or if the regions info is not present
             let img_conf = this.context.getImageConfig(this.config_id);
-            if (hash === '#rois' &&
+            if (this.selected_tab === '#rois' &&
                 (img_conf === null || img_conf.regions_info === null ||
                  img_conf.regions_info.data === null ||
                  img_conf.image_info.projection === 'split')) return;
 
-            if (!this.context.show_regions && hash === '#rois') {
+            if (!this.context.show_regions && this.selected_tab === '#rois') {
                 this.context.show_regions = true;
                 this.context.publish(
                     REGIONS_SET_PROPERTY, {property: "visible", value: true});
