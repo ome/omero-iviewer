@@ -12,12 +12,14 @@
             <div
                 class="${channel.reverseIntensity === null ? 'disabled-color' : ''}"
                 style="margin-left: 2px;">
-                <input type="checkbox"
-                disabled.bind="channel.reverseIntensity === null"
-                class="${channel.reverseIntensity === null ? 'disabled-color' : ''}"
-                checked.bind="channel.reverseIntensity"
-                change.delegate="onReverseIntensityToggle()"/>
-                &nbsp;Reverse Intensity
+                <label style="font-weight: normal;">
+                    <input type="checkbox"
+                        disabled.bind="channel.reverseIntensity === null"
+                        class="${channel.reverseIntensity === null ? 'disabled-color' : ''}"
+                        checked.bind="channel.reverseIntensity"
+                        change.delegate="onReverseIntensityToggle()"/>
+                        &nbsp;Reverse Intensity
+                </label>
             </div>
             <hr style="float: none" />
             <div class="luts-preview luts-item" style="background-color: #FF0000"
@@ -50,9 +52,12 @@
             </div>
             <div class="luts-item" repeat.for="[id, lut] of luts"
                 click.delegate="chooseLut(id)">
-                <div class="luts-preview" css="background-image:
-                    url('${luts_png}');
-                    background-position: 0 -${lut.index*20}px;">
+                <div class="luts-preview"
+                     css="${lut.index >= 0 ?
+                            'background-image: url(\'' + luts_png.url + '\');
+                            background-size: 100% ' + (luts_png.height*2) +
+                            'px;background-position: 0px -' + (lut.index*20+1) +
+                            'px' : ''}">
                     <div class="luts-name">${lut.nice_name}</div>
                 </div>
             </div>
