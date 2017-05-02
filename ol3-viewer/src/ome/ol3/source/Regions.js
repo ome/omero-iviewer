@@ -669,8 +669,7 @@ ome.ol3.source.Regions.prototype.setProperty =
                         f['permissions'] !== null &&
                         typeof f['permissions']['canDelete'] === 'boolean' &&
                         !f['permissions']['canDelete']) continue;
-                    if (hasSelect)
-                        this.select_.toggleFeatureSelection(f[s], false);
+                    if (hasSelect) this.select_.toggleFeatureSelection(f, false);
                     // we have already done this
                     if (presentState !== ome.ol3.REGIONS_STATE.REMOVED &&
                         (typeof f["old_state"] !== 'number' ||
@@ -715,7 +714,8 @@ ome.ol3.source.Regions.prototype.setProperty =
             if (eventProperty === 'rollback') {
                 eventProperty = 'deleted';
                 val = false;
-            } else val = value;
+            } else if (eventProperty === 'deleted') val = true;
+            else val = value;
             changedProperties.push(eventProperty);
             changedValues.push(val);
         }

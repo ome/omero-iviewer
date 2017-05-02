@@ -198,7 +198,7 @@ export default class RegionsInfo extends EventSubscriber {
                     (property === 'deleted' && value)) {
             let i = this.selected_shapes.indexOf(id);
             if (i !== -1) this.selected_shapes.splice(i, 1);
-            if (property === 'visible') shape.selected = false;
+            shape.selected = false;
             if (property === 'deleted' &&
                 typeof shape.is_new === 'boolean' && shape.is_new)
                     roi.deleted++;
