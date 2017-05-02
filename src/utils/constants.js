@@ -113,3 +113,12 @@ export const RENDER_STATUS = {
     RENDERED: 2,
     ERROR: 3
 }
+
+/**
+ * the text for the tooltips in case of missing permission
+ * @type {Object}
+ */
+export const PERMISSION_TOOLTIPS = {
+    CANNOT_EDIT: "No permission to edit",
+    CANNOT_DELETE: "No permission to delete",
+}

@@ -498,7 +498,7 @@ thumbnail-slider img {
     height: 40px;
 }
 .regions-header .regions-table-col {
-    border: solid 2px;
+    border: solid 2px transparent;
     height: 36px;
     line-height: 36px;
     font-weight: bold;
@@ -583,7 +583,7 @@ thumbnail-slider img {
     height:100%;
     float:left;
     width: 25px;
-    margin: 2px 8px 2px 8px;
+    margin: 2px 4px 2px 6px;
 }
 
 .draw-active {
@@ -660,7 +660,8 @@ thumbnail-slider img {
 }
 
 .shapes-edit .dropdown-menu {
-    left: -55px;
+    left: -7px;
+    min-width: 70px;
 }
 .shapes-persistence div {
     float: left;
@@ -700,7 +701,11 @@ thumbnail-slider img {
     margin: 5px;
 }
 .shape-edit-button {
-    width: 100px;
+    width: 45px;
+    margin-left: 5px;
+}
+.shape-delete-button {
+    width: 55px;
     margin-left: 5px;
 }
 .shape-edit-comment {
@@ -757,7 +762,7 @@ thumbnail-slider img {
     background-position: center!important;
 }
 .arrow-button .dropdown-menu {
-    left: -10px;
+    left: -13px;
     min-width: 62px;
 }
 .arrow-button .dropdown-menu span {
