@@ -50,8 +50,8 @@
 }
 
 .ol-rotate {
-    top: 3em;
-    right: .5em;
+    top: 0.5em;
+    right: 3.35em;
     transition: opacity .25s linear, visibility 0s linear;
 }
 .ol-rotate.ol-hidden {
@@ -64,7 +64,7 @@
     left: .5em;
 }
 .ol-full-screen {
-    right: .5em;
+    right: .85em;
     top: .5em;
 }
 @media print {
@@ -82,9 +82,9 @@
     font-weight: bold;
     text-decoration: none;
     text-align: center;
-    height: 1.375em;
+    height: 1.85em;
+    width: 1.85em;
     min-height: 25px;
-    width: 1.375em;
     min-width: 25px;
     line-height: .4em;
     border: 1px solid #ccc;
@@ -192,7 +192,7 @@
 }
 
 .ol-overviewmap {
-    right: .5em;
+    right: .85em;
     bottom: .5em;
     left: auto;
     left: initial;
