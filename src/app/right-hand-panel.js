@@ -73,7 +73,6 @@ export class RightHandPanel {
                     REGIONS_SET_PROPERTY, {property: "visible", value: true});
             }
             $(e.currentTarget).tab('show');
-            console.log(this.context.selected_tab);
         });
     }
 
