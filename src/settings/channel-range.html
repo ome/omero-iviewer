@@ -52,7 +52,7 @@
             </div>
             <div class="luts-item" repeat.for="[id, lut] of luts"
                 click.delegate="chooseLut(id)">
-                <div class="luts-preview"
+                <div class="luts-preview pixelated"
                      css="${lut.index >= 0 ?
                             'background-image: url(\'' + luts_png.url + '\');
                             background-size: 100% ' + (luts_png.height*2) +

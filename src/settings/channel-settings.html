@@ -17,9 +17,8 @@
                             (image_config.luts.get(channel.color).index*30+1) +
                             'px' : '') :
                         'background-color: #' + channel.color}
-                    ${channel.active ? ';border-style: inset' : ';border-style: outset'}
-                    ;image-rendering: pixelated"
-                class="btn btn-default btn-xs channel-active"
+                    ${channel.active ? ';border-style: inset' : ';border-style: outset'}"
+                class="btn btn-default btn-xs pixelated channel-active"
                 click.delegate="toggleChannel($index)">
                 ${channel.label}
             </button>

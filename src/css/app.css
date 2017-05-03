@@ -385,8 +385,15 @@ thumbnail-slider img {
     margin-left: 7px;
     margin-right: 1px;
 }
-.channel-slider .ui-slider-range {
-    image-rendering: pixelated;
+.channel-slider .ui-slider-range, .pixelated {
+    image-rendering:optimizeSpeed;
+    image-rendering:-moz-crisp-edges;
+    image-rendering:-o-crisp-edges;
+    image-rendering:-webkit-optimize-contrast;
+    image-rendering:optimize-contrast;
+    image-rendering:crisp-edges;
+    image-rendering:pixelated;
+    -ms-interpolation-mode:nearest-neighbor;
 }
 .channel-slider .ui-slider-handle {
     width: 10px;
@@ -428,7 +435,6 @@ thumbnail-slider img {
     background-repeat: no-repeat;
     height: 13px;
     width: 100px;
-    image-rendering: pixelated;
 }
 .luts-name {
     position: relative;
