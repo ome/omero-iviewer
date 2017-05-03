@@ -55,11 +55,11 @@ export default class ImageInfo {
     image_name = null;
 
     /**
-     * a flag for whether we are allowed to save the settings
+     * the canAnnotate permission
      * @memberof ImageInfo
      * @type {boolean}
      */
-    can_save_settings = false;
+    can_annotate = false;
 
     /**
      *  rendering settings as imported
@@ -259,10 +259,6 @@ export default class ImageInfo {
                 (parseInt(initialPlane)-1) : response.rdefs.defaultZ,
             max_z : response.size.z
         };
-        // do we have a scalebar
-        if (typeof response.pixel_size === 'object' &&
-            typeof response.pixel_size.x === 'number')
-            this.has_scalebar = true;
 
         // store projection and model
         this.projection =
@@ -271,8 +267,8 @@ export default class ImageInfo {
         this.model = initialModel !== null ?
             initialModel.toLowerCase() : response.rdefs.model;
 
-        // author and can Annotate means we are allowed to store
-        this.can_save_settings = response.perms.canAnnotate;
+        // set can annotate and author information
+        this.can_annotate = response.perms.canAnnotate;
         if (typeof response.meta.imageAuthor === 'string')
             this.author = response.meta.imageAuthor;
         if (typeof response.meta.imageName === 'string')

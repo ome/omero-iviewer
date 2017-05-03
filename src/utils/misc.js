@@ -24,11 +24,11 @@ export default class Misc {
 
     /**
      * A rudimentary check for when we send an ajax request using jsonp.
-     * In essence, anything that is not localhost or an empty string
-     * (relative assumed) should be handled via jsonp
+     * In essence, anything apart from an empty string (i.e. relative)
+     * and matching location/port should be handled via jsonp
      *
      * @static
-     * @return {boolean} true if we regard the server string not localhost
+     * @return {boolean} true if we regard the server string remote
      */
     static useJsonp(server="") {
         if (typeof server !== 'string') return false;
@@ -291,5 +291,15 @@ export default class Misc {
             url += "&x=" + settings.center[0] + "&y=" + settings.center[1];
 
         return url;
+    }
+
+    /**
+     * Tries to detect IE based on user agent
+     *
+     * @static
+     * @return {boolean} true if browser is IE, false otherwise
+     */
+    static isIE() {
+        return (new RegExp('MSIE|Trident|Edge')).test(navigator.userAgent);
     }
 }

@@ -43,11 +43,14 @@ export default class ChannelRange  {
     @bindable mode = 0;
 
     /**
-     * the luts png uri
+     * the luts png properties
      * @memberof ChannelRange
-     * @type {string}
+     * @type {Object}
      */
-    @bindable luts_png = '';
+    @bindable luts_png = {
+        url: '',
+        height: 0
+    };
 
     /**
      * the channels settings change mode handler
@@ -112,6 +115,9 @@ export default class ChannelRange  {
      */
     registerObservers() {
         this.unregisterObservers();
+        this.observers.push(
+            this.bindingEngine.propertyObserver(this.luts_png, 'height')
+                .subscribe((newValue, oldValue) => this.updateUI()));
         this.observers.push(
             this.bindingEngine.propertyObserver(this, 'mode')
                 .subscribe((newValue, oldValue) =>
@@ -391,6 +397,7 @@ export default class ChannelRange  {
          this.context.getSelectedImageConfig().addHistory({
              prop: ['image_info', 'channels', '' + this.index,'reverseIntensity'],
              old_val : !value, new_val: value, type: 'boolean'});
+         this.updateUI();
      }
 
      /**
@@ -401,24 +408,28 @@ export default class ChannelRange  {
      * @memberof ChannelRange
      */
      setSliderBackgroundAfterColorChange(isLut) {
+         let height = this.luts_png.height * 2;
+         let blackGradientOffset = height - 19;
+         let css = {
+             "background-image" : "url('" + this.luts_png.url + "')",
+             "background-size" : "100% " + height + "px",
+             "background-repeat": "no-repeat",
+             "background-position" : "0px -" + blackGradientOffset + "px",
+             "transform":
+                this.channel.reverseIntensity ? "scaleX(-1)" : "none",
+             "background-color": ""
+         };
          if (isLut) {
-             $(this.element).find(".channel-slider").find(".ui-slider-range").css(
-             "background", "");
-             $(this.element).find(".channel-slider").find(".ui-slider-range").css(
-                 {"background-image" :
-                    "url('" + this.luts_png + "')",
-                  "background-position" : "0 -" +
-                    (this.luts.get(this.channel.color).index*20) + "px",
-                  "background-size" : "100% 740px",
-                  "background-repeat": "no-repeat"});
+             let idx = this.luts.get(this.channel.color).index;
+             if (idx >= 0) idx = idx * 20 + 1;
+             else idx = blackGradientOffset;
+             css['background-position'] = "0px -" + idx + "px";
+             $(this.element).find(".channel-slider").find(
+                 ".ui-slider-range").css(css);
          } else {
-             $(this.element).find(".channel-slider").find(".ui-slider-range").css(
-                 {"background-image" :"",
-                  "background-position" : "",
-                  "background-size" : "",
-                  "background-repeat": ""});
-             $(this.element).find(".channel-slider").find(".ui-slider-range").css(
-             "background", "#" + this.channel.color);
+             css['background-color'] = "#" + this.channel.color;
+             $(this.element).find(".channel-slider").find(
+                 ".ui-slider-range").css(css);
          }
      }
 

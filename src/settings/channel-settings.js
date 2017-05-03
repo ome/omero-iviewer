@@ -80,12 +80,6 @@ export default class ChannelSettings extends EventSubscriber {
                     (params = {}) => this.onImageConfigChange(params)]];
 
     /**
-     * the luts png url
-     * @type {string}
-     */
-    luts_png = "";
-
-    /**
      * @constructor
      * @param {Context} context the application context (injected)
      * @param {BindingEngine} bindingEngine injected instance of BindingEngine
@@ -94,11 +88,6 @@ export default class ChannelSettings extends EventSubscriber {
         super(context.eventbus);
         this.context = context;
         this.bindingEngine = bindingEngine;
-
-        this.luts_png =
-            this.context.server +
-                this.context.getPrefixedURI(WEBGATEWAY, true) +
-                    '/img/luts_10.png';
     }
 
     /**

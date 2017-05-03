@@ -144,11 +144,9 @@
         <delete dir="${plugin.dir.static}/css" />
         <mkdir dir="${plugin.dir.static}/js" />
         <mkdir dir="${plugin.dir.static}/css" />
-        <concat destfile="${build.dir}/viewer.css" overwrite="true" fixlastline="true">
-            <fileset file="${ol.js}/dist/ol.css"/>
-            <fileset file="${basedir}/src/css/${ant.project.name}.css"/>
-        </concat>
-        <copy file="${build.dir}/viewer.css" todir="${plugin.dir.static}/css" overwrite="true"/>
+        <copy todir="${plugin.dir.static}/css" overwrite="true">
+            <fileset dir="${basedir}/src/css"/>
+        </copy>
         <copy file="${debug.name}" todir="${plugin.dir.static}/js" overwrite="true"/>
         <copy file="${dist.name}" todir="${plugin.dir.static}/js" overwrite="true"/>
     </target>

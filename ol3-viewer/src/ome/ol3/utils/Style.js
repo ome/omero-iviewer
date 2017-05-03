@@ -19,81 +19,87 @@ goog.require('ol.style.RegularShape');
  * @return {ol.style.Style|null} a style object or null if something went wrong
  */
 ome.ol3.utils.Style.createFeatureStyle = function(shape_info, is_label, fill_in_defaults) {
-	// preliminary checks
-	if (typeof(shape_info) != 'object') return null;
-	var forLabel = (typeof(is_label) === 'boolean') ? is_label : false;
+    // preliminary checks
+    if (typeof(shape_info) != 'object') return null;
+    var forLabel = (typeof(is_label) === 'boolean') ? is_label : false;
     if (typeof fill_in_defaults !== 'boolean') fill_in_defaults = true;
 
-	// that way we know whether at least one style property for stroke/fill was given
-	var stroke = {'count' : 0};
-	var fill = {'count' : 0};
+    // that way we know whether at least one style property for stroke/fill was given
+    var stroke = {'count' : 0};
+    var fill = {'count' : 0};
+    var tmpColor = null;
 
-	// FILL PROPERTIES
-	if (typeof(shape_info['fillColor']) === 'string') {
-		// we need hex +alpha to rgba conversion via color object
-		fill['color'] =
-			ome.ol3.utils.Conversion.convertHexColorFormatToObject(shape_info['fillColor'], shape_info['fillAlpha']);
-		fill['color'] = ome.ol3.utils.Conversion.convertColorObjectToRgba(fill['color']);
-		if (fill['color'] != null) fill['count']++;
-	}
+    // FILL PROPERTIES
+    if (typeof(shape_info['FillColor']) === 'number') {
+        // we need hex +alpha to rgba conversion via color object
+        tmpColor =
+            ome.ol3.utils.Conversion.convertSignedIntegerToColorObject(
+                shape_info['FillColor']);
+        fill['color'] = ome.ol3.utils.Conversion.convertColorObjectToRgba(tmpColor);
+        if (fill['color'] != null) fill['count']++;
+    }
 
-	// STROKE PROPERTIES
-	if (typeof(shape_info['strokeColor']) === 'string') {
-		// we need hex +alpha to rgba conversion via color object
-		stroke['color'] =
-			ome.ol3.utils.Conversion.convertHexColorFormatToObject(shape_info['strokeColor'], shape_info['strokeAlpha']);
-		stroke['color'] = ome.ol3.utils.Conversion.convertColorObjectToRgba(stroke['color']);
-		if (stroke['color'] != null) stroke['count']++;
-	}
-	if (typeof(shape_info['strokeWidth']) === 'number') {
-		stroke['width'] = shape_info['strokeWidth'];
-		stroke['count']++;
-	} else if (fill_in_defaults) {
-		stroke['width'] = 1;
-	}
-	if (stroke['count'] > 0) {
-		// we need to set some sensible defaults for the following
-		stroke['lineCap'] = "butt";
-		stroke['lineJoin'] = "miter";
-		stroke['miterLimit'] = 20;
-	}
+    // STROKE PROPERTIES
+    if (typeof(shape_info['StrokeColor']) === 'number') {
+        // we need hex +alpha to rgba conversion via color object
+        tmpColor =
+            ome.ol3.utils.Conversion.convertSignedIntegerToColorObject(
+                shape_info['StrokeColor']);
+        stroke['color'] = ome.ol3.utils.Conversion.convertColorObjectToRgba(tmpColor);
+        if (stroke['color'] != null) stroke['count']++;
+    }
+    if (typeof shape_info['StrokeWidth'] === 'object' &&
+        shape_info['StrokeWidth'] !== null &&
+        typeof shape_info['StrokeWidth']['Value'] === 'number') {
+            stroke['width'] = shape_info['StrokeWidth']['Value'];
+            stroke['count']++;
+    } else if (fill_in_defaults) {
+        stroke['width'] = 1;
+    }
+    if (stroke['count'] > 0) {
+        // we need to set some sensible defaults for the following
+        stroke['lineCap'] = "butt";
+        stroke['lineJoin'] = "miter";
+        stroke['miterLimit'] = 20;
+    }
 
-	// instantiate style objects
-	var strokeStyle = (stroke['count'] > 0) ? new ol.style.Stroke(stroke) : null;
-	var fillStyle = (fill['count'] > 0) ? new ol.style.Fill(fill) : null;
+    // instantiate style objects
+    var strokeStyle = (stroke['count'] > 0) ? new ol.style.Stroke(stroke) : null;
+    var fillStyle = (fill['count'] > 0) ? new ol.style.Fill(fill) : null;
 
-	// contains style information
-	var style = {};
-	var text = { "count" : 0};
-    if (typeof shape_info['textValue'] === 'string') {
-        text['text'] = shape_info['textValue'];
+    // contains style information
+    var style = {};
+    var text = { "count" : 0};
+    if (typeof shape_info['Text'] === 'string') {
+        text['text'] = shape_info['Text'];
         text['count']++;
-    } else if (typeof shape_info['textValue'] === 'object' &&
-        shape_info['textValue'] === null) {
+    } else if (typeof shape_info['Text'] === 'object' &&
+        shape_info['Text'] === null) {
         text['text'] = '';
         text['count']++;
     }
-	var font = "";
-	if (typeof(shape_info['fontStyle']) === 'string')
-		font += (shape_info['fontStyle'] + " ");
-	else if (fill_in_defaults) font += "normal ";
-	if (typeof(shape_info['fontSize']) === 'number')
-		font += (shape_info['fontSize'] + "px ");
-	else if (fill_in_defaults) font += "10px ";
-	if (typeof(shape_info['fontFamily']) === 'string')
-		font += shape_info['fontFamily'];
-	else if (fill_in_defaults) font += "sans-serif";
-	if (font.length > 0) {
+    var font = "";
+    if (typeof(shape_info['FontStyle']) === 'string')
+        font += (shape_info['FontStyle'] + " ");
+    else if (fill_in_defaults) font += "normal ";
+    if (typeof(shape_info['FontSize']) === 'object' &&
+        shape_info['FontSize'] !== 'null')
+        font += (shape_info['FontSize']['Value'] + "px ");
+    else if (fill_in_defaults) font += "10px ";
+    if (typeof(shape_info['FontFamily']) === 'string')
+        font += shape_info['FontFamily'];
+    else if (fill_in_defaults) font += "sans-serif";
+    if (font.length > 0) {
         text['font'] = font;
         text['count']++;
     }
-	if (strokeStyle) {
-		// we don't want spikes
-		stroke['lineCap'] = "round";
-		stroke['lineJoin'] = "round";
-		text['fill'] = new ol.style.Fill(stroke);
+    if (strokeStyle) {
+        // we don't want spikes
+        stroke['lineCap'] = "round";
+        stroke['lineJoin'] = "round";
+        text['fill'] = new ol.style.Fill(stroke);
         text['count']++;
-	} else if (forLabel &&
+    } else if (forLabel &&
         !(text['fill'] instanceof ol.style.Fill) && fillStyle) {
             text['fill'] = new ol.style.Fill(fill);
             text['count']++;
@@ -103,23 +109,23 @@ ome.ol3.utils.Style.createFeatureStyle = function(shape_info, is_label, fill_in_
 
         // we do not wish for defaults (ol creates default fill color)
         if (!fill_in_defaults &&
-                ((!forLabel && typeof shape_info['strokeColor'] !== 'string') ||
-                (forLabel && typeof shape_info['fillColor'] !== 'string' &&
-                    typeof shape_info['strokeColor'] !== 'string')))
+                ((!forLabel && typeof shape_info['StrokeColor'] !== 'number') ||
+                (forLabel && typeof shape_info['FillColor'] !== 'number' &&
+                    typeof shape_info['StrokeColor'] !== 'number')))
             style['text'].fill_ = null;
     }
 
-	if (strokeStyle) style['stroke'] = strokeStyle;
-	if (fillStyle) style['fill'] = fillStyle;
-	if (forLabel) { // the workaround for mere labels
-		style['stroke'] = new ol.style.Stroke(
-			{	'color': "rgba(255,255,255,0)", 'width': 1,
-				'lineCap' : "butt", 'lineJoin' : "miter", 'miterLimit' : 20
-			});
-		style['fill'] = new ol.style.Fill({'color': "rgba(255,255,255,0)"});
-	}
+    if (strokeStyle) style['stroke'] = strokeStyle;
+    if (fillStyle) style['fill'] = fillStyle;
+    if (forLabel) { // the workaround for mere labels
+        style['stroke'] = new ol.style.Stroke(
+            {'color': "rgba(255,255,255,0)", 'width': 1,
+             'lineCap' : "butt", 'lineJoin' : "miter", 'miterLimit' : 20
+            });
+        style['fill'] = new ol.style.Fill({'color': "rgba(255,255,255,0)"});
+    }
 
-	return new ol.style.Style(style);
+    return new ol.style.Style(style);
 }
 
 /**
@@ -133,127 +139,132 @@ ome.ol3.utils.Style.createFeatureStyle = function(shape_info, is_label, fill_in_
  * @param {ome.ol3.source.Regions} regions_reference a reference to the regions instance
  * @param {boolean=} forceUpdate forces label to be updated even if rotation/resolution (flags) were not modified
  */
-ome.ol3.utils.Style.updateStyleFunction = function(feature, regions_reference, forceUpdate) {
+ome.ol3.utils.Style.updateStyleFunction =
+    function(feature, regions_reference, forceUpdate) {
         if (!(feature instanceof ol.Feature))
             console.error("A style function requires an instance of a feature!");
 
         if (!(regions_reference instanceof ome.ol3.source.Regions))
             console.error("A style function requires an instance of Regions!");
 
-		// all this makes only sense with a style really
-		var oldStyle = feature.getStyle();
-		if (oldStyle == null) return;
-		var viewRef = regions_reference.viewer_.viewer_.getView();
+        // all this makes only sense with a style really
+        var oldStyle = feature.getStyle();
+        if (oldStyle == null) return;
+        var viewRef = regions_reference.viewer_.viewer_.getView();
 
-		// three possibilities:
+        // three possibilities:
         // we are a style, an array of styles (arrow),
         // or a style function...
-		if (typeof(oldStyle) === 'function')
-			oldStyle = oldStyle.call(feature, viewRef.getResolution());
+        if (typeof(oldStyle) === 'function')
+            oldStyle = oldStyle.call(feature, viewRef.getResolution());
         if (ome.ol3.utils.Misc.isArray(oldStyle))
             oldStyle = oldStyle[0]; // we want the first one only
 
-		// keep regions reference handy
-		feature['regions'] = regions_reference;
+        // keep regions reference handy
+        feature['regions'] = regions_reference;
 
-		// remember a heck of a lot of things to see if they have changed later
-		// 1. remember unselected style for un/select changes
-		var oldStrokeStyle = oldStyle.getStroke();
-		if (typeof(feature['oldStrokeStyle']) !== 'object') {
-			if (oldStrokeStyle)
-				feature['oldStrokeStyle'] = {
-					"color" : oldStrokeStyle.getColor(),
-					"width" : oldStrokeStyle.getWidth(),
-					"lineDash" : oldStrokeStyle.getLineDash(),
-					"lineCap" : oldStrokeStyle.getLineCap(),
-					"lineJoin" : oldStrokeStyle.getLineJoin(),
-					"miterLimit" : oldStrokeStyle.getMiterLimit(),
-				};
-			else feature['oldStrokeStyle'] = null;
-		}
-		// 2. remember old resolution/rotation and text scale/rotate flags
-		// this is only relevant for labels
-		if (feature.getGeometry() instanceof ome.ol3.geom.Label) {
-			if (typeof(feature['oldRotation']) === 'undefined')
-				feature['oldRotation'] = viewRef.getRotation();
-			if (typeof(feature['oldScale']) === 'undefined')
-				feature['oldScale'] = viewRef.getResolution();
-			if (typeof(feature['oldRotationFlag']) === 'undefined')
-				feature['oldRotationFlag'] = regions_reference.rotate_text_;
-			if (typeof(feature['oldScaleFlag']) === 'undefined')
-				feature['oldScaleFlag'] = regions_reference.scale_text_;
-		}
+        // remember a heck of a lot of things to see if they have changed later
+        // 1. remember unselected style for un/select changes
+        var oldStrokeStyle = oldStyle.getStroke();
+        if (typeof(feature['oldStrokeStyle']) !== 'object') {
+            if (oldStrokeStyle)
+                feature['oldStrokeStyle'] = {
+                    "color" : oldStrokeStyle.getColor(),
+                    "width" : oldStrokeStyle.getWidth(),
+                    "lineDash" : oldStrokeStyle.getLineDash(),
+                    "lineCap" : oldStrokeStyle.getLineCap(),
+                    "lineJoin" : oldStrokeStyle.getLineJoin(),
+                    "miterLimit" : oldStrokeStyle.getMiterLimit(),
+                };
+            else feature['oldStrokeStyle'] = null;
+        }
+        // 2. remember old resolution/rotation and text scale/rotate flags
+        // this is only relevant for labels
+        if (feature.getGeometry() instanceof ome.ol3.geom.Label) {
+            if (typeof(feature['oldRotation']) === 'undefined')
+                feature['oldRotation'] = viewRef.getRotation();
+            if (typeof(feature['oldScale']) === 'undefined')
+                feature['oldScale'] = viewRef.getResolution();
+            if (typeof(feature['oldRotationFlag']) === 'undefined')
+                feature['oldRotationFlag'] = regions_reference.rotate_text_;
+            if (typeof(feature['oldScaleFlag']) === 'undefined')
+                feature['oldScaleFlag'] = regions_reference.scale_text_;
+        }
 
-		// replace style function
-		feature.setStyle(function(actual_resolution) {
-			// fetch view via regions reference
-			if (!(feature['regions'] instanceof ome.ol3.source.Regions))
-				return oldStyle; // we are screwed, return old setStyle
+        // replace style function
+        feature.setStyle(function(actual_resolution) {
+            // fetch view via regions reference
+            if (!(feature['regions'] instanceof ome.ol3.source.Regions))
+                return oldStyle; // we are screwed, return old setStyle
 
-			var regions = feature['regions'];
+            var regions = feature['regions'];
             var geom = feature.getGeometry();
-			// find present flags for scaling/rotating text
-			var scale_text = regions.scale_text_;
-			var rotate_text = regions.rotate_text_;
-			// get present rotation
-			var rotation = viewRef.getRotation();
+            // find present flags for scaling/rotating text
+            var scale_text = regions.scale_text_;
+            var rotate_text = regions.rotate_text_;
+            // get present rotation
+            var rotation = viewRef.getRotation();
 
-			// is there a text style?
-			var textStyle = oldStyle.getText();
+            // is there a text style?
+            var textStyle = oldStyle.getText();
             // if show_comments flag is to false, we only set the text for labels
             var isLabel = (geom instanceof ome.ol3.geom.Label);
             if (!isLabel && !regions.show_comments_ &&
-                    (textStyle instanceof ol.style.Text)) {
-                feature['oldText'] = textStyle.clone();
-                textStyle = null;
-                oldStyle.text_ = textStyle;
+                (textStyle instanceof ol.style.Text)) {
+                    feature['oldText'] = textStyle.clone();
+                    textStyle = null;
+                    oldStyle.text_ = textStyle;
             } else if (!isLabel && regions.show_comments_ &&
-                        !(textStyle instanceof ol.style.Text) &&
-                        (feature['oldText'] instanceof ol.style.Text)) {
-                // this brings back a previously not shown comment
-                textStyle = feature['oldText'].clone();
-                oldStyle.text_ = textStyle;
+                       !(textStyle instanceof ol.style.Text) &&
+                       (feature['oldText'] instanceof ol.style.Text)) {
+                           // this brings back a previously not shown comment
+                           textStyle = feature['oldText'].clone();
+                           oldStyle.text_ = textStyle;
             }
 
-			if (textStyle instanceof ol.style.Text) {
-				// seems we want to adjust text to resolution level
-				if (scale_text) {
-					var newScale = 1/actual_resolution;
-					textStyle.setScale(newScale);
-				} else {// this is for a potential reset after a change
-					textStyle.setScale(1);
-				}
+            if (textStyle instanceof ol.style.Text) {
+                // seems we want to adjust text to resolution level
+                if (scale_text) {
+                    var newScale = 1/actual_resolution;
+                    textStyle.setScale(newScale);
+                } else {// this is for a potential reset after a change
+                    textStyle.setScale(1);
+                }
 
-				// seems we want the text to go along with the shape rotation
-				if (rotate_text)
-					textStyle.setRotation(rotation);
-				else
-					textStyle.setRotation(0);
+            // seems we want the text to go along with the shape rotation
+            if (rotate_text) textStyle.setRotation(rotation);
+            else textStyle.setRotation(0);
 
-					forceUpdate = forceUpdate || false;
-					if (isLabel && (forceUpdate ||
-					(feature['oldRotation'] !== rotation ||
-					 feature['oldScale'] !== actual_resolution ||
-				 	 feature['oldRotationFlag'] !== rotate_text ||
-				 		feature['oldScaleFlag'] !== scale_text))) {
-						if (feature['oldRotation'] !== rotation) feature['oldRotation'] = rotation;
-						if (feature['oldScale'] !== actual_resolution) feature['oldScale'] = actual_resolution;
-						if (feature['oldRotationFlag'] !== rotate_text) feature['oldRotationFlag'] = rotate_text;
-						if (feature['oldScaleFlag'] !== scale_text) feature['oldScaleFlag'] = scale_text;
-						if (forceUpdate) forceUpdate = false; // reset the flag, we do this only once
-						var newDims =
-							ome.ol3.utils.Style.measureTextDimensions(
-								textStyle.getText(), textStyle.getFont(),
-								scale_text ? null : actual_resolution);
-						var newRot = rotate_text ? 0 : 0-rotation;
-						geom.adjustCoordinates(newRot, newDims);
-				}
-			}
+            forceUpdate = forceUpdate || false;
+            if (isLabel && (forceUpdate ||
+                (feature['oldRotation'] !== rotation ||
+                feature['oldScale'] !== actual_resolution ||
+                feature['oldRotationFlag'] !== rotate_text ||
+                feature['oldScaleFlag'] !== scale_text))) {
+                    if (feature['oldRotation'] !== rotation)
+                        feature['oldRotation'] = rotation;
+                    if (feature['oldScale'] !== actual_resolution)
+                        feature['oldScale'] = actual_resolution;
+                    if (feature['oldRotationFlag'] !== rotate_text)
+                        feature['oldRotationFlag'] = rotate_text;
+                    if (feature['oldScaleFlag'] !== scale_text)
+                        feature['oldScaleFlag'] = scale_text;
+                    // reset the flag, we do this only once
+                    if (forceUpdate) forceUpdate = false;
+                    var newDims =
+                        ome.ol3.utils.Style.measureTextDimensions(
+                            textStyle.getText(), textStyle.getFont(),
+                            scale_text ? null : actual_resolution);
+                    var newRot = rotate_text ? 0 : 0-rotation;
+                    geom.adjustCoordinates(newRot, newDims);
+                }
+            }
 
-			var selected =
-				typeof(feature['selected'] === 'boolean') ? feature['selected'] : false;
-			if (selected) {
-				var selStyle = new ol.style.Stroke();
+            var selected =
+                typeof(feature['selected'] === 'boolean') ?
+                    feature['selected'] : false;
+            if (selected) {
+                var selStyle = new ol.style.Stroke();
                 var c = feature['oldStrokeStyle'] &&
                     typeof feature['oldStrokeStyle']['color'] !== 'undefined' ?
                         feature['oldStrokeStyle']['color'] : "rgba(0,153,255,0.9)";
@@ -270,10 +281,10 @@ ome.ol3.utils.Style.updateStyleFunction = function(feature, regions_reference, f
                         typeof feature['oldStrokeStyle']['width'] === 'number' ?
                             feature['oldStrokeStyle']['width'] : 1;
                 if (isLabel) w = 1;
-				selStyle.setWidth(w);
-				selStyle.setLineDash([5, 5]);
+                selStyle.setWidth(w);
+                selStyle.setLineDash([5, 5]);
                 oldStyle.stroke_ = selStyle;
-			} else if (feature['oldStrokeStyle']) {
+            } else if (feature['oldStrokeStyle']) {
                 // restore old style
                 var w = feature['oldStrokeStyle']['width'];
                 if (w !== 0)
@@ -286,9 +297,9 @@ ome.ol3.utils.Style.updateStyleFunction = function(feature, regions_reference, f
                         'width' : w
                     });
                 else oldStyle.stroke_ = null;
-			} else {
-					oldStyle.stroke_ = null;
-			}
+            } else {
+                oldStyle.stroke_ = null;
+            }
 
             var ret = [oldStyle];
             // arrow heads/tails for lines
@@ -321,14 +332,14 @@ ome.ol3.utils.Style.updateStyleFunction = function(feature, regions_reference, f
             }
 
             return ret;
-		});
+    });
 }
 
 /**
  * Helps measure the width of text using canvas metrics
  * it will return an object like this where the units are pixels:
  * <pre>
- *	{ width: 10, height: 20}
+ * { width: 10, height: 20}
  * </pre>
  *
  * @static
@@ -339,30 +350,32 @@ ome.ol3.utils.Style.updateStyleFunction = function(feature, regions_reference, f
  * @return {Object} a dimension object with properties width and height (in pixels)
  */
 ome.ol3.utils.Style.measureTextDimensions = function(text, font, resolution) {
-	// preliminary check: we need 2 strings
-	if (typeof(text) !== 'string' || typeof(font) !== 'string' ) return null;
+    // preliminary check: we need 2 strings
+    if (typeof(text) !== 'string' || typeof(font) !== 'string' ) return null;
 
-	var fontSize = 10;
-	resolution = (typeof(resolution) === 'number' && resolution > 0) ? resolution : 1;
-	var fontTokens = font.split(' ');
-	if (fontTokens.length != 3) return null;
+    var fontSize = 10;
+    resolution =
+        (typeof(resolution) === 'number' && resolution > 0) ? resolution : 1;
+    var fontTokens = font.split(' ');
+    if (fontTokens.length != 3) return null;
 
-	try {
-		fontSize = parseInt(fontTokens[1]);
-		fontSize *= resolution;
-		fontSize = Math.ceil(fontSize);
-		font = fontTokens[0] + " " + fontSize + "px " + fontTokens[2];
-	} catch(notANumber) {
-		// nothing we can do
-	}
+    try {
+        fontSize = parseInt(fontTokens[1]);
+        fontSize *= resolution;
+        fontSize = Math.ceil(fontSize);
+        font = fontTokens[0] + " " + fontSize + "px " + fontTokens[2];
+    } catch(notANumber) {
+        // nothing we can do
+    }
 
-	var canvas = document.createElement('canvas');
-	var ctx = canvas.getContext("2d");
-	ctx.font = font;
-	var metrics = ctx.measureText(text);
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext("2d");
+    ctx.font = font;
+    var metrics = ctx.measureText(text);
 
- 	// set return object with measured dimensions
-	return { 'width' : metrics.width > 0 ? metrics.width : 5, 'height' : fontSize};
+    // set return object with measured dimensions
+    return { 'width' : metrics.width > 0 ?
+                            metrics.width : 5, 'height' : fontSize};
 }
 
 /**
@@ -376,67 +389,46 @@ ome.ol3.utils.Style.measureTextDimensions = function(text, font, resolution) {
  * @return {ol.style.Style|null} an open layer's style instance or null
  */
 ome.ol3.utils.Style.cloneStyle = function(style) {
-	if (!(style instanceof ol.style.Style)) return null;
+    if (!(style instanceof ol.style.Style)) return null;
 
-	var newStyle = null;
+    var newStyle = null;
 
-	// FILL
-	var newFill = null;
-	if (style.getFill())
-		newFill = new ol.style.Fill({"color" : style.getFill().getColor()});
+    // FILL
+    var newFill = null;
+    if (style.getFill())
+        newFill = new ol.style.Fill({"color" : style.getFill().getColor()});
 
-	// STROKE
-	var newStroke = ome.ol3.utils.Style.cloneStroke(style.getStroke());
+    // STROKE
+    var newStroke = ome.ol3.utils.Style.cloneStroke(style.getStroke());
 
-	// TEXT
-	var newText = null;
-	if (style.getText()) {
-		var font =
-			style.getText().getFont() ? style.getText().getFont() : null;
-		/*
-		var rotation =
-			style.getText().getRotation() ? style.getText().getRotation() : 0;
-		var scale =
-			style.getText().getScale() ? style.getText().getScale() : 1;
-		*/
-		var text =
-			typeof style.getText().getText() === 'string' ?
-                style.getText().getText() : "";
-		/*
-		var textAlign =
-			style.getText().getTextAlign() ? style.getText().getTextAlign() : "center";
-		var textBaseline =
-			style.getText().getTextBaseline() ? style.getText().getTextBaseline() : "middle";
-		var offsetX =
-			style.getText().getOffsetX() ? style.getText().getOffsetX() : 0;
-		var offsetY =
-			style.getText().getOffsetY() ? style.getText().getOffsetY() : 0;
-		*/
-		var stroke = ome.ol3.utils.Style.cloneStroke(style.getText().getStroke());
-		var fill = style.getText().getFill() ?
-			new ol.style.Fill({"color" : style.getText().getFill().getColor()}) : null;
+    // TEXT
+    var newText = null;
+    if (style.getText()) {
+        var font =
+        style.getText().getFont() ? style.getText().getFont() : null;
+        var text =
+        typeof style.getText().getText() === 'string' ?
+            style.getText().getText() : "";
+        var stroke = ome.ol3.utils.Style.cloneStroke(style.getText().getStroke());
+        var fill = style.getText().getFill() ?
+            new ol.style.Fill(
+                {"color" : style.getText().getFill().getColor()}) : null;
 
-		// for our purposes and for now we are not going to set some things which
-		// have sensible defaults anyhow
-		newText = new ol.style.Text({
-			"font" : font,
-			//"rotation" : rotation,
-			//"scale" : scale,
-			"text" : text,
-			//"textAlign" : textAlign,
-			//"textBaseline" : textBaseline,
-			//"offsetX" : offsetX,
-			//"offsetY" : offsetY,
-			"stroke" : stroke,
-			"fill" : fill
-		});
-	}
+        // for our purposes and for now we are not going to set some things which
+        // have sensible defaults anyhow
+        newText = new ol.style.Text({
+            "font" : font,
+            "text" : text,
+            "stroke" : stroke,
+            "fill" : fill
+        });
+    }
 
-	if (newFill !== null || newStroke !== null || newText !== null)
-		newStyle = new ol.style.Style({
-			"fill" : newFill, "stroke" : newStroke, "text" : newText});
+    if (newFill !== null || newStroke !== null || newText !== null)
+        newStyle = new ol.style.Style({
+            "fill" : newFill, "stroke" : newStroke, "text" : newText});
 
-	return newStyle;
+    return newStyle;
 }
 
 /**
@@ -449,23 +441,23 @@ ome.ol3.utils.Style.cloneStyle = function(style) {
  * @return {ol.style.Stroke|null} an open layer's stroke instance or null
  */
  ome.ol3.utils.Style.cloneStroke = function(stroke) {
- 	if (!(stroke instanceof ol.style.Stroke)) return null;
+    if (!(stroke instanceof ol.style.Stroke)) return null;
 
-	var strokeColor = stroke.getColor() ? stroke.getColor() : null;
-	var strokeWidth = stroke.getWidth() !== null ? stroke.getWidth() : 1;
-	var lineCap = stroke.getLineCap() ? stroke.getLineCap() : "butt";
-	var lineDash = stroke.getLineDash() ? stroke.getLineDash() : null;
-	var lineJoin = stroke.getLineJoin() ? stroke.getLineJoin() : "miter";
-	var miterLimit = stroke.getMiterLimit() ? stroke.getMiterLimit() : 20;
+    var strokeColor = stroke.getColor() ? stroke.getColor() : null;
+    var strokeWidth = stroke.getWidth() !== null ? stroke.getWidth() : 1;
+    var lineCap = stroke.getLineCap() ? stroke.getLineCap() : "butt";
+    var lineDash = stroke.getLineDash() ? stroke.getLineDash() : null;
+    var lineJoin = stroke.getLineJoin() ? stroke.getLineJoin() : "miter";
+    var miterLimit = stroke.getMiterLimit() ? stroke.getMiterLimit() : 20;
 
-	return new ol.style.Stroke({
-		"color" : strokeColor,
-		"lineCap" : lineCap,
-		"lineDash" : lineDash,
-		"lineJoin" : lineJoin,
-		"miterLimit" : miterLimit,
-		"width" : strokeWidth
-	});
+    return new ol.style.Stroke({
+        "color" : strokeColor,
+        "lineCap" : lineCap,
+        "lineDash" : lineDash,
+        "lineJoin" : lineJoin,
+        "miterLimit" : miterLimit,
+        "width" : strokeWidth
+    });
 }
 
 /**
@@ -480,151 +472,151 @@ ome.ol3.utils.Style.cloneStyle = function(style) {
  */
 ome.ol3.utils.Style.modifyStyles =
     function(shape_info, regions_reference, feats, callback) {
-	if (!(regions_reference instanceof ome.ol3.source.Regions) ||
-			 typeof(shape_info) !== 'object') return;
+        if (!(regions_reference instanceof ome.ol3.source.Regions) ||
+            typeof(shape_info) !== 'object') return;
 
-    // use the selected features if no handed ins were present
-	if (!(feats instanceof ol.Collection)) {
-		if (regions_reference.select_ === null) return;
-		feats =  regions_reference.select_.getFeatures();
-	}
+        // use the selected features if no handed ins were present
+        if (!(feats instanceof ol.Collection)) {
+            if (regions_reference.select_ === null) return;
+            feats =  regions_reference.select_.getFeatures();
+        }
 
-    var ids = [];
-    var features = feats.getArray();
-    for (var i=0;i<features.length;i++) {
-        var feature = features[i];
+        var ids = [];
+        var features = feats.getArray();
+        for (var i=0;i<features.length;i++) {
+            var feature = features[i];
 
-		if (feature instanceof ol.Feature) {
-            // we pick the type from the existing feature
-            var type = feature['type'].toLowerCase();
-            shape_info['type'] = type;
-            // check for arrow markers
-            if (type === 'line' || type === 'polyline') {
-                if (typeof shape_info['strokeWidth'] === 'number' &&
-                        shape_info['strokeWidth'] === 0)
-                            shape_info['strokeWidth'] = 1;
-                if (typeof shape_info['markerStart'] === 'string')
-                    feature.getGeometry().has_start_arrow_ =
-                        shape_info['markerStart'] === 'Arrow';
-                else if (typeof shape_info['markerStart'] === 'object' &&
-                    shape_info['markerStart'] === null)
-                    feature.getGeometry().has_start_arrow_ = false;
-                if (typeof shape_info['markerEnd'] === 'string')
-                    feature.getGeometry().has_end_arrow_ =
-                        shape_info['markerEnd'] === 'Arrow';
-                else if (typeof shape_info['markerEnd'] === 'object' &&
-                    shape_info['markerEnd'] === null)
-                    feature.getGeometry().has_end_arrow_ = false;
-            }
-            var newStyle = ome.ol3.utils.Style.createFeatureStyle(
-                shape_info, (type === 'label'), false);
-            if (newStyle === null) continue;
+            if (feature instanceof ol.Feature) {
+                // we pick the type from the existing feature
+                var type = feature['type'].toLowerCase();
+                shape_info['type'] = type;
+                // check for arrow markers
+                if (type === 'line' || type === 'polyline') {
+                    if (typeof shape_info['StrokeWidth'] === 'object' &&
+                        shape_info['StrokeWidth'] !== null &&
+                        typeof shape_info['StrokeWidth']['Value'] === 'number' &&
+                        shape_info['StrokeWidth']['Value'] === 0)
+                                shape_info['StrokeWidth']['Value'] = 1;
+                    if (typeof shape_info['MarkerStart'] === 'string')
+                        feature.getGeometry().has_start_arrow_ =
+                            shape_info['MarkerStart'] === 'Arrow';
+                    else if (typeof shape_info['MarkerStart'] === 'object' &&
+                        shape_info['MarkerStart'] === null)
+                        feature.getGeometry().has_start_arrow_ = false;
+                    if (typeof shape_info['MarkerEnd'] === 'string')
+                        feature.getGeometry().has_end_arrow_ =
+                            shape_info['MarkerEnd'] === 'Arrow';
+                    else if (typeof shape_info['MarkerEnd'] === 'object' &&
+                        shape_info['MarkerEnd'] === null)
+                        feature.getGeometry().has_end_arrow_ = false;
+                }
+                var newStyle = ome.ol3.utils.Style.createFeatureStyle(
+                    shape_info, (type === 'label'), false);
+                if (newStyle === null) continue;
 
-			var style = feature.getStyle();
-			if (typeof(style) === 'function')
-				style = style(
-					regions_reference.viewer_.viewer_.getView().getResolution());
+                var style = feature.getStyle();
+                if (typeof(style) === 'function')
+                    style = style(
+                        regions_reference.viewer_.viewer_.getView().getResolution());
                 if (ome.ol3.utils.Misc.isArray(style)) style = style[0];
-				var newFillStyle =
-					newStyle.getFill() ? newStyle.getFill() : style.getFill();
+                var newFillStyle =
+                    newStyle.getFill() ? newStyle.getFill() : style.getFill();
 
-				var newStrokeStyle = null;
-				// first restore the old stroke style before selection
-				if (typeof(feature['oldStrokeStyle']) === 'object' &&
-							feature['oldStrokeStyle'] !== null) {
-					newStrokeStyle = new ol.style.Stroke();
-					newStrokeStyle.setColor(
-						feature['oldStrokeStyle']['color']);
-					newStrokeStyle.setWidth(
-						feature['oldStrokeStyle']['width']);
-					newStrokeStyle.setLineDash(
-						feature['oldStrokeStyle']['lineDash']);
-					newStrokeStyle.setLineCap(
-						feature['oldStrokeStyle']['lineCap']);
-					newStrokeStyle.setLineJoin(
-						feature['oldStrokeStyle']['lineJoin']);
-					newStrokeStyle.setMiterLimit(
-						feature['oldStrokeStyle']['miterLimit']);
-				}
-				if (newStyle.getStroke()) {
-					if (newStrokeStyle === null)
-						newStrokeStyle = new ol.style.Stroke();
-					// mix in new properties
-					if (newStyle.getStroke().getColor())
-						newStrokeStyle.setColor(newStyle.getStroke().getColor());
-					if (newStyle.getStroke().getLineCap())
-						newStrokeStyle.setLineCap(newStyle.getStroke().getLineCap());
-					if (newStyle.getStroke().getLineDash())
-						newStrokeStyle.setLineDash(newStyle.getStroke().getLineDash());
-					if (newStyle.getStroke().getLineJoin())
-						newStrokeStyle.setLineJoin(newStyle.getStroke().getLineJoin());
-					if (newStyle.getStroke().getMiterLimit())
-						newStrokeStyle.setMiterLimit(newStyle.getStroke().getMiterLimit());
-					if (typeof newStyle.getStroke().getWidth() === 'number')
-						newStrokeStyle.setWidth(newStyle.getStroke().getWidth());
-				}
-				var newTextStyle = style.getText();
-				if (newTextStyle === null &&
-                        feature['oldText'] instanceof ol.style.Text) {
-                    var tmp = newStyle.getText();
-                    if (tmp instanceof ol.style.Text) {
-                        if (typeof tmp.getText() === 'string')
-                            feature['oldText'].text_ = tmp.getText();
-                        if (typeof tmp.getFont() === 'string')
-                            feature['oldText'].font_ = tmp.getFont();
-                        if (newStrokeStyle)
-                            feature['oldText'].fill_ = newStrokeStyle;
-                    }
+                var newStrokeStyle = null;
+                // first restore the old stroke style before selection
+                if (typeof(feature['oldStrokeStyle']) === 'object' &&
+                    feature['oldStrokeStyle'] !== null) {
+                        newStrokeStyle = new ol.style.Stroke();
+                        newStrokeStyle.setColor(
+                        feature['oldStrokeStyle']['color']);
+                        newStrokeStyle.setWidth(
+                        feature['oldStrokeStyle']['width']);
+                        newStrokeStyle.setLineDash(
+                        feature['oldStrokeStyle']['lineDash']);
+                        newStrokeStyle.setLineCap(
+                        feature['oldStrokeStyle']['lineCap']);
+                        newStrokeStyle.setLineJoin(
+                        feature['oldStrokeStyle']['lineJoin']);
+                        newStrokeStyle.setMiterLimit(
+                        feature['oldStrokeStyle']['miterLimit']);
+                }
+                if (newStyle.getStroke()) {
+                    if (newStrokeStyle === null)
+                    newStrokeStyle = new ol.style.Stroke();
+                    // mix in new properties
+                    if (newStyle.getStroke().getColor())
+                        newStrokeStyle.setColor(newStyle.getStroke().getColor());
+                    if (newStyle.getStroke().getLineCap())
+                        newStrokeStyle.setLineCap(newStyle.getStroke().getLineCap());
+                    if (newStyle.getStroke().getLineDash())
+                        newStrokeStyle.setLineDash(newStyle.getStroke().getLineDash());
+                    if (newStyle.getStroke().getLineJoin())
+                        newStrokeStyle.setLineJoin(newStyle.getStroke().getLineJoin());
+                    if (newStyle.getStroke().getMiterLimit())
+                        newStrokeStyle.setMiterLimit(newStyle.getStroke().getMiterLimit());
+                    if (typeof newStyle.getStroke().getWidth() === 'number')
+                        newStrokeStyle.setWidth(newStyle.getStroke().getWidth());
+                }
+                var newTextStyle = style.getText();
+                if (newTextStyle === null &&
+                    feature['oldText'] instanceof ol.style.Text) {
+                        var tmp = newStyle.getText();
+                        if (tmp instanceof ol.style.Text) {
+                            if (typeof tmp.getText() === 'string')
+                                feature['oldText'].text_ = tmp.getText();
+                            if (typeof tmp.getFont() === 'string')
+                                feature['oldText'].font_ = tmp.getFont();
+                            if (newStrokeStyle)
+                                feature['oldText'].fill_ = newStrokeStyle;
+                        }
                 } else if (newTextStyle === null)
-					newTextStyle = newStyle.getText();
-				else if (newStyle.getText()) {
-					// mix in new properties
-					if (newStyle.getText().getFont())
-						newTextStyle.setFont(newStyle.getText().getFont());
-					if (newStyle.getText().getOffsetX())
-						newTextStyle.setOffsetX(newStyle.getText().getOffsetX());
-					if (newStyle.getText().getOffsetY())
-						newTextStyle.setOffsetY(newStyle.getText().getOffsetY());
-					if (newStyle.getText().getFill())
-						newTextStyle.setFill(newStyle.getText().getFill());
-					if (newStyle.getText().getRotation())
-						newTextStyle.setRotation(newStyle.getText().getRotation());
-					if (newStyle.getText().getScale())
-						newTextStyle.setScale(newStyle.getText().getScale());
-					if (newStyle.getText().getStroke())
-						newTextStyle.setStroke(newStyle.getText().getStroke());
-					if (typeof newStyle.getText().getText() === 'string')
-						newTextStyle.setText(newStyle.getText().getText());
-					if (newStyle.getText().getTextAlign())
-						newTextStyle.setTextAlign(newStyle.getText().getTextAlign());
-					if (newStyle.getText().getTextBaseline())
-						newTextStyle.setTextBaseline(newStyle.getText().getTextBaseline());
-				}
+                    newTextStyle = newStyle.getText();
+                else if (newStyle.getText()) {
+                    // mix in new properties
+                    if (newStyle.getText().getFont())
+                        newTextStyle.setFont(newStyle.getText().getFont());
+                    if (newStyle.getText().getOffsetX())
+                        newTextStyle.setOffsetX(newStyle.getText().getOffsetX());
+                    if (newStyle.getText().getOffsetY())
+                        newTextStyle.setOffsetY(newStyle.getText().getOffsetY());
+                    if (newStyle.getText().getFill())
+                        newTextStyle.setFill(newStyle.getText().getFill());
+                    if (newStyle.getText().getRotation())
+                        newTextStyle.setRotation(newStyle.getText().getRotation());
+                    if (newStyle.getText().getScale())
+                        newTextStyle.setScale(newStyle.getText().getScale());
+                    if (newStyle.getText().getStroke())
+                        newTextStyle.setStroke(newStyle.getText().getStroke());
+                    if (typeof newStyle.getText().getText() === 'string')
+                        newTextStyle.setText(newStyle.getText().getText());
+                    if (newStyle.getText().getTextAlign())
+                        newTextStyle.setTextAlign(newStyle.getText().getTextAlign());
+                    if (newStyle.getText().getTextBaseline())
+                        newTextStyle.setTextBaseline(newStyle.getText().getTextBaseline());
+                }
                 if (newTextStyle instanceof ol.style.Text &&
-                    typeof newTextStyle.text_ !== 'string')
-                        newTextStyle.text_ = "";
+                    typeof newTextStyle.text_ !== 'string') newTextStyle.text_ = "";
                 if (newTextStyle instanceof ol.style.Text &&
                     newTextStyle.fill_ === null)
                         newTextStyle.fill_ =
                             new ol.style.Fill({color: newStrokeStyle.getColor()});
 
-				var newMixedStyle = new ol.style.Style({
-					"fill" : newFillStyle,
-					"stroke" : newStrokeStyle,
-					"text" : newTextStyle
-				});
+                var newMixedStyle = new ol.style.Style({
+                    "fill" : newFillStyle,
+                    "stroke" : newStrokeStyle,
+                    "text" : newTextStyle
+                });
 
-				// reset oldStrokeStyle so that it is set with the new one
-				delete feature['oldStrokeStyle'];
-				feature.setStyle(newMixedStyle);
-				ome.ol3.utils.Style.updateStyleFunction(
-					feature,
-					regions_reference,
-					true);
+                // reset oldStrokeStyle so that it is set with the new one
+                delete feature['oldStrokeStyle'];
+                feature.setStyle(newMixedStyle);
+                ome.ol3.utils.Style.updateStyleFunction(
+                    feature, regions_reference, true);
 
                 // add id to the list for state change
                 ids.push(feature.getId());
-		}};
+            }
+        };
 
         if (ids.length > 0)
             regions_reference.setProperty(
@@ -644,89 +636,69 @@ ome.ol3.utils.Style.modifyStyles =
  * @param {boolean=} random_placement should the shapes be generated in random places?
  */
 ome.ol3.utils.Style.remedyShapeInfoIfNecessary =
-	function(shape_info, number, extent, random_placement) {
-		if (typeof(shape_info) !== 'object') return; // no shape info, no good
+    function(shape_info, number, extent, random_placement) {
+        // no shape info, no good
+        if (typeof(shape_info) !== 'object') return;
 
-		if (typeof(shape_info['type']) !== 'string' ||
-				shape_info['type'].length === 0) return;
+        if (typeof(shape_info['type']) !== 'string' ||
+            shape_info['type'].length === 0) return;
 
-		// we also need an extent to have an idea of placement
-		if (!ome.ol3.utils.Misc.isArray(extent) || extent.length != 4)
-			return null;
+        // we also need an extent to have an idea of placement
+        if (!ome.ol3.utils.Misc.isArray(extent) || extent.length != 4)
+            return null;
 
-		// if no number has been given, we default to 1
-		if (typeof(number) !== 'number')
-			number = 1;
-		if (number < 0) number = 1;
+        // if no number has been given, we default to 1
+        if (typeof(number) !== 'number') number = 1;
+        if (number < 0) number = 1;
 
-		// random_placement is optional, we default to false
-		if (typeof(random_placement) !== 'boolean')
-			random_placement = false;
+        // random_placement is optional, we default to false
+        if (typeof(random_placement) !== 'boolean') random_placement = false;
 
-		var type = shape_info['type'].toLowerCase();
-		if (type === 'point') {
-			if (typeof(shape_info['cx']) !== 'number' &&
-                typeof(shape_info['x']) !== 'number')
-				shape_info['cx'] = 6;
-			if (typeof(shape_info['cy']) !== 'number' &&
-                typeof(shape_info['x']) !== 'number')
-				shape_info['cy'] = 6;
-		} else if (type === 'line') {
-			if (typeof(shape_info['x1']) !== 'number')
-				shape_info['x1'] = 2;
-			if (typeof(shape_info['x2']) !== 'number')
-				shape_info['x2'] = 17;
-			if (typeof(shape_info['y1']) !== 'number')
-				shape_info['y1'] = 2;
-			if (typeof(shape_info['y2']) !== 'number')
-				shape_info['y2'] = 2;
-		} else if (type === 'polyline') {
-			if (typeof(shape_info['points']) !== 'string') {
-				// we have no svg path => draw a simple 3 line polyline
-				shape_info['points'] = "M 2 2 L 7 7 L12 2 L17 7";
-			}
-		} else if (type === 'polygon') {
-			if (typeof(shape_info['points']) !== 'string') {
-				// we have no svg path => draw a simple polygon
-				// take polyline above and close it
-				shape_info['points'] = "M 2 2 L 7 7 L12 2 L17 7 Z";
-			}
-		} else if (type === 'rectangle') {
-			if (typeof(shape_info['x']) !== 'number')
-				shape_info['x'] = 2;
-			if (typeof(shape_info['y']) !== 'number')
-				shape_info['y'] = 2;
-			if (typeof(shape_info['width']) !== 'number')
-				shape_info['width'] = 15;
-			if (typeof(shape_info['height']) !== 'number')
-				shape_info['height'] = 15;
-		 } else if (type === 'ellipse') {
-				if (typeof(shape_info['cx']) !== 'number' &&
-                    typeof(shape_info['x']) !== 'number')
-				 shape_info['cx'] = 20;
-				if (typeof(shape_info['cy']) !== 'number' &&
-                    typeof(shape_info['y']) !== 'number')
-					shape_info['cy'] = 15;
-				if (typeof(shape_info['rx']) !== 'number' &&
-                    typeof(shape_info['radiusX']) !== 'number')
-				 shape_info['rx'] = 8;
-				if (typeof(shape_info['ry']) !== 'number' &&
-                    typeof(shape_info['radiusY']) !== 'number')
-					shape_info['ry'] = 5;
- 		 } else if (type === 'label') {
- 				if (typeof(shape_info['fontFamily']) !== 'string')
-				shape_info['fontFamily'] = "sans-serif";
-				if (typeof(shape_info['fontSize']) !== 'number')
-					shape_info['fontSize'] = 15;
-				if (typeof(shape_info['fontStyle']) !== 'string')
-					shape_info['fontStyle'] = "normal";
-				 if (typeof(shape_info['textValue']) !== 'string')
-				 	shape_info['textValue'] = "generated";
-			 	 if (typeof(shape_info['x']) !== 'number')
-				 	shape_info['x'] = 10;
-				 if (typeof(shape_info['y']) !== 'number')
-				 	shape_info['y'] = 10;
- 		 }
+        var type = shape_info['type'].toLowerCase();
+        if (type === 'point') {
+            if (typeof shape_info['X'] !== 'number') shape_info['X'] = 6;
+            if (typeof shape_info['Y'] !== 'number') shape_info['Y'] = 6;
+        } else if (type === 'line') {
+            if (typeof shape_info['X1'] !== 'number') shape_info['X1'] = 2;
+            if (typeof shape_info['X2'] !== 'number') shape_info['X2'] = 17;
+            if (typeof shape_info['Y1'] !== 'number') shape_info['Y1'] = 2;
+            if (typeof shape_info['Y2'] !== 'number') shape_info['Y2'] = 2;
+        } else if (type === 'polyline') {
+            if (typeof shape_info['Points'] !== 'string')
+                shape_info['Points'] = "2,2 7,7 12,2 17,7";
+        } else if (type === 'polygon') {
+            if (typeof shape_info['Points'] !== 'string')
+                shape_info['Points'] = "2,2 7,7 12,2 17,7 2,2";
+        } else if (type === 'rectangle') {
+            if (typeof shape_info['X']  !== 'number') shape_info['X'] = 2;
+            if (typeof shape_info['Y']  !== 'number') shape_info['Y'] = 2;
+            if (typeof shape_info['Width'] !== 'number')
+                shape_info['Width'] = 15;
+            if (typeof shape_info['Height'] !== 'number')
+                shape_info['Height'] = 15;
+        } else if (type === 'ellipse') {
+            if (typeof shape_info['X'] !== 'number') shape_info['X'] = 20;
+            if (typeof shape_info['Y'] !== 'number') shape_info['Y'] = 15;
+            if (typeof shape_info['RadiusX'] !== 'number')
+                shape_info['RadiusX'] = 8;
+            if (typeof shape_info['RadiusY'] !== 'number')
+                shape_info['RadiusY'] = 5;
+        } else if (type === 'label') {
+            if (typeof shape_info['FontFamily'] !== 'string')
+                shape_info['FontFamily'] = "sans-serif";
+            if (typeof shape_info['FontSize'] !== 'object' ||
+                shape_info['FontSize'] === null ||
+                typeof shape_info['FontSize']['Value'] !== 'number') {
+                    shape_info['FontSize'] = {};
+                    shape_info['FontSize']['Value'] = 15;
+            }
+            if (typeof shape_info['FontStyle'] !== 'string')
+                shape_info['FontStyle'] = "normal";
+            if (typeof shape_info['Text'] !== 'string')
+                shape_info['Text'] = "generated";
+            if (typeof shape_info['X'] !== 'number') shape_info['X'] = 10;
+            if (typeof shape_info['Y']  !== 'number') shape_info['Y'] = 10;
+        }
 };
 
 /**
@@ -739,19 +711,20 @@ ome.ol3.utils.Style.remedyShapeInfoIfNecessary =
  * @param {Object} shape_info the roi shape information
  */
 ome.ol3.utils.Style.remedyStyleIfNecessary = function(shape_info) {
-	if (typeof(shape_info) !== 'object') return; // no shape info, no style
+    if (typeof(shape_info) !== 'object') return; // no shape info, no style
 
-	var defaultStrokeColor = "#FFFFFF";
-	var defaultStrokeAlpha = 1;
-	var defaultStrokeWidth = 1;
+    var defaultStrokeColor = -1;
+    var defaultStrokeWidth = 1;
 
-	// at a minumum we'd like to see the outline if no style has been handed in
-	if (typeof(shape_info['fillColor']) !== 'string' &&
-	 typeof(shape_info['strokeColor']) !== 'string') {
-		 shape_info['strokeColor'] = defaultStrokeColor;
-		 if (typeof(shape_info['strokeAlpha']) !== 'number')
-		 	shape_info['strokeAlpha'] = defaultStrokeAlpha;
-			if (typeof(shape_info['strokeWidth']) !== 'number')
- 		 	shape_info['strokeWidth'] = defaultStrokeWidth;
-	}
+    // at a minumum we'd like to see the outline if no style has been handed in
+    if (typeof(shape_info['FillColor']) !== 'number' &&
+        typeof(shape_info['StrokeColor']) !== 'number') {
+            shape_info['StrokeColor'] = defaultStrokeColor;
+            if (typeof shape_info['StrokeWidth'] !== 'object' ||
+                shape_info['StrokeWidth'] === null ||
+                typeof shape_info['StrokeWidth']['Value'] !== 'number') {
+                    shape_info['StrokeWidth'] = {};
+                    shape_info['StrokeWidth']['Value'] = defaultStrokeWidth;
+            }
+    }
 };
