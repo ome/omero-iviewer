@@ -1,21 +1,28 @@
 <template>
     <require from="../settings/settings"></require>
     <require from="../regions/regions"></require>
+    <require from="../info/info"></require>
 
     <ul class="nav nav-tabs" role="tablist">
-        <li class="active">
-            <a href="#setting" role="tab">Settings</a>
+        <li class="${context.selected_tab === '#info' ? 'active' : ''}">
+            <a href="#info" role="tab">Info</a>
         </li>
-        <li>
+        <li class="${context.selected_tab === '#settings' ? 'active' : ''}">
+            <a href="#settings" role="tab">Settings</a>
+        </li>
+        <li class="${context.selected_tab === '#rois' ? 'active' : ''}">
             <a href="#rois" role="tab">ROIs</a>
         </li>
     </ul>
 
-    <div class="tab-content regions-tabs">
-        <div role="tabpanel" class="regions-tabs tab-pane active" id="setting">
+    <div class="tab-content">
+        <div role="tabpanel" class="tab-pane ${context.selected_tab === '#info' ? 'active' : ''}" id="info">
+            <info class="container-fluid" config_id.bind="config_id"></info>
+        </div>
+        <div role="tabpanel" class="tab-pane ${context.selected_tab === '#settings' ? 'active' : ''}" id="settings">
             <settings class="container-fluid" config_id.bind="config_id"></settings>
         </div>
-        <div role="tabpanel" class="regions-tabs tab-pane" id="rois">
+        <div role="tabpanel" class="regions-tabs tab-pane ${context.selected_tab === '#rois' ? 'active' : ''}" id="rois">
             <regions class="container-fluid" config_id.bind="config_id"></regions>
         </div>
     </div>
