@@ -12,10 +12,8 @@
 
 .ol-scale-line {
     background: #fff;
-    border-radius: 4px;
     bottom: 8px;
     left: 8px;
-    padding: 2px;
     position: absolute;
     cursor: pointer;
 }
