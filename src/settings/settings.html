@@ -45,10 +45,10 @@
         </div>
         <div class="col-xs-6">
             <label class="${image_config && image_config.image_info &&
-                    image_config.image_info.has_histogram ? '' : 'disabled-color'}">
+                    !image_config.image_info.tiled ? '' : 'disabled-color'}">
             <input type="checkbox"
                 disabled.bind="!(image_config && image_config.image_info &&
-                    image_config.image_info.has_histogram)"
+                    !image_config.image_info.tiled)"
                 change.delegate="toggleHistogram($event.target.checked)" />
             Show Histogram
             </label>

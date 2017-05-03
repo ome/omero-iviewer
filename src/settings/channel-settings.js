@@ -361,7 +361,6 @@ export default class ChannelSettings extends EventSubscriber {
                 color: c.color, active: c.active, reverse: c.reverseIntensity}
            ]
        };
-       if (prop !== 'active') params.channel = index;
        this.context.publish(IMAGE_SETTINGS_CHANGE, params);
     }
 
