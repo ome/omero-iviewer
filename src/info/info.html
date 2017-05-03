@@ -1,0 +1,16 @@
+<template>
+
+    <div class="row">
+        <template repeat.for="column of columns">
+            <div class="col-sm-6 text-weight-bold">${column.label}</div>
+            <div class="col-sm-6">${column.value}</div>
+        </template>
+    </div>
+    <div class="row">
+        <div class="col-sm-6 text-weight-bold">Channels:</div>
+        <div class="col-sm-6">
+            <span repeat.for="channel of image_info.channels">${channel.label}${!$last ? ', ' : ''}</span>
+        </div>
+    </div>
+
+</template>

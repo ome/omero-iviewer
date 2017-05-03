@@ -1,3 +1,21 @@
+//
+// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+
 import {noView} from 'aurelia-framework';
 import {IMAGE_CONFIG_UPDATE} from '../events/events';
 import Misc from '../utils/misc';
@@ -57,7 +75,27 @@ export default class ImageInfo {
     image_name = null;
 
     /**
-     * the canAnnotate permission
+     * the acquisition date in the json response
+     * @memberof ImageInfo
+     * @type {string}
+     */
+    image_timestamp = null;
+
+    /**
+     * the pixels type in the json response
+     * @memberof ImageInfo
+     * @type {string}
+     */
+    image_pixels_type = null;
+
+    /** 
+     * the pixels size, defaul in macrons
+     * @memberof ImageInfo
+     */ 
+    image_pixels_size = null;
+
+    /**
+     * a flag for whether we are allowed to save the settings
      * @memberof ImageInfo
      * @type {boolean}
      */
@@ -275,6 +313,10 @@ export default class ImageInfo {
             this.author = response.meta.imageAuthor;
         if (typeof response.meta.imageName === 'string')
             this.image_name = response.meta.imageName;
+        if (typeof response.meta.pixelsType === 'string')
+            this.image_pixels_type = response.meta.pixelsType;
+        this.image_timestamp = response.meta.imageTimestamp;
+        this.image_pixels_size = response.pixel_size;
         this.sanityCheckInitialValues();
 
         // signal that we are ready and
