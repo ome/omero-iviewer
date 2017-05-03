@@ -312,7 +312,7 @@ export default class ChannelRange  {
                     "value", ui.values[1]);
 
                 let imgConf = this.context.getSelectedImageConfig();
-                if (!imgConf.image_info.tiled) return true;
+                if (imgConf.image_info.tiled) return true;
 
                 // we want to update the histogram on slide so we
                 // need a separate event. we throttle so that
