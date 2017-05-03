@@ -353,7 +353,7 @@ thumbnail-slider img {
 }
 
 .right-hand-panel li a {
-    padding: 0px 5px;
+    padding: 5px 20px;
 }
 
 .right-hand-panel .row {
@@ -483,18 +483,14 @@ thumbnail-slider img {
     cursor: pointer;
     float: left;
     border: 1px solid blue;
-    width: 95px;
-    margin: 2px;
-}
-
-.user-settings img {
-    max-width: 90px;
-    max-height: 90px;
+    padding: 2px;
+    margin: 2px 4px;
 }
 
 .user-settings div {
     text-align: center;
     max-width: 90px;
+    word-wrap: break-word;
     color: blue;
 }
 
@@ -892,4 +888,3 @@ thumbnail-slider img {
 .text-weight-bold {
    font-weight: 700;
  }
- 

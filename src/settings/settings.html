@@ -66,12 +66,14 @@
     <div class="row">
         <hr />
         <div>User Settings:</div>
-        <div repeat.for="rdef of rdefs"
-            class="user-settings"
-            click.delegate="applyUserSetting($index)">
-            <img src.bind="getRdefThumbUrl() + '/90/?rdefId=' + rdef.id + '&' + revision" />
-            <div>${rdef.owner.firstName + ' ' + rdef.owner.lastName}</div>
-        </div>
+        <div style="padding: 12px">
+            <div repeat.for="rdef of rdefs"
+                class="user-settings"
+                click.delegate="applyUserSetting($index)">
+                <img src.bind="getRdefThumbUrl() + '/90/?rdefId=' + rdef.id + '&' + revision" />
+                <div>${rdef.owner.firstName + ' ' + rdef.owner.lastName}</div>
+            </div>
+        <div>
     </div>
 
 </template>
