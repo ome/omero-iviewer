@@ -98,22 +98,29 @@ export class Info extends EventSubscriber {
         }
         let pixels_size = "";
         if (typeof this.image_info.image_pixels_size === 'object') {
+            let count = 0;
             if (typeof this.image_info.image_pixels_size.x == 'number') {
                 pixels_size += Number(this.image_info.image_pixels_size.x).toFixed(2);
             } else {
                pixels_size += "-";
+               count++;
             }
             pixels_size += " x ";
             if (typeof this.image_info.image_pixels_size.y == 'number') {
                 pixels_size += Number(this.image_info.image_pixels_size.y).toFixed(2);
             } else {
                 pixels_size += "-";
+                count++;
             }
             pixels_size += " x ";
             if (typeof this.image_info.image_pixels_size.z == 'number') {
                 pixels_size += Number(this.image_info.image_pixels_size.z).toFixed(2);
             } else {
                 pixels_size += "-";
+                count++;
+            }
+            if (count === 3) {
+                pixels_size = "Not available"
             }
         }
         this.columns = [
