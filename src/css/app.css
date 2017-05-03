@@ -171,6 +171,15 @@ a.ui-button:active,
     overflow: hidden;
     min-height: 40px;
     max-height: 40px;
+    background-color: #1F6AAA;
+}
+
+/** Text displayed in the header */
+.fixed-header-text {
+    text-align:center;
+    font-size: 20px;
+    color: white;
+    font-weight: bold;
 }
 
 .frame {
@@ -878,3 +887,8 @@ thumbnail-slider img {
 .modal-footer {
     padding: 4px;
 }
+
+.text-weight-bold {
+   font-weight: 700;
+ }
+ 
