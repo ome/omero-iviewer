@@ -242,9 +242,9 @@ export default class ChannelRange  {
      detached() {
          // tear down jquery elements
          try {
-             $(this.element).find(".channel-start").off("blur");
+             $(this.element).find(".channel-start").off();
              $(this.element).find(".channel-start").spinner("destroy");
-             $(this.element).find(".channel-end").off("blur");
+             $(this.element).find(".channel-end").off();
              $(this.element).find(".channel-end").spinner("destroy");
              $(this.element).find(".channel-slider").slider("destroy");
              $(this.element).find(".spectrum-input").spectrum("destroy");
@@ -268,22 +268,32 @@ export default class ChannelRange  {
                 CHANNEL_SETTINGS_MODE.FULL_RANGE,this.index);
         let minMaxValues =
             imgInf.getChannelMinMaxValues(this.mode,this.index);
+
          // channel start
-         $(this.element).find(".channel-start").spinner(
+         let channelStart = $(this.element).find(".channel-start");
+         channelStart.spinner(
              {min: minMaxRange.start_min, max: minMaxRange.start_max});
-             $(this.element).find(".channel-start").on("blur",
-                (event) => this.onRangeChange(event.target.value, true, true));
-         $(this.element).find(".channel-start").on("spinstop",
-            (event, ui) => {
+         let channelStartArrows =
+            $(channelStart).parent().find('a.ui-spinner-button');
+         channelStartArrows.css('display','none');
+         channelStart.on("focus",
+             (event) => channelStartArrows.css('display','block'));
+         channelStart.on("blur",
+                (event) => {
+                    channelStartArrows.css('display','none');
+                    this.onRangeChange(event.target.value, true, true);
+                });
+         channelStart.on("spinstop",
+            (event) => {
                 if (typeof event.keyCode !== 'number' ||
                     event.keyCode === 13)
                         this.onRangeChange(event.target.value, true);
         });
-        $(this.element).find(".channel-start").spinner(
-            "value", minMaxValues.start_val);
+        channelStart.spinner("value", minMaxValues.start_val);
 
         // channel range slider
-        $(this.element).find(".channel-slider").slider({
+        let channelRange = $(this.element).find(".channel-slider");
+        channelRange.slider({
             min: this.mode === CHANNEL_SETTINGS_MODE.FULL_RANGE ?
                     minMaxRange.start_min :
                     minMaxValues.start_val > minMaxValues.start_min ?
@@ -330,26 +340,39 @@ export default class ChannelRange  {
                                 end: ui.values[1]});}).bind(this);
                 this.lastUpdate = setTimeout(delayedUpdate, 100);
         }});
-        $(this.element).find(".channel-slider").css(
-            "background", "white");
+        channelRange.css("background", "white");
         // change slider background
         this.setSliderBackgroundAfterColorChange(
             this.luts instanceof Map &&
                typeof this.luts.get(this.channel.color) === 'object');
 
         //channel end
-        $(this.element).find(".channel-end").spinner(
+        let channelEnd = $(this.element).find(".channel-end");
+        channelEnd.spinner(
             {min: minMaxRange.end_min, max: minMaxRange.end_max});
-        $(this.element).find(".channel-end").on("blur",
-            (event) => this.onRangeChange(event.target.value, false, true));
-        $(this.element).find(".channel-end").on("blur spinstop",
+        let channelEndArrows =
+           $(channelEnd).parent().find('a.ui-spinner-button');
+        channelEndArrows.css('display','none');
+        channelEnd.on("blur",
+            (event) => {
+                channelEndArrows.css('display','none');
+                this.onRangeChange(event.target.value, false, true);
+            });
+        channelEnd.on("focus",
+            (event) => channelEndArrows.css('display','block'));
+        channelEnd.on("blur",
+            (event) => {
+                $(channelEnd).find('a.ui-spinner-button').css(
+                    'display','none');
+                this.onRangeChange(event.target.value, false, true);
+            });
+        channelEnd.on("spinstop",
             (event) => {
                 if (typeof event.keyCode !== 'number' ||
                     event.keyCode === 13)
                         this.onRangeChange(event.target.value)
         });
-       $(this.element).find(".channel-end").spinner(
-           "value",minMaxValues.end_val);
+       channelEnd.spinner("value",minMaxValues.end_val);
 
        //channel color
        $(this.element).find(".spectrum-input").spectrum({
