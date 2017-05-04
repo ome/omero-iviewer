@@ -626,8 +626,7 @@ export default class RegionsEdit extends EventSubscriber {
         let strokeColor =
             this.last_selected ?
                 this.last_selected.StrokeColor :
-                typeof this.regions_info.shape_defaults.StrokeColor === 'number' ?
-                    this.regions_info.shape_defaults.StrokeColor : 10092517;
+                    this.regions_info.shape_defaults.StrokeColor;
         let strokeWidth =
             this.last_selected ?
                 (typeof this.last_selected.StrokeWidth === 'object' &&
@@ -711,15 +710,14 @@ export default class RegionsEdit extends EventSubscriber {
         let fillOptions = this.getColorPickerOptions(true, this.last_selected);
         let fillSpectrum =
             $(this.element).find(".shape-fill-color .spectrum-input");
-        let fillColor = -129;
+        let fillColor = -256;
         let fillDisabled =
             type === 'line' || type === 'polyline' || type === 'label';
         if (!fillDisabled) {
             fillColor =
                 this.last_selected ?
                     this.last_selected.FillColor :
-                    typeof this.regions_info.shape_defaults.FillColor === 'number' ?
-                        this.regions_info.shape_defaults.FillColor : -129;
+                        this.regions_info.shape_defaults.FillColor;
         }
         fillOptions.color = Converters.signedIntegerToRgba(fillColor);
         fillSpectrum.spectrum(fillOptions);

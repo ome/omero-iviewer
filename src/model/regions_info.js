@@ -416,8 +416,8 @@ export default class RegionsInfo extends EventSubscriber {
      * @memberof RegionsEdit
      */
     resetShapeDefaults() {
-        this.shape_defaults['StrokeColor'] = 10092517;
-        this.shape_defaults['FillColor'] = -129
+        this.shape_defaults['StrokeColor'] = -65281;
+        this.shape_defaults['FillColor'] = -256;
         this.shape_defaults['StrokeWidth'] = {
             '@type': 'TBD#LengthI',
             'Unit': 'PIXEL',
