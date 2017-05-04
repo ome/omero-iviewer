@@ -14,6 +14,8 @@ export const IMAGE_SETTINGS_CHANGE = "IMAGE_SETTINGS_CHANGE";
 export const IMAGE_DIMENSION_CHANGE = "IMAGE_DIMENSION_CHANGE";
 /** whenever the dimension play should be started/stopped */
 export const IMAGE_DIMENSION_PLAY = "IMAGE_DIMENSION_PLAY";
+/** to initialize the regions (after a request) */
+export const REGIONS_INIT = "REGIONS_INIT";
 /** to set rois/shape properties such as visibility and selection */
 export const REGIONS_SET_PROPERTY = "REGIONS_SET_PROPERTY";
 /** whenever a region property change is received, e.g. selection, modification */

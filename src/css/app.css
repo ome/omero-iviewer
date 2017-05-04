@@ -135,14 +135,6 @@ a.ui-button:active,
     box-shadow:none;
     opacity:.65;
 }
-.header-content {
-    height: 40px;
-}
-.header-content label {
-    margin-left: 5px;
-    line-height: 40px;
-    font-weight: normal;
-}
 .link-url {
     height: 40px;
 }
@@ -492,7 +484,7 @@ thumbnail-slider img {
     color: blue;
 }
 
-.regions-tabs, .regions-container {
+.regions-tabs, .regions-tabs .tab-pane, .regions-container {
     height: 100%;
 }
 
@@ -891,4 +883,3 @@ thumbnail-slider img {
 .text-weight-bold {
    font-weight: 700;
  }
- 

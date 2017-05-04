@@ -4,8 +4,8 @@ import Misc from '../utils/misc';
 import Ui from '../utils/ui';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {
-    EventSubscriber,
-    IMAGE_VIEWER_RESIZE, REGIONS_SET_PROPERTY, REGIONS_STORED_SHAPES
+    EventSubscriber, IMAGE_VIEWER_RESIZE,
+    REGIONS_INIT, REGIONS_SET_PROPERTY, REGIONS_STORED_SHAPES
 } from '../events/events';
 
 /**
@@ -26,7 +26,10 @@ export default class RegionsList extends EventSubscriber {
      * @memberof RegionsList
      * @type {Array.<string,function>}
      */
-    sub_list = [[IMAGE_VIEWER_RESIZE,
+    sub_list = [[REGIONS_INIT,
+                    (params={}) =>
+                        setTimeout(this.adjustTableHeight.bind(this),50)],
+                [IMAGE_VIEWER_RESIZE,
                     (params={}) => this.adjustTableHeight()]];
 
     /**
@@ -109,10 +112,9 @@ export default class RegionsList extends EventSubscriber {
                             this.actUponSelectionChange()));
             this.observers.push(
                 this.bindingEngine.propertyObserver(
-                    this.context, "show_regions").subscribe(
+                    this.context, 'selected_tab').subscribe(
                         (newValue, oldValue) =>
-                            setTimeout(this.adjustTableHeight.bind(this), 25)
-            ));
+                            setTimeout(this.adjustTableHeight.bind(this), 25)));
             this.observers.push(
                 this.bindingEngine.propertyObserver(
                     this.regions_info, 'shape_to_be_drawn').subscribe(
@@ -294,12 +296,12 @@ export default class RegionsList extends EventSubscriber {
      * @memberof RegionsList
      */
     adjustTableHeight() {
-        if (!this.context.show_regions) return;
+        if (!this.context.isRoisTabActive()) return;
         let availableHeight =
             $(".regions-container").outerHeight() -
             $(".regions-tools").outerHeight() -
             $('.regions-header').outerHeight() -
-            $('.header-content').outerHeight();
+            $('.fixed-header').outerHeight();
         if (Misc.isIE()) availableHeight -= this.scrollbar_width;
 
         if (!isNaN(availableHeight))

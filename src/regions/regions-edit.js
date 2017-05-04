@@ -112,7 +112,7 @@ export default class RegionsEdit extends EventSubscriber {
                 this.context.addKeyListener(
                     action.key,
                         (event) => {
-                            if (!this.context.show_regions ||
+                            if (!this.context.isRoisTabActive() ||
                                     !event.ctrlKey) return;
                             action.func.apply(this, action.args);
                         }));
