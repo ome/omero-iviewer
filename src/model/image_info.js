@@ -52,13 +52,11 @@ export default class ImageInfo {
     tiled = false;
 
     /**
-     * a flag that signals whether the histogram is enabled or not
-     * this will be set accordingly by the histogram but due to its
-     * more global nature we want the flag here.
+     * a flag that signals whether we a pixe_size and hence a scalebar
      * @memberof ImageInfo
      * @type {boolean}
      */
-    has_histogram = false;
+    has_scalebar = false;
 
     /**
      * the imageAuthor in the json response

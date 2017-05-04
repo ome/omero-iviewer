@@ -30,6 +30,13 @@ export default class Histogram extends EventSubscriber {
     visible = false;
 
     /**
+     * we keep already requested c/z/t data
+     * @memberof Histogram
+     * @type {Map}
+     */
+    data_cache = new Map();
+
+    /**
      * we piggyback onto image settings and dimensions changes
      * to get notified for channel property and dimension changes
      * that result in histogram/line plotting
@@ -71,7 +78,7 @@ export default class Histogram extends EventSubscriber {
      * @memberof Histogram
      * @type {Array.<number>}
      */
-    last_active_channel = null;
+    last_active_channel = -1;
 
     /**
      * @constructor
@@ -93,25 +100,19 @@ export default class Histogram extends EventSubscriber {
         this.graph_dims[0] = el.width();
         this.graph_dims[1] = el.height();
 
+        // no histogram
+        if (this.image_info.tiled) return;
+
         //subscribe to events that tell us whenever and what we need to re-plot
         this.subscribe();
-
-        // we fire off a first request to check if backend supports histograms
-        this.requestHistogramJson(0, ((data) => {
-            if (this.image_info === null) return;
-                this.image_info.has_histogram = (data !== null);
-                if (this.image_info.has_histogram) this.createHistogramSVG(data);
-            }));
+        this.createHistogramSVG();
     }
 
     /**
-     * Creates the histogram
-     * @param {Array} data the data (from the initial request)
+     * Creates the histogram SVG
      * @memberof Histogram
      */
-    createHistogramSVG(data = null) {
-        if (!this.image_info.has_histogram) return;
-
+    createHistogramSVG() {
         // 1px margin to right so slider marker not lost
         this.graph_svg = d3.select($(this.selector).get(0)).append("svg")
               .attr("width", this.graph_dims[0] + 1)
@@ -136,9 +137,6 @@ export default class Histogram extends EventSubscriber {
               .attr("height", 300)
               .attr("width", 1)
               .attr("x", (d, i) => d * (this.graph_dims[1]/2));
-
-         // plot histogram
-         if (data) this.plotHistogram(0, data);
     }
 
     /**
@@ -147,29 +145,30 @@ export default class Histogram extends EventSubscriber {
      * @memberof Histogram
      */
     handleSettingsChanges(params = {}) {
-        // find first active channel
-        let channel = 0;
-        if (Misc.isArray(this.image_info.channels))
+        // use handed channel index or the last active channel that was used
+        let prop =
+            typeof params.prop === 'string' ? params.prop : null;
+        let channel =
+            typeof params.channel === 'number' ? params.channel :
+                Misc.isArray(params.ranges) ?
+                    params.ranges[0].index : this.last_active_channel;
+        // should we not have a last active channel or our channel was set
+        // inactive we choose the first active channel in the list
+        if (channel === -1 ||
+            (prop && prop === 'active' && !params.ranges[0].active)) {
             for (let i in this.image_info.channels)
                 if (this.image_info.channels[i].active) {
                     channel = parseInt(i);
                     break;
                 }
+        }
 
-        // check whether we need to plot the entire histogram or just
-        // the lines, in specific active, color and non channel changes (no prop)
-        // such as time and plane changes are going to trigger the plotting
-        // of the entire histogram (incl. backend request)
+        // replot the entire histogram if active changed, the channel color
+        // or the active channel
         let plotHistogram =
-            (typeof params.prop !== 'string' ||
-                params.prop === 'active' ||
-                params.prop === 'color');
+            prop === null || prop === 'active' || prop === 'color' ||
+            channel !== this.last_active_channel;
 
-        // special case: active toggle that doesn't affect the first active channel
-        if (plotHistogram && params.prop === "active" &&
-                channel === this.last_active_channel) return;
-        // update last active channel
-        this.last_active_channel = channel;
         if (plotHistogram) this.plotHistogram(channel);
         else if (typeof params.channel === 'number' && // range change
                     typeof params.start === 'number' &&
@@ -178,22 +177,20 @@ export default class Histogram extends EventSubscriber {
                 this.plotHistogramLines(
                     params.channel, params.start, params.end);
         else this.plotHistogramLines(channel);
+
+        // update last active channel
+        this.last_active_channel = channel;
     }
 
     /**
      * Plots the histogram
      * @param {number} channel the channel index
-     * @param {Array} data the data if it has already been requested
-     *                      (e.g. on createHistogramSVG)
      * @memberof Histogram
      */
-    plotHistogram(channel, data) {
-        // we don't plot if we are not enabled or visible or haven't been
-        // given a channel
-        if (!this.image_info.has_histogram || !this.visible ||
-                typeof channel !== 'number') return;
-
-        if (typeof this.image_info.channels[channel] !== 'object') return;
+    plotHistogram(channel) {
+        // we don't plot if we are not visible or haven't been given a channel
+        if (!this.visible || typeof channel !== 'number' ||
+            typeof this.image_info.channels[channel] !== 'object') return;
 
         // color: if not valid, gray will be applied by default,
         // for white we choose black
@@ -239,9 +236,12 @@ export default class Histogram extends EventSubscriber {
             this.plotHistogramLines(channel);
         };
 
-        // if we got data already (in the case of the initial request) => use it
-        // otherwise issue the ajax request
-        if (Misc.isArray(data)) plotHandler(data);
+        let time = this.image_info.dimensions.t;
+        let plane = this.image_info.dimensions.z;
+        let key = "" + channel + "/" + plane + "/" + time;
+        let alreadyRequested = this.data_cache.get(key);
+
+        if (alreadyRequested) plotHandler(alreadyRequested);
         else this.requestHistogramJson(channel, plotHandler);
     }
 
@@ -253,9 +253,8 @@ export default class Histogram extends EventSubscriber {
      * @memberof Histogram
      */
     plotHistogramLines(channel, start, end) {
-        // we don't plot if we are not enabled or visible
-        // or weren't given a channel
-        if (!this.image_info.has_histogram || !this.visible ||
+        // we don't plot if we are not visible or weren't given a channel
+        if (!this.visible ||
             typeof this.image_info.channels[channel] !== 'object') return;
 
         let c = this.image_info.channels[channel];
@@ -281,7 +280,7 @@ export default class Histogram extends EventSubscriber {
      * @memberof Histogram
      */
     toggleHistogramVisibilty(visible = false) {
-        if (!this.image_info.has_histogram || typeof visible !== 'boolean') return;
+        if (this.image_info.tiled || typeof visible !== 'boolean') return;
 
         if (visible) {
             // if we were invisible => plot again with present settings
@@ -328,6 +327,9 @@ export default class Histogram extends EventSubscriber {
                 let data =
                     typeof response === 'object' &&
                         Misc.isArray(response.data) ? response.data : null;
+                if (data) // store requested data
+                    this.data_cache.set(
+                        "" + channel + "/" + plane + "/" + time, data);
                 handler(data);
             },
             error : () => handler(null)});
