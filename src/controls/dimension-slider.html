@@ -6,16 +6,16 @@
           css="margin: -3px 5px"
           click.delegate="playDimension(true)" style="visibility: ${dim === 'z' ? 'hidden' : ''}">
     </div>
-    <div class="dim-arrows
-                ${dim === 'z' ? 'dim-arrow-up' : 'dim-arrow-left'}"
+    <div class="dim-arrows glyphicon
+                ${dim === 'z' ? 'glyphicon-chevron-up' : 'glyphicon-chevron-left'}"
         click.delegate="onArrowClick(dim === 'z' ? 1 : -1)">
     </div>
     <div name="dim"
         css="float: left; ${dim === 'z' ? 'height: 70%' : 'width: 60%'}">
         <span class='slider-value'></span>
     </div>
-    <div class="dim-arrows
-                ${dim === 'z' ? 'dim-arrow-down' : 'dim-arrow-right'}"
+    <div class="dim-arrows glyphicon
+                ${dim === 'z' ? 'glyphicon-chevron-down' : 'glyphicon-chevron-right'}"
                 click.delegate="onArrowClick(dim === 'z' ? -1 : 1)">
     </div>
     <div class="dim-arrows glyphicon
