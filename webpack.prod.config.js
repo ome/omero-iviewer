@@ -34,6 +34,7 @@ module.exports = {
         query: { compact: false, presets: ['es2015-loose', 'stage-1'], plugins: ['transform-decorators-legacy'] } },
       { test: /\.css?$/, loader: 'file?name=css/[name].[ext]' },
       { test: /\.(png|gif|jpg|jpeg)$/, loader: 'file?name=css/images/[name].[ext]' },
+      { test: /\.(woff|woff2)$/, loader: 'file?name=css/fonts/[name].[ext]' },
       { test: /\.html$/, loader: 'html' }
     ]
   }

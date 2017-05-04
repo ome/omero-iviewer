@@ -21,6 +21,10 @@ hr {
 .container-fluid {
     padding: 0px;
 }
+@font-face {
+  font-family: 'Glyphicons Halflings';
+  src: url('fonts/glyphicons-halflings-regular.woff');
+}
 /** BOOTSTRAP adjustments END **/
 
 /** JQUERY UI adjustments START **/
@@ -59,6 +63,7 @@ a.ui-button:active,
     margin: 0px;
     width: 40px;
     font-size: 11px;
+    float: left;
 }
 .ui-spinner a {
     width: 12px;
@@ -128,6 +133,7 @@ a.ui-button:active,
 }
 /** SPECTRUM colorpicker adjustments END **/
 
+/** APP SPECIFIC STYLES SECTION **/
 .disabled-color {
     cursor:not-allowed;
     filter:alpha(opacity=65);
