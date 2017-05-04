@@ -152,7 +152,7 @@ export default class Histogram extends EventSubscriber {
             typeof params.channel === 'number' ? params.channel :
                 Misc.isArray(params.ranges) ?
                     params.ranges[0].index : this.last_active_channel;
-        // should we not have a last lactive channel or our channel was set
+        // should we not have a last active channel or our channel was set
         // inactive we choose the first active channel in the list
         if (channel === -1 ||
             (prop && prop === 'active' && !params.ranges[0].active)) {
