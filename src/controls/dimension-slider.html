@@ -4,7 +4,7 @@
                 dim === 't' && player_info.forwards ? 'glyphicon-stop' :
                 'glyphicon-play'}"
           css="margin: -3px 5px"
-          click.delegate="playDimension(true)" style="visibility: ${dim === 'z' ? 'hidden' : ''}">
+          click.delegate="playDimension(true)" style="visibility: ${dim === 'z' ? 'hidden' : 'visible'}">
     </div>
     <div class="dim-arrows glyphicon
                 ${dim === 'z' ? 'glyphicon-chevron-up' : 'glyphicon-chevron-left'}"
@@ -23,6 +23,6 @@
                 dim === 'z' && player_info.forwards ? 'glyphicon-stop' :
                 'glyphicon-play'}"
           css="margin: 5px 0px 0px -3px"
-          click.delegate="playDimension(true)" style="visibility: ${dim === 't' ? 'hidden' : ''}">
+          click.delegate="playDimension(true)" style="visibility: ${dim === 't' ? 'hidden' : 'visible'}">
     </div>
 </template>
