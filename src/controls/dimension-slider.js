@@ -242,8 +242,6 @@ export default class DimensionSlider extends EventSubscriber {
         let imgInf = this.image_config.image_info;
         let oldValue = imgInf.dimensions[this.dim];
 
-        $('.slider-corner .' + this.dim).text(value+1);
-
         // no need to change for a the same value
         if (slider_interaction ||
                 (!slider_interaction && value === oldValue)) return;
@@ -306,7 +304,6 @@ export default class DimensionSlider extends EventSubscriber {
             change: (event, ui) => this.onChange(ui.value,
                 event.originalEvent ? true : false)
         });
-        $('.slider-corner .' + this.dim).text(imgInf.dimensions[this.dim]+1);
         this.show();
     }
 
@@ -319,6 +316,15 @@ export default class DimensionSlider extends EventSubscriber {
         if (this.player_info.handle !== null) return;
         let oldVal = $(this.elSelector).slider('value');
         $(this.elSelector).slider('value',  oldVal + step);
+    }
+
+    /**
+     * Projects along z or t
+     *
+     * @memberof DimensionSlider
+     */
+    projection(value) {
+        console.log(value);
     }
 
     /**

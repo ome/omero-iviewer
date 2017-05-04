@@ -1,4 +1,7 @@
 <template>
+    <div class="dim-arrows">
+        <span class="slider-corner">${dim === 't' ? 'T' : ''}</span>
+    </div>
     <div class="dim-arrows glyphicon 
                 ${player_info.handle !== null && player_info.dim === dim &&
                 dim === 't' && player_info.forwards ? 'glyphicon-stop' :
@@ -6,17 +9,23 @@
           css="margin: -3px 5px; visibility: ${dim === 'z' ? 'hidden' : 'visible'}"
           click.delegate="playDimension(true)">
     </div>
+    <div class="dim-arrows">
+        <span class="slider-corner">${dim === 'z' ? image_config.image_info.dimensions['max_z'] : image_config.image_info.dimensions['t']+1}</span>
+    </div>
     <div class="dim-arrows glyphicon
                 ${dim === 'z' ? 'glyphicon-chevron-up' : 'glyphicon-chevron-left'}"
         click.delegate="onArrowClick(dim === 'z' ? 1 : -1)">
     </div>
     <div name="dim"
-        css="float: left; ${dim === 'z' ? 'height: 70%' : 'width: 60%'}">
+        css="float: left; ${dim === 'z' ? 'height: 70%' : 'width: 70%'}">
         <span class='slider-value'></span>
     </div>
     <div class="dim-arrows glyphicon
                 ${dim === 'z' ? 'glyphicon-chevron-down' : 'glyphicon-chevron-right'}"
                 click.delegate="onArrowClick(dim === 'z' ? -1 : 1)">
+    </div>
+    <div class="dim-arrows">
+        <span class="slider-corner">${dim === 't' ? image_config.image_info.dimensions['max_t'] : image_config.image_info.dimensions['z']+1}</span>
     </div>
     <div class="dim-arrows glyphicon
                 ${player_info.handle !== null && player_info.dim === dim &&
@@ -24,5 +33,8 @@
                 'glyphicon-play'}"
           css="margin: 5px 0px 0px -3px; visibility: ${dim === 't' ? 'hidden' : 'visible'}"
           click.delegate="playDimension(true)">
+    </div>
+        <div class="dim-arrows">
+        <span class="slider-corner">${dim === 'z' ? 'Z' : ''}</span>
     </div>
 </template>
