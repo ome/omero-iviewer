@@ -6,8 +6,6 @@ export const IMAGE_VIEWER_INIT = "IMAGE_VIEWER_INIT";
 export const IMAGE_CONFIG_SELECT = "IMAGE_CONFIG_SELECT";
 /** whenever the image viewer needs to be resized */
 export const IMAGE_VIEWER_RESIZE = "IMAGE_VIEWER_RESIZE";
-/** whenever the viewer scalebar status (show/hide) is toggled */
-export const IMAGE_VIEWER_SCALEBAR = "IMAGE_VIEWER_SCALEBAR";
 /** whenever the image viewer split view is turned on/off */
 export const IMAGE_VIEWER_SPLIT_VIEW = "IMAGE_VIEWER_SPLIT_VIEW";
 /** whenever the image rendering settings change: channel, model, projection*/

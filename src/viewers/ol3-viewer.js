@@ -11,13 +11,12 @@ import {ol3} from '../../libs/ol3-viewer.js';
 import {IVIEWER, REGIONS_DRAWING_MODE, RENDER_STATUS} from '../utils/constants';
 import {
     IMAGE_CONFIG_UPDATE, IMAGE_VIEWER_INIT, IMAGE_VIEWER_RESIZE,
-    IMAGE_VIEWER_SCALEBAR, IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY,
-    IMAGE_SETTINGS_CHANGE, REGIONS_SET_PROPERTY, REGIONS_PROPERTY_CHANGED,
-    VIEWER_IMAGE_SETTINGS, IMAGE_VIEWER_SPLIT_VIEW,
-    REGIONS_DRAW_SHAPE, REGIONS_CHANGE_MODES, REGIONS_SHOW_COMMENTS,
-    REGIONS_GENERATE_SHAPES, REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES,
-    REGIONS_HISTORY_ENTRY, REGIONS_HISTORY_ACTION,REGIONS_MODIFY_SHAPES,
-    REGIONS_COPY_SHAPES, EventSubscriber }
+    IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY, IMAGE_SETTINGS_CHANGE,
+    REGIONS_SET_PROPERTY, REGIONS_PROPERTY_CHANGED, VIEWER_IMAGE_SETTINGS,
+    IMAGE_VIEWER_SPLIT_VIEW, REGIONS_DRAW_SHAPE, REGIONS_CHANGE_MODES,
+    REGIONS_SHOW_COMMENTS, REGIONS_GENERATE_SHAPES, REGIONS_STORED_SHAPES,
+    REGIONS_STORE_SHAPES, REGIONS_HISTORY_ENTRY, REGIONS_HISTORY_ACTION,
+    REGIONS_MODIFY_SHAPES, REGIONS_COPY_SHAPES, EventSubscriber }
 from '../events/events';
 
 
@@ -69,8 +68,6 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.initViewer(params)],
         [IMAGE_VIEWER_RESIZE,
             (params={}) => this.resizeViewer(params)],
-        [IMAGE_VIEWER_SCALEBAR,
-            (params={}) => this.showScalebar(params.visible)],
         [IMAGE_DIMENSION_CHANGE,
             (params={}) => this.changeDimension(params)],
         [IMAGE_DIMENSION_PLAY,
@@ -247,8 +244,6 @@ export default class Ol3Viewer extends EventSubscriber {
         // the event doesn't concern us
         if (params.config_id !== this.config_id) return;
 
-        // try and display the scale bar by default
-        this.showScalebar(true);
         // whould we display regions...
         this.showRegions(this.context.show_regions);
 
@@ -516,18 +511,6 @@ export default class Ol3Viewer extends EventSubscriber {
             this.changeRegionsModes(
                 { modes: this.image_config.regions_info.regions_modes});
         } else this.viewer.setRegionsVisibility(false, []);
-    }
-
-    /**
-     * Toggles the scalebar status, i.e. shows/hides the scale bar
-     *
-     * @param {boolean} flag true if we want to show the scalebar, false otherwise
-     * @memberof Ol3Viewer
-     */
-    showScalebar(flag) {
-        if (this.viewer) // if toggle fails we use null (for disable)
-            this.context.show_scalebar =
-                this.viewer.toggleScaleBar(flag) ? flag : null;
     }
 
     /**

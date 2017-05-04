@@ -97,12 +97,6 @@ export default class Context {
     show_regions = false;
 
     /**
-     * the global flag for showing the scalebar
-     * @type {boolean|null}
-     */
-     show_scalebar = null;
-
-    /**
      * the global value indicating the selected tab
      * @type {String}
      */
@@ -358,7 +352,6 @@ export default class Context {
 
         // reset
         this.show_regions = false;
-        this.show_scalebar = null;
 
         // we do not keep the other configs around unless we are in MDI mode.
         if (!this.useMDI)
