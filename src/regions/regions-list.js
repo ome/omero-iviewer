@@ -117,6 +117,12 @@ export default class RegionsList extends EventSubscriber {
                             setTimeout(this.adjustTableHeight.bind(this), 25)));
             this.observers.push(
                 this.bindingEngine.propertyObserver(
+                    this.regions_info, 'visibility_toggles').subscribe(
+                        (newValue, oldValue) =>
+                            $('#shapes_visibility_toggler').prop(
+                                'checked', newValue === 0)));
+            this.observers.push(
+                this.bindingEngine.propertyObserver(
                     this.regions_info, 'shape_to_be_drawn').subscribe(
                         (newValue, oldValue) => {
                             if (newValue === null) {
@@ -229,20 +235,25 @@ export default class RegionsList extends EventSubscriber {
      * @memberof RegionsList
      */
     enableTableResize() {
-        $('.regions-header').off("mouseleave");
-        $('.regions-header').mouseleave((e) => this.is_dragging = false);
+        $('.regions-header').off();
+        $('.regions-header').on(
+            "mouseup mouseleave", (e) => this.is_dragging = false);
         $('.regions-header .regions-table-col').off("mousemove");
         $('.regions-header .regions-table-col').mousemove((e) => {
             e.preventDefault();
              // column selection/grabbing
             if(!this.is_dragging) {
                 let cell = $(e.target);
-                let index =
-                    parseInt(cell.attr("id").substring("reg-col-".length));
+                if (!cell.hasClass("regions-table-col")) return;
+                let id = cell.attr("id")
+                let len = "reg-col-".length;
+                if (typeof id !== "string" || id.length < len) return;
+                let index = parseInt(id.substring(len));
                 var border = parseInt(cell.css('border-left-width'));
                 if (isNaN(border)) return;
 
                 // we only allow right border dragging
+                let colNr = $('.regions-header .regions-table-col').length;
                 if (e.offsetX >= -border && e.offsetX <= border &&
                    e.offsetY > 0 && e.offsetY < cell.outerHeight() &&
                    index > 0) {
@@ -253,7 +264,8 @@ export default class RegionsList extends EventSubscriber {
                           e.offsetX >= cell.innerWidth() &&
                           e.offsetX <= cell.outerWidth() &&
                           e.offsetY > 0 &&
-                          e.offsetY < cell.outerHeight()) {
+                          e.offsetY < cell.outerHeight() &&
+                          index < colNr-1) {
                               this.column_resized = index;
                               cell.css("cursor", "col-resize");
                               this.enableColumnResize(e);
@@ -421,6 +433,31 @@ export default class RegionsList extends EventSubscriber {
         let roi = this.regions_info.data.get(roi_id);
         if (typeof roi === 'undefined') return;
         roi.show = !roi.show;
+    }
+
+    /**
+     * Show/Hide all shapes
+     *
+     * @param {boolean} show true if we want to show, otherwise hide
+     * @memberof RegionsList
+     */
+    toggleAllShapesVisibility(show) {
+        let ids = [];
+        this.regions_info.data.forEach(
+            (roi) =>
+                roi.shapes.forEach(
+                    (shape) => {
+                        if (shape.visible !== show &&
+                            !(shape.deleted &&
+                            typeof shape.is_new === 'boolean' && shape.is_new))
+                                ids.push(shape.shape_id);
+                    })
+        );
+        this.context.publish(
+           REGIONS_SET_PROPERTY, {
+               config_id: this.regions_info.image_info.config_id,
+               property : "visible",
+               shapes : ids, value : show});
     }
 
     /**

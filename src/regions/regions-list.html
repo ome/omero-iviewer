@@ -6,7 +6,16 @@
             <div id="reg-col-2" class="regions-table-col shape-z">Z</div>
             <div id="reg-col-3" class="regions-table-col shape-t">T</div>
             <div id="reg-col-4" class="regions-table-col shape-comment">Comment</div>
-            <div id="reg-col-5" class="regions-table-col shape-show">Show</div>
+            <div id="reg-col-5" class="regions-table-col shape-show">
+                <label for="shapes_visibility_toggler"
+                       show.bind="regions_info.data.size > 0">Show</label>
+                <input id="shapes_visibility_toggler"
+                       title="Show/Hide all rois"
+                       checked
+                       change.delegate="toggleAllShapesVisibility($event.target.checked)"
+                       disabled.bind="regions_info.shape_to_be_drawn !== null"
+                       type="checkbox" />
+            </div>
         </div>
         <div class="regions-table">
             <template repeat.for="[roi_id, roi] of regions_info.data">
@@ -54,6 +63,7 @@
                         </div>
                         <div class="regions-table-col shape-show">
                             <input type="checkbox" checked.bind="shape.visible"
+                                title="Show/Hide shape"
                                 disabled.bind="regions_info.shape_to_be_drawn !== null"
                                 change.delegate="toggleShapeVisibility(shape.shape_id, shape.visible, $event)"/>
                         </div>

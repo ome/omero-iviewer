@@ -47,6 +47,17 @@ export default class RegionsInfo extends EventSubscriber {
     selected_shapes = [];
 
     /**
+     * the balance of individual shape show vs hide toggles
+     * a diffing method in a sense with zero equaling showing all,
+     * the initial state while a hide will add a -1 and a show will add a 1
+     * probably the less painful method as opposed to a total count tracking
+     * which necessitats more variables still as well as more work.
+     * @memberof RegionsInfo
+     * @type {boolean}
+     */
+    visibility_toggles = 0;
+
+    /**
      * the json of the copied shapes
      * (which uses also local storage -if supported)
      * @memberof RegionsInfo
@@ -189,10 +200,13 @@ export default class RegionsInfo extends EventSubscriber {
         // set its new value
         if (typeof shape[property] !== 'undefined') shape[property] = value;
         // modify the selected set for actions that influence it
-        if (property === 'selected' && value) {
-            this.data.get(ids.roi_id).show = true;
-            let i = this.selected_shapes.indexOf(id);
-            if (i === -1) this.selected_shapes.push(id);
+        if ((property === 'selected' || property === 'visible') && value) {
+            if (property === 'visible') this.visibility_toggles++;
+            else {
+                this.data.get(ids.roi_id).show = true;
+                let i = this.selected_shapes.indexOf(id);
+                if (i === -1) this.selected_shapes.push(id);
+            }
         } else if ((property === 'selected' && !value) ||
                     (property === 'visible' && !value) ||
                     (property === 'deleted' && value)) {
@@ -200,9 +214,15 @@ export default class RegionsInfo extends EventSubscriber {
             if (i !== -1) this.selected_shapes.splice(i, 1);
             shape.selected = false;
             if (property === 'deleted' &&
-                typeof shape.is_new === 'boolean' && shape.is_new)
+                typeof shape.is_new === 'boolean' && shape.is_new) {
                     roi.deleted++;
-        } else if (property === 'deleted' && !value) roi.deleted--;
+                    if (!shape.visible) this.visibility_toggles++;
+            } else if (property === 'visible') this.visibility_toggles--;
+        } else if (property === 'deleted' && !value) {
+            roi.deleted--;
+            if (typeof shape.is_new === 'boolean' && shape.is_new &&
+                !shape.visible) this.visibility_toggles--;
+        }
     }
 
     /**

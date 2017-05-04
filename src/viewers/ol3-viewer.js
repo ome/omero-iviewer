@@ -626,7 +626,8 @@ export default class Ol3Viewer extends EventSubscriber {
                 // we reset modifed
                 shape.modified = false;
                 // new ones are stored under their newly created ids
-                if (typeof shape.is_new === 'boolean') {
+                let wasNew = typeof shape.is_new === 'boolean' && shape.is_new;
+                if (wasNew) {
                     let newRoi =
                         this.image_config.regions_info.data.get(
                             newRoiAndShapeId.roi_id);
@@ -658,6 +659,9 @@ export default class Ol3Viewer extends EventSubscriber {
                     if (oldRoi.shapes.size === 0)
                         this.image_config.regions_info.data.delete(
                             oldRoiAndShapeId.roi_id);
+                    // take out of count if not visible and been deleted
+                    if (!wasNew && !shape.visible)
+                        this.image_config.regions_info.visibility_toggles++;
                 }
             }
         }
