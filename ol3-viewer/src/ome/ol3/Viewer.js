@@ -1783,11 +1783,15 @@ ome.ol3.Viewer.prototype.changeImageModel = function(value) {
  */
 ome.ol3.Viewer.prototype.redraw = function(delay) {
     if (this.viewer_) {
-        if (typeof delay !== 'number' || delay < 0) delay = 0;
         var update =
             function() {
                 if (this.viewer_) this.viewer_.updateSize();
             }.bind(this);
+
+        if (typeof delay !== 'number' || delay <= 0) {
+            update();
+            return;
+        }
         setTimeout(update, delay);
     }
 }

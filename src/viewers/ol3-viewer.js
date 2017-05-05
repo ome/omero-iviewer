@@ -262,15 +262,14 @@ export default class Ol3Viewer extends EventSubscriber {
         if (this.viewer === null) return;
 
         // while dragging does not concern us
-        if (typeof params.is_dragging !== 'boolean')
-            params.is_dragging = true;
+        if (typeof params.is_dragging !== 'boolean') params.is_dragging = false;
         if (params.is_dragging) return;
 
         // check if we are way to small, then we collapse...
-        if (typeof params.window_resize === 'boolean' &&
-                params.window_resize)
-                Ui.adjustSideBarsOnWindowResize();
-        this.viewer.redraw();
+        if (typeof params.window_resize === 'boolean' && params.window_resize)
+            Ui.adjustSideBarsOnWindowResize();
+            
+        this.viewer.redraw(params.delay);
     }
 
     /**
