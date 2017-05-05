@@ -268,7 +268,7 @@ export default class Ol3Viewer extends EventSubscriber {
         // check if we are way to small, then we collapse...
         if (typeof params.window_resize === 'boolean' && params.window_resize)
             Ui.adjustSideBarsOnWindowResize();
-            
+
         this.viewer.redraw(params.delay);
     }
 
@@ -658,10 +658,12 @@ export default class Ol3Viewer extends EventSubscriber {
                     if (oldRoi.shapes.size === 0)
                         this.image_config.regions_info.data.delete(
                             oldRoiAndShapeId.roi_id);
-                    // take out of count if not visible and been deleted
-                    if (!wasNew && !shape.visible)
-                        this.image_config.regions_info.visibility_toggles++;
-                    this.image_config.regions_info.number_of_shapes;
+                    // take out of count if not new
+                    if (!wasNew) {
+                        if (!shape.visible) // if not visible we correct
+                            this.image_config.regions_info.visibility_toggles++;
+                        this.image_config.regions_info.number_of_shapes--;
+                    }
                 }
             }
         }
