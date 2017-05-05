@@ -12,6 +12,7 @@
                 <input id="shapes_visibility_toggler"
                        title="Show/Hide all rois"
                        checked
+                       show.bind="regions_info.number_of_shapes > 0"
                        change.delegate="toggleAllShapesVisibility($event.target.checked)"
                        disabled.bind="regions_info.shape_to_be_drawn !== null"
                        type="checkbox" />

@@ -662,6 +662,7 @@ export default class Ol3Viewer extends EventSubscriber {
                     // take out of count if not visible and been deleted
                     if (!wasNew && !shape.visible)
                         this.image_config.regions_info.visibility_toggles++;
+                    this.image_config.regions_info.number_of_shapes;
                 }
             }
         }

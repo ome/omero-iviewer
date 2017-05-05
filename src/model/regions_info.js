@@ -34,6 +34,16 @@ export default class RegionsInfo extends EventSubscriber {
     data = new Map();
 
     /**
+     * a total shape count (exluding new with deleted!)
+     * necessary because the data map still needs to include deleted
+     * for history reasons (undo/redo) until we save BUT for the show all toggle
+     * they do not count.
+     * @memberof RegionsInfo
+     * @type {number}
+     */
+     number_of_shapes = 0;
+
+    /**
      * @memberof RegionsInfo
      * @type {RegionsHistory}
      */
@@ -49,7 +59,7 @@ export default class RegionsInfo extends EventSubscriber {
     /**
      * the balance of individual shape show vs hide toggles
      * a diffing method in a sense with zero equaling showing all,
-     * the initial state while a hide will add a -1 and a show will add a 1
+     * the initial state while a hide will subtract 1 and a show will add 1.
      * probably the less painful method as opposed to a total count tracking
      * which necessitats more variables still as well as more work.
      * @memberof RegionsInfo
@@ -216,12 +226,15 @@ export default class RegionsInfo extends EventSubscriber {
             if (property === 'deleted' &&
                 typeof shape.is_new === 'boolean' && shape.is_new) {
                     roi.deleted++;
+                    this.number_of_shapes--;
                     if (!shape.visible) this.visibility_toggles++;
             } else if (property === 'visible') this.visibility_toggles--;
         } else if (property === 'deleted' && !value) {
             roi.deleted--;
-            if (typeof shape.is_new === 'boolean' && shape.is_new &&
-                !shape.visible) this.visibility_toggles--;
+            if (typeof shape.is_new === 'boolean' && shape.is_new) {
+                    this.number_of_shapes++;
+                    if (!shape.visible) this.visibility_toggles--;
+                }
         }
     }
 
@@ -243,6 +256,7 @@ export default class RegionsInfo extends EventSubscriber {
                   "/request_rois/" + this.image_info.image_id + '/',
             success : (response) => {
                 try {
+                    let count = 0;
                     response.map((roi) => {
                         let shapes = new Map();
 
@@ -260,6 +274,7 @@ export default class RegionsInfo extends EventSubscriber {
                             newShape.deleted = false;
                             newShape.modified = false;
                             shapes.set(shapeId, newShape);
+                            count++;
                         });
                         this.data.set(roiId, {
                             shapes: shapes,
@@ -267,6 +282,7 @@ export default class RegionsInfo extends EventSubscriber {
                             deleted: 0
                         });
                     });
+                    this.number_of_shapes = count;
                     this.ready = true;
                     this.image_info.context.publish(
                         REGIONS_INIT, {data: response});
@@ -289,6 +305,7 @@ export default class RegionsInfo extends EventSubscriber {
             this.data.forEach((value, key) => value.shapes.clear());
             this.data.clear();
         }
+        this.number_of_shapes = 0;
     }
 
     /**

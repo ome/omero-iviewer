@@ -442,6 +442,10 @@ export default class RegionsList extends EventSubscriber {
      * @memberof RegionsList
      */
     toggleAllShapesVisibility(show) {
+        // IMPORTANT (and enforced through a template show.bind as well):
+        // we cannot have the initial state altered, the method of toggle diffs
+        // won't work any more.
+        if (this.regions_info.number_of_shapes === 0) return;
         let ids = [];
         this.regions_info.data.forEach(
             (roi) =>
