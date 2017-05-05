@@ -142,7 +142,6 @@ a.ui-button:active,
 
 /** APP SPECIFIC STYLES SECTION **/
 .disabled-color {
-    cursor:not-allowed;
     filter:alpha(opacity=65);
     -webkit-box-shadow:none;
     box-shadow:none;
@@ -674,9 +673,9 @@ thumbnail-slider img {
 }
 .shapes-edit {
     float: left;
-    margin: 5px 0;
-    margin-top: 10px;
+    margin: 10px 0 0 0;
     clear: left;
+    width: 100%;
 }
 .shape-edit-button {
     width: 45px;
@@ -687,48 +686,30 @@ thumbnail-slider img {
     margin-left: 5px;
 }
 .shape-edit-comment {
-    margin-left: 5px;
     margin-right: 5px;
     min-width: 100px;
     width: 75%;
     float: left;
-    padding-top: 1px;
-}
-.shape-edit-comment input {
-    width: 100%;
-    line-height: 28px;
-    height: 28px;
 }
 
-.shape-edit-attachments {
-    margin: 0px 5px 0px 15px;
-    min-width: 300px;
-    width: 100%;
-    float: left;
-    padding-top: 1px;
-}
 .shape-edit-attachments input[type=text] {
-    float: left;
     width: 50px;
-    line-height: 28px;
-    height: 28px;
-    font-size: 12px;
 }
 .shape-edit-attachments span {
-    float: left;
-    line-height: 30px;
-    height: 30px;
-    margin-left: 5px;
+    display: inline-block;
+    height: 25px;
+    width: 25px;
     background-repeat: no-repeat;
     background-position: center;
+    background-size: 75%;
+    margin-bottom: -7px;
+    outline: none;
 }
 .dim_locked {
     background-image: url('images/dim_locked.png');
-    width: 24px;
 }
 .dim_unlocked {
     background-image: url('images/dim_unlocked.png');
-    width: 24px;
 }
 
 .arrow-button button  {
