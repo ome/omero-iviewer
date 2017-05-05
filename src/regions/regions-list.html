@@ -63,10 +63,11 @@
                                 ${shape.Text ? shape.Text : ''}
                         </div>
                         <div class="regions-table-col shape-show">
-                            <input type="checkbox" checked.bind="shape.visible"
-                                title="Show/Hide shape"
+                            <input type="checkbox"
+                                title="Show/Hide shape" checked.one-way="shape.visible"
+                                value.one-way="shape.visible"
                                 disabled.bind="regions_info.shape_to_be_drawn !== null"
-                                change.delegate="toggleShapeVisibility(shape.shape_id, shape.visible, $event)"/>
+                                change.delegate="toggleShapeVisibility(shape.shape_id, $event.target.checked)"/>
                         </div>
                     </div>
                 </template>

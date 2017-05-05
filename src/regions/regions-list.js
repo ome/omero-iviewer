@@ -416,12 +416,10 @@ export default class RegionsList extends EventSubscriber {
      *
      * @param {number} id the shape id
      * @param {boolean} visible the visible state
-     * @param {Event} event the browser's event object
      * @memberof RegionsList
      */
-    toggleShapeVisibility(id, visible, event) {
-        if (this.regions_info.shape_to_be_drawn !== null) return true;
-        event.stopPropagation();
+    toggleShapeVisibility(id, visible) {
+        if (this.regions_info.shape_to_be_drawn !== null) return;
         this.context.publish(
            REGIONS_SET_PROPERTY, {
                config_id: this.regions_info.image_info.config_id,
