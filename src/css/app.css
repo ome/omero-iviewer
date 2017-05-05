@@ -328,10 +328,6 @@ thumbnail-slider img {
     overflow-y: hidden;
 }
 
-.right-hand-panel li a {
-    padding: 5px 20px;
-}
-
 .right-hand-panel .row {
     min-width: 350px;
     max-width: 800px;
