@@ -37,16 +37,13 @@ input[type=number]::-webkit-inner-spin-button {
 a.ui-button:active,
 .ui-button:active,
 .ui-button.ui-state-active:hover {
-	border: 1px solid #708090;
-	background: #778899;
-	font-weight: normal;
-	color: #ffffff;
+    border: 1px solid #708090;
+    background: #778899;
+    font-weight: normal;
+    color: #ffffff;
 }
 .ui-spinner {
-    height: 100%;
     float: left;
-    margin-left: 2px;
-    margin-right: 2px;
     min-width: 50px;
     width: 15%;
 }
@@ -74,6 +71,17 @@ a.ui-button:active,
 /** JQUERY UI adjustments END **/
 
 /** SPECTRUM colorpicker adjustments START **/
+.sp-replacer {
+    border-color: #ccc;
+    border-radius: 4px;
+    background-color: transparent;
+}
+
+.sp-preview {
+    height: 20px;
+    border-color: #ccc;
+}
+
 .color-range-replacer .sp-preview {
     background-image: none;
     margin-left: 2px;
@@ -352,8 +360,8 @@ thumbnail-slider img {
 }
 
 .checkbox-settings {
-    margin-left: 2px;
-    margin-top: 5px;
+    margin-left: 10px;
+    margin-top: 8px;
     margin-bottom: 0px;
 }
 
@@ -647,35 +655,28 @@ thumbnail-slider img {
 .shape-fill-color, .shape-stroke-color {
     float: left;
     height: 32px;
-    margin-left: 5px;
     margin-right: 5px;
 }
 
 .shape-stroke-width, .shape-font-size {
     margin-right: 5px;
     float: left;
-    padding-top: 2px;
 }
 
 .shape-stroke-width .ui-spinner {
-    min-width: 50px;
-    max-width: 50px;
-    line-height: 28px;
-    height: 28px;
+    height: 30px;
 }
 .shape-font-size .ui-spinner {
-    min-width: 50px;
-    max-width: 50px;
-    line-height: 28px;
-    height: 28px;
+    height: 30px;
 }
 .shape-font-size span {
     max-width: 38px;
 }
 .shapes-edit {
     float: left;
-    line-height: 30px;
-    margin: 5px;
+    margin: 5px 0;
+    margin-top: 10px;
+    clear: left;
 }
 .shape-edit-button {
     width: 45px;

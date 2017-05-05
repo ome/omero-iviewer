@@ -7,7 +7,7 @@
          show.bind="image_info.projection !== 'split'">
 
         <div class="regions-tools">
-            <div class="row shapes-persistence">
+            <div class="shapes-persistence">
                 <div class="btn-group">
                     <button type="button" class="btn btn-default"
                         disabled.bind="!(regions_info.history &&
@@ -22,7 +22,7 @@
                         disabled.bind="!(regions_info.history &&
                             regions_info.history.history.length > 0 &&
                             regions_info.history.historyPointer >= 0)"
-                        class="btn btn-default btn-xs"
+                        class="btn btn-default"
                         click.delegate="undoHistory()">Undo
                     </button>
                     <button type="button"
@@ -30,7 +30,7 @@
                             regions_info.history.history.length > 0 &&
                             regions_info.history.historyPointer <
                             regions_info.history.history.length-1)"
-                        class="btn btn-default btn-xs"
+                        class="btn btn-default"
                         click.delegate="redoHistory()">Redo
                     </button>
                 </div>
@@ -46,7 +46,6 @@
 
             </div>
 
-            <hr />
             <regions-edit regions_info.bind="regions_info"></regions-edit>
 
             <hr show.bind="regions_info !== null && regions_info.ready &&
