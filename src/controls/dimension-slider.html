@@ -6,7 +6,7 @@
                 ${player_info.handle !== null && player_info.dim === dim &&
                 dim === 't' && player_info.forwards ? 'glyphicon-stop' :
                 'glyphicon-play'}"
-          css="margin: -3px 5px; visibility: ${dim === 'z' ? 'hidden' : 'visible'}"
+          css="margin: -3px 5px; visibility: ${dim === 'z' || image_config.image_info.dimensions['max_t'] <= 1 ? 'hidden' : 'visible'}"
           click.delegate="playDimension(true)">
     </div>
     <div class="dim-arrows">
@@ -17,7 +17,7 @@
         click.delegate="onArrowClick(dim === 'z' ? 1 : -1)">
     </div>
     <div name="dim"
-        css="float: left; ${dim === 'z' ? 'height: 70%' : 'width: 70%'}">
+        css="float: left; ${dim === 'z' ? 'height: 70%' : 'width: 60%'}">
         <span class='slider-value'></span>
     </div>
     <div class="dim-arrows glyphicon
@@ -31,7 +31,7 @@
                 ${player_info.handle !== null && player_info.dim === dim &&
                 dim === 'z' && player_info.forwards ? 'glyphicon-stop' :
                 'glyphicon-play'}"
-          css="margin: 5px 0px 0px -3px; visibility: ${dim === 't' ? 'hidden' : 'visible'}"
+          css="margin: 5px 0px 0px -3px; visibility: ${dim === 't' || image_config.image_info.dimensions['max_z'] <= 1 ? 'hidden' : 'visible'}"
           click.delegate="playDimension(true)">
     </div>
         <div class="dim-arrows">
