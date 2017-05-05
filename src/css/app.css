@@ -556,8 +556,8 @@ thumbnail-slider img {
     background-position: center;
 }
 .shape-comment {
-    min-width: 150px;
-    max-width: 150px;
+    min-width: 135px;
+    max-width: 135px;
 }
 .shape-show {
     min-width: 60px;

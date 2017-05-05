@@ -235,9 +235,21 @@ export default class RegionsList extends EventSubscriber {
      * @memberof RegionsList
      */
     enableTableResize() {
+        let finishDragging = () => {
+            if (!this.is_dragging) return;
+            let cell = $("#reg-col-" + this.column_resized);
+            let index =
+                parseInt(cell.attr("id").substring("reg-col-".length)) + 1;
+            let tableColumn =
+                $(".regions-table .regions-table-row").first().find(
+                ".regions-table-col:nth-child(" + index + ")");
+            this.is_dragging = false;
+            cell.css("max-width",  cell.outerWidth());
+            tableColumn.css("max-width",  cell.outerWidth());
+            this.adjustColumnWidths();
+        }
         $('.regions-header').off();
-        $('.regions-header').on(
-            "mouseup mouseleave", (e) => this.is_dragging = false);
+        $('.regions-header').on("mouseup mouseleave", (e) => finishDragging());
         $('.regions-header .regions-table-col').off("mousemove");
         $('.regions-header .regions-table-col').mousemove((e) => {
             e.preventDefault();
@@ -273,6 +285,13 @@ export default class RegionsList extends EventSubscriber {
                 return;
             }
 
+            // finish off after drag stop, setting new max-widths
+            if (!((typeof e.buttons === 'undefined' && e.which === 1) ||
+                    e.buttons === 1)) {
+                finishDragging();
+                return;
+            }
+
             // column dragging / table resizing
             let delta = e.pageX - this.dragging_start;
             let cell = $("#reg-col-" + this.column_resized);
@@ -281,15 +300,6 @@ export default class RegionsList extends EventSubscriber {
             let tableColumn =
                 $(".regions-table .regions-table-row").first().find(
                 ".regions-table-col:nth-child(" + index + ")");
-            // finish off after drag stop, setting new max-widths
-            if (!((typeof e.buttons === 'undefined' && e.which === 1) ||
-                    e.buttons === 1)) {
-                this.is_dragging = false;
-                cell.css("max-width",  cell.outerWidth());
-                tableColumn.css("max-width",  cell.outerWidth());
-                this.adjustColumnWidths();
-                return;
-            }
 
             // remember new start and set new column widhts
             let newWidth =  cell.width() + delta;
