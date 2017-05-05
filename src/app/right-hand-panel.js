@@ -29,7 +29,7 @@ import 'bootstrap';
  * the right hand panel
  */
 @customElement('right-hand-panel')
-@inject(Context, Element)
+@inject(Context)
 export class RightHandPanel {
     /**
      * which image config do we belong to (bound via template)
@@ -42,9 +42,8 @@ export class RightHandPanel {
      * @constructor
      * @param {Context} context the application context
      */
-    constructor(context, element) {
+    constructor(context) {
         this.context = context;
-        this.element = element;
     }
 
     /**
@@ -54,7 +53,7 @@ export class RightHandPanel {
      * @memberof RightHandPanel
      */
     attached() {
-        $(this.element).find("a").click((e) => {
+        $("#panel-tabs").find("a").click((e) => {
             e.preventDefault();
 
             this.context.selected_tab = e.currentTarget.hash;
@@ -79,6 +78,6 @@ export class RightHandPanel {
      * @memberof RightHandPanel
      */
     detached() {
-        $(this.element).find("a").unbind("click");
+        $("#panel-tabs").find("a").unbind("click");
     }
 }
