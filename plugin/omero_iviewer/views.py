@@ -248,7 +248,7 @@ def image_data(request, image_id, conn=None, **kwargs):
             value = format_pixel_size_with_units(size)
             rv['pixel_size']['unit_z'] = value[0]
             rv['pixel_size']['symbol_z'] = value[1]
-   
+
     size_t = image.getSizeT()
     time_list = []
     if size_t > 1:
@@ -257,7 +257,7 @@ def image_data(request, image_id, conn=None, **kwargs):
         z = image.getSizeZ()/2
         c = image.getSizeC()/2
         query = "from PlaneInfo as Info where"\
-            " Info.theZ=%s and Info.theC=%s and pixels.id=:pid" % (z,c)
+            " Info.theZ=%s and Info.theC=%s and pixels.id=:pid" % (z, c)
         info_list = conn.getQueryService().findAllByQuery(
             query, params, conn.SERVICE_OPTS)
         timemap = {}
