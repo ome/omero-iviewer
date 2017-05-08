@@ -127,10 +127,30 @@ export default class DimensionSlider extends EventSubscriber {
      * @memberof DimensionSlider
      */
     onViewerResize() {
-        if (this.dim === 't')
-            $(this.elSelector).width($(this.elSelector).parent().width()-100);
-        else
-            $(this.elSelector).height($(this.elSelector).parent().height()-90);
+        let sliderContainer = $(this.elSelector).parent();
+        let len =
+            this.dim === 't' ?
+                sliderContainer.width() : sliderContainer.height();
+        let lenCtrls = 0;
+        sliderContainer.children().each(
+            (p, e) => {
+                let el = $(e);
+                if (!el.hasClass("ui-slider")) {
+                    if (this.dim === 't') {
+                        let margin =
+                            parseInt(el.css("margin-left")) +
+                            parseInt(el.css("margin-right"));
+                        lenCtrls += el.width() + margin;
+                    } else {
+                        let margin =
+                            parseInt(el.css("margin-top")) +
+                            parseInt(el.css("margin-bottom"));
+                        lenCtrls += el.height() + margin;
+                    }
+                }
+            });
+        if (!isNaN(lenCtrls)) len -= lenCtrls;
+        $(this.elSelector).css(this.dim === 't' ? "width" : "height", len);
     }
 
     /**

@@ -1,6 +1,22 @@
 <template>
     <require from="../controls/dimension-slider"></require>
 
+    <style>
+        dimension-slider div, dimension-slider span {
+            float: left;
+        }
+        .viewer {
+            padding-bottom: 0px; /* take out of app.css */
+        }
+        .plane-slider {
+            padding-bottom: 0px; /* take out of app.css */
+        }
+        .time-slider {
+            margin-left: 0px; /* take out of app.css */
+            padding-left: 30px; /* change in app.css */
+        }
+    </style>
+
     <div class="center-row1 row">
         <dimension-slider
             config_id.bind="config_id"
@@ -15,11 +31,6 @@
     </div>
 
     <div class="center-row2 row">
-            <div class="slider-corner col-xs-1">
-                <span class="z"></span>
-                <span class="t"></span>
-            </div>
-
             <dimension-slider
                 config_id.bind="config_id"
                 dim="t"
