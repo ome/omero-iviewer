@@ -91,18 +91,6 @@ export default class Context {
     useMDI = false;
 
     /**
-     * the global flag for showing regions
-     * @type {boolean}
-     */
-    show_regions = false;
-
-    /**
-     * the global flag for showing the scalebar
-     * @type {boolean|null}
-     */
-     show_scalebar = null;
-
-    /**
      * the global value indicating the selected tab
      * @type {String}
      */
@@ -356,10 +344,6 @@ export default class Context {
         if (typeof image_id !== 'number' || image_id < 0)
             return null;
 
-        // reset
-        this.show_regions = false;
-        this.show_scalebar = null;
-
         // we do not keep the other configs around unless we are in MDI mode.
         if (!this.useMDI)
             for (let [id, conf] of this.image_configs)
@@ -487,6 +471,16 @@ export default class Context {
             typeof this.initParams[key] === null) return null;
 
         return this.initParams[key];
+    }
+
+    /**
+     * Returns whether the rois tab is active/selected
+     *
+     * @return {boolean} true if rois tab is active/selected, false otherwise
+     * @memberof Context
+     */
+    isRoisTabActive() {
+        return this.selected_tab === '#rois';
     }
 
     /**

@@ -52,13 +52,11 @@ export default class ImageInfo {
     tiled = false;
 
     /**
-     * a flag that signals whether the histogram is enabled or not
-     * this will be set accordingly by the histogram but due to its
-     * more global nature we want the flag here.
+     * a flag that signals whether we a pixe_size and hence a scalebar
      * @memberof ImageInfo
      * @type {boolean}
      */
-    has_histogram = false;
+    has_scalebar = false;
 
     /**
      * the imageAuthor in the json response
@@ -88,10 +86,10 @@ export default class ImageInfo {
      */
     image_pixels_type = null;
 
-    /** 
+    /**
      * the pixels size, defaul in macrons
      * @memberof ImageInfo
-     */ 
+     */
     image_pixels_size = null;
 
     /**
@@ -190,16 +188,6 @@ export default class ImageInfo {
         this.dimensions = {t: 0, max_t : 1,z: 0, max_z : 1};
         this.channels = null;
         this.imported_settings = null;
-    }
-
-    /**
-     * Return flag whether we ought to show regions or not
-     *
-     * @memberof ImageInfo
-     * @return {boolean} show the regions or not
-     */
-    showRegions() {
-        return this.context.show_regions;
     }
 
     /**

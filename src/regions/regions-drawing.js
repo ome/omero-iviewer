@@ -179,7 +179,8 @@ export default class RegionsDrawing extends EventSubscriber {
                 params.hist_id, this.regions_info.history.action.SHAPES,
                 { diffs: generatedShapes, old_vals: false, new_vals: true});
         }
-
+        // we update the overall number of shapes
+        this.regions_info.number_of_shapes += len;
         // we only continue if we have been drawn and intend to propagate
         if (params.drawn)
             this.onDrawShape(

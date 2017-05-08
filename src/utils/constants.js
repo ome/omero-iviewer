@@ -115,6 +115,15 @@ export const RENDER_STATUS = {
 }
 
 /**
+ * the text for the tooltips in case of missing permission
+ * @type {Object}
+ */
+export const PERMISSION_TOOLTIPS = {
+    CANNOT_EDIT: "No permission to edit",
+    CANNOT_DELETE: "No permission to delete"
+}
+
+/*
  * luts list for pre-generated png
  * @type {Object}
  */

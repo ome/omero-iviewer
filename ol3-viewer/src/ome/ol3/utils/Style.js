@@ -170,11 +170,7 @@ ome.ol3.utils.Style.updateStyleFunction =
             if (oldStrokeStyle)
                 feature['oldStrokeStyle'] = {
                     "color" : oldStrokeStyle.getColor(),
-                    "width" : oldStrokeStyle.getWidth(),
-                    "lineDash" : oldStrokeStyle.getLineDash(),
-                    "lineCap" : oldStrokeStyle.getLineCap(),
-                    "lineJoin" : oldStrokeStyle.getLineJoin(),
-                    "miterLimit" : oldStrokeStyle.getMiterLimit(),
+                    "width" : oldStrokeStyle.getWidth()
                 };
             else feature['oldStrokeStyle'] = null;
         }
@@ -265,38 +261,17 @@ ome.ol3.utils.Style.updateStyleFunction =
                     feature['selected'] : false;
             if (selected) {
                 var selStyle = new ol.style.Stroke();
-                var c = feature['oldStrokeStyle'] &&
-                    typeof feature['oldStrokeStyle']['color'] !== 'undefined' ?
-                        feature['oldStrokeStyle']['color'] : "rgba(0,153,255,0.9)";
-                if (isLabel) {
-                    if (textStyle && textStyle.getFill() &&
-                        textStyle.getFill().getColor() !== null)
-                            c = textStyle.getFill().getColor();
-                    else c = "rgba(0,153,255,0.9)";
-                }
-                selStyle.setColor(c)
-                // we use width from old style if (exists)
-                var w =
-                    feature['oldStrokeStyle'] &&
-                        typeof feature['oldStrokeStyle']['width'] === 'number' ?
-                            feature['oldStrokeStyle']['width'] : 1;
-                if (isLabel) w = 1;
-                selStyle.setWidth(w);
-                selStyle.setLineDash([5, 5]);
+                selStyle.setColor('rgba(0,153,255,1)');
+                selStyle.setWidth(3);
                 oldStyle.stroke_ = selStyle;
             } else if (feature['oldStrokeStyle']) {
                 // restore old style
                 var w = feature['oldStrokeStyle']['width'];
-                if (w !== 0)
-                    oldStyle.stroke_ = new ol.style.Stroke({
-                        'color' : feature['oldStrokeStyle']['color'],
-                        'lineDash' : feature['oldStrokeStyle']['lineDash'],
-                        'lineCap' : feature['oldStrokeStyle']['lineCap'],
-                        'lineJoin' : feature['oldStrokeStyle']['lineJoin'],
-                        'miterLimit' : feature['oldStrokeStyle']['miterLimit'],
-                        'width' : w
-                    });
-                else oldStyle.stroke_ = null;
+                if (w === 0) w = 1;
+                oldStyle.stroke_ = new ol.style.Stroke({
+                    'color' : feature['oldStrokeStyle']['color'],
+                    'width' : w
+                });
             } else {
                 oldStyle.stroke_ = null;
             }

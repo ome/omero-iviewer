@@ -4,8 +4,8 @@ import Misc from '../utils/misc';
 import Ui from '../utils/ui';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {
-    EventSubscriber,
-    IMAGE_VIEWER_RESIZE, REGIONS_SET_PROPERTY, REGIONS_STORED_SHAPES
+    EventSubscriber, IMAGE_VIEWER_RESIZE,
+    REGIONS_INIT, REGIONS_SET_PROPERTY, REGIONS_STORED_SHAPES
 } from '../events/events';
 
 /**
@@ -26,7 +26,10 @@ export default class RegionsList extends EventSubscriber {
      * @memberof RegionsList
      * @type {Array.<string,function>}
      */
-    sub_list = [[IMAGE_VIEWER_RESIZE,
+    sub_list = [[REGIONS_INIT,
+                    (params={}) =>
+                        setTimeout(this.adjustTableHeight.bind(this),50)],
+                [IMAGE_VIEWER_RESIZE,
                     (params={}) => this.adjustTableHeight()]];
 
     /**
@@ -109,10 +112,15 @@ export default class RegionsList extends EventSubscriber {
                             this.actUponSelectionChange()));
             this.observers.push(
                 this.bindingEngine.propertyObserver(
-                    this.context, "show_regions").subscribe(
+                    this.context, 'selected_tab').subscribe(
                         (newValue, oldValue) =>
-                            setTimeout(this.adjustTableHeight.bind(this), 25)
-            ));
+                            setTimeout(this.adjustTableHeight.bind(this), 25)));
+            this.observers.push(
+                this.bindingEngine.propertyObserver(
+                    this.regions_info, 'visibility_toggles').subscribe(
+                        (newValue, oldValue) =>
+                            $('#shapes_visibility_toggler').prop(
+                                'checked', newValue === 0)));
             this.observers.push(
                 this.bindingEngine.propertyObserver(
                     this.regions_info, 'shape_to_be_drawn').subscribe(
@@ -227,20 +235,37 @@ export default class RegionsList extends EventSubscriber {
      * @memberof RegionsList
      */
     enableTableResize() {
-        $('.regions-header').off("mouseleave");
-        $('.regions-header').mouseleave((e) => this.is_dragging = false);
+        let finishDragging = () => {
+            if (!this.is_dragging) return;
+            let cell = $("#reg-col-" + this.column_resized);
+            let index =
+                parseInt(cell.attr("id").substring("reg-col-".length)) + 1;
+            let tableColumn =
+                $(".regions-table .regions-table-row").first().find(
+                ".regions-table-col:nth-child(" + index + ")");
+            this.is_dragging = false;
+            cell.css("max-width",  cell.outerWidth());
+            tableColumn.css("max-width",  cell.outerWidth());
+            this.adjustColumnWidths();
+        }
+        $('.regions-header').off();
+        $('.regions-header').on("mouseup mouseleave", (e) => finishDragging());
         $('.regions-header .regions-table-col').off("mousemove");
         $('.regions-header .regions-table-col').mousemove((e) => {
             e.preventDefault();
              // column selection/grabbing
             if(!this.is_dragging) {
                 let cell = $(e.target);
-                let index =
-                    parseInt(cell.attr("id").substring("reg-col-".length));
+                if (!cell.hasClass("regions-table-col")) return;
+                let id = cell.attr("id")
+                let len = "reg-col-".length;
+                if (typeof id !== "string" || id.length < len) return;
+                let index = parseInt(id.substring(len));
                 var border = parseInt(cell.css('border-left-width'));
                 if (isNaN(border)) return;
 
                 // we only allow right border dragging
+                let colNr = $('.regions-header .regions-table-col').length;
                 if (e.offsetX >= -border && e.offsetX <= border &&
                    e.offsetY > 0 && e.offsetY < cell.outerHeight() &&
                    index > 0) {
@@ -251,11 +276,19 @@ export default class RegionsList extends EventSubscriber {
                           e.offsetX >= cell.innerWidth() &&
                           e.offsetX <= cell.outerWidth() &&
                           e.offsetY > 0 &&
-                          e.offsetY < cell.outerHeight()) {
+                          e.offsetY < cell.outerHeight() &&
+                          index < colNr-1) {
                               this.column_resized = index;
                               cell.css("cursor", "col-resize");
                               this.enableColumnResize(e);
                 } else cell.css("cursor", "default");
+                return;
+            }
+
+            // finish off after drag stop, setting new max-widths
+            if (!((typeof e.buttons === 'undefined' && e.which === 1) ||
+                    e.buttons === 1)) {
+                finishDragging();
                 return;
             }
 
@@ -267,15 +300,6 @@ export default class RegionsList extends EventSubscriber {
             let tableColumn =
                 $(".regions-table .regions-table-row").first().find(
                 ".regions-table-col:nth-child(" + index + ")");
-            // finish off after drag stop, setting new max-widths
-            if (!((typeof e.buttons === 'undefined' && e.which === 1) ||
-                    e.buttons === 1)) {
-                this.is_dragging = false;
-                cell.css("max-width",  cell.outerWidth());
-                tableColumn.css("max-width",  cell.outerWidth());
-                this.adjustColumnWidths();
-                return;
-            }
 
             // remember new start and set new column widhts
             let newWidth =  cell.width() + delta;
@@ -294,12 +318,12 @@ export default class RegionsList extends EventSubscriber {
      * @memberof RegionsList
      */
     adjustTableHeight() {
-        if (!this.context.show_regions) return;
+        if (!this.context.isRoisTabActive()) return;
         let availableHeight =
             $(".regions-container").outerHeight() -
             $(".regions-tools").outerHeight() -
             $('.regions-header').outerHeight() -
-            $('.header-content').outerHeight();
+            $('.fixed-header').outerHeight();
         if (Misc.isIE()) availableHeight -= this.scrollbar_width;
 
         if (!isNaN(availableHeight))
@@ -392,12 +416,10 @@ export default class RegionsList extends EventSubscriber {
      *
      * @param {number} id the shape id
      * @param {boolean} visible the visible state
-     * @param {Event} event the browser's event object
      * @memberof RegionsList
      */
-    toggleShapeVisibility(id, visible, event) {
-        if (this.regions_info.shape_to_be_drawn !== null) return true;
-        event.stopPropagation();
+    toggleShapeVisibility(id, visible) {
+        if (this.regions_info.shape_to_be_drawn !== null) return;
         this.context.publish(
            REGIONS_SET_PROPERTY, {
                config_id: this.regions_info.image_info.config_id,
@@ -419,6 +441,35 @@ export default class RegionsList extends EventSubscriber {
         let roi = this.regions_info.data.get(roi_id);
         if (typeof roi === 'undefined') return;
         roi.show = !roi.show;
+    }
+
+    /**
+     * Show/Hide all shapes
+     *
+     * @param {boolean} show true if we want to show, otherwise hide
+     * @memberof RegionsList
+     */
+    toggleAllShapesVisibility(show) {
+        // IMPORTANT (and enforced through a template show.bind as well):
+        // we cannot have the initial state altered, the method of toggle diffs
+        // won't work any more.
+        if (this.regions_info.number_of_shapes === 0) return;
+        let ids = [];
+        this.regions_info.data.forEach(
+            (roi) =>
+                roi.shapes.forEach(
+                    (shape) => {
+                        if (shape.visible !== show &&
+                            !(shape.deleted &&
+                            typeof shape.is_new === 'boolean' && shape.is_new))
+                                ids.push(shape.shape_id);
+                    })
+        );
+        this.context.publish(
+           REGIONS_SET_PROPERTY, {
+               config_id: this.regions_info.image_info.config_id,
+               property : "visible",
+               shapes : ids, value : show});
     }
 
     /**
