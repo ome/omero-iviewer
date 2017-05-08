@@ -20,7 +20,7 @@ import {noView} from 'aurelia-framework';
 import {IMAGE_CONFIG_UPDATE} from '../events/events';
 import Misc from '../utils/misc';
 import {
-    REQUEST_PARAMS, WEBGATEWAY, CHANNEL_SETTINGS_MODE
+    REQUEST_PARAMS, WEBGATEWAY, CHANNEL_SETTINGS_MODE, IVIEWER
 } from '../utils/constants'
 
 /**
@@ -198,8 +198,8 @@ export default class ImageInfo {
     requestData() {
         $.ajax({
             url :
-                this.context.server + this.context.getPrefixedURI(WEBGATEWAY) +
-                "/imgData/" + this.image_id + '/',
+                this.context.server + this.context.getPrefixedURI(IVIEWER) +
+                "/image_data/" + this.image_id + '/',
             success : (response) => {
                 // read initial request params
                 this.initializeImageInfo(response);
