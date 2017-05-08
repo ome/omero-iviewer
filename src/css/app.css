@@ -194,8 +194,10 @@ a.ui-button:active,
 
 .center-row1 {
     height: 100%;
-    padding-left: 0px;
-    padding-right: 0px;
+    padding: 0px;
+}
+
+.show-tSlider {
     padding-bottom: 35px;
 }
 
@@ -226,13 +228,20 @@ a.ui-button:active,
 }
 
 .plane-slider {
-    bottom: 125px;
+    bottom: 90px;
     top: 45px;
     width: 35px;
 }
+.show-tSlider .plane-slider {
+    bottom: 125px;
+}
+
 .time-slider {
+    left: 90px;
+    right: 55px;
+}
+.show-zSlider .time-slider {
     left: 125px;
-    right: 45px;
 }
 
 .plane-slider span, .time-slider span {
@@ -245,7 +254,9 @@ a.ui-button:active,
 }
 
 .plane-slider span {
-    left: 9px;
+    left: 0;
+    width: 27px;
+    text-align: center;
 }
 .time-slider span {
     top: 6px;
@@ -266,20 +277,22 @@ a.ui-button:active,
 }
 
 .plane-slider .dim-current {
-    top: -45px;
+    bottom: -45px;
     color: #999;
 }
 .time-slider .dim-current {
-    left: -45px;
+    left: -55px;
     color: #999;
+    text-align: right;
+    width: 30px;
 }
 
 .time-slider .dim-size {
-    right: -45px;
+    right: -55px;
     color: #999;
 }
 .plane-slider .dim-size {
-    bottom: -45px;
+    top: -45px;
     color: #999;
 }
 
@@ -326,7 +339,7 @@ a.ui-button:active,
 }
 
 .time-slider .glyphicon-play, .time-slider .glyphicon-stop {
-    left: -65px;
+    left: -70px;
 }
 .plane-slider .glyphicon-play, .plane-slider .glyphicon-stop {
     bottom: -60px;
@@ -420,6 +433,9 @@ a.ui-button:active,
 .viewer {
     height: 100%;
     width: 100%;
+}
+
+.show-zSlider .viewer {
     padding-left: 35px;
 }
 
