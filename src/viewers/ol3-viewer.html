@@ -1,26 +1,15 @@
 <template>
     <require from="../controls/dimension-slider"></require>
 
-    <style>
-
-        .viewer {
-            padding-bottom: 0px; /* take out of app.css */
-        }
-        .plane-slider {
-            padding-bottom: 0px; /* take out of app.css */
-        }
-
-    </style>
-
     <div class="center-row1">
         <dimension-slider
             config_id.bind="config_id"
             dim="z"
             player_info.bind="player_info"
-            class="plane-slider col-xs-1">
+            class="plane-slider">
         </dimension-slider>
 
-        <div class="viewer col-xs-12">
+        <div class="viewer">
               <div id.bind="container" class="viewer-container"></div>
         </div>
     </div>

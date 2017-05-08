@@ -215,34 +215,60 @@ a.ui-button:active,
 }
 .slider-value {
     position: relative;
-    font-size: 12px;
     background-color: #FFFFFF;
     display: none;
 }
 
-.time-slider {
+/* Z/T sliders */
+.plane-slider, .time-slider {
     visibility: hidden;
     position: absolute;
-    z-index: 3;
+}
+
+.plane-slider {
+    bottom: 125px;
+    top: 45px;
+    width: 35px;
+}
+.time-slider {
     left: 125px;
     right: 45px;
 }
 
-.time-slider span {
+.plane-slider span, .time-slider span {
     position: absolute;
     font-size: 18px;
+}
+
+.plane-slider.glyphicon, .time-slider .glyphicon {
+    position: absolute;
+}
+
+.plane-slider span {
+    left: 9px;
+}
+.time-slider span {
     top: 6px;
 }
 
+.plane-slider .glyphicon {
+    left: 7px;
+}
 .time-slider .glyphicon {
-    position: absolute;
     top: 11px;
 }
 
+.plane-slider .dim-label {
+    bottom: -90px;
+}
 .time-slider .dim-label {
     left: -85px;
 }
 
+.plane-slider .dim-current {
+    top: -45px;
+    color: #999;
+}
 .time-slider .dim-current {
     left: -45px;
     color: #999;
@@ -252,24 +278,49 @@ a.ui-button:active,
     right: -45px;
     color: #999;
 }
+.plane-slider .dim-size {
+    bottom: -45px;
+    color: #999;
+}
 
-.time-slider .ui-slider {
-    width: 100%;
-    height: 10px;
-    margin-top: 14px;
+/* Make the Z/T sliders look thin,
+   but still thick-enough to click easily */
+.time-slider .ui-slider, .plane-slider .ui-slider {
     cursor: pointer;
     border: 4px solid white;
     background: #c5c5c5;
 }
 
+.plane-slider .ui-slider {
+    height: 100%;
+    width: 10px;
+    margin-left: 9px;
+    z-index: 3;
+}
+.time-slider .ui-slider {
+    width: 100%;
+    height: 10px;
+    margin-top: 14px;
+}
+
+.plane-slider .ui-slider-handle {
+    left: -.55em;
+}
 .time-slider .ui-slider-handle {
     top: -0.55em;
 }
 
+.plane-slider .glyphicon-chevron-down {
+    bottom: -20px;
+    top: auto;
+}
 .time-slider .glyphicon-chevron-left {
     left: -20px;
 }
 
+.plane-slider .glyphicon-chevron-up {
+    top: -20px;
+}
 .time-slider .glyphicon-chevron-right {
     right: -20px;
 }
@@ -277,21 +328,20 @@ a.ui-button:active,
 .time-slider .glyphicon-play, .time-slider .glyphicon-stop {
     left: -65px;
 }
+.plane-slider .glyphicon-play, .plane-slider .glyphicon-stop {
+    bottom: -60px;
+    top: auto;
+}
 
+.plane-slider .slider-value {
+    margin-top: 20px;
+    left: 30px;
+}
 .time-slider .slider-value {
-    margin-left: -30px;
+    margin-bottom: -20px;
     top: -40px;
 }
 
-.plane-slider {
-    visibility: hidden;
-    position: relative;
-    z-index: 3;
-    max-width: 25px;
-    height:100%;
-    padding-top: 15px;
-    padding-bottom: 40px;
-}
 
 .dim-arrows {
     position: absolute;
@@ -369,10 +419,8 @@ a.ui-button:active,
 
 .viewer {
     height: 100%;
-    padding-bottom: 25px;
-    padding-left: 30px;
-    padding-right: 0px;
-    margin-left: -30px;
+    width: 100%;
+    padding-left: 35px;
 }
 
 .viewer-container {

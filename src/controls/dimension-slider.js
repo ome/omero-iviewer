@@ -287,10 +287,9 @@ export default class DimensionSlider extends EventSubscriber {
                 let sliderValueSpan = $(this.elSelector + ' .slider-value');
                 sliderValueSpan.text(
                     this.dim.toUpperCase() + ":" + Math.round(ui.value+1));
-                let percent = (ui.value / imgInf.dimensions['max_' + this.dim]) * 100;
-                console.log(imgInf.dimensions['max_' + this.dim], ui.value, percent);
+                let percent = (ui.value / (imgInf.dimensions['max_' + this.dim] - 1)) * 100;
                 if (this.dim === 'z') {
-                    sliderValueSpan.css({left: "15px",top: "50%"})
+                    sliderValueSpan.css({bottom: percent + "%"})
                 } else {
                     sliderValueSpan.css({left: percent + "%"})
                 }
