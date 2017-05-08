@@ -16,6 +16,7 @@
     left: 8px;
     position: absolute;
     cursor: pointer;
+    z-index: 4;
 }
 .ol-scale-line-inner {
     border-bottom: 6px solid #000;
