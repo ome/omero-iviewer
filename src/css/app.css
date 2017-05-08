@@ -37,10 +37,10 @@ input[type=number]::-webkit-inner-spin-button {
 a.ui-button:active,
 .ui-button:active,
 .ui-button.ui-state-active:hover {
-	border: 1px solid #708090;
-	background: #778899;
-	font-weight: normal;
-	color: #ffffff;
+    border: 1px solid #708090;
+    background: #778899;
+    font-weight: normal;
+    color: #ffffff;
 }
 .ui-spinner {
     height: 100%;
@@ -196,12 +196,13 @@ a.ui-button:active,
     height: 100%;
     padding-left: 0px;
     padding-right: 0px;
-    padding-bottom: 25px;
+    padding-bottom: 35px;
 }
 
 .center-row2 {
-    max-height: 25px;
-    margin-top: -25px
+    height: 35px;
+    margin-top: -35px;
+    position: relative;
 }
 
 .slider-corner {
@@ -221,11 +222,65 @@ a.ui-button:active,
 
 .time-slider {
     visibility: hidden;
-    position: relative;
+    position: absolute;
     z-index: 3;
-    max-height: 25px;
+    left: 125px;
+    right: 45px;
+}
+
+.time-slider span {
+    position: absolute;
+    font-size: 18px;
+    top: 6px;
+}
+
+.time-slider .glyphicon {
+    position: absolute;
+    top: 11px;
+}
+
+.time-slider .dim-label {
+    left: -85px;
+}
+
+.time-slider .dim-current {
+    left: -45px;
+    color: #999;
+}
+
+.time-slider .dim-size {
+    right: -45px;
+    color: #999;
+}
+
+.time-slider .ui-slider {
+    width: 100%;
+    height: 10px;
+    margin-top: 14px;
+    cursor: pointer;
+    border: 4px solid white;
+    background: #c5c5c5;
+}
+
+.time-slider .ui-slider-handle {
+    top: -0.55em;
+}
+
+.time-slider .glyphicon-chevron-left {
+    left: -20px;
+}
+
+.time-slider .glyphicon-chevron-right {
+    right: -20px;
+}
+
+.time-slider .glyphicon-play, .time-slider .glyphicon-stop {
+    left: -65px;
+}
+
+.time-slider .slider-value {
     margin-left: -30px;
-    padding-left: 75px;
+    top: -40px;
 }
 
 .plane-slider {
@@ -239,12 +294,7 @@ a.ui-button:active,
 }
 
 .dim-arrows {
-    float: left;
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 17px 17px;
-    width: 17px;
-    height: 17px;
+    position: absolute;
 }
 .dim-arrow-up {
     background-image: url('images/arrow-up.png');

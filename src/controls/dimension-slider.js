@@ -76,7 +76,7 @@ export default class DimensionSlider extends EventSubscriber {
      * @type {Array.<string,function>}
      */
     sub_list = [[IMAGE_CONFIG_UPDATE,
-                    (params = {}) => this.onImageConfigChange(params)],
+                     (params = {}) => this.onImageConfigChange(params)],
                 [IMAGE_VIEWER_RESIZE,
                     (params = {}) => this.onViewerResize()]];
 
@@ -127,30 +127,6 @@ export default class DimensionSlider extends EventSubscriber {
      * @memberof DimensionSlider
      */
     onViewerResize() {
-        let sliderContainer = $(this.elSelector).parent();
-        let len =
-            this.dim === 't' ?
-                sliderContainer.width() : sliderContainer.height();
-        let lenCtrls = 0;
-        sliderContainer.children().each(
-            (p, e) => {
-                let el = $(e);
-                if (!el.hasClass("ui-slider")) {
-                    if (this.dim === 't') {
-                        let margin =
-                            parseInt(el.css("margin-left")) +
-                            parseInt(el.css("margin-right"));
-                        lenCtrls += el.width() + margin;
-                    } else {
-                        let margin =
-                            parseInt(el.css("margin-top")) +
-                            parseInt(el.css("margin-bottom"));
-                        lenCtrls += el.height() + margin;
-                    }
-                }
-            });
-        if (!isNaN(lenCtrls)) len -= lenCtrls;
-        $(this.elSelector).css(this.dim === 't' ? "width" : "height", len);
     }
 
     /**
@@ -292,7 +268,8 @@ export default class DimensionSlider extends EventSubscriber {
         // create jquery slider
         $(this.elSelector).slider({
             orientation: this.dim === 'z' ? "vertical" : "horizontal",
-            min: 0, max: imgInf.dimensions['max_' + this.dim] - 1 ,
+            min: 0,
+            max: imgInf.dimensions['max_' + this.dim] - 1 ,
             step: 0.01, value: imgInf.dimensions[this.dim],
             slide: (event, ui) => {
                 if (this.player_info.handle !== null) return false;
@@ -310,9 +287,13 @@ export default class DimensionSlider extends EventSubscriber {
                 let sliderValueSpan = $(this.elSelector + ' .slider-value');
                 sliderValueSpan.text(
                     this.dim.toUpperCase() + ":" + Math.round(ui.value+1));
-                if (this.dim === 'z')
+                let percent = (ui.value / imgInf.dimensions['max_' + this.dim]) * 100;
+                console.log(imgInf.dimensions['max_' + this.dim], ui.value, percent);
+                if (this.dim === 'z') {
                     sliderValueSpan.css({left: "15px",top: "50%"})
-                else sliderValueSpan.css({left: "50%", top: "-20px"})
+                } else {
+                    sliderValueSpan.css({left: percent + "%"})
+                }
                 sliderValueSpan.show();
             },
             stop: (event, ui) => {

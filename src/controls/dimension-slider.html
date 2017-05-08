@@ -19,14 +19,13 @@
     </template>
 
     <template if.bind="dim === 't'">
-        <span>${dim.toUpperCase()}</span>
+        <span class='dim-label'>${dim.toUpperCase()}</span>
         <div class="dim-arrows glyphicon
                 ${player_info.handle !== null && player_info.dim === dim &&
                   player_info.forwards ? 'glyphicon-stop' : 'glyphicon-play'}"
-             style="margin: -3px 5px;}"
              click.delegate="playDimension(true)">
         </div>
-        <span>${image_config.image_info.dimensions[dim]+1}</span>
+        <span class='dim-current'>${image_config.image_info.dimensions[dim]+1}</span>
         <div class="dim-arrows glyphicon glyphicon-chevron-left"
              click.delegate="onArrowClick(-1)">
         </div>
@@ -36,6 +35,6 @@
         <div class="dim-arrows glyphicon glyphicon-chevron-right"
              click.delegate="onArrowClick(1)">
         </div>
-        <span>${image_config.image_info.dimensions['max_' + dim]}</span>
+        <span class='dim-size'>${image_config.image_info.dimensions['max_' + dim]}</span>
     </template>
 </template>

@@ -2,22 +2,17 @@
     <require from="../controls/dimension-slider"></require>
 
     <style>
-        dimension-slider div, dimension-slider span {
-            float: left;
-        }
+
         .viewer {
             padding-bottom: 0px; /* take out of app.css */
         }
         .plane-slider {
             padding-bottom: 0px; /* take out of app.css */
         }
-        .time-slider {
-            margin-left: 0px; /* take out of app.css */
-            padding-left: 30px; /* change in app.css */
-        }
+
     </style>
 
-    <div class="center-row1 row">
+    <div class="center-row1">
         <dimension-slider
             config_id.bind="config_id"
             dim="z"
@@ -30,12 +25,12 @@
         </div>
     </div>
 
-    <div class="center-row2 row">
+    <div class="center-row2">
             <dimension-slider
                 config_id.bind="config_id"
                 dim="t"
                 player_info.bind="player_info"
-                class="time-slider col-xs-12">
+                class="time-slider">
             </dimension-slider>
     </div>
 </template>
