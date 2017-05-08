@@ -22,7 +22,8 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 from omeroweb.decorators import login_required
 from omeroweb.webgateway.marshal import imageMarshal
-
+from omeroweb.webgateway.templatetags.common_filters import lengthunit
+from omeroweb.webgateway.templatetags.common_filters import lengthformat
 import json
 import omero_marshal
 from omero.model import MaskI
@@ -215,8 +216,8 @@ def image_data(request, image_id, conn=None, **kwargs):
                             "no image id supplied for image data request"})
     image = conn.getObject("Image", image_id)
 
-    if image is None:
-        return JsonResponse({"error": "Image not found"})
+    # if image is None:
+    #    return JsonResponse({"error": "Image not found"})
 
     # Test if we have Units support (OMERO 5.1)
     px = image.getPrimaryPixels().getPhysicalSizeX()
@@ -229,12 +230,41 @@ def image_data(request, image_id, conn=None, **kwargs):
         # Add extra parameters with units data
         # NB ['pixel_size']['x'] will have size in MICROMETER
         px = image.getPrimaryPixels().getPhysicalSizeX()
-        rv['pixel_size']['valueX'] = px.getValue()
-        rv['pixel_size']['symbolX'] = px.getSymbol()
-        rv['pixel_size']['unitX'] = str(px.getUnit())
+        if (px is not None):
+            size = image.getPixelSizeX(True);
+            value = formatPixelSizeWithUnits(size)
+            rv['pixel_size']['unit_x'] = str(value[0])
+            rv['pixel_size']['symbol_x'] = value[1]
         py = image.getPrimaryPixels().getPhysicalSizeY()
-        rv['pixel_size']['valueY'] = py.getValue()
-        rv['pixel_size']['symbolY'] = py.getSymbol()
-        rv['pixel_size']['unitY'] = str(py.getUnit())
+        if (py is not None):
+            size = image.getPixelSizeY(True);
+            value = formatPixelSizeWithUnits(size)
+            rv['pixel_size']['unit_y'] = str(value[0])
+            rv['pixel_size']['symbol_y'] = value[1]
+        pz = image.getPrimaryPixels().getPhysicalSizeZ()
+        if (pz is not None):
+            size = image.getPixelSizeZ(True);
+            value = formatPixelSizeWithUnits(size)
+            rv['pixel_size']['unit_z'] = str(value[0])
+            rv['pixel_size']['symbol_z'] = value[1]
 
     return JsonResponse(rv)
+
+
+def formatPixelSizeWithUnits(size):
+        """
+        Formats the response for methods above.
+        Returns [value, unitSymbol]
+        If the unit is MICROMETER in database (default), we
+        convert to more appropriate units & value
+        """
+        if size is None:
+            return (None, "")
+        length = size.getValue()
+        unit = size.getUnit()
+        if unit == "MICROMETER":
+            unit = lengthunit(length)
+            length = lengthformat(length)
+        else:
+            unit = size.getSymbol()
+        return (length, unit)
