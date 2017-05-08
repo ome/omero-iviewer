@@ -26,6 +26,7 @@ from omeroweb.webgateway.templatetags.common_filters import lengthunit
 from omeroweb.webgateway.templatetags.common_filters import lengthformat
 import json
 import omero_marshal
+import omero
 from omero.model import MaskI
 
 
@@ -247,6 +248,29 @@ def image_data(request, image_id, conn=None, **kwargs):
             value = format_pixel_size_with_units(size)
             rv['pixel_size']['unit_z'] = value[0]
             rv['pixel_size']['symbol_z'] = value[1]
+   
+    size_t = image.getSizeT()
+    time_list = []
+    if size_t > 1:
+        params = omero.sys.ParametersI()
+        params.addLong('pid', image.getPixelsId())
+        z = image.getSizeZ()/2
+        c = image.getSizeC()/2
+        query = "from PlaneInfo as Info where"\
+            " Info.theZ=%s and Info.theC=%s and pixels.id=:pid" % (z,c)
+        info_list = conn.getQueryService().findAllByQuery(
+            query, params, conn.SERVICE_OPTS)
+        timemap = {}
+        for info in info_list:
+            t_index = info.theT.getValue()
+            if info.deltaT is not None:
+                # planeInfo.deltaT gives number only (no units)
+                delta_t = info.deltaT.getValue()
+                timemap[t_index] = delta_t
+        for t in range(image.getSizeT()):
+            if t in timemap:
+                time_list.append(timemap[t])
+    rv['delta_t'] = time_list
 
     return JsonResponse(rv)
 
