@@ -347,12 +347,12 @@ a.ui-button:active,
 }
 
 .plane-slider .slider-value {
-    margin-top: 20px;
+    margin-bottom: -20px;
     left: 30px;
 }
 .time-slider .slider-value {
     margin-bottom: -20px;
-    top: -40px;
+    top: -50px;
 }
 
 
