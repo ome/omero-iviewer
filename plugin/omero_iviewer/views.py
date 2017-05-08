@@ -21,6 +21,7 @@ from django.http import HttpResponse
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from omeroweb.decorators import login_required
+from omeroweb.webgateway.marshal import imageMarshal
 
 import json
 import omero_marshal
@@ -205,3 +206,35 @@ def request_rois(request, iid, conn=None, **kwargs):
         return JsonResponse(ret, safe=False)
     except Exception as someException:
         return JsonResponse({"error": repr(someException)})
+
+
+@login_required()
+def image_data(request, image_id, conn=None, **kwargs):
+    if image_id is None:
+        return JsonResponse({"error":
+                            "no image id supplied for image data request"})
+    image = conn.getObject("Image", image_id)
+
+    if image is None:
+        return JsonResponse({"error": "Image not found"})
+
+    # Test if we have Units support (OMERO 5.1)
+    px = image.getPrimaryPixels().getPhysicalSizeX()
+    pix_size_x = str(px)  # As string e.g. "0.13262 MICROMETER"
+    units_support = " " in pix_size_x
+
+    rv = imageMarshal(image)
+
+    if units_support:
+        # Add extra parameters with units data
+        # NB ['pixel_size']['x'] will have size in MICROMETER
+        px = image.getPrimaryPixels().getPhysicalSizeX()
+        rv['pixel_size']['valueX'] = px.getValue()
+        rv['pixel_size']['symbolX'] = px.getSymbol()
+        rv['pixel_size']['unitX'] = str(px.getUnit())
+        py = image.getPrimaryPixels().getPhysicalSizeY()
+        rv['pixel_size']['valueY'] = py.getValue()
+        rv['pixel_size']['symbolY'] = py.getSymbol()
+        rv['pixel_size']['unitY'] = str(py.getUnit())
+
+    return JsonResponse(rv)
