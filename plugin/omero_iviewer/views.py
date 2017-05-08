@@ -231,27 +231,27 @@ def image_data(request, image_id, conn=None, **kwargs):
         # NB ['pixel_size']['x'] will have size in MICROMETER
         px = image.getPrimaryPixels().getPhysicalSizeX()
         if (px is not None):
-            size = image.getPixelSizeX(True);
-            value = formatPixelSizeWithUnits(size)
+            size = image.getPixelSizeX(True)
+            value = format_pixel_size_with_units(size)
             rv['pixel_size']['unit_x'] = str(value[0])
             rv['pixel_size']['symbol_x'] = value[1]
         py = image.getPrimaryPixels().getPhysicalSizeY()
         if (py is not None):
-            size = image.getPixelSizeY(True);
-            value = formatPixelSizeWithUnits(size)
+            size = image.getPixelSizeY(True)
+            value = format_pixel_size_with_units(size)
             rv['pixel_size']['unit_y'] = str(value[0])
             rv['pixel_size']['symbol_y'] = value[1]
         pz = image.getPrimaryPixels().getPhysicalSizeZ()
         if (pz is not None):
-            size = image.getPixelSizeZ(True);
-            value = formatPixelSizeWithUnits(size)
+            size = image.getPixelSizeZ(True)
+            value = format_pixel_size_with_units(size)
             rv['pixel_size']['unit_z'] = str(value[0])
             rv['pixel_size']['symbol_z'] = value[1]
 
     return JsonResponse(rv)
 
 
-def formatPixelSizeWithUnits(size):
+def format_pixel_size_with_units(size):
         """
         Formats the response for methods above.
         Returns [value, unitSymbol]
