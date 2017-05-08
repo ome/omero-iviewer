@@ -81,12 +81,10 @@ a.ui-button:active,
     width: 80px;
 }
 .color-range-spectrum-container {
+    background-color: #fff;
     position: relative!important;
-    width: 195px;
-    height: 220px;
-    right: 100px;
-    top: 12px!important;
-    left: -180px!important;
+    left: 2px!important;
+    top: -30px!important;
 }
 .shape-fill-color-replacer .sp-preview {
     margin-left: 2px;
@@ -140,27 +138,6 @@ a.ui-button:active,
     -webkit-box-shadow:none;
     box-shadow:none;
     opacity:.65;
-}
-.link-url {
-    height: 40px;
-}
-.link-url button {
-    height: 40px;
-}
-.link-url div {
-    background-color: #F8F8F8;
-    opacity: 1;
-    position: absolute;
-    z-index: 1000;
-    top: 7px;
-    left: 60px;
-    display: none;
-    width: 400px;
-}
-.link-url input {
-    width: 380px;
-    background-color: #FFFFFF;
-    border: 1px solid #E7E7E7;
 }
 
 .fixed-header {
@@ -405,32 +382,10 @@ thumbnail-slider img {
 .channel-slider .ui-slider-handle {
     width: 10px;
 }
-
-.channel-color {
-    float: left;
-    margin-left: 2px;
-    width: 25px;
-}
 .luts {
-    background: #f8f8f8;
-    border: 1px solid #000;
-    display: none;
-    position: relative;
-    z-index: 1000;
-    top: 12px;
-    left: -230px;
-    max-height: 250px;
-    overflow-y: auto;
-    width: 250px;
-}
-.luts-title {
-    text-align: center;
-    font-weight: bold;
-}
-.luts-close {
-    position: absolute;
-    top: 2px;
-    right: 3px;
+     max-height: 165px;
+     overflow-y: auto;
+     overflow-x: hidden;
 }
 .luts-item {
     margin-left: 2px;
@@ -449,14 +404,30 @@ thumbnail-slider img {
     line-height: 13px;
     font-size: 13px;
 }
-.luts-color-picker {
-    margin-bottom: 5px;
+.luts-color-picker span {
+    margin: 0px 10px;
 }
-.luts-color-picker .sp-replacer {
-    width: 145px;
+.luts-color-picker input {
+    float: left;
 }
-.luts-color-picker .sp-preview {
-    width: 115px;
+.channel-button-group {
+    float: left;
+    min-width: 70px;
+    width: 15%
+}
+.channel-button-group .channel-active {
+    overflow-x: hidden;
+    min-width: 50px;
+    width: 80%;
+}
+.channel-color {
+    top: 30px;
+    max-height: 250px;
+    width: 200px;
+}
+.channel-color hr {
+    float: none;
+    min-width: 0px;
 }
 .channel-mode {
     margin-top: 2px;
@@ -464,17 +435,6 @@ thumbnail-slider img {
 }
 .channel-mode button {
     width: 33%;
-}
-
-.channel-active {
-    overflow-x: hidden;
-    font-size: 10px;
-    float: left;
-    height: 100%;
-    min-width: 50px;
-    width: 15%;
-    border-width: 2px;
-    border-radius: 0px;
 }
 
 .user-settings {

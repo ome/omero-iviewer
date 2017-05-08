@@ -137,29 +137,6 @@ export default class ChannelRange  {
      *
      * @memberof ChannelRange
      */
-    showLuts(newValue, oldValue) {
-        let luts = $(this.element).find('.luts');
-        luts.show();
-        $(this.element).find('.luts-close').off("click");
-        $(this.element).find('.luts-close').on("click", () => luts.hide());
-    }
-
-    /**
-     * click handler for lut
-     *
-     * @param {string} id the lookup name
-     * @memberof ChannelRange
-     */
-    chooseLut(id) {
-        $(this.element).find('.luts').hide();
-        this.onColorChange(id);
-    }
-
-    /**
-     * Deals with the mode change triggered by the observer
-     *
-     * @memberof ChannelRange
-     */
     changeMode(newValue, oldValue) {
         if (newValue === null) return;
         if (oldValue === null) oldValue = newValue;
@@ -342,7 +319,7 @@ export default class ChannelRange  {
         }});
         channelRange.css("background", "white");
         // change slider background
-        this.setSliderBackgroundAfterColorChange(
+        this.setBackgroundAfterColorChange(
             this.luts instanceof Map &&
                typeof this.luts.get(this.channel.color) === 'object');
 
@@ -383,9 +360,6 @@ export default class ChannelRange  {
             showInitial: true,
             preferredFormat: "hex",
             appendTo: $(this.element).find('.channel-color'),
-            beforeShow: () => {
-                $(this.element).find('.luts').hide();
-            },
             change: (color) => this.onColorChange(color.toHexString())});
 }
 
@@ -403,7 +377,7 @@ export default class ChannelRange  {
          let oldValue = this.channel.color;
          this.channel.color = isLut ? value : value.substring(1);
          // change slider background
-         this.setSliderBackgroundAfterColorChange(isLut);
+         this.setBackgroundAfterColorChange(isLut);
          // add history record
          this.context.getSelectedImageConfig().addHistory({
              prop: ['image_info', 'channels', '' + this.index,'color'],
@@ -424,15 +398,15 @@ export default class ChannelRange  {
      }
 
      /**
-     * Chnages slider looks after color/lut selection
+     * Chnages slider and button background after color/lut selection
      *
      * @param {boolean} ui_triggered was triggered by ui interaction
      * @private
      * @memberof ChannelRange
      */
-     setSliderBackgroundAfterColorChange(isLut) {
-         let height = this.luts_png.height * 2;
-         let blackGradientOffset = height - 19;
+     setBackgroundAfterColorChange(isLut) {
+         let height = this.luts_png.height * 3;
+         let blackGradientOffset = height - 29;
          let css = {
              "background-image" : "url('" + this.luts_png.url + "')",
              "background-size" : "100% " + height + "px",
@@ -442,17 +416,28 @@ export default class ChannelRange  {
                 this.channel.reverseIntensity ? "scaleX(-1)" : "none",
              "background-color": ""
          };
+         let resetCss = (transform_only=false) => {
+             if (!transform_only) {
+                 css['background-image'] = ""; css['background-size'] = "";
+                 css['background-repeat'] = ""; css['background-position'] = "";
+             };
+             css['transform'] = "";
+         };
          if (isLut) {
              let idx = this.luts.get(this.channel.color).index;
-             if (idx >= 0) idx = idx * 20 + 1;
+             if (idx >= 0) idx = idx * 30 + 1;
              else idx = blackGradientOffset;
              css['background-position'] = "0px -" + idx + "px";
              $(this.element).find(".channel-slider").find(
                  ".ui-slider-range").css(css);
+             resetCss(idx !== blackGradientOffset);
+             $(this.element).find(".channel-active").css(css);
          } else {
              css['background-color'] = "#" + this.channel.color;
              $(this.element).find(".channel-slider").find(
                  ".ui-slider-range").css(css);
+             resetCss();
+             $(this.element).find(".channel-active").css(css);
          }
      }
 
@@ -573,6 +558,44 @@ export default class ChannelRange  {
                     } catch (ignored) {}
         } else $(this.element).find(clazz).parent().css(
             "border-color", "rgb(255,0,0)");
+    }
+
+    /**
+     * Toggles a channel, i.e. sets it active or inactive
+     *
+     * @memberof ChannelRange
+     */
+    toggleChannel() {
+        let imgConf = this.context.getSelectedImageConfig();
+
+        // we don't allow to deactivate the only active channel for grayscale
+        if (imgConf.image_info.model === 'greyscale' &&
+            this.channel.active) return;
+
+        let history = [];
+
+        // toggle channel active state
+        this.channel.active = !this.channel.active;
+        // remember change
+        history.push({
+            prop: ['image_info', 'channels', '' + this.index, 'active'],
+            old_val :   !this.channel.active,
+            new_val: this.channel.active, type: 'boolean'});
+
+        if (imgConf.image_info.model === 'greyscale') {
+            // for grayscale: we allow only one active channel
+            let channels = imgConf.image_info.channels;
+            for (let i=0;i<channels.length;i++) {
+                let c = channels[i];
+                if (i === this.index || !c.active) continue;
+                // deactivate other channels
+                c.active = false;
+                history.push({
+                    prop: ['image_info', 'channels', '' + i, 'active'],
+                    old_val : true, new_val: false, type: 'boolean'});
+            };
+        };
+        imgConf.addHistory(history);
     }
 
     /**
