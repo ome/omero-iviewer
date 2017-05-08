@@ -93,6 +93,12 @@ export default class ImageInfo {
     image_pixels_size = null;
 
     /**
+     * the delta t
+     * @memberof ImageInfo
+     */
+    image_exposure = null;
+
+    /**
      * a flag for whether we are allowed to save the settings
      * @memberof ImageInfo
      * @type {boolean}
@@ -305,8 +311,8 @@ export default class ImageInfo {
             this.image_pixels_type = response.meta.pixelsType;
         this.image_timestamp = response.meta.imageTimestamp;
         this.image_pixels_size = response.pixel_size;
+        this.image_exposure = response.delta_t;
         this.sanityCheckInitialValues();
-
         // signal that we are ready and
         // send out an image config update event
         this.ready = true;
