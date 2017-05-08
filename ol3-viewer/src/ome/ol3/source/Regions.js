@@ -22,11 +22,14 @@ goog.require('ol.proj.Projection');
  * and drawing. As a consequence, Regions can only be created after the viewer
  * has been instantiated.
  *
- * Two flags that can be handed in as part of the second (otional argument)
- * are important to be mentioned. They determine whether the text for a shape
- * or the label text gets scaled with resolutions changes (default behavior)
+ * Flags that can be handed in as part of the second (otional argument)
+ * are 'rotateText', 'scaleText' which determine whether a shape comment
+ * or label text gets scaled with resolutions changes (default behavior)
  * and whether it should get rotated if the rest of the view was rotated
- * (doesn't happen by default), e.g:
+ * (doesn't happen by default), as well as optional rois data that has already
+ * been requested. For the latter use a deep clone.
+ *
+ * e.g:
  * <pre>
  *  { 'rotateText' : false, 'scaleText' : true}
  *</pre>
@@ -35,7 +38,7 @@ goog.require('ol.proj.Projection');
  * @extends {ol.source.Vector}
  *
  * @param {ome.ol3.Viewer} viewerReference mandatory reference to the viewer parent
- * @param {Object.<string, *>=} options additional properties
+ * @param {Object=} options additional properties for initialization
  */
 ome.ol3.source.Regions = function(viewerReference, options) {
     if (!(viewerReference instanceof ome.ol3.Viewer))
@@ -44,15 +47,8 @@ ome.ol3.source.Regions = function(viewerReference, options) {
     var opts = options || {};
     // we always use the spatial index
     opts.useSpatialIndex = true;
-
-    var optGeneratedFeatures = null;
-    if (ome.ol3.utils.Misc.isArray(opts['features'])) {
-        optGeneratedFeatures = options['features'];
-        opts['features'] = null;
-        opts.features = null;
-    }
-
-    goog.base(this, opts); // call super
+    // call super
+    goog.base(this, opts);
 
     /**
      * a flag that tells us if we'd like for the text to be scaled with resolution
@@ -163,53 +159,58 @@ ome.ol3.source.Regions = function(viewerReference, options) {
 
     /**
      * The initialization function performs the following steps:
-     * 1. Request regions data as json and store it internally
+     * 1. Make an ajax request for the regions data as json and store it internally
      * 2. Convert the json response into open layers objects
      *    (ol.Feature and ol.geom.Geometry) and add them to its internal collection
      * 3. Instantiate a regions layer (ol.vector.Regions) and add it to the map
      *
-     * Note: steps 2 and 3 are done asynchroniously after the regions data
-     *       has been received.
+     * Note: if data is provided step is skipped
      *
      * @function
      * @param {Object} scope the java script context
      * @private
      */
-    this.initialize_ = function(scope) {
-        // the success handler that creates the vector layer and adds it to
-        // the open layers map
-        var success = function(data) {
-            if (typeof(data) === 'string') {
-                try {
-                    data = JSON.parse(data);
-                } catch(parseError) {
-                    console.error("Failed to parse json response!");
-                }
-            }
-            if (typeof(data) !== 'object' || data === null) {
-                console.error("Regions Request did not receive proper response!");
-                return;
-            }
+    this.initialize_ = function(scope, data) {
 
+        // initialize features helper function
+        var init0 = function(data) {
             // store response internally to be able to work with it later
             scope.regions_info_ = data;
             scope.new_unsaved_shapes_ = {}; // reset
             var regionsAsFeatures =
                 ome.ol3.utils.Regions.createFeaturesFromRegionsResponse(scope);
             if (ome.ol3.utils.Misc.isArray(regionsAsFeatures) &&
-                regionsAsFeatures.length > 0) {
+                regionsAsFeatures.length > 0)
                     scope.addFeatures(regionsAsFeatures);
-            }
-        };
+        }
+
+        // we use provided data if there
+        if (ome.ol3.utils.Misc.isArray(data)) {
+            init0(data);
+            return;
+        }
 
          // define request settings
          var reqParams = {
              "server" : scope.viewer_.getServer(),
              "uri" : scope.viewer_.getPrefixedURI(ome.ol3.PLUGIN_PREFIX) +
                         '/request_rois/' + scope.viewer_.getId(),
-             "success" : success,
-             "error" : function(error) {
-                 console.error("Error retrieving regions info for id: " +
+             "success" : function(data) {
+                 if (typeof(data) === 'string') {
+                     try {
+                         data = JSON.parse(data);
+                     } catch(parseError) {
+                         console.error("Failed to parse json response!");
+                     }
+                 }
+                 if (typeof(data) !== 'object' || data === null) {
+                     console.error("Regions Request did not receive proper response!");
+                     return;
+                 }
+                 // delegate
+                 init0(data);
+             }, "error" : function(error) {
+                    console.error("Error retrieving regions info for id: " +
                     scope.viewer_.getId() +
                     ((error && error.length > 0) ? ("\\n" + error) : ""));
              }
@@ -219,25 +220,8 @@ ome.ol3.source.Regions = function(viewerReference, options) {
          ome.ol3.utils.Net.sendRequest(reqParams);
      };
 
-    // might be we enter into this constructor with generated features.
-    // deal with them first
-    if (optGeneratedFeatures) {
-        // we run updateStyle over the shapes
-        for (var s in optGeneratedFeatures) {
-            var f = optGeneratedFeatures[s];
-            var rot = this.viewer_.viewer_.getView().getRotation();
-            var res = this.viewer_.viewer_.getView().getResolution();
-            // in case we got created in a rotated view
-            if (f.getGeometry() instanceof ome.ol3.geom.Label && rot !== 0 &&
-                !this.rotate_text_) f.getGeometry().rotate(-rot);
-            // apply style function
-            ome.ol3.utils.Style.updateStyleFunction(f, this, true);
-        }
-        this.addFeatures(optGeneratedFeatures);
-    }
-
     // execute initialization function
-    this.initialize_(this);
+    this.initialize_(this, opts.data);
 }
 goog.inherits(ome.ol3.source.Regions, ol.source.Vector);
 
@@ -658,9 +642,10 @@ ome.ol3.source.Regions.prototype.setProperty =
             var presentState = null;
             var hasSelect = (this.select_ instanceof ome.ol3.interaction.Select);
             if (hasSelect &&
-                (property === 'selected' || (property === 'visible' && !value))) {
+                (property === 'selected' || property === 'visible')) {
                     eventProperty = property;
-                    this.select_.toggleFeatureSelection(f, value);
+                    if (!(property === 'visible' && value))
+                        this.select_.toggleFeatureSelection(f, value);
             } else if (property === 'state') {
                 presentState = f[property];
                 if (value === ome.ol3.REGIONS_STATE.REMOVED) {
@@ -669,8 +654,7 @@ ome.ol3.source.Regions.prototype.setProperty =
                         f['permissions'] !== null &&
                         typeof f['permissions']['canDelete'] === 'boolean' &&
                         !f['permissions']['canDelete']) continue;
-                    if (hasSelect)
-                        this.select_.toggleFeatureSelection(f[s], false);
+                    if (hasSelect) this.select_.toggleFeatureSelection(f, false);
                     // we have already done this
                     if (presentState !== ome.ol3.REGIONS_STATE.REMOVED &&
                         (typeof f["old_state"] !== 'number' ||
@@ -715,7 +699,8 @@ ome.ol3.source.Regions.prototype.setProperty =
             if (eventProperty === 'rollback') {
                 eventProperty = 'deleted';
                 val = false;
-            } else val = value;
+            } else if (eventProperty === 'deleted') val = true;
+            else val = value;
             changedProperties.push(eventProperty);
             changedValues.push(val);
         }

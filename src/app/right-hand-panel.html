@@ -3,7 +3,7 @@
     <require from="../regions/regions"></require>
     <require from="../info/info"></require>
 
-    <ul class="nav nav-tabs" role="tablist">
+    <ul id="panel-tabs" class="nav nav-tabs" role="tablist">
         <li class="${context.selected_tab === '#info' ? 'active' : ''}">
             <a href="#info" role="tab">Info</a>
         </li>
@@ -15,14 +15,14 @@
         </li>
     </ul>
 
-    <div class="tab-content">
+    <div class="tab-content regions-tabs">
         <div role="tabpanel" class="tab-pane ${context.selected_tab === '#info' ? 'active' : ''}" id="info">
             <info class="container-fluid" config_id.bind="config_id"></info>
         </div>
         <div role="tabpanel" class="tab-pane ${context.selected_tab === '#settings' ? 'active' : ''}" id="settings">
             <settings class="container-fluid" config_id.bind="config_id"></settings>
         </div>
-        <div role="tabpanel" class="regions-tabs tab-pane ${context.selected_tab === '#rois' ? 'active' : ''}" id="rois">
+        <div role="tabpanel" class="tab-pane ${context.selected_tab === '#rois' ? 'active' : ''}" id="rois">
             <regions class="container-fluid" config_id.bind="config_id"></regions>
         </div>
     </div>

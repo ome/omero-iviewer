@@ -4,8 +4,7 @@
     <require from="./regions-edit"></require>
 
     <div class="regions-container"
-         show.bind="
-            image_info.projection !== 'split' && regions_info.data !== null">
+         show.bind="image_info.projection !== 'split'">
 
         <div class="regions-tools">
             <div class="row shapes-persistence" style="padding-top: 2px">
@@ -36,26 +35,8 @@
                     </button>
                 </div>
 
-                <div class="dropdown rois-dropdown" style="margin: 5px;">
-                    <button type="button"
-                            disabled.bind="regions_info === null ||
-                                           !regions_info.image_info.can_annotate"
-                            title="${!regions_info.image_info.can_annotate ?
-                                        'No permission to delete' : ''}"
-                            class="btn btn-default btn-xs dropdown-toggle"
-                            data-toggle="dropdown">Delete
-                    </button>
-                    <ul class="dropdown-menu"
-                        title="Rois/shapes that cannot be deleted (permissions) are skipped">
-                        <li if.bind="regions_info &&
-                                     regions_info.selected_shapes.length !== 0"
-                            click.delegate="deleteShapes()"><a href="#">Delete</a>
-                        </li>
-                        <li click.delegate="deleteShapes(true)"><a href="#">Delete All</a></li>
-                    </ul>
-                </div>
-
-                <div class="checkbox checkbox-settings" style="line-height: 20px;">
+                <div show.bind="regions_info.ready"
+                     class="checkbox checkbox-settings" style="line-height: 20px;">
                     <label>
                         <input style="line-height: 20px;" type="checkbox"
                         change.delegate="showComments($event.target.checked)">
@@ -65,19 +46,25 @@
 
             </div>
 
-            <hr/>
+            <hr />
             <regions-edit regions_info.bind="regions_info"></regions-edit>
 
-            <hr show.bind="regions_info !== null &&
+            <hr show.bind="regions_info !== null && regions_info.ready &&
                            regions_info.image_info.can_annotate"
                 regions_info.bind="regions_info" />
             <regions-drawing show.bind="regions_info !== null &&
+                                        regions_info.ready &&
                                         regions_info.image_info.can_annotate"
                              regions_info.bind="regions_info">
             </regions-drawing>
             <hr />
         </div>
-        <regions-list regions_info.bind="regions_info"></regions-list>
+        <regions-list show.bind="regions_info.ready"
+                      regions_info.bind="regions_info">
+        </regions-list>
+        <div style="position: relative;top: 20%;text-align: center"
+             class="disabled-color"
+             show.bind="!regions_info.ready">Loading Regions ...</div>
 
     </div>
 </template>
