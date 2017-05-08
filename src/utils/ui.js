@@ -53,14 +53,14 @@ export default class Ui {
                                "padding-right": '' + (x+15) + 'px'});
                 }
                 eventbus.publish(IMAGE_VIEWER_RESIZE,
-                    {config_id: -1, is_dragging: true, window_resize: false});
+                    {config_id: -1, is_dragging: true});
             });
 
             $(document).mouseup((e) => {
                 $(document).unbind('mousemove');
                 $(document).unbind('mouseup');
                 eventbus.publish(IMAGE_VIEWER_RESIZE,
-                    {config_id: -1, is_dragging: false, window_resize: false});
+                    {config_id: -1, is_dragging: false});
             });
         });
     }
@@ -142,8 +142,7 @@ export default class Ui {
                 $('.frame').css(
                     {"margin-right": '' + (-newWidth-5) + 'px',
                      "padding-right": '' + (newWidth+15) + 'px'});
-            eventbus.publish(IMAGE_VIEWER_RESIZE,
-                {config_id: -1, is_dragging: true, window_resize: false});
+            eventbus.publish(IMAGE_VIEWER_RESIZE, {config_id: -1});
         });
     }
 

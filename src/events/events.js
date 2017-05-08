@@ -6,8 +6,6 @@ export const IMAGE_VIEWER_INIT = "IMAGE_VIEWER_INIT";
 export const IMAGE_CONFIG_SELECT = "IMAGE_CONFIG_SELECT";
 /** whenever the image viewer needs to be resized */
 export const IMAGE_VIEWER_RESIZE = "IMAGE_VIEWER_RESIZE";
-/** whenever the viewer scalebar status (show/hide) is toggled */
-export const IMAGE_VIEWER_SCALEBAR = "IMAGE_VIEWER_SCALEBAR";
 /** whenever the image viewer split view is turned on/off */
 export const IMAGE_VIEWER_SPLIT_VIEW = "IMAGE_VIEWER_SPLIT_VIEW";
 /** whenever the image rendering settings change: channel, model, projection*/
@@ -16,6 +14,8 @@ export const IMAGE_SETTINGS_CHANGE = "IMAGE_SETTINGS_CHANGE";
 export const IMAGE_DIMENSION_CHANGE = "IMAGE_DIMENSION_CHANGE";
 /** whenever the dimension play should be started/stopped */
 export const IMAGE_DIMENSION_PLAY = "IMAGE_DIMENSION_PLAY";
+/** to initialize the regions (after a request) */
+export const REGIONS_INIT = "REGIONS_INIT";
 /** to set rois/shape properties such as visibility and selection */
 export const REGIONS_SET_PROPERTY = "REGIONS_SET_PROPERTY";
 /** whenever a region property change is received, e.g. selection, modification */

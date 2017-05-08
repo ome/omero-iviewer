@@ -4,7 +4,9 @@ import Misc from '../utils/misc';
 import {Utils} from '../utils/regions';
 import Ui from '../utils/ui';
 import {Converters} from '../utils/converters';
-import {REGIONS_MODE, REGIONS_DRAWING_MODE} from '../utils/constants';
+import {
+    REGIONS_MODE, REGIONS_DRAWING_MODE, PERMISSION_TOOLTIPS
+} from '../utils/constants';
 import {
     EventSubscriber,
     IMAGE_CONFIG_UPDATE, IMAGE_DIMENSION_CHANGE, REGIONS_COPY_SHAPES,
@@ -110,7 +112,7 @@ export default class RegionsEdit extends EventSubscriber {
                 this.context.addKeyListener(
                     action.key,
                         (event) => {
-                            if (!this.context.show_regions ||
+                            if (!this.context.isRoisTabActive() ||
                                     !event.ctrlKey) return;
                             action.func.apply(this, action.args);
                         }));
@@ -436,23 +438,13 @@ export default class RegionsEdit extends EventSubscriber {
     }
 
     /**
-     * Reacts to shape selections, adjusting the edit widgets accordingly
+     * Adjusts the edit section for comments after selection changes
      *
+     * @param {boolean} canDo permission flag for required permission
+     * @param {boolean} showDisabled if true we disable (due to permissions)
      * @memberof RegionsEdit
      */
-    adjustEditWidgets() {
-        this.last_selected = this.regions_info.getLastSelectedShape();
-        let canEdit =
-            this.regions_info.checkShapeForPermission(
-                this.last_selected, "canEdit");
-        let showAsPermissionDisabled =
-            !this.regions_info.image_info.can_annotate ||
-            (this.regions_info.selected_shapes.length >= 1 && !canEdit);
-        let permissionsTooltip = "No permission to edit";
-        let type =
-            this.last_selected ? this.last_selected.type.toLowerCase() : null;
-
-        // COMMENT
+    adjustCommentEdit(canDo=false, showDisabled=true) {
         let editComment = $(this.element).find(".shape-edit-comment input");
         editComment.off('input');
         editComment.val('Comment');
@@ -466,17 +458,16 @@ export default class RegionsEdit extends EventSubscriber {
                 (event) =>
                     this.onCommentChange(
                         event.target.value, this.last_selected));
-            editComment.prop("disabled", showAsPermissionDisabled);
-            if (showAsPermissionDisabled) {
+            editComment.prop("disabled", showDisabled);
+            if (showDisabled) {
                 editComment.addClass("disabled-color");
-                editComment.attr('title', permissionsTooltip);
+                editComment.attr('title', PERMISSION_TOOLTIPS.CANNOT_EDIT);
             }
         } else {
             editComment.prop("disabled", true);
             editComment.addClass("disabled-color");
         }
 
-        // FONT SIZE
         let fontSize =
             this.last_selected ?
                 (typeof this.last_selected.FontSize === 'object' &&
@@ -489,11 +480,19 @@ export default class RegionsEdit extends EventSubscriber {
         fontSizeSpinner.on("input spinstop",
            (event, ui) => this.onFontSizeChange(
                parseInt(event.target.value), this.last_selected));
-        fontSizeSpinner.spinner(canEdit ? "enable" : "disable");
+        fontSizeSpinner.spinner(canDo ? "enable" : "disable");
         fontSizeSpinner.attr(
-            'title', showAsPermissionDisabled ? permissionsTooltip : "");
+            'title', showDisabled ? PERMISSION_TOOLTIPS.CANNOT_EDIT : "");
+    }
 
-        // DIMENSION ATTACHMENT
+    /**
+     * Adjusts the dimension attachment edit section after selection changes
+     *
+     * @param {boolean} canDo permission flag for required permission
+     * @param {boolean} showDisabled if true we disable (due to permissions)
+     * @memberof RegionsEdit
+     */
+    adjustAttachmentEdit(canDo=false, showDisabled=true) {
         let dims = this.regions_info.image_info.dimensions;
         let shapeAttachments =
             $(this.element).find(".shape-edit-attachments").children();
@@ -538,16 +537,18 @@ export default class RegionsEdit extends EventSubscriber {
                                     this.regions_info.image_info.dimensions[d] + 1);
                     let hasMoreThanOneEntry =
                         this.regions_info.image_info.dimensions['max_' + d] > 1;
-                    if (hasMoreThanOneEntry && (!showAsPermissionDisabled ||
+                    if (hasMoreThanOneEntry && (!showDisabled ||
                         (this.regions_info.image_info.can_annotate &&
                          this.last_selected === null))) {
                             respectiveAttachementLock.removeClass("disabled-color");
                             if (!unattached)
                                 respectiveDimensionInput.prop("disabled", false);
                     }
-                    if (showAsPermissionDisabled) {
-                        respectiveDimensionInput.attr("title", permissionsTooltip);
-                        respectiveAttachementLock.attr("title", permissionsTooltip);
+                    if (showDisabled) {
+                        respectiveDimensionInput.attr(
+                            "title", PERMISSION_TOOLTIPS.CANNOT_EDIT);
+                        respectiveAttachementLock.attr(
+                            "title", PERMISSION_TOOLTIPS.CANNOT_EDIT);
                     }
             });
 
@@ -578,7 +579,7 @@ export default class RegionsEdit extends EventSubscriber {
                 // click handler on locks
                 shapeAttachmentsLocks.on('click',
                     (event) => {
-                        if (showAsPermissionDisabled) return;
+                        if (showDisabled) return;
                         let dim = event.target.getAttribute('dim');
                         if (this.regions_info.image_info.dimensions[
                             'max_' + dim] <= 1) return;
@@ -603,8 +604,19 @@ export default class RegionsEdit extends EventSubscriber {
                     });
             }
         }
+    }
 
-        // STROKE COLOR & WIDTH
+    /**
+     * Adjusts the stroke style edit section after selection changes
+     *
+     * @param {boolean} canDo permission flag for required permission
+     * @param {boolean} showDisabled if true we disable (due to permissions)
+     * @memberof RegionsEdit
+     */
+    adjustStrokeEdit(canDo=false, showDisabled=true) {
+        let type =
+            this.last_selected ? this.last_selected.type.toLowerCase() : null;
+
         let strokeOptions =
             this.getColorPickerOptions(false, this.last_selected);
         let strokeSpectrum =
@@ -614,8 +626,7 @@ export default class RegionsEdit extends EventSubscriber {
         let strokeColor =
             this.last_selected ?
                 this.last_selected.StrokeColor :
-                typeof this.regions_info.shape_defaults.StrokeColor === 'number' ?
-                    this.regions_info.shape_defaults.StrokeColor : 10092517;
+                    this.regions_info.shape_defaults.StrokeColor;
         let strokeWidth =
             this.last_selected ?
                 (typeof this.last_selected.StrokeWidth === 'object' &&
@@ -628,7 +639,7 @@ export default class RegionsEdit extends EventSubscriber {
         else if (type === 'label') strokeWidth = 0;
         strokeOptions.color = Converters.signedIntegerToRgba(strokeColor);
         strokeSpectrum.spectrum(strokeOptions);
-        // STROKE width
+
         let strokeWidthSpinner =
             $(this.element).find(".shape-stroke-width input");
         strokeWidthSpinner.off("input spinstop");
@@ -644,17 +655,31 @@ export default class RegionsEdit extends EventSubscriber {
                    parseInt(event.target.value), this.last_selected));
         }
         this.setDrawColors(strokeOptions.color, false);
-        if (showAsPermissionDisabled) {
+        if (showDisabled) {
             strokeSpectrum.spectrum("disable");
             strokeWidthSpinner.spinner("disable");
-            strokeWidthSpinner.attr('title', permissionsTooltip);
-            $(".shape-stroke-color").attr('title', permissionsTooltip);
+            strokeWidthSpinner.attr(
+                'title', PERMISSION_TOOLTIPS.CANNOT_EDIT);
+            $(".shape-stroke-color").attr(
+                'title', PERMISSION_TOOLTIPS.CANNOT_EDIT);
         }
-        // ARROW
+    }
+
+    /**
+     * Adjusts the arrow style edit section after selection changes
+     *
+     * @param {boolean} canDo permission flag for required permission
+     * @param {boolean} showDisabled if true we disable (due to permissions)
+     * @memberof RegionsEdit
+     */
+     adjustArrowEdit(canDo=false, showDisabled=true) {
+        let type =
+            this.last_selected ? this.last_selected.type.toLowerCase() : null;
+
         let arrowButton = $(this.element).find(".arrow-button button");
         arrowButton.attr(
-            'title', showAsPermissionDisabled ? permissionsTooltip : "");
-        if (type && type.indexOf('line') >= 0 && !showAsPermissionDisabled) {
+            'title', showDisabled ? PERMISSION_TOOLTIPS.CANNOT_EDIT : "");
+        if (type && type.indexOf('line') >= 0 && !showDisabled) {
             arrowButton.prop('disabled', false);
             arrowButton.removeClass('disabled-color');
             $('.marker_start').html(
@@ -669,33 +694,89 @@ export default class RegionsEdit extends EventSubscriber {
             arrowButton.prop('disabled', true);
             arrowButton.addClass('disabled-color');
         }
+    }
 
-        // FILL COLOR
+    /**
+     * Adjusts the fill style edit section after selection changes
+     *
+     * @param {boolean} canDo permission flag for required permission
+     * @param {boolean} showDisabled if true we disable (due to permissions)
+     * @memberof RegionsEdit
+     */
+     adjustFillEdit(canDo=false, showDisabled=true) {
+        let type =
+            this.last_selected ? this.last_selected.type.toLowerCase() : null;
+
         let fillOptions = this.getColorPickerOptions(true, this.last_selected);
         let fillSpectrum =
             $(this.element).find(".shape-fill-color .spectrum-input");
-        let fillColor = -129;
+        let fillColor = -256;
         let fillDisabled =
             type === 'line' || type === 'polyline' || type === 'label';
         if (!fillDisabled) {
             fillColor =
                 this.last_selected ?
                     this.last_selected.FillColor :
-                    typeof this.regions_info.shape_defaults.FillColor === 'number' ?
-                        this.regions_info.shape_defaults.FillColor : -129;
+                        this.regions_info.shape_defaults.FillColor;
         }
         fillOptions.color = Converters.signedIntegerToRgba(fillColor);
         fillSpectrum.spectrum(fillOptions);
         $(".shape-fill-color").attr('title', '');
         // set fill (if not disabled)
-        if (fillDisabled || showAsPermissionDisabled) {
-            if (showAsPermissionDisabled)
-                $(".shape-fill-color").attr('title', permissionsTooltip);
+        if (fillDisabled || showDisabled) {
+            if (showDisabled)
+                $(".shape-fill-color").attr(
+                    'title', PERMISSION_TOOLTIPS.CANNOT_EDIT);
             fillSpectrum.spectrum("disable");
             return;
         }
         this.setDrawColors(fillOptions.color, true);
         fillSpectrum.spectrum("enable");
+    }
+
+    /**
+     * Adjusts the delete button after selection changes
+     *
+     * @param {boolean} canDo permission flag for required permission
+     * @param {boolean} showDisabled if true we disable (due to permissions)
+     * @memberof RegionsEdit
+     */
+     adjustDeleteButton(canDo=false, showDisabled=true) {
+        let deleteButton = $(this.element).find(".shape-delete-button");
+        deleteButton.prop(
+            'disabled',
+            showDisabled || this.regions_info.selected_shapes.length === 0);
+        deleteButton.attr(
+            'title', showDisabled ? PERMISSION_TOOLTIPS.CANNOT_DELETE : '');
+    }
+
+    /**
+     * Reacts to shape selections, adjusting the edit widgets accordingly
+     *
+     * @memberof RegionsEdit
+     */
+    adjustEditWidgets() {
+        this.last_selected = this.regions_info.getLastSelectedShape();
+        let canEdit =
+            this.regions_info.checkShapeForPermission(
+                this.last_selected, "canEdit");
+        let canDelete =
+            this.regions_info.checkShapeForPermission(
+                this.last_selected, "canDelete");
+        let showEditDisabled =
+            !this.regions_info.image_info.can_annotate ||
+                (this.regions_info.selected_shapes.length >= 1 && !canEdit);
+        let showDeleteDisabled =
+            !this.regions_info.image_info.can_annotate ||
+                (this.regions_info.selected_shapes.length >= 1 && !canDelete);
+
+        // break up adjustment into individual sections
+        this.adjustCommentEdit(canEdit, showEditDisabled);
+        this.adjustAttachmentEdit(canEdit, showEditDisabled);
+        this.adjustStrokeEdit(canEdit, showEditDisabled);
+        this.adjustArrowEdit(canEdit, showEditDisabled);
+        this.adjustFillEdit(canEdit, showEditDisabled);
+        this.adjustDeleteButton(canDelete, showDeleteDisabled);
     }
 
     /**
@@ -805,4 +886,39 @@ export default class RegionsEdit extends EventSubscriber {
                 number : 1, random : true, hist_id : hist_id
             });
     }
+
+    /**
+     * Deletes selected shapes (incl. permissions check)
+     *
+     * @memberof RegionsEdit
+     */
+    deleteShapes() {
+        if (this.regions_info.selected_shapes.length === 0) return;
+        // find selected
+        let ids = this.regions_info.unsophisticatedShapeFilter(
+                        ["deleted"], [false], ["delete"],
+                        this.regions_info.selected_shapes);
+        if (ids.length === 0) return;
+
+        let opts = {
+            config_id : this.regions_info.image_info.config_id,
+            property: 'state', shapes : ids, value: 'delete'
+        };
+
+        // history entry
+        let history = this.regions_info.history;
+        let hist_id = history.getHistoryId();
+        opts.callback = (shape) => {
+            if (typeof shape !== 'object' || shape === null) return;
+            history.addHistory(
+                hist_id, history.action.SHAPES,
+                {shape_id: shape.shape_id,
+                    diffs: [Object.assign({}, shape)],
+                    old_vals: true, new_vals: false});
+            this.adjustEditWidgets();
+        };
+
+        this.context.publish(REGIONS_SET_PROPERTY, opts);
+    }
+
 }

@@ -1,12 +1,12 @@
 import {noView} from 'aurelia-framework';
 import RegionsHistory from './regions_history';
 import {
-    IMAGE_CONFIG_UPDATE, REGIONS_GENERATE_SHAPES, EventSubscriber
+    IMAGE_CONFIG_UPDATE, REGIONS_INIT, EventSubscriber
 } from '../events/events';
 import Misc from '../utils/misc';
 import {Converters} from '../utils/converters';
 import {
-    PLUGIN_PREFIX, REGIONS_DRAWING_MODE, REGIONS_MODE, IVIEWER
+    REGIONS_DRAWING_MODE, REGIONS_MODE, IVIEWER
 } from '../utils/constants';
 
 /**
@@ -34,6 +34,16 @@ export default class RegionsInfo extends EventSubscriber {
     data = new Map();
 
     /**
+     * a total shape count (exluding new with deleted!)
+     * necessary because the data map still needs to include deleted
+     * for history reasons (undo/redo) until we save BUT for the show all toggle
+     * they do not count.
+     * @memberof RegionsInfo
+     * @type {number}
+     */
+     number_of_shapes = 0;
+
+    /**
      * @memberof RegionsInfo
      * @type {RegionsHistory}
      */
@@ -45,6 +55,17 @@ export default class RegionsInfo extends EventSubscriber {
      * @type {Array.<string>}
      */
     selected_shapes = [];
+
+    /**
+     * the balance of individual shape show vs hide toggles
+     * a diffing method in a sense with zero equaling showing all,
+     * the initial state while a hide will subtract 1 and a show will add 1.
+     * probably the less painful method as opposed to a total count tracking
+     * which necessitats more variables still as well as more work.
+     * @memberof RegionsInfo
+     * @type {boolean}
+     */
+    visibility_toggles = 0;
 
     /**
      * the json of the copied shapes
@@ -161,7 +182,7 @@ export default class RegionsInfo extends EventSubscriber {
         if (params.config_id !== this.image_info.config_id ||
             !params.ready) return;
 
-        this.requestData(true);
+        if (this.image_info.context.isRoisTabActive()) this.requestData(true);
     }
 
     /**
@@ -189,20 +210,32 @@ export default class RegionsInfo extends EventSubscriber {
         // set its new value
         if (typeof shape[property] !== 'undefined') shape[property] = value;
         // modify the selected set for actions that influence it
-        if (property === 'selected' && value) {
-            this.data.get(ids.roi_id).show = true;
-            let i = this.selected_shapes.indexOf(id);
-            if (i === -1) this.selected_shapes.push(id);
+        if ((property === 'selected' || property === 'visible') && value) {
+            if (property === 'visible') this.visibility_toggles++;
+            else {
+                this.data.get(ids.roi_id).show = true;
+                let i = this.selected_shapes.indexOf(id);
+                if (i === -1) this.selected_shapes.push(id);
+            }
         } else if ((property === 'selected' && !value) ||
                     (property === 'visible' && !value) ||
                     (property === 'deleted' && value)) {
             let i = this.selected_shapes.indexOf(id);
             if (i !== -1) this.selected_shapes.splice(i, 1);
-            if (property === 'visible') shape.selected = false;
+            shape.selected = false;
             if (property === 'deleted' &&
-                typeof shape.is_new === 'boolean' && shape.is_new)
+                typeof shape.is_new === 'boolean' && shape.is_new) {
                     roi.deleted++;
-        } else if (property === 'deleted' && !value) roi.deleted--;
+                    this.number_of_shapes--;
+                    if (!shape.visible) this.visibility_toggles++;
+            } else if (property === 'visible') this.visibility_toggles--;
+        } else if (property === 'deleted' && !value) {
+            roi.deleted--;
+            if (typeof shape.is_new === 'boolean' && shape.is_new) {
+                    this.number_of_shapes++;
+                    if (!shape.visible) this.visibility_toggles--;
+                }
+        }
     }
 
     /**
@@ -212,8 +245,7 @@ export default class RegionsInfo extends EventSubscriber {
      * @param {boolean} forceUpdate if true we always request up-to-date data
      */
     requestData(forceUpdate = false) {
-        if ((this.ready || !this.image_info.showRegions()) &&
-                !forceUpdate) return;
+        if (this.ready && !forceUpdate) return;
         // reset regions info data and history
         this.resetRegionsInfo();
 
@@ -223,39 +255,41 @@ export default class RegionsInfo extends EventSubscriber {
                   this.image_info.context.getPrefixedURI(IVIEWER) +
                   "/request_rois/" + this.image_info.image_id + '/',
             success : (response) => {
-                // we want an array
-                if (!Misc.isArray(response)) return;
+                try {
+                    let count = 0;
+                    response.map((roi) => {
+                        let shapes = new Map();
 
-                // traverse results and stuff them into the map
-                response.map((roi) => {
-                     // shapes have to be arrays as well
-                     if (Misc.isArray(roi.shapes)) {
-                         let shapes = new Map();
-
-                          // set shape properties and store the object
-                          let roiId = roi['@id'];
-                          roi.shapes.map((shape) => {
-                              let newShape =
-                                Converters.amendShapeDefinition(
-                                    Object.assign({}, shape));
-                              let shapeId = newShape['@id']
-                              newShape.shape_id = "" + roiId + ":" + shapeId;
-                              // we add some flags we are going to need
-                              newShape.visible = true;
-                              newShape.selected = false;
-                              newShape.deleted = false;
-                              newShape.modified = false;
-                              shapes.set(shapeId, newShape);
-                          });
-                          this.data.set(roiId,
-                              {
-                                  shapes: shapes,
-                                  show: false,
-                                  deleted: 0
-                              });
-                      }});
-                this.ready = true;
-                }, error : (error) => this.ready = false
+                        // set shape properties and store the object
+                        let roiId = roi['@id'];
+                        roi.shapes.map((shape) => {
+                            let newShape =
+                            Converters.amendShapeDefinition(
+                                Object.assign({}, shape));
+                            let shapeId = newShape['@id']
+                            newShape.shape_id = "" + roiId + ":" + shapeId;
+                            // we add some flags we are going to need
+                            newShape.visible = true;
+                            newShape.selected = false;
+                            newShape.deleted = false;
+                            newShape.modified = false;
+                            shapes.set(shapeId, newShape);
+                            count++;
+                        });
+                        this.data.set(roiId, {
+                            shapes: shapes,
+                            show: false,
+                            deleted: 0
+                        });
+                    });
+                    this.number_of_shapes = count;
+                    this.ready = true;
+                    this.image_info.context.publish(
+                        REGIONS_INIT, {data: response});
+                } catch(err) {
+                    console.error("Failed to load Rois: " + err);
+                }
+            }, error : (error) => console.error("Failed to load Rois: " + error)
         });
     }
 
@@ -265,11 +299,13 @@ export default class RegionsInfo extends EventSubscriber {
      * @memberof RegionsInfo
 \     */
     resetRegionsInfo() {
+        this.ready = false;
         if (this.history instanceof RegionsHistory) this.history.resetHistory();
         if (this.data instanceof Map) {
             this.data.forEach((value, key) => value.shapes.clear());
             this.data.clear();
         }
+        this.number_of_shapes = 0;
     }
 
     /**
@@ -397,8 +433,8 @@ export default class RegionsInfo extends EventSubscriber {
      * @memberof RegionsEdit
      */
     resetShapeDefaults() {
-        this.shape_defaults['StrokeColor'] = 10092517;
-        this.shape_defaults['FillColor'] = -129
+        this.shape_defaults['StrokeColor'] = -65281;
+        this.shape_defaults['FillColor'] = -256;
         this.shape_defaults['StrokeWidth'] = {
             '@type': 'TBD#LengthI',
             'Unit': 'PIXEL',

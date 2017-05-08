@@ -39,8 +39,6 @@ export default class Regions {
      * @type {Object}
      */
     key_actions = [
-        { key: 68, func: this.deleteShapes},                        // ctrl - d
-        { key: 85, func: this.deleteShapes, args: [false, true]},   // ctrl - u
         { key: 83, func: this.saveShapes},                          // ctrl - s
         { key: 89, func: this.redoHistory},                         // ctrl - y
         { key: 90, func: this.undoHistory}                          // ctrl - z
@@ -81,7 +79,7 @@ export default class Regions {
                 this.context.addKeyListener(
                     action.key,
                         (event) => {
-                            if (!this.context.show_regions ||
+                            if (!this.context.isRoisTabActive() ||
                                     !event.ctrlKey) return;
                             action.func.apply(this, action.args);
                         }));
@@ -114,44 +112,6 @@ export default class Regions {
             REGIONS_STORE_SHAPES,
             {config_id : this.regions_info.image_info.config_id,
                 selected: false});
-    }
-
-    /**
-     * Deletes selected/all shapes
-     *
-     * @memberof Regions
-     */
-    deleteShapes(all=false, undo=false) {
-        if (typeof all !== 'boolean') all = false;
-        if (typeof undo !== 'boolean') undo = false;
-        let ids = [];
-
-        // if we don't want all we only take the selected and not yet deleted
-        if (all || undo) ids = this.regions_info.unsophisticatedShapeFilter(
-            ["deleted"], [false], ["delete"]);
-        else ids = this.regions_info.unsophisticatedShapeFilter(
-                        ["deleted"], [false], ["delete"],
-                        this.regions_info.selected_shapes);
-
-        if (ids.length === 0) return;
-
-        let opts = {
-            config_id : this.regions_info.image_info.config_id,
-            property: 'state', shapes : ids, value: undo ? 'undo' : 'delete'};
-
-        if (!undo) { // make history entry
-            let history = this.regions_info.history;
-            let hist_id = history.getHistoryId();
-            opts.callback = (shape) => {
-                if (typeof shape !== 'object' || shape === null) return;
-                history.addHistory(
-                    hist_id, history.action.SHAPES,
-                    {shape_id: shape.shape_id,
-                        diffs: [Object.assign({}, shape)],
-                        old_vals: true, new_vals: false});
-            };
-        }
-        this.context.publish(REGIONS_SET_PROPERTY, opts);
     }
 
     /**

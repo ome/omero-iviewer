@@ -29,7 +29,7 @@ import 'bootstrap';
  * the right hand panel
  */
 @customElement('right-hand-panel')
-@inject(Context, Element)
+@inject(Context)
 export class RightHandPanel {
     /**
      * which image config do we belong to (bound via template)
@@ -42,9 +42,8 @@ export class RightHandPanel {
      * @constructor
      * @param {Context} context the application context
      */
-    constructor(context, element) {
+    constructor(context) {
         this.context = context;
-        this.element = element;
     }
 
     /**
@@ -54,24 +53,20 @@ export class RightHandPanel {
      * @memberof RightHandPanel
      */
     attached() {
-        $(this.element).find("a").click((e) => {
+        $("#panel-tabs").find("a").click((e) => {
             e.preventDefault();
 
             this.context.selected_tab = e.currentTarget.hash;
 
-            // we don't allow clicking the regions if we don't show them
-            // or if the regions info is not present
+            // we don't allow an active regions tab if we are in spit view
             let img_conf = this.context.getImageConfig(this.config_id);
-            if (this.context.selected_tab === '#rois' &&
-                (img_conf === null || img_conf.regions_info === null ||
-                 img_conf.regions_info.data === null ||
-                 img_conf.image_info.projection === 'split')) return;
+            if (this.context.isRoisTabActive()) {
+                if (img_conf === null || img_conf.regions_info === null ||
+                    img_conf.image_info.projection === 'split') return;
 
-            if (!this.context.show_regions && this.context.selected_tab === '#rois') {
-                this.context.show_regions = true;
-                this.context.publish(
-                    REGIONS_SET_PROPERTY, {property: "visible", value: true});
-            }
+                if (!img_conf.regions_info.ready)
+                    img_conf.regions_info.requestData(true);
+            };
             $(e.currentTarget).tab('show');
         });
     }
@@ -83,6 +78,6 @@ export class RightHandPanel {
      * @memberof RightHandPanel
      */
     detached() {
-        $(this.element).find("a").unbind("click");
+        $("#panel-tabs").find("a").unbind("click");
     }
 }

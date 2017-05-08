@@ -67,6 +67,32 @@ ome.ol3.interaction.Modify = function(regions_reference) {
 };
 goog.inherits(ome.ol3.interaction.Modify, ol.interaction.Modify);
 
+
+/**
+ * Override for dimension/permission/visibility filtering
+ * @param {ol.Collection.Event} evt Event.
+ * @private
+ */
+ome.ol3.interaction.Modify.prototype.handleFeatureAdd_ = function(evt) {
+    var feature = evt.element;
+    var theT = this.regions_.viewer_.getDimensionIndex('t');
+    var theZ = this.regions_.viewer_.getDimensionIndex('z');
+    var featureT = feature['TheT'];
+    var featureZ = feature['TheZ'];
+    
+    if ((typeof feature['visible'] === 'boolean' && !feature['visible']) ||
+         (typeof feature['state'] === 'number' &&
+            feature['state'] === ome.ol3.REGIONS_STATE.REMOVED) ||
+         (featureT !== -1 && featureT !== theT) ||
+         (featureZ !== -1 && featureZ !== theZ) ||
+         (typeof feature['permissions'] === 'object' &&
+            feature['permissions'] !== null &&
+            typeof feature['permissions']['canEdit'] === 'boolean' &&
+            !feature['permissions']['canEdit'])) return;
+
+    this.addFeature_(feature);
+};
+
 /**
  * Overridden method
  *
@@ -102,14 +128,6 @@ ome.ol3.interaction.Modify.prototype.handlePointerAtPixel_ = function(pixel, map
         nodes.sort(sortByDistance);
         // get closest node
         var node = nodes[0];
-        if ((typeof node.feature['visible'] === 'boolean' &&
-             !node.feature['visible']) ||
-             (typeof node.feature['state'] === 'number' &&
-             node.feature['state'] === ome.ol3.REGIONS_STATE.REMOVED) ||
-             (typeof node.feature['permissions'] === 'object' &&
-                node.feature['permissions'] !== null &&
-                typeof node.feature['permissions']['canEdit'] === 'boolean' &&
-                !node.feature['permissions']['canEdit'])) return;
 
         // we only continue if we don't have an unmodifyable labels
         if (!(node.geometry instanceof ome.ol3.geom.Label) &&

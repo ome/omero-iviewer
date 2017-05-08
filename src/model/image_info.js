@@ -86,10 +86,10 @@ export default class ImageInfo {
      */
     image_pixels_type = null;
 
-    /** 
+    /**
      * the pixels size, defaul in macrons
      * @memberof ImageInfo
-     */ 
+     */
     image_pixels_size = null;
 
     /**
@@ -188,16 +188,6 @@ export default class ImageInfo {
         this.dimensions = {t: 0, max_t : 1,z: 0, max_z : 1};
         this.channels = null;
         this.imported_settings = null;
-    }
-
-    /**
-     * Return flag whether we ought to show regions or not
-     *
-     * @memberof ImageInfo
-     * @return {boolean} show the regions or not
-     */
-    showRegions() {
-        return this.context.show_regions;
     }
 
     /**
