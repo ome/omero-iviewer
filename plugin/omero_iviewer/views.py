@@ -233,19 +233,19 @@ def image_data(request, image_id, conn=None, **kwargs):
         if (px is not None):
             size = image.getPixelSizeX(True)
             value = format_pixel_size_with_units(size)
-            rv['pixel_size']['unit_x'] = str(value[0])
+            rv['pixel_size']['unit_x'] = value[0]
             rv['pixel_size']['symbol_x'] = value[1]
         py = image.getPrimaryPixels().getPhysicalSizeY()
         if (py is not None):
             size = image.getPixelSizeY(True)
             value = format_pixel_size_with_units(size)
-            rv['pixel_size']['unit_y'] = str(value[0])
+            rv['pixel_size']['unit_y'] = value[0]
             rv['pixel_size']['symbol_y'] = value[1]
         pz = image.getPrimaryPixels().getPhysicalSizeZ()
         if (pz is not None):
             size = image.getPixelSizeZ(True)
             value = format_pixel_size_with_units(size)
-            rv['pixel_size']['unit_z'] = str(value[0])
+            rv['pixel_size']['unit_z'] = value[0]
             rv['pixel_size']['symbol_z'] = value[1]
 
     return JsonResponse(rv)
