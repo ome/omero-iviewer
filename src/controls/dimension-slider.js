@@ -1,3 +1,20 @@
+//
+// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 //css and images
 require('../../node_modules/jquery-ui/themes/base/slider.css');
 
@@ -110,10 +127,30 @@ export default class DimensionSlider extends EventSubscriber {
      * @memberof DimensionSlider
      */
     onViewerResize() {
-        if (this.dim === 't')
-            $(this.elSelector).width($(this.elSelector).parent().width()-100);
-        else
-            $(this.elSelector).height($(this.elSelector).parent().height()-90);
+        let sliderContainer = $(this.elSelector).parent();
+        let len =
+            this.dim === 't' ?
+                sliderContainer.width() : sliderContainer.height();
+        let lenCtrls = 0;
+        sliderContainer.children().each(
+            (p, e) => {
+                let el = $(e);
+                if (!el.hasClass("ui-slider")) {
+                    if (this.dim === 't') {
+                        let margin =
+                            parseInt(el.css("margin-left")) +
+                            parseInt(el.css("margin-right"));
+                        lenCtrls += el.width() + margin;
+                    } else {
+                        let margin =
+                            parseInt(el.css("margin-top")) +
+                            parseInt(el.css("margin-bottom"));
+                        lenCtrls += el.height() + margin;
+                    }
+                }
+            });
+        if (!isNaN(lenCtrls)) len -= lenCtrls;
+        $(this.elSelector).css(this.dim === 't' ? "width" : "height", len);
     }
 
     /**
@@ -225,11 +262,6 @@ export default class DimensionSlider extends EventSubscriber {
         let imgInf = this.image_config.image_info;
         let oldValue = imgInf.dimensions[this.dim];
 
-        // show new value
-        $('.slider-corner .' + this.dim).text(
-            this.dim.toUpperCase() + ":" + (value+1) + "/" +
-            imgInf.dimensions['max_' + this.dim]);
-
         // no need to change for a the same value
         if (slider_interaction ||
                 (!slider_interaction && value === oldValue)) return;
@@ -292,10 +324,6 @@ export default class DimensionSlider extends EventSubscriber {
             change: (event, ui) => this.onChange(ui.value,
                 event.originalEvent ? true : false)
         });
-        $('.slider-corner .' + this.dim).text(
-            this.dim.toUpperCase() + ":" +
-            (imgInf.dimensions[this.dim]+1) + "/" +
-                imgInf.dimensions['max_' + this.dim]);
         this.show();
     }
 
@@ -308,6 +336,15 @@ export default class DimensionSlider extends EventSubscriber {
         if (this.player_info.handle !== null) return;
         let oldVal = $(this.elSelector).slider('value');
         $(this.elSelector).slider('value',  oldVal + step);
+    }
+
+    /**
+     * Projects along z or t
+     *
+     * @memberof DimensionSlider
+     */
+    projection(value) {
+        console.log(value);
     }
 
     /**
