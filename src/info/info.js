@@ -103,8 +103,8 @@ export class Info extends EventSubscriber {
             let unit = 'MICROMETER';
             let count = 0;
             let set = false;
-            if (typeof this.image_info.image_pixels_size.x == 'number') {
-                pixels_size += Number(this.image_info.image_pixels_size.unit_x).toFixed(2);
+            if (typeof this.image_info.image_pixels_size.unit_x == 'number') {
+                pixels_size += this.image_info.image_pixels_size.unit_x.toFixed(2);
                 symbol = this.image_info.image_pixels_size.symbol_x;
                 set = true;
             } else {
@@ -112,8 +112,8 @@ export class Info extends EventSubscriber {
                count++;
             }
             pixels_size += " x ";
-            if (typeof this.image_info.image_pixels_size.y == 'number') {
-                pixels_size += Number(this.image_info.image_pixels_size.unit_y).toFixed(2);
+            if (typeof this.image_info.image_pixels_size.unit_y == 'number') {
+                pixels_size += this.image_info.image_pixels_size.unit_y.toFixed(2);
                 if (!set) {
                     symbol = this.image_info.image_pixels_size.symbol_y;
                     set = true;
@@ -123,8 +123,8 @@ export class Info extends EventSubscriber {
                 count++;
             }
             pixels_size += " x ";
-            if (typeof this.image_info.image_pixels_size.z == 'number') {
-                pixels_size += Number(this.image_info.image_pixels_size.unit_z).toFixed(2);
+            if (typeof this.image_info.image_pixels_size.unit_z == 'number') {
+                pixels_size += this.image_info.image_pixels_size.unit_z.toFixed(2);
                 if (!set) {
                     symbol = this.image_info.image_pixels_size.symbol_z;
                     set = true;
