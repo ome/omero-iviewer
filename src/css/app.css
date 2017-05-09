@@ -344,7 +344,7 @@ thumbnail-slider img {
     max-width: 800px;
     height: 30px;
     margin-bottom: 2px;
-    margin-left: 2px;
+    margin-left: 0px;
     margin-right: 0px;
     width: 100%;
 }
@@ -366,7 +366,7 @@ thumbnail-slider img {
 
 #panel-tabs li a {
     padding-left: 20px;
-    padding-right 20px;
+    padding-right: 20px;
 }
 
 .channel-range {
