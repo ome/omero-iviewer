@@ -212,9 +212,7 @@ def request_rois(request, iid, conn=None, **kwargs):
 
 @login_required()
 def image_data(request, image_id, conn=None, **kwargs):
-    if image_id is None:
-        return JsonResponse({"error":
-                            "no image id supplied for image data request"})
+
     image = conn.getObject("Image", image_id)
 
     if image is None:
