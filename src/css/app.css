@@ -84,7 +84,7 @@ a.ui-button:active,
     background-color: #fff;
     position: relative!important;
     left: 2px!important;
-    top: -30px!important;
+    top: -205px!important;
 }
 .shape-fill-color-replacer .sp-preview {
     margin-left: 2px;
@@ -100,6 +100,7 @@ a.ui-button:active,
     opacity: 0.8;
 }
 .color-spectrum-container {
+    background-color: #f8f8f8;
     position: absolute!important;
     width: 195px;
     height: 270px;
@@ -356,6 +357,11 @@ thumbnail-slider img {
     margin-bottom: 0px;
 }
 
+#panel-tabs li a {
+    padding-left: 20px;
+    padding-right 20px;
+}
+
 .channel-range {
     width: 100%;
     height: 100%;
@@ -415,7 +421,7 @@ thumbnail-slider img {
     min-width: 70px;
     width: 15%
 }
-.channel-button-group .channel-active {
+.channel-button-group .channel {
     overflow-x: hidden;
     min-width: 50px;
     width: 80%;

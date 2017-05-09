@@ -323,7 +323,7 @@ export default class RegionsList extends EventSubscriber {
             $(".regions-container").outerHeight() -
             $(".regions-tools").outerHeight() -
             $('.regions-header').outerHeight() -
-            $('.fixed-header').outerHeight();
+            $("#panel-tabs").outerHeight();
         if (Misc.isIE()) availableHeight -= this.scrollbar_width;
 
         if (!isNaN(availableHeight))

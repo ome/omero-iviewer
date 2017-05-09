@@ -161,9 +161,10 @@ export default class ImageConfig extends History {
      * Queries whether a lut by the given name is in our map
      *
      * @param {string} name the lut name
+     * @param {boolean} true if the lut was found, false otherwise
      * @memberof ImageConfig
      */
-    hasLookupTable(name) {
+    hasLookupTableEntry(name) {
         if (this.luts === null || typeof name !== 'string') return false;
 
         let lut = this.luts.get(name);

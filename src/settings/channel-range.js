@@ -234,12 +234,13 @@ export default class ChannelRange  {
       * @memberof ChannelRange
       */
      updateUI() {
-         // just in case
-         this.detached();
+        // just in case
+        this.detached();
 
-         if (this.channel === null) return;
+        if (this.channel === null) return;
 
-        let imgInf = this.context.getSelectedImageConfig().image_info;
+        let imgConf = this.context.getSelectedImageConfig();
+        let imgInf = imgConf.image_info;
         let minMaxRange =
             imgInf.getChannelMinMaxValues(
                 CHANNEL_SETTINGS_MODE.FULL_RANGE,this.index);
@@ -349,11 +350,12 @@ export default class ChannelRange  {
                     event.keyCode === 13)
                         this.onRangeChange(event.target.value)
         });
-       channelEnd.spinner("value",minMaxValues.end_val);
+        channelEnd.spinner("value",minMaxValues.end_val);
 
-       //channel color
-       $(this.element).find(".spectrum-input").spectrum({
-            color: "#" + this.channel.color,
+        //channel color
+        let isLut = imgConf.hasLookupTableEntry(this.channel.color);
+        $(this.element).find(".spectrum-input").spectrum({
+            color: isLut ? '#fff' : "#" + this.channel.color,
             showInput: true,
             containerClassName: 'color-range-spectrum-container',
             replacerClassName: 'color-range-replacer',
@@ -370,16 +372,16 @@ export default class ChannelRange  {
      * @memberof ChannelRange
      */
      onColorChange(value) {
-         let isLut = false;
-         if (this.luts instanceof Map &&
-                typeof this.luts.get(value) === 'object')
-            isLut = true;
+         let imgConf = this.context.getSelectedImageConfig();
+         let isLut = imgConf.hasLookupTableEntry(value);
          let oldValue = this.channel.color;
          this.channel.color = isLut ? value : value.substring(1);
          // change slider background
          this.setBackgroundAfterColorChange(isLut);
+         $(this.element).find(".spectrum-input").spectrum(
+             "set", isLut ? '#fff' : value);
          // add history record
-         this.context.getSelectedImageConfig().addHistory({
+         imgConf.addHistory({
              prop: ['image_info', 'channels', '' + this.index,'color'],
              old_val : oldValue, new_val: this.channel.color, type: 'string'});
      }
@@ -431,13 +433,13 @@ export default class ChannelRange  {
              $(this.element).find(".channel-slider").find(
                  ".ui-slider-range").css(css);
              resetCss(idx !== blackGradientOffset);
-             $(this.element).find(".channel-active").css(css);
+             $(this.element).find(".channel").css(css);
          } else {
              css['background-color'] = "#" + this.channel.color;
              $(this.element).find(".channel-slider").find(
                  ".ui-slider-range").css(css);
              resetCss();
-             $(this.element).find(".channel-active").css(css);
+             $(this.element).find(".channel").css(css);
          }
      }
 
@@ -558,6 +560,15 @@ export default class ChannelRange  {
                     } catch (ignored) {}
         } else $(this.element).find(clazz).parent().css(
             "border-color", "rgb(255,0,0)");
+    }
+
+    /**
+     * Hides color picker
+     *
+     * @memberof ChannelRange
+     */
+    hideColorPicker() {
+        $(this.element).find(".spectrum-input").spectrum("hide");
     }
 
     /**

@@ -2,13 +2,15 @@
     <div class="btn-group channel-button-group">
         <button type="button"
                 title="${channel.label}"
-                class="btn btn-default btn-sm  pixelated channel-active"
+                class="btn btn-default btn-sm pixelated channel"
+                css="${!channel.active ? 'opacity: 0.5' : ''}"
                 click.delegate="toggleChannel()">${channel.label}
         </button>
         <button type="button"
                 class="btn btn-default btn-sm dropdown-toggle"
                 style="min-width: 15px;padding: 5px 0px;"
-                data-toggle="dropdown">
+                data-toggle="dropdown"
+                click.trigger="hideColorPicker()">
             <span class="caret"></span>
         </button>
         <div class="dropdown-menu channel-color">
@@ -27,43 +29,51 @@
             <hr />
             <div class="luts">
                 <div class="luts-preview luts-item" style="background-color: #FF0000"
+                    title="red"
                     click.delegate="onColorChange('#FF0000')">
                     <div class="luts-name">red</div>
                 </div>
                 <div class="luts-preview luts-item" style="background-color: #00FF00"
-                    click.delegate="onColorChange('#00FF00')">
+                     title="green"
+                     click.delegate="onColorChange('#00FF00')">
                     <div class="luts-name">green</div>
                 </div>
                 <div class="luts-preview luts-item" style="background-color: #0000FF"
-                    click.delegate="onColorChange('#0000FF')">
+                     title="blue"
+                     click.delegate="onColorChange('#0000FF')">
                     <div class="luts-name">blue</div>
                 </div>
                 <div class="luts-preview luts-item" style="background-color: #FFFFFF"
-                    click.delegate="onColorChange('#FFFFFF')">
+                     title="white"
+                     click.delegate="onColorChange('#FFFFFF')">
                     <div class="luts-name">white</div>
                 </div>
                 <div class="luts-preview luts-item" style="background-color: #FFFF00"
-                    click.delegate="onColorChange('#FFFF00')">
+                     title="yellow"
+                     click.delegate="onColorChange('#FFFF00')">
                     <div class="luts-name">yellow</div>
                 </div>
                 <div class="luts-preview luts-item" style="background-color: #FF00FF"
-                    click.delegate="onColorChange('#FF00FF')">
+                     title="magenta"
+                     click.delegate="onColorChange('#FF00FF')">
                     <div class="luts-name">magenta</div>
                 </div>
                 <div class="luts-preview luts-item" style="background-color: #00FFFF"
-                    click.delegate="onColorChange('#00FFFF')">
+                     title="cyan"
+                     click.delegate="onColorChange('#00FFFF')">
                     <div class="luts-name">cyan</div>
                 </div>
                 <div class="luts-item" repeat.for="[id, lut] of luts"
-                    click.delegate="onColorChange(id)">
-                    <div class="luts-preview pixelated"
+                     title="${lut.nice_name}"
+                     click.delegate="onColorChange(id)">
+                     <div class="luts-preview pixelated"
                          css="${lut.index >= 0 ?
                                 'background-image: url(\'' + luts_png.url + '\');
                                 background-size: 100% ' + (luts_png.height*2) +
                                 'px;background-position: 0px -' + (lut.index*20+1) +
                                 'px' : ''}">
-                        <div class="luts-name">${lut.nice_name}</div>
-                    </div>
+                         <div class="luts-name">${lut.nice_name}</div>
+                     </div>
                 </div>
             </div>
             <hr/>
