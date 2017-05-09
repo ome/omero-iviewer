@@ -207,14 +207,6 @@ a.ui-button:active,
     position: relative;
 }
 
-.slider-corner {
-    max-height: 25px;
-    max-width: 30px;
-    margin-top: -20px;
-}
-.slider-corner span {
-    font-size: 14px;
-}
 .slider-value {
     position: relative;
     background-color: #FFFFFF;
