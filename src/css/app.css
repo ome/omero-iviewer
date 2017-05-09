@@ -306,21 +306,23 @@ a.ui-button:active,
 
 .plane-slider .ui-slider {
     height: 100%;
-    width: 10px;
+    width: 9px;
     margin-left: 9px;
     z-index: 3;
 }
 .time-slider .ui-slider {
     width: 100%;
-    height: 10px;
+    height: 9px;
     margin-top: 14px;
 }
 
 .plane-slider .ui-slider-handle {
-    left: -.55em;
+    left: -.45em;
+    width: 19px;
 }
 .time-slider .ui-slider-handle {
-    top: -0.55em;
+    top: -0.45em;
+    height: 19px;
 }
 
 .plane-slider .glyphicon-chevron-down {
