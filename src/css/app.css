@@ -344,6 +344,11 @@ thumbnail-slider img {
     cursor: pointer;
 }
 
+#info .table>tbody>tr>th, #info .table>tbody>tr>td {
+    border-top-width: 0;
+    padding: 2px;
+}
+
 .right-hand-panel {
     width: 350px;
     max-width: 800px;
