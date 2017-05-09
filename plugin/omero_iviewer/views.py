@@ -217,37 +217,33 @@ def image_data(request, image_id, conn=None, **kwargs):
                             "no image id supplied for image data request"})
     image = conn.getObject("Image", image_id)
 
-    # if image is None:
-    #    return JsonResponse({"error": "Image not found"})
+    if image is None:
+        return JsonResponse({"error": "Image not found"}, status=404)
 
-    # Test if we have Units support (OMERO 5.1)
     px = image.getPrimaryPixels().getPhysicalSizeX()
-    pix_size_x = str(px)  # As string e.g. "0.13262 MICROMETER"
-    units_support = " " in pix_size_x
 
     rv = imageMarshal(image)
 
-    if units_support:
-        # Add extra parameters with units data
-        # NB ['pixel_size']['x'] will have size in MICROMETER
-        px = image.getPrimaryPixels().getPhysicalSizeX()
-        if (px is not None):
-            size = image.getPixelSizeX(True)
-            value = format_pixel_size_with_units(size)
-            rv['pixel_size']['unit_x'] = value[0]
-            rv['pixel_size']['symbol_x'] = value[1]
-        py = image.getPrimaryPixels().getPhysicalSizeY()
-        if (py is not None):
-            size = image.getPixelSizeY(True)
-            value = format_pixel_size_with_units(size)
-            rv['pixel_size']['unit_y'] = value[0]
-            rv['pixel_size']['symbol_y'] = value[1]
-        pz = image.getPrimaryPixels().getPhysicalSizeZ()
-        if (pz is not None):
-            size = image.getPixelSizeZ(True)
-            value = format_pixel_size_with_units(size)
-            rv['pixel_size']['unit_z'] = value[0]
-            rv['pixel_size']['symbol_z'] = value[1]
+    # Add extra parameters with units data
+    # Note ['pixel_size']['x'] will have size in MICROMETER
+    px = image.getPrimaryPixels().getPhysicalSizeX()
+    if (px is not None):
+        size = image.getPixelSizeX(True)
+        value = format_pixel_size_with_units(size)
+        rv['pixel_size']['unit_x'] = value[0]
+        rv['pixel_size']['symbol_x'] = value[1]
+    py = image.getPrimaryPixels().getPhysicalSizeY()
+    if (py is not None):
+        size = image.getPixelSizeY(True)
+        value = format_pixel_size_with_units(size)
+        rv['pixel_size']['unit_y'] = value[0]
+        rv['pixel_size']['symbol_y'] = value[1]
+    pz = image.getPrimaryPixels().getPhysicalSizeZ()
+    if (pz is not None):
+        size = image.getPixelSizeZ(True)
+        value = format_pixel_size_with_units(size)
+        rv['pixel_size']['unit_z'] = value[0]
+        rv['pixel_size']['symbol_z'] = value[1]
 
     size_t = image.getSizeT()
     time_list = []
