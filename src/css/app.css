@@ -354,8 +354,8 @@ thumbnail-slider img {
     padding-left: 5px;
 }
 
-.save-settings {
-    margin-top: 5px;
+.save-settings .btn-sm, .history .btn-sm {
+    padding: 5px 9px;
 }
 
 .checkbox-settings {
