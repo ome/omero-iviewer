@@ -9,7 +9,7 @@
         <div class="regions-tools">
             <div class="shapes-persistence">
                 <div class="btn-group">
-                    <button type="button" class="btn btn-default"
+                    <button type="button" class="btn btn-default btn-sm"
                         disabled.bind="!(regions_info.history &&
                             regions_info.history.history.length > 0 &&
                             regions_info.history.historyPointer >= 0) ||
@@ -22,7 +22,7 @@
                         disabled.bind="!(regions_info.history &&
                             regions_info.history.history.length > 0 &&
                             regions_info.history.historyPointer >= 0)"
-                        class="btn btn-default"
+                        class="btn btn-default btn-sm"
                         click.delegate="undoHistory()">Undo
                     </button>
                     <button type="button"
@@ -30,7 +30,7 @@
                             regions_info.history.history.length > 0 &&
                             regions_info.history.historyPointer <
                             regions_info.history.history.length-1)"
-                        class="btn btn-default"
+                        class="btn btn-default btn-sm"
                         click.delegate="redoHistory()">Redo
                     </button>
                 </div>
