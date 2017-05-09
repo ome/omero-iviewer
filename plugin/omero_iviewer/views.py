@@ -22,8 +22,8 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 from omeroweb.decorators import login_required
 from omeroweb.webgateway.marshal import imageMarshal
-from omeroweb.webgateway.templatetags.common_filters import lengthunit
-from omeroweb.webgateway.templatetags.common_filters import lengthformat
+from omeroweb.webgateway.templatetags.common_filters import lengthformat,\
+    lengthunit
 import json
 import omero_marshal
 import omero
