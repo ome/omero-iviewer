@@ -134,7 +134,6 @@ export default class RegionsEdit extends EventSubscriber {
 
         let editComment = $(this.element).find(".shape-edit-comment input");
         editComment.prop("disabled", true);
-        editComment.addClass("disabled-color");
         let fontSizeSpinner =
             $(this.element).find(".shape-font-size input");
         fontSizeSpinner.spinner({min: 1, disabled: true});
@@ -449,7 +448,6 @@ export default class RegionsEdit extends EventSubscriber {
         editComment.off('input');
         editComment.val('Comment');
         editComment.attr('title',"");
-        editComment.removeClass("disabled-color");
         if (this.last_selected) {
             editComment.val(
                 typeof this.last_selected.Text === 'string' ?
@@ -459,14 +457,9 @@ export default class RegionsEdit extends EventSubscriber {
                     this.onCommentChange(
                         event.target.value, this.last_selected));
             editComment.prop("disabled", showDisabled);
-            if (showDisabled) {
-                editComment.addClass("disabled-color");
+            if (showDisabled)
                 editComment.attr('title', PERMISSION_TOOLTIPS.CANNOT_EDIT);
-            }
-        } else {
-            editComment.prop("disabled", true);
-            editComment.addClass("disabled-color");
-        }
+        } else editComment.prop("disabled", true);
 
         let fontSize =
             this.last_selected ?
@@ -681,7 +674,6 @@ export default class RegionsEdit extends EventSubscriber {
             'title', showDisabled ? PERMISSION_TOOLTIPS.CANNOT_EDIT : "");
         if (type && type.indexOf('line') >= 0 && !showDisabled) {
             arrowButton.prop('disabled', false);
-            arrowButton.removeClass('disabled-color');
             $('.marker_start').html(
                 typeof this.last_selected['MarkerStart'] === 'string' &&
                     this.last_selected['MarkerStart'] === 'Arrow' ?
@@ -690,10 +682,7 @@ export default class RegionsEdit extends EventSubscriber {
                 typeof this.last_selected['MarkerEnd'] === 'string' &&
                     this.last_selected['MarkerEnd'] === 'Arrow' ?
                         '&#10003;' : '&nbsp;');
-        } else {
-            arrowButton.prop('disabled', true);
-            arrowButton.addClass('disabled-color');
-        }
+        } else arrowButton.prop('disabled', true);
     }
 
     /**

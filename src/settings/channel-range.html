@@ -15,12 +15,10 @@
         </button>
         <div class="dropdown-menu channel-color">
             <div
-                class="${channel.reverseIntensity === null ? 'disabled-color' : ''}"
                 style="margin-left: 2px;">
                 <label style="font-weight: normal;">
                     <input type="checkbox"
                         disabled.bind="channel.reverseIntensity === null"
-                        class="${channel.reverseIntensity === null ? 'disabled-color' : ''}"
                         checked.bind="channel.reverseIntensity"
                         change.delegate="onReverseIntensityToggle()"/>
                         &nbsp;Reverse Intensity
