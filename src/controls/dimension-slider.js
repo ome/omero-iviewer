@@ -76,9 +76,7 @@ export default class DimensionSlider extends EventSubscriber {
      * @type {Array.<string,function>}
      */
     sub_list = [[IMAGE_CONFIG_UPDATE,
-                     (params = {}) => this.onImageConfigChange(params)],
-                [IMAGE_VIEWER_RESIZE,
-                    (params = {}) => this.onViewerResize()]];
+                     (params = {}) => this.onImageConfigChange(params)]];
 
     /**
      * @constructor
@@ -119,14 +117,6 @@ export default class DimensionSlider extends EventSubscriber {
         this.elSelector = "#" + this.config_id +
             " [dim='" + this.dim + "']" + " [name='dim']";
         this.registerObserver();
-    }
-
-    /**
-     * Adjusts widget dynamically in case of panel/window resizing
-     *
-     * @memberof DimensionSlider
-     */
-    onViewerResize() {
     }
 
     /**
