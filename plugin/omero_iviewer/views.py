@@ -254,8 +254,8 @@ def image_data(request, image_id, conn=None, **kwargs):
     if size_t > 1:
         params = omero.sys.ParametersI()
         params.addLong('pid', image.getPixelsId())
-        z = image.getSizeZ()/2
-        c = image.getSizeC()/2
+        z = 0
+        c = 0
         query = "from PlaneInfo as Info where"\
             " Info.theZ=%s and Info.theC=%s and pixels.id=:pid" % (z, c)
         info_list = conn.getQueryService().findAllByQuery(
