@@ -23,7 +23,7 @@ import {inject,customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {slider} from 'jquery-ui/ui/widgets/slider';
 
 import {
-    IMAGE_CONFIG_UPDATE, IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY, IMAGE_VIEWER_RESIZE,
+    IMAGE_CONFIG_UPDATE, IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY,
     EventSubscriber
 } from '../events/events';
 
@@ -305,15 +305,6 @@ export default class DimensionSlider extends EventSubscriber {
         if (this.player_info.handle !== null) return;
         let oldVal = $(this.elSelector).slider('value');
         $(this.elSelector).slider('value',  oldVal + step);
-    }
-
-    /**
-     * Projects along z or t
-     *
-     * @memberof DimensionSlider
-     */
-    projection(value) {
-        console.log(value);
     }
 
     /**
