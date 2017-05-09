@@ -1,3 +1,20 @@
+//
+// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 import {noView} from 'aurelia-framework';
 import {EventAggregator} from 'aurelia-event-aggregator';
 import {IMAGE_CONFIG_SELECT} from '../events/events';
@@ -74,16 +91,10 @@ export default class Context {
     useMDI = false;
 
     /**
-     * the global flag for showing regions
-     * @type {boolean}
+     * the global value indicating the selected tab
+     * @type {String}
      */
-    show_regions = false;
-
-    /**
-     * the global flag for showing the scalebar
-     * @type {boolean}
-     */
-     show_scalebar = false;
+     selected_tab = "#settings";
 
      /**
       * application wide keyhandlers.
@@ -333,10 +344,6 @@ export default class Context {
         if (typeof image_id !== 'number' || image_id < 0)
             return null;
 
-        // reset
-        this.show_regions = false;
-        this.show_scalebar = false;
-
         // we do not keep the other configs around unless we are in MDI mode.
         if (!this.useMDI)
             for (let [id, conf] of this.image_configs)
@@ -464,6 +471,16 @@ export default class Context {
             typeof this.initParams[key] === null) return null;
 
         return this.initParams[key];
+    }
+
+    /**
+     * Returns whether the rois tab is active/selected
+     *
+     * @return {boolean} true if rois tab is active/selected, false otherwise
+     * @memberof Context
+     */
+    isRoisTabActive() {
+        return this.selected_tab === '#rois';
     }
 
     /**

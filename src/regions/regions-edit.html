@@ -39,7 +39,14 @@
                     <li click.delegate="selectAllShapes()"><a href="#">Select All</a></li>
                 </ul>
             </div>
+
+            <button type="button" disabled
+                    click.delegate="deleteShapes()"
+                    class="btn btn-default btn-sm shape-delete-button">Delete
+            </button>
         </div>
+
+
         <div class="row shapes-edit">
             <div class="shape-edit-comment"><input value="Comment"/></div>
             <div class="shape-font-size"><input /></div>

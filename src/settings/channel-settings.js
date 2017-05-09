@@ -80,12 +80,6 @@ export default class ChannelSettings extends EventSubscriber {
                     (params = {}) => this.onImageConfigChange(params)]];
 
     /**
-     * the luts png url
-     * @type {string}
-     */
-    luts_png = "";
-
-    /**
      * @constructor
      * @param {Context} context the application context (injected)
      * @param {BindingEngine} bindingEngine injected instance of BindingEngine
@@ -94,11 +88,6 @@ export default class ChannelSettings extends EventSubscriber {
         super(context.eventbus);
         this.context = context;
         this.bindingEngine = bindingEngine;
-
-        this.luts_png =
-            this.context.server +
-                this.context.getPrefixedURI(WEBGATEWAY, true) +
-                    '/img/luts_10.png';
     }
 
     /**
@@ -353,12 +342,15 @@ export default class ChannelSettings extends EventSubscriber {
    propagateChannelChanges(index, prop) {
        let c = this.image_config.image_info.channels[index];
 
-        this.context.publish(
-            IMAGE_SETTINGS_CHANGE,
-            { config_id: this.config_id, prop: prop, ranges:
-                [{index: index, start: c.window.start, end: c.window.end,
-                     color: c.color, active: c.active,
-                     reverse: c.reverseIntensity}]});
+       let params = {
+           config_id: this.config_id,
+           prop: prop,
+           ranges:[
+               {index: index, start: c.window.start, end: c.window.end,
+                color: c.color, active: c.active, reverse: c.reverseIntensity}
+           ]
+       };
+       this.context.publish(IMAGE_SETTINGS_CHANGE, params);
     }
 
     /**

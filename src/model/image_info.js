@@ -1,3 +1,21 @@
+//
+// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+
 import {noView} from 'aurelia-framework';
 import {IMAGE_CONFIG_UPDATE} from '../events/events';
 import Misc from '../utils/misc';
@@ -41,15 +59,6 @@ export default class ImageInfo {
     has_scalebar = false;
 
     /**
-     * a flag that signals whether the histogram is enabled or not
-     * this will be set accordingly by the histogram but due to its
-     * more global nature we want the flag here.
-     * @memberof ImageInfo
-     * @type {boolean}
-     */
-    has_histogram = false;
-
-    /**
      * the imageAuthor in the json response
      * @memberof ImageInfo
      * @type {string}
@@ -64,7 +73,27 @@ export default class ImageInfo {
     image_name = null;
 
     /**
-     * the canAnnotate permission
+     * the acquisition date in the json response
+     * @memberof ImageInfo
+     * @type {string}
+     */
+    image_timestamp = null;
+
+    /**
+     * the pixels type in the json response
+     * @memberof ImageInfo
+     * @type {string}
+     */
+    image_pixels_type = null;
+
+    /**
+     * the pixels size, defaul in macrons
+     * @memberof ImageInfo
+     */
+    image_pixels_size = null;
+
+    /**
+     * a flag for whether we are allowed to save the settings
      * @memberof ImageInfo
      * @type {boolean}
      */
@@ -159,16 +188,6 @@ export default class ImageInfo {
         this.dimensions = {t: 0, max_t : 1,z: 0, max_z : 1};
         this.channels = null;
         this.imported_settings = null;
-    }
-
-    /**
-     * Return flag whether we ought to show regions or not
-     *
-     * @memberof ImageInfo
-     * @return {boolean} show the regions or not
-     */
-    showRegions() {
-        return this.context.show_regions;
     }
 
     /**
@@ -268,10 +287,6 @@ export default class ImageInfo {
                 (parseInt(initialPlane)-1) : response.rdefs.defaultZ,
             max_z : response.size.z
         };
-        // do we have a scalebar
-        if (typeof response.pixel_size === 'object' &&
-            typeof response.pixel_size.x === 'number')
-            this.has_scalebar = true;
 
         // store projection and model
         this.projection =
@@ -286,6 +301,10 @@ export default class ImageInfo {
             this.author = response.meta.imageAuthor;
         if (typeof response.meta.imageName === 'string')
             this.image_name = response.meta.imageName;
+        if (typeof response.meta.pixelsType === 'string')
+            this.image_pixels_type = response.meta.pixelsType;
+        this.image_timestamp = response.meta.imageTimestamp;
+        this.image_pixels_size = response.pixel_size;
         this.sanityCheckInitialValues();
 
         // signal that we are ready and

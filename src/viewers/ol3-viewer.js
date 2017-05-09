@@ -10,14 +10,14 @@ import {inject, customElement, bindable} from 'aurelia-framework';
 import {ol3} from '../../libs/ol3-viewer.js';
 import {IVIEWER, REGIONS_DRAWING_MODE, RENDER_STATUS} from '../utils/constants';
 import {
-    IMAGE_CONFIG_UPDATE, IMAGE_VIEWER_RESIZE, IMAGE_VIEWER_SCALEBAR,
+    IMAGE_CONFIG_UPDATE, IMAGE_VIEWER_INIT, IMAGE_VIEWER_RESIZE,
     IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY, IMAGE_SETTINGS_CHANGE,
-    REGIONS_SET_PROPERTY, REGIONS_PROPERTY_CHANGED,
-    VIEWER_IMAGE_SETTINGS, IMAGE_VIEWER_SPLIT_VIEW,
-    REGIONS_DRAW_SHAPE, REGIONS_CHANGE_MODES, REGIONS_SHOW_COMMENTS,
-    REGIONS_GENERATE_SHAPES, REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES,
-    REGIONS_HISTORY_ENTRY, REGIONS_HISTORY_ACTION,REGIONS_MODIFY_SHAPES,
-    REGIONS_COPY_SHAPES, EventSubscriber }
+    REGIONS_INIT, REGIONS_SET_PROPERTY, REGIONS_PROPERTY_CHANGED,
+    VIEWER_IMAGE_SETTINGS, IMAGE_VIEWER_SPLIT_VIEW, REGIONS_DRAW_SHAPE,
+    REGIONS_CHANGE_MODES, REGIONS_SHOW_COMMENTS, REGIONS_GENERATE_SHAPES,
+    REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES, REGIONS_HISTORY_ENTRY,
+    REGIONS_HISTORY_ACTION, REGIONS_MODIFY_SHAPES, REGIONS_COPY_SHAPES,
+    EventSubscriber }
 from '../events/events';
 
 
@@ -64,17 +64,19 @@ export default class Ol3Viewer extends EventSubscriber {
      */
     sub_list = [
         [IMAGE_CONFIG_UPDATE,
-             (params={}) => this.updateViewer(params)],
+            (params={}) => this.updateViewer(params)],
+        [IMAGE_VIEWER_INIT,
+            (params={}) => this.initViewer(params)],
         [IMAGE_VIEWER_RESIZE,
             (params={}) => this.resizeViewer(params)],
-        [IMAGE_VIEWER_SCALEBAR,
-            (params={}) => this.showScalebar(params.visible)],
         [IMAGE_DIMENSION_CHANGE,
             (params={}) => this.changeDimension(params)],
         [IMAGE_DIMENSION_PLAY,
             (params={}) => this.playDimension(params)],
         [IMAGE_SETTINGS_CHANGE,
             (params={}) => this.changeImageSettings(params)],
+        [REGIONS_INIT,
+            (params={}) => this.initRegions(params)],
         [REGIONS_PROPERTY_CHANGED,
             (params={}) => this.getRegionsPropertyChange(params)],
         [REGIONS_SET_PROPERTY,
@@ -182,7 +184,15 @@ export default class Ol3Viewer extends EventSubscriber {
         // the event doesn't concern us
         if (params.config_id !== this.config_id) return;
 
-        this.initViewer();
+        // create viewer instance
+        this.viewer =
+            new ol3.Viewer(
+                this.image_config.image_info.image_id,
+                { eventbus : this.context.eventbus,
+                  server : this.context.server,
+                  initParams :  this.context.initParams,
+                  container: this.container
+        });
         this.resizeViewer({window_resize: true});
     }
 
@@ -228,25 +238,14 @@ export default class Ol3Viewer extends EventSubscriber {
     }
 
     /**
-     * Initializes the viewer to have the actual dimensions and channels
+     * Perform initialization task for the viewer
      *
+     * @param {Object} params the event notification parameters
      * @memberof Ol3Viewer
      */
-    initViewer()  {
-        // create viewer instance
-        this.viewer =
-            new ol3.Viewer(
-                this.image_config.image_info.image_id,
-                { eventbus : this.context.eventbus,
-                  server : this.context.server,
-                  initParams :  this.context.initParams,
-                  container: this.container
-        });
-
-        // should we display the scale bar
-        this.showScalebar(this.context.show_scalebar);
-        // whould we display regions...
-        this.showRegions(this.context.show_regions);
+    initViewer(params = {})  {
+        // the event doesn't concern us
+        if (params.config_id !== this.config_id) return;
 
         // only the first request should be affected
         this.context.resetInitParams();
@@ -263,15 +262,14 @@ export default class Ol3Viewer extends EventSubscriber {
         if (this.viewer === null) return;
 
         // while dragging does not concern us
-        if (typeof params.is_dragging !== 'boolean')
-            params.is_dragging = true;
+        if (typeof params.is_dragging !== 'boolean') params.is_dragging = false;
         if (params.is_dragging) return;
 
         // check if we are way to small, then we collapse...
-        if (typeof params.window_resize === 'boolean' &&
-                params.window_resize)
-                Ui.adjustSideBarsOnWindowResize();
-        this.viewer.redraw();
+        if (typeof params.window_resize === 'boolean' && params.window_resize)
+            Ui.adjustSideBarsOnWindowResize();
+
+        this.viewer.redraw(params.delay);
     }
 
     /**
@@ -332,7 +330,7 @@ export default class Ol3Viewer extends EventSubscriber {
         // delegate to individual handler
         let prop = params.property.toLowerCase();
         if (prop === 'visible')
-            this.changeRegionsVisibility(params);
+            this.viewer.setRegionsVisibility(params.value, params.shapes);
         else if (prop === 'selected')
             this.changeShapeSelection(params);
         else if (prop === 'state')
@@ -442,30 +440,6 @@ export default class Ol3Viewer extends EventSubscriber {
       }
 
     /**
-     * Handles Regions layer and shape visibility following event notification
-     * delegating to showRegions for layer visibility
-     *
-     * @param {Object} params the event notification parameters
-     * @memberof Ol3Viewer
-     */
-    changeRegionsVisibility(params = {}) {
-        let broadcast = typeof params.config_id !== 'number';
-        // we ignore notifications that don't concern us
-        if (!broadcast && params.config_id !== this.config_id) return;
-
-        // delegate to show regions,
-        // this is not about individual shapes
-        if (!Misc.isArray(params.shapes) || params.shapes.length === 0) {
-            this.showRegions(params.value);
-            return;
-        }
-
-        // this we do only if our image_config has been addressed specifically
-        if (!broadcast)
-            this.viewer.setRegionsVisibility(params.value, params.shapes);
-    }
-
-    /**
      * Queries the present image settings of the viewer
      *
      * @param {Object} params the event notification parameters
@@ -499,32 +473,15 @@ export default class Ol3Viewer extends EventSubscriber {
     }
 
     /**
-     * Toggles show_regions adding/showing the regions layer or hidding it
+     * Initializes the ol3 regions layer
      *
-     * @param {boolean} flag true if we want to show regions, false otherwise
+     * @param {Object} params the event notification parameters
      * @memberof Ol3Viewer
      */
-    showRegions(flag) {
-        if (flag) {
-            this.viewer.addRegions();
-            // in case we are not visible and have no context menu enabled
-            this.viewer.setRegionsVisibility(true, []);
-            this.changeRegionsModes(
-                { modes: this.image_config.regions_info.regions_modes});
-        } else this.viewer.setRegionsVisibility(false, []);
-    }
-
-    /**
-     * Toggles the scalebar status, i.e. shows/hides the scale bar
-     *
-     * @param {boolean} flag true if we want to show the scalebar, false otherwise
-     * @memberof Ol3Viewer
-     */
-    showScalebar(flag) {
-        let delayedCall = function() {
-            if (this.viewer) this.viewer.toggleScaleBar(flag);
-        }.bind(this);
-        setTimeout(delayedCall, 200);
+    initRegions(params) {
+        this.viewer.addRegions(params);
+        this.changeRegionsModes(
+            { modes: this.image_config.regions_info.regions_modes});
     }
 
     /**
@@ -668,7 +625,8 @@ export default class Ol3Viewer extends EventSubscriber {
                 // we reset modifed
                 shape.modified = false;
                 // new ones are stored under their newly created ids
-                if (typeof shape.is_new === 'boolean') {
+                let wasNew = typeof shape.is_new === 'boolean' && shape.is_new;
+                if (wasNew) {
                     let newRoi =
                         this.image_config.regions_info.data.get(
                             newRoiAndShapeId.roi_id);
@@ -700,6 +658,12 @@ export default class Ol3Viewer extends EventSubscriber {
                     if (oldRoi.shapes.size === 0)
                         this.image_config.regions_info.data.delete(
                             oldRoiAndShapeId.roi_id);
+                    // take out of count if not new
+                    if (!wasNew) {
+                        if (!shape.visible) // if not visible we correct
+                            this.image_config.regions_info.visibility_toggles++;
+                        this.image_config.regions_info.number_of_shapes--;
+                    }
                 }
             }
         }

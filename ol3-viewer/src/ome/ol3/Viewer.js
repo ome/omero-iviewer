@@ -476,6 +476,8 @@ ome.ol3.Viewer = function(id, options) {
                 scope.viewerState_["birdseye"]['ref']
                     instanceof ome.ol3.controls.BirdsEye)
                         scope.viewerState_["birdseye"]['ref'].setCollapsed(false);
+            // enable scalebar by default
+            scope.toggleScaleBar(true);
 
             // listens to resolution changes
             scope.onViewResolutionListener =
@@ -486,8 +488,17 @@ ome.ol3.Viewer = function(id, options) {
                     }, scope);
             scope.displayResolutionInPercent();
 
-            // an endMove listener to publish move events
-            if (scope.eventbus_)
+            // this is for work that needs to be done after,
+            // e.g we have just switched images
+            // because of the asynchronious nature of the initialization
+            // we need to do this here
+            if (typeof(postSuccessHook) === 'function')
+                postSuccessHook.call(scope);
+
+            if (scope.tried_regions) scope.addRegions();
+
+            if (scope.eventbus_) {
+                // an endMove listener to publish move events
                 scope.onEndMoveListener =
                     ol.events.listen(
                         scope.viewer_, ol.MapEventType.MOVEEND,
@@ -500,15 +511,10 @@ ome.ol3.Viewer = function(id, options) {
                                  "c": this.getDimensionIndex('c'),
                                  "center": this.viewer_.getView().getCenter()});
                         }, scope);
-
-            // this is for work that needs to be done after,
-            // e.g we have just switched images
-            // because of the asynchronious nature of the initialization
-            // we need to do this here
-            if (typeof(postSuccessHook) === 'function')
-                postSuccessHook.call(scope);
-
-            if (scope.tried_regions) scope.addRegions();
+                // announce that we are finished
+                scope.eventbus_.publish(
+                    "IMAGE_VIEWER_INIT", {"config_id": scope.getTargetId()});
+            }
         };
 
         // define request settings
@@ -691,7 +697,7 @@ ome.ol3.Viewer.prototype.changeToImage =
  * [addRegions]{@link ome.ol3.Viewer#addRegions} again if you want it back which is more expensive
  * than toggling visibility
  *
- * @param {Object.<string, *>=} options properties not used yet and maybe never
+ * @param {Object=} options additional options for region initialization
  */
 ome.ol3.Viewer.prototype.addRegions = function(options) {
     // without a map, no need for a regions overlay...
@@ -700,8 +706,7 @@ ome.ol3.Viewer.prototype.addRegions = function(options) {
         return;
     }
     this.tried_regions = false;
-    if (this.regions_ instanceof ome.ol3.source.Regions)
-        return;
+    if (this.regions_ instanceof ome.ol3.source.Regions) return;
 
     this.regions_ = new ome.ol3.source.Regions(this, options);
     // add a vector layer with the regions
@@ -1742,20 +1747,33 @@ ome.ol3.Viewer.prototype.changeImageModel = function(value) {
  * Enables/disabled scale bar
  *
  * @param {boolean} show if true we show the scale bar, otherwise not
+ * @return {boolean} true if the toggle was successfully done, otherwise false
  */
  ome.ol3.Viewer.prototype.toggleScaleBar = function(show) {
     // check if we have an image and a pixel size specified
     if (this.getImage() === null ||
         typeof this.image_info_['pixel_size'] !== "object" ||
-        typeof this.image_info_['pixel_size']['x'] !== "number") return;
+        typeof this.image_info_['pixel_size']['x'] !== "number") return false;
 
     if (typeof show !== 'boolean') show = false;
 
-    if (show) {
-        this.addControl("scalebar");
-        return;
+    // check if we have an instance of the control already
+    // and create one if we don't
+    var scalebarControlExists =
+        typeof this.viewerState_['scalebar'] === 'object';
+    if (!scalebarControlExists) {
+        if (show) this.addControl("scalebar");
+        return true;
     }
-    this.removeInteractionOrControl("scalebar");
+
+    // toggle visibility now
+    try {
+        var scalebarControl = this.viewerState_["scalebar"]['ref'];
+        scalebarControl.element_.style.display = show ? "" : "none";
+    } catch(ex) {
+        return false;
+    }
+    return true;
  }
 
 /**
@@ -1765,11 +1783,15 @@ ome.ol3.Viewer.prototype.changeImageModel = function(value) {
  */
 ome.ol3.Viewer.prototype.redraw = function(delay) {
     if (this.viewer_) {
-        if (typeof delay !== 'number' || delay < 0) delay = 0;
         var update =
             function() {
                 if (this.viewer_) this.viewer_.updateSize();
             }.bind(this);
+
+        if (typeof delay !== 'number' || delay <= 0) {
+            update();
+            return;
+        }
         setTimeout(update, delay);
     }
 }

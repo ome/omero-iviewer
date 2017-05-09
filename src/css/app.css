@@ -21,6 +21,10 @@ hr {
 .container-fluid {
     padding: 0px;
 }
+@font-face {
+  font-family: 'Glyphicons Halflings';
+  src: url('fonts/glyphicons-halflings-regular.woff');
+}
 /** BOOTSTRAP adjustments END **/
 
 /** JQUERY UI adjustments START **/
@@ -59,6 +63,7 @@ a.ui-button:active,
     margin: 0px;
     width: 40px;
     font-size: 11px;
+    float: left;
 }
 .ui-spinner a {
     width: 12px;
@@ -128,20 +133,13 @@ a.ui-button:active,
 }
 /** SPECTRUM colorpicker adjustments END **/
 
+/** APP SPECIFIC STYLES SECTION **/
 .disabled-color {
     cursor:not-allowed;
     filter:alpha(opacity=65);
     -webkit-box-shadow:none;
     box-shadow:none;
     opacity:.65;
-}
-.header-content {
-    height: 40px;
-}
-.header-content label {
-    margin-left: 5px;
-    line-height: 40px;
-    font-weight: normal;
 }
 .link-url {
     height: 40px;
@@ -171,6 +169,15 @@ a.ui-button:active,
     overflow: hidden;
     min-height: 40px;
     max-height: 40px;
+    background-color: #1F6AAA;
+}
+
+/** Text displayed in the header */
+.fixed-header-text {
+    text-align:center;
+    font-size: 20px;
+    color: white;
+    font-weight: bold;
 }
 
 .frame {
@@ -385,7 +392,9 @@ thumbnail-slider img {
     margin-left: 7px;
     margin-right: 1px;
 }
-
+.channel-slider .ui-slider-range {
+    image-rendering: pixelated;
+}
 .channel-slider .ui-slider-handle {
     width: 10px;
 }
@@ -423,10 +432,10 @@ thumbnail-slider img {
 }
 .luts-preview {
     margin-right: 2px;
-    background-size: 100% 740px;
     background-repeat: no-repeat;
     height: 13px;
     width: 100px;
+    image-rendering: pixelated;
 }
 .luts-name {
     position: relative;
@@ -481,7 +490,7 @@ thumbnail-slider img {
     color: blue;
 }
 
-.regions-tabs, .regions-container {
+.regions-tabs, .regions-tabs .tab-pane, .regions-container {
     height: 100%;
 }
 
@@ -498,7 +507,7 @@ thumbnail-slider img {
     height: 40px;
 }
 .regions-header .regions-table-col {
-    border: solid 2px;
+    border: solid 2px transparent;
     height: 36px;
     line-height: 36px;
     font-weight: bold;
@@ -547,12 +556,12 @@ thumbnail-slider img {
     background-position: center;
 }
 .shape-comment {
-    min-width: 150px;
-    max-width: 150px;
+    min-width: 135px;
+    max-width: 135px;
 }
 .shape-show {
-    min-width: 40px;
-    max-width: 40px;
+    min-width: 60px;
+    max-width: 60px;
 }
 
 .rectangle-icon {
@@ -583,7 +592,7 @@ thumbnail-slider img {
     height:100%;
     float:left;
     width: 25px;
-    margin: 2px 8px 2px 8px;
+    margin: 2px 4px 2px 6px;
 }
 
 .draw-active {
@@ -660,7 +669,8 @@ thumbnail-slider img {
 }
 
 .shapes-edit .dropdown-menu {
-    left: -55px;
+    left: -7px;
+    min-width: 70px;
 }
 .shapes-persistence div {
     float: left;
@@ -700,7 +710,11 @@ thumbnail-slider img {
     margin: 5px;
 }
 .shape-edit-button {
-    width: 100px;
+    width: 45px;
+    margin-left: 5px;
+}
+.shape-delete-button {
+    width: 55px;
     margin-left: 5px;
 }
 .shape-edit-comment {
@@ -757,7 +771,7 @@ thumbnail-slider img {
     background-position: center!important;
 }
 .arrow-button .dropdown-menu {
-    left: -10px;
+    left: -13px;
     min-width: 62px;
 }
 .arrow-button .dropdown-menu span {
@@ -871,3 +885,7 @@ thumbnail-slider img {
 .modal-footer {
     padding: 4px;
 }
+
+.text-weight-bold {
+   font-weight: 700;
+ }
