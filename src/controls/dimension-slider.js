@@ -212,7 +212,6 @@ export default class DimensionSlider extends EventSubscriber {
          this.image_config = this.context.getImageConfig(params.config_id);
          this.bind();
          this.updateSlider();
-         setTimeout(this.onViewerResize.bind(this), 100);
      }
 
     /**
