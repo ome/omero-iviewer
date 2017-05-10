@@ -25,7 +25,7 @@ import setuptools.command.install
 import setuptools.command.sdist
 from distutils.core import Command
 from setuptools import setup, find_packages
-from omero_iviewer.version import VERSION
+from omero_iviewer.version import get_version
 
 
 # Utility function to read the README file.
@@ -37,7 +37,6 @@ def read(fname):
 
 
 cmdclass = {}
-
 
 class RunProd(Command):
 
@@ -76,9 +75,11 @@ class Install(setuptools.command.install.install):
 
 cmdclass['install'] = Install
 
+version = get_version()
+
 setup(name="omero-iviewer",
       packages=find_packages(exclude=['ez_setup', 'ol3-viewer']),
-      version=VERSION,
+      version=version,
       description="A Python plugin for OMERO.web",
       long_description=read('omero_iviewer/README.rst'),
       classifiers=[
@@ -105,7 +106,7 @@ setup(name="omero-iviewer",
       author_email='ome-devel@lists.openmicroscopy.org.uk',
       license='AGPL-3.0',
       url="https://github.com/ome/omero-iviewer/",
-      download_url='https://github.com/ome/omero-iviewer/tarball/%s' % VERSION,  # NOQA
+      download_url='https://github.com/ome/omero-iviewer/tarball/%s' % version,  # NOQA
       keywords=['OMERO.web', 'plugin'],
       include_package_data=True,
       zip_safe=False,
