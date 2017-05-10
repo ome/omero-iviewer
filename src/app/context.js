@@ -21,7 +21,7 @@ import {IMAGE_CONFIG_SELECT} from '../events/events';
 import Misc from '../utils/misc';
 import ImageConfig from '../model/image_config';
 import {
-    API_PREFIX, IVIEWER, PLUGIN_NAME, PLUGIN_PREFIX, REQUEST_PARAMS,
+    API_PREFIX, IVIEWER, APP_NAME, PLUGIN_NAME, PLUGIN_PREFIX, REQUEST_PARAMS,
     WEBCLIENT, WEBGATEWAY, URI_PREFIX
 } from '../utils/constants';
 
@@ -209,7 +209,7 @@ export default class Context {
         this.prefixed_uris.set(URI_PREFIX, prefix);
         this.prefixed_uris.set(API_PREFIX, prefix + "/" + this.api_prefix);
         let iViewerPrefixed = prefix + "/" + PLUGIN_NAME;
-        this.prefixed_uris.set(IVIEWER, iViewerPrefixed);
+        this.prefixed_uris.set(IVIEWER, APP_NAME);
         this.prefixed_uris.set(PLUGIN_PREFIX, iViewerPrefixed);
         params[PLUGIN_PREFIX] = iViewerPrefixed;
         [WEBGATEWAY, WEBCLIENT].map(

@@ -3,7 +3,7 @@ import {noView} from 'aurelia-framework';
 /**
  * @type {string}
  */
-export const APP_NAME = 'iViewer';
+export const APP_NAME = 'iviewer';
 
 /**
  * the plugin name
