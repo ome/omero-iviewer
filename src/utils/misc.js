@@ -302,4 +302,14 @@ export default class Misc {
     static isIE() {
         return (new RegExp('MSIE|Trident|Edge')).test(navigator.userAgent);
     }
+
+    /**
+     * Tries to detect if the user is on an Apple OS
+     *
+     * @static
+     * @return {boolean} true if Apple OS, false otherwise
+     */
+    static isApple() {
+        return (new RegExp('Mac|iPod|iPhone|iPad')).test(navigator.platform);
+    }
 }

@@ -79,8 +79,10 @@ export default class Regions {
                 this.context.addKeyListener(
                     action.key,
                         (event) => {
+                            let command =
+                                Misc.isApple() ? 'metaKey' : 'ctrlKey';
                             if (!this.context.isRoisTabActive() ||
-                                    !event.ctrlKey) return;
+                                    !event[command]) return;
                             action.func.apply(this, action.args);
                         }));
     }

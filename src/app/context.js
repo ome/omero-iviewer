@@ -264,10 +264,11 @@ export default class Context {
         if (window.onkeydown === null)
             window.onkeydown = (event) => {
                 try {
-                    // only process CTRL+KEY combinations
+                    let command = Misc.isApple() ? 'metaKey' : 'ctrlKey';
+                    // only process command key combinations
                     // and if target is an input field,
                     // we do not wish to override either
-                    if (!event.ctrlKey ||
+                    if (!event[command] ||
                             event.target.tagName.toUpperCase() === 'INPUT')
                             return;
                     let keyHandler =
