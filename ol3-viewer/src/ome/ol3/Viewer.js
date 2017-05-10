@@ -820,6 +820,11 @@ ome.ol3.Viewer.prototype.deleteShapes = function(roi_shape_ids, undo, callback) 
 ome.ol3.Viewer.prototype.centerOnGeometry = function(geometry, resolution) {
     if (!(geometry instanceof ol.geom.Geometry)) return;
 
+    // only center if we don't intersect the viewport 
+    if (ol.extent.intersects(
+            geometry.getExtent(),
+            this.viewer_.getView().calculateExtent())) return;
+
     // use given resolution for zoom
     if (typeof resolution === 'number' && !isNaN(resolution)) {
         var constrainedResolution =
