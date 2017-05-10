@@ -218,8 +218,6 @@ def image_data(request, image_id, conn=None, **kwargs):
     if image is None:
         return JsonResponse({"error": "Image not found"}, status=404)
 
-    px = image.getPrimaryPixels().getPhysicalSizeX()
-
     rv = imageMarshal(image)
 
     # Add extra parameters with units data
