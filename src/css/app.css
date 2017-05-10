@@ -37,10 +37,10 @@ input[type=number]::-webkit-inner-spin-button {
 a.ui-button:active,
 .ui-button:active,
 .ui-button.ui-state-active:hover {
-	border: 1px solid #708090;
-	background: #778899;
-	font-weight: normal;
-	color: #ffffff;
+    border: 1px solid #708090;
+    background: #778899;
+    font-weight: normal;
+    color: #ffffff;
 }
 .ui-spinner {
     height: 100%;
@@ -194,57 +194,164 @@ a.ui-button:active,
 
 .center-row1 {
     height: 100%;
-    padding-left: 0px;
-    padding-right: 0px;
-    padding-bottom: 25px;
+    padding: 0px;
+}
+
+.show-tSlider {
+    padding-bottom: 35px;
 }
 
 .center-row2 {
-    max-height: 25px;
-    margin-top: -25px
+    height: 35px;
+    margin-top: -35px;
+    position: relative;
 }
 
-.slider-corner {
-    max-height: 25px;
-    max-width: 30px;
-    margin-top: -20px;
-}
-.slider-corner span {
-    font-size: 14px;
-}
 .slider-value {
     position: relative;
-    font-size: 12px;
     background-color: #FFFFFF;
     display: none;
 }
 
-.time-slider {
+/* Z/T sliders */
+.plane-slider, .time-slider {
     visibility: hidden;
-    position: relative;
-    z-index: 3;
-    max-height: 25px;
-    margin-left: -30px;
-    padding-left: 75px;
+    position: absolute;
 }
 
 .plane-slider {
-    visibility: hidden;
-    position: relative;
-    z-index: 3;
-    max-width: 25px;
-    height:100%;
-    padding-top: 15px;
-    padding-bottom: 40px;
+    bottom: 90px;
+    top: 45px;
+    width: 35px;
+}
+.show-tSlider .plane-slider {
+    bottom: 125px;
 }
 
+.time-slider {
+    left: 90px;
+    right: 55px;
+}
+.show-zSlider .time-slider {
+    left: 125px;
+}
+
+.plane-slider span, .time-slider span {
+    position: absolute;
+    font-size: 18px;
+}
+
+.plane-slider.glyphicon, .time-slider .glyphicon {
+    position: absolute;
+}
+
+.plane-slider span {
+    left: 0;
+    width: 27px;
+    text-align: center;
+}
+.time-slider span {
+    top: 6px;
+}
+
+.plane-slider .glyphicon {
+    left: 7px;
+}
+.time-slider .glyphicon {
+    top: 11px;
+}
+
+.plane-slider .dim-label {
+    bottom: -90px;
+}
+.time-slider .dim-label {
+    left: -85px;
+}
+
+.plane-slider .dim-current {
+    bottom: -45px;
+    color: #999;
+}
+.time-slider .dim-current {
+    left: -55px;
+    color: #999;
+    text-align: right;
+    width: 30px;
+}
+
+.time-slider .dim-size {
+    right: -55px;
+    color: #999;
+}
+.plane-slider .dim-size {
+    top: -45px;
+    color: #999;
+}
+
+/* Make the Z/T sliders look thin,
+   but still thick-enough to click easily */
+.time-slider .ui-slider, .plane-slider .ui-slider {
+    cursor: pointer;
+    border: 3px solid white;
+    background: #c5c5c5;
+}
+
+.plane-slider .ui-slider {
+    height: 100%;
+    width: 9px;
+    margin-left: 9px;
+    z-index: 3;
+}
+.time-slider .ui-slider {
+    width: 100%;
+    height: 9px;
+    margin-top: 14px;
+}
+
+.plane-slider .ui-slider-handle {
+    left: -.45em;
+    width: 19px;
+}
+.time-slider .ui-slider-handle {
+    top: -0.45em;
+    height: 19px;
+}
+
+.plane-slider .glyphicon-chevron-down {
+    bottom: -20px;
+    top: auto;
+}
+.time-slider .glyphicon-chevron-left {
+    left: -20px;
+}
+
+.plane-slider .glyphicon-chevron-up {
+    top: -20px;
+}
+.time-slider .glyphicon-chevron-right {
+    right: -20px;
+}
+
+.time-slider .glyphicon-play, .time-slider .glyphicon-stop {
+    left: -70px;
+}
+.plane-slider .glyphicon-play, .plane-slider .glyphicon-stop {
+    bottom: -60px;
+    top: auto;
+}
+
+.plane-slider .slider-value {
+    margin-bottom: -20px;
+    left: 30px;
+}
+.time-slider .slider-value {
+    margin-bottom: -20px;
+    top: -50px;
+}
+
+
 .dim-arrows {
-    float: left;
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 17px 17px;
-    width: 17px;
-    height: 17px;
+    position: absolute;
 }
 .dim-arrow-up {
     background-image: url('images/arrow-up.png');
@@ -319,10 +426,11 @@ a.ui-button:active,
 
 .viewer {
     height: 100%;
-    padding-bottom: 25px;
-    padding-left: 30px;
-    padding-right: 0px;
-    margin-left: -30px;
+    width: 100%;
+}
+
+.show-zSlider .viewer {
+    padding-left: 35px;
 }
 
 .viewer-container {
