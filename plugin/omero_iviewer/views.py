@@ -5,7 +5,7 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 from omeroweb.decorators import login_required
 from omero.model import MaskI
-from version import VERSION
+from version import __version__
 
 import json
 import omero_marshal
@@ -29,7 +29,7 @@ def index(request, iid=None, conn=None, **kwargs):
 
     return render(
         request, 'omero_iviewer/index.html',
-        {'params': params, 'iviewer_url_suffix': u"?_iviewer-%s" % VERSION}
+        {'params': params, 'iviewer_url_suffix': u"?_iviewer-%s" % __version__}
     )
 
 
