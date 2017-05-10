@@ -97,32 +97,51 @@ export class Info extends EventSubscriber {
             acquisition_date = new Date(this.image_info.image_timestamp * 1000).toISOString().slice(-25, -14);
         }
         let pixels_size = "";
+        let pixels_size_label = "Pixels Size (XYZ)";
         if (typeof this.image_info.image_pixels_size === 'object') {
+            let symbol = '\xB5m'; // microns by default
+            let unit = 'MICROMETER';
             let count = 0;
-            if (typeof this.image_info.image_pixels_size.x == 'number') {
-                pixels_size += Number(this.image_info.image_pixels_size.x).toFixed(2);
+            let set = false;
+            if (typeof this.image_info.image_pixels_size.unit_x == 'number') {
+                pixels_size += this.image_info.image_pixels_size.unit_x.toFixed(2);
+                symbol = this.image_info.image_pixels_size.symbol_x;
+                set = true;
             } else {
                pixels_size += "-";
                count++;
             }
             pixels_size += " x ";
-            if (typeof this.image_info.image_pixels_size.y == 'number') {
-                pixels_size += Number(this.image_info.image_pixels_size.y).toFixed(2);
+            if (typeof this.image_info.image_pixels_size.unit_y == 'number') {
+                pixels_size += this.image_info.image_pixels_size.unit_y.toFixed(2);
+                if (!set) {
+                    symbol = this.image_info.image_pixels_size.symbol_y;
+                    set = true;
+                }
             } else {
                 pixels_size += "-";
                 count++;
             }
             pixels_size += " x ";
-            if (typeof this.image_info.image_pixels_size.z == 'number') {
-                pixels_size += Number(this.image_info.image_pixels_size.z).toFixed(2);
+            if (typeof this.image_info.image_pixels_size.unit_z == 'number') {
+                pixels_size += this.image_info.image_pixels_size.unit_z.toFixed(2);
+                if (!set) {
+                    symbol = this.image_info.image_pixels_size.symbol_z;
+                    set = true;
+                }
             } else {
                 pixels_size += "-";
                 count++;
             }
             if (count === 3) {
                 pixels_size = "Not available"
+            } else {
+                if (set) {
+                     pixels_size_label += " ("+symbol+")";
+                }
             }
         }
+        pixels_size_label += ":";
         this.columns = [
             {"label": "Image ID:",
              "value": this.image_info.image_id,
@@ -139,7 +158,7 @@ export class Info extends EventSubscriber {
             {"label": "Pixels Type:",
              "value": this.image_info.image_pixels_type,
             },
-            {"label": "Pixels Size (XYZ):",
+            {"label": pixels_size_label,
              "value": pixels_size,
             },
             {"label": "Z-sections:",
