@@ -76,7 +76,7 @@ export class Converters {
         if (signed_integer < 0) signed_integer = signed_integer >>> 0;
         let intAsHex = signed_integer.toString(16);
         // pad with zeros to have 8 digits
-        intAsHex = ("00" + intAsHex).slice(-8);
+        intAsHex = ("00000000" + intAsHex).slice(-8);
 
         // we expect RGBA
         let rgba = "rgba(";
