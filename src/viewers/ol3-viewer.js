@@ -189,7 +189,7 @@ export default class Ol3Viewer extends EventSubscriber {
         // tweak initParams for ol3viewer to reflect iviewer app name
         let ol3initParams = Object.assign({}, this.context.initParams);
         ol3initParams[PLUGIN_PREFIX] = this.context.getPrefixedURI(IVIEWER);
-        
+
         // create viewer instance
         this.viewer =
             new ol3.Viewer(
@@ -329,9 +329,10 @@ export default class Ol3Viewer extends EventSubscriber {
      * @memberof Ol3Viewer
      */
      setRegionsProperty(params = {}) {
-         // at a minimum we need params with the property it concers
-         if (typeof params !== 'object' ||
-            typeof params.property !== 'string') return
+         // at a minimum we need a viewer and params with a property
+         if (this.viewer === null ||
+             typeof params !== 'object' ||
+             typeof params.property !== 'string') return
 
         // delegate to individual handler
         let prop = params.property.toLowerCase();
@@ -351,9 +352,11 @@ export default class Ol3Viewer extends EventSubscriber {
       */
       generateShapes(params = {}) {
           //we want only notifications that concern us
-          // and need at least one shape definition in an array
+          // and need at least a viewer one shape definition in an array
           if (params.config_id !== this.config_id ||
-              !Misc.isArray(params.shapes) || params.shapes.length === 0) return;
+              this.viewer === null ||
+              !Misc.isArray(params.shapes) ||
+              params.shapes.length === 0) return;
 
           let extent = this.viewer.getSmallestViewExtent();
           if (typeof params.random !== 'boolean') params.random = false;
@@ -395,9 +398,11 @@ export default class Ol3Viewer extends EventSubscriber {
       */
       deleteShapes(params = {}) {
           //we want only notifications that concern us
-          // and need at least one shape id in the array as well as a value
+          // and need at least a viewer instance and
+          //one shape id in the array as well as a value
           // for the action, either delete or undo
           if (params.config_id !== this.config_id ||
+              this.viewer === null ||
               typeof params.value !== 'string' ||
               !Misc.isArray(params.shapes) || params.shapes.length === 0) return;
 
@@ -416,9 +421,11 @@ export default class Ol3Viewer extends EventSubscriber {
       */
       changeShapeSelection(params = {}) {
           //we want only notifications that concern us
-          // and need at least one shape id in the array
+          // and need at least a viewer instance and one shape id in the array
           if (params.config_id !== this.config_id ||
-            !Misc.isArray(params.shapes) || params.shapes.length === 0) return;
+              this.viewer === null ||
+              !Misc.isArray(params.shapes) ||
+              params.shapes.length === 0) return;
 
         let delay = 0;
         if (params.clear) {
@@ -485,6 +492,8 @@ export default class Ol3Viewer extends EventSubscriber {
      * @memberof Ol3Viewer
      */
     initRegions(params) {
+        if (this.viewer === null) return;
+
         this.viewer.addRegions(params);
         this.changeRegionsModes(
             { modes: this.image_config.regions_info.regions_modes});
@@ -497,9 +506,10 @@ export default class Ol3Viewer extends EventSubscriber {
      * @param {Object} params the event notification parameters
      */
     toggleSplitChannels(params = {}) {
-        // the event doesn't concern us
+        // check if we have a viewer instance and the event concerns us
         if (params.config_id !== this.config_id ||
-                typeof params.split !== 'boolean') return;
+            this.viewer === null ||
+            typeof params.split !== 'boolean') return;
 
         this.viewer.toggleSplitView(params.split);
     }
@@ -559,8 +569,10 @@ export default class Ol3Viewer extends EventSubscriber {
      * @param {Object} params the event notification parameters
      */
     storeShapes(params = {}) {
-        // the event doesn't concern us
-        if (params.config_id !== this.config_id) return;
+        // we need a viewer instance at a minimun,
+        // also check if the event doesn't concern us
+        if (this.viewer === null ||
+            params.config_id !== this.config_id) return;
 
         // should we only persist the selected ones
         let selectedOnly =
@@ -584,12 +596,13 @@ export default class Ol3Viewer extends EventSubscriber {
      * @param {Object} params the event notification parameters
      */
     modifyShapes(params = {}) {
-        // the event doesn't concern us
+        // the event doesn't concern us, we don't have a viewer instance
         // or does not have all the params required
         if (params.config_id !== this.config_id ||
+            this.viewer === null ||
             !Misc.isArray(params.shapes) || params.shapes.length === 0 ||
-            typeof params.definition !== 'object' || params.definition === null)
-                return;
+            typeof params.definition !== 'object' ||
+            params.definition === null) return;
 
         let modifies_attachment =
             typeof params.modifies_attachment === 'boolean' &&
@@ -728,8 +741,10 @@ export default class Ol3Viewer extends EventSubscriber {
      * @param {Object} params the event notification parameters
      */
     affectHistoryAction(params) {
-        // the event doesn't concern us or we don't have a numeric history id
+        // the event doesn't concern us, we don't have a viewer instance
+        // or we don't have a numeric history id
         if (params.config_id !== this.config_id ||
+            this.viewer === null ||
             typeof params.hist_id !== 'number') return;
 
         if (typeof params.undo !== 'boolean') params.undo = true;
@@ -744,8 +759,10 @@ export default class Ol3Viewer extends EventSubscriber {
      * @return
      */
     copyShapeDefinitions(params) {
-        // the event doesn't concern us or we have nothing selected for copy
+        // the event doesn't concern us, we don't have a viewer instance
+        // or we have nothing selected for copy
         if (params.config_id !== this.config_id ||
+            this.viewer === null ||
             this.image_config.regions_info.selected_shapes.length === 0) return;
 
         this.image_config.regions_info.copied_shapes = []; // empty first
