@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
   <head>
-      <link rel="stylesheet" type="text/css" href="{% static 'omero_iviewer/css/theme.css' %}" />
-      <link rel="stylesheet" type="text/css" href="{% static 'omero_iviewer/css/spinner.css' %}" />
-      <link rel="stylesheet" type="text/css" href="{% static 'omero_iviewer/css/slider.css' %}" />
-      <link rel="stylesheet" type="text/css" href="{% static 'omero_iviewer/css/bootstrap.min.css' %}" />
-      <link rel="stylesheet" type="text/css" href="{% static 'omero_iviewer/css/spectrum.css' %}" />
-      <link rel="stylesheet" type="text/css" href="{% static 'omero_iviewer/css/ol3-viewer.css' %}" />
-      <link rel="stylesheet" type="text/css" href="{% static 'omero_iviewer/css/app.css' %}" />
+      <link rel="stylesheet" type="text/css" href="{% static 'omero_iviewer/css/theme.css'|add:iviewer_url_suffix %}" />
+      <link rel="stylesheet" type="text/css" href="{% static 'omero_iviewer/css/spinner.css'|add:iviewer_url_suffix %}" />
+      <link rel="stylesheet" type="text/css" href="{% static 'omero_iviewer/css/slider.css'|add:iviewer_url_suffix %}" />
+      <link rel="stylesheet" type="text/css" href="{% static 'omero_iviewer/css/bootstrap.min.css'|add:iviewer_url_suffix %}" />
+      <link rel="stylesheet" type="text/css" href="{% static 'omero_iviewer/css/spectrum.css'|add:iviewer_url_suffix %}" />
+      <link rel="stylesheet" type="text/css" href="{% static 'omero_iviewer/css/ol3-viewer.css'|add:iviewer_url_suffix %}" />
+      <link rel="stylesheet" type="text/css" href="{% static 'omero_iviewer/css/app.css'|add:iviewer_url_suffix %}" />
 
       <script type="text/javascript">
         window.INITIAL_REQUEST_PARAMS = {};
@@ -21,7 +21,7 @@
 
   <body class="container-fluid">
       <script type="text/javascript"
-              src="{% static 'omero_iviewer/bundle.js' %}">
+              src="{% static 'omero_iviewer/bundle.js'|add:iviewer_url_suffix %}">
       </script>
   </body>
 

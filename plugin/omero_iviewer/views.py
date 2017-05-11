@@ -20,14 +20,18 @@ from django.http import JsonResponse
 from django.http import HttpResponse
 from django.conf import settings
 from django.core.urlresolvers import reverse
+
 from omeroweb.decorators import login_required
 from omeroweb.webgateway.marshal import imageMarshal
 from omeroweb.webgateway.templatetags.common_filters import lengthformat,\
     lengthunit
+
 import json
 import omero_marshal
 import omero
 from omero.model import MaskI
+
+from version import __version__
 
 
 @login_required()
@@ -46,7 +50,10 @@ def index(request, iid=None, conn=None, **kwargs):
     if settings.FORCE_SCRIPT_NAME is not None:
         params['URI_PREFIX'] = settings.FORCE_SCRIPT_NAME
 
-    return render(request, 'omero_iviewer/index.html', {'params': params})
+    return render(
+        request, 'omero_iviewer/index.html',
+        {'params': params, 'iviewer_url_suffix': u"?_iviewer-%s" % __version__}
+    )
 
 
 @login_required()
