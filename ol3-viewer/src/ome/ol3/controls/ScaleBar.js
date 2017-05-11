@@ -113,7 +113,7 @@ ome.ol3.controls.ScaleBar.prototype.updateElement_ = function() {
       }
   }
 
-  var html = scaleBarLengthInUnits.toFixed(5) + ' ' + symbol;
+  var html = scaleBarLengthInUnits.toFixed(2) + ' ' + symbol;
   if (this.renderedHTML_ !== html) {
     this.innerElement_.innerHTML = html;
     this.renderedHTML_ = html;
