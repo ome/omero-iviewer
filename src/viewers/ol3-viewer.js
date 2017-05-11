@@ -186,13 +186,17 @@ export default class Ol3Viewer extends EventSubscriber {
         // the event doesn't concern us
         if (params.config_id !== this.config_id) return;
 
+        // tweak initParams for ol3viewer to reflect iviewer app name
+        let ol3initParams = Object.assign({}, this.context.initParams);
+        ol3initParams[PLUGIN_PREFIX] = this.context.getPrefixedURI(IVIEWER);
+        
         // create viewer instance
         this.viewer =
             new ol3.Viewer(
                 this.image_config.image_info.image_id,
                 { eventbus : this.context.eventbus,
                   server : this.context.server,
-                  initParams :  this.context.initParams,
+                  initParams :  ol3initParams,
                   container: this.container
         });
         this.resizeViewer({window_resize: true});

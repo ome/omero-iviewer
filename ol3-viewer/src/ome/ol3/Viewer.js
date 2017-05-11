@@ -118,7 +118,14 @@ ome.ol3.Viewer = function(id, options) {
      * @type {boolean}
      * @private
      */
-     this.tried_regions = false;
+     this.tried_regions_ = false;
+
+     /**
+      * any handed in regions data when we tried the regions (see tried_regions_)
+      * @type {Array.<Object>}
+      * @private
+      */
+      this.tried_regions_data_ = false;
 
     /**
      * a flag that's only relevant if the server is not same orgin.
@@ -495,7 +502,8 @@ ome.ol3.Viewer = function(id, options) {
             if (typeof(postSuccessHook) === 'function')
                 postSuccessHook.call(scope);
 
-            if (scope.tried_regions) scope.addRegions();
+            if (scope.tried_regions_)
+                scope.addRegions({"data" : scope.tried_regions_data_});
 
             if (scope.eventbus_) {
                 // an endMove listener to publish move events
@@ -689,6 +697,12 @@ ome.ol3.Viewer.prototype.changeToImage =
  * Important: Calling this method twice or more times will have no effect if
  * there is a regions instance present already.
  *
+ * Note: Because of asynchronous viewer initialization this method can be called
+ * at a moment in time that the viewer has not been fully initialized in which
+ * case we make a note (flag: tried_regions_) and remember any handed in
+ * regions data which will be picked up at the end of the initialization process
+ * when the tried_regions_ flag is checked.
+ *
  * Should you want to hide the regions, once created, call:
  * [setRegionsVisibility]{@link ome.ol3.Viewer#setRegionsVisibility} passing in: false
  *
@@ -702,10 +716,13 @@ ome.ol3.Viewer.prototype.changeToImage =
 ome.ol3.Viewer.prototype.addRegions = function(options) {
     // without a map, no need for a regions overlay...
     if (!(this.viewer_ instanceof ol.Map)) {
-        this.tried_regions = true;
+        this.tried_regions_ = true;
+        if (ome.ol3.utils.Misc.isArray(options['data']))
+            this.tried_regions_data_ = options['data'];
         return;
     }
-    this.tried_regions = false;
+    this.tried_regions_ = false;
+    this.tried_regions_data_ = null;
     if (this.regions_ instanceof ome.ol3.source.Regions) return;
 
     this.regions_ = new ome.ol3.source.Regions(this, options);
