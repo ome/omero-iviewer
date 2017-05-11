@@ -1,3 +1,21 @@
+//
+// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+
 //css & images
 require('../../node_modules/jquery-ui/themes/base/spinner.css');
 require('../../node_modules/spectrum-colorpicker/spectrum.css');
@@ -137,29 +155,6 @@ export default class ChannelRange  {
      *
      * @memberof ChannelRange
      */
-    showLuts(newValue, oldValue) {
-        let luts = $(this.element).find('.luts');
-        luts.show();
-        $(this.element).find('.luts-close').off("click");
-        $(this.element).find('.luts-close').on("click", () => luts.hide());
-    }
-
-    /**
-     * click handler for lut
-     *
-     * @param {string} id the lookup name
-     * @memberof ChannelRange
-     */
-    chooseLut(id) {
-        $(this.element).find('.luts').hide();
-        this.onColorChange(id);
-    }
-
-    /**
-     * Deals with the mode change triggered by the observer
-     *
-     * @memberof ChannelRange
-     */
     changeMode(newValue, oldValue) {
         if (newValue === null) return;
         if (oldValue === null) oldValue = newValue;
@@ -242,9 +237,9 @@ export default class ChannelRange  {
      detached() {
          // tear down jquery elements
          try {
-             $(this.element).find(".channel-start").off("blur");
+             $(this.element).find(".channel-start").off();
              $(this.element).find(".channel-start").spinner("destroy");
-             $(this.element).find(".channel-end").off("blur");
+             $(this.element).find(".channel-end").off();
              $(this.element).find(".channel-end").spinner("destroy");
              $(this.element).find(".channel-slider").slider("destroy");
              $(this.element).find(".spectrum-input").spectrum("destroy");
@@ -257,33 +252,44 @@ export default class ChannelRange  {
       * @memberof ChannelRange
       */
      updateUI() {
-         // just in case
-         this.detached();
+        // just in case
+        this.detached();
 
-         if (this.channel === null) return;
+        if (this.channel === null) return;
 
-        let imgInf = this.context.getSelectedImageConfig().image_info;
+        let imgConf = this.context.getSelectedImageConfig();
+        let imgInf = imgConf.image_info;
         let minMaxRange =
             imgInf.getChannelMinMaxValues(
                 CHANNEL_SETTINGS_MODE.FULL_RANGE,this.index);
         let minMaxValues =
             imgInf.getChannelMinMaxValues(this.mode,this.index);
+
          // channel start
-         $(this.element).find(".channel-start").spinner(
+         let channelStart = $(this.element).find(".channel-start");
+         channelStart.spinner(
              {min: minMaxRange.start_min, max: minMaxRange.start_max});
-             $(this.element).find(".channel-start").on("blur",
-                (event) => this.onRangeChange(event.target.value, true, true));
-         $(this.element).find(".channel-start").on("spinstop",
-            (event, ui) => {
+         let channelStartArrows =
+            $(channelStart).parent().find('a.ui-spinner-button');
+         channelStartArrows.css('display','none');
+         channelStart.on("focus",
+             (event) => channelStartArrows.css('display','block'));
+         channelStart.on("blur",
+                (event) => {
+                    channelStartArrows.css('display','none');
+                    this.onRangeChange(event.target.value, true, true);
+                });
+         channelStart.on("spinstop",
+            (event) => {
                 if (typeof event.keyCode !== 'number' ||
                     event.keyCode === 13)
                         this.onRangeChange(event.target.value, true);
         });
-        $(this.element).find(".channel-start").spinner(
-            "value", minMaxValues.start_val);
+        channelStart.spinner("value", minMaxValues.start_val);
 
         // channel range slider
-        $(this.element).find(".channel-slider").slider({
+        let channelRange = $(this.element).find(".channel-slider");
+        channelRange.slider({
             min: this.mode === CHANNEL_SETTINGS_MODE.FULL_RANGE ?
                     minMaxRange.start_min :
                     minMaxValues.start_val > minMaxValues.start_min ?
@@ -330,39 +336,50 @@ export default class ChannelRange  {
                                 end: ui.values[1]});}).bind(this);
                 this.lastUpdate = setTimeout(delayedUpdate, 100);
         }});
-        $(this.element).find(".channel-slider").css(
-            "background", "white");
+        channelRange.css("background", "white");
         // change slider background
-        this.setSliderBackgroundAfterColorChange(
+        this.setBackgroundAfterColorChange(
             this.luts instanceof Map &&
                typeof this.luts.get(this.channel.color) === 'object');
 
         //channel end
-        $(this.element).find(".channel-end").spinner(
+        let channelEnd = $(this.element).find(".channel-end");
+        channelEnd.spinner(
             {min: minMaxRange.end_min, max: minMaxRange.end_max});
-        $(this.element).find(".channel-end").on("blur",
-            (event) => this.onRangeChange(event.target.value, false, true));
-        $(this.element).find(".channel-end").on("blur spinstop",
+        let channelEndArrows =
+           $(channelEnd).parent().find('a.ui-spinner-button');
+        channelEndArrows.css('display','none');
+        channelEnd.on("blur",
+            (event) => {
+                channelEndArrows.css('display','none');
+                this.onRangeChange(event.target.value, false, true);
+            });
+        channelEnd.on("focus",
+            (event) => channelEndArrows.css('display','block'));
+        channelEnd.on("blur",
+            (event) => {
+                $(channelEnd).find('a.ui-spinner-button').css(
+                    'display','none');
+                this.onRangeChange(event.target.value, false, true);
+            });
+        channelEnd.on("spinstop",
             (event) => {
                 if (typeof event.keyCode !== 'number' ||
                     event.keyCode === 13)
                         this.onRangeChange(event.target.value)
         });
-       $(this.element).find(".channel-end").spinner(
-           "value",minMaxValues.end_val);
+        channelEnd.spinner("value",minMaxValues.end_val);
 
-       //channel color
-       $(this.element).find(".spectrum-input").spectrum({
-            color: "#" + this.channel.color,
+        //channel color
+        let isLut = imgConf.hasLookupTableEntry(this.channel.color);
+        $(this.element).find(".spectrum-input").spectrum({
+            color: isLut ? '#fff' : "#" + this.channel.color,
             showInput: true,
             containerClassName: 'color-range-spectrum-container',
             replacerClassName: 'color-range-replacer',
             showInitial: true,
             preferredFormat: "hex",
             appendTo: $(this.element).find('.channel-color'),
-            beforeShow: () => {
-                $(this.element).find('.luts').hide();
-            },
             change: (color) => this.onColorChange(color.toHexString())});
 }
 
@@ -373,16 +390,16 @@ export default class ChannelRange  {
      * @memberof ChannelRange
      */
      onColorChange(value) {
-         let isLut = false;
-         if (this.luts instanceof Map &&
-                typeof this.luts.get(value) === 'object')
-            isLut = true;
+         let imgConf = this.context.getSelectedImageConfig();
+         let isLut = imgConf.hasLookupTableEntry(value);
          let oldValue = this.channel.color;
          this.channel.color = isLut ? value : value.substring(1);
          // change slider background
-         this.setSliderBackgroundAfterColorChange(isLut);
+         this.setBackgroundAfterColorChange(isLut);
+         $(this.element).find(".spectrum-input").spectrum(
+             "set", isLut ? '#fff' : value);
          // add history record
-         this.context.getSelectedImageConfig().addHistory({
+         imgConf.addHistory({
              prop: ['image_info', 'channels', '' + this.index,'color'],
              old_val : oldValue, new_val: this.channel.color, type: 'string'});
      }
@@ -401,15 +418,15 @@ export default class ChannelRange  {
      }
 
      /**
-     * Chnages slider looks after color/lut selection
+     * Chnages slider and button background after color/lut selection
      *
      * @param {boolean} ui_triggered was triggered by ui interaction
      * @private
      * @memberof ChannelRange
      */
-     setSliderBackgroundAfterColorChange(isLut) {
-         let height = this.luts_png.height * 2;
-         let blackGradientOffset = height - 19;
+     setBackgroundAfterColorChange(isLut) {
+         let height = this.luts_png.height * 3;
+         let blackGradientOffset = height - 29;
          let css = {
              "background-image" : "url('" + this.luts_png.url + "')",
              "background-size" : "100% " + height + "px",
@@ -419,17 +436,28 @@ export default class ChannelRange  {
                 this.channel.reverseIntensity ? "scaleX(-1)" : "none",
              "background-color": ""
          };
+         let resetCss = (transform_only=false) => {
+             if (!transform_only) {
+                 css['background-image'] = ""; css['background-size'] = "";
+                 css['background-repeat'] = ""; css['background-position'] = "";
+             };
+             css['transform'] = "";
+         };
          if (isLut) {
              let idx = this.luts.get(this.channel.color).index;
-             if (idx >= 0) idx = idx * 20 + 1;
+             if (idx >= 0) idx = idx * 30 + 1;
              else idx = blackGradientOffset;
              css['background-position'] = "0px -" + idx + "px";
              $(this.element).find(".channel-slider").find(
                  ".ui-slider-range").css(css);
+             resetCss(idx !== blackGradientOffset);
+             $(this.element).find(".channel").css(css);
          } else {
              css['background-color'] = "#" + this.channel.color;
              $(this.element).find(".channel-slider").find(
                  ".ui-slider-range").css(css);
+             resetCss();
+             $(this.element).find(".channel").css(css);
          }
      }
 
@@ -550,6 +578,53 @@ export default class ChannelRange  {
                     } catch (ignored) {}
         } else $(this.element).find(clazz).parent().css(
             "border-color", "rgb(255,0,0)");
+    }
+
+    /**
+     * Hides color picker
+     *
+     * @memberof ChannelRange
+     */
+    hideColorPicker() {
+        $(this.element).find(".spectrum-input").spectrum("hide");
+    }
+
+    /**
+     * Toggles a channel, i.e. sets it active or inactive
+     *
+     * @memberof ChannelRange
+     */
+    toggleChannel() {
+        let imgConf = this.context.getSelectedImageConfig();
+
+        // we don't allow to deactivate the only active channel for grayscale
+        if (imgConf.image_info.model === 'greyscale' &&
+            this.channel.active) return;
+
+        let history = [];
+
+        // toggle channel active state
+        this.channel.active = !this.channel.active;
+        // remember change
+        history.push({
+            prop: ['image_info', 'channels', '' + this.index, 'active'],
+            old_val :   !this.channel.active,
+            new_val: this.channel.active, type: 'boolean'});
+
+        if (imgConf.image_info.model === 'greyscale') {
+            // for grayscale: we allow only one active channel
+            let channels = imgConf.image_info.channels;
+            for (let i=0;i<channels.length;i++) {
+                let c = channels[i];
+                if (i === this.index || !c.active) continue;
+                // deactivate other channels
+                c.active = false;
+                history.push({
+                    prop: ['image_info', 'channels', '' + i, 'active'],
+                    old_val : true, new_val: false, type: 'boolean'});
+            };
+        };
+        imgConf.addHistory(history);
     }
 
     /**

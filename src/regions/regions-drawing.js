@@ -1,3 +1,21 @@
+//
+// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+
 // js
 import Context from '../app/context';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
@@ -92,6 +110,16 @@ export default class RegionsDrawing extends EventSubscriber {
                     this.bindingEngine.propertyObserver(
                         this.regions_info.shape_defaults, p)
                             .subscribe((newValue, oldValue) => action()));
+            this.observers.push(
+                this.bindingEngine.propertyObserver(
+                    this.context, 'selected_tab').subscribe(
+                        (newValue, oldValue) => {
+                            if (this.regions_info.shape_to_be_drawn !== null &&
+                                !this.context.isRoisTabActive())
+                                    this.onModeChange(
+                                        { config_id:
+                                            this.regions_info.image_info.config_id
+                                        });}));
         };
 
         if (this.regions_info === null) {
@@ -263,7 +291,6 @@ export default class RegionsDrawing extends EventSubscriber {
          // if the event is for another config, forget it...
          if (params.config_id !== this.regions_info.image_info.config_id) return;
 
-         this.regions_info.shape_to_be_drawn = null;
          // send drawing abort notification to ol3 viewer
          this.context.publish(
             REGIONS_DRAW_SHAPE, {config_id: params.config_id, abort: true});

@@ -1,3 +1,20 @@
+<!--
+    Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+    All rights reserved.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
 <template>
     <div class="row regions-list">
         <div class="regions-header">
@@ -13,8 +30,7 @@
                        title="Show/Hide all rois"
                        checked
                        show.bind="regions_info.number_of_shapes > 0"
-                       change.delegate="toggleAllShapesVisibility($event.target.checked)"
-                       disabled.bind="regions_info.shape_to_be_drawn !== null"
+                       change.delegate="toggleAllShapesVisibility($event)"
                        type="checkbox" />
             </div>
         </div>
@@ -27,8 +43,7 @@
                         class="regions-table-row"
                         click.delegate="selectShapes(roi_id, $event)">
                         <div class="regions-table-col roi-toggle">
-                            <div title="${regions_info.shape_to_be_drawn === null ?
-                                        'Click to show/hide shapes' : ''}"
+                            <div title="Click to show/hide shapes"
                                  style="cursor: pointer"
                                  click.delegate="expandOrCollapseRoi(roi_id, $event)">
                                  ${roi.show ? '&#9660;' : '&#9658;'}
@@ -66,8 +81,7 @@
                             <input type="checkbox"
                                 title="Show/Hide shape" checked.one-way="shape.visible"
                                 value.one-way="shape.visible"
-                                disabled.bind="regions_info.shape_to_be_drawn !== null"
-                                change.delegate="toggleShapeVisibility(shape.shape_id, $event.target.checked)"/>
+                                change.delegate="toggleShapeVisibility(shape.shape_id, $event)"/>
                         </div>
                     </div>
                 </template>

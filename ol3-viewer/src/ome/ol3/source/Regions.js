@@ -1,3 +1,21 @@
+//
+// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+
 goog.provide('ome.ol3.source.Regions');
 
 goog.require('ol.source.Vector');
@@ -641,11 +659,10 @@ ome.ol3.source.Regions.prototype.setProperty =
             // as well as the state for removed, modified and rollback deletes
             var presentState = null;
             var hasSelect = (this.select_ instanceof ome.ol3.interaction.Select);
-            if (hasSelect &&
-                (property === 'selected' || property === 'visible')) {
-                    eventProperty = property;
-                    if (!(property === 'visible' && value))
-                        this.select_.toggleFeatureSelection(f, value);
+            if (property === 'selected' || property === 'visible') {
+                eventProperty = property;
+                if (hasSelect && !(property === 'visible' && value))
+                    this.select_.toggleFeatureSelection(f, value);
             } else if (property === 'state') {
                 presentState = f[property];
                 if (value === ome.ol3.REGIONS_STATE.REMOVED) {

@@ -1,3 +1,20 @@
+<!--
+    Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+    All rights reserved.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
 <template>
     <require from="./regions-list"></require>
     <require from="./regions-drawing"></require>
@@ -7,9 +24,9 @@
          show.bind="image_info.projection !== 'split'">
 
         <div class="regions-tools">
-            <div class="row shapes-persistence" style="padding-top: 2px">
-                <div class="btn-group" style="margin: 5px;">
-                    <button type="button" class="btn btn-default btn-xs"
+            <div class="shapes-persistence">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default btn-sm"
                         disabled.bind="!(regions_info.history &&
                             regions_info.history.history.length > 0 &&
                             regions_info.history.historyPointer >= 0) ||
@@ -22,7 +39,7 @@
                         disabled.bind="!(regions_info.history &&
                             regions_info.history.history.length > 0 &&
                             regions_info.history.historyPointer >= 0)"
-                        class="btn btn-default btn-xs"
+                        class="btn btn-default btn-sm"
                         click.delegate="undoHistory()">Undo
                     </button>
                     <button type="button"
@@ -30,7 +47,7 @@
                             regions_info.history.history.length > 0 &&
                             regions_info.history.historyPointer <
                             regions_info.history.history.length-1)"
-                        class="btn btn-default btn-xs"
+                        class="btn btn-default btn-sm"
                         click.delegate="redoHistory()">Redo
                     </button>
                 </div>
@@ -46,7 +63,6 @@
 
             </div>
 
-            <hr />
             <regions-edit regions_info.bind="regions_info"></regions-edit>
 
             <hr show.bind="regions_info !== null && regions_info.ready &&
@@ -62,8 +78,7 @@
         <regions-list show.bind="regions_info.ready"
                       regions_info.bind="regions_info">
         </regions-list>
-        <div style="position: relative;top: 20%;text-align: center"
-             class="disabled-color"
+        <div class="disabled-color loading-regions"
              show.bind="!regions_info.ready">Loading Regions ...</div>
 
     </div>
