@@ -329,9 +329,10 @@ export default class Ol3Viewer extends EventSubscriber {
 
         // delegate to individual handler
         let prop = params.property.toLowerCase();
-        if (prop === 'visible')
+        if (prop === 'visible') {
+            this.abortDrawing();
             this.viewer.setRegionsVisibility(params.value, params.shapes);
-        else if (prop === 'selected')
+        } else if (prop === 'selected')
             this.changeShapeSelection(params);
         else if (prop === 'state')
             this.deleteShapes(params);
@@ -434,8 +435,7 @@ export default class Ol3Viewer extends EventSubscriber {
         }
 
         setTimeout(() => {
-            this.viewer.abortDrawing();
-            this.image_config.regions_info.shape_to_be_drawn = null;
+            this.abortDrawing();
             this.viewer.selectShapes(
                 params.shapes, params.value,
                 params.clear, params.center);
@@ -514,7 +514,7 @@ export default class Ol3Viewer extends EventSubscriber {
 
         // we want to only abort
         if (typeof params.abort === 'boolean' && params.abort) {
-            this.viewer.abortDrawing();
+            this.abortDrawing();
             return;
         }
 
@@ -547,6 +547,17 @@ export default class Ol3Viewer extends EventSubscriber {
                 unattached: unattached,
                 add: add
             });
+    }
+
+
+    /**
+     * Aborts drawing interaction in ol3 viewer
+     *
+     * @memberof Ol3Viewer
+     */
+    abortDrawing() {
+        this.viewer.abortDrawing();
+        this.image_config.regions_info.shape_to_be_drawn = null;
     }
 
     /**

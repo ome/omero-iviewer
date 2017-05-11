@@ -94,10 +94,10 @@ export default class RegionsDrawing extends EventSubscriber {
                             .subscribe((newValue, oldValue) => action()));
             this.observers.push(
                 this.bindingEngine.propertyObserver(
-                    this.regions_info, 'selected_tab').subscribe(
+                    this.context, 'selected_tab').subscribe(
                         (newValue, oldValue) => {
-                            if (this.regions_info.drawing_mode &&
-                                !this.regions_info.isRoisTabActive())
+                            if (this.regions_info.shape_to_be_drawn !== null &&
+                                !this.context.isRoisTabActive())
                                     this.onModeChange(
                                         { config_id:
                                             this.regions_info.image_info.config_id
@@ -273,7 +273,6 @@ export default class RegionsDrawing extends EventSubscriber {
          // if the event is for another config, forget it...
          if (params.config_id !== this.regions_info.image_info.config_id) return;
 
-         this.regions_info.shape_to_be_drawn = null;
          // send drawing abort notification to ol3 viewer
          this.context.publish(
             REGIONS_DRAW_SHAPE, {config_id: params.config_id, abort: true});
