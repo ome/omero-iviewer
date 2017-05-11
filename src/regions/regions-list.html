@@ -13,8 +13,7 @@
                        title="Show/Hide all rois"
                        checked
                        show.bind="regions_info.number_of_shapes > 0"
-                       change.delegate="toggleAllShapesVisibility($event.target.checked)"
-                       disabled.bind="regions_info.shape_to_be_drawn !== null"
+                       change.delegate="toggleAllShapesVisibility($event)"
                        type="checkbox" />
             </div>
         </div>
@@ -27,8 +26,7 @@
                         class="regions-table-row"
                         click.delegate="selectShapes(roi_id, $event)">
                         <div class="regions-table-col roi-toggle">
-                            <div title="${regions_info.shape_to_be_drawn === null ?
-                                        'Click to show/hide shapes' : ''}"
+                            <div title="Click to show/hide shapes"
                                  style="cursor: pointer"
                                  click.delegate="expandOrCollapseRoi(roi_id, $event)">
                                  ${roi.show ? '&#9660;' : '&#9658;'}
@@ -66,8 +64,7 @@
                             <input type="checkbox"
                                 title="Show/Hide shape" checked.one-way="shape.visible"
                                 value.one-way="shape.visible"
-                                disabled.bind="regions_info.shape_to_be_drawn !== null"
-                                change.delegate="toggleShapeVisibility(shape.shape_id, $event.target.checked)"/>
+                                change.delegate="toggleShapeVisibility(shape.shape_id, $event)"/>
                         </div>
                     </div>
                 </template>

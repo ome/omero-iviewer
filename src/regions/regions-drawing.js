@@ -92,6 +92,16 @@ export default class RegionsDrawing extends EventSubscriber {
                     this.bindingEngine.propertyObserver(
                         this.regions_info.shape_defaults, p)
                             .subscribe((newValue, oldValue) => action()));
+            this.observers.push(
+                this.bindingEngine.propertyObserver(
+                    this.regions_info, 'selected_tab').subscribe(
+                        (newValue, oldValue) => {
+                            if (this.regions_info.drawing_mode &&
+                                !this.regions_info.isRoisTabActive())
+                                    this.onModeChange(
+                                        { config_id:
+                                            this.regions_info.image_info.config_id
+                                        });}));
         };
 
         if (this.regions_info === null) {

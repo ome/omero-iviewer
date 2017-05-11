@@ -433,10 +433,13 @@ export default class Ol3Viewer extends EventSubscriber {
             }
         }
 
-        setTimeout(() =>
+        setTimeout(() => {
+            this.viewer.abortDrawing();
+            this.image_config.regions_info.shape_to_be_drawn = null;
             this.viewer.selectShapes(
                 params.shapes, params.value,
-                params.clear, params.center), delay);
+                params.clear, params.center);
+        }, delay);
       }
 
     /**
