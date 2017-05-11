@@ -170,14 +170,15 @@ a.ui-button:active,
     min-height: 40px;
     max-height: 40px;
     background-color: #1F6AAA;
+    border-width: 0;
 }
 
 /** Text displayed in the header */
 .fixed-header-text {
     text-align:center;
-    font-size: 20px;
+    font-size: 22px;
     color: white;
-    font-weight: bold;
+    margin-top: 5px;
 }
 
 .frame {
