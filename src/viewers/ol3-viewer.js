@@ -329,10 +329,9 @@ export default class Ol3Viewer extends EventSubscriber {
 
         // delegate to individual handler
         let prop = params.property.toLowerCase();
-        if (prop === 'visible') {
-            this.abortDrawing();
+        if (prop === 'visible')
             this.viewer.setRegionsVisibility(params.value, params.shapes);
-        } else if (prop === 'selected')
+        else if (prop === 'selected')
             this.changeShapeSelection(params);
         else if (prop === 'state')
             this.deleteShapes(params);
