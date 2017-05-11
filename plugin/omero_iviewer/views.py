@@ -1,12 +1,32 @@
+#
+# Copyright (c) 2017 University of Dundee.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.http import HttpResponse
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from omeroweb.decorators import login_required
-
+from omeroweb.webgateway.marshal import imageMarshal
+from omeroweb.webgateway.templatetags.common_filters import lengthformat,\
+    lengthunit
 import json
 import omero_marshal
+import omero
 from omero.model import MaskI
 
 
@@ -188,3 +208,79 @@ def request_rois(request, iid, conn=None, **kwargs):
         return JsonResponse(ret, safe=False)
     except Exception as someException:
         return JsonResponse({"error": repr(someException)})
+
+
+@login_required()
+def image_data(request, image_id, conn=None, **kwargs):
+
+    image = conn.getObject("Image", image_id)
+
+    if image is None:
+        return JsonResponse({"error": "Image not found"}, status=404)
+
+    rv = imageMarshal(image)
+
+    # Add extra parameters with units data
+    # Note ['pixel_size']['x'] will have size in MICROMETER
+    px = image.getPrimaryPixels().getPhysicalSizeX()
+    if (px is not None):
+        size = image.getPixelSizeX(True)
+        value = format_pixel_size_with_units(size)
+        rv['pixel_size']['unit_x'] = value[0]
+        rv['pixel_size']['symbol_x'] = value[1]
+    py = image.getPrimaryPixels().getPhysicalSizeY()
+    if (py is not None):
+        size = image.getPixelSizeY(True)
+        value = format_pixel_size_with_units(size)
+        rv['pixel_size']['unit_y'] = value[0]
+        rv['pixel_size']['symbol_y'] = value[1]
+    pz = image.getPrimaryPixels().getPhysicalSizeZ()
+    if (pz is not None):
+        size = image.getPixelSizeZ(True)
+        value = format_pixel_size_with_units(size)
+        rv['pixel_size']['unit_z'] = value[0]
+        rv['pixel_size']['symbol_z'] = value[1]
+
+    size_t = image.getSizeT()
+    time_list = []
+    if size_t > 1:
+        params = omero.sys.ParametersI()
+        params.addLong('pid', image.getPixelsId())
+        z = 0
+        c = 0
+        query = "from PlaneInfo as Info where"\
+            " Info.theZ=%s and Info.theC=%s and pixels.id=:pid" % (z, c)
+        info_list = conn.getQueryService().findAllByQuery(
+            query, params, conn.SERVICE_OPTS)
+        timemap = {}
+        for info in info_list:
+            t_index = info.theT.getValue()
+            if info.deltaT is not None:
+                # planeInfo.deltaT gives number only (no units)
+                delta_t = info.deltaT.getValue()
+                timemap[t_index] = delta_t
+        for t in range(image.getSizeT()):
+            if t in timemap:
+                time_list.append(timemap[t])
+    rv['delta_t'] = time_list
+
+    return JsonResponse(rv)
+
+
+def format_pixel_size_with_units(size):
+        """
+        Formats the response for methods above.
+        Returns [value, unitSymbol]
+        If the unit is MICROMETER in database (default), we
+        convert to more appropriate units & value
+        """
+        if size is None:
+            return (None, "")
+        length = size.getValue()
+        unit = size.getUnit()
+        if unit == "MICROMETER":
+            unit = lengthunit(length)
+            length = lengthformat(length)
+        else:
+            unit = size.getSymbol()
+        return (length, unit)

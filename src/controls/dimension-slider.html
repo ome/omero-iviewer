@@ -1,30 +1,39 @@
 <template>
-    <div class="dim-arrows
+    <template if.bind="dim === 'z'">
+        <span class='dim-size'>${image_config.image_info.dimensions['max_' + dim]}</span>
+        <div class="dim-arrows glyphicon glyphicon-chevron-up"
+             click.delegate="onArrowClick(1)">
+        </div>
+        <div name="dim"><span class='slider-value'></span></div>
+        <div class="dim-arrows glyphicon glyphicon-chevron-down"
+             click.delegate="onArrowClick(-1)">
+        </div>
+        <span class='dim-current'>${image_config.image_info.dimensions[dim]+1}</span>
+        <div class="dim-arrows glyphicon
                 ${player_info.handle !== null && player_info.dim === dim &&
-                ((dim === 't' && !player_info.forwards) ||
-                (dim === 'z' && player_info.forwards)) ? 'player-stop' :
-                dim === 't' ? 'player-left' : 'player-up'}"
-          css="${dim === 't' ? 'margin: -3px 5px' : 'margin: 0px 0px 5px -3px'}"
-          click.delegate="playDimension(dim==='z')">
-    </div>
-    <div class="dim-arrows
-                ${dim === 'z' ? 'dim-arrow-up' : 'dim-arrow-left'}"
-        click.delegate="onArrowClick(dim === 'z' ? 1 : -1)">
-    </div>
-    <div name="dim"
-        css="float: left; ${dim === 'z' ? 'height: 70%' : 'width: 70%'}">
-        <span class='slider-value'></span>
-    </div>
-    <div class="dim-arrows
-                ${dim === 'z' ? 'dim-arrow-down' : 'dim-arrow-right'}"
-                click.delegate="onArrowClick(dim === 'z' ? -1 : 1)">
-    </div>
-    <div class="dim-arrows
+                  player_info.forwards ? 'glyphicon-stop' : 'glyphicon-play'}"
+             click.delegate="playDimension(true)">
+        </div>
+        <span class='dim-label'>${dim.toUpperCase()}</span>
+    </template>
+
+    <template if.bind="dim === 't'">
+        <span class='dim-label'>${dim.toUpperCase()}</span>
+        <div class="dim-arrows glyphicon
                 ${player_info.handle !== null && player_info.dim === dim &&
-                ((dim === 't' && player_info.forwards) ||
-                (dim === 'z' && !player_info.forwards)) ? 'player-stop' :
-                dim === 't' ? 'player-right' : 'player-down'}"
-          css="${dim === 't' ? 'margin: -3px 0px 5px 4px' : 'margin: 5px 0px 0px -3px'}"
-          click.delegate="playDimension(dim==='t')">
-    </div>
+                  player_info.forwards ? 'glyphicon-stop' : 'glyphicon-play'}"
+             click.delegate="playDimension(true)">
+        </div>
+        <span class='dim-current'>${image_config.image_info.dimensions[dim]+1}</span>
+        <div class="dim-arrows glyphicon glyphicon-chevron-left"
+             click.delegate="onArrowClick(-1)">
+        </div>
+        <div name="dim">
+            <span class='slider-value'></span>
+        </div>
+        <div class="dim-arrows glyphicon glyphicon-chevron-right"
+             click.delegate="onArrowClick(1)">
+        </div>
+        <span class='dim-size'>${image_config.image_info.dimensions['max_' + dim]}</span>
+    </template>
 </template>
