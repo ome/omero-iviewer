@@ -1,3 +1,21 @@
+//
+// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+
 /**
  * @namespace ome.ol3.utils.Regions
  */
@@ -41,7 +59,7 @@ ome.ol3.utils.Regions.FEATURE_FACTORY_LOOKUP_TABLE = {
         feat['type'] = "rectangle";
         feat.setStyle(ome.ol3.utils.Style.createFeatureStyle(shape));
         return feat;
-	}, "line" : function(shape) {
+    }, "line" : function(shape) {
         var drawStartArrow =
             typeof shape['MarkerStart'] === 'string' &&
                 shape['MarkerStart'] === 'Arrow';
@@ -166,8 +184,8 @@ ome.ol3.utils.Regions.featureFactory = function(shape_info) {
  *
  * <pre>
  *   var shape_info =
- * 		{ "type" : "rectangle", "X" : 10, "Y" : 10, "Width" : 5, "Height" : 5,
- * 			"StrokeColor" : -1 };
+ *      { "type" : "rectangle", "X" : 10, "Y" : 10, "Width" : 5, "Height" : 5,
+ *        "StrokeColor" : -1 };
  *   ome.ol3.utils.Regions.generateRegion(shape_info, 10, [0, -100, 100, 0]);
  * </pre>
  *

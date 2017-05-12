@@ -1,3 +1,20 @@
+//
+// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 goog.provide('ome.ol3.interaction.Modify');
 
 goog.require('ol.interaction.Modify');
@@ -79,7 +96,7 @@ ome.ol3.interaction.Modify.prototype.handleFeatureAdd_ = function(evt) {
     var theZ = this.regions_.viewer_.getDimensionIndex('z');
     var featureT = feature['TheT'];
     var featureZ = feature['TheZ'];
-    
+
     if ((typeof feature['visible'] === 'boolean' && !feature['visible']) ||
          (typeof feature['state'] === 'number' &&
             feature['state'] === ome.ol3.REGIONS_STATE.REMOVED) ||

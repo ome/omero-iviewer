@@ -1,3 +1,20 @@
+//
+// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 goog.provide('ome.ol3.interaction.Draw');
 
 goog.require('ol.Feature');
@@ -16,73 +33,73 @@ goog.require('ol.interaction.Draw');
 */
 ome.ol3.interaction.Draw =
     function(previous_modes, regions_reference) {
-	if (!ome.ol3.utils.Misc.isArray(previous_modes))
-        console.error("Draw needs the prevously set modes as an array");
+        if (!ome.ol3.utils.Misc.isArray(previous_modes))
+            console.error("Draw needs the prevously set modes as an array");
 
-	// we do need the regions reference to do translations
-    if (!(regions_reference instanceof ome.ol3.source.Regions))
-        console.error("Draw needs Regions instance!");
+        // we do need the regions reference to do translations
+        if (!(regions_reference instanceof ome.ol3.source.Regions))
+            console.error("Draw needs Regions instance!");
 
-    /**
-     * optional parameters
-     * @type {Object}
-     * @private
-     */
-    this.opts_ = {};
+        /**
+         * optional parameters
+         * @type {Object}
+         * @private
+         */
+        this.opts_ = {};
 
-    /**
-     * @type {ome.ol3.source.Regions}
-     * @private
-     */
-    this.regions_ = regions_reference;
+        /**
+         * @type {ome.ol3.source.Regions}
+         * @private
+         */
+        this.regions_ = regions_reference;
 
-    /**
-     * array of moded presently used
-     *
-     * @type {Array}
-     * @private
-     */
-    this.previous_modes_ = previous_modes;
+        /**
+         * array of moded presently used
+         *
+         * @type {Array}
+         * @private
+         */
+        this.previous_modes_ = previous_modes;
 
-    /**
-     * the contained open layers draw interaction
-     *
-     * @type {ol.interaction.Draw}
-     * @private
-     */
-    this.ol_draw_ = null;
+        /**
+         * the contained open layers draw interaction
+         *
+         * @type {ol.interaction.Draw}
+         * @private
+         */
+        this.ol_draw_ = null;
 
-    /**
-     * the history id
-     *
-     * @type {number}
-     * @private
-     */
-    this.history_id_ = null;
+        /**
+         * the history id
+         *
+         * @type {number}
+         * @private
+         */
+        this.history_id_ = null;
 
-    /**
-     * the roi id
-     *
-     * @type {number}
-     * @private
-     */
-    this.roi_id_ = 0;
+        /**
+         * the roi id
+         *
+         * @type {number}
+         * @private
+         */
+        this.roi_id_ = 0;
 
-    /**
-     * forces simple line
-     *
-     * @type {boolean}
-     * @private
-     */
-    this.abort_polyline_ = false;
+        /**
+         * forces simple line
+         *
+         * @type {boolean}
+         * @private
+         */
+        this.abort_polyline_ = false;
 
-    /**
-     * the default style used for drawing
-     *
-     * @type {Object}
-     * @private
-     */
-    this.default_style_ = null;
+        /**
+         * the default style used for drawing
+         *
+         * @type {Object}
+         * @private
+         */
+        this.default_style_ = null;
 };
 goog.inherits(ome.ol3.interaction.Draw, ome.ol3.interaction);
 
@@ -210,7 +227,7 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
 ome.ol3.interaction.Draw.prototype.drawShape = function(shape, roi_id, opts) {
     this.opts_ = opts || {};
     this.abort_polyline_ = false;
-	if (typeof(shape['type']) !== 'string' || shape['type'].length === 0) {
+    if (typeof(shape['type']) !== 'string' || shape['type'].length === 0) {
         this.history_id_ = null;
         this.roi_id_ = 0;
         this.dispatchEvent(new ol.interaction.Draw.Event(
@@ -374,7 +391,7 @@ ome.ol3.interaction.Draw.prototype.endDrawingInteraction = function(reset) {
  * @param {Object} event the event object for the drawing interaction
  */
 ome.ol3.interaction.Draw.prototype.drawPolygon_ = function(event) {
-	this.drawShapeCommonCode_('Polygon', 'polygon');
+    this.drawShapeCommonCode_('Polygon', 'polygon');
 };
 
 /**
@@ -384,7 +401,7 @@ ome.ol3.interaction.Draw.prototype.drawPolygon_ = function(event) {
  * @param {Object} event the event object for the drawing interaction
  */
 ome.ol3.interaction.Draw.prototype.drawLine_ = function(event) {
-	this.drawShapeCommonCode_('LineString', 'polyline',
+    this.drawShapeCommonCode_('LineString', 'polyline',
         function(coordinates, opt_geometry) {
             var geometry = new ome.ol3.geom.Line(coordinates);
 
@@ -404,7 +421,7 @@ ome.ol3.interaction.Draw.prototype.drawLine_ = function(event) {
  */
 ome.ol3.interaction.Draw.prototype.drawArrow_ = function(event) {
     this.abort_polyline_ = true;
-	this.drawShapeCommonCode_('LineString', 'polyline',
+    this.drawShapeCommonCode_('LineString', 'polyline',
         function(coordinates, opt_geometry) {
             var geometry = new ome.ol3.geom.Line(coordinates, false, true);
             if (opt_geometry) {
