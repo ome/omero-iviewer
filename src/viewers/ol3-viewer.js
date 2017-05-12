@@ -1,3 +1,21 @@
+//
+// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+
 // css
 require('../css/ol3-viewer.css');
 
@@ -446,10 +464,12 @@ export default class Ol3Viewer extends EventSubscriber {
             }
         }
 
-        setTimeout(() =>
+        setTimeout(() => {
+            this.abortDrawing();
             this.viewer.selectShapes(
                 params.shapes, params.value,
-                params.clear, params.center), delay);
+                params.clear, params.center);
+        }, delay);
       }
 
     /**
@@ -527,7 +547,7 @@ export default class Ol3Viewer extends EventSubscriber {
 
         // we want to only abort
         if (typeof params.abort === 'boolean' && params.abort) {
-            this.viewer.abortDrawing();
+            this.abortDrawing();
             return;
         }
 
@@ -560,6 +580,17 @@ export default class Ol3Viewer extends EventSubscriber {
                 unattached: unattached,
                 add: add
             });
+    }
+
+
+    /**
+     * Aborts drawing interaction in ol3 viewer
+     *
+     * @memberof Ol3Viewer
+     */
+    abortDrawing() {
+        this.viewer.abortDrawing();
+        this.image_config.regions_info.shape_to_be_drawn = null;
     }
 
     /**

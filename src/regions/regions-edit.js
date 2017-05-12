@@ -1,3 +1,21 @@
+//
+// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+
 // js
 import Context from '../app/context';
 import Misc from '../utils/misc';
@@ -112,8 +130,10 @@ export default class RegionsEdit extends EventSubscriber {
                 this.context.addKeyListener(
                     action.key,
                         (event) => {
+                            let command =
+                                Misc.isApple() ? 'metaKey' : 'ctrlKey';
                             if (!this.context.isRoisTabActive() ||
-                                    !event.ctrlKey) return;
+                                    !event[command]) return;
                             action.func.apply(this, action.args);
                         }));
 
@@ -134,7 +154,6 @@ export default class RegionsEdit extends EventSubscriber {
 
         let editComment = $(this.element).find(".shape-edit-comment input");
         editComment.prop("disabled", true);
-        editComment.addClass("disabled-color");
         let fontSizeSpinner =
             $(this.element).find(".shape-font-size input");
         fontSizeSpinner.spinner({min: 1, disabled: true});
@@ -449,7 +468,6 @@ export default class RegionsEdit extends EventSubscriber {
         editComment.off('input');
         editComment.val('Comment');
         editComment.attr('title',"");
-        editComment.removeClass("disabled-color");
         if (this.last_selected) {
             editComment.val(
                 typeof this.last_selected.Text === 'string' ?
@@ -459,14 +477,9 @@ export default class RegionsEdit extends EventSubscriber {
                     this.onCommentChange(
                         event.target.value, this.last_selected));
             editComment.prop("disabled", showDisabled);
-            if (showDisabled) {
-                editComment.addClass("disabled-color");
+            if (showDisabled)
                 editComment.attr('title', PERMISSION_TOOLTIPS.CANNOT_EDIT);
-            }
-        } else {
-            editComment.prop("disabled", true);
-            editComment.addClass("disabled-color");
-        }
+        } else editComment.prop("disabled", true);
 
         let fontSize =
             this.last_selected ?
@@ -681,7 +694,6 @@ export default class RegionsEdit extends EventSubscriber {
             'title', showDisabled ? PERMISSION_TOOLTIPS.CANNOT_EDIT : "");
         if (type && type.indexOf('line') >= 0 && !showDisabled) {
             arrowButton.prop('disabled', false);
-            arrowButton.removeClass('disabled-color');
             $('.marker_start').html(
                 typeof this.last_selected['MarkerStart'] === 'string' &&
                     this.last_selected['MarkerStart'] === 'Arrow' ?
@@ -690,10 +702,7 @@ export default class RegionsEdit extends EventSubscriber {
                 typeof this.last_selected['MarkerEnd'] === 'string' &&
                     this.last_selected['MarkerEnd'] === 'Arrow' ?
                         '&#10003;' : '&nbsp;');
-        } else {
-            arrowButton.prop('disabled', true);
-            arrowButton.addClass('disabled-color');
-        }
+        } else arrowButton.prop('disabled', true);
     }
 
     /**

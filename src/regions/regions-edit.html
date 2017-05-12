@@ -1,5 +1,22 @@
+<!--
+    Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+    All rights reserved.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
 <template>
-        <div class="row shapes-edit">
+        <div class="shapes-edit">
             <div class="shape-fill-color"><input class="spectrum-input"/></div>
             <div class="shape-stroke-color"><input class="spectrum-input"/></div>
             <div class="shape-stroke-width"><input /></div>
@@ -7,7 +24,7 @@
             <div class="dropdown rois-dropdown arrow-button"
                  title="Toggle arrow heads">
                 <button type="button"
-                    class="btn btn-default btn-sm dropdown-toggle disabled-color"
+                    class="btn btn-default btn-sm dropdown-toggle"
                     disabled="disabled"
                 data-toggle="dropdown">&nbsp;</button>
                 <ul class="dropdown-menu">
@@ -47,19 +64,21 @@
         </div>
 
 
-        <div class="row shapes-edit">
-            <div class="shape-edit-comment"><input value="Comment"/></div>
+        <div class="shapes-edit">
+            <div class="shape-edit-comment">
+                <input placeholder="Comment" class="form-control input-sm" />
+            </div>
             <div class="shape-font-size"><input /></div>
         </div>
-        <div class="row shapes-edit">
-            <div class="shape-edit-attachments">
-                <span style="width: 15px">Z:</span>
-                <input type="text" dim="z" value="" tabindex="-1"/>
+        <div class="shapes-edit form-inline">
+            <div class="shape-edit-attachments form-group">
+                <label>Z</label>
+                <input class="form-control input-sm" type="text" dim="z" value="" tabindex="-1"/>
                 <span name="shape-edit-attachments-locks" tabindex="-1"
                        dim="z" locked="locked" class="dim_locked"
                        title="Lock shape(s) to Z-index"></span>
-                <span style="margin-left: 20px; width: 15px">T:</span>
-                <input type="text" dim="t" value="" tabindex="-1"/>
+                <label>T</label>
+                <input class="form-control input-sm" type="text" dim="t" value="" tabindex="-1"/>
                 <span name="shape-edit-attachments-locks" tabindex="-1"
                       dim="t" locked="locked" class="dim_locked"
                       title="Lock shape(s) to T-index"></span>

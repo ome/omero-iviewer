@@ -1,3 +1,21 @@
+/*
+    Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+    All rights reserved.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 /** BOOTSTRAP adjustments START **/
 html, body, .frame, .center, ol3-viewer {
     height: 100%;
@@ -37,16 +55,13 @@ input[type=number]::-webkit-inner-spin-button {
 a.ui-button:active,
 .ui-button:active,
 .ui-button.ui-state-active:hover {
-	border: 1px solid #708090;
-	background: #778899;
-	font-weight: normal;
-	color: #ffffff;
+    border: 1px solid #708090;
+    background: #778899;
+    font-weight: normal;
+    color: #ffffff;
 }
 .ui-spinner {
-    height: 100%;
     float: left;
-    margin-left: 2px;
-    margin-right: 2px;
     min-width: 50px;
     width: 15%;
 }
@@ -74,6 +89,17 @@ a.ui-button:active,
 /** JQUERY UI adjustments END **/
 
 /** SPECTRUM colorpicker adjustments START **/
+.sp-replacer {
+    border-color: #ccc;
+    border-radius: 4px;
+    background-color: transparent;
+}
+
+.sp-preview {
+    height: 20px;
+    border-color: #ccc;
+}
+
 .color-range-replacer .sp-preview {
     background-image: none;
     margin-left: 2px;
@@ -81,12 +107,10 @@ a.ui-button:active,
     width: 80px;
 }
 .color-range-spectrum-container {
+    background-color: #fff;
     position: relative!important;
-    width: 195px;
-    height: 220px;
-    right: 100px;
-    top: 12px!important;
-    left: -180px!important;
+    left: 2px!important;
+    top: -205px!important;
 }
 .shape-fill-color-replacer .sp-preview {
     margin-left: 2px;
@@ -102,6 +126,7 @@ a.ui-button:active,
     opacity: 0.8;
 }
 .color-spectrum-container {
+    background-color: #f8f8f8;
     position: absolute!important;
     width: 195px;
     height: 270px;
@@ -135,32 +160,10 @@ a.ui-button:active,
 
 /** APP SPECIFIC STYLES SECTION **/
 .disabled-color {
-    cursor:not-allowed;
     filter:alpha(opacity=65);
     -webkit-box-shadow:none;
     box-shadow:none;
     opacity:.65;
-}
-.link-url {
-    height: 40px;
-}
-.link-url button {
-    height: 40px;
-}
-.link-url div {
-    background-color: #F8F8F8;
-    opacity: 1;
-    position: absolute;
-    z-index: 1000;
-    top: 7px;
-    left: 60px;
-    display: none;
-    width: 400px;
-}
-.link-url input {
-    width: 380px;
-    background-color: #FFFFFF;
-    border: 1px solid #E7E7E7;
 }
 
 .fixed-header {
@@ -170,14 +173,15 @@ a.ui-button:active,
     min-height: 40px;
     max-height: 40px;
     background-color: #1F6AAA;
+    border-width: 0;
 }
 
 /** Text displayed in the header */
 .fixed-header-text {
     text-align:center;
-    font-size: 20px;
+    font-size: 22px;
     color: white;
-    font-weight: bold;
+    margin-top: 5px;
 }
 
 .frame {
@@ -194,57 +198,164 @@ a.ui-button:active,
 
 .center-row1 {
     height: 100%;
-    padding-left: 0px;
-    padding-right: 0px;
-    padding-bottom: 25px;
+    padding: 0px;
+}
+
+.show-tSlider {
+    padding-bottom: 35px;
 }
 
 .center-row2 {
-    max-height: 25px;
-    margin-top: -25px
+    height: 35px;
+    margin-top: -35px;
+    position: relative;
 }
 
-.slider-corner {
-    max-height: 25px;
-    max-width: 30px;
-    margin-top: -20px;
-}
-.slider-corner span {
-    font-size: 14px;
-}
 .slider-value {
     position: relative;
-    font-size: 12px;
     background-color: #FFFFFF;
     display: none;
 }
 
-.time-slider {
+/* Z/T sliders */
+.plane-slider, .time-slider {
     visibility: hidden;
-    position: relative;
-    z-index: 3;
-    max-height: 25px;
-    margin-left: -30px;
-    padding-left: 75px;
+    position: absolute;
 }
 
 .plane-slider {
-    visibility: hidden;
-    position: relative;
-    z-index: 3;
-    max-width: 25px;
-    height:100%;
-    padding-top: 15px;
-    padding-bottom: 40px;
+    bottom: 90px;
+    top: 45px;
+    width: 35px;
+}
+.show-tSlider .plane-slider {
+    bottom: 125px;
 }
 
+.time-slider {
+    left: 90px;
+    right: 55px;
+}
+.show-zSlider .time-slider {
+    left: 125px;
+}
+
+.plane-slider span, .time-slider span {
+    position: absolute;
+    font-size: 18px;
+}
+
+.plane-slider.glyphicon, .time-slider .glyphicon {
+    position: absolute;
+}
+
+.plane-slider span {
+    left: 0;
+    width: 27px;
+    text-align: center;
+}
+.time-slider span {
+    top: 6px;
+}
+
+.plane-slider .glyphicon {
+    left: 7px;
+}
+.time-slider .glyphicon {
+    top: 11px;
+}
+
+.plane-slider .dim-label {
+    bottom: -90px;
+}
+.time-slider .dim-label {
+    left: -85px;
+}
+
+.plane-slider .dim-current {
+    bottom: -45px;
+    color: #999;
+}
+.time-slider .dim-current {
+    left: -55px;
+    color: #999;
+    text-align: right;
+    width: 30px;
+}
+
+.time-slider .dim-size {
+    right: -55px;
+    color: #999;
+}
+.plane-slider .dim-size {
+    top: -45px;
+    color: #999;
+}
+
+/* Make the Z/T sliders look thin,
+   but still thick-enough to click easily */
+.time-slider .ui-slider, .plane-slider .ui-slider {
+    cursor: pointer;
+    border: 3px solid white;
+    background: #c5c5c5;
+}
+
+.plane-slider .ui-slider {
+    height: 100%;
+    width: 9px;
+    margin-left: 9px;
+    z-index: 3;
+}
+.time-slider .ui-slider {
+    width: 100%;
+    height: 9px;
+    margin-top: 14px;
+}
+
+.plane-slider .ui-slider-handle {
+    left: -.45em;
+    width: 19px;
+}
+.time-slider .ui-slider-handle {
+    top: -0.45em;
+    height: 19px;
+}
+
+.plane-slider .glyphicon-chevron-down {
+    bottom: -20px;
+    top: auto;
+}
+.time-slider .glyphicon-chevron-left {
+    left: -20px;
+}
+
+.plane-slider .glyphicon-chevron-up {
+    top: -20px;
+}
+.time-slider .glyphicon-chevron-right {
+    right: -20px;
+}
+
+.time-slider .glyphicon-play, .time-slider .glyphicon-stop {
+    left: -70px;
+}
+.plane-slider .glyphicon-play, .plane-slider .glyphicon-stop {
+    bottom: -60px;
+    top: auto;
+}
+
+.plane-slider .slider-value {
+    margin-bottom: -20px;
+    left: 30px;
+}
+.time-slider .slider-value {
+    margin-bottom: -20px;
+    top: -50px;
+}
+
+
 .dim-arrows {
-    float: left;
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 17px 17px;
-    width: 17px;
-    height: 17px;
+    position: absolute;
 }
 .dim-arrow-up {
     background-image: url('images/arrow-up.png');
@@ -319,10 +430,11 @@ a.ui-button:active,
 
 .viewer {
     height: 100%;
-    padding-bottom: 25px;
-    padding-left: 30px;
-    padding-right: 0px;
-    margin-left: -30px;
+    width: 100%;
+}
+
+.show-zSlider .viewer {
+    padding-left: 35px;
 }
 
 .viewer-container {
@@ -344,14 +456,19 @@ thumbnail-slider img {
     cursor: pointer;
 }
 
+#info .table>tbody>tr>th, #info .table>tbody>tr>td {
+    border-top-width: 0;
+    padding: 2px;
+}
+
 .right-hand-panel {
     width: 350px;
     max-width: 800px;
     overflow-y: hidden;
 }
 
-.right-hand-panel li a {
-    padding: 0px 5px;
+.tab-pane {
+    padding: 10px;
 }
 
 .right-hand-panel .row {
@@ -359,7 +476,7 @@ thumbnail-slider img {
     max-width: 800px;
     height: 30px;
     margin-bottom: 2px;
-    margin-left: 2px;
+    margin-left: 0px;
     margin-right: 0px;
     width: 100%;
 }
@@ -369,19 +486,31 @@ thumbnail-slider img {
     padding-left: 5px;
 }
 
-.save-settings {
-    margin-top: 5px;
+.save-settings .btn-sm, .history .btn-sm {
+    padding: 5px 9px;
 }
 
 .checkbox-settings {
-    margin-left: 2px;
-    margin-top: 5px;
+    margin-left: 10px;
+    margin-top: 8px;
     margin-bottom: 0px;
+}
+
+#panel-tabs li a {
+    padding-left: 20px;
+    padding-right: 20px;
 }
 
 .channel-range {
     width: 100%;
     height: 100%;
+}
+.channel-range .ui-spinner {
+    margin: 0px 2px;
+    height: 30px;
+}
+.channel-range .ui-spinner-input {
+    width: 100%;
 }
 
 .channel-slider {
@@ -392,38 +521,23 @@ thumbnail-slider img {
     margin-left: 7px;
     margin-right: 1px;
 }
-.channel-slider .ui-slider-range {
-    image-rendering: pixelated;
+.channel-slider .ui-slider-range, .pixelated {
+    image-rendering:optimizeSpeed;
+    image-rendering:-moz-crisp-edges;
+    image-rendering:-o-crisp-edges;
+    image-rendering:-webkit-optimize-contrast;
+    image-rendering:optimize-contrast;
+    image-rendering:crisp-edges;
+    image-rendering:pixelated;
+    -ms-interpolation-mode:nearest-neighbor;
 }
 .channel-slider .ui-slider-handle {
     width: 10px;
 }
-
-.channel-color {
-    float: left;
-    margin-left: 2px;
-    width: 25px;
-}
 .luts {
-    background: #f8f8f8;
-    border: 1px solid #000;
-    display: none;
-    position: relative;
-    z-index: 1000;
-    top: 12px;
-    left: -230px;
-    max-height: 250px;
-    overflow-y: auto;
-    width: 250px;
-}
-.luts-title {
-    text-align: center;
-    font-weight: bold;
-}
-.luts-close {
-    position: absolute;
-    top: 2px;
-    right: 3px;
+     max-height: 165px;
+     overflow-y: auto;
+     overflow-x: hidden;
 }
 .luts-item {
     margin-left: 2px;
@@ -435,7 +549,6 @@ thumbnail-slider img {
     background-repeat: no-repeat;
     height: 13px;
     width: 100px;
-    image-rendering: pixelated;
 }
 .luts-name {
     position: relative;
@@ -443,50 +556,52 @@ thumbnail-slider img {
     line-height: 13px;
     font-size: 13px;
 }
-.luts-color-picker {
-    margin-bottom: 5px;
+.luts-color-picker span {
+    margin: 0px 10px;
 }
-.luts-color-picker .sp-replacer {
-    width: 145px;
+.luts-color-picker input {
+    float: left;
 }
-.luts-color-picker .sp-preview {
-    width: 115px;
+.channel-button-group {
+    float: left;
+    min-width: 70px;
+    width: 15%;
+}
+.channel-button-group .channel {
+    overflow-x: hidden;
+    min-width: 50px;
+    width: 80%;
+}
+.channel-color {
+    top: 30px;
+    max-height: 250px;
+    width: 200px;
+}
+.channel-color hr {
+    float: none;
+    min-width: 0px;
 }
 .channel-mode {
     margin-top: 2px;
-    width: 100%;
+    margin-top: 4px;
+    width: 95%;
 }
 .channel-mode button {
     width: 33%;
-}
-
-.channel-active {
-    overflow-x: hidden;
-    font-size: 10px;
-    float: left;
-    height: 100%;
-    min-width: 50px;
-    width: 15%;
-    border-width: 2px;
-    border-radius: 0px;
 }
 
 .user-settings {
     cursor: pointer;
     float: left;
     border: 1px solid blue;
-    width: 95px;
-    margin: 2px;
-}
-
-.user-settings img {
-    max-width: 90px;
-    max-height: 90px;
+    padding: 2px;
+    margin: 2px 4px;
 }
 
 .user-settings div {
     text-align: center;
     max-width: 90px;
+    word-wrap: break-word;
     color: blue;
 }
 
@@ -539,6 +654,13 @@ thumbnail-slider img {
     border-width: 0px 2px 0px 2px;
     font-size: 13px;
     overflow: hidden;
+}
+.loading-regions {
+    float: left;
+    position: relative;
+    top: 20%;
+    text-align: center;
+    width: 100%;
 }
 
 .roi-toggle {
@@ -679,35 +801,28 @@ thumbnail-slider img {
 .shape-fill-color, .shape-stroke-color {
     float: left;
     height: 32px;
-    margin-left: 5px;
     margin-right: 5px;
 }
 
 .shape-stroke-width, .shape-font-size {
     margin-right: 5px;
     float: left;
-    padding-top: 2px;
 }
 
 .shape-stroke-width .ui-spinner {
-    min-width: 50px;
-    max-width: 50px;
-    line-height: 28px;
-    height: 28px;
+    height: 30px;
 }
 .shape-font-size .ui-spinner {
-    min-width: 50px;
-    max-width: 50px;
-    line-height: 28px;
-    height: 28px;
+    height: 30px;
 }
 .shape-font-size span {
     max-width: 38px;
 }
 .shapes-edit {
     float: left;
-    line-height: 30px;
-    margin: 5px;
+    margin: 10px 0 0 0;
+    clear: left;
+    width: 100%;
 }
 .shape-edit-button {
     width: 45px;
@@ -718,48 +833,30 @@ thumbnail-slider img {
     margin-left: 5px;
 }
 .shape-edit-comment {
-    margin-left: 5px;
     margin-right: 5px;
     min-width: 100px;
     width: 75%;
     float: left;
-    padding-top: 1px;
-}
-.shape-edit-comment input {
-    width: 100%;
-    line-height: 28px;
-    height: 28px;
 }
 
-.shape-edit-attachments {
-    margin: 0px 5px 0px 15px;
-    min-width: 300px;
-    width: 100%;
-    float: left;
-    padding-top: 1px;
-}
 .shape-edit-attachments input[type=text] {
-    float: left;
     width: 50px;
-    line-height: 28px;
-    height: 28px;
-    font-size: 12px;
 }
 .shape-edit-attachments span {
-    float: left;
-    line-height: 30px;
-    height: 30px;
-    margin-left: 5px;
+    display: inline-block;
+    height: 25px;
+    width: 25px;
     background-repeat: no-repeat;
     background-position: center;
+    background-size: 75%;
+    margin-bottom: -7px;
+    outline: none;
 }
 .dim_locked {
     background-image: url('images/dim_locked.png');
-    width: 24px;
 }
 .dim_unlocked {
     background-image: url('images/dim_unlocked.png');
-    width: 24px;
 }
 
 .arrow-button button  {

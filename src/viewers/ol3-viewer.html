@@ -1,30 +1,28 @@
 <template>
     <require from="../controls/dimension-slider"></require>
 
-    <div class="center-row1 row">
+    <div class="center-row1
+                ${image_config.image_info.dimensions.max_t > 1 ? 'show-tSlider' : ''}
+                ${image_config.image_info.dimensions.max_z > 1 ? 'show-zSlider' : ''}">
         <dimension-slider
             config_id.bind="config_id"
             dim="z"
             player_info.bind="player_info"
-            class="plane-slider col-xs-1">
+            class="plane-slider">
         </dimension-slider>
 
-        <div class="viewer col-xs-12">
+        <div class="viewer">
               <div id.bind="container" class="viewer-container"></div>
         </div>
     </div>
 
-    <div class="center-row2 row">
-            <div class="slider-corner col-xs-1">
-                <span class="z"></span>
-                <span class="t"></span>
-            </div>
-
+    <div class="center-row2
+                ${image_config.image_info.dimensions.max_z > 1 ? 'show-zSlider' : ''}">
             <dimension-slider
                 config_id.bind="config_id"
                 dim="t"
                 player_info.bind="player_info"
-                class="time-slider col-xs-12">
+                class="time-slider">
             </dimension-slider>
     </div>
 </template>

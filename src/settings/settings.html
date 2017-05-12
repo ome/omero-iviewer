@@ -1,40 +1,57 @@
+<!--
+    Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+    All rights reserved.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
 <template>
     <require from="../utils/converters"></require>
     <require from="./channel-settings"></require>
 
-    <div class="btn-group save-settings" style="margin: 5px">
+    <div class="btn-group save-settings">
         <button type="button"
             disabled.bind="!(image_config && image_config.image_info &&
                 image_config.image_info.can_annotate &&
                 image_config.history.length > 0 && image_config.historyPointer >= 0)"
-            class="btn btn-default btn-xs"
+            class="btn btn-default btn-sm"
             click.delegate="saveImageSettings()">Save
         </button>
         <button type="button"
             disabled.bind="!(image_config && image_config.image_info &&
                 image_config.image_info.can_annotate)"
-            class="btn btn-default btn-xs"
+            class="btn btn-default btn-sm"
             click.delegate="saveImageSettingsToAll()">Save to All
         </button>
     </div>
 
-    <div class="btn-group history" style="margin: 5px">
+    <div class="btn-group history">
         <button type="button" click.delegate="undo()"
             disabled.bind="!(image_config && image_config.history.length > 0 &&
                 image_config.historyPointer >= 0)"
-            class="btn btn-default btn-xs">Undo</button>
+            class="btn btn-default btn-sm">Undo</button>
         <button type="button" click.delegate="redo()"
             disabled.bind="!(image_config && image_config.history.length > 0 &&
                 image_config.historyPointer < image_config.history.length-1)"
-            class="btn btn-default btn-xs">Redo</button>
-        <button type="button" click.delegate="copy()" class="btn btn-default btn-xs">Copy</button>
-        <button type="button" class="btn btn-default btn-xs"
+            class="btn btn-default btn-sm">Redo</button>
+        <button type="button" click.delegate="copy()" class="btn btn-default btn-sm">Copy</button>
+        <button type="button" class="btn btn-default btn-sm"
             disabled.bind="!(image_config && image_config.image_info &&
                 image_config.image_info.copied_img_rdef)"
             click.delegate="paste()">Paste</button>
     </div>
 
-    <div class="row checkbox checkbox-settings">
+    <div class="checkbox checkbox-settings">
         <div class="col-xs-6">
             <label>
                 <input type="checkbox"
@@ -59,19 +76,21 @@
         <div class="histogram"></div>
     </div>
 
-    <div class="row" style="height: 100%">
+    <div class="row">
         <channel-settings config_id.bind="config_id"></channel-settings>
     </div>
 
     <div class="row">
         <hr />
         <div>User Settings:</div>
-        <div repeat.for="rdef of rdefs"
-            class="user-settings"
-            click.delegate="applyUserSetting($index)">
-            <img src.bind="getRdefThumbUrl() + '/90/?rdefId=' + rdef.id + '&' + revision" />
-            <div>${rdef.owner.firstName + ' ' + rdef.owner.lastName}</div>
-        </div>
+        <div style="padding: 12px">
+            <div repeat.for="rdef of rdefs"
+                class="user-settings"
+                click.delegate="applyUserSetting($index)">
+                <img src.bind="getRdefThumbUrl() + '/90/?rdefId=' + rdef.id + '&' + revision" />
+                <div>${rdef.owner.firstName + ' ' + rdef.owner.lastName}</div>
+            </div>
+        <div>
     </div>
 
 </template>

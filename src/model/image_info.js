@@ -20,7 +20,7 @@ import {noView} from 'aurelia-framework';
 import {IMAGE_CONFIG_UPDATE} from '../events/events';
 import Misc from '../utils/misc';
 import {
-    REQUEST_PARAMS, WEBGATEWAY, CHANNEL_SETTINGS_MODE
+    REQUEST_PARAMS, WEBGATEWAY, CHANNEL_SETTINGS_MODE, IVIEWER
 } from '../utils/constants'
 
 /**
@@ -91,6 +91,12 @@ export default class ImageInfo {
      * @memberof ImageInfo
      */
     image_pixels_size = null;
+
+    /**
+     * the delta t
+     * @memberof ImageInfo
+     */
+    image_exposure = null;
 
     /**
      * a flag for whether we are allowed to save the settings
@@ -198,8 +204,8 @@ export default class ImageInfo {
     requestData() {
         $.ajax({
             url :
-                this.context.server + this.context.getPrefixedURI(WEBGATEWAY) +
-                "/imgData/" + this.image_id + '/',
+                this.context.server + this.context.getPrefixedURI(IVIEWER) +
+                "/image_data/" + this.image_id + '/',
             success : (response) => {
                 // read initial request params
                 this.initializeImageInfo(response);
@@ -305,8 +311,8 @@ export default class ImageInfo {
             this.image_pixels_type = response.meta.pixelsType;
         this.image_timestamp = response.meta.imageTimestamp;
         this.image_pixels_size = response.pixel_size;
+        this.image_exposure = response.delta_t;
         this.sanityCheckInitialValues();
-
         // signal that we are ready and
         // send out an image config update event
         this.ready = true;

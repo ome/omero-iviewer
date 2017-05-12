@@ -1,3 +1,21 @@
+//
+// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+
 // js
 import Context from '../app/context';
 import Misc from '../utils/misc';
@@ -121,19 +139,6 @@ export default class RegionsList extends EventSubscriber {
                         (newValue, oldValue) =>
                             $('#shapes_visibility_toggler').prop(
                                 'checked', newValue === 0)));
-            this.observers.push(
-                this.bindingEngine.propertyObserver(
-                    this.regions_info, 'shape_to_be_drawn').subscribe(
-                        (newValue, oldValue) => {
-                            if (newValue === null) {
-                                $(".regions-table").removeClass("disabled-color");
-                                $(".regions-table").prop("disabled", false);
-                            } else {
-                                $(".regions-table").addClass("disabled-color");
-                                $(".regions-table").prop("disabled", true);
-                            }
-                        }
-            ));
         };
 
         if (this.regions_info === null) {
@@ -323,7 +328,7 @@ export default class RegionsList extends EventSubscriber {
             $(".regions-container").outerHeight() -
             $(".regions-tools").outerHeight() -
             $('.regions-header').outerHeight() -
-            $('.fixed-header').outerHeight();
+            $("#panel-tabs").outerHeight();
         if (Misc.isIE()) availableHeight -= this.scrollbar_width;
 
         if (!isNaN(availableHeight))
@@ -372,8 +377,8 @@ export default class RegionsList extends EventSubscriber {
      * @memberof RegionsList
      */
     selectShape(id, selected, event) {
-        if (event.target.tagName.toUpperCase() === 'INPUT' ||
-            this.regions_info.shape_to_be_drawn !== null) return true;
+        if (event.target.tagName.toUpperCase() === 'INPUT') return true;
+
         let multipleSelection =
             typeof event.ctrlKey === 'boolean' && event.ctrlKey;
         let deselect = multipleSelection && selected;
@@ -396,8 +401,8 @@ export default class RegionsList extends EventSubscriber {
     selectShapes(roi_id, event) {
         event.stopPropagation();
         if (event.target.className.indexOf("roi_id") !== -1 ||
-            event.target.parentNode.className.indexOf("roi_id") !== -1 ||
-            this.regions_info.shape_to_be_drawn !== null) return true;
+            event.target.parentNode.className.indexOf("roi_id") !== -1)
+                return true;
 
         let roi = this.regions_info.data.get(roi_id);
         if (typeof roi === 'undefined') return;
@@ -415,16 +420,16 @@ export default class RegionsList extends EventSubscriber {
      * shape visibility toggler
      *
      * @param {number} id the shape id
-     * @param {boolean} visible the visible state
+     * @param {Object} event the mouse event object
      * @memberof RegionsList
      */
-    toggleShapeVisibility(id, visible) {
-        if (this.regions_info.shape_to_be_drawn !== null) return;
+    toggleShapeVisibility(id, event) {
+        event.stopPropagation();
         this.context.publish(
            REGIONS_SET_PROPERTY, {
                config_id: this.regions_info.image_info.config_id,
                property : "visible",
-               shapes : [id], value : visible});
+               shapes : [id], value : event.target.checked});
     }
 
     /**
@@ -435,7 +440,6 @@ export default class RegionsList extends EventSubscriber {
      * @memberof RegionsList
      */
     expandOrCollapseRoi(roi_id, event) {
-        if (this.regions_info.shape_to_be_drawn !== null) return true;
         event.stopPropagation();
 
         let roi = this.regions_info.data.get(roi_id);
@@ -446,13 +450,15 @@ export default class RegionsList extends EventSubscriber {
     /**
      * Show/Hide all shapes
      *
-     * @param {boolean} show true if we want to show, otherwise hide
+     * @param {Object} event the mouse event object
      * @memberof RegionsList
      */
-    toggleAllShapesVisibility(show) {
+    toggleAllShapesVisibility(event) {
         // IMPORTANT (and enforced through a template show.bind as well):
         // we cannot have the initial state altered, the method of toggle diffs
         // won't work any more.
+        event.stopPropagation();
+        let show = event.target.checked;
         if (this.regions_info.number_of_shapes === 0) return;
         let ids = [];
         this.regions_info.data.forEach(

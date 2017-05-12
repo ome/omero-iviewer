@@ -1,3 +1,20 @@
+//
+// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 //css and images
 require('../../node_modules/jquery-ui/themes/base/slider.css');
 
@@ -6,7 +23,7 @@ import {inject,customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {slider} from 'jquery-ui/ui/widgets/slider';
 
 import {
-    IMAGE_CONFIG_UPDATE, IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY, IMAGE_VIEWER_RESIZE,
+    IMAGE_CONFIG_UPDATE, IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY,
     EventSubscriber
 } from '../events/events';
 
@@ -59,9 +76,7 @@ export default class DimensionSlider extends EventSubscriber {
      * @type {Array.<string,function>}
      */
     sub_list = [[IMAGE_CONFIG_UPDATE,
-                    (params = {}) => this.onImageConfigChange(params)],
-                [IMAGE_VIEWER_RESIZE,
-                    (params = {}) => this.onViewerResize()]];
+                     (params = {}) => this.onImageConfigChange(params)]];
 
     /**
      * @constructor
@@ -102,18 +117,6 @@ export default class DimensionSlider extends EventSubscriber {
         this.elSelector = "#" + this.config_id +
             " [dim='" + this.dim + "']" + " [name='dim']";
         this.registerObserver();
-    }
-
-    /**
-     * Adjusts widget dynamically in case of panel/window resizing
-     *
-     * @memberof DimensionSlider
-     */
-    onViewerResize() {
-        if (this.dim === 't')
-            $(this.elSelector).width($(this.elSelector).parent().width()-100);
-        else
-            $(this.elSelector).height($(this.elSelector).parent().height()-90);
     }
 
     /**
@@ -209,7 +212,6 @@ export default class DimensionSlider extends EventSubscriber {
          this.image_config = this.context.getImageConfig(params.config_id);
          this.bind();
          this.updateSlider();
-         setTimeout(this.onViewerResize.bind(this), 100);
      }
 
     /**
@@ -224,11 +226,6 @@ export default class DimensionSlider extends EventSubscriber {
         value = parseInt(value);
         let imgInf = this.image_config.image_info;
         let oldValue = imgInf.dimensions[this.dim];
-
-        // show new value
-        $('.slider-corner .' + this.dim).text(
-            this.dim.toUpperCase() + ":" + (value+1) + "/" +
-            imgInf.dimensions['max_' + this.dim]);
 
         // no need to change for a the same value
         if (slider_interaction ||
@@ -260,7 +257,8 @@ export default class DimensionSlider extends EventSubscriber {
         // create jquery slider
         $(this.elSelector).slider({
             orientation: this.dim === 'z' ? "vertical" : "horizontal",
-            min: 0, max: imgInf.dimensions['max_' + this.dim] - 1 ,
+            min: 0,
+            max: imgInf.dimensions['max_' + this.dim] - 1 ,
             step: 0.01, value: imgInf.dimensions[this.dim],
             slide: (event, ui) => {
                 if (this.player_info.handle !== null) return false;
@@ -278,9 +276,12 @@ export default class DimensionSlider extends EventSubscriber {
                 let sliderValueSpan = $(this.elSelector + ' .slider-value');
                 sliderValueSpan.text(
                     this.dim.toUpperCase() + ":" + Math.round(ui.value+1));
-                if (this.dim === 'z')
-                    sliderValueSpan.css({left: "15px",top: "50%"})
-                else sliderValueSpan.css({left: "50%", top: "-20px"})
+                let percent = (ui.value / (imgInf.dimensions['max_' + this.dim] - 1)) * 100;
+                if (this.dim === 'z') {
+                    sliderValueSpan.css({bottom: percent + "%"})
+                } else {
+                    sliderValueSpan.css({left: percent + "%"})
+                }
                 sliderValueSpan.show();
             },
             stop: (event, ui) => {
@@ -292,10 +293,6 @@ export default class DimensionSlider extends EventSubscriber {
             change: (event, ui) => this.onChange(ui.value,
                 event.originalEvent ? true : false)
         });
-        $('.slider-corner .' + this.dim).text(
-            this.dim.toUpperCase() + ":" +
-            (imgInf.dimensions[this.dim]+1) + "/" +
-                imgInf.dimensions['max_' + this.dim]);
         this.show();
     }
 

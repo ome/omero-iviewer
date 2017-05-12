@@ -1,3 +1,21 @@
+//
+// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+
 // js
 import Context from '../app/context';
 import Misc from '../utils/misc';
@@ -351,45 +369,6 @@ export default class ChannelSettings extends EventSubscriber {
            ]
        };
        this.context.publish(IMAGE_SETTINGS_CHANGE, params);
-    }
-
-    /**
-     * Toggles a channel, i.e. sets it active or inactive
-     *
-     * @param {number} index the channel array index
-     * @memberof ChannelSettings
-     */
-    toggleChannel(index) {
-        // we don't allow to deactivate the only active channel for grayscale
-        if (this.image_config.image_info.model === 'greyscale' &&
-            this.image_config.image_info.channels[index].active) return;
-
-        let history = [];
-
-        // toggle channel active state
-        this.image_config.image_info.channels[index].active =
-            !this.image_config.image_info.channels[index].active;
-        // remember change
-        history.push({
-            prop: ['image_info', 'channels', '' + index, 'active'],
-            old_val :   !this.image_config.image_info.channels[index].active,
-            new_val: this.image_config.image_info.channels[index].active,
-            type: 'boolean'});
-
-        if (this.image_config.image_info.model === 'greyscale') {
-            // for grayscale: we allow only one active channel
-            let channels = this.image_config.image_info.channels;
-            for (let i=0;i<channels.length;i++) {
-                let c = channels[i];
-                if (i === index || !c.active) continue;
-                // deactivate other channels
-                c.active = false;
-                history.push({
-                    prop: ['image_info', 'channels', '' + i, 'active'],
-                    old_val : true, new_val: false, type: 'boolean'});
-            };
-        };
-        this.image_config.addHistory(history);
     }
 
     /**

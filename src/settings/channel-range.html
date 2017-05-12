@@ -1,70 +1,104 @@
+<!--
+    Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+    All rights reserved.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
 <template>
-    <input class="channel-start"/>
-    <div class="channel-slider"></div>
-    <input class="channel-end" type="text"/>
-    <div class="channel-color">
-        <img src="../css/images/colorpicker.png"
-            click.delegate="showLuts()"/>
-        <div class="luts">
-            <img class="luts-close" src="../css/images/close.gif"/>
-            <div class="luts-title">Colors &amp; Lookup Tables</div>
-            <hr style="float: none" />
+    <div class="btn-group channel-button-group">
+        <button type="button"
+                title="${channel.label}"
+                class="btn btn-default btn-sm pixelated channel"
+                css="${!channel.active ? 'opacity: 0.5' : ''}"
+                click.delegate="toggleChannel()">${channel.label}
+        </button>
+        <button type="button"
+                class="btn btn-default btn-sm dropdown-toggle"
+                style="min-width: 15px;padding: 5px 0px;"
+                data-toggle="dropdown"
+                click.trigger="hideColorPicker()">
+            <span class="caret"></span>
+        </button>
+        <div class="dropdown-menu channel-color">
             <div
-                class="${channel.reverseIntensity === null ? 'disabled-color' : ''}"
                 style="margin-left: 2px;">
                 <label style="font-weight: normal;">
                     <input type="checkbox"
                         disabled.bind="channel.reverseIntensity === null"
-                        class="${channel.reverseIntensity === null ? 'disabled-color' : ''}"
                         checked.bind="channel.reverseIntensity"
                         change.delegate="onReverseIntensityToggle()"/>
                         &nbsp;Reverse Intensity
                 </label>
             </div>
-            <hr style="float: none" />
-            <div class="luts-preview luts-item" style="background-color: #FF0000"
-                click.delegate="chooseLut('#FF0000')">
-                <div class="luts-name">red</div>
-            </div>
-            <div class="luts-preview luts-item" style="background-color: #00FF00"
-                click.delegate="chooseLut('#00FF00')">
-                <div class="luts-name">green</div>
-            </div>
-            <div class="luts-preview luts-item" style="background-color: #0000FF"
-                click.delegate="chooseLut('#0000FF')">
-                <div class="luts-name">blue</div>
-            </div>
-            <div class="luts-preview luts-item" style="background-color: #FFFFFF"
-                click.delegate="chooseLut('#FFFFFF')">
-                <div class="luts-name">white</div>
-            </div>
-            <div class="luts-preview luts-item" style="background-color: #FFFF00"
-                click.delegate="chooseLut('#FFFF00')">
-                <div class="luts-name">yellow</div>
-            </div>
-            <div class="luts-preview luts-item" style="background-color: #FF00FF"
-                click.delegate="chooseLut('#FF00FF')">
-                <div class="luts-name">magenta</div>
-            </div>
-            <div class="luts-preview luts-item" style="background-color: #00FFFF"
-                click.delegate="chooseLut('#00FFFF')">
-                <div class="luts-name">cyan</div>
-            </div>
-            <div class="luts-item" repeat.for="[id, lut] of luts"
-                click.delegate="chooseLut(id)">
-                <div class="luts-preview"
-                     css="${lut.index >= 0 ?
-                            'background-image: url(\'' + luts_png.url + '\');
-                            background-size: 100% ' + (luts_png.height*2) +
-                            'px;background-position: 0px -' + (lut.index*20+1) +
-                            'px' : ''}">
-                    <div class="luts-name">${lut.nice_name}</div>
+            <hr />
+            <div class="luts">
+                <div class="luts-preview luts-item" style="background-color: #FF0000"
+                    title="red"
+                    click.delegate="onColorChange('#FF0000')">
+                    <div class="luts-name">red</div>
+                </div>
+                <div class="luts-preview luts-item" style="background-color: #00FF00"
+                     title="green"
+                     click.delegate="onColorChange('#00FF00')">
+                    <div class="luts-name">green</div>
+                </div>
+                <div class="luts-preview luts-item" style="background-color: #0000FF"
+                     title="blue"
+                     click.delegate="onColorChange('#0000FF')">
+                    <div class="luts-name">blue</div>
+                </div>
+                <div class="luts-preview luts-item" style="background-color: #FFFFFF"
+                     title="white"
+                     click.delegate="onColorChange('#FFFFFF')">
+                    <div class="luts-name">white</div>
+                </div>
+                <div class="luts-preview luts-item" style="background-color: #FFFF00"
+                     title="yellow"
+                     click.delegate="onColorChange('#FFFF00')">
+                    <div class="luts-name">yellow</div>
+                </div>
+                <div class="luts-preview luts-item" style="background-color: #FF00FF"
+                     title="magenta"
+                     click.delegate="onColorChange('#FF00FF')">
+                    <div class="luts-name">magenta</div>
+                </div>
+                <div class="luts-preview luts-item" style="background-color: #00FFFF"
+                     title="cyan"
+                     click.delegate="onColorChange('#00FFFF')">
+                    <div class="luts-name">cyan</div>
+                </div>
+                <div class="luts-item" repeat.for="[id, lut] of luts"
+                     title="${lut.nice_name}"
+                     click.delegate="onColorChange(id)">
+                     <div class="luts-preview pixelated"
+                         css="${lut.index >= 0 ?
+                                'background-image: url(\'' + luts_png.url + '\');
+                                background-size: 100% ' + (luts_png.height*2) +
+                                'px;background-position: 0px -' + (lut.index*20+1) +
+                                'px' : ''}">
+                         <div class="luts-name">${lut.nice_name}</div>
+                     </div>
                 </div>
             </div>
-            <hr style="float: none" />
-            <div class="luts-color-picker">&nbsp;Pick Color:&nbsp;
-                <input class="spectrum-input" style="width:160px"/>
+            <hr/>
+            <div class="luts-color-picker">
+                <span>Color:</span>
+                <input class="spectrum-input" />
             </div>
         </div>
     </div>
+    <input class="channel-start"/>
+    <div class="channel-slider"></div>
+    <input class="channel-end" type="text"/>
 </template>
