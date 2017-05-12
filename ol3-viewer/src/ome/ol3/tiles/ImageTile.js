@@ -1,3 +1,20 @@
+//
+// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 goog.provide('ome.ol3.tiles.ImageTile');
 
 goog.require('ol.dom')
@@ -20,14 +37,14 @@ goog.require('ol.Tile')
  * @param {ol.TileLoadFunctionType} tileLoadFunction Tile load function.
  */
 ome.ol3.tiles.ImageTile = function(
-	tileCoord, state, src, crossOrigin, tileLoadFunction) {
-	goog.base(this, tileCoord, state, src, crossOrigin, tileLoadFunction);
+    tileCoord, state, src, crossOrigin, tileLoadFunction) {
+    goog.base(this, tileCoord, state, src, crossOrigin, tileLoadFunction);
 
-	/**
-	 * @type {object}
-	 * @private
-	 */
-	this.imageByContext_ = {};
+    /**
+     * @type {object}
+     * @private
+     */
+    this.imageByContext_ = {};
 };
 goog.inherits(ome.ol3.tiles.ImageTile, ol.ImageTile);
 
@@ -44,33 +61,33 @@ goog.inherits(ome.ol3.tiles.ImageTile, ol.ImageTile);
  * @return {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement} the image drawn on the context.
  */
 ome.ol3.tiles.ImageTile.prototype.getRenderedTileAsContext =
-	function(tile, tileSize, createContextOnlyForResize, key) {
-		if ((typeof(tile) !== 'object') ||
-			(typeof(tile['width']) !== 'number') || (typeof(tile['height']) !== 'number'))
-			return tile;
+    function(tile, tileSize, createContextOnlyForResize, key) {
+        if ((typeof(tile) !== 'object') ||
+            (typeof(tile['width']) !== 'number') ||
+            (typeof(tile['height']) !== 'number')) return tile;
 
         if (typeof createContextOnlyForResize !== 'boolean')
             createContextOnlyForResize = false;
 
-		var w = tile.width;
-		var h = tile.height;
-		if (ome.ol3.utils.Misc.isArray(tileSize) && tileSize.length > 1) {
-			w = tileSize[0];
-			h = tileSize[1];
-		}
+        var w = tile.width;
+        var h = tile.height;
+        if (ome.ol3.utils.Misc.isArray(tileSize) && tileSize.length > 1) {
+            w = tileSize[0];
+            h = tileSize[1];
+        }
 
         // no need to use a canvas if we don't resize
-		if (createContextOnlyForResize && w === tile.width && h === tile.height)
+        if (createContextOnlyForResize && w === tile.width && h === tile.height)
             return tile;
 
-		var context = ol.dom.createCanvasContext2D(w,h);
- 		context.drawImage(tile, 0,0);
+        var context = ol.dom.createCanvasContext2D(w,h);
+        context.drawImage(tile, 0,0);
 
         // we'd like to store the resized tile so that we don't have to do it again
         if (createContextOnlyForResize && key)
             this.imageByContext_[key] = context.canvas;
 
-		return context.canvas;
+        return context.canvas;
 }
 
 /**
@@ -80,8 +97,8 @@ ome.ol3.tiles.ImageTile.prototype.getRenderedTileAsContext =
  * @return {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement} Image.
  */
 ome.ol3.tiles.ImageTile.prototype.getImage = function(opt_context) {
-	// call super.getImage
-	var image = goog.base(this, 'getImage', opt_context);
+    // call super.getImage
+    var image = goog.base(this, 'getImage', opt_context);
     // we are not loaded yet => good byes
     if (this.state !== ol.TileState.LOADED) return image;
 
@@ -98,20 +115,20 @@ ome.ol3.tiles.ImageTile.prototype.getImage = function(opt_context) {
 
     // post tile function
     image = this.getRenderedTileAsContext(image);
-	try {
-		var context =  postTileFunction.call(this, image);
-		if (context === null) context = image;
+    try {
+        var context =  postTileFunction.call(this, image);
+        if (context === null) context = image;
 
-		this.imageByContext_[key] = context;
+        this.imageByContext_[key] = context;
 
-		return context;
-	} catch(planb) {
-		return image;
-	}
+        return context;
+    } catch(planb) {
+        return image;
+    }
 };
 
 
 goog.exportProperty(
-	ome.ol3.tiles.ImageTile.prototype,
-	'getRenderedTileAsContext',
-	ome.ol3.tiles.ImageTile.prototype.getRenderedTileAsContext);
+    ome.ol3.tiles.ImageTile.prototype,
+    'getRenderedTileAsContext',
+    ome.ol3.tiles.ImageTile.prototype.getRenderedTileAsContext);

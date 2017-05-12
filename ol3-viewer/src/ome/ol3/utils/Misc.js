@@ -1,3 +1,21 @@
+//
+// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+
 /**
  * @namespace ome.ol3.utils.Misc
  */
@@ -51,9 +69,10 @@ ome.ol3.utils.Misc.generateDefaultResolutions = function(zoom_in, zoom_out) {
  * @param {?Array} resolutions the resolutions array or null
  */
 ome.ol3.utils.Misc.prepareResolutions = function(resolutions) {
-	if (!ome.ol3.utils.Misc.isArray(resolutions) || resolutions.length === 0 ||
-				(resolutions.length === 1 && resolutions[0] === 1))
-		return ome.ol3.utils.Misc.generateDefaultResolutions(0.025, 0.10);
+    if (!ome.ol3.utils.Misc.isArray(resolutions) ||
+        resolutions.length === 0 ||
+        (resolutions.length === 1 && resolutions[0] === 1))
+            return ome.ol3.utils.Misc.generateDefaultResolutions(0.025, 0.10);
 
     // for tiled sources we find the 1:1, then go backwards in the array
     // filling up with levels for zoom out
@@ -81,24 +100,23 @@ ome.ol3.utils.Misc.prepareResolutions = function(resolutions) {
     // for a total number of resolutions
     newRes.sort((a,b) => b - a);
     var totalNumberOfLevels = newRes.length === 1 ? 20 : newRes.length + 10;
-	var remainingPositions = totalNumberOfLevels - newRes.length;
-	//we alternate starting at which end has fewer zoom level
-	var insertFront = true;
-	if (newRes.length - oneToOneIndex < oneToOneIndex)
-		insertFront = false;
-	while (remainingPositions > 0) {
-		if (insertFront) {
-			insertFront=false;
-			newRes.splice(0, 0, newRes[0] * 1.20);
-		} else {
-			insertFront=true;
-			var newVal = newRes[newRes.length-1] / 1.10;
-			newRes.push(newVal);
-		}
-		remainingPositions--;
-	}
+    var remainingPositions = totalNumberOfLevels - newRes.length;
+    //we alternate starting at which end has fewer zoom level
+    var insertFront = true;
+    if (newRes.length - oneToOneIndex < oneToOneIndex) insertFront = false;
+    while (remainingPositions > 0) {
+        if (insertFront) {
+            insertFront=false;
+            newRes.splice(0, 0, newRes[0] * 1.20);
+        } else {
+            insertFront=true;
+            var newVal = newRes[newRes.length-1] / 1.10;
+            newRes.push(newVal);
+        }
+        remainingPositions--;
+    }
 
-	return newRes;
+    return newRes;
 };
 
 
@@ -138,12 +156,12 @@ function(features) {
  * @return {Array.<string>|null} an array of classes or null
  */
 ome.ol3.utils.Misc.getClass = function(element) {
-	if (typeof(element) !== 'object' || typeof(element['className']) !== 'string')
-		return null;
+    if (typeof(element) !== 'object' ||
+        typeof(element['className']) !== 'string') return null;
 
-	var classNames = element['className'];
+    var classNames = element['className'];
 
-	return classNames.match(/\S+/g) || null;
+    return classNames.match(/\S+/g) || null;
 }
 
 /**
@@ -154,10 +172,11 @@ ome.ol3.utils.Misc.getClass = function(element) {
  * @param {string} className a class
  */
 ome.ol3.utils.Misc.setClass = function(element, className) {
-	if (typeof(element) !== 'object' || typeof(element['className']) !== 'string'
-	 			|| typeof(className) !== 'string')
-		return;
-	element['className'] = className;
+    if (typeof(element) !== 'object' ||
+        typeof(element['className']) !== 'string' ||
+        typeof(className) !== 'string') return;
+
+    element['className'] = className;
 }
 
 /**
@@ -169,12 +188,12 @@ ome.ol3.utils.Misc.setClass = function(element, className) {
  * @return {boolean} true if the element has the class on it, false otherwise
  */
 ome.ol3.utils.Misc.containsClass = function(element, className) {
-	if (typeof(className) !== 'string' || className.length === 0) return false;
+    if (typeof(className) !== 'string' || className.length === 0) return false;
 
-	var allClasses = ome.ol3.utils.Misc.getClass(element);
-	if (allClasses === null) return false;
+    var allClasses = ome.ol3.utils.Misc.getClass(element);
+    if (allClasses === null) return false;
 
-	return ol.array.includes(allClasses, className);
+    return ol.array.includes(allClasses, className);
 }
 
 /**
@@ -202,16 +221,16 @@ ome.ol3.utils.Misc.isArray = function(something) {
  * @return {string} the cookie's value
  */
 ome.ol3.utils.Misc.getCookie = function(name) {
-	if (typeof(name) != 'string')
-		return "";
+    if (typeof(name) != 'string') return "";
 
-		var all = document.cookie.split(';');
-		for(var i=0, ii = all.length;i<ii; i++) {
-				var cookie = all[i];
-				while (cookie.charAt(0)==' ') cookie = cookie.substring(1);
-				if (cookie.indexOf(name + '=') == 0) return cookie.substring(name.length+1,cookie.length);
-		}
-		return "";
+    var all = document.cookie.split(';');
+    for(var i=0, ii = all.length;i<ii; i++) {
+        var cookie = all[i];
+        while (cookie.charAt(0)==' ') cookie = cookie.substring(1);
+        if (cookie.indexOf(name + '=') == 0)
+            return cookie.substring(name.length+1,cookie.length);
+    }
+    return "";
 };
 
 /**

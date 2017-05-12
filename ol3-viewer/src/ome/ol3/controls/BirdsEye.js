@@ -1,3 +1,20 @@
+//
+// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 goog.provide('ome.ol3.controls.BirdsEye');
 
 goog.require('ol.control.OverviewMap');
@@ -174,9 +191,8 @@ ome.ol3.controls.BirdsEye.prototype.clickedIntoBox = function(coords) {
  * sort of destructor
  */
 ome.ol3.controls.BirdsEye.prototype.disposeInternal = function() {
-    if (typeof(this.onUpEvent) !== 'undefined' &&
-    			this.onUpEvent)
-    		ol.events.unlistenByKey(this.onUpEvent);
+    if (typeof(this.onUpEvent) !== 'undefined' && this.onUpEvent)
+        ol.events.unlistenByKey(this.onUpEvent);
 
     goog.base(this, 'disposeInternal');
     if (this.ovmap_) this.ovmap_.dispose();

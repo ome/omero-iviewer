@@ -1,3 +1,20 @@
+//
+// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 goog.provide('ome.ol3.geom.Ellipse');
 
 goog.require('ol.geom.Polygon');
@@ -37,81 +54,82 @@ goog.require('ol.geom.Polygon');
  */
 ome.ol3.geom.Ellipse = function(cx, cy, rx, ry, transform, theta, step) {
 
-	// preliminary checks: are all mandatory paramters numeric
+    // preliminary checks: are all mandatory paramters numeric
     if (typeof cx !== 'number' || typeof cy !== 'number' ||
             typeof rx !== 'number' || typeof ry !== 'number')
         console.error("at least one ellipse param is not numeric!");
 
-	/**
-	 * center x coordinate
-	 * @type {number}
-	 * @private
-	 */
-	this.cx_ = cx;
-
-	/**
-	 * center y coordinate
-	 * @type {number}
-	 * @private
-	 */
-	this.cy_ = cy;
-
-	/**
-	 * radius x distance
-	 * @type {number}
-	 * @private
-	 */
-	this.rx_ = rx;
-
-	/**
-	 * radius y distance
-	 * @type {number}
-	 * @private
-	 */
-	this.ry_ = ry;
+    /**
+     * center x coordinate
+     * @type {number}
+     * @private
+     */
+    this.cx_ = cx;
 
     /**
-	 * a 3x3 transformation matrix
-	 * @type {Array.<number>|null}
-	 * @private
-	 */
-	this.transform_ = null;
+     * center y coordinate
+     * @type {number}
+     * @private
+     */
+    this.cy_ = cy;
+
+    /**
+     * radius x distance
+     * @type {number}
+     * @private
+     */
+    this.rx_ = rx;
+
+    /**
+     * radius y distance
+     * @type {number}
+     * @private
+     */
+    this.ry_ = ry;
+
+    /**
+     * a 3x3 transformation matrix
+     * @type {Array.<number>|null}
+     * @private
+     */
+    this.transform_ = null;
     this.setTransform(transform);
 
-	// look at the optional params
-	var opt =
-		{ "theta" : (theta || 0),
-	 		"step" : step || 0.1};
-	for (var o in opt) {
-		if (typeof(opt[o]) === 'string') { // see if the string can be made a number
-			try {
-				opt[o] = parseInt(opt[o]);
-			} catch(oopsie) {}
-		}
-		if (typeof(opt[o]) !== 'number') { //final sanity checks, nonsense turns to default
-			if (o === 'theta') opt[o] = 0;
-			if (o === 'step') opt[o] = 0.1;
-			if (opt[o] < 0)
-                console.error("Optional Ellipse parameters cannot be negative numbers!");
-		}
-	}
+    // look at the optional params
+    var opt = { "theta" : (theta || 0), "step" : step || 0.1};
+    for (var o in opt) {
+        // see if the string can be made a number
+        if (typeof(opt[o]) === 'string') {
+            try {
+                opt[o] = parseInt(opt[o]);
+            } catch(oopsie) {}
+        }
+        //final sanity checks, nonsense turns to default
+        if (typeof(opt[o]) !== 'number') {
+            if (o === 'theta') opt[o] = 0;
+            if (o === 'step') opt[o] = 0.1;
+            if (opt[o] < 0)
+                console.error(
+                    "Optional Ellipse parameters cannot be negative numbers!");
+        }
+    }
 
-	/**
-	 * theta the angle of rotation
-	 * @type {number}
-	 * @private
-	 */
-	this.theta_ = opt['theta'];
+    /**
+     * theta the angle of rotation
+     * @type {number}
+     * @private
+     */
+    this.theta_ = opt['theta'];
 
-	/**
-	 * step the step size for plotting
-	 * @type {number}
-	 * @private
-	 */
-	this.step_ = opt['step'];
+    /**
+     * step the step size for plotting
+     * @type {number}
+     * @private
+     */
+    this.step_ = opt['step'];
 
     // call super and hand in our coordinate array
-	goog.base(this, [this.getPolygonCoords()]);
+    goog.base(this, [this.getPolygonCoords()]);
 }
 goog.inherits(ome.ol3.geom.Ellipse, ol.geom.Polygon);
 
@@ -279,7 +297,7 @@ ome.ol3.geom.Ellipse.prototype.getTransform = function(asObject) {
  * @return {Array.<number>} the center of the ellipse as an array
  */
 ome.ol3.geom.Ellipse.prototype.getCenter = function() {
-	  return [this.cx_,this.cy_] ;
+    return [this.cx_,this.cy_] ;
 }
 
 /**
@@ -288,11 +306,12 @@ ome.ol3.geom.Ellipse.prototype.getCenter = function() {
  * @param {Array.<number>} value the center of the ellipse as an array
  */
 ome.ol3.geom.Ellipse.prototype.setCenter = function(value) {
-	if (!ome.ol3.utils.Misc.isArray(value) ||
+    if (!ome.ol3.utils.Misc.isArray(value) ||
         typeof value[0] !== 'number' || typeof value[1] !== 'number')
-		      console.error("the center needs to be given as a numeric array [cx,cy]");
-	this.cx_ = value[0];
-	this.cy_ = value[1];
+            console.error(
+                "the center needs to be given as a numeric array [cx,cy]");
+    this.cx_ = value[0];
+    this.cy_ = value[1];
 }
 
 /**
@@ -300,7 +319,7 @@ ome.ol3.geom.Ellipse.prototype.setCenter = function(value) {
  * @return {Array.<number>} the radius of the ellipse as an array
  */
 ome.ol3.geom.Ellipse.prototype.getRadius = function() {
-	  return [this.rx_, this.ry_];
+    return [this.rx_, this.ry_];
 }
 
 /**
@@ -309,11 +328,11 @@ ome.ol3.geom.Ellipse.prototype.getRadius = function() {
  * @param {Array.<number>} value the radius of the ellipse as an array
  */
 ome.ol3.geom.Ellipse.prototype.setRadius = function(value) {
-	if (!ome.ol3.utils.Misc.isArray(value) ||
+    if (!ome.ol3.utils.Misc.isArray(value) ||
         typeof value[0] !== 'number' || typeof value[1] !== 'number')
             console.error("the radius needs to be given as a numeric array [cx,cy]");
-	this.rx_ = value[0];
-	this.ry_ = value[1];
+    this.rx_ = value[0];
+    this.ry_ = value[1];
 }
 
 /**
@@ -322,7 +341,7 @@ ome.ol3.geom.Ellipse.prototype.setRadius = function(value) {
  * @private
  */
 ome.ol3.geom.Ellipse.prototype.translate = function(deltaX, deltaY) {
-	// delegate
+    // delegate
     if (this.transform_) {
             this.transform_[4] += deltaX;
             this.transform_[5] -= deltaY;
@@ -339,7 +358,7 @@ ome.ol3.geom.Ellipse.prototype.translate = function(deltaX, deltaY) {
  * @private
  */
 ome.ol3.geom.Ellipse.prototype.scale = function(factor) {
-	// delegate
+    // delegate
     if (this.transform_) {
         this.transform_[0] *= factor;
         this.transform_[1] *= factor;
@@ -358,8 +377,7 @@ ome.ol3.geom.Ellipse.prototype.scale = function(factor) {
  * @return {ome.ol3.geom.Ellipse} Clone.
  */
 ome.ol3.geom.Ellipse.prototype.clone = function() {
-  return new ome.ol3.geom.Ellipse(
-		this.cx_, this.cy_, this.rx_, this.ry_,
-        this.getTransform(),
-        this.theta_, this.step_);
+    return new ome.ol3.geom.Ellipse(
+        this.cx_, this.cy_, this.rx_, this.ry_,
+        this.getTransform(), this.theta_, this.step_);
 };

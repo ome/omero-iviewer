@@ -1,3 +1,21 @@
+//
+// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+
 goog.require('ol.control.Attribution');
 goog.require('ol.control.Rotate');
 goog.require('ol.control.FullScreen');
@@ -50,13 +68,13 @@ ome.ol3.PREFIXED_URIS =
  * @type {Object}
  */
 ome.ol3.DIMENSION_LOOKUP = {
-	"x" : {"method" : "Width", "settable" : false},
-	"width" : {"method" : "Width", "settable" : false}, // alias
-	"y" : {"method" : "Height", "settable" : false},
-	"height" : {"method" : "Width", "settable" : false}, // alias
-	"z" : {"method" : "Plane", "settable" : true},
-	"t" : {"method" : "Time", "settable" : true},
-	"c" : {"method" : "Channels", "settable" : true}
+    "x" : {"method" : "Width", "settable" : false},
+    "width" : {"method" : "Width", "settable" : false}, // alias
+    "y" : {"method" : "Height", "settable" : false},
+    "height" : {"method" : "Width", "settable" : false}, // alias
+    "z" : {"method" : "Plane", "settable" : true},
+    "t" : {"method" : "Time", "settable" : true},
+    "c" : {"method" : "Channels", "settable" : true}
 };
 
 /**
@@ -80,30 +98,30 @@ ome.ol3.DIMENSION_LOOKUP = {
  * @type {Object}
  */
 ome.ol3.AVAILABLE_VIEWER_CONTROLS = {
-	"attribution" :
-	 	{"clazz" : ol.control.Attribution,
-		 "options": {},
-		 "defaults": true,
-		 "enabled": false,
-		 "links" : []},
-	"zoom" :
-		{"clazz" : ome.ol3.controls.Zoom,
-		 "options": {},
-	 	 "defaults": true,
-		 "enabled": true,
-	 	 "links" : []},
-	"rotate" :
-		{"clazz" : ol.control.Rotate,
-		"options": {autoHide: false},
-		"defaults": true,
-		"enabled": true,
-		"links" : ["shiftRotate"]},
-	"fullscreen" :
-		{"clazz" : ol.control.FullScreen,
-		"options": {},
-		"defaults": true,
-		"enabled": true,
-		"links" : []},
+    "attribution" :
+        {"clazz" : ol.control.Attribution,
+         "options": {},
+         "defaults": true,
+         "enabled": false,
+         "links" : []},
+    "zoom" :
+        {"clazz" : ome.ol3.controls.Zoom,
+         "options": {},
+         "defaults": true,
+         "enabled": true,
+         "links" : []},
+    "rotate" :
+        {"clazz" : ol.control.Rotate,
+         "options": {autoHide: false},
+         "defaults": true,
+         "enabled": true,
+         "links" : ["shiftRotate"]},
+    "fullscreen" :
+        {"clazz" : ol.control.FullScreen,
+         "options": {},
+         "defaults": true,
+         "enabled": true,
+         "links" : []},
     "birdseye" :
         {"clazz" : ome.ol3.controls.BirdsEye,
         "options": {collapsed : true, collapseLabel : "»", label: "«"},
@@ -144,41 +162,49 @@ ome.ol3.AVAILABLE_VIEWER_CONTROLS = {
  * @type {Object}
  */
 ome.ol3.AVAILABLE_VIEWER_INTERACTIONS = {
-	"dragPan" : {"clazz" : ol.interaction.DragPan,
-			"options": {"kinetic" : new ol.Kinetic(-0.005, 0.05, 100)},
-			"defaults": true, "enabled": true,
-			"links" : []},
-	"pinchZoom" : {"clazz" : ol.interaction.PinchZoom,
-			"options": {"zoomDuration" : null},
-			"defaults": true,
-			"enabled": true,
-			"links" : []},
-	"mouseWheelZoom" : {"clazz" : ol.interaction.MouseWheelZoom,
-			"options":
-			{"duration" : 0, "timeout": 0},
-			"defaults": true,
-			"enabled": true,
-			"links" : []},
-	"keyboardPan" : {"clazz" : ol.interaction.KeyboardPan, "options": {},
-		"defaults": true, "enabled": false, "links" : []},
-	"keyboardZoom" : {"clazz" : ol.interaction.KeyboardZoom,
-			"options": {"zoomDuration" : null, "zoomDelta": null},
-			"defaults": true, "enabled": false, "links" : []},
-	"shiftDragZoom" : {"clazz" : ol.interaction.DragZoom,
-		 	"options": {"zoomDuration" : null},
-			"defaults": true, "enabled": false, "links" : []},
-	"doubleClickZoom" : {"clazz" : ol.interaction.DoubleClickZoom,
-			"options": {"zoomDuration" : null, "zoomDelta": null},
-			 "defaults": true, "enabled": false, "links" : []},
-	"pinchRotate" : {"clazz" : ol.interaction.PinchRotate,
-			"options": {}, "defaults": true, "enabled": false,
-			"links" : ["rotate"]},
-	"shiftRotate" : {"clazz" : ome.ol3.interaction.Rotate,
-			"options": {},
-			"defaults": true, "enabled": true,
-			"links" : ["rotate"]},
-	"boxSelect" : {"clazz" : ome.ol3.interaction.BoxSelect,
-			"options": {}, "defaults": false, "enabled": false, "links" : []}
+    "dragPan" :
+        {"clazz" : ol.interaction.DragPan,
+         "options": {"kinetic" : new ol.Kinetic(-0.005, 0.05, 100)},
+         "defaults": true, "enabled": true,
+         "links" : []},
+    "pinchZoom" :
+        {"clazz" : ol.interaction.PinchZoom,
+         "options": {"zoomDuration" : null},
+         "defaults": true,
+         "enabled": true,
+         "links" : []},
+    "mouseWheelZoom" :
+        {"clazz" : ol.interaction.MouseWheelZoom,
+         "options": {"duration" : 0, "timeout": 0},
+         "defaults": true,
+         "enabled": true,
+         "links" : []},
+    "keyboardPan" :
+        {"clazz" : ol.interaction.KeyboardPan, "options": {},
+         "defaults": true, "enabled": false, "links" : []},
+         "keyboardZoom" : {"clazz" : ol.interaction.KeyboardZoom,
+         "options": {"zoomDuration" : null, "zoomDelta": null},
+         "defaults": true, "enabled": false, "links" : []},
+    "shiftDragZoom" :
+        {"clazz" : ol.interaction.DragZoom,
+         "options": {"zoomDuration" : null},
+         "defaults": true, "enabled": false, "links" : []},
+    "doubleClickZoom" :
+        {"clazz" : ol.interaction.DoubleClickZoom,
+         "options": {"zoomDuration" : null, "zoomDelta": null},
+         "defaults": true, "enabled": false, "links" : []},
+    "pinchRotate" :
+        {"clazz" : ol.interaction.PinchRotate,
+         "options": {}, "defaults": true, "enabled": false,
+         "links" : ["rotate"]},
+    "shiftRotate" :
+        {"clazz" : ome.ol3.interaction.Rotate,
+         "options": {},
+         "defaults": true, "enabled": true,
+         "links" : ["rotate"]},
+    "boxSelect" :
+        {"clazz" : ome.ol3.interaction.BoxSelect,
+         "options": {}, "defaults": false, "enabled": false, "links" : []}
 };
 
 /**
@@ -190,24 +216,25 @@ ome.ol3.AVAILABLE_VIEWER_INTERACTIONS = {
  * @returns {Object} the default controls
  */
 ome.ol3.defaultControls = function() {
-	var ret = {};
+    var ret = {};
     for (var K in ome.ol3.AVAILABLE_VIEWER_CONTROLS) {
         var V = ome.ol3.AVAILABLE_VIEWER_CONTROLS[K];
-		if (V['defaults'] && V['enabled']) {
-			try {
-				var Constructor = V['clazz'];
-				ret[K] =
-					{ "type": 'control',
-					 	"ref": new Constructor(V['options']),
-						"defaults" : V['defaults'] };
-			} catch(bad) {
-				// this could happen because the clazz does not point to a valid
-				// function definition, a ClassNotFound in a way ...
-				console.error("Failed to construct control: " + bad);
-			}
-		}
-	};
-	return ret;
+        if (V['defaults'] && V['enabled']) {
+            try {
+                var Constructor = V['clazz'];
+                ret[K] = {
+                    "type": 'control',
+                    "ref": new Constructor(V['options']),
+                    "defaults" : V['defaults']
+                };
+            } catch(bad) {
+                // this could happen because the clazz does not point to a valid
+                // function definition, a ClassNotFound in a way ...
+                console.error("Failed to construct control: " + bad);
+            }
+        }
+    };
+    return ret;
 };
 
 /**
@@ -219,24 +246,25 @@ ome.ol3.defaultControls = function() {
  * @returns {Object} the default interactions
  */
 ome.ol3.defaultInteractions = function() {
-	var ret = {};
+    var ret = {};
     for (var K in ome.ol3.AVAILABLE_VIEWER_INTERACTIONS) {
         var V = ome.ol3.AVAILABLE_VIEWER_INTERACTIONS[K];
-		if (V['defaults'] && V['enabled']) {
-			try {
-				var Constructor = V['clazz'];
-				ret[K] =
-					{ "type": 'interaction',
-					 	"ref": new Constructor(V['options']),
-					 	"defaults" : V["defaults"]};
-			} catch(bad) {
-				// this could happen because the clazz does not point to a valid
-				// function definition, a ClassNotFound in a way ...
-				console.error("Failed to construct interaction: " + bad);
-			}
-		}
+        if (V['defaults'] && V['enabled']) {
+            try {
+                var Constructor = V['clazz'];
+                ret[K] = {
+                    "type": 'interaction',
+                    "ref": new Constructor(V['options']),
+                    "defaults" : V["defaults"]
+                };
+            } catch(bad) {
+                // this could happen because the clazz does not point to a valid
+                // function definition, a ClassNotFound in a way ...
+                console.error("Failed to construct interaction: " + bad);
+            }
+        }
     };
-	return ret;
+    return ret;
 };
 
 /**
@@ -264,16 +292,16 @@ ome.ol3.REQUEST_PARAMS = {
  * @enum {number}
  */
 ome.ol3.REGIONS_STATE = {
-	/** the original state */
-	"DEFAULT" : 0,
-	/** the changed state */
-	"MODIFIED" : 1,
-	/** the new state */
-	"ADDED" : 2,
-	/** the deleted state */
-	"REMOVED" : 3,
+    /** the original state */
+    "DEFAULT" : 0,
+    /** the changed state */
+    "MODIFIED" : 1,
+    /** the new state */
+    "ADDED" : 2,
+    /** the deleted state */
+    "REMOVED" : 3,
     /** a state used for rollback */
-	"ROLLBACK" : 4
+    "ROLLBACK" : 4
 };
 
 /**
@@ -294,16 +322,16 @@ ome.ol3.REGIONS_STATE = {
  * @enum {number}
  */
 ome.ol3.REGIONS_MODE = {
-	/** the original state i.e. no interaction possible, only display */
-	"DEFAULT" : 0,
-	/** select interaction */
-	"SELECT" : 1,
-	/** translate interaction */
-	"TRANSLATE" : 2,
-	/** modify interaction */
-	"MODIFY" : 3,
-	/** draw interaction */
-	"DRAW" : 4
+    /** the original state i.e. no interaction possible, only display */
+    "DEFAULT" : 0,
+    /** select interaction */
+    "SELECT" : 1,
+    /** translate interaction */
+    "TRANSLATE" : 2,
+    /** modify interaction */
+    "MODIFY" : 3,
+    /** draw interaction */
+    "DRAW" : 4
 };
 
 /**
@@ -323,6 +351,6 @@ ome.ol3.RENDER_STATUS = {
 };
 
 goog.exportSymbol(
-	'ome.ol3.REGIONS_MODE',
-	ome.ol3.REGIONS_MODE,
-	OME);
+    'ome.ol3.REGIONS_MODE',
+    ome.ol3.REGIONS_MODE,
+    OME);

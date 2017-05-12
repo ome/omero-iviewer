@@ -1,3 +1,20 @@
+//
+// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 goog.provide('ome.ol3.geom.Line');
 
 goog.require('ol.geom.LineString');
@@ -20,25 +37,25 @@ ome.ol3.geom.Line = function(
         console.error("Line needs a minimum of 2 points!");
 
     /**
-	 * flag whether we have a start arrow
-	 *
-	 * @type {Array}
-	 * @private
-	 */
-	this.has_start_arrow_ =
+     * flag whether we have a start arrow
+     *
+     * @type {Array}
+     * @private
+     */
+     this.has_start_arrow_ =
         typeof draw_start_arrow === 'boolean' && draw_start_arrow;
 
     /**
-	 * flag whether we have an end arrow
-	 *
-	 * @type {Array}
-	 * @private
-	 */
-	this.has_end_arrow_ =
+     * flag whether we have an end arrow
+     *
+     * @type {Array}
+     * @private
+     */
+     this.has_end_arrow_ =
         typeof draw_end_arrow === 'boolean' && draw_end_arrow;
 
- 	// call super
-	goog.base(this, coordinates);
+    // call super
+    goog.base(this, coordinates);
 }
 goog.inherits(ome.ol3.geom.Line, ol.geom.LineString);
 
