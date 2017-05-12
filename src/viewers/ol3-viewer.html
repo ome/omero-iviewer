@@ -22,7 +22,9 @@
                 config_id.bind="config_id"
                 dim="t"
                 player_info.bind="player_info"
-                class="time-slider">
+                class="time-slider"
+                css="${image_config.image_info.image_exposure.length > 0 ?
+                       'right: 125px': ''}">
             </dimension-slider>
     </div>
 </template>

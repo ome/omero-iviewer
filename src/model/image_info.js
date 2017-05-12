@@ -94,9 +94,10 @@ export default class ImageInfo {
 
     /**
      * the delta t
+     * @type {Array.<number>}
      * @memberof ImageInfo
      */
-    image_exposure = null;
+    image_exposure = [];
 
     /**
      * a flag for whether we are allowed to save the settings

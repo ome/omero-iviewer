@@ -286,10 +286,15 @@ a.ui-button:active,
 .time-slider .dim-size {
     right: -55px;
     color: #999;
+    width: 30px;
 }
 .plane-slider .dim-size {
     top: -45px;
     color: #999;
+}
+
+.time-slider .timestamp {
+    right: -125px;
 }
 
 /* Make the Z/T sliders look thin,
