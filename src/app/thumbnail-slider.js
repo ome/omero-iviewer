@@ -57,7 +57,7 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @memberof ThumbnailSlider
      * @type {Array.<Object>}
      */
-    thumbnail_length = 80;
+    thumbnail_length = 96;
 
     /**
      * the number of thumnails we request in one go
