@@ -45,7 +45,7 @@ export class ImageModelValueConverter {
 import Misc from './misc';
 
 /*
- * Methods for color conversion
+ * Methods for data conversion
  */
 @noView
 export class Converters {
@@ -58,7 +58,7 @@ export class Converters {
     * @return {number} the color encoded as signed integer or null (if error)
     */
    static rgbaToSignedInteger(rgba) {
-       if (typeof rgba !== 'string' || rgba.length === 0) return null;
+      if (typeof rgba !== 'string' || rgba.length === 0) return null;
 
       let strippedRgba = rgba.replace(/\(rgba|\(|rgba|rgb|\)/g, "");
       let tokens = strippedRgba.split(",");
@@ -88,21 +88,21 @@ export class Converters {
     * @return {string} the color in rgba notation
     */
     static signedIntegerToRgba(signed_integer) {
-        if (typeof signed_integer !== 'number') return null;
+      if (typeof signed_integer !== 'number') return null;
 
-        // prepare integer to be converted to hex for easier dissection
-        if (signed_integer < 0) signed_integer = signed_integer >>> 0;
-        let intAsHex = signed_integer.toString(16);
-        // pad with zeros to have 8 digits
-        intAsHex = ("00000000" + intAsHex).slice(-8);
+      // prepare integer to be converted to hex for easier dissection
+      if (signed_integer < 0) signed_integer = signed_integer >>> 0;
+      let intAsHex = signed_integer.toString(16);
+      // pad with zeros to have 8 digits
+      intAsHex = ("00000000" + intAsHex).slice(-8);
 
-        // we expect RGBA
-        let rgba = "rgba(";
-        for (let i=0;i<intAsHex.length-2;i+=2)
-            rgba += parseInt(intAsHex.substr(i, 2),16) + ",";
-        rgba += parseInt(intAsHex.substring(6,8), 16) / 255;
+      // we expect RGBA
+      let rgba = "rgba(";
+      for (let i=0;i<intAsHex.length-2;i+=2)
+        rgba += parseInt(intAsHex.substr(i, 2),16) + ",";
+      rgba += parseInt(intAsHex.substring(6,8), 16) / 255;
 
-        return rgba + ")";
+      return rgba + ")";
     }
 
     /**
@@ -112,24 +112,24 @@ export class Converters {
      * @param {string} id the id in the format roi_id:shape_id, e.g. 2:4
      * @return {Object} an object containing the properties roi_id and shape_id
      */
-     static extractRoiAndShapeId(id) {
-        let ret = {
-            roi_id: null,
-            shape_id: null
-        };
-        if (typeof id !== 'string' || id.length < 3) return ret;
+    static extractRoiAndShapeId(id) {
+      let ret = {
+        roi_id: null,
+        shape_id: null
+      };
+      if (typeof id !== 'string' || id.length < 3) return ret;
 
-        // dissect roi:shape id
-        let colon = id.indexOf(':');
-        if (colon < 1) return ret;
+      // dissect roi:shape id
+      let colon = id.indexOf(':');
+      if (colon < 1) return ret;
 
-        // check for numeric
-        let roi_id = parseInt(id.substring(0, colon));
-        if (!isNaN(roi_id)) ret.roi_id = roi_id;
-        let shape_id = parseInt(id.substring(colon+1));
-        if (!isNaN(shape_id)) ret.shape_id = shape_id;
+      // check for numeric
+      let roi_id = parseInt(id.substring(0, colon));
+      if (!isNaN(roi_id)) ret.roi_id = roi_id;
+      let shape_id = parseInt(id.substring(colon+1));
+      if (!isNaN(shape_id)) ret.shape_id = shape_id;
 
-        return ret;
+      return ret;
     }
 
     /**
@@ -142,37 +142,37 @@ export class Converters {
      * @param {object} shape a shape definition in omero marshal json
      * @return {object} an amended shape definition
      */
-     static amendShapeDefinition(shape) {
-         if (typeof shape !== 'object' || shape === null ||
-                typeof shape['@type'] !== 'string') return null;
+    static amendShapeDefinition(shape) {
+      if (typeof shape !== 'object' || shape === null ||
+          typeof shape['@type'] !== 'string') return null;
 
-        // add pure type without schema info
-        let typePos = shape['@type'].lastIndexOf("#");
-        if (typePos === -1) return; // we really need this info
-        let type = shape['@type'].substring(typePos + 1).toLowerCase();
-        shape.type = type;
+      // add pure type without schema info
+      let typePos = shape['@type'].lastIndexOf("#");
+      if (typePos === -1) return; // we really need this info
+      let type = shape['@type'].substring(typePos + 1).toLowerCase();
+      shape.type = type;
 
-        // use permissions
-        if (typeof shape['omero:details'] === 'object' &&
-            shape['omero:details'] !== null &&
-            typeof shape['omero:details']['permissions'] === 'object' &&
-            shape['omero:details']['permissions'] !== null) {
-                shape.permissions = shape['omero:details']['permissions'];
-                delete shape['omero:details'];
-        }
+      // use permissions
+      if (typeof shape['omero:details'] === 'object' &&
+          shape['omero:details'] !== null &&
+          typeof shape['omero:details']['permissions'] === 'object' &&
+          shape['omero:details']['permissions'] !== null) {
+              shape.permissions = shape['omero:details']['permissions'];
+              delete shape['omero:details'];
+      }
 
-        // if there is an oldId (after storage), set ids from it
-        let ids = Converters.extractRoiAndShapeId(shape.oldId);
-        if (ids.shape_id !== null) {
-            shape.shape_id = shape.oldId;
-            shape['@id'] = ids.shape_id;
-        }
+      // if there is an oldId (after storage), set ids from it
+      let ids = Converters.extractRoiAndShapeId(shape.oldId);
+      if (ids.shape_id !== null) {
+        shape.shape_id = shape.oldId;
+        shape['@id'] = ids.shape_id;
+      }
 
-        // unattached dimensions will be treated as -1 internally
-        ['TheZ', 'TheT', 'TheC'].map((d) => {
-            if (typeof shape[d] !== 'number') shape[d] = -1;
-        });
+      // unattached dimensions will be treated as -1 internally
+      ['TheZ', 'TheT', 'TheC'].map((d) => {
+        if (typeof shape[d] !== 'number') shape[d] = -1;
+      });
 
-        return shape;
-     }
+      return shape;
+    }
 }
