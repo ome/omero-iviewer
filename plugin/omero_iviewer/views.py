@@ -251,8 +251,6 @@ def image_data(request, image_id, conn=None, **kwargs):
     size_t = image.getSizeT()
     time_list = []
     delta_t_unit_symbol = None
-    exposure_list = []
-    exposure_unit_symbol = None
     if size_t > 1:
         params = omero.sys.ParametersI()
         params.addLong('pid', image.getPixelsId())
@@ -263,27 +261,19 @@ def image_data(request, image_id, conn=None, **kwargs):
         info_list = conn.getQueryService().findAllByQuery(
             query, params, conn.SERVICE_OPTS)
         timemap = {}
-        exposuremap = {}
         for info in info_list:
             t_index = info.theT.getValue()
             if info.deltaT is not None:
                 value = format_value_with_units(info.deltaT)
-                timemap[t_index] = value[0]
+                timemap[t_index] = round(value[0])
                 if delta_t_unit_symbol is None:
                     delta_t_unit_symbol = value[1]
-                v = format_value_with_units(info.exposureTime)
-                exposuremap[t_index] = v[0]
-                if exposure_unit_symbol is None:
-                    exposure_unit_symbol = v[1]
         for t in range(image.getSizeT()):
             if t in timemap:
                 time_list.append(timemap[t])
-                exposure_list.append(exposuremap[t])
 
     rv['delta_t'] = time_list
     rv['delta_t_unit_symbol'] = delta_t_unit_symbol
-    rv['exposure_time'] = exposure_list
-    rv['exposure_time_unit_symbol'] = exposure_unit_symbol
 
     return JsonResponse(rv)
 
@@ -299,9 +289,18 @@ def format_value_with_units(value):
             return (None, "")
         length = value.getValue()
         unit = value.getUnit()
-        if unit == "MICROMETER" or unit == "s":
+        if unit == "MICROMETER":
             unit = lengthunit(length)
             length = lengthformat(length)
+        elif unit == "MILLISECOND":
+            length = length/1000.0
+            unit = value.getSymbol()
+        elif unit == "MINUTE":
+            length = 60*length
+            unit = value.getSymbol()
+        elif unit == "HOUR":
+            length = 3600*length
+            unit = value.getSymbol()
         else:
             unit = value.getSymbol()
         return (length, unit)
