@@ -26,20 +26,20 @@
             <div id="reg-col-5" class="regions-table-col shape-show">
                 <label for="shapes_visibility_toggler"
                        show.bind="regions_info.data.size > 0">Show</label>
-                <input id="shapes_visibility_toggler"
+                <input id="shapes_visibility_toggler" type="checkbox"
                        title="Show/Hide all rois"
                        checked
                        show.bind="regions_info.number_of_shapes > 0"
                        change.delegate="toggleAllShapesVisibility($event)"
-                       type="checkbox" />
+                       />
             </div>
         </div>
         <div class="regions-table">
             <template repeat.for="[roi_id, roi] of regions_info.data">
-                <template repeat.for="[shape_id, shape] of roi.shapes">
-                    <div if.bind="(roi.shapes.size - roi.deleted) > 1 &&
-                                   roi.shapes.size > 1 && $first"
-                        title="ROI: ${roi_id} - Shape: ${shape_id}"
+                <template repeat.for="shape of roi.shapes">
+                    <div if.bind="(roi.shapes.length - roi.deleted) > 1 &&
+                                   roi.shapes.length > 1 && $first"
+                        title="ROI: ${roi_id} - Shape: ${shape.id}"
                         class="regions-table-row"
                         click.delegate="selectShapes(roi_id, $event)">
                         <div class="regions-table-col roi-toggle">
@@ -50,7 +50,7 @@
                              </div>
                          </div>
                          <div class="regions-table-col shape-type">
-                             (${(roi.shapes.size - roi.deleted)})
+                             (${(roi.shapes.length - roi.deleted)})
                          </div>
                         <div class="regions-table-col shape-z"></div>
                         <div class="regions-table-col shape-t"></div>
@@ -58,14 +58,14 @@
                         <div class="regions-table-col shape-show"></div>
                     </div>
                     <div if.bind="!(shape.deleted && shape.is_new) &&
-                                   !(roi.shapes.size > 1 && !roi.show)"
-                        title="ROI: ${roi_id} - Shape: ${shape_id}"
-                        id="${'roi-' + shape.shape_id}"
+                                   !(roi.shapes.length > 1 && !roi.show)"
+                        title="ROI: ${roi_id} - Shape: ${shape.id}"
+                        id="${'roi-' + shape.id}"
                         class="regions-table-row"
                         css="${shape.selected ? 'background-color: #d0d0ff;' : ''}
                              ${shape.deleted ? 'color: red;' :
                                 (shape.modified ? 'color: blue;' : '')}"
-                        click.delegate="selectShape(shape.shape_id, shape.selected, $event)">
+                        click.delegate="selectShape(shape.id, shape.selected, $event)">
                         <div class="regions-table-col roi-toggle"></div>
                         <div class="regions-table-col shape-type ${shape.type.toLowerCase()}-icon"></div>
                         <div class="regions-table-col shape-z">
@@ -81,7 +81,7 @@
                             <input type="checkbox"
                                 title="Show/Hide shape" checked.one-way="shape.visible"
                                 value.one-way="shape.visible"
-                                change.delegate="toggleShapeVisibility(shape.shape_id, $event)"/>
+                                change.delegate="toggleShapeVisibility(shape.id, $event)"/>
                         </div>
                     </div>
                 </template>
