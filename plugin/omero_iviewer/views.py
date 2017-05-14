@@ -263,7 +263,6 @@ def image_data(request, image_id, conn=None, **kwargs):
         info_list = conn.getQueryService().findAllByQuery(
             query, params, conn.SERVICE_OPTS)
         timemap = {}
-        exposuremap = {}
         for info in info_list:
             t_index = info.theT.getValue()
             if info.deltaT is not None:
@@ -271,19 +270,12 @@ def image_data(request, image_id, conn=None, **kwargs):
                 timemap[t_index] = value[0]
                 if delta_t_unit_symbol is None:
                     delta_t_unit_symbol = value[1]
-                v = format_value_with_units(info.exposureTime)
-                exposuremap[t_index] = v[0]
-                if exposure_unit_symbol is None:
-                    exposure_unit_symbol = v[1]
         for t in range(image.getSizeT()):
             if t in timemap:
                 time_list.append(timemap[t])
-                exposure_list.append(exposuremap[t])
 
     rv['delta_t'] = time_list
     rv['delta_t_unit_symbol'] = delta_t_unit_symbol
-    rv['exposure_time'] = exposure_list
-    rv['exposure_time_unit_symbol'] = exposure_unit_symbol
 
     return JsonResponse(rv)
 
@@ -299,7 +291,7 @@ def format_value_with_units(value):
             return (None, "")
         length = value.getValue()
         unit = value.getUnit()
-        if unit == "MICROMETER" or unit == "s":
+        if unit == "MICROMETER":
             unit = lengthunit(length)
             length = lengthformat(length)
         else:
