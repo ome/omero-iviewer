@@ -24,7 +24,7 @@ from django.core.urlresolvers import reverse
 from omeroweb.decorators import login_required
 from omeroweb.webgateway.marshal import imageMarshal
 from omeroweb.webgateway.templatetags.common_filters import lengthformat,\
-    lengthunit, timeformat
+    lengthunit
 
 import json
 import omero_marshal
@@ -265,7 +265,7 @@ def image_data(request, image_id, conn=None, **kwargs):
             t_index = info.theT.getValue()
             if info.deltaT is not None:
                 value = format_value_with_units(info.deltaT)
-                timemap[t_index] = value[0]
+                timemap[t_index] = round(value[0])
                 if delta_t_unit_symbol is None:
                     delta_t_unit_symbol = value[1]
         for t in range(image.getSizeT()):
@@ -292,14 +292,15 @@ def format_value_with_units(value):
         if unit == "MICROMETER":
             unit = lengthunit(length)
             length = lengthformat(length)
-        elif unit == "s":
-            length = timeformat(length)
-        elif unit == "ms":
-            length = timeformat(length/1000.0)
-        elif unit == "min":
-            length = timeformat(60*length)
-        elif unit == "h":
-            length = timeformat(3600*length)
+        elif unit == "MILLISECOND":
+            length = length/1000.0
+            unit = value.getSymbol()
+        elif unit == "MINUTE":
+            length = 60*length
+            unit = value.getSymbol()
+        elif unit == "HOUR":
+            length = 3600*length
+            unit = value.getSymbol()
         else:
             unit = value.getSymbol()
         return (length, unit)
