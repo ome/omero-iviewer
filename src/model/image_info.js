@@ -100,7 +100,7 @@ export default class ImageInfo {
     image_delta_t = [];
 
     /**
-     * the delta t unit. default is seconds 
+     * the delta t unit. default is seconds
      * @type {string}
      * @memberof ImageInfo
      */
@@ -265,7 +265,54 @@ export default class ImageInfo {
      * @memberof ImageInfo
      */
     initializeImageInfo(response) {
-        // we might have some requested defaults
+        // integrate initial settings with respone values
+        this.integrateInitialSettings(response);
+
+        // assign rest of response to class members
+        this.range = response.pixel_range;
+        this.image_pixels_size = response.pixel_size;
+        this.can_annotate = response.perms.canAnnotate;
+        if (typeof response.meta.imageAuthor === 'string')
+            this.author = response.meta.imageAuthor;
+        if (typeof response.meta.imageName === 'string')
+            this.image_name = response.meta.imageName;
+        if (typeof response.meta.pixelsType === 'string')
+            this.image_pixels_type = response.meta.pixelsType;
+        this.image_timestamp = response.meta.imageTimestamp;
+        response.delta_t.map((t) => {
+            let deltaTformatted = "";
+            let hours = parseInt(t / (60 * 60));
+            if (hours > 0) {
+                deltaTformatted += hours + "hr ";
+                t -= (hours * 60 * 60);
+            }
+            let mins =  parseInt(t / 60);
+            if (mins > 0) {
+                deltaTformatted += mins + "min ";
+                t -= (mins * 60);
+            }
+            let secs = parseInt(t);
+            if (secs > 0) deltaTformatted += secs + "s ";
+            let millis = parseInt((t - secs) * 1000);
+            if (millis > 0) deltaTformatted += millis + "ms ";
+            this.image_delta_t.push(deltaTformatted.slice(0, -1));
+        });
+        this.image_delta_t_unit = response.delta_t_unit_symbol;
+        this.sanityCheckInitialValues();
+
+        // signal that we are ready and
+        // send out an image config update event
+        this.ready = true;
+    }
+
+    /**
+     * Uses inital/handed in settings to override response values
+     *
+     * @private
+     * @param {Object} response the response object
+     * @memberof ImageInfo
+     */
+    integrateInitialSettings(response) {
         let initialDatasetId =
             parseInt(
                 this.context.getInitialRequestParam(REQUEST_PARAMS.DATASET_ID));
@@ -287,12 +334,11 @@ export default class ImageInfo {
         initialChannels =
             Misc.parseChannelParameters(initialChannels, initialMaps);
 
-        // store channels, pixel_range and dimensions
+        // store channels and dimensions
         if (typeof response.tiles === 'boolean') this.tiled = response.tiles;
         this.channels =
             this.initAndMixChannelsWithInitialSettings(
                 response.channels, initialChannels);
-        this.range = response.pixel_range;
         this.dimensions = {
             t: initialTime !== null ?
                 (parseInt(initialTime)-1) : response.rdefs.defaultT,
@@ -308,23 +354,6 @@ export default class ImageInfo {
                 initialProjection.toLowerCase() : response.rdefs.projection;
         this.model = initialModel !== null ?
             initialModel.toLowerCase() : response.rdefs.model;
-
-        // set can annotate and author information
-        this.can_annotate = response.perms.canAnnotate;
-        if (typeof response.meta.imageAuthor === 'string')
-            this.author = response.meta.imageAuthor;
-        if (typeof response.meta.imageName === 'string')
-            this.image_name = response.meta.imageName;
-        if (typeof response.meta.pixelsType === 'string')
-            this.image_pixels_type = response.meta.pixelsType;
-        this.image_timestamp = response.meta.imageTimestamp;
-        this.image_pixels_size = response.pixel_size;
-        this.image_delta_t = response.delta_t;
-        this.image_delta_t_unit = response.delta_t_unit_symbol;
-        this.sanityCheckInitialValues();
-        // signal that we are ready and
-        // send out an image config update event
-        this.ready = true;
     }
 
     /**
