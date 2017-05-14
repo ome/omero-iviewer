@@ -37,11 +37,11 @@
         <span class='dim-size'>
             ${image_config.image_info.dimensions['max_' + dim]}
         </span>
-        <span show.bind="image_config.image_info.image_exposure.length > 0"
+        <span show.bind="image_config.image_info.image_delta_t.length > 0"
               class="timestamp">
             ${image_config.image_info.dimensions[dim] &lt;
-                image_config.image_info.image_exposure.length ?
-                    image_config.image_info.image_exposure[
+                image_config.image_info.image_delta_t.length ?
+                    image_config.image_info.image_delta_t[
                         image_config.image_info.dimensions[dim]] : '&nbsp;'}
         </span>
     </template>
