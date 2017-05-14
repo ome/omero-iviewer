@@ -210,7 +210,7 @@ def request_rois(request, iid, conn=None, **kwargs):
                 if encoded_shape is None:
                     return JsonResponse({"error": "Failed to encode roi!"})
                 rois_to_be_returned['shapes'].append(encoded_shape)
-                ret.append(rois_to_be_returned)
+            ret.append(rois_to_be_returned)
 
         return JsonResponse(ret, safe=False)
     except Exception as someException:
