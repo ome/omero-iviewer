@@ -279,7 +279,9 @@ export default class ImageInfo {
         if (typeof response.meta.pixelsType === 'string')
             this.image_pixels_type = response.meta.pixelsType;
         this.image_timestamp = response.meta.imageTimestamp;
+        let deltaTisAllZeros = true;
         response.delta_t.map((t) => {
+            if (t !== 0) deltaTisAllZeros = false;
             let deltaTformatted = "";
             let hours = parseInt(t / (60 * 60));
             deltaTformatted += ("00" + hours).slice(-2) + ":";
@@ -293,6 +295,7 @@ export default class ImageInfo {
             deltaTformatted += ("" + millis).slice(0,3);
             this.image_delta_t.push(deltaTformatted);
         });
+        if (deltaTisAllZeros) this.image_delta_t = [];
         this.image_delta_t_unit = response.delta_t_unit_symbol;
         this.sanityCheckInitialValues();
 
