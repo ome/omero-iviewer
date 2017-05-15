@@ -1571,10 +1571,10 @@ ome.ol3.Viewer.prototype.getSmallestViewExtent = function() {
   }
 
 /**
- * Persists modified/added shapes
+ * Persists modified/added/deleted shapes
  * see: {@link ome.ol3.source.Regions.storeRegions}
  *
- * @param {boolean} selectedOnly if true only selected regions are considered
+ * @param {Array.<string>} selected an array of selected ids (of the form: roi_id:shape_id)
  * @param {boolean} useSeparateRoiForEachNewShape if false all new shapes are combined within one roi
  * @param {string} uri a server uri to post to for persistance
  * @param {boolean} omit_client_update an optional flag that's handed back to the client
@@ -1582,32 +1582,58 @@ ome.ol3.Viewer.prototype.getSmallestViewExtent = function() {
  * @return {boolean} true if a storage request was made, false otherwise
  */
 ome.ol3.Viewer.prototype.storeRegions =
-    function(selectedOnly,useSeparateRoiForEachNewShape, uri, omit_client_update) {
+    function(selected, useSeparateRoiForEachNewShape, uri, omit_client_update) {
 
         if (!(this.regions_ instanceof ome.ol3.source.Regions))
             return false; // no regions, nothing to persist...
 
-        selectedOnly =
-            typeof(selectedOnly) === 'boolean' ? selectedOnly : false;
+        omit_client_update =
+            typeof omit_client_update === 'boolean' && omit_client_update;
+        selected = ome.ol3.utils.Misc.isArray(selected) ? selected : [];
         useSeparateRoiForEachNewShape =
             typeof(useSeparateRoiForEachNewShape) === 'boolean' ?
                 useSeparateRoiForEachNewShape : true;
         if (typeof uri !== 'string' || uri.length === 0) uri = '/persist_rois';
 
+        var len = selected.length;
         var collectionOfFeatures =
-            (selectedOnly &&
-             this.regions_.select_) ? this.regions_.select_.getFeatures() :
-                new ol.Collection(this.regions_.getFeatures());
+            new ol.Collection(len > 0 ? selected : this.regions_.getFeatures());
+        for (var i=0;i<len;i++) {
+            var id = selected[i];
+            if (typeof this.regions_.idIndex_[id] === 'object')
+                collectionOfFeatures.push(this.regions_.idIndex_[id]);
+        };
 
         var roisAsJsonObject =
         ome.ol3.utils.Conversion.toJsonObject(
             collectionOfFeatures, useSeparateRoiForEachNewShape);
-
-        // either something happened or we don't have anything to persist
-        if (roisAsJsonObject === null || roisAsJsonObject['count'] === 0)
+        // check if we have nothing to persist, i.e. to send to the back-end
+        if (roisAsJsonObject['count'] === 0) {
+            // we may still want to clean up new but deleted shapes
+            if (!omit_client_update &&
+                roisAsJsonObject['new_and_deleted'].length > 0) {
+                    var ids = {};
+                    for (var i in roisAsJsonObject['new_and_deleted']) {
+                        var id = roisAsJsonObject['new_and_deleted'][i];
+                        if (typeof this.regions_.idIndex_[id] === 'object') {
+                            this.regions_.removeFeature(
+                                this.regions_.idIndex_[id]);
+                            ids[id] = id;
+                        }
+                    }
+                    if (this.eventbus_) {
+                        this.eventbus_.publish(
+                            "REGIONS_STORED_SHAPES", {
+                                'config_id': this.getTargetId(),
+                                'shapes': ids
+                            });
+                    }
+            }
             return false;
+        }
 
-        return this.regions_.storeRegions(roisAsJsonObject, uri, omit_client_update);
+        return this.regions_.storeRegions(
+                    roisAsJsonObject, uri, omit_client_update);
 }
 
 /**

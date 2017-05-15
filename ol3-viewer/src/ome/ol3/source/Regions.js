@@ -594,7 +594,17 @@ ome.ol3.source.Regions.prototype.storeRegions =
                             f.setId(data['ids'][id]);
                         }
                     }
+                    // tag on the newly but immediately deleted shapes
+                    for (var i in roisAsJsonObject['new_and_deleted']) {
+                        var id = roisAsJsonObject['new_and_deleted'][i];
+                        if (typeof capturedRegionsReference.idIndex_[id] === 'object') {
+                            capturedRegionsReference.removeFeature(
+                                capturedRegionsReference.idIndex_[id]);
+                                data['ids'][id] = id;
+                            }
+                    };
                 }
+
                 if (typeof data['error'] === 'string') error = data['error'];
             } catch(err) {
                 error = err;

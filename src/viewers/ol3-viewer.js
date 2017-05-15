@@ -587,15 +587,12 @@ export default class Ol3Viewer extends EventSubscriber {
         // the event doesn't concern us
         if (params.config_id !== this.config_id) return;
 
-        // should we only persist the selected ones
-        let selectedOnly =
-            typeof params.selected === 'boolean' && params.selected;
-
         let requestMade =
             this.viewer.storeRegions(
-                selectedOnly, false,
+                Misc.isArray(params.selected) ? params.selected : [], false,
                 this.context.getPrefixedURI(IVIEWER) + '/persist_rois',
                 params.omit_client_update);
+                
         if (requestMade) Ui.showModalMessage("Saving Regions. Please wait...");
         else if (params.omit_client_update)
             this.context.eventbus.publish(

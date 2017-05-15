@@ -165,14 +165,17 @@ export default class RegionsHistory {
 
     /**
      * Undoes the last action
+     * @param {boolean} remove delete history entry after action (default: false)
      * @memberof History
      */
-    undoHistory() {
+    undoHistory(remove=false) {
         if (!this.canUndo()) return;
 
         let entry = this.history[this.historyPointer];
         // converge
         this.doHistory(entry, true);
+        if (typeof remove === 'boolean' && remove)
+            this.history.splice(this.historyPointer, 1);
         //adjust pointer
         this.historyPointer--;
     }

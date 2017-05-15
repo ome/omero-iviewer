@@ -412,7 +412,7 @@ export default class ThumbnailSlider extends EventSubscriber {
                     });
                 this.context.publish(
                     REGIONS_STORE_SHAPES,
-                    {config_id : conf.id, selected: false, omit_client_update: true});
+                    {config_id : conf.id, omit_client_update: true});
             };
 
             UI.showConfirmationDialog(

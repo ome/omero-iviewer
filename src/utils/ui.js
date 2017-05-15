@@ -256,23 +256,30 @@ export default class Ui {
      * @param {string} content goes into the body of the dialog
      * @param {function} yes a handler that's executed on clicking yes
      * @param {function} no an optional handler that's executed on clicking no
+     * @param {boolean} can_close if true we allow closing by esc key and X click
      * @static
      */
-     static showConfirmationDialog(title='', content='', yes = null, no = null) {
+     static showConfirmationDialog(
+         title='', content='', yes = null, no = null, can_close = true) {
          if (typeof title !== 'string') title = 'Confirmation';
          if (typeof content !== 'string') content = '';
          if (typeof yes !== 'function') yes = null;
          if (typeof no !== 'function') no = null;
+         if (typeof can_close !== 'boolean') can_close = true;
 
          let dialog = $('.confirmation-dialog');
          if (dialog.length === 0) return;
+
+         if (can_close) dialog.find('.modal-header .close').show();
+         else dialog.find('.modal-header .close').hide();
+
          dialog.find('.modal-title').html(title);
          dialog.find('.modal-body').html(content);
 
          // set up handlers and reset routine on close
-         dialog.on('hidden.bs.modal', () => Ui.resetConfirmationDialog());
          let handlers = [".yes", ".no"];
          handlers.map((h) => {
+             dialog.find(h).off();
              dialog.find(h).on('click', () => {
                  if (h === '.yes' && yes) yes();
                  if (h === '.no' && no) no();
@@ -282,23 +289,6 @@ export default class Ui {
 
          dialog.modal();
      }
-
-     /**
-      * Resets the bootstrap modal confirmation dialog
-      *
-      * @static
-      */
-      static resetConfirmationDialog() {
-          let dialog = $('.confirmation_dialog');
-          if (dialog.length === 0) return;
-
-          dialog.find('.modal-title').html("Confirmation");
-          dialog.find('.modal-body').html("");
-
-          dialog.find('.yes').off();
-          dialog.find('.no').off();
-          dialog.off('hidden.bs.modal');
-      }
 
       /**
        * Scrolls the regions table to the row with the given id
