@@ -20,6 +20,7 @@
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import Histogram from './histogram';
+import Ui from '../utils/ui';
 import {CHANNEL_SETTINGS_MODE, WEBGATEWAY} from '../utils/constants';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 
@@ -272,8 +273,14 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     saveImageSettingsToAll() {
-        // we only delegate
-        this.copy(true);
+        // we delegate (after confirming choice)
+        let desc = "Do you want to apply the settings to all images ";
+        if (typeof this.image_config.image_info.dataset_id === 'number')
+            desc += "in dataset " + this.image_config.image_info.dataset_id;
+        else desc += "in the dataset?"
+
+        Ui.showConfirmationDialog(
+            "Save Image Settings", desc, () => this.copy(true))
     }
 
     /**
