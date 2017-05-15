@@ -280,6 +280,16 @@ export default class RegionsInfo extends EventSubscriber {
 
                         // set shape properties and store the object
                         let roiId = roi['@id'];
+                        roi.shapes.sort(function(s1, s2) {
+                            var z1 = parseInt(s1['TheZ']);
+                            var z2 = parseInt(s2['TheZ']);
+                            var t1 = parseInt(s1['TheT']);
+                            var t2 = parseInt(s2['TheT']);
+                            if (z1 === z2) {
+                                return (t1 < t2) ? -1 : (t1 > t2) ? 1: 0;
+                            }
+                            return (z1 < z2) ? -1: 1;
+                        }); 
                         roi.shapes.map((shape) => {
                             let newShape =
                             Converters.amendShapeDefinition(
