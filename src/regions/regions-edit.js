@@ -553,6 +553,9 @@ export default class RegionsEdit extends EventSubscriber {
                     if (hasMoreThanOneEntry && (!showDisabled ||
                         (this.regions_info.image_info.can_annotate &&
                          this.last_selected === null))) {
+                            respectiveAttachementLock.attr(
+                                'title', 'Lock shape(s) to ' +
+                                         d.toUpperCase() + '-index');
                             respectiveAttachementLock.removeClass("disabled-color");
                             if (!unattached)
                                 respectiveDimensionInput.prop("disabled", false);
