@@ -71,13 +71,6 @@ export default class ThumbnailSlider extends EventSubscriber {
     thumbnails = [];
 
     /**
-     * the default thumbnail length
-     * @memberof ThumbnailSlider
-     * @type {Array.<Object>}
-     */
-    thumbnail_length = 80;
-
-    /**
      * the number of thumnails we request in one go
      * @memberof ThumbnailSlider
      * @type {number}
@@ -339,7 +332,7 @@ export default class ThumbnailSlider extends EventSubscriber {
             let id = item['@id'];
             let entry = {
                 id: id,
-                url: thumbPrefix + id + "/" + this.thumbnail_length + "/",
+                url: thumbPrefix + id + "/",
                 title: typeof item.Name === 'string' ? item.Name : id,
                 revision : 0
             }
