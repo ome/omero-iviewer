@@ -282,20 +282,16 @@ export default class ImageInfo {
         response.delta_t.map((t) => {
             let deltaTformatted = "";
             let hours = parseInt(t / (60 * 60));
-            if (hours > 0) {
-                deltaTformatted += hours + "hr ";
-                t -= (hours * 60 * 60);
-            }
+            deltaTformatted += ("00" + hours).slice(-2) + ":";
+            t -= (hours * 60 * 60);
             let mins =  parseInt(t / 60);
-            if (mins > 0) {
-                deltaTformatted += mins + "min ";
-                t -= (mins * 60);
-            }
+            deltaTformatted += ("00" + mins).slice(-2) + ":";
+            t -= (mins * 60);
             let secs = parseInt(t);
-            if (secs > 0) deltaTformatted += secs + "s ";
+            deltaTformatted += ("00" + secs).slice(-2) + ".";
             let millis = parseInt((t - secs) * 1000);
-            if (millis > 0) deltaTformatted += millis + "ms ";
-            this.image_delta_t.push(deltaTformatted.slice(0, -1));
+            deltaTformatted += ("" + millis).slice(0,3);
+            this.image_delta_t.push(deltaTformatted);
         });
         this.image_delta_t_unit = response.delta_t_unit_symbol;
         this.sanityCheckInitialValues();
