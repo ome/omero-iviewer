@@ -375,7 +375,8 @@ export default class ImageInfo {
      * @memberof ImageInfo
      */
     setFormattedDeltaT(response) {
-        // avoid further FFF for remainders by using multiplier and round
+        // avoid further IEEE inaccuracies for remainders
+        // by using multiplier and rounding to integer (at ms effectively)
         const precision = 1000;
 
         let deltaTisAllZeros = true;
