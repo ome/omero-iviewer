@@ -279,25 +279,7 @@ export default class ImageInfo {
         if (typeof response.meta.pixelsType === 'string')
             this.image_pixels_type = response.meta.pixelsType;
         this.image_timestamp = response.meta.imageTimestamp;
-        let deltaTisAllZeros = true;
-        response.delta_t.map((t) => {
-            if (t !== 0) deltaTisAllZeros = false;
-            let deltaTformatted = "";
-            let hours = parseInt(t / (60 * 60));
-            deltaTformatted += ("00" + hours).slice(-2) + ":";
-            t -= (hours * 60 * 60);
-            let mins =  parseInt(t / 60);
-            deltaTformatted += ("00" + mins).slice(-2) + ":";
-            t -= (mins * 60);
-            let secs = parseInt(t);
-            deltaTformatted += ("00" + secs).slice(-2) + ".";
-            let millis = parseInt((t - secs) * 1000);
-            deltaTformatted += ("" + millis).slice(0,3);
-            this.image_delta_t.push(deltaTformatted);
-        });
-        if (deltaTisAllZeros) this.image_delta_t = [];
-        this.image_delta_t_unit = response.delta_t_unit_symbol;
-        this.sanityCheckInitialValues();
+        this.setFormattedDeltaT(response);
 
         // signal that we are ready and
         // send out an image config update event
@@ -353,6 +335,8 @@ export default class ImageInfo {
                 initialProjection.toLowerCase() : response.rdefs.projection;
         this.model = initialModel !== null ?
             initialModel.toLowerCase() : response.rdefs.model;
+
+        this.sanityCheckInitialValues();
     }
 
     /**
@@ -380,6 +364,53 @@ export default class ImageInfo {
                 lowerCaseProjection !== 'intmax' &&
                 lowerCaseProjection !== 'split')
             this.projection = 'normal';
+    }
+
+    /**
+     * Sets image_delta_t member from response
+     * after formatting it to hours:minutes:seconds:milliseconds
+     *
+     * @private
+     * @param {Object} response the response object
+     * @memberof ImageInfo
+     */
+    setFormattedDeltaT(response) {
+        // avoid further FFF for remainders by using multiplier and round
+        const precision = 1000;
+
+        let deltaTisAllZeros = true;
+        response.delta_t.map((t) => {
+            t = Math.round(t * precision);
+            let deltaTformatted = "";
+
+            // put minus in front
+            let isNegative = t < 0;
+            if (isNegative) {
+                deltaTformatted += "-";
+                t = -t;
+            }
+            if (t !== 0) deltaTisAllZeros = false;
+            // hrs
+            let hours = parseInt(t / (3600 * precision));
+            deltaTformatted += ("00" + hours).slice(-2) + ":";
+            t -= (hours * 3600 * precision);
+            // minutes
+            let mins =  parseInt(t / (60 * precision));
+            deltaTformatted += ("00" + mins).slice(-2) + ":";
+            t -= (mins * (60 * precision));
+            // seconds
+            let secs = parseInt(t / precision);
+            deltaTformatted += ("00" + secs).slice(-2) + ".";
+            // milliseconds
+            let millis = t - (secs * precision);
+            deltaTformatted += ("000" + millis).slice(-3);
+            this.image_delta_t.push(deltaTformatted);
+        });
+
+        // we reset to deltaT to [] if all zeros
+        if (deltaTisAllZeros) this.image_delta_t = [];
+        // original units
+        this.image_delta_t_unit = response.delta_t_unit_symbol;
     }
 
     /**

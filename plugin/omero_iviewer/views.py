@@ -265,7 +265,7 @@ def image_data(request, image_id, conn=None, **kwargs):
             t_index = info.theT.getValue()
             if info.deltaT is not None:
                 value = format_value_with_units(info.deltaT)
-                timemap[t_index] = round(value[0])
+                timemap[t_index] = value[0]
                 if delta_t_unit_symbol is None:
                     delta_t_unit_symbol = value[1]
         for t in range(image.getSizeT()):
