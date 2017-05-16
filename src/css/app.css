@@ -214,7 +214,9 @@ a.ui-button:active,
 .slider-value {
     position: relative;
     background-color: #FFFFFF;
+    z-index: 10;
     display: none;
+    white-space: pre;
 }
 
 /* Z/T sliders */
