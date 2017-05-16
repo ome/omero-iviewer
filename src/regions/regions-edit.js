@@ -515,6 +515,7 @@ export default class RegionsEdit extends EventSubscriber {
         shapeAttachmentsLocks.addClass('disabled-color');
         shapeAttachments.attr("title", "");
         shapeAttachmentsInput.prop("disabled", true);
+        let selected = this.regions_info.selected_shapes.length;
 
         if (dims.max_t > 1 || dims.max_z > 1) {
             shapeAttachmentsInput.off();
@@ -553,9 +554,12 @@ export default class RegionsEdit extends EventSubscriber {
                     if (hasMoreThanOneEntry && (!showDisabled ||
                         (this.regions_info.image_info.can_annotate &&
                          this.last_selected === null))) {
-                            respectiveAttachementLock.attr(
-                                'title', 'Lock shape(s) to ' +
-                                         d.toUpperCase() + '-index');
+                            let title = "Lock " +
+                                (selected === 0 ? "new " : "selected ") +
+                                (selected === 1 ? "shape " : "shapes ") + "to" +
+                                (selected === 0 ? " current " : " ") +
+                                d.toUpperCase() + '-index';
+                            respectiveAttachementLock.attr('title', title);
                             respectiveAttachementLock.removeClass("disabled-color");
                             if (!unattached)
                                 respectiveDimensionInput.prop("disabled", false);

@@ -274,10 +274,10 @@ export default class Settings extends EventSubscriber {
      */
     saveImageSettingsToAll() {
         // we delegate (after confirming choice)
-        let desc = "Do you want to apply the settings to all images ";
+        let desc = "Do you want to apply the settings to all Images ";
         if (typeof this.image_config.image_info.dataset_id === 'number')
-            desc += "in dataset " + this.image_config.image_info.dataset_id;
-        else desc += "in the dataset?"
+            desc += "in Dataset " + this.image_config.image_info.dataset_id + "?";
+        else desc += "in the Dataset?"
 
         Ui.showConfirmationDialog(
             "Save Image Settings", desc, () => this.copy(true))
