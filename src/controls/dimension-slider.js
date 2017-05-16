@@ -274,8 +274,13 @@ export default class DimensionSlider extends EventSubscriber {
                     return false;
                 }
                 let sliderValueSpan = $(this.elSelector + ' .slider-value');
-                sliderValueSpan.text(
-                    this.dim.toUpperCase() + ":" + Math.round(ui.value+1));
+                let newDimVal = Math.round(ui.value);
+                let sliderTip =
+                    this.dim.toUpperCase() + ":" + (newDimVal+1);
+                if (imgInf.image_delta_t.length > 0 &&
+                    newDimVal < imgInf.image_delta_t.length)
+                        sliderTip += " [" + imgInf.image_delta_t[newDimVal] + "]";
+                sliderValueSpan.text(sliderTip);
                 let percent = (ui.value / (imgInf.dimensions['max_' + this.dim] - 1)) * 100;
                 if (this.dim === 'z') {
                     sliderValueSpan.css({bottom: percent + "%"})

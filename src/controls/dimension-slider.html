@@ -52,6 +52,15 @@
         <div class="dim-arrows glyphicon glyphicon-chevron-right"
              click.delegate="onArrowClick(1)">
         </div>
-        <span class='dim-size'>${image_config.image_info.dimensions['max_' + dim]}</span>
+        <span class='dim-size'>
+            ${image_config.image_info.dimensions['max_' + dim]}
+        </span>
+        <span show.bind="image_config.image_info.image_delta_t.length > 0"
+              class="timestamp">
+            ${image_config.image_info.dimensions[dim] &lt;
+                image_config.image_info.image_delta_t.length ?
+                    image_config.image_info.image_delta_t[
+                        image_config.image_info.dimensions[dim]] : '&nbsp;'}
+        </span>
     </template>
 </template>
