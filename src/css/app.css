@@ -160,10 +160,10 @@ a.ui-button:active,
 
 /** APP SPECIFIC STYLES SECTION **/
 .disabled-color {
-    filter:alpha(opacity=65);
+    filter:alpha(opacity=55);
     -webkit-box-shadow:none;
     box-shadow:none;
-    opacity:.65;
+    opacity:.55;
 }
 
 .fixed-header {
