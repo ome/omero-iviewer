@@ -36,6 +36,13 @@ import {
 @noView
 export default class RegionsInfo extends EventSubscriber {
     /**
+     * true if a backend request is pending
+     * @memberof RegionsInfo
+     * @type {boolean}
+     */
+    is_pending = false;
+
+    /**
      * a flag that signals whether we have successfully
      * received all backend info or not
      * @memberof RegionsInfo
@@ -263,9 +270,10 @@ export default class RegionsInfo extends EventSubscriber {
      * @param {boolean} forceUpdate if true we always request up-to-date data
      */
     requestData(forceUpdate = false) {
-        if (this.ready && !forceUpdate) return;
+        if (this.is_pending || (this.ready && !forceUpdate)) return;
         // reset regions info data and history
         this.resetRegionsInfo();
+        this.is_pending = true;
 
         // send request
         $.ajax({
@@ -273,6 +281,7 @@ export default class RegionsInfo extends EventSubscriber {
                   this.image_info.context.getPrefixedURI(IVIEWER) +
                   "/request_rois/" + this.image_info.image_id + '/',
             success : (response) => {
+                this.is_pending = false;
                 try {
                     let count = 0;
                     response.map((roi) => {
@@ -289,7 +298,7 @@ export default class RegionsInfo extends EventSubscriber {
                                 return (t1 < t2) ? -1 : (t1 > t2) ? 1: 0;
                             }
                             return (z1 < z2) ? -1: 1;
-                        }); 
+                        });
                         roi.shapes.map((shape) => {
                             let newShape =
                             Converters.amendShapeDefinition(
@@ -317,7 +326,10 @@ export default class RegionsInfo extends EventSubscriber {
                 } catch(err) {
                     console.error("Failed to load Rois: " + err);
                 }
-            }, error : (error) => console.error("Failed to load Rois: " + error)
+            }, error : (error) => {
+                this.is_pending = false;
+                console.error("Failed to load Rois: " + error)
+            }
         });
     }
 

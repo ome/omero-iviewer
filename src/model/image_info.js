@@ -237,6 +237,7 @@ export default class ImageInfo {
                             {config_id: this.config_id,
                              image_id: this.image_id,
                              dataset_id: this.dataset_id,
+                             data : Object.assign({}, response),
                              ready: this.ready
                             });
             },

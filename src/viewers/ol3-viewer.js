@@ -30,14 +30,13 @@ import {
     IVIEWER, PLUGIN_PREFIX, REGIONS_DRAWING_MODE, RENDER_STATUS
 } from '../utils/constants';
 import {
-    IMAGE_CONFIG_UPDATE, IMAGE_VIEWER_INIT, IMAGE_VIEWER_RESIZE,
-    IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY, IMAGE_SETTINGS_CHANGE,
-    REGIONS_INIT, REGIONS_SET_PROPERTY, REGIONS_PROPERTY_CHANGED,
-    VIEWER_IMAGE_SETTINGS, IMAGE_VIEWER_SPLIT_VIEW, REGIONS_DRAW_SHAPE,
-    REGIONS_CHANGE_MODES, REGIONS_SHOW_COMMENTS, REGIONS_GENERATE_SHAPES,
-    REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES, REGIONS_HISTORY_ENTRY,
-    REGIONS_HISTORY_ACTION, REGIONS_MODIFY_SHAPES, REGIONS_COPY_SHAPES,
-    EventSubscriber }
+    IMAGE_CONFIG_UPDATE, IMAGE_VIEWER_RESIZE, IMAGE_DIMENSION_CHANGE,
+    IMAGE_DIMENSION_PLAY, IMAGE_SETTINGS_CHANGE, REGIONS_INIT,
+    REGIONS_SET_PROPERTY, REGIONS_PROPERTY_CHANGED, VIEWER_IMAGE_SETTINGS,
+    IMAGE_VIEWER_SPLIT_VIEW, REGIONS_DRAW_SHAPE, REGIONS_CHANGE_MODES,
+    REGIONS_SHOW_COMMENTS, REGIONS_GENERATE_SHAPES, REGIONS_STORED_SHAPES,
+    REGIONS_STORE_SHAPES, REGIONS_HISTORY_ENTRY, REGIONS_HISTORY_ACTION,
+    REGIONS_MODIFY_SHAPES, REGIONS_COPY_SHAPES, EventSubscriber }
 from '../events/events';
 
 
@@ -84,8 +83,6 @@ export default class Ol3Viewer extends EventSubscriber {
      */
     sub_list = [
         [IMAGE_CONFIG_UPDATE,
-            (params={}) => this.updateViewer(params)],
-        [IMAGE_VIEWER_INIT,
             (params={}) => this.initViewer(params)],
         [IMAGE_VIEWER_RESIZE,
             (params={}) => this.resizeViewer(params)],
@@ -194,13 +191,13 @@ export default class Ol3Viewer extends EventSubscriber {
     }
 
     /**
-     * Handles viewer updates as a result of image config changes
+     * Instantiates a new ol3 viewer as a result of image config changes
      * (event notification)
      *
      * @memberof Ol3Viewer
      * @param {Object} params the event notification parameters
      */
-    updateViewer(params = {}) {
+    initViewer(params = {}) {
         // the event doesn't concern us
         if (params.config_id !== this.config_id) return;
 
@@ -211,13 +208,17 @@ export default class Ol3Viewer extends EventSubscriber {
         // create viewer instance
         this.viewer =
             new ol3.Viewer(
-                this.image_config.image_info.image_id,
-                { eventbus : this.context.eventbus,
-                  server : this.context.server,
-                  initParams :  ol3initParams,
-                  container: this.container
-        });
-        this.resizeViewer({window_resize: true});
+                this.image_config.image_info.image_id, {
+                     eventbus : this.context.eventbus,
+                     server : this.context.server,
+                     data: params.data,
+                     initParams :  ol3initParams,
+                     container: this.container
+                 });
+
+        // only the first request should be affected
+        this.context.resetInitParams();
+        this.resizeViewer({window_resize: true, delay: 100});
     }
 
     /**
@@ -259,20 +260,6 @@ export default class Ol3Viewer extends EventSubscriber {
             this.viewer.changeImageProjection(params.projection);
         if (Misc.isArray(params.ranges))
             this.viewer.changeChannelRange(params.ranges);
-    }
-
-    /**
-     * Perform initialization task for the viewer
-     *
-     * @param {Object} params the event notification parameters
-     * @memberof Ol3Viewer
-     */
-    initViewer(params = {})  {
-        // the event doesn't concern us
-        if (params.config_id !== this.config_id) return;
-
-        // only the first request should be affected
-        this.context.resetInitParams();
     }
 
     /**

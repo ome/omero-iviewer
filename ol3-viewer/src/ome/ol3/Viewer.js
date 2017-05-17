@@ -170,12 +170,11 @@ ome.ol3.Viewer = function(id, options) {
         this.container_ = opts['container'];
 
     /**
-     * the associated image information
-     * as retrieved from the omero server
+     * the associated image information as retrieved from the omero server
      * @type {Object}
      * @private
      */
-    this.image_info_ = null;
+    this.image_info_ = typeof opts['data'] === 'object' ? opts['data'] : null;
 
     /**
      * the associated OmeroRegions object
@@ -225,13 +224,11 @@ ome.ol3.Viewer = function(id, options) {
 
     /**
      * The initialization function performs the following steps:
-     * 1. Request image data as json
-     * 2. Store the image data internally
-     * 3. Build open layer objects needed for map creation
-     * 4. Instantiate the Viewer(ol.Map) and store it interally
+     * 1. Request image data as json (if not handed in)
+     * 2. Store the image data internally (if not handed in)
+     * 3. Bootstrap ol3 map (and associated objects such as view, controls, etc)
      *
-     * Note: steps 2-4 are done asynchroniously after the image data
-     *       has been received.
+     * Note: Step 3 happens asynchroniously (if data had to be fetched via ajax)
      *
      * @function
      * @param {Object} scope the java script context
@@ -243,7 +240,13 @@ ome.ol3.Viewer = function(id, options) {
         // can happen if we instantitate the viewer without id
         if (scope.id_ < 0) return;
 
-        // the success handler builds the open layers map
+        // use handed in image info instead of requesting it
+        if (scope.image_info_ !== null) {
+            scope.bootstrapOpenLayers(postSuccessHook, initHook);
+            return;
+        }
+
+        // the success handler instantiates the open layers map and controls
         var success = function(data) {
             if (typeof(data) === 'string') {
                 try {
@@ -259,288 +262,8 @@ ome.ol3.Viewer = function(id, options) {
              // store response internally to be able to work with it later
              scope.image_info_ = data;
 
-             if (typeof(scope.image_info_['size']) === 'undefined') {
-                console.error("Image Info does not contain size info!");
-                return;
-            }
-
-            // we might need to run some initialization handler after we have
-            // received the json respone.
-            if (typeof initHook === 'function') initHook.call(scope);
-
-            /*
-             * get dimensions of image: width,height, z, t and c sizes,
-             * as well as zoom levels for pyramids
-             * for openlayers we gotta prepare the resolutions
-             * as 1 / res and reverse the order
-             */
-            var zoomLevelScaling = null;
-            var dims = scope.image_info_['size'];
-            if (scope.image_info_['zoomLevelScaling']) {
-                var tmp = [];
-                for (var r in scope.image_info_['zoomLevelScaling'])
-                    tmp.push(1 / scope.image_info_['zoomLevelScaling'][r]);
-                zoomLevelScaling = tmp.reverse();
-            }
-            var zoom= zoomLevelScaling ? zoomLevelScaling.length : -1;
-
-            // we have to check the initial projection so that we can adjust
-            // the view potentially to cater for split view in the code below
-            var initialProjection =
-                scope.getInitialRequestParam(
-                    ome.ol3.REQUEST_PARAMS.PROJECTION);
-            initialProjection =
-               initialProjection !== null ? initialProjection.toLowerCase() :
-                   scope.image_info_['rdefs']['projection']
-            if (initialProjection !== 'normal' &&
-                initialProjection !== 'intmax' &&
-                initialProjection !== 'split')
-                initialProjection = 'normal';
-           if (initialProjection === 'split')
-               scope.split_ = true;
-
-           // in the same spirit we need the model so that in the split channel
-           // case we get the proper dimensions from the json
-           var initialModel =
-                scope.getInitialRequestParam(ome.ol3.REQUEST_PARAMS.MODEL);
-            initialModel =
-               initialModel !== null ? initialModel :
-                   scope.image_info_['rdefs']['model']
-            var lowerCaseModel = initialModel.toLowerCase()[0];
-            switch (lowerCaseModel) {
-                case 'c': initialModel = 'color'; break;
-                case 'g': initialModel = 'greyscale'; break;
-                default: initialModel = 'color';
-            };
-
-            // should we be in the split view mode, we need to trick ol3
-            // and set the dims and tile sizes accordingly to essentially
-            // request 1 tile with the dimensions of the entire image extent
-            if (scope.split_) {
-                var tmpDims =
-                    scope.image_info_['split_channel'][initialModel[0]];
-                if (typeof tmpDims === 'object' && tmpDims) {
-                    dims['width'] = tmpDims['width'];
-                    dims['height'] = tmpDims['height'];
-                    scope.image_info_['tile_size'] =
-                    {"width" : dims['width'], "height" : dims['height']};
-                }
-                initialProjection = "split";
-            }
-
-            // determine the center
-            var imgCenter = [dims['width'] / 2, -dims['height'] / 2];
-            // pixel size
-            var pixelSize =
-                typeof scope.image_info_['pixel_size'] === "object" &&
-                typeof scope.image_info_['pixel_size']['x'] === "number" ?
-                    scope.image_info_['pixel_size']['x'] : null;
-
-            // instantiate a pixel projection for omero data
-            var proj = new ol.proj.Projection({
-                 code: 'OMERO',
-                 units: 'pixels',
-                 extent: [0, 0, dims['width'], dims['height']],
-                 metersPerUnit : pixelSize
-             });
-
-            // we might have some requested defaults
-            var initialTime =
-                scope.getInitialRequestParam(ome.ol3.REQUEST_PARAMS.TIME);
-            initialTime =
-                initialTime !== null ? (parseInt(initialTime)-1) :
-                scope.image_info_['rdefs']['defaultT'];
-            if (initialTime < 0) initialTime = 0;
-            if (initialTime >= dims.t) initialTime =  dims.t-1;
-            var initialPlane =
-                scope.getInitialRequestParam(ome.ol3.REQUEST_PARAMS.PLANE);
-            initialPlane =
-                initialPlane !== null ? (parseInt(initialPlane)-1) :
-                    scope.image_info_['rdefs']['defaultZ'];
-            if (initialPlane < 0) initialPlane = 0;
-            if (initialPlane >= dims.z) initialPlane =  dims.z-1;
-            var initialCenterX =
-                scope.getInitialRequestParam(ome.ol3.REQUEST_PARAMS.CENTER_X);
-            var initialCenterY =
-                scope.getInitialRequestParam(ome.ol3.REQUEST_PARAMS.CENTER_Y);
-            if (initialCenterX && !isNaN(parseFloat(initialCenterX)) &&
-                initialCenterY && !isNaN(parseFloat(initialCenterY))) {
-                initialCenterX = parseFloat(initialCenterX);
-                initialCenterY = parseFloat(initialCenterY);
-                if (initialCenterY > 0) initialCenterY = -initialCenterY;
-                if (initialCenterX >=0 && initialCenterX <= dims['width'] &&
-                    -initialCenterY >=0 && -initialCenterX <= dims['height'])
-                imgCenter = [initialCenterX, initialCenterY];
-            }
-            var initialChannels =
-                scope.getInitialRequestParam(ome.ol3.REQUEST_PARAMS.CHANNELS);
-            var initialMaps =
-                scope.getInitialRequestParam(ome.ol3.REQUEST_PARAMS.MAPS);
-            initialChannels =
-                ome.ol3.utils.Misc.parseChannelParameters(
-                    initialChannels, initialMaps);
-
-            // copy needed channels info
-            var channels = [];
-            for (var c in scope.image_info_['channels']) {
-                var oldC = scope.image_info_['channels'][c];
-                var newC = {
-                    "active" : oldC['active'],
-                    "color" :
-                        typeof oldC['lut'] === 'string' &&
-                        oldC['lut'].length > 0 ? oldC['lut'] : oldC['color'],
-                    "min" : oldC['window']['min'],
-                    "max" : oldC['window']['max'],
-                    "start" : oldC['window']['start'],
-                    "end" : oldC['window']['end']
-                };
-                if (typeof oldC['reverseIntensity'] === 'boolean')
-                    newC['reverse'] = oldC['reverseIntensity'];
-                channels.push(newC);
-            }
-
-            // create an OmeroImage source (tiled)
-            var source = new ome.ol3.source.Image({
-                server : scope.getServer(),
-                uri : scope.getPrefixedURI(ome.ol3.WEBGATEWAY),
-                image: scope.id_,
-                width: dims['width'],
-                height: dims['height'],
-                plane: initialPlane,
-                time: initialTime,
-                channels: channels,
-                resolutions: zoom > 1 ? zoomLevelScaling : [1],
-                img_proj:  initialProjection,
-                img_model:  initialModel,
-                split: scope.split_,
-                tiled: typeof scope.image_info_['tiles'] === 'boolean' &&
-                       scope.image_info_['tiles'],
-                tile_size: scope.image_info_['tile_size'] ?
-                                scope.image_info_['tile_size'] : null
-            });
-            source.changeChannelRange(initialChannels, false);
-
-            var actualZoom = zoom > 1 ? zoomLevelScaling[0] : 1;
-            var initialZoom =
-                scope.getInitialRequestParam(ome.ol3.REQUEST_PARAMS.ZOOM);
-            var possibleResolutions =
-                ome.ol3.utils.Misc.prepareResolutions(zoomLevelScaling);
-            if (initialZoom && !isNaN(parseFloat(initialZoom))) {
-                initialZoom = (1 / (parseFloat(initialZoom) / 100));
-                var posLen = possibleResolutions.length;
-                if (posLen > 1) {
-                    if (initialZoom >= possibleResolutions[0])
-                        actualZoom = possibleResolutions[0];
-                    else if (initialZoom <= possibleResolutions[posLen-1])
-                        actualZoom = possibleResolutions[posLen-1];
-                    else {
-                        // find nearest resolution
-                        for (var r=0;r<posLen-1;r++) {
-                            if (initialZoom < possibleResolutions[r+1])
-                                continue;
-                            var d1 =
-                                Math.abs(possibleResolutions[r] - initialZoom);
-                            var d2 =
-                                Math.abs(possibleResolutions[r+1] - initialZoom);
-                            if (d1 < d2)
-                                actualZoom = possibleResolutions[r];
-                            else actualZoom = possibleResolutions[r+1];
-                            break;
-                        }
-                    }
-                } else actualZoom = 1;
-            }
-
-            // we need a View object for the map
-            var view = new ol.View({
-                projection: proj,
-                center: imgCenter,
-                extent: [0, -dims['height'], dims['width'], 0],
-                resolutions :
-                    ome.ol3.utils.Misc.prepareResolutions(zoomLevelScaling),
-                resolution : actualZoom
-            });
-
-            // we have a need to keep a list & reference of the controls
-            // and interactions registered, therefore we need to take a
-            // slighlty longer route to add them to the map
-            var defaultInteractions = ome.ol3.defaultInteractions();
-            var interactions = new ol.Collection();
-            for (var inter in defaultInteractions) {
-                interactions.push(defaultInteractions[inter]['ref']);
-                scope.viewerState_[inter] = defaultInteractions[inter];
-            }
-            var defaultControls = ome.ol3.defaultControls();
-            var controls = new ol.Collection();
-            for (var contr in defaultControls) {
-                controls.push(defaultControls[contr]['ref']);
-                scope.viewerState_[contr] = defaultControls[contr];
-            }
-
-            var targetElement = document.getElementById(scope.container_);
-            if (targetElement === null) return;
-
-            var children =
-                Array.prototype.slice.call(targetElement.childNodes);
-            for (var child in children)
-                targetElement.removeChild(children[child]);
-
-            // finally construct the open layers map object
-            scope.viewer_ = new ol.Map({
-                logo: false,
-                controls: controls,
-                interactions:  interactions,
-                renderer: ol.renderer.Type.CANVAS,
-                layers: [new ol.layer.Tile({source: source, preload: Infinity})],
-                target: scope.container_,
-                view: view
-            });
-
-            // expand bird's eye view for tiles sources
-            if (source.use_tiled_retrieval_ && scope.viewerState_["birdseye"] &&
-                scope.viewerState_["birdseye"]['ref']
-                    instanceof ome.ol3.controls.BirdsEye)
-                        scope.viewerState_["birdseye"]['ref'].setCollapsed(false);
-            // enable scalebar by default
-            scope.toggleScaleBar(true);
-
-            // listens to resolution changes
-            scope.onViewResolutionListener =
-                ol.events.listen( // register a resolution handler for zoom display
-                    scope.viewer_.getView(), "change:resolution",
-                    function(event) {
-                        this.displayResolutionInPercent();
-                    }, scope);
-            scope.displayResolutionInPercent();
-
-            // this is for work that needs to be done after,
-            // e.g we have just switched images
-            // because of the asynchronious nature of the initialization
-            // we need to do this here
-            if (typeof(postSuccessHook) === 'function')
-                postSuccessHook.call(scope);
-
-            if (scope.tried_regions_)
-                scope.addRegions({"data" : scope.tried_regions_data_});
-
-            if (scope.eventbus_) {
-                // an endMove listener to publish move events
-                scope.onEndMoveListener =
-                    ol.events.listen(
-                        scope.viewer_, ol.MapEventType.MOVEEND,
-                        function(event) {
-                            this.eventbus_.publish(
-                                "IMAGE_INTERACTION",
-                                {"config_id": this.getTargetId(),
-                                 "z": this.getDimensionIndex('z'),
-                                 "t": this.getDimensionIndex('t'),
-                                 "c": this.getDimensionIndex('c'),
-                                 "center": this.viewer_.getView().getCenter()});
-                        }, scope);
-                // announce that we are finished
-                scope.eventbus_.publish(
-                    "IMAGE_VIEWER_INIT", {"config_id": scope.getTargetId()});
-            }
+             // delegate
+             scope.bootstrapOpenLayers(postSuccessHook, initHook);
         };
 
         // define request settings
@@ -569,6 +292,296 @@ ome.ol3.Viewer = function(id, options) {
     } else ome.ol3.utils.Net.makeCrossDomainLoginRedirect(this.server_);
 };
 goog.inherits(ome.ol3.Viewer, ol.Object);
+
+/**
+ * Bootstraps the Openlayers components
+ * e.g. view, projection, map and any controls/interactions used
+ *
+ * @function
+ * @param {?function} postSuccessHook an optional post success handler
+ * @param {?function} initHook an optional initialization handler
+ * @private
+ */
+ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHook) {
+    if (typeof(this.image_info_['size']) === 'undefined') {
+       console.error("Image Info does not contain size info!");
+       return;
+    }
+
+    // we might need to run some initialization handler after we have
+    // received the json respone.
+    if (typeof initHook === 'function') initHook.call(this);
+
+    /*
+    * get dimensions of image: width,height, z, t and c sizes,
+    * as well as zoom levels for pyramids
+    * for openlayers we gotta prepare the resolutions
+    * as 1 / res and reverse the order
+    */
+    var zoomLevelScaling = null;
+    var dims = this.image_info_['size'];
+    if (this.image_info_['zoomLevelScaling']) {
+       var tmp = [];
+       for (var r in this.image_info_['zoomLevelScaling'])
+           tmp.push(1 / this.image_info_['zoomLevelScaling'][r]);
+       zoomLevelScaling = tmp.reverse();
+    }
+    var zoom= zoomLevelScaling ? zoomLevelScaling.length : -1;
+
+    // we have to check the initial projection so that we can adjust
+    // the view potentially to cater for split view in the code below
+    var initialProjection =
+       this.getInitialRequestParam(
+           ome.ol3.REQUEST_PARAMS.PROJECTION);
+    initialProjection =
+      initialProjection !== null ? initialProjection.toLowerCase() :
+          this.image_info_['rdefs']['projection']
+    if (initialProjection !== 'normal' &&
+       initialProjection !== 'intmax' &&
+       initialProjection !== 'split')
+       initialProjection = 'normal';
+    if (initialProjection === 'split')
+      this.split_ = true;
+
+    // in the same spirit we need the model so that in the split channel
+    // case we get the proper dimensions from the json
+    var initialModel =
+       this.getInitialRequestParam(ome.ol3.REQUEST_PARAMS.MODEL);
+    initialModel =
+      initialModel !== null ? initialModel :
+          this.image_info_['rdefs']['model']
+    var lowerCaseModel = initialModel.toLowerCase()[0];
+    switch (lowerCaseModel) {
+       case 'c': initialModel = 'color'; break;
+       case 'g': initialModel = 'greyscale'; break;
+       default: initialModel = 'color';
+    };
+
+    // should we be in the split view mode, we need to trick ol3
+    // and set the dims and tile sizes accordingly to essentially
+    // request 1 tile with the dimensions of the entire image extent
+    if (this.split_) {
+       var tmpDims =
+           this.image_info_['split_channel'][initialModel[0]];
+       if (typeof tmpDims === 'object' && tmpDims) {
+           dims['width'] = tmpDims['width'];
+           dims['height'] = tmpDims['height'];
+           this.image_info_['tile_size'] =
+           {"width" : dims['width'], "height" : dims['height']};
+       }
+       initialProjection = "split";
+    }
+
+    // determine the center
+    var imgCenter = [dims['width'] / 2, -dims['height'] / 2];
+    // pixel size
+    var pixelSize =
+       typeof this.image_info_['pixel_size'] === "object" &&
+       typeof this.image_info_['pixel_size']['x'] === "number" ?
+           this.image_info_['pixel_size']['x'] : null;
+
+    // instantiate a pixel projection for omero data
+    var proj = new ol.proj.Projection({
+        code: 'OMERO',
+        units: 'pixels',
+        extent: [0, 0, dims['width'], dims['height']],
+        metersPerUnit : pixelSize
+    });
+
+    // we might have some requested defaults
+    var initialTime =
+       this.getInitialRequestParam(ome.ol3.REQUEST_PARAMS.TIME);
+    initialTime =
+       initialTime !== null ? (parseInt(initialTime)-1) :
+       this.image_info_['rdefs']['defaultT'];
+    if (initialTime < 0) initialTime = 0;
+    if (initialTime >= dims.t) initialTime =  dims.t-1;
+    var initialPlane =
+       this.getInitialRequestParam(ome.ol3.REQUEST_PARAMS.PLANE);
+    initialPlane =
+       initialPlane !== null ? (parseInt(initialPlane)-1) :
+           this.image_info_['rdefs']['defaultZ'];
+    if (initialPlane < 0) initialPlane = 0;
+    if (initialPlane >= dims.z) initialPlane =  dims.z-1;
+    var initialCenterX =
+       this.getInitialRequestParam(ome.ol3.REQUEST_PARAMS.CENTER_X);
+    var initialCenterY =
+       this.getInitialRequestParam(ome.ol3.REQUEST_PARAMS.CENTER_Y);
+    if (initialCenterX && !isNaN(parseFloat(initialCenterX)) &&
+       initialCenterY && !isNaN(parseFloat(initialCenterY))) {
+       initialCenterX = parseFloat(initialCenterX);
+       initialCenterY = parseFloat(initialCenterY);
+       if (initialCenterY > 0) initialCenterY = -initialCenterY;
+       if (initialCenterX >=0 && initialCenterX <= dims['width'] &&
+           -initialCenterY >=0 && -initialCenterX <= dims['height'])
+       imgCenter = [initialCenterX, initialCenterY];
+    }
+    var initialChannels =
+       this.getInitialRequestParam(ome.ol3.REQUEST_PARAMS.CHANNELS);
+    var initialMaps =
+       this.getInitialRequestParam(ome.ol3.REQUEST_PARAMS.MAPS);
+    initialChannels =
+       ome.ol3.utils.Misc.parseChannelParameters(
+           initialChannels, initialMaps);
+
+    // copy needed channels info
+    var channels = [];
+    for (var c in this.image_info_['channels']) {
+       var oldC = this.image_info_['channels'][c];
+       var newC = {
+           "active" : oldC['active'],
+           "color" :
+               typeof oldC['lut'] === 'string' &&
+               oldC['lut'].length > 0 ? oldC['lut'] : oldC['color'],
+           "min" : oldC['window']['min'],
+           "max" : oldC['window']['max'],
+           "start" : oldC['window']['start'],
+           "end" : oldC['window']['end']
+       };
+       if (typeof oldC['reverseIntensity'] === 'boolean')
+           newC['reverse'] = oldC['reverseIntensity'];
+       channels.push(newC);
+    }
+
+    // create an OmeroImage source (tiled)
+    var source = new ome.ol3.source.Image({
+       server : this.getServer(),
+       uri : this.getPrefixedURI(ome.ol3.WEBGATEWAY),
+       image: this.id_,
+       width: dims['width'],
+       height: dims['height'],
+       plane: initialPlane,
+       time: initialTime,
+       channels: channels,
+       resolutions: zoom > 1 ? zoomLevelScaling : [1],
+       img_proj:  initialProjection,
+       img_model:  initialModel,
+       split: this.split_,
+       tiled: typeof this.image_info_['tiles'] === 'boolean' &&
+              this.image_info_['tiles'],
+       tile_size: this.image_info_['tile_size'] ?
+                       this.image_info_['tile_size'] : null
+    });
+    source.changeChannelRange(initialChannels, false);
+
+    var actualZoom = zoom > 1 ? zoomLevelScaling[0] : 1;
+    var initialZoom =
+       this.getInitialRequestParam(ome.ol3.REQUEST_PARAMS.ZOOM);
+    var possibleResolutions =
+       ome.ol3.utils.Misc.prepareResolutions(zoomLevelScaling);
+    if (initialZoom && !isNaN(parseFloat(initialZoom))) {
+       initialZoom = (1 / (parseFloat(initialZoom) / 100));
+       var posLen = possibleResolutions.length;
+       if (posLen > 1) {
+           if (initialZoom >= possibleResolutions[0])
+               actualZoom = possibleResolutions[0];
+           else if (initialZoom <= possibleResolutions[posLen-1])
+               actualZoom = possibleResolutions[posLen-1];
+           else {
+               // find nearest resolution
+               for (var r=0;r<posLen-1;r++) {
+                   if (initialZoom < possibleResolutions[r+1])
+                       continue;
+                   var d1 =
+                       Math.abs(possibleResolutions[r] - initialZoom);
+                   var d2 =
+                       Math.abs(possibleResolutions[r+1] - initialZoom);
+                   if (d1 < d2)
+                       actualZoom = possibleResolutions[r];
+                   else actualZoom = possibleResolutions[r+1];
+                   break;
+               }
+           }
+       } else actualZoom = 1;
+    }
+
+    // we need a View object for the map
+    var view = new ol.View({
+       projection: proj,
+       center: imgCenter,
+       extent: [0, -dims['height'], dims['width'], 0],
+       resolutions :
+           ome.ol3.utils.Misc.prepareResolutions(zoomLevelScaling),
+       resolution : actualZoom
+    });
+
+    // we have a need to keep a list & reference of the controls
+    // and interactions registered, therefore we need to take a
+    // slighlty longer route to add them to the map
+    var defaultInteractions = ome.ol3.defaultInteractions();
+    var interactions = new ol.Collection();
+    for (var inter in defaultInteractions) {
+       interactions.push(defaultInteractions[inter]['ref']);
+       this.viewerState_[inter] = defaultInteractions[inter];
+    }
+    var defaultControls = ome.ol3.defaultControls();
+    var controls = new ol.Collection();
+    for (var contr in defaultControls) {
+       controls.push(defaultControls[contr]['ref']);
+       this.viewerState_[contr] = defaultControls[contr];
+    }
+
+    var targetElement = document.getElementById(this.container_);
+    if (targetElement === null) return;
+
+    var children =
+       Array.prototype.slice.call(targetElement.childNodes);
+    for (var child in children)
+       targetElement.removeChild(children[child]);
+
+    // finally construct the open layers map object
+    this.viewer_ = new ol.Map({
+       logo: false,
+       controls: controls,
+       interactions:  interactions,
+       renderer: ol.renderer.Type.CANVAS,
+       layers: [new ol.layer.Tile({source: source, preload: Infinity})],
+       target: this.container_,
+       view: view
+    });
+
+    // expand bird's eye view for tiles sources
+    if (source.use_tiled_retrieval_ && this.viewerState_["birdseye"] &&
+       this.viewerState_["birdseye"]['ref']
+           instanceof ome.ol3.controls.BirdsEye)
+               this.viewerState_["birdseye"]['ref'].setCollapsed(false);
+    // enable scalebar by default
+    this.toggleScaleBar(true);
+
+    // listens to resolution changes
+    this.onViewResolutionListener =
+       ol.events.listen( // register a resolution handler for zoom display
+           this.viewer_.getView(), "change:resolution",
+           function(event) {
+               this.displayResolutionInPercent();
+           }, this);
+    this.displayResolutionInPercent();
+
+    // this is for work that needs to be done after,
+    // e.g we have just switched images
+    // because of the asynchronious nature of the initialization
+    // we need to do this here
+    if (typeof(postSuccessHook) === 'function')
+       postSuccessHook.call(this);
+
+    if (this.tried_regions) this.addRegions();
+
+    if (this.eventbus_) {
+       // an endMove listener to publish move events
+       this.onEndMoveListener =
+           ol.events.listen(
+               this.viewer_, ol.MapEventType.MOVEEND,
+               function(event) {
+                   this.eventbus_.publish(
+                       "IMAGE_INTERACTION",
+                       {"config_id": this.getTargetId(),
+                        "z": this.getDimensionIndex('z'),
+                        "t": this.getDimensionIndex('t'),
+                        "c": this.getDimensionIndex('c'),
+                        "center": this.viewer_.getView().getCenter()});
+               }, this);
+    }
+}
 
 /**
  * Shows the viewer
