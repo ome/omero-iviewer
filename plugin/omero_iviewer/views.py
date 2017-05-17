@@ -232,24 +232,25 @@ def image_data(request, image_id, conn=None, **kwargs):
     px = image.getPrimaryPixels().getPhysicalSizeX()
     if (px is not None):
         size = image.getPixelSizeX(True)
-        value = format_pixel_size_with_units(size)
+        value = format_value_with_units(size)
         rv['pixel_size']['unit_x'] = value[0]
         rv['pixel_size']['symbol_x'] = value[1]
     py = image.getPrimaryPixels().getPhysicalSizeY()
     if (py is not None):
         size = image.getPixelSizeY(True)
-        value = format_pixel_size_with_units(size)
+        value = format_value_with_units(size)
         rv['pixel_size']['unit_y'] = value[0]
         rv['pixel_size']['symbol_y'] = value[1]
     pz = image.getPrimaryPixels().getPhysicalSizeZ()
     if (pz is not None):
         size = image.getPixelSizeZ(True)
-        value = format_pixel_size_with_units(size)
+        value = format_value_with_units(size)
         rv['pixel_size']['unit_z'] = value[0]
         rv['pixel_size']['symbol_z'] = value[1]
 
     size_t = image.getSizeT()
     time_list = []
+    delta_t_unit_symbol = None
     if size_t > 1:
         params = omero.sys.ParametersI()
         params.addLong('pid', image.getPixelsId())
@@ -263,31 +264,43 @@ def image_data(request, image_id, conn=None, **kwargs):
         for info in info_list:
             t_index = info.theT.getValue()
             if info.deltaT is not None:
-                # planeInfo.deltaT gives number only (no units)
-                delta_t = info.deltaT.getValue()
-                timemap[t_index] = delta_t
+                value = format_value_with_units(info.deltaT)
+                timemap[t_index] = value[0]
+                if delta_t_unit_symbol is None:
+                    delta_t_unit_symbol = value[1]
         for t in range(image.getSizeT()):
             if t in timemap:
                 time_list.append(timemap[t])
+
     rv['delta_t'] = time_list
+    rv['delta_t_unit_symbol'] = delta_t_unit_symbol
 
     return JsonResponse(rv)
 
 
-def format_pixel_size_with_units(size):
+def format_value_with_units(value):
         """
         Formats the response for methods above.
         Returns [value, unitSymbol]
-        If the unit is MICROMETER in database (default), we
+        If the unit is MICROMETER or s in database (default), we
         convert to more appropriate units & value
         """
-        if size is None:
+        if value is None:
             return (None, "")
-        length = size.getValue()
-        unit = size.getUnit()
+        length = value.getValue()
+        unit = value.getUnit()
         if unit == "MICROMETER":
             unit = lengthunit(length)
             length = lengthformat(length)
+        elif unit == "MILLISECOND":
+            length = length/1000.0
+            unit = value.getSymbol()
+        elif unit == "MINUTE":
+            length = 60*length
+            unit = value.getSymbol()
+        elif unit == "HOUR":
+            length = 3600*length
+            unit = value.getSymbol()
         else:
-            unit = size.getSymbol()
+            unit = value.getSymbol()
         return (length, unit)

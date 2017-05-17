@@ -160,10 +160,10 @@ a.ui-button:active,
 
 /** APP SPECIFIC STYLES SECTION **/
 .disabled-color {
-    filter:alpha(opacity=65);
+    filter:alpha(opacity=55);
     -webkit-box-shadow:none;
     box-shadow:none;
-    opacity:.65;
+    opacity:.55;
 }
 
 .fixed-header {
@@ -214,7 +214,9 @@ a.ui-button:active,
 .slider-value {
     position: relative;
     background-color: #FFFFFF;
+    z-index: 10;
     display: none;
+    white-space: pre;
 }
 
 /* Z/T sliders */
@@ -286,10 +288,15 @@ a.ui-button:active,
 .time-slider .dim-size {
     right: -55px;
     color: #999;
+    width: 30px;
 }
 .plane-slider .dim-size {
     top: -45px;
     color: #999;
+}
+
+.time-slider .timestamp {
+    right: -160px;
 }
 
 /* Make the Z/T sliders look thin,

@@ -1,5 +1,9 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
-# Copyright (c) 2017 University of Dundee.
+#
+#
+# Copyright (c) 2016 University of Dundee.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -14,4 +18,15 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-default_app_config = 'omero_iviewer.apps.IviewerAppConfig'
+# Author: Jean-Marie Burel <j(dot)burel(at)dundee(dot)ac(dot)uk>, 2016.
+#
+# Version: 1.0
+#
+
+
+from django.apps import AppConfig
+
+
+class IviewerAppConfig(AppConfig):
+    name = "omero_iviewer"
+    label = "iviewer"
