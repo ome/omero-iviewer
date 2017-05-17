@@ -326,7 +326,9 @@ export default class ImageInfo {
             max_t : response.size.t,
             z: initialPlane !== null ?
                 (parseInt(initialPlane)-1) : response.rdefs.defaultZ,
-            max_z : response.size.z
+            max_z : response.size.z,
+            max_x : response.size.width,
+            max_y : response.size.height,
         };
 
         // store projection and model
