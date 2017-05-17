@@ -1574,7 +1574,7 @@ ome.ol3.Viewer.prototype.getSmallestViewExtent = function() {
  * Persists modified/added/deleted shapes
  * see: {@link ome.ol3.source.Regions.storeRegions}
  *
- * @param {Array.<string>} selected an array of selected ids (of the form: roi_id:shape_id)
+ * @param {Array.<string>} deleted an array of ids for deletion (of the form: roi_id:shape_id)
  * @param {boolean} useSeparateRoiForEachNewShape if false all new shapes are combined within one roi
  * @param {string} uri a server uri to post to for persistance
  * @param {boolean} omit_client_update an optional flag that's handed back to the client
@@ -1582,27 +1582,30 @@ ome.ol3.Viewer.prototype.getSmallestViewExtent = function() {
  * @return {boolean} true if a storage request was made, false otherwise
  */
 ome.ol3.Viewer.prototype.storeRegions =
-    function(selected, useSeparateRoiForEachNewShape, uri, omit_client_update) {
+    function(deleted, useSeparateRoiForEachNewShape, uri, omit_client_update) {
 
         if (!(this.regions_ instanceof ome.ol3.source.Regions))
             return false; // no regions, nothing to persist...
 
         omit_client_update =
             typeof omit_client_update === 'boolean' && omit_client_update;
-        selected = ome.ol3.utils.Misc.isArray(selected) ? selected : [];
         useSeparateRoiForEachNewShape =
             typeof(useSeparateRoiForEachNewShape) === 'boolean' ?
                 useSeparateRoiForEachNewShape : true;
         if (typeof uri !== 'string' || uri.length === 0) uri = '/persist_rois';
 
-        var len = selected.length;
-        var collectionOfFeatures =
-            new ol.Collection(len > 0 ? selected : this.regions_.getFeatures());
-        for (var i=0;i<len;i++) {
-            var id = selected[i];
-            if (typeof this.regions_.idIndex_[id] === 'object')
-                collectionOfFeatures.push(this.regions_.idIndex_[id]);
-        };
+        var isDeleteRequest =
+            ome.ol3.utils.Misc.isArray(deleted) && deleted.length > 0;
+        var collectionOfFeatures = null;
+        if (isDeleteRequest) {
+            collectionOfFeatures = new ol.Collection();
+            for (var i=0;i<deleted.length;i++) {
+                var id = deleted[i];
+                if (typeof this.regions_.idIndex_[id] === 'object')
+                    collectionOfFeatures.push(this.regions_.idIndex_[id]);
+            };
+        } else collectionOfFeatures =
+                    new ol.Collection(this.regions_.getFeatures());
 
         var roisAsJsonObject =
         ome.ol3.utils.Conversion.toJsonObject(
@@ -1625,13 +1628,16 @@ ome.ol3.Viewer.prototype.storeRegions =
                         this.eventbus_.publish(
                             "REGIONS_STORED_SHAPES", {
                                 'config_id': this.getTargetId(),
-                                'shapes': ids
+                                'shapes': ids,
+                                'is_delete': isDeleteRequest
                             });
                     }
             }
             return false;
         }
 
+        // remember deleted ids for history removal
+        roisAsJsonObject['is_delete'] = isDeleteRequest;
         return this.regions_.storeRegions(
                     roisAsJsonObject, uri, omit_client_update);
 }

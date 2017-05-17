@@ -137,7 +137,7 @@ ome.ol3.interaction.Translate.prototype.handleTranslateEnd = function(event) {
 
     // complete history entry
     this.regions_.addHistory(filtered, false, this.hist_id_);
-    this.regions_.sendHistoryNotification(this.hist_id_);
+    this.regions_.sendHistoryNotification(this.hist_id_, ids);
     this.hist_id_ = -1; // reset
 
     // set modified flag

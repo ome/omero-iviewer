@@ -160,7 +160,7 @@ export class Utils {
              !Misc.isArray(updates.values) ||
              updates.values.length !== updates.properties.length) return null;
 
-        let callback = (shape) => {
+        let callback = (shape, hasBeenModified) => {
             if (typeof shape !== 'object' || shape === null) return;
 
             let oldVals = [];
@@ -169,11 +169,24 @@ export class Utils {
                 let prop = updates.properties[i];
                 let old_value =
                     typeof shape[prop] !== 'undefined' ? shape[prop] : null;
-                if (old_value !== updates.values[i]) allPropertiesEqual = false;
+                if (typeof old_value === 'object' &&
+                    typeof updates.values[i] === 'object' &&
+                    old_value !== null && updates.values[i] !== null) {
+                    for (let p in old_value)
+                        if (typeof updates.values[i][p] === undefined ||
+                            old_value[p] !== updates.values[i][p])
+                                allPropertiesEqual = false;
+                } else if (old_value !== updates.values[i])
+                    allPropertiesEqual = false;
                 oldVals.push(old_value);
                 shape[prop] = updates.values[i];
             };
             if (history.hist instanceof RegionsHistory && !allPropertiesEqual) {
+                if (typeof hasBeenModified === 'boolean') {
+                    updates.properties.push("modified");
+                    oldVals.push(hasBeenModified);
+                    updates.values.push(shape.modified);
+                }
                 if (typeof history.hist_id !== 'number') history.hist_id = -1;
                 history.hist.addHistory(
                     history.hist_id, history.hist.action.PROPERTIES,

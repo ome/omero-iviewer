@@ -308,4 +308,49 @@ export default class RegionsHistory {
        this.history = [];
        this.historyPointer = -1;
     }
+
+    /**
+    * Removes all entries that concern the given ids
+    * @param {Array.<string>} ids an array of ids (of the form roi_id:shape_id)
+    * @memberof History
+    */
+    removeEntries(ids) {
+        if (!Misc.isArray(ids) || ids.length === 0 ||
+            this.history.length === 0) return;
+
+        // a helper for removing a history entry
+        let adjustHistory = (index) => {
+            this.history.splice(index, 1);
+            if (this.historyPointer >= index) this.historyPointer--;
+        };
+
+        for (let i=this.history.length-1;i>=0;i--) {
+            let entry = this.history[i];
+
+            // first remove info/records referring to deleted shapes
+            // then check if we have other history records left or can delete
+            // the history entry altogether
+            for (let j=ids.length-1;j>=0;j--) {
+                let id = ids[j];
+                switch (entry.action) {
+                    case this.action.OL_ACTION:
+                        let idx = entry.records[0].shape_ids.indexOf(id);
+                        if (idx !== -1)
+                            entry.records[0].shape_ids.splice(idx, 1);
+                        if (j === 0 && entry.records[0].shape_ids.length === 0)
+                            adjustHistory(i);
+                        break;
+                    case this.action.PROPERTIES:
+                    case this.action.SHAPES:
+                        for (let k=entry.records.length-1;k>=0;k--) {
+                            if (entry.records[k].shape_id === id)
+                                entry.records.splice(k, 1);
+                        }
+                        if (j === 0 && entry.records.length === 0)
+                            adjustHistory(i);
+                        break;
+                }
+            }
+        }
+    }
 }

@@ -110,7 +110,7 @@ ome.ol3.interaction.Select.prototype.clearSelection = function() {
         function(feature) {
             ids.push(feature.getId());
     }, this);
-    this.regions_.setProperty(ids, "selected", false);
+    if (ids.length > 0) this.regions_.setProperty(ids, "selected", false);
 }
 
 /**

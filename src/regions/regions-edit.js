@@ -249,8 +249,8 @@ export default class RegionsEdit extends EventSubscriber {
                 shape.FontFamily : 'sans-serif';
         deltaProps.FontSize = {
             '@type': 'TBD#LengthI',
-            'Unit': 'PIXEL',
-            'Symbol': 'pixel',
+            'Unit': 'POINT',
+            'Symbol': 'pt',
             'Value': size
         };
 
@@ -465,17 +465,19 @@ export default class RegionsEdit extends EventSubscriber {
      */
     adjustCommentEdit(canDo=false, showDisabled=true) {
         let editComment = $(this.element).find(".shape-edit-comment input");
-        editComment.off('input');
+        editComment.off();
         editComment.val('Comment');
         editComment.attr('title',"");
         if (this.last_selected) {
             editComment.val(
                 typeof this.last_selected.Text === 'string' ?
                     this.last_selected.Text : '');
-            editComment.on('input',
-                (event) =>
+            editComment.on('change keyup',
+                (event) => {
+                    if (event.type === 'keyup' && event.keyCode !== 13) return;
                     this.onCommentChange(
-                        event.target.value, this.last_selected));
+                        event.target.value, this.last_selected)
+                });
             editComment.prop("disabled", showDisabled);
             if (showDisabled)
                 editComment.attr('title', PERMISSION_TOOLTIPS.CANNOT_EDIT);
@@ -488,11 +490,14 @@ export default class RegionsEdit extends EventSubscriber {
                  typeof this.last_selected.FontSize.Value === 'number' ?
                 this.last_selected.FontSize.Value : 10) : 10;
         let fontSizeSpinner = $(this.element).find(".shape-font-size input");
-        fontSizeSpinner.off("input spinstop");
+        fontSizeSpinner.off();
         fontSizeSpinner.spinner("value", fontSize);
-        fontSizeSpinner.on("input spinstop",
-           (event, ui) => this.onFontSizeChange(
-               parseInt(event.target.value), this.last_selected));
+        fontSizeSpinner.on("change keyup spinstop",
+            (event, ui) => {
+               if (event.type === 'keyup' && event.keyCode !== 13) return;
+               this.onFontSizeChange(
+                   parseInt(event.target.value), this.last_selected)
+            });
         fontSizeSpinner.spinner(canDo ? "enable" : "disable");
         fontSizeSpinner.attr(
             'title', showDisabled ? PERMISSION_TOOLTIPS.CANNOT_EDIT : "");
@@ -655,7 +660,7 @@ export default class RegionsEdit extends EventSubscriber {
 
         let strokeWidthSpinner =
             $(this.element).find(".shape-stroke-width input");
-        strokeWidthSpinner.off("input spinstop");
+        strokeWidthSpinner.off();
         strokeWidthSpinner.attr("title", "");
         strokeWidthSpinner.spinner("enable");
         if (type === 'label') {
@@ -663,9 +668,12 @@ export default class RegionsEdit extends EventSubscriber {
             strokeWidthSpinner.spinner("disable");
         } else {
             strokeWidthSpinner.spinner("value", strokeWidth);
-            strokeWidthSpinner.on("input spinstop",
-               (event, ui) => this.onStrokeWidthChange(
-                   parseInt(event.target.value), this.last_selected));
+            strokeWidthSpinner.on("change keyup spinstop",
+               (event, ui) => {
+                   if (event.type === 'keyup' && event.keyCode !== 13) return;
+                   this.onStrokeWidthChange(
+                       parseInt(event.target.value), this.last_selected)
+               });
         }
         this.setDrawColors(strokeOptions.color, false);
         if (showDisabled) {
@@ -935,7 +943,7 @@ export default class RegionsEdit extends EventSubscriber {
             () => this.context.publish( // trigger storage routine
                 REGIONS_STORE_SHAPES,
                 {config_id : this.regions_info.image_info.config_id,
-                 selected: ids}),
+                 deleted: ids}),
             () => {
                 history.undoHistory(true);
                 this.context.publish(

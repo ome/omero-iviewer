@@ -76,9 +76,13 @@ ome.ol3.interaction.Modify = function(regions_reference) {
         function(event) {
             // complete history entry
             if (this.hist_id_ >= 0) {
+                var featId = event.features.array_[0].getId();
                 this.regions_.addHistory(
                     event.features.array_, false, this.hist_id_);
-                this.regions_.sendHistoryNotification(this.hist_id_);
+                this.regions_.sendHistoryNotification(
+                    this.hist_id_, [featId]);
+                this.regions_.setProperty(
+                    [featId], "state", ome.ol3.REGIONS_STATE.MODIFIED);
             }
         },this);
 };
@@ -344,8 +348,6 @@ ome.ol3.interaction.Modify.handleUpEvent_ = function(mapBrowserEvent) {
         id = segmentData.feature.getId();
     }
 
-    if (id) this.regions_.setProperty(
-        [id], "state", ome.ol3.REGIONS_STATE.MODIFIED);
     if (this.modified_) {
         this.dispatchEvent(
             new ol.interaction.Modify.Event(
@@ -353,7 +355,6 @@ ome.ol3.interaction.Modify.handleUpEvent_ = function(mapBrowserEvent) {
                 this.features_, mapBrowserEvent));
         this.modified_ = false;
     }
-    this.hist_id_ = -1; // reset
 
     return false;
 };

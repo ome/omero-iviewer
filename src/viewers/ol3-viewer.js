@@ -316,6 +316,7 @@ export default class Ol3Viewer extends EventSubscriber {
                 let refOrCopy =
                     this.image_config.regions_info.data ?
                         this.image_config.regions_info.getShape(shape) : null;
+                let hasBeenModified = refOrCopy ? refOrCopy.modified : null;
                 let prop = Misc.isArray(params.properties) ?
                                 params.properties[i] : params.properties;
                 let value = Misc.isArray(params.values) ?
@@ -329,7 +330,7 @@ export default class Ol3Viewer extends EventSubscriber {
                 if (refOrCopy && prop === 'deleted')
                     refOrCopy = Object.assign({}, refOrCopy);
                 if (typeof params.callback === 'function')
-                    params.callback(refOrCopy);
+                    params.callback(refOrCopy, hasBeenModified);
             }
      }
 
@@ -589,10 +590,10 @@ export default class Ol3Viewer extends EventSubscriber {
 
         let requestMade =
             this.viewer.storeRegions(
-                Misc.isArray(params.selected) ? params.selected : [], false,
+                Misc.isArray(params.deleted) ? params.deleted : [], false,
                 this.context.getPrefixedURI(IVIEWER) + '/persist_rois',
                 params.omit_client_update);
-                
+
         if (requestMade) Ui.showModalMessage("Saving Regions. Please wait...");
         else if (params.omit_client_update)
             this.context.eventbus.publish(
@@ -641,15 +642,15 @@ export default class Ol3Viewer extends EventSubscriber {
                 params.shapes === null ||
                 params.omit_client_update) return;
 
-        // make deep copy to work with
-        let ids = Object.assign({}, params.shapes);
-        params.shapes = null;
+        let ids = [];
         // we iterate over the ids given and reset states accordingly
-        for (let id in ids) {
+        for (let id in params.shapes) {
             let shape = this.image_config.regions_info.getShape(id);
             if (shape) {
+                let syncId = params.shapes[id];
+                ids.push(id);
                 let oldRoiAndShapeId = Converters.extractRoiAndShapeId(id);
-                let newRoiAndShapeId = Converters.extractRoiAndShapeId(ids[id]);
+                let newRoiAndShapeId = Converters.extractRoiAndShapeId(syncId);
                 // we reset modifed
                 shape.modified = false;
                 // new ones are stored under their newly created ids
@@ -669,7 +670,7 @@ export default class Ol3Viewer extends EventSubscriber {
                     }
                     delete shape['is_new'];
                     let newShape = Object.assign({}, shape);
-                    newShape.shape_id = ids[id];
+                    newShape.shape_id = syncId;
                     newShape['@id'] = newRoiAndShapeId.shape_id;
                     newRoi.shapes.set(newRoiAndShapeId.shape_id, newShape);
                     shape.deleted = true; // take out old entry
@@ -695,8 +696,14 @@ export default class Ol3Viewer extends EventSubscriber {
                 }
             }
         }
-        // for now let's just clear the history
-        this.image_config.regions_info.history.resetHistory();
+
+        // if we stored as part of a delete request we need to clean up
+        // the history for the deleted shapes,
+        // otherwise we wipe the history altogether
+        if (params.is_delete)
+            this.image_config.regions_info.history.removeEntries(ids);
+        else this.image_config.regions_info.history.resetHistory();
+
         // error handling: will probably be adjusted
         if (typeof params.error === 'string') {
             let msg = "Saving of Rois/Shapes failed.";
@@ -739,7 +746,7 @@ export default class Ol3Viewer extends EventSubscriber {
         history.addHistory(
             history.getHistoryId(),
             history.action.OL_ACTION,
-            {hist_id : params.hist_id});
+            {hist_id : params.hist_id, shape_ids: params.shape_ids});
     }
 
     /**
