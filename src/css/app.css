@@ -868,8 +868,8 @@ thumbnail-slider img {
     background-position: center!important;
 }
 .arrow-button .dropdown-menu {
-    left: -13px;
-    min-width: 62px;
+    left: -15px;
+    min-width: 70px;
 }
 .arrow-button .dropdown-menu span {
     display: inline-block;
