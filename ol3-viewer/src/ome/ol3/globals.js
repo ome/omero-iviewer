@@ -355,7 +355,7 @@ ome.ol3.RENDER_STATUS = {
  * @const
  * @enum {number}
  */
-ome.ol3.UNTILED_RETRIEVAL_LIMIT = 4000000;
+ome.ol3.UNTILED_RETRIEVAL_LIMIT = 1000000;
 
 goog.exportSymbol(
     'ome.ol3.REGIONS_MODE',
