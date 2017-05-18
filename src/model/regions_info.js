@@ -66,7 +66,7 @@ export default class RegionsInfo extends EventSubscriber {
      * @memberof RegionsInfo
      * @type {number}
      */
-     number_of_shapes = 0;
+    number_of_shapes = 0;
 
     /**
      * @memberof RegionsInfo
@@ -75,7 +75,7 @@ export default class RegionsInfo extends EventSubscriber {
     history = null;
 
     /**
-     * a helper array to avoid data iteration. holds ids of selsected shapes
+     * a helper array to avoid data iteration. holds ids of selected shapes
      * @memberof RegionsInfo
      * @type {Array.<string>}
      */
@@ -284,8 +284,9 @@ export default class RegionsInfo extends EventSubscriber {
                 this.is_pending = false;
                 try {
                     let count = 0;
+                    console.log(response);
                     response.map((roi) => {
-                        let shapes = new Map();
+                        let shapes = [];
 
                         // set shape properties and store the object
                         let roiId = roi['@id'];
@@ -310,8 +311,19 @@ export default class RegionsInfo extends EventSubscriber {
                             newShape.selected = false;
                             newShape.deleted = false;
                             newShape.modified = false;
-                            shapes.set(shapeId, newShape);
+                            newShape.id = shapeId;
+                            shapes.push(newShape);
                             count++;
+                        });
+                        shapes.sort(function(s1, s2) {
+                            var z1 = parseInt(s1['TheZ']);
+                            var z2 = parseInt(s2['TheZ']);
+                            var t1 = parseInt(s1['TheT']);
+                            var t2 = parseInt(s2['TheT']);
+                            if (z1 === z2) {
+                                return (t1 < t2) ? -1 : (t1 > t2) ? 1: 0;
+                            }
+                            return (z1 < z2) ? -1: 1;
                         });
                         this.data.set(roiId, {
                             shapes: shapes,
