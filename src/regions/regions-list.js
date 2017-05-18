@@ -425,11 +425,13 @@ export default class RegionsList extends EventSubscriber {
      */
     toggleShapeVisibility(id, event) {
         event.stopPropagation();
+        event.preventDefault();
         this.context.publish(
            REGIONS_SET_PROPERTY, {
                config_id: this.regions_info.image_info.config_id,
                property : "visible",
                shapes : [id], value : event.target.checked});
+        return false;
     }
 
     /**

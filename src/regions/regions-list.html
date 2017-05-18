@@ -25,7 +25,7 @@
             <div id="reg-col-4" class="regions-table-col shape-comment">Comment</div>
             <div id="reg-col-5" class="regions-table-col shape-show">
                 <label for="shapes_visibility_toggler"
-                       show.bind="regions_info.data.size > 0">Show</label>
+                       show.bind="regions_info.number_of_shapes > 0">Show</label>
                 <input id="shapes_visibility_toggler"
                        title="Show/Hide all rois"
                        checked
@@ -80,7 +80,6 @@
                         <div class="regions-table-col shape-show">
                             <input type="checkbox"
                                 title="Show/Hide shape" checked.one-way="shape.visible"
-                                value.one-way="shape.visible"
                                 change.delegate="toggleShapeVisibility(shape.shape_id, $event)"/>
                         </div>
                     </div>
