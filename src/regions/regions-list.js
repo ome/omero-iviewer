@@ -430,6 +430,7 @@ export default class RegionsList extends EventSubscriber {
                config_id: this.regions_info.image_info.config_id,
                property : "visible",
                shapes : [id], value : event.target.checked});
+        return false;
     }
 
     /**
