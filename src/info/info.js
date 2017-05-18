@@ -142,7 +142,7 @@ export class Info extends EventSubscriber {
             }
         }
         pixels_size_label += ":";
-        let size_xy = this.image_info.dimensions.max_x+" x "+this.image_info.dimensions.max_y+" px"
+        let size_xy = this.image_info.dimensions.max_x+" x "+this.image_info.dimensions.max_y
         this.columns = [
             {"label": "Image ID:",
              "value": this.image_info.image_id,
@@ -153,7 +153,7 @@ export class Info extends EventSubscriber {
             {"label": "Acquisition Date:",
              "value": acquisition_date,
             },
-            {"label": "Dimension XY:",
+            {"label": "Dimension (XY):",
              "value": size_xy,
             },
             {"label": "Pixels Type:",
