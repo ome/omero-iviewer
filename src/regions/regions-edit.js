@@ -935,23 +935,5 @@ export default class RegionsEdit extends EventSubscriber {
             this.adjustEditWidgets();
         };
         this.context.publish(REGIONS_SET_PROPERTY, opts);
-
-        // ask if we should delete immediately
-        Ui.showConfirmationDialog(
-            "Delete Selected Rois",
-            "Do you really want to delete?",
-            () => this.context.publish( // trigger storage routine
-                REGIONS_STORE_SHAPES,
-                {config_id : this.regions_info.image_info.config_id,
-                 deleted: ids}),
-            () => {
-                history.undoHistory(true);
-                this.context.publish(
-                   REGIONS_SET_PROPERTY, {
-                       config_id: this.regions_info.image_info.config_id,
-                       property: 'selected', shapes : ids,
-                    clear: false, value : true, center : false
-                });
-            }, false);
     }
 }
