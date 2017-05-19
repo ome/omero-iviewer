@@ -1458,7 +1458,7 @@ ome.ol3.Viewer.prototype.generateShapes =
             setTimeout(function() {
                 var newRegionsObject =
                     ome.ol3.utils.Conversion.toJsonObject(
-                        new ol.Collection(generatedShapes), false, true);
+                        new ol.Collection(generatedShapes), true, true);
                 if (typeof newRegionsObject !== 'object' ||
                     !ome.ol3.utils.Misc.isArray(newRegionsObject['rois']) ||
                     newRegionsObject['rois'].length === 0) return;

@@ -387,7 +387,10 @@ export default class Ol3Viewer extends EventSubscriber {
                                     Converters.amendShapeDefinition(upToDateDef);
                           }
                           delete deepCopy['shape_id'];
-                          deepCopy['roi_id'] = params.roi_id;
+                          if (typeof params.paste === 'boolean' && params.paste)
+                            deepCopy['roi_id'] =
+                                this.image_config.regions_info.getNewRegionsId();
+                          else deepCopy['roi_id'] = params.roi_id;
                           this.viewer.generateShapes(deepCopy,
                               params.number, params.random, extent, theDims,
                               params.add_history, params.hist_id);
