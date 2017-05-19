@@ -28,7 +28,7 @@ import {
 import {
     EventSubscriber, IMAGE_CONFIG_UPDATE, IMAGE_DIMENSION_CHANGE,
     REGIONS_COPY_SHAPES, REGIONS_GENERATE_SHAPES, REGIONS_MODIFY_SHAPES,
-    REGIONS_SET_PROPERTY, REGIONS_STORE_SHAPES
+    REGIONS_SET_PROPERTY
 } from '../events/events';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {spectrum} from 'spectrum-colorpicker';

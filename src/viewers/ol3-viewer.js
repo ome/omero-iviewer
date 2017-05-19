@@ -588,16 +588,32 @@ export default class Ol3Viewer extends EventSubscriber {
         // the event doesn't concern us
         if (params.config_id !== this.config_id) return;
 
-        let requestMade =
-            this.viewer.storeRegions(
-                Misc.isArray(params.deleted) ? params.deleted : [], false,
-                this.context.getPrefixedURI(IVIEWER) + '/persist_rois',
-                params.omit_client_update);
+        let numberOfdeletedShapes =
+            this.image_config.regions_info.getNumberOfDeletedShapes(true);
+        let storeRois = () => {
+            let requestMade =
+                this.viewer.storeRegions(
+                    Misc.isArray(params.deleted) ? params.deleted : [], false,
+                    this.context.getPrefixedURI(IVIEWER) + '/persist_rois',
+                    params.omit_client_update);
 
-        if (requestMade) Ui.showModalMessage("Saving Regions. Please wait...");
-        else if (params.omit_client_update)
-            this.context.eventbus.publish(
-                "REGIONS_STORED_SHAPES", { omit_client_update: true});
+            if (requestMade) Ui.showModalMessage("Saving Regions. Please wait...");
+            else if (params.omit_client_update)
+                this.context.eventbus.publish(
+                    "REGIONS_STORED_SHAPES", { omit_client_update: true});
+        };
+
+        if (numberOfdeletedShapes > 0) {
+            Ui.showConfirmationDialog(
+                'Save ROIS?',
+                'Saving your changes includes the deletion of ' +
+                numberOfdeletedShapes + ' ROIs. Do you want to continue?',
+                storeRois, () => {
+                    if (params.omit_client_update)
+                        this.context.eventbus.publish(
+                            "REGIONS_STORED_SHAPES", { omit_client_update: false});
+                });
+        } else storeRois();
     }
 
     /**
