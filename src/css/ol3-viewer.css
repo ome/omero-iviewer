@@ -233,6 +233,7 @@
     border: 1px solid #ccc;
 }
 .ol-overviewmap:not(.ol-collapsed) button {
+    background-color: #fff;
     bottom: 1px;
     right: 1px;
     position: absolute;
