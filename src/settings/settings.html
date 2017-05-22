@@ -53,20 +53,23 @@
     </div>
 
     <div class="checkbox checkbox-settings">
-        <div class="col-xs-6">
+        <div>
             <label>
                 <input type="checkbox"
                     checked.bind="image_config.image_info.model | imageModel"
+                    disabled.bind="!(image_config && image_config.image_info &&
+                                     image_config.image_info.ready)"
                     change.delegate="onModelChange($event.target.checked)" />
                Grayscale
            </label>
         </div>
-        <div class="col-xs-6">
+        <div>
             <label class="${image_config && image_config.image_info &&
-                    !image_config.image_info.tiled ? '' : 'disabled-color'}">
+                    !image_config.image_info.tiled && image_config.image_info.ready ?
+                        '' : 'disabled-color'}">
             <input type="checkbox"
                 disabled.bind="!(image_config && image_config.image_info &&
-                    !image_config.image_info.tiled)"
+                    !image_config.image_info.tiled && image_config.image_info.ready)"
                 change.delegate="toggleHistogram($event.target.checked)" />
             Show Histogram
             </label>
@@ -77,21 +80,25 @@
         <div class="histogram"></div>
     </div>
 
-    <div class="row">
+    <div show.bind="image_config.image_info.ready" class="row">
         <channel-settings config_id.bind="config_id"></channel-settings>
     </div>
 
-    <div class="row">
+    <div show.bind="image_config.image_info.ready" class="row">
         <hr />
         <div>User Settings:</div>
-        <div style="padding: 12px">
+        <div class="user-settings">
             <div repeat.for="rdef of rdefs"
-                class="user-settings"
+                class="user-setting"
                 click.delegate="applyUserSetting($index)">
                 <img src.bind="getRdefThumbUrl() + '/?rdefId=' + rdef.id + '&' + revision" />
                 <div>${rdef.owner.firstName + ' ' + rdef.owner.lastName}</div>
             </div>
-        <div>
+        </div>
     </div>
+
+    <div class="disabled-color loading-text"
+         show.bind="!image_config.image_info.ready">Loading Image Data ...
+     </div>
 
 </template>

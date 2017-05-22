@@ -65,21 +65,18 @@
         </div>
 
         <span repeat.for="[id, conf] of context.image_configs">
-            <div class="frame col-xs-12"
-                show.bind="context.getImageConfig(id) &&
-                    context.getImageConfig(id).image_info.ready">
-                <ol3-viewer config_id.bind="id"></ol3-viewer>
+            <div class="frame col-xs-12">
+                <ol3-viewer show.bind="conf.image_info.ready"
+                            config_id.bind="id">
+                </ol3-viewer>
             </div>
 
-            <div class="col-splitter right-split"
-                show.bind="context.getImageConfig(id) &&
-                    context.getImageConfig(id).image_info.ready">
+            <div class="col-splitter right-split">
                 <img src="../css/images/collapse-right.png"/>
             </div>
 
-            <right-hand-panel show.bind="context.getImageConfig(id) &&
-                context.getImageConfig(id).image_info.ready"
-                class="right-hand-panel sidebar" config_id.bind="id">
+            <right-hand-panel class="right-hand-panel sidebar"
+                              config_id.bind="id">
             </right-hand-panel>
         </span>
     </div>
