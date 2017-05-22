@@ -53,9 +53,9 @@
                 </div>
 
                 <div show.bind="regions_info.ready"
-                     class="checkbox checkbox-settings" style="line-height: 20px;">
+                     class="checkbox comment-checkbox">
                     <label>
-                        <input style="line-height: 20px;" type="checkbox"
+                        <input style="width: auto;" type="checkbox"
                         change.delegate="showComments($event.target.checked)">
                         Show Comments
                     </label>
@@ -78,7 +78,7 @@
         <regions-list show.bind="regions_info.ready"
                       regions_info.bind="regions_info">
         </regions-list>
-        <div class="disabled-color loading-regions"
+        <div class="disabled-color loading-text"
              show.bind="!regions_info.ready">Loading Regions ...</div>
 
     </div>

@@ -18,9 +18,9 @@
 
 <template>
 
-    <h4>${image_info.image_name}</h4>
+    <h4 show.bind="image_info.ready">${image_info.image_name}</h4>
 
-    <table class="table table-condensed">
+    <table show.bind="image_info.ready" class="table table-condensed">
         <tr repeat.for="column of columns">
             <th class="col-sm-6 text-weight-bold">${column.label}</th>
             <td class="col-sm-6">${column.value}</td>
@@ -28,9 +28,15 @@
         <tr>
             <th class="col-sm-6 text-weight-bold">Channels:</th>
             <td class="col-sm-6">
-                <span repeat.for="channel of image_info.channels">${channel.label}${!$last ? ', ' : ''}</span>
+                <span repeat.for="channel of image_info.channels">
+                    ${channel.label}${!$last ? ', ' : ''}
+                </span>
             </td>
         </tr>
     </table>
+
+    <div class="disabled-color loading-text" show.bind="!image_info.ready">
+        Loading Image Data ...
+     </div>
 
 </template>

@@ -250,6 +250,7 @@ export default class Ol3Viewer extends EventSubscriber {
         // we ignore notifications that don't concern us
         // and don't have the model param
         if (params.config_id !== this.config_id ||
+            this.viewer === null ||
             (typeof params.model !== 'string' &&
                 typeof params.projection !== 'string' &&
                 !Misc.isArray(params.ranges))) return;
