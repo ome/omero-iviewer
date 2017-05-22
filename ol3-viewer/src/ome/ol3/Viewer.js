@@ -540,11 +540,9 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
        view: view
     });
 
-    // expand bird's eye view for tiles sources
-    if (source.use_tiled_retrieval_ && this.viewerState_["birdseye"] &&
-       this.viewerState_["birdseye"]['ref']
-           instanceof ome.ol3.controls.BirdsEye)
-               this.viewerState_["birdseye"]['ref'].setCollapsed(false);
+    // collapse/expand bird's eye view depending on whether we have tile sources
+    this.viewerState_["birdseye"]['ref'].setCollapsed(
+        !source.use_tiled_retrieval_);
     // enable scalebar by default
     this.toggleScaleBar(true);
 
@@ -1838,7 +1836,13 @@ ome.ol3.Viewer.prototype.redraw = function(delay) {
     if (this.viewer_) {
         var update =
             function() {
-                if (this.viewer_) this.viewer_.updateSize();
+                if (this.viewer_) {
+                    this.viewer_.updateSize();
+                    if (this.viewerState_["birdseye"] &&
+                        this.viewerState_["birdseye"]['ref']
+                           instanceof ome.ol3.controls.BirdsEye)
+                                this.viewerState_["birdseye"]['ref'].ovmap_.updateSize();
+                }
             }.bind(this);
 
         if (typeof delay !== 'number' || delay <= 0) {
