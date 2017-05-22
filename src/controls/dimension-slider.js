@@ -255,7 +255,7 @@ export default class DimensionSlider extends EventSubscriber {
                 let newDimVal = Math.round(ui.value);
                 let sliderTip =
                     this.dim.toUpperCase() + ":" + (newDimVal+1);
-                if (imgInf.image_delta_t.length > 0 &&
+                if (this.dim === 't' && imgInf.image_delta_t.length > 0 &&
                     newDimVal < imgInf.image_delta_t.length)
                         sliderTip += " [" + imgInf.image_delta_t[newDimVal] + "]";
                 sliderValueSpan.text(sliderTip);
