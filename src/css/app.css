@@ -210,6 +210,9 @@ a.ui-button:active,
     margin-top: -35px;
     position: relative;
 }
+.center-row2-hidden {
+    display: none;
+}
 
 .slider-value {
     position: relative;
@@ -221,7 +224,7 @@ a.ui-button:active,
 
 /* Z/T sliders */
 .plane-slider, .time-slider {
-    visibility: hidden;
+    display: none;
     position: absolute;
 }
 

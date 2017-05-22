@@ -130,29 +130,7 @@ export default class DimensionSlider extends EventSubscriber {
             // get rid of slider
             $(this.elSelector).slider( "destroy" );
         } catch (ignored) {}
-        this.hide();
-    }
-
-    /**
-     * Shows slider using display or visibility css
-     *
-     * @memberof DimensionSlider
-     * @param {boolean} use_display use css display instead of visibility
-     */
-    show(use_display=false) {
-        if (use_display) $(this.element).show();
-        else $(this.element).css('visibility', 'visible');
-    }
-
-    /**
-     * Hides slider using display or visibility css
-     *
-     * @memberof DimensionSlider
-     * @param {boolean} use_display use css display instead of visibility
-     */
-    hide(use_display=false) {
-        if (use_display) $(this.element).hide();
-        else $(this.element).css('visibility', 'hidden');
+        $(this.element).hide()
     }
 
     /**
@@ -277,7 +255,7 @@ export default class DimensionSlider extends EventSubscriber {
                 let newDimVal = Math.round(ui.value);
                 let sliderTip =
                     this.dim.toUpperCase() + ":" + (newDimVal+1);
-                if (imgInf.image_delta_t.length > 0 &&
+                if (this.dim === 't' && imgInf.image_delta_t.length > 0 &&
                     newDimVal < imgInf.image_delta_t.length)
                         sliderTip += " [" + imgInf.image_delta_t[newDimVal] + "]";
                 sliderValueSpan.text(sliderTip);
@@ -298,7 +276,7 @@ export default class DimensionSlider extends EventSubscriber {
             change: (event, ui) => this.onChange(ui.value,
                 event.originalEvent ? true : false)
         });
-        this.show();
+        $(this.element).show();
     }
 
     /**
