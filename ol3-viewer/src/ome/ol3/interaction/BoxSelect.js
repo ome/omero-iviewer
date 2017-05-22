@@ -79,7 +79,7 @@ ome.ol3.interaction.BoxSelect = function(regions_reference) {
                 if (feature.getGeometry().intersectsExtent(extent))
                     ids.push(feature.getId());
             });
-        this.regions_.setProperty(ids, "selected", true);
+        if (ids.length > 0) this.regions_.setProperty(ids, "selected", true);
     };
     this.boxEndListener_ = null;
 

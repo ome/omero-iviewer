@@ -130,8 +130,7 @@ export default class Regions {
 
         this.context.publish(
             REGIONS_STORE_SHAPES,
-            {config_id : this.regions_info.image_info.config_id,
-                selected: false});
+            {config_id : this.regions_info.image_info.config_id});
     }
 
     /**

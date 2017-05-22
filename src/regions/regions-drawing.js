@@ -151,9 +151,11 @@ export default class RegionsDrawing extends EventSubscriber {
         // if the event is for another config, forget it...
         if (params.config_id !== this.regions_info.image_info.config_id) return;
 
-        // set default for param drawn
+        // set defaults for params (that don't exist)
         if (typeof params.drawn !== 'boolean') params.drawn = false;
         let add = typeof params.add !== 'boolean' || params.add;
+        if (typeof params.add_history !== 'boolean') params.add_history = true;
+        if (typeof params.hist_id !== 'number') params.hist_id = -1;
 
         // the roi we belong to
         let roi_id = params.drawn ? params.roi_id : null;
@@ -190,30 +192,37 @@ export default class RegionsDrawing extends EventSubscriber {
                         newShape.selected = false;
                         newShape.deleted = false;
                         newShape.modified = true;
-                        // add to map (if flag is true)
-                        if (add) shapes.set(newShape['@id'], newShape);
-                        generatedShapes.push(Object.assign({}, newShape));
+
+                        // create deep copy
+                        let genShape = Object.assign({}, newShape);
+                        if (add) {
+                            // add to map (if flag is true)
+                            shapes.set(newShape['@id'], newShape);
+                            // make history entry (if flag is set)
+                            if (params.add_history) {
+                                this.regions_info.history.addHistory(
+                                    params.hist_id,
+                                    this.regions_info.history.action.SHAPES,
+                                    { diffs: [genShape],
+                                      shape_id: genShape.shape_id,
+                                      old_vals: false, new_vals: true});
+                            }
+                        }
+                        generatedShapes.push(genShape);
                     }
                 });
         }
 
-        // add a history entry for the drawn shapes, if we have at least one
-        // and no directive to not add a history record
-        if (typeof params.add_history !== 'boolean') params.add_history = true;
-        if (typeof params.hist_id !== 'number') params.hist_id = -1;
         let len = generatedShapes.length;
-        if (len !== 0 && add && params.add_history) {
-            this.regions_info.history.addHistory(
-                params.hist_id, this.regions_info.history.action.SHAPES,
-                { diffs: generatedShapes, old_vals: false, new_vals: true});
-        }
         // we update the overall number of shapes
         this.regions_info.number_of_shapes += len;
+
         // we only continue if we have been drawn and intend to propagate
         if (params.drawn)
             this.onDrawShape(
                 this.supported_shapes.indexOf(
                     this.regions_info.shape_to_be_drawn), true);
+
         // scroll to end of list
         if (len !== 0)
             setTimeout(

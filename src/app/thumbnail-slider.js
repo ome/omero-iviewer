@@ -401,11 +401,12 @@ export default class ThumbnailSlider extends EventSubscriber {
                         REGIONS_STORED_SHAPES,
                         (params={}) => {
                             tmpSub.dispose();
-                            navigateToNewImage();
+                            if (params.omit_client_update) navigateToNewImage();
                     });
-                this.context.publish(
-                    REGIONS_STORE_SHAPES,
-                    {config_id : conf.id, selected: false, omit_client_update: true});
+                setTimeout(()=>
+                    this.context.publish(
+                        REGIONS_STORE_SHAPES,
+                        {config_id : conf.id, omit_client_update: true}), 20);
             };
 
             UI.showConfirmationDialog(

@@ -573,6 +573,7 @@ ome.ol3.source.Regions.prototype.storeRegions =
             var eventbus = viewer.eventbus_;
             if (config_id && eventbus) {
                 params['config_id'] = config_id;
+                params['is_delete'] = roisAsJsonObject['is_delete'];
                 eventbus.publish("REGIONS_STORED_SHAPES", params);
             }
         }
@@ -594,7 +595,17 @@ ome.ol3.source.Regions.prototype.storeRegions =
                             f.setId(data['ids'][id]);
                         }
                     }
+                    // tag on the newly but immediately deleted shapes
+                    for (var i in roisAsJsonObject['new_and_deleted']) {
+                        var id = roisAsJsonObject['new_and_deleted'][i];
+                        if (typeof capturedRegionsReference.idIndex_[id] === 'object') {
+                            capturedRegionsReference.removeFeature(
+                                capturedRegionsReference.idIndex_[id]);
+                                data['ids'][id] = id;
+                            }
+                    };
                 }
+
                 if (typeof data['error'] === 'string') error = data['error'];
             } catch(err) {
                 error = err;
@@ -643,6 +654,7 @@ ome.ol3.source.Regions.prototype.setProperty =
     function(roi_shape_ids, property, value, callback) {
 
     if (!ome.ol3.utils.Misc.isArray(roi_shape_ids) ||
+        roi_shape_ids.length === 0 ||
         typeof property !== 'string' ||
         typeof value === 'undefined' ||
         typeof this.idIndex_ !== 'object') return;
@@ -702,7 +714,7 @@ ome.ol3.source.Regions.prototype.setProperty =
                         !f['permissions']['canDelete']) continue;
                     eventProperty = "rollback";
                 }
-            }
+            } else eventProperty = property;
 
             // set new value
             f[property] =
@@ -716,7 +728,9 @@ ome.ol3.source.Regions.prototype.setProperty =
             if (eventProperty === 'rollback') {
                 eventProperty = 'deleted';
                 val = false;
-            } else if (eventProperty === 'deleted') val = true;
+            } else if (eventProperty === 'deleted' ||
+                       (property === 'state' && eventProperty === 'modified'))
+                            val = true;
             else val = value;
             changedProperties.push(eventProperty);
             changedValues.push(val);
@@ -763,7 +777,10 @@ ome.ol3.source.Regions.prototype.addHistory =
         var f = features[i];
         // we have a record per feature id for convenient lookup
         // if we don't have one yet, we ar going to create and add it
-        var hist_record = { old_value : null, new_value : null};
+        var hist_record = {
+            old_state: f['state'],
+            new_state: ome.ol3.REGIONS_STATE.MODIFIED,
+            old_value : null, new_value : null};
         if (typeof hist_entry[f.getId()] === 'object')
             hist_record = hist_entry[f.getId()];
         else hist_entry[f.getId()] = hist_record;
@@ -793,9 +810,17 @@ ome.ol3.source.Regions.prototype.doHistory = function(hist_id, undo) {
     for (var f in hist_entry) {
         var hist_record = hist_entry[f];
         // check if we have such as feature
-        if (this.idIndex_[f] instanceof ol.Feature)
+        if (this.idIndex_[f] instanceof ol.Feature) {
             this.idIndex_[f].setGeometry(
                 undo ? hist_record.old_value : hist_record.new_value);
+            var newState = undo ? hist_record.old_state : hist_record.new_state;
+            if (newState !== this.idIndex_[f]['state']) {
+                this.idIndex_[f]['state'] = newState;
+                this.setProperty(
+                    [this.idIndex_[f].getId()], "modified",
+                    newState !== ome.ol3.REGIONS_STATE.DEFAULT);
+            }
+        }
     }
 }
 
@@ -803,14 +828,15 @@ ome.ol3.source.Regions.prototype.doHistory = function(hist_id, undo) {
  * Sends out an event notification with the associated history id
  *
  * @param {number} hist_id the id for the history entry we like to un/redo
+ * @param {Array.<string>} ids the ids of the shapes in the history entry
  */
-ome.ol3.source.Regions.prototype.sendHistoryNotification = function(hist_id) {
+ome.ol3.source.Regions.prototype.sendHistoryNotification = function(hist_id, ids) {
     // send out notification with shape ids
     var config_id = this.viewer_.getTargetId();
     var eventbus = this.viewer_.eventbus_;
     if (config_id && eventbus) // publish
         eventbus.publish("REGIONS_HISTORY_ENTRY",
-                {"config_id": config_id, "hist_id": hist_id});
+                {"config_id": config_id, "hist_id": hist_id, "shape_ids": ids});
 }
 
 /**

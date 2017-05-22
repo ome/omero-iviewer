@@ -660,7 +660,7 @@ ome.ol3.utils.Conversion.toJsonObject = function(
     if (typeof returnFlattenedArray !== 'boolean') returnFlattenedArray = false;
 
     var currentNewId = -1;
-    var roisToBeStored = {"count" : 0};
+    var roisToBeStored = {"count": 0, "new_and_deleted": []};
     var rois = {};
 
     var feats = features.getArray();
@@ -696,7 +696,10 @@ ome.ol3.utils.Conversion.toJsonObject = function(
                 (typeof feature['permissions'] === 'object' &&
                  feature['permissions'] !== null &&
                  typeof feature['permissions']['canDelete'] === 'boolean' &&
-                 !feature['permissions']['canDelete'])) continue;
+                 !feature['permissions']['canDelete'])) {
+                     roisToBeStored['new_and_deleted'].push(feature.getId());
+                     continue;
+                 }
         } else if (feature['state'] === ome.ol3.REGIONS_STATE.REMOVED &&
                    typeof feature['permissions'] === 'object' &&
                    feature['permissions'] !== null &&
@@ -726,8 +729,6 @@ ome.ol3.utils.Conversion.toJsonObject = function(
         roiContainer['shapes'].push(jsonObject);
         roisToBeStored['count']++;
     };
-
-    if (roisToBeStored['count'] === 0) return null;
 
     if (returnFlattenedArray) {
         var flattenedArray = [];

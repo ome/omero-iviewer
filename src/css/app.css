@@ -875,8 +875,8 @@ thumbnail-slider img {
     background-position: center!important;
 }
 .arrow-button .dropdown-menu {
-    left: -13px;
-    min-width: 62px;
+    left: -15px;
+    min-width: 70px;
 }
 .arrow-button .dropdown-menu span {
     display: inline-block;
@@ -976,18 +976,11 @@ thumbnail-slider img {
 .modal-message .ok {
     width: 50px;
 }
-.confirmation_dialog .modal-title {
-    margin: 5px;
-}
-.confirmation_dialog .close {
-    margin-top: 5px;
-    margin-right: 8px;
-}
-.confirmation_dialog .modal-header {
-    padding: 2px;
-}
 .modal-footer {
     padding: 4px;
+}
+.modal-open .modal {
+    overflow-y: hidden;
 }
 
 .text-weight-bold {

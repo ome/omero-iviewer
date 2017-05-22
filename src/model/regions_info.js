@@ -505,4 +505,14 @@ export default class RegionsInfo extends EventSubscriber {
                 !shape['permissions'][permission]);
     }
 
+    /**
+     * Returns the number of deleted shapes
+     *
+     * @return {number} the number of deleted shapes
+     * @memberof RegionsEdit
+     */
+    getNumberOfDeletedShapes() {
+        return this.unsophisticatedShapeFilter(
+            ["deleted"], [true], ['canDelete']).length;
+    }
 }
