@@ -34,8 +34,10 @@
         </div>
     </div>
 
-    <div class="center-row2
-                ${image_config.image_info.dimensions.max_z > 1 ? 'show-zSlider' : ''}">
+    <div class="${image_config.image_info.dimensions.max_t > 1 ?
+                    'center-row2' : 'center-row2-hidden'}
+                ${image_config.image_info.dimensions.max_z > 1 ?
+                    'show-zSlider' : ''}">
             <dimension-slider
                 config_id.bind="config_id"
                 dim="t"
