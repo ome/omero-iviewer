@@ -171,7 +171,8 @@ ome.ol3.source.Image = function(options) {
      */
     this.use_tiled_retrieval_ =
         !this.split_ &&
-            (this.tiled_ || (this.width_* this.height_) > (1000 * 1000));
+            (this.tiled_ ||
+                (this.width_* this.height_) > ome.ol3.UNTILED_RETRIEVAL_LIMIT);
     if (!this.use_tiled_retrieval_) // 1 tile with image dimensions
         opts.tile_size = { width: this.width_, height: this.height_};
 
