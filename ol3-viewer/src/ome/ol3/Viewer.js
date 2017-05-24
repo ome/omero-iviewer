@@ -532,9 +532,9 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
        view: view
     });
 
-    // collapse/expand bird's eye view depending on whether we have tile sources
-    //this.viewerState_["birdseye"]['ref'].setCollapsed(
-    //    !source.use_tiled_retrieval_);
+    // expand bird's eye view if we have tiled sources
+    if (source.use_tiled_retrieval_)
+        this.viewerState_["birdseye"]['ref'].setCollapsed(false);
     // tweak source element for fullscreen to include dim sliders (iviewer only)
     var targetId = this.getTargetId();
     var viewerFrame = targetId ? document.getElementById(targetId) : null;
