@@ -351,11 +351,11 @@ ome.ol3.RENDER_STATUS = {
 };
 
 /**
- * Limit for untiled image retrieval: 1K^2
+ * Limit for untiled image retrieval: 2K^2
  * @const
  * @enum {number}
  */
-ome.ol3.UNTILED_RETRIEVAL_LIMIT = 1000000;
+ome.ol3.UNTILED_RETRIEVAL_LIMIT = 4000000;
 
 goog.exportSymbol(
     'ome.ol3.REGIONS_MODE',
