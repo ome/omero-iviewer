@@ -126,7 +126,7 @@ ome.ol3.AVAILABLE_VIEWER_CONTROLS = {
         {"clazz" : ome.ol3.controls.BirdsEye,
         "options": {collapsed : false, collapseLabel : "»", label: "«"},
         "defaults": true,
-        "enabled": true,
+        "enabled": false,
         "links" : []},
     "scalebar" :
         {"clazz" : ome.ol3.controls.ScaleBar,

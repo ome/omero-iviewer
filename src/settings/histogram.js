@@ -131,6 +131,7 @@ export default class Histogram extends EventSubscriber {
      * @memberof Histogram
      */
     createHistogramSVG() {
+        d3.select($(this.selector + ' svg').get(0)).remove();
         // 1px margin to right so slider marker not lost
         this.graph_svg = d3.select($(this.selector).get(0)).append("svg")
               .attr("width", this.graph_dims[0] + 1)
@@ -354,6 +355,7 @@ export default class Histogram extends EventSubscriber {
     }
 
     destroyHistogram() {
+        d3.select($(this.selector + ' svg').get(0)).remove();
         this.unsubscribe();
         this.image_info = null;
     }

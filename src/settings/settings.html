@@ -21,15 +21,16 @@
 
     <div class="btn-group save-settings">
         <button type="button"
-            disabled.bind="!(image_config && image_config.image_info &&
+            disabled.bind="!(image_config.image_info.ready &&
                 image_config.image_info.can_annotate &&
-                image_config.history.length > 0 && image_config.historyPointer >= 0)"
+                image_config.history.length > 0 &&
+                image_config.historyPointer >= 0)"
             class="btn btn-default btn-sm"
             click.delegate="saveImageSettings()">Save
         </button>
         <button type="button"
-            disabled.bind="!(image_config && image_config.image_info &&
-                image_config.image_info.can_annotate)"
+            disabled.bind="!(image_config.image_info.ready &&
+                            image_config.image_info.can_annotate)"
             class="btn btn-default btn-sm"
             title="Apply and save Image settings to all Images in the Dataset"
             click.delegate="saveImageSettingsToAll()">Save to All
@@ -38,17 +39,17 @@
 
     <div class="btn-group history">
         <button type="button" click.delegate="undo()"
-            disabled.bind="!(image_config && image_config.history.length > 0 &&
-                image_config.historyPointer >= 0)"
+            disabled.bind="!(image_config.history.length > 0 &&
+                            image_config.historyPointer >= 0)"
             class="btn btn-default btn-sm">Undo</button>
         <button type="button" click.delegate="redo()"
-            disabled.bind="!(image_config && image_config.history.length > 0 &&
-                image_config.historyPointer < image_config.history.length-1)"
+            disabled.bind="!(image_config.history.length > 0 &&
+                            image_config.historyPointer < image_config.history.length-1)"
             class="btn btn-default btn-sm">Redo</button>
         <button type="button" click.delegate="copy()" class="btn btn-default btn-sm">Copy</button>
         <button type="button" class="btn btn-default btn-sm"
-            disabled.bind="!(image_config && image_config.image_info &&
-                image_config.image_info.copied_img_rdef)"
+            disabled.bind="!(image_config.image_info.ready &&
+                            image_config.image_info.copied_img_rdef)"
             click.delegate="paste()">Paste</button>
     </div>
 
@@ -64,24 +65,27 @@
            </label>
         </div>
         <div>
-            <label class="${image_config && image_config.image_info &&
-                    !image_config.image_info.tiled && image_config.image_info.ready ?
-                        '' : 'disabled-color'}">
+            <label class="${image_config.image_info.ready &&
+                            !image_config.image_info.tiled  ?
+                                '' : 'disabled-color'}">
             <input type="checkbox"
-                disabled.bind="!(image_config && image_config.image_info &&
-                    !image_config.image_info.tiled && image_config.image_info.ready)"
-                change.delegate="toggleHistogram($event.target.checked)" />
+                disabled.bind="!(image_config.image_info.ready &&
+                                !image_config.image_info.tiled)"
+                checked.one-way="histogram && histogram.visible"
+                change.delegate="toggleHistogram($event)" />
             Show Histogram
             </label>
         </div>
     </div>
 
-    <div show.bind="histogram && histogram.visible" class="row">
+    <div show.bind="image_config.image_info.ready &&
+                    !image_config.image_info.tiled && 
+                    histogram && histogram.visible" class="row">
         <div class="histogram"></div>
     </div>
 
     <div show.bind="image_config.image_info.ready" class="row">
-        <channel-settings config_id.bind="config_id"></channel-settings>
+        <channel-settings image_config.bind="image_config"></channel-settings>
     </div>
 
     <div show.bind="image_config.image_info.ready" class="row">

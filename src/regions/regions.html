@@ -21,7 +21,7 @@
     <require from="./regions-edit"></require>
 
     <div class="regions-container"
-         show.bind="image_info.projection !== 'split'">
+         show.bind="regions_info.image_info.projection !== 'split'">
 
         <div class="regions-tools">
             <div class="shapes-persistence">
@@ -56,7 +56,8 @@
                      class="checkbox comment-checkbox">
                     <label>
                         <input style="width: auto;" type="checkbox"
-                        change.delegate="showComments($event.target.checked)">
+                               checked.one-way="show_comments"
+                               change.delegate="showComments($event)">
                         Show Comments
                     </label>
                 </div>
@@ -66,8 +67,7 @@
             <regions-edit regions_info.bind="regions_info"></regions-edit>
 
             <hr show.bind="regions_info !== null && regions_info.ready &&
-                           regions_info.image_info.can_annotate"
-                regions_info.bind="regions_info" />
+                           regions_info.image_info.can_annotate" />
             <regions-drawing show.bind="regions_info !== null &&
                                         regions_info.ready &&
                                         regions_info.image_info.can_annotate"

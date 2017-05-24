@@ -21,9 +21,7 @@ import Context from '../app/context';
 import Misc from '../utils/misc';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {CHANNEL_SETTINGS_MODE, WEBGATEWAY} from '../utils/constants';
-import {
-    IMAGE_CONFIG_UPDATE, IMAGE_SETTINGS_CHANGE, EventSubscriber
-} from '../events/events';
+import { IMAGE_SETTINGS_CHANGE} from '../events/events';
 
 /**
  * Represents the settings section in the right hand panel
@@ -31,27 +29,23 @@ import {
  */
 @customElement('channel-settings')
 @inject(Context, BindingEngine)
-export default class ChannelSettings extends EventSubscriber {
+export default class ChannelSettings {
     /**
-     * which image config do we belong to (bound in template)
-     * @memberof ChannelSettings
-     * @type {number}
-     */
-    @bindable config_id = null;
-
-    /**
-     * a reference to the image config
+     * a reference to the image config (bound in template)
      * @memberof ChannelSettings
      * @type {ImageConfig}
      */
-    image_config = null;
+    @bindable image_config = null;
+    image_configChanged(newVal, oldVal) {
+        this.waitForImageInfoReady();
+    }
 
     /**
      * the present channel settings mode
      * @memberof ChannelSettings
      * @type {number}
      */
-    mode = null;
+    mode = CHANNEL_SETTINGS_MODE.MIN_MAX;
 
     /**
      * unfortunately necessary to detect transition in special circumstances
@@ -72,9 +66,16 @@ export default class ChannelSettings extends EventSubscriber {
     /**
      * property observers
      * @memberof ChannelSettings
-     * @type {Array.<object>}
+     * @type {Array.<Object>}
      */
     observers = [];
+
+    /**
+     * the image info ready observers
+     * @memberof ChannelSettings
+     * @type {Object}
+     */
+    image_info_ready_observer = null;
 
     /**
      * list of properties that ought to be observed
@@ -90,20 +91,11 @@ export default class ChannelSettings extends EventSubscriber {
     ];
 
     /**
-     * events we subscribe to
-     * @memberof ChannelSettings
-     * @type {Array.<string,function>}
-     */
-    sub_list = [[IMAGE_CONFIG_UPDATE,
-                    (params = {}) => this.onImageConfigChange(params)]];
-
-    /**
      * @constructor
      * @param {Context} context the application context (injected)
      * @param {BindingEngine} bindingEngine injected instance of BindingEngine
      */
     constructor(context, bindingEngine) {
-        super(context.eventbus);
         this.context = context;
         this.bindingEngine = bindingEngine;
     }
@@ -116,23 +108,50 @@ export default class ChannelSettings extends EventSubscriber {
      * @memberof ChannelSettings
      */
     bind() {
-        this.subscribe();
-        this.registerObservers();
-
-        if (this.image_config === null ||
-                this.image_config.image_info === null) return;
-
-        this.mode = CHANNEL_SETTINGS_MODE.MIN_MAX;
+        this.waitForImageInfoReady();
     }
 
     /**
-     * Unregisters the property observers for model change
+     * Makes sure that all image info data is there
      *
+     * @memberof Settings
+     */
+    waitForImageInfoReady() {
+        let onceReady = () => {
+            // register observer
+            this.registerObservers();
+            this.mode = CHANNEL_SETTINGS_MODE.MIN_MAX;
+        };
+
+        // tear down old observers
+        this.unregisterObservers();
+        if (this.image_config.image_info.ready) {
+            onceReady();
+            return;
+        }
+
+        // we are not yet ready, wait for ready via observer
+        if (this.image_info_ready_observer === null)
+            this.image_info_ready_observer =
+                this.bindingEngine.propertyObserver(
+                    this.image_config.image_info, 'ready').subscribe(
+                        (newValue, oldValue) => onceReady());
+    }
+
+    /**
+     * Unregisters the the observers (property and image info ready)
+     *
+     * @param {boolean} property_only true if only property observers are cleaned up
      * @memberof ChannelSettings
      */
-    unregisterObservers() {
-        this.observers.map((o) => o.dispose());
+    unregisterObservers(property_only = false) {
+        this.observers.map((o) => {if (o) o.dispose();});
         this.observers = [];
+        if (property_only) return;
+        if (this.image_info_ready_observer) {
+            this.image_info_ready_observer.dispose();
+            this.image_info_ready_observer = null;
+        }
     }
 
     /**
@@ -141,10 +160,6 @@ export default class ChannelSettings extends EventSubscriber {
      * @memberof ChannelSettings
      */
     registerObservers() {
-        if (this.image_config === null ||
-            this.image_config.image_info === null ||
-            !Misc.isArray(this.image_config.image_info.channels)) return;
-        this.unregisterObservers();
         let image_info = this.image_config.image_info;
         for (let i=0;i<image_info.channels.length;i++)
             for (let p=0;p<this.observedProperties.length;p++) {
@@ -307,23 +322,6 @@ export default class ChannelSettings extends EventSubscriber {
          }
      }
 
-    /**
-     * Handles changes of the associated ImageConfig
-     *
-     * @memberof ChannelSettings
-     * @param {Object} params the event notification parameters
-     */
-     onImageConfigChange(params = {}) {
-         // if the event is for another config, forget it...
-         if (params.config_id !== this.config_id) return;
-
-         // change image config and update image info
-         this.config_id = params.config_id;
-         if (this.context.getImageConfig(params.config_id) === null) return;
-         this.image_config = this.context.getImageConfig(params.config_id);
-         this.bind();
-     }
-
      /**
      * Deals with click event on mode buttons (min/max, full range, imported)
      * only ever acts in cases where the observer won't act i.e. if mode has
@@ -361,7 +359,7 @@ export default class ChannelSettings extends EventSubscriber {
        let c = this.image_config.image_info.channels[index];
 
        let params = {
-           config_id: this.config_id,
+           config_id: this.image_config.id,
            prop: prop,
            ranges:[
                {index: index, start: c.window.start, end: c.window.end,
@@ -379,8 +377,6 @@ export default class ChannelSettings extends EventSubscriber {
      * @memberof ChannelSettings
      */
     unbind() {
-        this.unsubscribe()
         this.unregisterObservers();
-        this.image_config = null;
     }
 }

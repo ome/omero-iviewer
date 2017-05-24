@@ -521,14 +521,6 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
        this.viewerState_[contr] = defaultControls[contr];
     }
 
-    var targetElement = document.getElementById(this.container_);
-    if (targetElement === null) return;
-
-    var children =
-       Array.prototype.slice.call(targetElement.childNodes);
-    for (var child in children)
-       targetElement.removeChild(children[child]);
-
     // finally construct the open layers map object
     this.viewer_ = new ol.Map({
        logo: false,
@@ -541,8 +533,13 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
     });
 
     // collapse/expand bird's eye view depending on whether we have tile sources
-    this.viewerState_["birdseye"]['ref'].setCollapsed(
-        !source.use_tiled_retrieval_);
+    //this.viewerState_["birdseye"]['ref'].setCollapsed(
+    //    !source.use_tiled_retrieval_);
+    // tweak source element for fullscreen to include dim sliders (iviewer only)
+    var targetId = this.getTargetId();
+    var viewerFrame = targetId ? document.getElementById(targetId) : null;
+    if (targetId && viewerFrame)
+        this.viewerState_["fullscreen"]['ref'].source_ = viewerFrame;
     // enable scalebar by default
     this.toggleScaleBar(true);
 

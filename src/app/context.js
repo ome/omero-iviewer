@@ -17,7 +17,6 @@
 //
 import {noView} from 'aurelia-framework';
 import {EventAggregator} from 'aurelia-event-aggregator';
-import {IMAGE_CONFIG_SELECT} from '../events/events';
 import Misc from '../utils/misc';
 import ImageConfig from '../model/image_config';
 import {
@@ -140,11 +139,9 @@ export default class Context {
         let initial_dataset_id =
             parseInt(
                 this.getInitialRequestParam(REQUEST_PARAMS.DATASET_ID));
-        let initial_image_config =
-            this.addImageConfig(initial_image_id,
-                typeof initial_dataset_id === 'number' &&
-                !isNaN(initial_dataset_id) ? initial_dataset_id : null);
-        this.selected_config = initial_image_config.id;
+        this.addImageConfig(initial_image_id,
+            typeof initial_dataset_id === 'number' &&
+            !isNaN(initial_dataset_id) ? initial_dataset_id : null);
 
         // set up key listener
         this.establishKeyDownListener();
@@ -390,8 +387,7 @@ export default class Context {
     }
 
     /**
-     * Selects an image config and sends out an event notification
-     * This method is really only relevant for MDI mode
+     * Selects an image config
      *
      * @memberof Context
      * @param {number} id the ImageConfig id
@@ -402,10 +398,6 @@ export default class Context {
             return null;
 
         this.selected_config = id;
-
-        if (this.useMDI)
-            this.publish(
-                IMAGE_CONFIG_SELECT, { image_config: this.selected_config});
     }
 
     /**

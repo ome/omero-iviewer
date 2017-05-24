@@ -18,42 +18,27 @@
 
 // js
 import Context from '../app/context';
-import Misc from '../utils/misc';
-import {WEBCLIENT} from '../utils/constants';
 
-import {inject, customElement, bindable} from 'aurelia-framework';
-
-import {
-    IMAGE_CONFIG_UPDATE,
-    EventSubscriber
-} from '../events/events';
+import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 
 
 @customElement('info')
-@inject(Context)
-export class Info extends EventSubscriber {
+@inject(Context, BindingEngine)
+export class Info {
 
     /**
-     * events we subscribe to
-     * @memberof Header
-     * @type {Array.<string,function>}
-     */
-    sub_list = [[IMAGE_CONFIG_UPDATE,
-                    (params = {}) => this.onImageConfigChange(params)]];
-
-    /**
-     * which image config do we belong to (bound in template)
-     * @memberof Regions
-     * @type {number}
-     */
-    @bindable config_id = null;
-
-    /**
-     * a reference to the image info
+     * a reference to the image info  (bound in template)
      * @memberof Info
      * @type {ImageInfo}
      */
-    image_info = null;
+    @bindable image_info = null;
+
+    /**
+     * the list of observers
+     * @memberof Info
+     * @type {Array.<Object>}
+     */
+    observers = [];
 
     /**
      * Values to display
@@ -64,10 +49,11 @@ export class Info extends EventSubscriber {
     /**
      * @constructor
      * @param {Context} context the application context (injected)
+     * @param {BindingEngine} bindingEngine the BindingEngine (injected)
      */
-    constructor(context) {
-        super(context.eventbus);
+    constructor(context, bindingEngine) {
         this.context = context;
+        this.bindingEngine = bindingEngine;
     }
 
     /**
@@ -78,20 +64,52 @@ export class Info extends EventSubscriber {
      * @memberof Info
      */
     bind() {
-        this.subscribe();
+        let changeImageConfig = () => {
+            if (this.image_info.ready) {
+                this.onImageConfigChange();
+                return;
+            }
+            // we are not yet ready, wait for ready via observer
+            if (this.observers.length > 1 &&
+                typeof this.observers[1] === 'object' &&
+                this.observers[1] !== null) this.observers.pop().dispose();
+            this.observers.push(
+                this.bindingEngine.propertyObserver(
+                    this.image_info, 'ready').subscribe(
+                        (newValue, oldValue) => this.onImageConfigChange()));
+        };
+        // listen for image info changes
+        this.observers.push(
+            this.bindingEngine.propertyObserver(
+                this, 'image_info').subscribe(
+                    (newValue, oldValue) => changeImageConfig()));
+        // initial image config
+        changeImageConfig();
     }
 
     /**
-     * Handles changes of the associated ImageConfig
+     * Overridden aurelia lifecycle method:
+     * called whenever the view is unbound within aurelia
+     * in other words a 'destruction' hook that happens after 'detached'
+     *
+     * @memberof Info
+     */
+    unbind() {
+        // get rid of observers
+        this.observers.map((o) => {
+            if (o) o.dispose();
+        });
+        this.observers = [];
+    }
+
+    /**
+     * Handles changes of the seleccted ImageConfig
      *
      * @memberof Header
-     * @param {Object} params the event notification parameters
      */
-    onImageConfigChange(params = {}) {
-        let conf = this.context.getImageConfig(params.config_id);
+    onImageConfigChange() {
+        if (this.image_info === null) return;
 
-        if (conf === null) return;
-        this.image_info = conf.image_info;
         let acquisition_date = "-";
         if (typeof this.image_info.image_pixels_size.x == 'number') {
             acquisition_date = new Date(this.image_info.image_timestamp * 1000).toISOString().slice(-25, -14);
@@ -179,8 +197,6 @@ export class Info extends EventSubscriber {
      * @memberof Info
      */
     unbind() {
-        this.unsubscribe();
-        this.image_info = null;
         this.columns = [];
     }
 

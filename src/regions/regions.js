@@ -31,25 +31,22 @@ import {inject, customElement, bindable} from 'aurelia-framework';
 @inject(Context)
 export default class Regions {
     /**
-     * which image config do we belong to (bound in template)
-     * @memberof Regions
-     * @type {number}
-     */
-    @bindable config_id = null;
-
-    /**
-     * a reference to the image info
-     * @memberof Regions
-     * @type {ImageInfo}
-     */
-    image_info = null;
-
-    /**
-     * a reference to the regions info
+     * a bound reference to regions_info
+     * and its associated change handler
      * @memberof Regions
      * @type {RegionsInfo}
      */
-    regions_info = null;
+    @bindable regions_info = null;
+    regions_infoChanged(newVal, oldVal) {
+        this.show_comments = false;
+    }
+
+    /**
+     * show comments flag
+     * @memberof Regions
+     * @type {RegionsInfo}
+     */
+    show_comments = false;
 
     /**
      * a list of keys we want to listen for
@@ -68,21 +65,6 @@ export default class Regions {
      */
     constructor(context) {
         this.context = context;
-    }
-
-    /**
-     * Overridden aurelia lifecycle method:
-     * called whenever the view is bound within aurelia
-     * in other words an 'init' hook that happens before 'attached'
-     *
-     * @memberof Regions
-     */
-    bind() {
-        let img_conf = this.context.getImageConfig(this.config_id);
-        if (img_conf && img_conf.regions_info) {
-            this.image_info = img_conf.image_info;
-            this.regions_info = img_conf.regions_info;
-        }
     }
 
     /**
@@ -127,6 +109,7 @@ export default class Regions {
             alert("Saving the regions will not work cross-domain!");
             return;
         }
+        if (!this.regions_info.ready) return;
 
         this.context.publish(
             REGIONS_STORE_SHAPES,
@@ -136,13 +119,21 @@ export default class Regions {
     /**
      * Show/Hide Text Labels
      *
-     * @param {boolean} flag show comments if true, otherwise false
+     * @param {Object} event the mouse event object
      * @memberof Regions
      */
-    showComments(flag = false) {
+    showComments(event) {
+        event.stopPropagation();
+        event.preventDefault();
+
+        if (!this.regions_info.ready) return false;
+
+        this.show_comments = event.target.checked;
         this.context.publish(
             REGIONS_SHOW_COMMENTS,
-        {config_id : this.regions_info.image_info.config_id, value: flag});
+            {config_id : this.regions_info.image_info.config_id,
+             value: this.show_comments});
+        return false;
     }
 
     /**
@@ -151,6 +142,8 @@ export default class Regions {
      * @memberof Regions
      */
     undoHistory() {
+        if (!this.regions_info.ready) return;
+
         this.regions_info.history.undoHistory();
     }
 
@@ -160,6 +153,8 @@ export default class Regions {
      * @memberof Regions
      */
     redoHistory() {
+        if (!this.regions_info.ready) return;
+
         this.regions_info.history.redoHistory();
     }
 }

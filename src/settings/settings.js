@@ -25,8 +25,7 @@ import {CHANNEL_SETTINGS_MODE, WEBGATEWAY} from '../utils/constants';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 
 import {
-    IMAGE_SETTINGS_CHANGE, THUMBNAILS_UPDATE,
-    EventSubscriber
+    IMAGE_SETTINGS_CHANGE, THUMBNAILS_UPDATE, EventSubscriber
 } from '../events/events';
 
 /**
@@ -38,18 +37,14 @@ import {
 @inject(Context, BindingEngine)
 export default class Settings extends EventSubscriber {
     /**
-     * which image config do we belong to (bound in template)
-     * @memberof Settings
-     * @type {number}
-     */
-    @bindable config_id = null;
-
-    /**
-     * a reference to the image config
+     * a reference to the image config (bound in template)
      * @memberof Settings
      * @type {ImageConfig}
      */
-    image_config = null;
+    @bindable image_config = null;
+    image_configChanged(newVal, oldVal) {
+        this.waitForImageInfoReady();
+    }
 
     /**
      * a revision count that forces updates of user setting thumbs after save
@@ -71,6 +66,20 @@ export default class Settings extends EventSubscriber {
      * @type {Histogram}
      */
      histogram = null;
+
+     /**
+      * the property observer
+      * @memberof Settings
+      * @type {Object}
+      */
+     observer = null;
+
+     /**
+      * the image info ready observers
+      * @memberof Settings
+      * @type {Object}
+      */
+     image_info_ready_observer = null;
 
     /**
      * events we subscribe to
@@ -98,28 +107,41 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     bind() {
-        this.image_config =
-            this.context.getImageConfig(this.config_id);
-
-        // event subscriptions and property observation
-        this.subscribe();
-        this.registerObserver();
-
-        // fire off ajax request for rendering defs
-        this.requestAllRenderingDefs();
+        this.waitForImageInfoReady();
     }
 
     /**
-     * Overridden aurelia lifecycle method:
-     * fired when PAL (dom abstraction) is ready for use
+     * Makes sure that all image info data is there
      *
      * @memberof Settings
      */
-    attached() {
-        // create histogram instance (if not tiled)
-        if (this.image_config && this.image_config.image_info &&
-            !this.image_config.image_info.tiled)
+    waitForImageInfoReady() {
+        let onceReady = () => {
+            // register observer
+            this.registerObserver();
+            // event subscriptions
+            this.subscribe();
+            // fire off ajax request for rendering defs
+            this.requestAllRenderingDefs();
+            // instantiate histogram
+            if (this.histogram) this.histogram.destroyHistogram();
             this.histogram = new Histogram(this.image_config.image_info);
+        };
+
+        // tear down old observers/subscription
+        this.unregisterObservers();
+        this.unsubscribe();
+        if (this.image_config.image_info.ready) {
+            onceReady();
+            return;
+        }
+
+        // we are not yet ready, wait for ready via observer
+        if (this.image_info_ready_observer === null)
+            this.image_info_ready_observer =
+                this.bindingEngine.propertyObserver(
+                    this.image_config.image_info, 'ready').subscribe(
+                        (newValue, oldValue) => onceReady());
     }
 
     /**
@@ -129,8 +151,7 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     requestAllRenderingDefs(action) {
-        if (this.image_config === null || this.image_config.image_info === null)
-            return;
+        if (!this.image_config.image_info.ready) return;
 
         let img_id = this.image_config.image_info.image_id;
         $.ajax({
@@ -138,7 +159,8 @@ export default class Settings extends EventSubscriber {
                     this.context.getPrefixedURI(WEBGATEWAY) +
                         "/get_image_rdefs_json/" + img_id + '/',
             success : (response) => {
-                if (!Misc.isArray(response.rdefs)) return;
+                if (!Misc.isArray(response.rdefs) ||
+                    img_id !== this.image_config.image_info.image_id) return;
 
                 // merge in lut info
                 response.rdefs.map((rdef) => {
@@ -175,12 +197,17 @@ export default class Settings extends EventSubscriber {
     /**
      * Shows and hides the histogram
      *
+     * @param {Object} event the mouse event object
      * @memberof Settings
      */
-    toggleHistogram(checked) {
+    toggleHistogram(event) {
+        event.stopPropagation();
+        event.preventDefault();
+
         if (this.histogram) {
-            this.histogram.toggleHistogramVisibilty(checked);
+            this.histogram.toggleHistogramVisibilty(event.target.checked);
         }
+        return false;
     }
 
     /**
@@ -232,6 +259,8 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     saveImageSettings() {
+        if (!this.image_config.image_info.ready) return;
+
         $('.save-settings').children('button').blur();
         if (Misc.useJsonp(this.context.server)) {
             alert("Saving the rendering settings will not work cross-domain!");
@@ -259,7 +288,7 @@ export default class Settings extends EventSubscriber {
                 let action =
                     (() => this.context.publish(
                             THUMBNAILS_UPDATE,
-                            { config_id : this.config_id,
+                            { config_id : this.image_config.id,
                               ids: [image_info.image_id]}));
                 this.requestAllRenderingDefs(action);
             },
@@ -273,6 +302,8 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     saveImageSettingsToAll() {
+        if (!this.image_config.image_info.ready) return;
+
         // we delegate (after confirming choice)
         let desc = "Do you want to apply the settings to all Images ";
         if (typeof this.image_config.image_info.dataset_id === 'number')
@@ -315,6 +346,8 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     copy(toAll=false) {
+        if (!this.image_config.image_info.ready) return;
+
         if (toAll && Misc.useJsonp(this.context.server)) {
             alert("Saving to All will not work cross-domain!");
             return;
@@ -356,7 +389,7 @@ export default class Settings extends EventSubscriber {
                     let action =
                         (() => this.context.publish(
                                 THUMBNAILS_UPDATE,
-                                { config_id : this.config_id, ids: thumbIds}));
+                                { config_id : imgInf.config_id, ids: thumbIds}));
                     this.requestAllRenderingDefs(action);
                 }
         } else params.success =
@@ -496,9 +529,6 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     registerObserver() {
-        if (this.image_config === null ||
-            this.image_config.image_info === null) return;
-        this.unregisterObserver();
         this.observer =
             this.bindingEngine.propertyObserver(
                 this.image_config.image_info, 'model')
@@ -506,18 +536,25 @@ export default class Settings extends EventSubscriber {
                         (newValue, oldValue) =>
                             this.context.publish(
                                 IMAGE_SETTINGS_CHANGE,
-                                { config_id: this.config_id, model: newValue}));
+                                { config_id: this.image_config.id,
+                                  model: newValue}));
     }
 
     /**
-     * Unregisters the model(color/greyscale) property listener for model change
+     * Unregisters the the observers (property and image info ready)
      *
+     * @param {boolean} property_only true if only property observers are cleaned up
      * @memberof Settings
      */
-    unregisterObserver() {
+    unregisterObservers(property_only = false) {
         if (this.observer) {
             this.observer.dispose();
             this.observer = null;
+        }
+        if (property_only) return;
+        if (this.image_info_ready_observer) {
+            this.image_info_ready_observer.dispose();
+            this.image_info_ready_observer = null;
         }
     }
 
@@ -529,9 +566,8 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     unbind() {
-        this.unregisterObserver();
-        this.unsubscribe();
         if (this.histogram) this.histogram.destroyHistogram();
-        this.image_config = null;
+        this.unregisterObservers();
+        this.unsubscribe();
     }
 }

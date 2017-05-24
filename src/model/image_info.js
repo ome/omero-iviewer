@@ -225,9 +225,6 @@ export default class ImageInfo {
                         this.dataset_id = response.meta.datasetId;
                 }
 
-                // fire off the request for the imported data,
-                // can't hurt to have handy when we need it
-                this.requestImportedData();
                 // fetch copied img RDef
                 this.requestImgRDef();
                 // notify everyone that we are ready
@@ -424,13 +421,15 @@ export default class ImageInfo {
      * @memberof ImageInfo
      */
     requestImgRDef(callback = null) {
+        let oldConfigId = this.config_id;
         if (callback === null)
-            callback = (rdef) => {
-                if (rdef === null || typeof rdef.c !== 'string') return;
+            callback = (rdef, config_id) => {
+                if (rdef === null || typeof rdef.c !== 'string' ||
+                    config_id !== oldConfigId || !this.ready) return;
                 let channels = Misc.parseChannelParameters(rdef.c, rdef.maps);
                 // we only allow copy and paste with same number of channels
                 // and compatible range
-                if (!Misc.isArray(channels) ||
+                if (!Misc.isArray(channels) || !Misc.isArray(this.channels) ||
                         channels.length != this.channels.length ||
                         rdef.pixel_range != this.range.join(":"))
                             this.copied_img_rdef = null;
@@ -445,10 +444,10 @@ export default class ImageInfo {
                         this.copied_img_rdef = null;
                 else this.copied_img_rdef = response.rdef;
                 if (typeof callback === 'function')
-                    callback(this.copied_img_rdef);},
+                    callback(this.copied_img_rdef, this.config_id);},
             error : () => {
                 this.copied_img_rdef = null;
-                callback(this.copied_img_rdef);}
+                callback(this.copied_img_rdef, this.config_id);}
         });
     }
 
@@ -463,6 +462,8 @@ export default class ImageInfo {
             if (typeof callback === 'function') callback();
             return;
         }
+
+        let old
 
         $.ajax({
             url :

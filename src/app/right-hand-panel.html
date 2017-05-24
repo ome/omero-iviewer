@@ -35,13 +35,13 @@
 
     <div class="tab-content regions-tabs">
         <div role="tabpanel" class="tab-pane ${context.selected_tab === '#info' ? 'active' : ''}" id="info">
-            <info config_id.bind="config_id"></info>
+            <info image_info.bind="image_config.image_info"></info>
         </div>
         <div role="tabpanel" class="tab-pane ${context.selected_tab === '#settings' ? 'active' : ''}" id="settings">
-            <settings config_id.bind="config_id"></settings>
+            <settings image_config.bind="image_config"></settings>
         </div>
         <div role="tabpanel" class="tab-pane ${context.selected_tab === '#rois' ? 'active' : ''}" id="rois">
-            <regions config_id.bind="config_id"></regions>
+            <regions regions_info.bind="image_config.regions_info"></regions>
         </div>
     </div>
 

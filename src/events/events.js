@@ -18,8 +18,6 @@
 
 /** whenever an image config has been updated */
 export const IMAGE_CONFIG_UPDATE = "IMAGE_CONFIG_UPDATE";
-/** whenever an image config has been selected */
-export const IMAGE_CONFIG_SELECT = "IMAGE_CONFIG_SELECT";
 /** whenever the image viewer needs to be resized */
 export const IMAGE_VIEWER_RESIZE = "IMAGE_VIEWER_RESIZE";
 /** whenever the image viewer split view is turned on/off */

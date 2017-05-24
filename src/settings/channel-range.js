@@ -512,7 +512,7 @@ export default class ChannelRange  {
                 $(this.element).find(clazz).spinner("value", oldValue);
                 return;
             }
-            value = parseInt(value);
+            value = parseFloat(value);
             if (isNaN(value)) {
                 $(this.element).find(clazz).parent().css(
                     "border-color", "rgb(255,0,0)");
@@ -625,16 +625,5 @@ export default class ChannelRange  {
             };
         };
         imgConf.addHistory(history);
-    }
-
-    /**
-     * Overridden aurelia lifecycle method:
-     * called whenever the view is unbound within aurelia
-     * in other words a 'destruction' hook that happens after 'detached'
-     *
-     * @memberof ChannelRange
-     */
-    unbind() {
-        this.image_info = null;
     }
 }

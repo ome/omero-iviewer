@@ -27,7 +27,8 @@ import Ui from '../utils/ui';
 import {inject, customElement, bindable} from 'aurelia-framework';
 import {ol3} from '../../libs/ol3-viewer.js';
 import {
-    IVIEWER, PLUGIN_PREFIX, REGIONS_DRAWING_MODE, RENDER_STATUS
+    IVIEWER, PLUGIN_PREFIX, REGIONS_DRAWING_MODE, RENDER_STATUS,
+    VIEWER_ELEMENT_PREFIX
 } from '../utils/constants';
 import {
     IMAGE_CONFIG_UPDATE, IMAGE_VIEWER_RESIZE, IMAGE_DIMENSION_CHANGE,
@@ -162,7 +163,7 @@ export default class Ol3Viewer extends EventSubscriber {
         // we 'tag' the element to belong to a certain image config
         this.element.parentNode.id = this.config_id;
         // define the container element
-        this.container = 'ol3_viewer_' + this.config_id;
+        this.container = VIEWER_ELEMENT_PREFIX + this.config_id;
         // we associate the image config with the present config id
         this.image_config = this.context.getImageConfig(this.config_id);
     }
@@ -174,7 +175,10 @@ export default class Ol3Viewer extends EventSubscriber {
      * @memberof Ol3Viewer
      */
     detached() {
-        if (this.viewer) this.viewer.destroyViewer();
+        if (this.viewer) {
+            this.viewer.destroyViewer();
+            this.viewer = null;
+        }
     }
 
     /**

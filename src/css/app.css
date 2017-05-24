@@ -1005,3 +1005,10 @@ thumbnail-slider img {
 .text-weight-bold {
    font-weight: 700;
  }
+
+#viewer-context-menu {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    display: none;
+}

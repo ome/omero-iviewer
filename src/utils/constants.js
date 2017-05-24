@@ -65,6 +65,13 @@ export const WEBCLIENT = "WEBCLIENT";
 export const PLUGIN_PREFIX = "PLUGIN_PREFIX";
 
 /**
+ * the viewer's dom element prefix (complemented by config id)
+ * @type {string}
+ */
+
+export const VIEWER_ELEMENT_PREFIX = "ol3_viewer_";
+
+/**
  * the possible request params that we accept
  * @type {Object}
  */

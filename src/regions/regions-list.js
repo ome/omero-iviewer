@@ -22,8 +22,8 @@ import Misc from '../utils/misc';
 import Ui from '../utils/ui';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {
-    EventSubscriber, IMAGE_VIEWER_RESIZE,
-    REGIONS_INIT, REGIONS_SET_PROPERTY, REGIONS_STORED_SHAPES
+    IMAGE_VIEWER_RESIZE, REGIONS_SET_PROPERTY, REGIONS_STORED_SHAPES,
+    EventSubscriber
 } from '../events/events';
 
 /**
@@ -33,29 +33,36 @@ import {
 @inject(Context, BindingEngine)
 export default class RegionsList extends EventSubscriber {
     /**
-     * a reference to the image config
-     * @memberof RegionsList
-     * @type {RegionsList}
+     * a bound reference to regions_info
+     * and its associated change handler
+     * @memberof RegionsEdit
+     * @type {RegionsInfo}
      */
     @bindable regions_info = null;
+    regions_infoChanged(newVal, oldVal) {
+        this.waitForRegionsInfoReady();
+    }
 
     /**
      * events we subscribe to
      * @memberof RegionsList
      * @type {Array.<string,function>}
      */
-    sub_list = [[REGIONS_INIT,
-                    (params={}) =>
-                        setTimeout(this.adjustTableHeight.bind(this),50)],
-                [IMAGE_VIEWER_RESIZE,
-                    (params={}) => this.adjustTableHeight()]];
+    sub_list = [[IMAGE_VIEWER_RESIZE, (params={}) => this.adjustTableHeight()]];
 
     /**
-     * the list of observers
-     * @memberof RegionsEdit
+     * the list of property observers
+     * @memberof RegionsList
      * @type {Array.<Object>}
      */
     observers = [];
+
+    /**
+     * the regions info ready observers
+     * @memberof RegionsList
+     * @type {Object}
+     */
+    regions_ready_observer = null;
 
     /**
      * a flag for the regions list interaction
@@ -110,55 +117,81 @@ export default class RegionsList extends EventSubscriber {
      * @memberof RegionsList
      */
     bind() {
-        this.subscribe();
-        this.registerObservers();
+        this.waitForRegionsInfoReady();
     }
 
     /**
-     * Registers observers
+     * Makes sure that all regions info data is there
+     *
+     * @memberof RegionsList
+     */
+    waitForRegionsInfoReady() {
+        let onceReady = () => {
+            $('#shapes_visibility_toggler').prop('checked', true);
+            // register observer
+            this.registerObservers();
+            // subscribe
+            this.subscribe();
+            setTimeout(
+                () => {
+                    this.adjustTableHeight();
+                    this.adjustColumnWidths();
+                },50);
+        };
+
+        // tear down old observers/subscription
+        this.unregisterObservers();
+        this.unsubscribe();
+        if (this.regions_info.ready) {
+            onceReady();
+            return;
+        }
+
+        // we are not yet ready, wait for ready via observer
+        if (this.regions_ready_observer === null)
+            this.regions_ready_observer =
+                this.bindingEngine.propertyObserver(
+                    this.regions_info, 'ready').subscribe(
+                        (newValue, oldValue) => onceReady());
+    }
+
+    /**
+     * Registers property observers
      *
      * @memberof RegionsList
      */
     registerObservers() {
-        let createObserver = () => {
-            this.unregisterObservers();
-
-            this.observers.push(
-                this.bindingEngine.collectionObserver(
-                    this.regions_info.selected_shapes).subscribe(
-                        (newValue, oldValue) =>
-                            this.actUponSelectionChange()));
-            this.observers.push(
-                this.bindingEngine.propertyObserver(
-                    this.context, 'selected_tab').subscribe(
-                        (newValue, oldValue) =>
-                            setTimeout(this.adjustTableHeight.bind(this), 25)));
-            this.observers.push(
-                this.bindingEngine.propertyObserver(
-                    this.regions_info, 'visibility_toggles').subscribe(
-                        (newValue, oldValue) =>
-                            $('#shapes_visibility_toggler').prop(
-                                'checked', newValue === 0)));
-        };
-
-        if (this.regions_info === null) {
-            this.observers.push(
-                    this.bindingEngine.propertyObserver(this, 'regions_info')
-                        .subscribe((newValue, oldValue) => {
-                            if (oldValue === null && newValue) createObserver();
-                        }
-            ));
-        } else createObserver();
+        this.observers.push(
+            this.bindingEngine.collectionObserver(
+                this.regions_info.selected_shapes).subscribe(
+                    (newValue, oldValue) => this.actUponSelectionChange()));
+        this.observers.push(
+            this.bindingEngine.propertyObserver(
+                this.context, 'selected_tab').subscribe(
+                    (newValue, oldValue) =>
+                        setTimeout(this.adjustTableHeight.bind(this), 25)));
+        this.observers.push(
+            this.bindingEngine.propertyObserver(
+                this.regions_info, 'visibility_toggles').subscribe(
+                    (newValue, oldValue) =>
+                        $('#shapes_visibility_toggler').prop(
+                            'checked', newValue === 0)));
     }
 
     /**
-     * Unregisters observers
+     * Unregisters the the observers (property and regions info ready)
      *
+     * @param {boolean} property_only true if only property observers are cleaned up
      * @memberof RegionsList
      */
-    unregisterObservers() {
-        this.observers.map((o) => o.dispose());
+    unregisterObservers(property_only = false) {
+        this.observers.map((o) => {if (o) o.dispose();});
         this.observers = [];
+        if (property_only) return;
+        if (this.regions_ready_observer) {
+            this.regions_ready_observer.dispose();
+            this.regions_ready_observer = null;
+        }
     }
 
     /**
