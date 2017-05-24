@@ -351,7 +351,7 @@ ome.ol3.RENDER_STATUS = {
 };
 
 /**
- * Limit for untiled image retrieval: 2K^2
+ * Limit for untiled image retrieval: 1K^2
  * @const
  * @enum {number}
  */
