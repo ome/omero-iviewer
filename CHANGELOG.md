@@ -7,7 +7,7 @@ This version includes:
 
 - availability from PyPI
 - support for 'Open With' functionality
-- support for images of non-tiled and tiled images
+- support for non-tiled and tiled images
 - ability to adjust rendering settings
 - support for lookup tables and reverse intensity rendering
 - support for histograms
