@@ -353,7 +353,7 @@ ome.ol3.RENDER_STATUS = {
 /**
  * Limit for untiled image retrieval: 2K^2
  * @const
- * @enum {number}
+ * @type {number}
  */
 ome.ol3.UNTILED_RETRIEVAL_LIMIT = 4000000;
 
