@@ -19,9 +19,9 @@
 // js
 import Context from '../app/context';
 import Misc from '../utils/misc';
-import {
-    REGIONS_SET_PROPERTY, REGIONS_STORE_SHAPES,REGIONS_SHOW_COMMENTS
-} from '../events/events';
+import Ui from '../utils/ui';
+import {TABS} from '../utils/constants';
+import {REGIONS_STORE_SHAPES, REGIONS_SHOW_COMMENTS} from '../events/events';
 import {inject, customElement, bindable} from 'aurelia-framework';
 
 /**
@@ -74,17 +74,7 @@ export default class Regions {
      * @memberof Regions
      */
     attached() {
-        this.key_actions.map(
-            (action) =>
-                this.context.addKeyListener(
-                    action.key,
-                        (event) => {
-                            let command =
-                                Misc.isApple() ? 'metaKey' : 'ctrlKey';
-                            if (!this.context.isRoisTabActive() ||
-                                    !event[command]) return;
-                            action.func.apply(this, action.args);
-                        }));
+        Ui.registerKeyHandlers(this.context, this.key_actions, TABS.ROIS, this);
     }
 
     /**
@@ -96,7 +86,7 @@ export default class Regions {
      */
     detached() {
         this.key_actions.map(
-            (action) => this.context.removeKeyListener(action.key));
+            (action) => this.context.removeKeyListener(action.key, TABS.ROIS));
     }
 
     /**

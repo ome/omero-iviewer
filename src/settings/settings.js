@@ -21,7 +21,7 @@ import Context from '../app/context';
 import Misc from '../utils/misc';
 import Histogram from './histogram';
 import Ui from '../utils/ui';
-import {CHANNEL_SETTINGS_MODE, WEBGATEWAY} from '../utils/constants';
+import {CHANNEL_SETTINGS_MODE, TABS, WEBGATEWAY} from '../utils/constants';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 
 import {
@@ -45,6 +45,19 @@ export default class Settings extends EventSubscriber {
     image_configChanged(newVal, oldVal) {
         this.waitForImageInfoReady();
     }
+
+    /**
+     * a list of keys we want to listen for
+     * @memberof Settings
+     * @type {Object}
+     */
+    key_actions = [
+        { key: 83, func: this.saveImageSettings},            // ctrl - s
+        { key: 89, func: this.redo},                         // ctrl - y
+        { key: 90, func: this.undo},                         // ctrl - z
+        { key: 67, func: this.copy},                         // ctrl - v
+        { key: 86, func: this.paste}                         // ctrl - y
+    ];
 
     /**
      * a revision count that forces updates of user setting thumbs after save
@@ -142,6 +155,17 @@ export default class Settings extends EventSubscriber {
                 this.bindingEngine.propertyObserver(
                     this.image_config.image_info, 'ready').subscribe(
                         (newValue, oldValue) => onceReady());
+    }
+
+    /**
+     * Overridden aurelia lifecycle method:
+     * fired when PAL (dom abstraction) is ready for use
+     *
+     * @memberof Settings
+     */
+    attached() {
+        Ui.registerKeyHandlers(
+            this.context, this.key_actions, TABS.SETTINGS, this);
     }
 
     /**
@@ -259,7 +283,10 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     saveImageSettings() {
-        if (!this.image_config.image_info.ready) return;
+        if (!this.image_config.image_info.ready ||
+            !this.image_config.image_info.can_annotate ||
+            this.image_config.history.length === 0 ||
+            this.image_config.historyPointer < 0) return;
 
         $('.save-settings').children('button').blur();
         if (Misc.useJsonp(this.context.server)) {
@@ -320,7 +347,7 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     undo() {
-        if (this.image_config) {
+        if (this.image_config.image_info.ready) {
             this.image_config.undoHistory();
             this.image_config.changed();
         }
@@ -332,7 +359,7 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     redo() {
-        if (this.image_config) {
+        if (this.image_config.image_info.ready) {
             this.image_config.redoHistory();
             this.image_config.changed();
         }
@@ -346,10 +373,12 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     copy(toAll=false) {
-        if (!this.image_config.image_info.ready) return;
+        if (!this.image_config.image_info.ready ||
+            (!toAll && this.image_config.image_info.copied_img_rdef === null))
+                return;
 
         if (toAll && Misc.useJsonp(this.context.server)) {
-            alert("Saving to All will not work cross-domain!");
+            Ui.showModalMessage("Saving to All will not work cross-domain!", true);
             return;
         }
 
@@ -509,6 +538,9 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     paste() {
+        if (!this.image_config.image_info.ready ||
+            this.image_config.image_info.copied_img_rdef === null) return;
+
         this.image_config.image_info.requestImgRDef(
             this.applyRenderingSettings.bind(this));
     }
@@ -556,6 +588,19 @@ export default class Settings extends EventSubscriber {
             this.image_info_ready_observer.dispose();
             this.image_info_ready_observer = null;
         }
+    }
+
+    /**
+     * Overridden aurelia lifecycle method:
+     * called when the view and its elemetns are detached from the PAL
+     * (dom abstraction)
+     *
+     * @memberof Settings
+     */
+    detached() {
+        this.key_actions.map(
+            (action) =>
+                this.context.removeKeyListener(action.key, TABS.SETTINGS));
     }
 
     /**

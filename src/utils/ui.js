@@ -335,4 +335,32 @@ export default class Ui {
 
           return widthNoScroll - widthWithScroll;
     }
+
+    /**
+     * A helper function to register a list of keyhandlers via the context
+     * @param {Context} context a reference to the Context instance
+     * @param {Array.<Object>} handler_info array of objects providing key code and handler
+     * @param {string} group the group info for registration, default: global
+     * @param {Object} scope the scope for the handler function, default: null
+     * @static
+     */
+    static registerKeyHandlers(context, handler_info, group='global', scope=null) {
+        handler_info.map(
+            (action) =>
+                context.addKeyListener(
+                    action.key,
+                    (event) => {
+                        let command =
+                            Misc.isApple() ? 'metaKey' : 'ctrlKey';
+                            if ((group !== 'global' &&
+                                context.selected_tab !== group) ||
+                                !event[command]) return true;
+                            try {
+                                action.func.apply(scope, action.args);
+                            } catch(err) {
+                                console.error("Key Handler failed: " + err);
+                            }
+                            return false;
+                }, group));
+    }
 }

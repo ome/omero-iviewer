@@ -22,25 +22,28 @@
     <require from="../info/info"></require>
 
     <ul id="panel-tabs" class="nav nav-tabs" role="tablist">
-        <li class="${context.selected_tab === '#info' ? 'active' : ''}">
-            <a href="#info" role="tab">Info</a>
+        <li class="${context.selected_tab === TABS.INFO ? 'active' : ''}">
+            <a href="${'#' + TABS.INFO}" role="tab">Info</a>
         </li>
-        <li class="${context.selected_tab === '#settings' ? 'active' : ''}">
-            <a href="#settings" role="tab">Settings</a>
+        <li class="${context.selected_tab === TABS.SETTINGS ? 'active' : ''}">
+            <a href="${'#' + TABS.SETTINGS}" role="tab">Settings</a>
         </li>
-        <li class="${context.selected_tab === '#rois' ? 'active' : ''}">
-            <a href="#rois" role="tab">ROIs</a>
+        <li class="${context.selected_tab === TABS.ROIS ? 'active' : ''}">
+            <a href="${'#' + TABS.ROIS}" role="tab">ROIs</a>
         </li>
     </ul>
 
     <div class="tab-content regions-tabs">
-        <div role="tabpanel" class="tab-pane ${context.selected_tab === '#info' ? 'active' : ''}" id="info">
+        <div id="${TABS.INFO}" role="tabpanel"
+             class="tab-pane ${context.selected_tab === TABS.INFO ? 'active' : ''}">
             <info image_info.bind="image_config.image_info"></info>
         </div>
-        <div role="tabpanel" class="tab-pane ${context.selected_tab === '#settings' ? 'active' : ''}" id="settings">
+        <div id="${TABS.SETTINGS}" role="tabpanel"
+             class="tab-pane ${context.selected_tab === TABS.SETTINGS ? 'active' : ''}">
             <settings image_config.bind="image_config"></settings>
         </div>
-        <div role="tabpanel" class="tab-pane ${context.selected_tab === '#rois' ? 'active' : ''}" id="rois">
+        <div id="${TABS.ROIS}" role="tabpanel"
+             class="tab-pane ${context.selected_tab === TABS.ROIS ? 'active' : ''}">
             <regions regions_info.bind="image_config.regions_info"></regions>
         </div>
     </div>

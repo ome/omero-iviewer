@@ -190,3 +190,13 @@ export const LUTS_NAMES = [
     'unionjack.lut',
     'yellow_hot.lut'
 ];
+
+/**
+ * the right hand panel tab names
+ * @type {Object}
+ */
+export const TABS = {
+    INFO: 'info',
+    SETTINGS: 'settings',
+    ROIS: 'rois'
+}

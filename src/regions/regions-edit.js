@@ -23,7 +23,7 @@ import {Utils} from '../utils/regions';
 import Ui from '../utils/ui';
 import {Converters} from '../utils/converters';
 import {
-    REGIONS_MODE, REGIONS_DRAWING_MODE, PERMISSION_TOOLTIPS
+    REGIONS_DRAWING_MODE, PERMISSION_TOOLTIPS, TABS
 } from '../utils/constants';
 import {
     IMAGE_DIMENSION_CHANGE, REGIONS_COPY_SHAPES, REGIONS_GENERATE_SHAPES,
@@ -162,17 +162,7 @@ export default class RegionsEdit extends EventSubscriber {
      */
     attached() {
         // register key listeners
-        this.key_actions.map(
-            (action) =>
-                this.context.addKeyListener(
-                    action.key,
-                        (event) => {
-                            let command =
-                                Misc.isApple() ? 'metaKey' : 'ctrlKey';
-                            if (!this.context.isRoisTabActive() ||
-                                    !event[command]) return;
-                            action.func.apply(this, action.args);
-                        }));
+        Ui.registerKeyHandlers(this.context, this.key_actions, TABS.ROIS, this);
 
         // set up ui widgets such as color pickers and spinners
         let strokeOptions = this.getColorPickerOptions(false);
@@ -477,7 +467,7 @@ export default class RegionsEdit extends EventSubscriber {
      */
     detached() {
         this.key_actions.map(
-            (action) => this.context.removeKeyListener(action.key));
+            (action) => this.context.removeKeyListener(action.key, TABS.ROIS));
          $(this.element).find(".spectrum-input").spectrum("destroy");
          $(this.element).find(".shape-stroke-width input").spinner("destroy");
     }

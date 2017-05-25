@@ -19,8 +19,8 @@
 // js
 import {inject, customElement, BindingEngine} from 'aurelia-framework';
 import Context from './context';
+import {TABS} from '../utils/constants';
 import 'bootstrap';
-
 
 /**
  * @classdesc
@@ -30,6 +30,11 @@ import 'bootstrap';
 @customElement('right-hand-panel')
 @inject(Context, BindingEngine)
 export class RightHandPanel {
+    /**
+     * expose TABS constants to template (no other way in aurelia)
+     */
+    TABS = TABS;
+
     /**
      * the selected image config
      * @memberof RightHandPanel
@@ -98,7 +103,7 @@ export class RightHandPanel {
         $("#panel-tabs").find("a").click((e) => {
             e.preventDefault();
 
-            this.context.selected_tab = e.currentTarget.hash;
+            this.context.selected_tab = e.currentTarget.hash.substring(1);
 
             // we don't allow an active regions tab if we are in spit view
             if (this.context.isRoisTabActive()) {
