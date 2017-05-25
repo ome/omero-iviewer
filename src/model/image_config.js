@@ -98,7 +98,6 @@ export default class ImageConfig extends History {
     bind() {
         this.requestLookupTables();
         this.image_info.bind();
-        this.regions_info.bind();
     }
 
     /**
@@ -144,6 +143,7 @@ export default class ImageConfig extends History {
         let lutsPng = new Image();
         lutsPng.onload = (e) => {
             this.luts_png.height = e.target.naturalHeight;
+            this.changed();
         }
         lutsPng.src = this.luts_png.url;
 

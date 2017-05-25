@@ -105,6 +105,7 @@ export default class Settings extends EventSubscriber {
     /**
      * @constructor
      * @param {Context} context the application context (injected)
+     * @param {BindingEngine} bindingEngine the BindingEngine (injected)
      */
     constructor(context, bindingEngine) {
         super(context.eventbus);
@@ -373,9 +374,7 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     copy(toAll=false) {
-        if (!this.image_config.image_info.ready ||
-            (!toAll && this.image_config.image_info.copied_img_rdef === null))
-                return;
+        if (!this.image_config.image_info.ready) return;
 
         if (toAll && Misc.useJsonp(this.context.server)) {
             Ui.showModalMessage("Saving to All will not work cross-domain!", true);

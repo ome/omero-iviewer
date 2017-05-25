@@ -25,7 +25,6 @@ import { IMAGE_SETTINGS_CHANGE} from '../events/events';
 
 /**
  * Represents the settings section in the right hand panel
- * @extends {EventSubscriber}
  */
 @customElement('channel-settings')
 @inject(Context, BindingEngine)
@@ -210,8 +209,7 @@ export default class ChannelSettings {
             for (let i=0;i<imgInfo.channels.length;i++)
                 this.takeChannelSnapshot(newValue, i, history);
 
-                if (this.enable_mode_history && history.length > 0 &&
-                        newValue !== oldValue) {
+                if (this.enable_mode_history && newValue !== oldValue) {
                     // the order of these is essential
                     //this is to force the initial values
                     let modeAdditions = [];
@@ -234,6 +232,7 @@ export default class ChannelSettings {
                  };
 
             conf.addHistory(history);
+            conf.changed();
         });
         // for imported we do this (potentially) async
         if (newValue === CHANNEL_SETTINGS_MODE.IMPORTED)
@@ -252,73 +251,92 @@ export default class ChannelSettings {
          let imgInf = this.image_config.image_info;
          let minMaxValues =
              imgInf.getChannelMinMaxValues(mode, index);
+
          let chan = imgInf.channels[index];
-         if (chan.window.start !== minMaxValues.start_val)
+         if (chan.window.start !== minMaxValues.start_val) {
              history.push({
                  prop: ['image_info', 'channels', '' + index, 'window', 'start'],
                  old_val : chan.window.start,
                  new_val: minMaxValues.start_val,
                  type: 'number'});
-         if (chan.window.end !== minMaxValues.end_val)
+             chan.window.start = minMaxValues.start_val;
+         }
+         if (chan.window.end !== minMaxValues.end_val) {
              history.push({
                  prop: ['image_info', 'channels', '' + index, 'window', 'end'],
                  old_val : chan.window.end,
                  new_val: minMaxValues.end_val,
                  type: 'number'});
+             chan.window.end = minMaxValues.end_val;
+         }
          // we have to also reset channel color, dimensions
          // model and projection
          if (mode === CHANNEL_SETTINGS_MODE.IMPORTED) {
              let impImgData = imgInf.imported_settings;
              // log channel color
-             if (chan.color !== impImgData.c[index].color)
+             if (chan.color !== impImgData.c[index].color) {
                 history.push({
                     prop: ['image_info', 'channels', '' + index, 'color'],
                     old_val : chan.color,
                     new_val: impImgData.c[index].color,
                     type: 'string'});
+                chan.color = impImgData.c[index].color;
+             }
             // log reverse intensity
             //(taking into account that it might not be supported)
             if (typeof impImgData.c[index].reverseIntensity === 'undefined')
                 impImgData.c[index].reverseIntensity = null;
-            if (chan.reverseIntensity !== impImgData.c[index].reverseIntensity)
-               history.push({
+            if (chan.reverseIntensity !== impImgData.c[index].reverseIntensity) {
+                history.push({
                    prop: ['image_info', 'channels', '' + index, 'reverseIntensity'],
                    old_val : chan.reverseIntensity,
                    new_val: impImgData.c[index].reverseIntensity,
                    type: 'boolean'});
+                chan.reverseIntensity = impImgData.c[index].reverseIntensity;
+             }
              // remember active
-             if (chan.active !== impImgData.c[index].active)
+             if (chan.active !== impImgData.c[index].active) {
                  history.push({
                      prop: ['image_info', 'channels', '' + index, 'active'],
                      old_val : chan.active,
                      new_val: impImgData.c[index].active,
                      type: 'boolean'});
+                 chan.active = impImgData.c[index].active;
+             }
              // log z and t
-             if (imgInf.dimensions.t !== impImgData.t)
+             if (imgInf.dimensions.t !== impImgData.t) {
                  history.push({
                      prop: ['image_info', 'dimensions', 't'],
                      old_val : imgInf.dimensions.t,
                      new_val: impImgData.t,
                      type: 'number'});
-             if (imgInf.dimensions.z !== impImgData.z)
+                 imgInf.dimensions.t = impImgData.t;
+             }
+             if (imgInf.dimensions.z !== impImgData.z) {
                  history.push({
                      prop: ['image_info', 'dimensions', 'z'],
                      old_val : imgInf.dimensions.z,
                      new_val: impImgData.z,
                      type: 'number'});
+                 imgInf.dimensions.z = impImgData.z;
+             }
              // remember model and projection
-             if (imgInf.model !== impImgData.m)
+             if (imgInf.model !== impImgData.m) {
                  history.push({
                      prop: ['image_info', 'model'],
                      old_val : imgInf.model,
                      new_val: impImgData.m,
                      type: 'string'});
-             if (imgInf.projection !== impImgData.p)
+                 imgInf.model = impImgData.m;
+             }
+             if (imgInf.projection !== impImgData.p) {
                  history.push({
                      prop: ['image_info', 'projection'],
                      old_val : imgInf.projection,
                      new_val: impImgData.p,
                      type: 'string'});
+                 imgInf.projection = impImgData.p;
+             }
          }
      }
 

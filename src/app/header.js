@@ -16,37 +16,37 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 // js
-import {inject,customElement} from 'aurelia-framework';
+import {inject,customElement, BindingEngine} from 'aurelia-framework';
 import Context from './context';
-
-import {
-    IMAGE_CONFIG_UPDATE,
-    EventSubscriber
-} from '../events/events';
 
 /**
  * @classdesc
  *
  * the app header
- * @extends EventSubscriber
  */
 @customElement('header')
-@inject(Context)
-export class Header extends EventSubscriber {
-    /**
-     * events we subscribe to
-     * @memberof Header
-     * @type {Array.<string,function>}
-     */
-    sub_list = [[IMAGE_CONFIG_UPDATE,
-                    (params = {}) => this.onImageConfigChange(params)]];
-
+@inject(Context, BindingEngine)
+export class Header {
     /**
      * the selected image info
      * @memberof Header
      * @type {ImageInfo}
      */
     image_info = null;
+
+    /**
+     * observer watching for changes in the selected image
+     * @memberof Header
+     * @type {Object}
+     */
+    selected_image_observer = null;
+
+    /**
+     * observer watching for when the image info data is ready
+     * @memberof Header
+     * @type {Object}
+     */
+    image_info_ready_observer = null;
 
     /**
      * shorter version of the image name
@@ -63,32 +63,67 @@ export class Header extends EventSubscriber {
      * @memberof Header
      */
     bind() {
-        this.subscribe();
+        // initial image config
+        this.onImageConfigChange();
+        // register observer for selected image configs and event subscriptions
+        this.selected_image_observer =
+            this.bindingEngine.propertyObserver(
+                this.context, 'selected_config').subscribe(
+                    (newValue, oldValue) => this.onImageConfigChange());
     }
 
     /**
      * @constructor
      * @param {Context} context the application context
+     * @param {BindingEngine} bindingEngine the BindingEngine (injected)
      */
-    constructor(context) {
-        super(context.eventbus);
+    constructor(context, bindingEngine) {
         this.context = context;
+        this.bindingEngine = bindingEngine;
     }
 
     /**
-     * Handles changes of the associated ImageConfig
+     * Handles changes of the selected image config
      *
      * @memberof Header
-     * @param {Object} params the event notification parameters
      */
-     onImageConfigChange(params = {}) {
-        let conf = this.context.getImageConfig(params.config_id);
+     onImageConfigChange() {
+        this.image_info = this.context.getSelectedImageConfig().image_info;
 
-        if (conf === null) return;
-        this.image_info = conf.image_info;
-        let result = this.image_info.image_name.replace("\\", "/");
-        let fields = result.split("/");
-        this.short_image_name = fields[fields.length-1];
+        let imageInfoReady = () => {
+            let fullPath = this.image_info.image_name.replace("\\", "/");
+            let fields = fullPath.split("/");
+            this.short_image_name = fields[fields.length-1];
+        };
+
+        if (this.image_info.ready) {
+            imageInfoReady();
+            return;
+        }
+
+        this.unregisterObservers(true);
+        this.image_info_ready_observer =
+            this.bindingEngine.propertyObserver(
+                this.image_info, 'ready').subscribe(
+                    (newValue, oldValue) => imageInfoReady());
+     }
+
+     /**
+      * Unregisters the the observers (image selection and image data ready)
+      *
+      * @param {boolean} ready_only true if only the image data ready observer is cleaned up
+      * @memberof Header
+      */
+     unregisterObservers(ready_only = false) {
+         if (this.image_info_ready_observer) {
+             this.image_info_ready_observer.dispose();
+             this.image_info_ready_observer = null;
+         }
+         if (ready_only) return;
+         if (this.selected_image_observer) {
+             this.selected_image_observer.dispose();
+             this.selected_image_observer = null;
+         }
      }
 
     /**
@@ -99,6 +134,6 @@ export class Header extends EventSubscriber {
      * @memberof Header
      */
     unbind() {
-        this.unsubscribe();
+        this.unregisterObservers();
     }
 }

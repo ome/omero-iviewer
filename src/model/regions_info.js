@@ -18,9 +18,7 @@
 
 import {noView} from 'aurelia-framework';
 import RegionsHistory from './regions_history';
-import {
-    IMAGE_CONFIG_UPDATE, REGIONS_INIT, EventSubscriber
-} from '../events/events';
+import {REGIONS_INIT, EventSubscriber} from '../events/events';
 import Misc from '../utils/misc';
 import {Converters} from '../utils/converters';
 import {
@@ -29,12 +27,9 @@ import {
 
 /**
  * Holds region information
- *
- * @extends {EventSubscriber}
- *
  */
 @noView
-export default class RegionsInfo extends EventSubscriber {
+export default class RegionsInfo  {
     /**
      * true if a backend request is pending
      * @memberof RegionsInfo
@@ -146,20 +141,10 @@ export default class RegionsInfo extends EventSubscriber {
     roi_id = -1;
 
     /**
-     * our list of events we subscribe to via the EventSubscriber
-     * @memberof RegionsInfo
-     * @type {Map}
-     */
-    sub_list = [
-        [IMAGE_CONFIG_UPDATE,
-            (params={}) => this.handleImageConfigUpdate(params)]];
-
-    /**
      * @constructor
      * @param {ImageInfo} image_info the associated image
      */
     constructor(image_info) {
-        super(image_info.context.eventbus);
         this.image_info = image_info;
         // we want history
         this.history = new RegionsHistory(this);
@@ -176,38 +161,13 @@ export default class RegionsInfo extends EventSubscriber {
 
     /**
      * Even though we are not an Aurelia View we stick to Aurelia's lifecycle
-     * terminology and use the method bind for initialization purposes
-     *
-     * @memberof RegionsInfo
-     */
-    bind() {
-        this.subscribe();
-    }
-
-    /**
-     * Even though we are not an Aurelia View we stick to Aurelia's lifecycle
      * terminology and use the method unbind for cleanup purposes
      *
      * @memberof RegionsInfo
      */
     unbind() {
-        this.unsubscribe();
         this.resetRegionsInfo();
         this.history = null;
-    }
-
-    /**
-     * Handles received image config updates (IMAGE_CONFIG_UPDATE)
-     *
-     * @memberof RegionsInfo
-     * @param {Object} params the event notification parameters
-     */
-    handleImageConfigUpdate(params = {}) {
-        // we ignore notifications that don't concern us
-        if (params.config_id !== this.image_info.config_id ||
-            !params.ready) return;
-
-        if (this.image_info.context.isRoisTabActive()) this.requestData(true);
     }
 
     /**

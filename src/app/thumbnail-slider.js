@@ -17,15 +17,13 @@
 //
 
 // js
-import {inject,customElement} from 'aurelia-framework';
+import {inject,customElement, BindingEngine} from 'aurelia-framework';
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import UI from '../utils/ui';
 import {API_PREFIX, WEBCLIENT, WEBGATEWAY} from '../utils/constants';
 import {REGIONS_STORE_SHAPES, REGIONS_STORED_SHAPES} from '../events/events';
-import {
-    IMAGE_CONFIG_UPDATE, THUMBNAILS_UPDATE, EventSubscriber
-} from '../events/events';
+import {THUMBNAILS_UPDATE, EventSubscriber} from '../events/events';
 
 /**
  * Displays the image thumbnails
@@ -33,21 +31,21 @@ import {
  * @extends {EventSubscriber}
  */
 @customElement('thumbnail-slider')
-@inject(Context, Element)
+@inject(Context, Element, BindingEngine)
 export default class ThumbnailSlider extends EventSubscriber {
     /**
-     * the present dataset id to see if we need to reissue a request
+     * have we been initialized
      * @memberof ThumbnailSlider
-     * @type {number}
+     * @type {boolean}
      */
-    dataset_id = null;
+     initialized = false;
 
     /**
-     * the id of the present image showing
+     * a reference to the selected image config
      * @memberof ThumbnailSlider
-     * @type {number}
+     * @type {ImageConfig}
      */
-    image_showing = null;
+    image_config = null;
 
     /**
      * the api prefix for requests
@@ -62,6 +60,20 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @type {string}
      */
     gateway_prefix = '';
+
+    /**
+     * observer watching for changes in the selected image
+     * @memberof ThumbnailSlider
+     * @type {Object}
+     */
+    selected_image_observer = null;
+
+    /**
+     * observer watching for when the image info data is ready
+     * @memberof ThumbnailSlider
+     * @type {Object}
+     */
+    image_info_ready_observer = null;
 
     /**
      * a list of thumbnails objects with a url and an id property each
@@ -118,21 +130,21 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @memberof ThumbnailSlider
      * @type {Map}
      */
-    sub_list = [
-        [IMAGE_CONFIG_UPDATE,
-            (params={}) => this.init(params.dataset_id, params.image_id)],
-        [THUMBNAILS_UPDATE,
-            (params={}) => this.updateThumbnails(params)]];
+    sub_list = [[THUMBNAILS_UPDATE,
+                    (params={}) => this.updateThumbnails(params)]];
 
     /**
      * @constructor
      * @param {Context} context the application context (injected)
+     * @param {BindingEngine} bindingEngine the BindingEngine (injected)
      */
-    constructor(context, element) {
+    constructor(context, element, bindingEngine) {
         super(context.eventbus)
         this.context = context;
         this.element = element;
+        this.bindingEngine = bindingEngine;
 
+        // get prefixes
         this.api_prefix = this.context.getPrefixedURI(API_PREFIX);
         this.gateway_prefix = this.context.getPrefixedURI(WEBGATEWAY);
     }
@@ -145,7 +157,73 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @memberof ThumbnailSlider
      */
     bind() {
+        // initial image config
+        this.onImageConfigChange();
+        // register observer for selected image configs and event subscriptions
+        this.selected_image_observer =
+            this.bindingEngine.propertyObserver(
+                this.context, 'selected_config').subscribe(
+                    (newValue, oldValue) => this.onImageConfigChange());
         this.subscribe();
+    }
+
+    /**
+     * Triggered for initialization of thumnnail panel (once only)
+     * as well as setting image config reference every time the selected image
+     * changes
+     *
+     * @memberof ThumbnailSlider
+     */
+    onImageConfigChange() {
+        // swap out selected image config
+        this.image_config = this.context.getSelectedImageConfig();
+
+        // no need to do this twice
+        if (this.initialized) return;
+
+        // ready handler
+        let imageInfoReady = () => {
+            this.initialized = true;
+            if (typeof this.image_config.image_info.dataset_id
+                    !== 'number') this.hideMe();
+            else this.gatherThumbnailMetaInfo(
+                    this.image_config.image_info.image_id);
+            this.unregisterObservers(true);
+        };
+
+        // we don't have a dataset id
+        if (typeof this.image_config.image_info.dataset_id !== 'number') {
+            // have we had all the data already
+            if (this.image_config.image_info.ready) {
+                // too bad, no dataset id
+                this.initialized = true;
+                this.hideMe();
+                return;
+            };
+            // wait until we have all the data to check again for dataset_id
+            this.image_info_ready_observer =
+                this.bindingEngine.propertyObserver(
+                    this.image_config.image_info, 'ready').subscribe(
+                        (newValue, oldValue) => imageInfoReady());
+        } else imageInfoReady();
+    }
+
+    /**
+     * Unregisters the the observers (image selection and image data ready)
+     *
+     * @param {boolean} ready_only true if only the image data ready observer is cleaned up
+     * @memberof ThumbnailSlider
+     */
+    unregisterObservers(ready_only = false) {
+        if (this.image_info_ready_observer) {
+            this.image_info_ready_observer.dispose();
+            this.image_info_ready_observer = null;
+        }
+        if (ready_only) return;
+        if (this.selected_image_observer) {
+            this.selected_image_observer.dispose();
+            this.selected_image_observer = null;
+        }
     }
 
     /**
@@ -158,35 +236,9 @@ export default class ThumbnailSlider extends EventSubscriber {
     unbind() {
         if (this.updateHandle) clearInterval(this.updateHandle);
         this.unsubscribe();
+        this.unregisterObservers();
     }
 
-    /**
-     * Issues backend request to retrieve thumbnail information
-     *
-     * @memberof ThumbnailSlider
-     * @param {number} dataset_id the dataset id used for initialization
-     * @param {number} image_id the id of the image in the dataset
-     */
-    init(dataset_id, image_id) {
-        this.image_showing = image_id;
-        // we don't have a dataset id => hide us
-        if (typeof dataset_id !== 'number' || typeof image_id !== 'number') {
-            this.hideMe();
-            return;
-        }
-
-        // undo some hiding that might have been done prior
-        this.showMe();
-
-        // same id => we don't need to do anything...
-        if (dataset_id  === this.dataset_id) return;
-        this.dataset_id = dataset_id;
-
-        this.requesting_thumbnail_data = true;
-        this.thumbnails = [];
-
-        this.gatherThumbnailMetaInfo(image_id);
-    }
 
     /**
      * Initializes thumbnail count and thumbnails_start_index as well as
@@ -209,7 +261,6 @@ export default class ThumbnailSlider extends EventSubscriber {
                 if (typeof response !== 'object' || response === null ||
                     !Misc.isArray(response.paths) ||
                     response.paths.length === 0) {
-                        this.dataset_id = null;
                         this.hideMe();
                         return;
                 }
@@ -223,7 +274,7 @@ export default class ThumbnailSlider extends EventSubscriber {
                     for (let j=0; j<p.length; j++)
                         if (typeof p[j].type === 'string' &&
                             p[j].type === 'dataset' &&
-                            p[j].id === this.dataset_id) {
+                            p[j].id === this.image_config.image_info.dataset_id) {
                                 if (typeof p[j].childCount === 'number')
                                     path = p[j];
                                 break;
@@ -275,7 +326,8 @@ export default class ThumbnailSlider extends EventSubscriber {
         }
         let url =
             this.context.server + this.api_prefix + "/datasets/" +
-            this.dataset_id + '/images/?offset=' + offset + '&limit=' + limit;
+            this.image_config.image_info.dataset_id + '/images/?offset=' +
+            offset + '&limit=' + limit;
 
         $.ajax(
             {url : url,
@@ -286,7 +338,6 @@ export default class ThumbnailSlider extends EventSubscriber {
                     if (typeof response !== 'object' || response === null ||
                         typeof response.meta !== 'object' ||
                         response.meta === null) {
-                            this.dataset_id = null;
                             this.hideMe();
                             return;
                         }
@@ -306,7 +357,6 @@ export default class ThumbnailSlider extends EventSubscriber {
             },
             error : (response) => {
                 this.requesting_thumbnail_data = false;
-                this.dataset_id = null;
                 if (init) this.hideMe();
             }
         });
@@ -360,20 +410,6 @@ export default class ThumbnailSlider extends EventSubscriber {
     }
 
     /**
-     * Shows thumbnail slider including resize bar
-     *
-     * @memberof ThumbnailSlider
-     */
-    showMe() {
-        $(this.element).css('visibility', 'visible');
-        $('.col-splitter.left-split').css('visibility', 'visible');
-        $('.frame').removeClass('left-hand-panel-hidden');
-        let w =  $(this.element).width();
-        $('.frame').css('margin-left', '' + (-w-5) + 'px');
-        $('.frame').css('padding-left', '' + (w+10) + 'px');
-    }
-
-    /**
      * A click handler: sets the image id in the main view
      *
      * @memberof ThumbnailSlider
@@ -381,20 +417,20 @@ export default class ThumbnailSlider extends EventSubscriber {
      */
     onClick(image_id) {
         let navigateToNewImage = () => {
-            this.context.rememberImageConfigChange(image_id, this.dataset_id);
-            this.context.addImageConfig(image_id, this.dataset_id);
-            this.image_showing = image_id;
+            this.context.rememberImageConfigChange(
+                image_id, this.image_config.image_info.dataset_id);
+            this.context.addImageConfig(
+                image_id, this.image_config.image_info.dataset_id);
         };
 
-        let conf = this.context.getSelectedImageConfig();
         // pop up dialog to ask whether user wants to store rois changes
         // if we have a regions history, we have modifications
         // and are not cross domain
-        if (conf &&
-            conf.regions_info &&
-            conf.regions_info.hasBeenModified() &&
+        if (this.image_config &&
+            this.image_config.regions_info &&
+            this.image_config.regions_info.hasBeenModified() &&
             !Misc.useJsonp(this.context.server) &&
-            conf.regions_info.image_info.can_annotate) {
+            this.image_config.regions_info.image_info.can_annotate) {
             let saveHandler = () => {
                 let tmpSub =
                     this.context.eventbus.subscribe(
@@ -406,7 +442,8 @@ export default class ThumbnailSlider extends EventSubscriber {
                 setTimeout(()=>
                     this.context.publish(
                         REGIONS_STORE_SHAPES,
-                        {config_id : conf.id, omit_client_update: true}), 20);
+                        {config_id : this.image_config.id,
+                         omit_client_update: true}), 20);
             };
 
             UI.showConfirmationDialog(

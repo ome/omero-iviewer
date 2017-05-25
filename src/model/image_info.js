@@ -227,6 +227,11 @@ export default class ImageInfo {
 
                 // fetch copied img RDef
                 this.requestImgRDef();
+                // request regions data if rois tab showing
+                if (this.context.isRoisTabActive())
+                    this.context.getSelectedImageConfig().
+                        regions_info.requestData(true);
+
                 // notify everyone that we are ready
                 if (this.context)
                     this.context.publish(
@@ -462,8 +467,6 @@ export default class ImageInfo {
             if (typeof callback === 'function') callback();
             return;
         }
-
-        let old
 
         $.ajax({
             url :
