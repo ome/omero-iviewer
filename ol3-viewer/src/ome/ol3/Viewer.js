@@ -1668,21 +1668,6 @@ ome.ol3.Viewer.prototype.storeRegions =
 }
 
 /**
- * Enables/Disables context menu for regions
- * see: {@link ome.ol3.interaction.Select.enableContextMenu}
- *
- * @param {boolean} flag if true the context menu will be shown on right click,
- *                       otherwise not
- */
-ome.ol3.Viewer.prototype.enableRegionsContextMenu = function(flag) {
-    if (!(this.regions_ instanceof ome.ol3.source.Regions) ||
-        !(this.regions_.select_ instanceof ome.ol3.interaction.Select))
-            return; // no regions or select => no context menu...
-
-    this.regions_.select_.enableContextMenu(flag);
-}
-
-/**
  * Enables the drawing of one shape of a given type
  * To do so it sets the regions mode to draw, storing previously chosen
  * modes, adds the openlayers draw interaction to then switch back to
@@ -2097,11 +2082,6 @@ goog.exportProperty(
     ome.ol3.Viewer.prototype,
     'storeRegions',
     ome.ol3.Viewer.prototype.storeRegions);
-
-goog.exportProperty(
-    ome.ol3.Viewer.prototype,
-    'enableRegionsContextMenu',
-    ome.ol3.Viewer.prototype.enableRegionsContextMenu);
 
 goog.exportProperty(
     ome.ol3.Viewer.prototype,

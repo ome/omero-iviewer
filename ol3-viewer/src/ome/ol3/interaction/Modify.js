@@ -222,12 +222,6 @@ ome.ol3.interaction.Modify.prototype.handlePointerAtPixel_ = function(pixel, map
  * @private
  */
 ome.ol3.interaction.Modify.handleDragEvent_ = function(mapBrowserEvent) {
-    // short circuit right for click context menu
-    if (mapBrowserEvent instanceof ol.MapBrowserPointerEvent &&
-        mapBrowserEvent.originalEvent instanceof MouseEvent &&
-        typeof(mapBrowserEvent.originalEvent.which) === 'number' &&
-        mapBrowserEvent.originalEvent.which === 3) return;
-
     this.ignoreNextSingleClick_ = false;
     this.willModifyFeatures_(mapBrowserEvent);
 
@@ -322,12 +316,6 @@ ome.ol3.interaction.Modify.handleDragEvent_ = function(mapBrowserEvent) {
  * @private
  */
 ome.ol3.interaction.Modify.handleUpEvent_ = function(mapBrowserEvent) {
-    // short circuit right for click context menu
-    if (mapBrowserEvent instanceof ol.MapBrowserPointerEvent &&
-        mapBrowserEvent.originalEvent instanceof MouseEvent &&
-        typeof(mapBrowserEvent.originalEvent.which) === 'number' &&
-        mapBrowserEvent.originalEvent.which === 3) return false;
-
     this.oppVertBeingDragged = null;
     var segmentData;
 
@@ -368,12 +356,6 @@ ome.ol3.interaction.Modify.handleUpEvent_ = function(mapBrowserEvent) {
  * @api
  */
 ome.ol3.interaction.Modify.handleEvent = function(mapBrowserEvent) {
-    // short circuit right for click context menu
-    if (!(mapBrowserEvent instanceof ol.MapBrowserPointerEvent) ||
-        (mapBrowserEvent.originalEvent instanceof MouseEvent &&
-        typeof(mapBrowserEvent.originalEvent.which) === 'number' &&
-        mapBrowserEvent.originalEvent.which === 3)) return true;
-
     var handled;
     if (!mapBrowserEvent.map.getView().getHints()[ol.ViewHint.INTERACTING] &&
         mapBrowserEvent.type == ol.MapBrowserEventType.POINTERMOVE &&

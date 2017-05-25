@@ -63,20 +63,6 @@ ome.ol3.interaction.Select = function(regions_reference) {
      */
     this.features_ = new ol.Collection();
 
-    /**
-     * the flag whether the right click context menu should be enabled
-     * @private
-     * @type {boolean}
-     */
-    this.enableContextMenu_ = false;
-
-    /**
-     * the overlay for the context menu
-     * @private
-     * @type {ol.Overlay}
-     */
-    this.contextMenuOverlay_ = null;
-
     // we only want it to apply to our layer
     var regionsLayer = this.regions_.viewer_.getRegionsLayer();
     /**
@@ -92,10 +78,6 @@ ome.ol3.interaction.Select = function(regions_reference) {
      * @type {ol.interaction.SelectFilterFunction}
      */
     this.filter_ = ol.functions.TRUE;
-
-    if (this.enableContextMenu_)
-        ome.ol3.interaction.Select.prototype.enableContextMenu.call(
-            this, true);
 };
 goog.inherits(ome.ol3.interaction.Select, ol.interaction.Interaction);
 
@@ -114,19 +96,6 @@ ome.ol3.interaction.Select.prototype.clearSelection = function() {
 }
 
 /**
- * Handles a context menu for the selected feature
- *
- * @param {Object} event the event information
- */
-ome.ol3.interaction.Select.prototype.handleRightClick = function(event) {
-
-    var pixel = [event.offsetX,event.offsetY];
-    var selected = this.select_.featuresAtCoords_(pixel);
-
-    this.select_.showContextMenu(pixel, selected);
-};
-
-/**
  * Handles the {@link ol.MapBrowserEvent map browser event} and may change the
  * selected state of features.
  * @param {ol.MapBrowserEvent} mapBrowserEvent Map browser event.
@@ -138,12 +107,6 @@ ome.ol3.interaction.Select.handleEvent = function(mapBrowserEvent) {
     if (!this.condition_(mapBrowserEvent) || mapBrowserEvent.dragging) {
         return true;
     }
-
-    // short circuit right for click context menu
-    if (mapBrowserEvent instanceof ol.MapBrowserPointerEvent &&
-        mapBrowserEvent.originalEvent instanceof MouseEvent &&
-        typeof(mapBrowserEvent.originalEvent.which) === 'number' &&
-        mapBrowserEvent.originalEvent.which === 3) return true;
 
     var selected = this.featuresAtCoords_(mapBrowserEvent.pixel);
 
@@ -188,178 +151,12 @@ ome.ol3.interaction.Select.prototype.featuresAtCoords_ =
 };
 
 /**
- * @param {Array.<number>} position an array of pixelcoordinates, e.g. [x,y]
- * @param {ol.Feature=} feature the context menu for the feature
- * @private
- */
-ome.ol3.interaction.Select.prototype.showContextMenu =
-    function(position, feature) {
-        if (!ome.ol3.utils.Misc.isArray(position) || position.length !== 2 ||
-            !(feature instanceof ol.Feature) ||
-            !(this.contextMenuOverlay_ instanceof ol.Overlay)) return;
-        var contextFeature = feature || null;
-
-        var contextMenu = document.createElement('div');
-        contextMenu.id = 'ome_context_menu';
-        if (contextMenu === null) return;
-
-        // convert pixel to coordinates
-        var coordinates =
-            this.regions_.viewer_.viewer_.getCoordinateFromPixel(
-                [position[0]-10, position[1]-10]);
-
-        // for closing the context menu
-        var overlayCaptured = this.contextMenuOverlay_;
-        var closeContextMenuHandler = function(event) {
-            overlayCaptured.setPosition(undefined);
-            return false;
-        }
-
-        // add header with selected information
-        var title = document.createElement('span');
-        title.className = "context-title";
-        title.textContent = "Feature: " + feature.getId();
-
-        var close = document.createElement('a');
-        close.href = "#";
-        close.className = "context-close";
-        close.textContent = "✖";
-        close.onclick = closeContextMenuHandler;
-
-        var header = document.createElement('div');
-        header.className = "context-header";
-        header.appendChild(title);
-        header.appendChild(close);
-
-        contextMenu.appendChild(header);
-
-        this.addItemToContextMenu(
-            contextMenu, "Toggle Shape Selection",
-            function(event) {
-                this.regions_.setProperty(
-                    [feature.getId()], "selected", !feature['selected']);
-        });
-
-        this.addItemToContextMenu(
-            contextMenu, "Delete Shape",
-            function(event) {
-                this.regions_.setProperty(
-                    [feature.getId()], "state", ome.ol3.REGIONS_STATE.REMOVED);
-        });
-
-        this.contextMenuOverlay_.setElement(contextMenu);
-        this.contextMenuOverlay_.setPosition(coordinates);
-        contextMenu.parentNode.style.margin="1px";
-        this.regions_.viewer_.viewer_.getTargetElement().onmouseover =
-            function(event) {
-                if (event.target.id !== 'ome_context_menu' &&
-                    event.target.parentNode.id !== 'ome_context_menu' &&
-                    event.target.parentNode.parentNode.id !== 'ome_context_menu')
-                        overlayCaptured.setPosition(undefined);
-                return false;
-        };
-};
-
-/**
- * @param {Object} contextMenu the context menue dom element
- * @param {string} text the new items text description
- * @param {function=} handler a click handler to be executed
- * @private
- */
-ome.ol3.interaction.Select.prototype.addItemToContextMenu =
-    function(contextMenu, text, handler) {
-        if (typeof(contextMenu) !== 'object' ||
-            typeof(text) !== 'string' || text.length === 0) return;
-        var clickHandler = typeof(handler) === 'function' ? handler : null;
-
-        var contentDiv = null;
-        if (contextMenu.childNodes < 1 ||
-            contextMenu.childNodes[contextMenu.childNodes.length-1].tagName.toUpperCase() !== 'DIV' ||
-            !ome.ol3.utils.Misc.containsClass(
-                contextMenu.childNodes[contextMenu.childNodes.length-1],
-                "content")) {
-                    contextMenu.appendChild(document.createElement("hr"));
-                    var tmp = document.createElement("div");
-                    tmp.className = "context-content";
-                    contextMenu.appendChild(tmp);
-        }
-        contentDiv = contextMenu.childNodes[contextMenu.childNodes.length-1];
-        if (contentDiv === null) return;
-        if (contentDiv.childNodes.length >  0)
-            contentDiv.appendChild(document.createElement("br"));
-        var newItem = document.createElement("span");
-        newItem.textContent = text;
-        // register select style
-        newItem.onmouseover = function(event) {
-            ome.ol3.utils.Misc.setClass(event.target, "context-selected");
-        };
-        newItem.onmouseout = function(event) {
-            ome.ol3.utils.Misc.setClass(event.target, "");
-        };
-        if (clickHandler) {
-            var capturedThis = this;
-            newItem.onclick = function(event) {
-                handler.call(capturedThis, event);
-            }
-        };
-        contentDiv.appendChild(newItem);
-}
-
-/**
  * Getter for the selected features
  *
  * @return {ol.Collection} the selected features
  */
 ome.ol3.interaction.Select.prototype.getFeatures = function() {
     return this.features_;
-}
-
-/**
- * Enables/Disables context menu
- *
- * @param {boolean} flag if true, the right-click context menu is enabled, otherwise not
- */
-ome.ol3.interaction.Select.prototype.enableContextMenu = function(flag) {
-    if (typeof(flag) !== 'boolean') flag = false;
-
-    var oldFlag = this.enableContextMenu_;
-    if (oldFlag == flag) return; // no changes
-
-    this.enableContextMenu_ = flag;
-    if (flag) {
-        // create and add overlay
-        this.contextMenuOverlay_ = new ol.Overlay({autoPan: true});
-        this.regions_.viewer_.viewer_.addOverlay(this.contextMenuOverlay_);
-
-        var regions_reference = this.regions_;
-
-        // add right click handler
-        this.regions_.viewer_.viewer_.getTargetElement().oncontextmenu =
-            function(event) {
-                // we need a select to be present
-                if (regions_reference.select_ === null) return;
-
-                // delegate
-                ome.ol3.interaction.Select.prototype.handleRightClick.call(
-                regions_reference, event);
-
-                // stop browser from showing you its context menu
-                if (event.stopPropagation) event.stopPropagation();
-                else event.cancelBubble = true;
-                return false;
-            }
-    } else {
-        if (this.contextMenuOverlay_ instanceof ol.Overlay) {
-            this.regions_.viewer_.viewer_.removeOverlay(
-                this.contextMenuOverlay_);
-            this.contextMenuOverlay_ = null;
-        }
-
-        if (this.regions_.viewer_.viewer_.getTargetElement()) {
-            this.regions_.viewer_.viewer_.getTargetElement().oncontextmenu = null;
-            this.regions_.viewer_.viewer_.getTargetElement().onmouseover = null;
-        }
-    }
 }
 
 /**
@@ -390,15 +187,5 @@ ome.ol3.interaction.Select.prototype.enableContextMenu = function(flag) {
  * a sort of desctructor
  */
 ome.ol3.interaction.Select.prototype.disposeInternal = function() {
-    if (this.addListener_) {
-        ol.events.unlistenByKey(this.addListener_);
-        this.addListener_ = null;
-    }
-    if (this.removeListener_) {
-        ol.events.unlistenByKey(this.removeListener_);
-        this.removeListener_ = null;
-    }
-
-    this.enableContextMenu(false);
     this.regions_ = null;
 }
