@@ -30,6 +30,13 @@ import History from './history';
 @noView
 export default class ImageConfig extends History {
     /**
+     * id
+     * @memberof ImageConfig
+     * @type {number}
+     */
+    id = null;
+
+    /**
      * revision for history
      * @memberof ImageConfig
      * @type {ImageInfo}

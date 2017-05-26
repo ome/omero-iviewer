@@ -232,8 +232,9 @@ export default class RegionsDrawing extends EventSubscriber {
         // scroll to end of list
         if (len !== 0)
             setTimeout(
-                Ui.scrollRegionsTable.bind(
-                    null,generatedShapes[len-1].shape_id), 50);
+                Ui.scrollContainer.bind(null,
+                    'roi-' + generatedShapes[len-1].shape_id,
+                    '.regions-table'), 50);
 
         // only if we have to generate more shapes we continue
         if (!params.drawn || len === 0) return;

@@ -70,7 +70,7 @@
 
         <div class="frame col-xs-12">
             <div class="viewer" repeat.for="[id, conf] of context.image_configs">
-                <ol3-viewer config_id.bind="id">
+                <ol3-viewer image_config.bind="conf">
                 </ol3-viewer>
             </div>
         </div>

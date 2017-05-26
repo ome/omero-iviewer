@@ -24,21 +24,21 @@ import Context from '../app/context';
 import Misc from '../utils/misc';
 import {Converters} from '../utils/converters';
 import Ui from '../utils/ui';
-import {inject, customElement, bindable} from 'aurelia-framework';
+import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {ol3} from '../../libs/ol3-viewer.js';
 import {
     IVIEWER, PLUGIN_PREFIX, REGIONS_DRAWING_MODE, RENDER_STATUS,
     VIEWER_ELEMENT_PREFIX
 } from '../utils/constants';
 import {
-    IMAGE_CONFIG_UPDATE, IMAGE_VIEWER_RESIZE, IMAGE_DIMENSION_CHANGE,
-    IMAGE_DIMENSION_PLAY, IMAGE_SETTINGS_CHANGE, REGIONS_INIT,
-    REGIONS_SET_PROPERTY, REGIONS_PROPERTY_CHANGED, VIEWER_IMAGE_SETTINGS,
-    IMAGE_VIEWER_SPLIT_VIEW, REGIONS_DRAW_SHAPE, REGIONS_CHANGE_MODES,
-    REGIONS_SHOW_COMMENTS, REGIONS_GENERATE_SHAPES, REGIONS_STORED_SHAPES,
-    REGIONS_STORE_SHAPES, REGIONS_HISTORY_ENTRY, REGIONS_HISTORY_ACTION,
-    REGIONS_MODIFY_SHAPES, REGIONS_COPY_SHAPES, EventSubscriber }
-from '../events/events';
+    IMAGE_VIEWER_RESIZE, IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY,
+    IMAGE_SETTINGS_CHANGE, REGIONS_SET_PROPERTY, REGIONS_PROPERTY_CHANGED,
+    VIEWER_IMAGE_SETTINGS, IMAGE_VIEWER_SPLIT_VIEW, REGIONS_DRAW_SHAPE,
+    REGIONS_CHANGE_MODES, REGIONS_SHOW_COMMENTS, REGIONS_GENERATE_SHAPES,
+    REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES, REGIONS_HISTORY_ENTRY,
+    REGIONS_HISTORY_ACTION, REGIONS_MODIFY_SHAPES, REGIONS_COPY_SHAPES,
+    EventSubscriber
+} from '../events/events';
 
 
 /**
@@ -47,21 +47,21 @@ from '../events/events';
  */
 
 @customElement('ol3-viewer')
-@inject(Context, Element)
+@inject(Context, Element, BindingEngine)
 export default class Ol3Viewer extends EventSubscriber {
     /**
-     * which image config do we belong to (bound via template)
-     * @memberof Ol3Viewer
-     * @type {number}
-     */
-    @bindable config_id=null;
-
-    /**
-     * the image config reference to work with
+     * the image config reference to work with (bound via template)
      * @memberof Ol3Viewer
      * @type {ImageConfig}
      */
-    image_config = null;
+    @bindable image_config = null;
+
+    /**
+     * the image info ready observers
+     * @memberof Ol3Viewer
+     * @type {Object}
+     */
+    image_info_ready_observer = null;
 
     /**
      * the internal instance of the ol3.Viewer
@@ -83,8 +83,6 @@ export default class Ol3Viewer extends EventSubscriber {
      * @type {Array.<string,function>}
      */
     sub_list = [
-        [IMAGE_CONFIG_UPDATE,
-            (params={}) => this.initViewer(params)],
         [IMAGE_VIEWER_RESIZE,
             (params={}) => this.resizeViewer(params)],
         [IMAGE_DIMENSION_CHANGE,
@@ -93,8 +91,6 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.playDimension(params)],
         [IMAGE_SETTINGS_CHANGE,
             (params={}) => this.changeImageSettings(params)],
-        [REGIONS_INIT,
-            (params={}) => this.initRegions(params)],
         [REGIONS_PROPERTY_CHANGED,
             (params={}) => this.getRegionsPropertyChange(params)],
         [REGIONS_SET_PROPERTY,
@@ -128,11 +124,13 @@ export default class Ol3Viewer extends EventSubscriber {
      * @constructor
      * @param {Context} context the application context (injected)
      * @param {Element} element the associated dom element (injected)
+     * @param {BindingEngine} bindingEngine injected instance of BindingEngine
      */
-    constructor(context, element) {
+    constructor(context, element, bindingEngine) {
         super(context.eventbus)
         this.context = context;
         this.element = element;
+        this.bindingEngine = bindingEngine;
     }
 
     /**
@@ -142,14 +140,23 @@ export default class Ol3Viewer extends EventSubscriber {
      * @memberof Ol3Viewer
      */
     attached() {
-        // register resize and collapse handlers
-        Ui.registerSidePanelHandlers(
-            this.context.eventbus,
-            this.context.getPrefixedURI(PLUGIN_PREFIX, true),
-        );
-
-        // subscribe
-        this.subscribe();
+        let imageDataReady = () => {
+            // create viewer instance, register event subscriptions
+            this.initViewer();
+            this.subscribe();
+            // listen to when the regions info data is ready
+            this.regions_info_ready_observer =
+                this.bindingEngine.propertyObserver(
+                    this.image_config.regions_info, 'ready').subscribe(
+                        (newValue, oldValue) => this.initRegions());
+        };
+        // if the data is ready we initalize the viewer now,
+        // otherwise we listen via the observer
+        if (this.image_config.image_info.ready) imageDataReady();
+        else this.image_info_ready_observer =
+                this.bindingEngine.propertyObserver(
+                    this.image_config.image_info, 'ready').subscribe(
+                        (newValue, oldValue) => imageDataReady());
     }
 
     /**
@@ -161,11 +168,9 @@ export default class Ol3Viewer extends EventSubscriber {
      */
     bind() {
         // we 'tag' the element to belong to a certain image config
-        this.element.parentNode.id = this.config_id;
+        this.element.parentNode.id = this.image_config.id;
         // define the container element
-        this.container = VIEWER_ELEMENT_PREFIX + this.config_id;
-        // we associate the image config with the present config id
-        this.image_config = this.context.getImageConfig(this.config_id);
+        this.container = VIEWER_ELEMENT_PREFIX + this.image_config.id;
     }
 
     /**
@@ -189,22 +194,25 @@ export default class Ol3Viewer extends EventSubscriber {
      * @memberof Ol3Viewer
      */
     unbind() {
+        if (this.image_info_ready_observer) {
+            this.image_info_ready_observer.dispose();
+            this.image_info_ready_observer = null;
+        }
+        if (this.regions_info_ready_observer) {
+            this.regions_info_ready_observer.dispose();
+            this.regions_info_ready_observer = null;
+        }
         this.unsubscribe();
         this.viewer = null;
         this.image_config = null;
     }
 
     /**
-     * Instantiates a new ol3 viewer as a result of image config changes
-     * (event notification)
+     * Instantiates a new ol3 viewer once image data is ready
      *
      * @memberof Ol3Viewer
-     * @param {Object} params the event notification parameters
      */
-    initViewer(params = {}) {
-        // the event doesn't concern us
-        if (params.config_id !== this.config_id) return;
-
+    initViewer() {
         // tweak initParams for ol3viewer to reflect iviewer app name
         let ol3initParams = Object.assign({}, this.context.initParams);
         ol3initParams[PLUGIN_PREFIX] = this.context.getPrefixedURI(IVIEWER);
@@ -215,10 +223,11 @@ export default class Ol3Viewer extends EventSubscriber {
                 this.image_config.image_info.image_id, {
                      eventbus : this.context.eventbus,
                      server : this.context.server,
-                     data: params.data,
+                     data: this.image_config.image_info.tmp_data,
                      initParams :  ol3initParams,
                      container: this.container
                  });
+        delete this.image_config.image_info.tmp_data;
 
         // only the first request should be affected
         this.context.resetInitParams();
@@ -234,7 +243,8 @@ export default class Ol3Viewer extends EventSubscriber {
     changeDimension(params = {}) {
         // we ignore notifications that don't concern us
         // and need a dim identifier as well an array value
-        if (params.config_id !== this.config_id ||
+        if (params.config_id !== this.image_config.id ||
+            this.viewer === null ||
             typeof params.dim !== 'string' ||
             !Misc.isArray(params.value)) return;
 
@@ -253,7 +263,7 @@ export default class Ol3Viewer extends EventSubscriber {
     changeImageSettings(params = {}) {
         // we ignore notifications that don't concern us
         // and don't have the model param
-        if (params.config_id !== this.config_id ||
+        if (params.config_id !== this.image_config.id ||
             this.viewer === null ||
             (typeof params.model !== 'string' &&
                 typeof params.projection !== 'string' &&
@@ -364,7 +374,7 @@ export default class Ol3Viewer extends EventSubscriber {
       generateShapes(params = {}) {
           //we want only notifications that concern us
           // and need at least a viewer one shape definition in an array
-          if (params.config_id !== this.config_id ||
+          if (params.config_id !== this.image_config.id ||
               this.viewer === null ||
               !Misc.isArray(params.shapes) ||
               params.shapes.length === 0) return;
@@ -415,7 +425,7 @@ export default class Ol3Viewer extends EventSubscriber {
           // and need at least a viewer instance and
           //one shape id in the array as well as a value
           // for the action, either delete or undo
-          if (params.config_id !== this.config_id ||
+          if (params.config_id !== this.image_config.id ||
               this.viewer === null ||
               typeof params.value !== 'string' ||
               !Misc.isArray(params.shapes) || params.shapes.length === 0) return;
@@ -436,7 +446,7 @@ export default class Ol3Viewer extends EventSubscriber {
       changeShapeSelection(params = {}) {
           //we want only notifications that concern us
           // and need at least a viewer instance and one shape id in the array
-          if (params.config_id !== this.config_id ||
+          if (params.config_id !== this.image_config.id ||
               this.viewer === null ||
               !Misc.isArray(params.shapes) ||
               params.shapes.length === 0) return;
@@ -476,7 +486,8 @@ export default class Ol3Viewer extends EventSubscriber {
      */
     getImageSettings(params = {}) {
         // we ignore notifications that don't concern us
-        if (params.config_id !== this.config_id ||
+        if (params.config_id !== this.image_config.id ||
+            this.viewer === null ||
             typeof params.callback !== 'function') return;
 
         params.callback(this.viewer.captureViewParameters());
@@ -492,7 +503,8 @@ export default class Ol3Viewer extends EventSubscriber {
     changeRegionsModes(params={}) {
         // we don't do this if it does not concern us
         // or we don't have the right params
-        if (params.config_id !== this.config_id ||
+        if (params.config_id !== this.image_config.id ||
+                this.viewer === null ||
                 typeof params !== 'object' ||
                 !Misc.isArray(params.modes)) return;
 
@@ -504,13 +516,13 @@ export default class Ol3Viewer extends EventSubscriber {
     /**
      * Initializes the ol3 regions layer
      *
-     * @param {Object} params the event notification parameters
      * @memberof Ol3Viewer
      */
-    initRegions(params) {
+    initRegions() {
         if (this.viewer === null) return;
 
-        this.viewer.addRegions(params);
+        this.viewer.addRegions(this.image_config.regions_info.tmp_data);
+        delete this.image_config.regions_info.tmp_data;
         this.changeRegionsModes(
             { modes: this.image_config.regions_info.regions_modes});
     }
@@ -523,7 +535,7 @@ export default class Ol3Viewer extends EventSubscriber {
      */
     toggleSplitChannels(params = {}) {
         // check if we have a viewer instance and the event concerns us
-        if (params.config_id !== this.config_id ||
+        if (params.config_id !== this.image_config.id ||
             this.viewer === null ||
             typeof params.split !== 'boolean') return;
 
@@ -539,7 +551,8 @@ export default class Ol3Viewer extends EventSubscriber {
      */
     drawShape(params = {}) {
         // the event doesn't concern us
-        if (params.config_id !== this.config_id) return;
+        if (params.config_id !== this.image_config.id ||
+            this.viewer === null) return;
 
         // we want to only abort
         if (typeof params.abort === 'boolean' && params.abort) {
@@ -599,7 +612,7 @@ export default class Ol3Viewer extends EventSubscriber {
         // we need a viewer instance at a minimun,
         // also check if the event doesn't concern us
         if (this.viewer === null ||
-            params.config_id !== this.config_id) return;
+            params.config_id !== this.image_config.id) return;
 
         let numberOfdeletedShapes =
             this.image_config.regions_info.getNumberOfDeletedShapes(true);
@@ -638,7 +651,7 @@ export default class Ol3Viewer extends EventSubscriber {
     modifyShapes(params = {}) {
         // the event doesn't concern us, we don't have a viewer instance
         // or does not have all the params required
-        if (params.config_id !== this.config_id ||
+        if (params.config_id !== this.image_config.id ||
             this.viewer === null ||
             !Misc.isArray(params.shapes) || params.shapes.length === 0 ||
             typeof params.definition !== 'object' ||
@@ -667,7 +680,7 @@ export default class Ol3Viewer extends EventSubscriber {
     afterShapeStorage(params = {}) {
         Ui.hideModalMessage();
         // the event doesn't concern us
-        if (params.config_id !== this.config_id ||
+        if (params.config_id !== this.image_config.id ||
                 typeof params.shapes !== 'object' ||
                 params.shapes === null ||
                 params.omit_client_update) return;
@@ -753,7 +766,8 @@ export default class Ol3Viewer extends EventSubscriber {
      */
     showComments(params = {}) {
         // the event doesn't concern us
-        if (params.config_id !== this.config_id) return;
+        if (params.config_id !== this.image_config.id ||
+            this.viewer === null) return;
 
         this.viewer.showShapeComments(params.value);
     }
@@ -768,7 +782,7 @@ export default class Ol3Viewer extends EventSubscriber {
      */
     addHistoryEntry(params) {
         // the event doesn't concern us or we don't have a numeric history id
-        if (params.config_id !== this.config_id ||
+        if (params.config_id !== this.image_config.id ||
             typeof params.hist_id !== 'number') return;
 
         // we record the ol3 history id from a geometry modification/translation
@@ -789,7 +803,7 @@ export default class Ol3Viewer extends EventSubscriber {
     affectHistoryAction(params) {
         // the event doesn't concern us, we don't have a viewer instance
         // or we don't have a numeric history id
-        if (params.config_id !== this.config_id ||
+        if (params.config_id !== this.image_config.id ||
             this.viewer === null ||
             typeof params.hist_id !== 'number') return;
 
@@ -807,7 +821,7 @@ export default class Ol3Viewer extends EventSubscriber {
     copyShapeDefinitions(params) {
         // the event doesn't concern us, we don't have a viewer instance
         // or we have nothing selected for copy
-        if (params.config_id !== this.config_id ||
+        if (params.config_id !== this.image_config.id ||
             this.viewer === null ||
             this.image_config.regions_info.selected_shapes.length === 0) return;
 
@@ -848,7 +862,8 @@ export default class Ol3Viewer extends EventSubscriber {
     playDimension(params = {}) {
         // the event doesn't concern us or we don't have the minimum params
         // needed to properly process the event
-        if (params.config_id !== this.config_id  ||
+        if (params.config_id !== this.image_config.id  ||
+            this.viewer === null ||
             typeof params.forwards !== 'boolean' ||
             typeof params.dim !== 'string' ||
             (params.dim !== 'z' && params.dim !== 't')) return;

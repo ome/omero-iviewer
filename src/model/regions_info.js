@@ -18,7 +18,6 @@
 
 import {noView} from 'aurelia-framework';
 import RegionsHistory from './regions_history';
-import {REGIONS_INIT, EventSubscriber} from '../events/events';
 import Misc from '../utils/misc';
 import {Converters} from '../utils/converters';
 import {
@@ -281,8 +280,7 @@ export default class RegionsInfo  {
                     });
                     this.number_of_shapes = count;
                     this.ready = true;
-                    this.image_info.context.publish(
-                        REGIONS_INIT, {data: response});
+                    this.tmp_data = response;
                 } catch(err) {
                     console.error("Failed to load Rois: " + err);
                 }

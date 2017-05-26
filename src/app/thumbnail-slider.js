@@ -178,8 +178,14 @@ export default class ThumbnailSlider extends EventSubscriber {
         // swap out selected image config
         this.image_config = this.context.getSelectedImageConfig();
 
-        // no need to do this twice
-        if (this.initialized) return;
+        if (this.initialized) {
+            // scroll to image thumb
+            UI.scrollContainer(
+                'img-thumb-' + this.image_config.image_info.image_id,
+                '.thumbnail-panel');
+            // no need to initialize twice
+            return;
+        }
 
         // ready handler
         let imageInfoReady = () => {

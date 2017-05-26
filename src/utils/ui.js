@@ -291,27 +291,31 @@ export default class Ui {
      }
 
       /**
-       * Scrolls the regions table to the row with the given id
-       * if the row is outside the visible portion of the table
+       * Scrolls a container with a scrollbar in order to
+       * put one of its children into the visible part of the container
+       * if it cannot be seen already.
        *
-       * @param {string} id a row id of the form roi_id:shape_id
+       * @param {string} id the id of the child to scroll to
+       * @param {string} container the selector for the container element
        * @static
        */
-      static scrollRegionsTable(id) {
-          if (typeof id !== 'string') return;
+      static scrollContainer(id, container) {
+          if (typeof id !== 'string' || typeof container !== 'string') return;
 
-          let el = document.getElementById('roi-' + id);
+          let el = document.getElementById(id);
           if (el === null) return;
 
-          let regTable = $('.regions-table');
-          let offsetRegTable = regTable.prop("offsetTop");
-          let scrollTop = regTable.scrollTop();
-          let scrollBottom = scrollTop + regTable.outerHeight();
-          let elTop = el.offsetTop - offsetRegTable;
+          let contEl = $(container);
+          let offsetContainer = contEl.prop("offsetTop");
+          let scrollTop = contEl.scrollTop();
+          let scrollBottom = scrollTop + contEl.outerHeight();
+          let elTop = el.offsetTop - offsetContainer;
           let elBottom = elTop + el.offsetHeight;
           if (elTop > scrollTop && elBottom < scrollBottom) return;
 
-          regTable.scrollTop(elTop);
+          let pos =
+              elTop - parseInt(contEl.outerHeight() / 2) - el.offsetHeight;
+          contEl.scrollTop(pos < 0 ? elTop : pos);
       }
 
       /**

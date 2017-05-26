@@ -210,7 +210,7 @@ export default class RegionsList extends EventSubscriber {
          // exception: mixed permissions - don't scroll for canEdit=false
          if (idOflastEntry !== lastSelShape.shape_id && !lastCanEdit) return;
 
-         Ui.scrollRegionsTable(lastSelShape.shape_id);
+         Ui.scrollContainer('roi-' + lastSelShape.shape_id, '.regions-table');
      }
 
     /**

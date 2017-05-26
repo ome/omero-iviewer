@@ -737,21 +737,24 @@ ome.ol3.Viewer.prototype.changeToImage =
  * [addRegions]{@link ome.ol3.Viewer#addRegions} again if you want it back which is more expensive
  * than toggling visibility
  *
- * @param {Object=} options additional options for region initialization
+ * @param {Array=} data regions data (optional)
  */
-ome.ol3.Viewer.prototype.addRegions = function(options) {
+ome.ol3.Viewer.prototype.addRegions = function(data) {
     // without a map, no need for a regions overlay...
     if (!(this.viewer_ instanceof ol.Map)) {
         this.tried_regions_ = true;
-        if (ome.ol3.utils.Misc.isArray(options['data']))
-            this.tried_regions_data_ = options['data'];
+        if (ome.ol3.utils.Misc.isArray(data))
+            this.tried_regions_data_ = data;
         return;
     }
     this.tried_regions_ = false;
     this.tried_regions_data_ = null;
     if (this.regions_ instanceof ome.ol3.source.Regions) return;
 
+    var options = {};
+    if (data) options['data'] = data;
     this.regions_ = new ome.ol3.source.Regions(this, options);
+
     // add a vector layer with the regions
     if (this.regions_) {
         this.viewer_.addLayer(new ol.layer.Vector({source : this.regions_}));

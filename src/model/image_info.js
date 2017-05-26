@@ -17,7 +17,6 @@
 //
 
 import {noView} from 'aurelia-framework';
-import {IMAGE_CONFIG_UPDATE} from '../events/events';
 import Misc from '../utils/misc';
 import {
     REQUEST_PARAMS, WEBGATEWAY, CHANNEL_SETTINGS_MODE, IVIEWER
@@ -29,6 +28,13 @@ import {
  */
 @noView
 export default class ImageInfo {
+    /**
+     * the image id
+     * @memberof ImageInfo
+     * @type {number}
+     */
+    image_id = null;
+
     /**
      * the associated dataset id
      * @memberof ImageInfo
@@ -231,30 +237,12 @@ export default class ImageInfo {
                 if (this.context.isRoisTabActive())
                     this.context.getSelectedImageConfig().
                         regions_info.requestData(true);
-
-                // notify everyone that we are ready
-                if (this.context)
-                    this.context.publish(
-                        IMAGE_CONFIG_UPDATE,
-                            {config_id: this.config_id,
-                             image_id: this.image_id,
-                             dataset_id: this.dataset_id,
-                             data : Object.assign({}, response),
-                             ready: this.ready
-                            });
             },
             error : (error) => {
                 this.ready = false;
                 // we wanted a new image info => remove old
                 if (typeof this.config_id === 'number')
                     this.context.removeImageConfig(this.config_id);
-                // send out an image config update event
-                // with a no ready flag to (potentially react to)
-                this.context.publish(
-                    IMAGE_CONFIG_UPDATE,
-                        {config_id: this.config_id,
-                         dataset_id: null,
-                         ready: this.ready});
             }
         });
     }
@@ -284,9 +272,9 @@ export default class ImageInfo {
         this.image_timestamp = response.meta.imageTimestamp;
         this.setFormattedDeltaT(response);
 
-        // signal that we are ready and
-        // send out an image config update event
+        // signal that we are ready
         this.ready = true;
+        this.tmp_data = response;
     }
 
     /**

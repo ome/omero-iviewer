@@ -23,24 +23,22 @@ import {inject,customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {slider} from 'jquery-ui/ui/widgets/slider';
 
 import {
-    IMAGE_CONFIG_UPDATE, IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY,
-    EventSubscriber
+    IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY, EventSubscriber
 } from '../events/events';
 
 /**
  * Represents a dimension slider using jquery slider
- * @extends {EventSubscriber}
  */
 
 @customElement('dimension-slider')
 @inject(Context, Element, BindingEngine)
-export default class DimensionSlider extends EventSubscriber {
+export default class DimensionSlider {
     /**
-     * the image config we belong to
+     * the image config we belong to (bound in template)
      * @memberof DimensionSlider
      * @type {ImageConfig}
      */
-    image_config = null;
+    @bindable image_config = null;
 
     /**
      * a selector to conveniently access the dimension element slider
@@ -48,13 +46,6 @@ export default class DimensionSlider extends EventSubscriber {
      * @type {ImageInfo}
      */
     elSelector = null;
-
-    /**
-     * which image config do we belong to (bound in template)
-     * @memberof DimensionSlider
-     * @type {number}
-     */
-    @bindable config_id = null;
 
     /**
      * which dimension do we represent (bound via template)
@@ -71,12 +62,25 @@ export default class DimensionSlider extends EventSubscriber {
     @bindable player_info = {dim: null, forwards: null, handle: null};
 
     /**
-     * events we subscribe to
+     * Watches for dimension changes
      * @memberof DimensionSlider
-     * @type {Array.<string,function>}
+     * @type {Object}
      */
-    sub_list = [[IMAGE_CONFIG_UPDATE,
-                     (params = {}) => this.onImageConfigChange(params)]];
+    observer = null;
+
+    /**
+     * the image info  observers
+     * @memberof DimensionSlider
+     * @type {Object}
+     */
+    image_info__observer = null;
+
+    /**
+     * the starting point of play
+     * @memberof DimensionSlider
+     * @type {Object}
+     */
+    last_player_start = null;
 
     /**
      * @constructor
@@ -85,23 +89,36 @@ export default class DimensionSlider extends EventSubscriber {
      * @param {BindingEngine} bindingEngine injected instance of BindingEngine
      */
     constructor(context, element, bindingEngine) {
-        super(context.eventbus);
         this.context = context;
         this.element = element;
         this.bindingEngine = bindingEngine;
     }
 
     playDimension(forwards) {
+        let stop =
+            this.player_info.dim !== null &&
+            this.player_info.dim === this.dim &&
+            this.player_info.forwards === forwards;
+
+        // make history entry for stop
+        if (stop)
+            this.image_config.addHistory({
+                prop: ['image_info', 'dimensions', this.dim],
+                old_val : this.last_player_start,
+                new_val:  this.image_config.image_info.dimensions[this.dim],
+                type : "number"
+            });
+        else this.last_player_start =
+                this.image_config.image_info.dimensions[this.dim];
+
         // send out a dimension change notification
         this.context.publish(
-            IMAGE_DIMENSION_PLAY,
-                {config_id: this.config_id,
-                 dim: this.dim,
-                 forwards: forwards,
-                 stop:
-                    this.player_info.dim !== null &&
-                        this.player_info.dim === this.dim &&
-                        this.player_info.forwards === forwards});
+            IMAGE_DIMENSION_PLAY, {
+                config_id: this.image_config.id,
+                dim: this.dim,
+                forwards: forwards,
+                stop: stop
+            });
     }
 
     /**
@@ -112,11 +129,29 @@ export default class DimensionSlider extends EventSubscriber {
      * @memberof DimensionSlider
      */
     bind() {
-        // define the element selector, subscribe to events and register observer
-        this.subscribe();
-        this.elSelector = "#" + this.config_id +
+        // define the element selector
+        this.elSelector = "#" + this.image_config.id +
             " [dim='" + this.dim + "']" + " [name='dim']";
-        this.registerObserver();
+    }
+
+    /**
+     * Overridden aurelia lifecycle method:
+     * fired when PAL (dom abstraction) is ready for use
+     *
+     * @memberof DimensionSlider
+     */
+    attached() {
+        let imageDataReady = () => {
+            this.registerObserver();
+            this.initSlider();
+        };
+        // if the data is ready we initalize the viewer now,
+        // otherwise we listen via the observer
+        if (this.image_config.image_info.ready) imageDataReady();
+        else this.image_info_ready_observer =
+                this.bindingEngine.propertyObserver(
+                    this.image_config.image_info, 'ready').subscribe(
+                        (newValue, oldValue) => imageDataReady());
     }
 
     /**
@@ -143,54 +178,32 @@ export default class DimensionSlider extends EventSubscriber {
             this.observer.dispose();
             this.observer = null;
         }
+        if (this.image_info_ready_observer) {
+            this.image_info_ready_observer.dispose();
+            this.image_info_ready_observer = null;
+        }
     }
 
     /**
-     * Registers the dimension property listener for model change
+     * Registers the dimension property listener for dimension changes
      *
      * @memberof DimensionSlider
      */
     registerObserver() {
-        if (this.image_config === null ||
-                this.image_config.image_info === null) return;
-        this.unregisterObserver();
-        // we do this in a bit of a roundabout way by setting the slider value
-        // which in turn triggers the onchange handler which is where
-        // both, programmatic and ui affected change converge
         this.observer =
             this.bindingEngine.propertyObserver(
                 this.image_config.image_info.dimensions, this.dim)
                     .subscribe(
                         (newValue, oldValue) => {
                             $(this.elSelector).slider({value: newValue});
-
                             // send out a dimension change notification
                             this.context.publish(
                                 IMAGE_DIMENSION_CHANGE,
-                                    {config_id: this.config_id,
+                                    {config_id: this.image_config.id,
                                      dim: this.dim,
                                      value: [newValue]});
                         })
     }
-
-    /**
-     * Handles changes of the associated ImageConfig
-     *
-     * @memberof DimensionSlider
-     * @param {Object} params the event notification parameters
-     */
-     onImageConfigChange(params = {}) {
-         // if the event is for another config, forget it...
-         if (params.config_id !== this.config_id) return;
-
-         // change image config and (re)bind
-         // as well as update the slider (UI)
-         this.config_id = params.config_id;
-         if (this.context.getImageConfig(params.config_id) === null) return;
-         this.image_config = this.context.getImageConfig(params.config_id);
-         this.bind();
-         this.updateSlider();
-     }
 
     /**
      * Handles changes in the dimension model both via the UI or
@@ -201,34 +214,30 @@ export default class DimensionSlider extends EventSubscriber {
      * @param {boolean} slider_interaction true if change was affected by UI
      */
     onChange(value, slider_interaction = false) {
-        value = parseInt(value);
+        value = Math.round(parseFloat(value));
         let imgInf = this.image_config.image_info;
         let oldValue = imgInf.dimensions[this.dim];
 
         // no need to change for a the same value
-        if (slider_interaction ||
-                (!slider_interaction && value === oldValue)) return;
+        if (value === oldValue) return;
 
-        // make history entry
-        this.image_config.addHistory({
-           prop: ['image_info', 'dimensions', this.dim],
-           old_val : oldValue, new_val:  value, type : "number"});
+        // make history entry only for slider interaction
+        if (slider_interaction)
+            this.image_config.addHistory({
+               prop: ['image_info', 'dimensions', this.dim],
+               old_val : oldValue, new_val:  value, type : "number"});
 
         // this will trigger the observer who does the rest
         imgInf.dimensions[this.dim] = value;
     }
 
     /**
-     * Affects updates of the jquery slider
+     * Initialize jquery slider
      *
      * @memberof DimensionSlider
      */
-    updateSlider() {
-        // just in case
-        this.detached();
-
+    initSlider() {
         let imgInf = this.image_config.image_info;
-
         // no slider for a 0 length dimension
         if (imgInf.dimensions['max_' + this.dim] <= 1) return;
 
@@ -271,7 +280,7 @@ export default class DimensionSlider extends EventSubscriber {
                 let sliderValueSpan = $(this.elSelector + ' .slider-value');
                 sliderValueSpan.text("");
                 sliderValueSpan.hide();
-                $(this.elSelector).slider('value',  Math.round(ui.value));
+                //$(this.elSelector).slider('value',  Math.round(ui.value));
             },
             change: (event, ui) => this.onChange(ui.value,
                 event.originalEvent ? true : false)
@@ -298,7 +307,6 @@ export default class DimensionSlider extends EventSubscriber {
      * @memberof DimensionSlider
      */
     unbind() {
-        this.unsubscribe()
         this.unregisterObserver();
         this.image_config = null;
     }
