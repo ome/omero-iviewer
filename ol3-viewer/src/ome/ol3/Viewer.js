@@ -538,8 +538,15 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
     // tweak source element for fullscreen to include dim sliders (iviewer only)
     var targetId = this.getTargetId();
     var viewerFrame = targetId ? document.getElementById(targetId) : null;
-    if (targetId && viewerFrame)
+    if (targetId && viewerFrame) {
         this.viewerState_["fullscreen"]['ref'].source_ = viewerFrame;
+        this.viewerState_["dragPan"]['ref'].condition_ =
+            function(e) {
+                // ignore right clicks (from context)
+                return ol.events.condition.noModifierKeys(e) &&
+                    ol.events.condition.primaryAction(e);
+            };
+    }
     // enable scalebar by default
     this.toggleScaleBar(true);
 

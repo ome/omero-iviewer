@@ -369,4 +369,28 @@ export default class Ui {
                             return false;
                 }, group));
     }
+
+    /**
+     * Returns the prefix for the full screen api functionality
+     * @return {string|null} the prefix or null if no support
+     * @static
+     */
+    static getFullScreenApiPrefix() {
+        try {
+            let ret = null;
+
+            if (document.body.webkitRequestFullscreen) ret = 'webkit'
+            else if (document.body.mozRequestFullScreen) ret = 'moz'
+            else if (document.body.msRequestFullscreen) ret = 'ms'
+            else if (document.body.requestFullscreen) ret = "";
+
+            // no support
+            if (ret === null) return null;
+
+            // now check the corresponding enabled flag
+            if (document[ret + 'FullScreenEnabled'] ||
+                document[ret + 'FullscreenEnabled']) return ret
+        } catch(ignored){}
+        return null;
+    }
 }

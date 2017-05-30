@@ -19,6 +19,7 @@
 // dependencies
 import Context from '../app/context';
 import {inject, customElement, BindingEngine} from 'aurelia-framework';
+import Ui from '../utils/ui';
 import { VIEWER_ELEMENT_PREFIX } from '../utils/constants';
 
 /**
@@ -34,6 +35,13 @@ export default class ViewerContextMenu {
      * @type {string}
      */
     SELECTOR = "#viewer-context-menu";
+
+    /**
+     * a prefix for the full screen api methods
+     * @memberof ViewerContextMenu
+     * @type {string}
+     */
+    full_screen_api_prefix = null;
 
     /**
      * the location of the context menu click
@@ -118,6 +126,8 @@ export default class ViewerContextMenu {
             this.bindingEngine.propertyObserver(
                 this.context, 'selected_config')
                     .subscribe((newValue, oldValue) => registerReadyObserver());
+        // initial call
+        registerReadyObserver();
     }
 
     /**
@@ -154,17 +164,30 @@ export default class ViewerContextMenu {
      * @memberof ViewerContextMenu
      */
     attached() {
-        // context menu for initial image config
-        this.enableContextMenu();
-        // we don't allow browser context menu on the context menu itself...
-        this.getElement().contextmenu(() => {
-            event.stopPropagation();
-            event.preventDefault();
-            return false;
-        });
-        // we have to monitor for ol3 full screen change
-        // ol3 full screen
-        document.onfullscreenchange = (e) => console.info(e);
+        // register the fullscreenchange handler
+        this.full_screen_api_prefix = Ui.getFullScreenApiPrefix();
+        if (this.full_screen_api_prefix)
+            document['on' + this.full_screen_api_prefix + 'fullscreenchange'] =
+                () => this.onFullScreenChange();
+    }
+
+    /**
+     * Depending ob the fullscreen change the context menu is included
+     * or excluded from the ol3-viewer viewport
+     *
+     * @memberof ViewerContextMenu
+     */
+    onFullScreenChange() {
+        this.hideContextMenu();
+        let isInFullScreen =
+            document[this.full_screen_api_prefix + 'isFullScreen'] ||
+            document[this.full_screen_api_prefix + 'FullScreen'] ||
+            document[this.full_screen_api_prefix + 'FullscreenElement'];
+
+        let contextMenu = this.getElement();
+        if (isInFullScreen)
+            $('#' + this.image_config.id).append(contextMenu)
+        else contextMenu.insertBefore(".center");
     }
 
     /**
@@ -196,20 +219,8 @@ export default class ViewerContextMenu {
             $('#' + VIEWER_ELEMENT_PREFIX + this.image_config.id);
         if (viewerTarget.length === 0) return;
 
-       // a mousedown to prevent right clicks from affecting
-       // other mousedown listeners (ol3-viewer ones)
-      viewerTarget.mousedown(
-           (event) => {
-               // suppress click action if we have a context right click
-               if (event.buttons === 2 ||
-                   (event.buttons === undefined && event.which == 3)) {
-                       event.stopPropagation();
-                       event.preventDefault();
-                       return false;
-               };
-               // hide context menu
-               this.hideContextMenu();
-           });
+       // hide context menu on regular clicks
+      viewerTarget.click((event) => this.hideContextMenu());
        // register context menu listener
       viewerTarget.contextmenu(
            (event) => {
@@ -229,6 +240,13 @@ export default class ViewerContextMenu {
                this.getElement().show();
 
                // prevent browser default context menu
+               return false;
+           });
+           // we don't allow browser context menu on the context menu itself...
+           this.getElement().off();
+           this.getElement().contextmenu((event) => {
+               event.stopPropagation();
+               event.preventDefault();
                return false;
            });
     }
@@ -299,4 +317,18 @@ export default class ViewerContextMenu {
         // prevent link click behavior
         return false;
     }
+
+    /**
+     * Overridden aurelia lifecycle method:
+     * called whenever the view is unbound within aurelia
+     * in other words a 'destruction' hook that happens after 'detached'
+     *
+     * @memberof ViewerContextMenu
+     */
+    unbind() {
+        if (this.full_screen_api_prefix !== null &&
+            document['on' + fullScreenApiPrefix + 'fullscreenchange'])
+                document['on' + fullScreenApiPrefix + 'fullscreenchange'] = null;
+    }
+
 }
