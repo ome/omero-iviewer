@@ -28,9 +28,30 @@ import { VIEWER_ELEMENT_PREFIX } from '../utils/constants';
 @customElement('viewer-context-menu')
 @inject(Context, BindingEngine)
 export default class ViewerContextMenu {
+    /**
+     * the selector for the context menu
+     * @memberof ViewerContextMenu
+     * @type {string}
+     */
+    SELECTOR = "#viewer-context-menu";
 
     /**
-     * the list of observers
+     * the location of the context menu click
+     * in ol-viewport 'coordinates' (offsets)
+     * @memberof ViewerContextMenu
+     * @type {Array.<number>}
+     */
+    viewport_location = null;
+
+    /**
+     * the image config observer
+     * @memberof ViewerContextMenu
+     * @type {Object}
+     */
+    image_config_observer = null;
+
+    /**
+     * the other property observers
      * @memberof ViewerContextMenu
      * @type {Array.<Object>}
      */
@@ -44,6 +65,13 @@ export default class ViewerContextMenu {
     image_config = null;
 
     /**
+     * flag whether the delete option should be shown/enabled
+     * @memberof ViewerContextMenu
+     * @type {boolean}
+     */
+    selected_can_delete = true;
+
+    /**
      * @constructor
      * @param {Context} context the application context (injected)
      * @param {BindingEngine} bindingEngine the BindingEngine (injected)
@@ -54,7 +82,6 @@ export default class ViewerContextMenu {
         // set initial image config
         this.image_config = this.context.getSelectedImageConfig();
     }
-
 
     /**
      * Overridden aurelia lifecycle method:
@@ -68,27 +95,45 @@ export default class ViewerContextMenu {
         // listeneres for the selected image (once ready)
         let registerReadyObserver = () => {
             // hide context menu
-            $('#viewer-context-menu').offset({top: 0, left: 0});
-            $('#viewer-context-menu').hide();
+            this.hideContextMenu();
             // get selected image config
-            this.image_config =
-                this.context.getSelectedImageConfig();
-            // clean up old ready observer
-            if (this.observers.length > 1 &&
-                typeof this.observers[1] === 'object' &&
-                this.observers[1] !== null) this.observers.pop().dispose();
+            this.image_config = this.context.getSelectedImageConfig();
+            // clean up old observers
+            this.unregisterObservers(true);
             // we establish the new context menu once the viewer's ready
             this.observers.push(
                 this.bindingEngine.propertyObserver(
                     this.image_config.image_info, 'ready').subscribe(
                         (newValue, oldValue) => this.enableContextMenu()
                     ));
+            // we initalialize the regions context menu options once the data is ready
+            this.observers.push(
+                this.bindingEngine.propertyObserver(
+                    this.image_config.regions_info, 'ready').subscribe(
+                        (newValue, oldValue) => this.initRegionsContextOptions()
+                    ));
         };
         // listen for image changes
-        this.observers.push(
+        this.image_config_observer =
             this.bindingEngine.propertyObserver(
                 this.context, 'selected_config')
-                    .subscribe((newValue, oldValue) => registerReadyObserver()));
+                    .subscribe((newValue, oldValue) => registerReadyObserver());
+    }
+
+    /**
+     * Unregisters the the observers (property and regions info ready)
+     *
+     * @param {boolean} property_only true if only property observers are cleaned up
+     * @memberof ViewerContextMenu
+     */
+    unregisterObservers(property_only = false) {
+        this.observers.map((o) => {if (o) o.dispose();});
+        this.observers = [];
+        if (property_only) return;
+        if (this.image_config_observer) {
+            this.image_config_observer.dispose();
+            this.image_config_observer = null;
+        }
     }
 
     /**
@@ -99,11 +144,7 @@ export default class ViewerContextMenu {
      * @memberof ViewerContextMenu
      */
     unbind() {
-        // get rid of observers
-        this.observers.map((o) => {
-            if (o) o.dispose();
-        });
-        this.observers = [];
+        this.unregisterObservers();
     }
 
     /**
@@ -116,7 +157,7 @@ export default class ViewerContextMenu {
         // context menu for initial image config
         this.enableContextMenu();
         // we don't allow browser context menu on the context menu itself...
-        $('#viewer-context-menu').contextmenu(() => {
+        this.getElement().contextmenu(() => {
             event.stopPropagation();
             event.preventDefault();
             return false;
@@ -124,6 +165,24 @@ export default class ViewerContextMenu {
         // we have to monitor for ol3 full screen change
         // ol3 full screen
         document.onfullscreenchange = (e) => console.info(e);
+    }
+
+    /**
+     * Returns the context menu element
+     * @return {Object} a jquery object containing the context menu element
+     * @memberof ViewerContextMenu
+     */
+    getElement() {
+        return $(this.SELECTOR);
+    }
+
+    /**
+     * Hides the context menu
+     * @memberof ViewerContextMenu
+     */
+    hideContextMenu() {
+        this.getElement().offset({top: 0, left: 0});
+        this.getElement().hide();
     }
 
     /**
@@ -149,8 +208,7 @@ export default class ViewerContextMenu {
                        return false;
                };
                // hide context menu
-               $('#viewer-context-menu').offset({top: 0, left: 0});
-               $('#viewer-context-menu').hide();
+               this.hideContextMenu();
            });
        // register context menu listener
       viewerTarget.contextmenu(
@@ -160,14 +218,85 @@ export default class ViewerContextMenu {
                event.stopPropagation();
                event.preventDefault();
 
+               // we don't allow right clicking on ol3-controls
+               // i.e. the parent has to have class ol-viewport
+               if (!$(event.target).parent().hasClass('ol-viewport')) return false;
+               this.viewport_location = [event.offsetX, event.offsetY];
+
                // show context menu
-               $('#viewer-context-menu').offset(
+               this.getElement().offset(
                    {left: event.clientX, top: event.clientY});
-               $('#viewer-context-menu').show();
+               this.getElement().show();
 
                // prevent browser default context menu
                return false;
            });
     }
 
+    /**
+     * Initialized the regions context menu options
+     *
+     * @memberof ViewerContextMenu
+     */
+    initRegionsContextOptions () {
+        // listen to changes in selected shapes which determines the options
+        this.observers.push(
+            this.bindingEngine.collectionObserver(
+                this.image_config.regions_info.selected_shapes).subscribe(
+                    (newValue, oldValue) => this.onRoiSelectionChange()));
+    }
+
+    /**
+     * Reacts to roi selection changes to update the corresponding members
+     * such that the template can show/hide/enable/disable the appropriate options
+     *
+     * @memberof ViewerContextMenu
+     */
+    onRoiSelectionChange() {
+        let numberOfshapesSelected =
+            this.image_config.regions_info.selected_shapes.length;
+        let lastSelected =
+            this.image_config.regions_info.getLastSelectedShape("canDelete");
+        if (numberOfshapesSelected > 0 && lastSelected === null)
+            this.selected_can_delete = false;
+    }
+
+    /**
+     * Copies shapes
+     *
+     * @memberof ViewerContextMenu
+     */
+    copyShapes() {
+        this.image_config.regions_info.copyShapes();
+        // hide context menu
+        this.hideContextMenu();
+        // prevent link click behavior
+        return false;
+    }
+
+    /**
+     * Paste Shapes
+     *
+     * @memberof ViewerContextMenu
+     */
+    pasteShapes() {
+        this.image_config.regions_info.pasteShapes();
+        // hide context menu
+        this.hideContextMenu();
+        // prevent link click behavior
+        return false;
+    }
+
+    /**
+     * Deletes selected shapes (incl. permissions check)
+     *
+     * @memberof ViewerContextMenu
+     */
+    deleteShapes(event) {
+        this.image_config.regions_info.deleteShapes();
+        // hide context menu
+        this.hideContextMenu();
+        // prevent link click behavior
+        return false;
+    }
 }

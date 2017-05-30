@@ -845,11 +845,12 @@ export default class Ol3Viewer extends EventSubscriber {
                 }
                 this.image_config.regions_info.copied_shapes.push(deepCopy)});
 
-        // put them in local storage if exists
-        if (typeof window.localStorage)
+        // put them in local storage
+        try {
             window.localStorage.setItem(
                 "omero_iviewer.copied_shapes",
                 JSON.stringify(this.image_config.regions_info.copied_shapes));
+        } catch(localstorage_not_supported) {}
     }
 
     /**

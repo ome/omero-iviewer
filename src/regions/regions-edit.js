@@ -26,8 +26,8 @@ import {
     REGIONS_DRAWING_MODE, PERMISSION_TOOLTIPS, TABS
 } from '../utils/constants';
 import {
-    IMAGE_DIMENSION_CHANGE, REGIONS_COPY_SHAPES, REGIONS_GENERATE_SHAPES,
-    REGIONS_MODIFY_SHAPES, REGIONS_SET_PROPERTY, EventSubscriber
+    IMAGE_DIMENSION_CHANGE, REGIONS_MODIFY_SHAPES, REGIONS_SET_PROPERTY,
+    EventSubscriber
 } from '../events/events';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {spectrum} from 'spectrum-colorpicker';
@@ -56,9 +56,9 @@ export default class RegionsEdit extends EventSubscriber {
      * @type {Object}
      */
     key_actions = [
-        { key: 65, func: this.selectAllShapes},                     // ctrl - a
-        { key: 67, func: this.copyShapes},                          // ctrl - c
-        { key: 86, func: this.pasteShapes}                          // ctrl - v
+        { key: 65, func: this.selectAllShapes},        // ctrl - a
+        { key: 67, func: this.copyShapes},             // ctrl - c
+        { key: 86, func: this.pasteShapes}             // ctrl - v
     ];
 
     /**
@@ -135,6 +135,9 @@ export default class RegionsEdit extends EventSubscriber {
             this.registerObservers();
             // subscribe
             this.subscribe();
+            // register key listeners
+            Ui.registerKeyHandlers(
+                this.context, this.key_actions, TABS.ROIS, this);
             this.adjustEditWidgets()
         };
 
@@ -161,9 +164,6 @@ export default class RegionsEdit extends EventSubscriber {
      * @memberof RegionsEdit
      */
     attached() {
-        // register key listeners
-        Ui.registerKeyHandlers(this.context, this.key_actions, TABS.ROIS, this);
-
         // set up ui widgets such as color pickers and spinners
         let strokeOptions = this.getColorPickerOptions(false);
         let strokeSpectrum =
@@ -898,17 +898,13 @@ export default class RegionsEdit extends EventSubscriber {
     }
 
     /**
-     * Copy Shapes
+     * Copies shapes
      *
      * @memberof RegionsEdit
      */
     copyShapes() {
-        if (!this.regions_info.ready) return;
-
-        this.context.publish(
-            REGIONS_COPY_SHAPES,
-            {config_id : this.regions_info.image_info.config_id});
-   }
+        this.regions_info.copyShapes();
+    }
 
     /**
      * Paste Shapes
@@ -916,20 +912,7 @@ export default class RegionsEdit extends EventSubscriber {
      * @memberof RegionsEdit
      */
     pasteShapes() {
-        if (!this.regions_info.ready) return;
-
-        if (!this.regions_info.image_info.can_annotate) {
-                Ui.showModalMessage("You don't have permission to paste", true);
-                return;
-        }
-
-        let hist_id = this.regions_info.history.getHistoryId();
-        this.context.publish(
-            REGIONS_GENERATE_SHAPES,
-            {config_id : this.regions_info.image_info.config_id,
-                shapes : this.regions_info.copied_shapes,
-                number : 1, random : true, hist_id : hist_id, paste: true
-            });
+        this.regions_info.pasteShapes();
     }
 
     /**
@@ -938,32 +921,6 @@ export default class RegionsEdit extends EventSubscriber {
      * @memberof RegionsEdit
      */
     deleteShapes() {
-        if (!this.regions_info.ready ||
-            this.regions_info.selected_shapes.length === 0) return;
-
-        // find selected
-        let ids = this.regions_info.unsophisticatedShapeFilter(
-                        ["deleted"], [false], ["delete"],
-                        this.regions_info.selected_shapes);
-        if (ids.length === 0) return;
-
-        let opts = {
-            config_id : this.regions_info.image_info.config_id,
-            property: 'state', shapes : ids, value: 'delete'
-        };
-
-        // history entry
-        let history = this.regions_info.history;
-        let hist_id = history.getHistoryId();
-        opts.callback = (shape) => {
-            if (typeof shape !== 'object' || shape === null) return;
-            history.addHistory(
-                hist_id, history.action.SHAPES,
-                {shape_id: shape.shape_id,
-                    diffs: [Object.assign({}, shape)],
-                    old_vals: true, new_vals: false});
-            this.adjustEditWidgets();
-        };
-        this.context.publish(REGIONS_SET_PROPERTY, opts);
+        this.regions_info.deleteShapes();
     }
 }

@@ -48,11 +48,14 @@
                 <ul class="dropdown-menu">
                     <li if.bind="regions_info && regions_info.selected_shapes &&
                                     regions_info.selected_shapes.length !== 0"
-                        click.delegate="copyShapes()"><a href="#">Copy</a></li>
-                    <li if.bind="regions_info.copied_shapes &&
-                                 regions_info.copied_shapes.length !== 0 &&
+                        click.delegate="copyShapes()">
+                            <a href="#">Copy</a>
+                    </li>
+                    <li if.bind="regions_info.copied_shapes.length !== 0 &&
                                  regions_info.image_info.can_annotate"
-                         click.delegate="pasteShapes()"><a href="#">Paste</a></li>
+                         click.delegate="pasteShapes()">
+                            <a href="#">Paste</a>
+                    </li>
                     <li click.delegate="selectAllShapes()"><a href="#">Select All</a></li>
                 </ul>
             </div>
