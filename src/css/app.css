@@ -256,6 +256,7 @@ a.ui-button:active,
 
 .plane-slider span {
     left: 0;
+    width: 27px;
     text-align: center;
 }
 .time-slider span {
@@ -356,6 +357,7 @@ a.ui-button:active,
 .plane-slider .slider-value {
     margin-bottom: -20px;
     left: 30px;
+    width: auto;
 }
 .time-slider .slider-value {
     margin-bottom: -20px;

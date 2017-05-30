@@ -273,10 +273,12 @@ export default class ViewerContextMenu {
     onRoiSelectionChange() {
         let numberOfshapesSelected =
             this.image_config.regions_info.selected_shapes.length;
+        if (numberOfshapesSelected === 0) return;
         let lastSelected =
             this.image_config.regions_info.getLastSelectedShape("canDelete");
-        if (numberOfshapesSelected > 0 && lastSelected === null)
-            this.selected_can_delete = false;
+        this.selected_can_delete =
+            this.image_config.regions_info.checkShapeForPermission(
+                lastSelected, "canDelete");
     }
 
     /**
