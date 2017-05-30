@@ -297,24 +297,26 @@ export default class Ui {
        *
        * @param {string} id the id of the child to scroll to
        * @param {string} container the selector for the container element
+       * @param {number} header_height optional height of a header
        * @static
        */
-      static scrollContainer(id, container) {
+      static scrollContainer(id, container, header_height) {
           if (typeof id !== 'string' || typeof container !== 'string') return;
 
           let el = document.getElementById(id);
           if (el === null) return;
 
+          if (typeof header_height !== 'number' || header_height < 0)
+            header_height = 0;
           let contEl = $(container);
-          let offsetContainer = contEl.prop("offsetTop");
           let scrollTop = contEl.scrollTop();
           let scrollBottom = scrollTop + contEl.outerHeight();
-          let elTop = el.offsetTop - offsetContainer;
+          let elTop = el.offsetTop - header_height;
           let elBottom = elTop + el.offsetHeight;
           if (elTop > scrollTop && elBottom < scrollBottom) return;
 
           let pos =
-              elTop - parseInt(contEl.outerHeight() / 2) - el.offsetHeight;
+              elTop - parseInt((contEl.outerHeight() - el.offsetHeight) / 2);
           contEl.scrollTop(pos < 0 ? elTop : pos);
       }
 

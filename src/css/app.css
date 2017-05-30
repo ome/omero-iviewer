@@ -634,6 +634,7 @@ thumbnail-slider img {
 }
 .regions-container {
     width: 100%;
+    min-width: 330px;
 }
 
 .regions-list {
@@ -644,12 +645,9 @@ thumbnail-slider img {
 }
 
 .regions-header {
-    border-collapse: collapse;
+    position: fixed;
+    background-color: #f8f8f8;
     height: 40px;
-}
-.regions-header .regions-table-col {
-    border: solid 1px transparent;
-    height: 36px;
     line-height: 36px;
     font-weight: bold;
     font-size: 13px;
@@ -657,9 +655,15 @@ thumbnail-slider img {
 
 .regions-table {
     border-collapse: collapse;
-    overflow-y: scroll;
+    overflow-y: auto;
     overflow-x: hidden;
     height: 100%;
+    position: relative;
+}
+
+.regions-table .regions-table-first-row {
+    line-height: 36px;
+    height: 40px;
 }
 
 .regions-table-row {

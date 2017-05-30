@@ -21,14 +21,17 @@ import Context from '../app/context';
 import Misc from '../utils/misc';
 import Ui from '../utils/ui';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
-import {REGIONS_SET_PROPERTY} from '../events/events';
+import {
+    REGIONS_SET_PROPERTY, IMAGE_VIEWER_RESIZE, EventSubscriber
+} from '../events/events';
 
 /**
  * Represents the regions list/table in the regions settings/tab
+ * @extend {EventSubscriber}
  */
 @customElement('regions-list')
 @inject(Context, BindingEngine)
-export default class RegionsList {
+export default class RegionsList extends EventSubscriber {
     /**
      * a bound reference to regions_info
      * and its associated change handler
@@ -55,11 +58,12 @@ export default class RegionsList {
     regions_ready_observer = null;
 
     /**
-     * the browser's scrollbar width
+     * events we subscribe to
      * @memberof RegionsList
-     * @type {number}
+     * @type {Array.<string,function>}
      */
-    scrollbar_width = 0;
+    sub_list = [[IMAGE_VIEWER_RESIZE,
+                    (params={}) => setTimeout(() => this.setHeaderWidth(), 50)]];
 
     /**
      * @constructor
@@ -67,6 +71,7 @@ export default class RegionsList {
      * @param {BindingEngine} bindingEngine the BindingEngine (injected)
      */
     constructor(context, bindingEngine) {
+        super(context.eventbus);
         this.context = context;
         this.bindingEngine = bindingEngine;
     }
@@ -92,6 +97,8 @@ export default class RegionsList {
             $('#shapes_visibility_toggler').prop('checked', true);
             // register observer
             this.registerObservers();
+            // event subscriptions
+            this.subscribe();
             setTimeout(() => this.setTableHeight(), 50);
         };
 
@@ -120,6 +127,11 @@ export default class RegionsList {
             this.bindingEngine.collectionObserver(
                 this.regions_info.selected_shapes).subscribe(
                     (newValue, oldValue) => this.actUponSelectionChange()));
+        this.observers.push(
+            this.bindingEngine.propertyObserver(
+                this.regions_info, 'number_of_shapes').subscribe(
+                    (newValue, oldValue) =>
+                        setTimeout(() => this.setHeaderWidth(), 50)));
         this.observers.push(
             this.bindingEngine.propertyObserver(
                 this.context, 'selected_tab').subscribe(
@@ -165,7 +177,9 @@ export default class RegionsList {
          // exception: mixed permissions - don't scroll for canEdit=false
          if (idOflastEntry !== lastSelShape.shape_id && !lastCanEdit) return;
 
-         Ui.scrollContainer('roi-' + lastSelShape.shape_id, '.regions-table');
+         Ui.scrollContainer(
+             'roi-' + lastSelShape.shape_id, '.regions-table',
+            $('.regions-header').outerHeight());
      }
 
     /**
@@ -186,13 +200,11 @@ export default class RegionsList {
     }
 
     /**
-     * Overridden aurelia lifecycle method:
-     * fired when PAL (dom abstraction) is ready for use
-     *
+     * Gives the header the row width to avoid scalebar adjustment nonsense
      * @memberof RegionsList
      */
-    attached() {
-        this.scrollbar_width = Ui.measureScrollbarWidth();
+    setHeaderWidth() {
+        $('.regions-header').width($('.regions-table-first-row').width());
     }
 
     /**
@@ -202,22 +214,11 @@ export default class RegionsList {
     setTableHeight() {
         if (!this.context.isRoisTabActive()) return;
 
+        this.setHeaderWidth();
         $(".regions-table").css(
             'max-height', 'calc(100% - ' +
                 ($(".regions-tools").outerHeight() +
-                $('.regions-header').outerHeight() +
                 $("#panel-tabs").outerHeight()) + 'px)');
-    }
-
-    /**
-     * Overridden aurelia lifecycle method:
-     * called when the view and its elemetns are detached from the PAL
-     * (dom abstraction)
-     *
-     * @memberof RegionsList
-     */
-    detached() {
-        $(".regions-table").off("scroll");
     }
 
     /**
@@ -299,6 +300,8 @@ export default class RegionsList {
         let roi = this.regions_info.data.get(roi_id);
         if (typeof roi === 'undefined') return;
         roi.show = !roi.show;
+
+        setTimeout(() => this.setHeaderWidth(), 25);
     }
 
     /**
@@ -340,6 +343,7 @@ export default class RegionsList {
      * @memberof RegionsList
      */
     unbind() {
+        this.unsubscribe();
         this.unregisterObservers();
     }
 }
