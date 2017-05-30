@@ -44,7 +44,7 @@ To enable the "open with" feature:
 ::
 
     $ bin/omero config append omero.web.open_with '["omero_iviewer", "omero_iviewer_index",
-      {"supported_objects":["image"], "script_url": "omero_iviewer/openwith.js"}]'
+      {"supported_objects":["image"], "script_url": "omero_iviewer/openwith.js", "label": "OMERO.iviewer"}]'
 
 Now restart OMERO.web as normal.
 
