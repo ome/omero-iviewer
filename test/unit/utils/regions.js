@@ -122,7 +122,7 @@ describe("Regions", function() {
     it('generateRegions', function() {
         var features =
             ome.ol3.utils.Regions.generateRegions(
-                polygon_info, 10, [0,0,1000,1000], true);
+                polygon_info, 10, [0,-1000,1000,0]);
 
         assert.instanceOf(features, Array);
         for (var f in features) {

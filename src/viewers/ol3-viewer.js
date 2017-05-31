@@ -379,8 +379,6 @@ export default class Ol3Viewer extends EventSubscriber {
               !Misc.isArray(params.shapes) ||
               params.shapes.length === 0) return;
 
-          let extent = this.viewer.getSmallestViewExtent();
-          if (typeof params.random !== 'boolean') params.random = false;
           if (typeof params.number !== 'number') params.number = 1;
           if (typeof params.roi_id !== 'number')
               params.roi_id = this.image_config.regions_info.getNewRegionsId();
@@ -388,30 +386,40 @@ export default class Ol3Viewer extends EventSubscriber {
             Misc.isArray(params.theDims) && params.theDims.length !== 0 ?
                 params.theDims : null;
 
-          params.shapes.map(
-              (def) => {
-                  try {
-                      if (!def.deleted) {
-                          let deepCopy = Object.assign({},def);
-                          // we are modified so let's update the definition
-                          // before we generate from it
-                          if (deepCopy.modified) {
-                              let upToDateDef =
-                                this.viewer.getShapeDefinition(deepCopy.shape_id);
-                              if (upToDateDef)
-                                deepCopy =
-                                    Converters.amendShapeDefinition(upToDateDef);
-                          }
-                          delete deepCopy['shape_id'];
-                          if (typeof params.paste === 'boolean' && params.paste)
-                            deepCopy['roi_id'] =
-                                this.image_config.regions_info.getNewRegionsId();
-                          else deepCopy['roi_id'] = params.roi_id;
-                          this.viewer.generateShapes(deepCopy,
-                              params.number, params.random, extent, theDims,
-                              params.add_history, params.hist_id);
-                    };
-                  } catch(ignored) {}});
+          params.shapes.map((def) => {
+              try {
+                  if (!def.deleted) {
+                      let deepCopy = Object.assign({},def);
+                      // we are modified so let's update the definition
+                      // before we generate from it
+                      if (deepCopy.modified) {
+                          let upToDateDef =
+                            this.viewer.getShapeDefinition(deepCopy.shape_id);
+                          if (upToDateDef)
+                            deepCopy =
+                                Converters.amendShapeDefinition(upToDateDef);
+                      }
+                      delete deepCopy['shape_id'];
+                      if (typeof params.paste === 'boolean' && params.paste)
+                        deepCopy['roi_id'] =
+                            this.image_config.regions_info.getNewRegionsId();
+                      else deepCopy['roi_id'] = params.roi_id;
+                      let opts = {
+                          'number': params.number,
+                          'position': params.position,
+                          'extent': this.viewer.getSmallestViewExtent(),
+                          'theDims': theDims
+                      };
+                      if (typeof params.scale_factor === 'number')
+                          opts['scale_factor'] = params.scale_factor;
+                      if (typeof params.add_history === 'boolean')
+                          opts['add_history'] = params.add_history;
+                      if (typeof params.hist_id === 'number')
+                          opts['hist_id'] = params.hist_id;
+                      this.viewer.generateShapes(deepCopy, opts);
+                };
+              } catch(ignored) {}
+          });
       }
 
      /**
@@ -847,8 +855,16 @@ export default class Ol3Viewer extends EventSubscriber {
 
         // put them in local storage
         try {
+            // remember image dimension for pasting into different size images
             window.localStorage.setItem(
-                "omero_iviewer.copied_shapes",
+                IVIEWER + ".copy_image_dims",
+                JSON.stringify({
+                    width: this.image_config.image_info.dimensions.max_x,
+                    height: this.image_config.image_info.dimensions.max_x
+            }));
+            // remember shape definitions for generating copies
+            window.localStorage.setItem(
+                IVIEWER + ".copy_shape_defs",
                 JSON.stringify(this.image_config.regions_info.copied_shapes));
         } catch(localstorage_not_supported) {}
     }
