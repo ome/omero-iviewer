@@ -141,6 +141,36 @@ ome.ol3.controls.BirdsEye.prototype.setMap = function(map) {
   }
 };
 
+
+/**
+ * Overridden to avoid postrender exception if viewer is destoyed to quickly
+ * @private
+ */
+ome.ol3.controls.BirdsEye.prototype.handleToggle_ = function() {
+  this.element.classList.toggle('ol-collapsed');
+  if (this.collapsed_) {
+    ol.dom.replaceNode(this.collapseLabel_, this.label_);
+  } else {
+    ol.dom.replaceNode(this.label_, this.collapseLabel_);
+  }
+  this.collapsed_ = !this.collapsed_;
+
+  // manage overview map if it had not been rendered before and control
+  // is expanded
+  var ovmap = this.ovmap_;
+  if (!this.collapsed_ && !ovmap.isRendered()) {
+    ovmap.updateSize();
+    this.resetExtent_();
+    ol.events.listenOnce(ovmap, ol.MapEventType.POSTRENDER,
+        function(event) {
+            try {
+                this.updateBox_();
+            } catch(ignored) {}
+        },
+        this);
+  }
+};
+
 /**
  * Overridden to suppress updates when loading tiles still
  * @param {ol.MapEvent} mapEvent Map event.

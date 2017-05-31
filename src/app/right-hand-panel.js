@@ -17,11 +17,10 @@
 //
 
 // js
-import {inject, bindable, customElement} from 'aurelia-framework';
+import {inject, customElement, BindingEngine} from 'aurelia-framework';
 import Context from './context';
-import {REGIONS_SET_PROPERTY} from '../events/events';
+import {TABS} from '../utils/constants';
 import 'bootstrap';
-
 
 /**
  * @classdesc
@@ -29,21 +28,69 @@ import 'bootstrap';
  * the right hand panel
  */
 @customElement('right-hand-panel')
-@inject(Context)
+@inject(Context, BindingEngine)
 export class RightHandPanel {
     /**
-     * which image config do we belong to (bound via template)
-     * @memberof RightHandPanel
-     * @type {number}
+     * expose TABS constants to template (no other way in aurelia)
      */
-    @bindable config_id = null;
+    TABS = TABS;
+
+    /**
+     * the selected image config
+     * @memberof RightHandPanel
+     * @type {ImageConfig}
+     */
+    image_config = null;
+
+    /**
+     * observer listening for image config changes
+     * @memberof RightHandPanel
+     * @type {Object}
+     */
+    observer = null;
 
     /**
      * @constructor
      * @param {Context} context the application context
+     * @param {BindingEngine} bindingEngine the BindingEngine (injected)
      */
-    constructor(context) {
+    constructor(context, bindingEngine) {
         this.context = context;
+        this.bindingEngine = bindingEngine;
+        // set initial image config
+        this.image_config = this.context.getSelectedImageConfig();
+    }
+
+    /**
+     * Overridden aurelia lifecycle method:
+     * called whenever the view is bound within aurelia
+     * in other words an 'init' hook that happens before 'attached'
+     *
+     * @memberof RightHandPanel
+     */
+    bind() {
+        // listen for image config changes
+        this.observer =
+            this.bindingEngine.propertyObserver(
+                this.context, 'selected_config').subscribe(
+                    (newValue, oldValue) =>
+                        this.image_config =
+                            this.context.getSelectedImageConfig());
+    }
+
+    /**
+     * Overridden aurelia lifecycle method:
+     * called whenever the view is unbound within aurelia
+     * in other words a 'destruction' hook that happens after 'detached'
+     *
+     * @memberof RightHandPanel
+     */
+    unbind() {
+        // get rid of observer
+        if (this.observer) {
+            this.observer.dispose();
+            this.observer = null;
+        }
     }
 
     /**
@@ -56,16 +103,16 @@ export class RightHandPanel {
         $("#panel-tabs").find("a").click((e) => {
             e.preventDefault();
 
-            this.context.selected_tab = e.currentTarget.hash;
+            this.context.selected_tab = e.currentTarget.hash.substring(1);
 
             // we don't allow an active regions tab if we are in spit view
-            let img_conf = this.context.getImageConfig(this.config_id);
             if (this.context.isRoisTabActive()) {
-                if (img_conf === null || img_conf.regions_info === null ||
-                    img_conf.image_info.projection === 'split') return;
+                if (this.image_config === null ||
+                    this.image_config.regions_info === null ||
+                    this.image_config.image_info.projection === 'split') return;
 
-                if (!img_conf.regions_info.ready)
-                    img_conf.regions_info.requestData(true);
+                if (!this.image_config.regions_info.ready)
+                    this.image_config.regions_info.requestData(true);
             };
             $(e.currentTarget).tab('show');
         });

@@ -17,12 +17,11 @@
 //
 import {noView} from 'aurelia-framework';
 import {EventAggregator} from 'aurelia-event-aggregator';
-import {IMAGE_CONFIG_SELECT} from '../events/events';
 import Misc from '../utils/misc';
 import ImageConfig from '../model/image_config';
 import {
     API_PREFIX, IVIEWER, APP_NAME, PLUGIN_NAME, PLUGIN_PREFIX, REQUEST_PARAMS,
-    WEBCLIENT, WEBGATEWAY, URI_PREFIX
+    TABS, WEBCLIENT, WEBGATEWAY, URI_PREFIX
 } from '../utils/constants';
 
 /**
@@ -94,7 +93,7 @@ export default class Context {
      * the global value indicating the selected tab
      * @type {String}
      */
-     selected_tab = "#settings";
+     selected_tab = TABS.SETTINGS;
 
      /**
       * application wide keyhandlers.
@@ -140,11 +139,9 @@ export default class Context {
         let initial_dataset_id =
             parseInt(
                 this.getInitialRequestParam(REQUEST_PARAMS.DATASET_ID));
-        let initial_image_config =
-            this.addImageConfig(initial_image_id,
-                typeof initial_dataset_id === 'number' &&
-                !isNaN(initial_dataset_id) ? initial_dataset_id : null);
-        this.selected_config = initial_image_config.id;
+        this.addImageConfig(initial_image_id,
+            typeof initial_dataset_id === 'number' &&
+            !isNaN(initial_dataset_id) ? initial_dataset_id : null);
 
         // set up key listener
         this.establishKeyDownListener();
@@ -263,51 +260,74 @@ export default class Context {
         // we do this only once
         if (window.onkeydown === null)
             window.onkeydown = (event) => {
-                try {
-                    let command = Misc.isApple() ? 'metaKey' : 'ctrlKey';
-                    // only process command key combinations
-                    // and if target is an input field,
-                    // we do not wish to override either
-                    if (!event[command] ||
-                            event.target.tagName.toUpperCase() === 'INPUT')
-                            return;
-                    let keyHandler =
-                        this.key_listeners.get(event.keyCode);
-                    if (keyHandler) {
-                        // prevents IE standard key handler
+                let command = Misc.isApple() ? 'metaKey' : 'ctrlKey';
+                // only process command key combinations
+                // and if target is an input field,
+                // we do not wish to override either
+                if (!event[command] ||
+                    event.target.nodeName.toUpperCase() === 'INPUT') return;
+
+                let keyHandlers = this.key_listeners.get(event.keyCode);
+                if (keyHandlers) {
+                    // we allow the browser's default action and event
+                    // bubbling unless one handler returns false
+                    let allowDefaultAndPropagation = true;
+                    try {
+                        for (let action in keyHandlers)
+                            if (!((keyHandlers[action])(event)))
+                                allowDefaultAndPropagation = false;
+                    } catch(ignored) {}
+                    if (!allowDefaultAndPropagation) {
                         event.preventDefault();
-                        keyHandler(event);
-                        // important: prevents browser specific handlers
+                        event.stopPropagation();
                         return false;
                     }
-                } catch(whatever) {}
+                }
             };
     }
 
     /**
      * Registers an app wide key handler for individual keys for onkeydown
+     * Multiple actions for one key are posssible under the prerequisite
+     * that a respective group be used for distinguishing
      *
      * @memberof Context
      * @param {number} key the numeric key code to listen for
      * @param {function} action a function
+     * @param {string} group a grouping, default: 'global'
      */
-    addKeyListener(key, action) {
+    addKeyListener(key, action, group = 'global') {
         // some basic checks as to validity of key and key_handler_def
         // we need a numeric key and a function at a minimum
         if (typeof key !== 'number' || typeof action !== 'function') return;
 
-        this.key_listeners.set(key, action);
+        // we allow multiple actions for same key but different groups,
+        // i.e. undo/redo, copy/paste, save for settings/rois
+        let keyActions = this.key_listeners.get(key);
+        if (keyActions) keyActions[group] = action
+        else this.key_listeners.set(key, {group: action});
     }
 
     /**
-     * Unregisters a keydown handler for a particular key
+     * Unregisters a keydown handler for a particular key (with group)
      *
      * @param {number} key the key code associated with the listener
+     * @param {string} group a grouping, default: 'global'
      * @memberof Context
      */
-    removeKeyListener(key) {
+    removeKeyListener(key, group='global') {
         if (typeof key !== 'number') return;
-        this.key_listeners.delete(key);
+        let keyActions = this.key_listeners.get(key);
+        if (keyActions) {
+            delete keyActions[group];
+            let noHandlersLeft = true;
+            for(let k in keyActions)
+                if (typeof keyActions[k] === 'function') {
+                    noHandlersLeft = false;
+                    break;
+                }
+            if (noHandlersLeft) this.key_listeners.delete(key);
+        }
     }
 
     rememberImageConfigChange(image_id, dataset_id) {
@@ -390,8 +410,7 @@ export default class Context {
     }
 
     /**
-     * Selects an image config and sends out an event notification
-     * This method is really only relevant for MDI mode
+     * Selects an image config
      *
      * @memberof Context
      * @param {number} id the ImageConfig id
@@ -402,10 +421,6 @@ export default class Context {
             return null;
 
         this.selected_config = id;
-
-        if (this.useMDI)
-            this.publish(
-                IMAGE_CONFIG_SELECT, { image_config: this.selected_config});
     }
 
     /**
@@ -481,7 +496,7 @@ export default class Context {
      * @memberof Context
      */
     isRoisTabActive() {
-        return this.selected_tab === '#rois';
+        return this.selected_tab === TABS.ROIS;
     }
 
     /**

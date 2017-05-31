@@ -152,12 +152,6 @@ ome.ol3.interaction.Translate.prototype.handleTranslateEnd = function(event) {
  * @private
  */
 ome.ol3.interaction.Translate.handleDownEvent_ = function(mapBrowserEvent) {
-    // short circuit right for click context menu
-    if (!(mapBrowserEvent instanceof ol.MapBrowserPointerEvent) ||
-        (mapBrowserEvent.originalEvent instanceof MouseEvent &&
-        typeof(mapBrowserEvent.originalEvent.which) === 'number' &&
-        mapBrowserEvent.originalEvent.which === 3)) return false;
-
     this.lastFeature_ = this.featuresAtCoords_(mapBrowserEvent.pixel);
     if (!this.lastCoordinate_ && this.lastFeature_) {
         this.lastCoordinate_ = mapBrowserEvent.coordinate;
@@ -178,11 +172,7 @@ ome.ol3.interaction.Translate.handleDownEvent_ = function(mapBrowserEvent) {
  * @private
  */
 ome.ol3.interaction.Translate.handleMoveEvent_ = function(mapBrowserEvent) {
-    // short circuit right for click context menu
-    if (!(mapBrowserEvent instanceof ol.MapBrowserPointerEvent) ||
-        (mapBrowserEvent.originalEvent instanceof MouseEvent &&
-        typeof(mapBrowserEvent.originalEvent.which) === 'number' &&
-        mapBrowserEvent.originalEvent.which === 3)) return;
+    // overridden on purpose to do nothing
 };
 
 /**
@@ -192,12 +182,6 @@ ome.ol3.interaction.Translate.handleMoveEvent_ = function(mapBrowserEvent) {
  * @private
  */
 ome.ol3.interaction.Translate.handleUpEvent_ = function(mapBrowserEvent) {
-    // short circuit right for click context menu
-    if (!(mapBrowserEvent instanceof ol.MapBrowserPointerEvent) ||
-        (mapBrowserEvent.originalEvent instanceof MouseEvent &&
-        typeof(mapBrowserEvent.originalEvent.which) === 'number' &&
-        mapBrowserEvent.originalEvent.which === 3)) return true;
-
     if (this.lastCoordinate_) {
         this.lastCoordinate_ = null;
         ome.ol3.interaction.Translate.handleMoveEvent_.call(

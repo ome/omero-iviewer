@@ -65,6 +65,13 @@ export const WEBCLIENT = "WEBCLIENT";
 export const PLUGIN_PREFIX = "PLUGIN_PREFIX";
 
 /**
+ * the viewer's dom element prefix (complemented by config id)
+ * @type {string}
+ */
+
+export const VIEWER_ELEMENT_PREFIX = "ol3_viewer_";
+
+/**
  * the possible request params that we accept
  * @type {Object}
  */
@@ -183,3 +190,13 @@ export const LUTS_NAMES = [
     'unionjack.lut',
     'yellow_hot.lut'
 ];
+
+/**
+ * the right hand panel tab names
+ * @type {Object}
+ */
+export const TABS = {
+    INFO: 'info',
+    SETTINGS: 'settings',
+    ROIS: 'rois'
+}

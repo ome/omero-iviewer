@@ -18,23 +18,20 @@
 
 import {noView} from 'aurelia-framework';
 import RegionsHistory from './regions_history';
-import {
-    IMAGE_CONFIG_UPDATE, REGIONS_INIT, EventSubscriber
-} from '../events/events';
 import Misc from '../utils/misc';
 import {Converters} from '../utils/converters';
+import {
+    REGIONS_COPY_SHAPES, REGIONS_GENERATE_SHAPES, REGIONS_SET_PROPERTY
+} from '../events/events';
 import {
     REGIONS_DRAWING_MODE, REGIONS_MODE, IVIEWER
 } from '../utils/constants';
 
 /**
  * Holds region information
- *
- * @extends {EventSubscriber}
- *
  */
 @noView
-export default class RegionsInfo extends EventSubscriber {
+export default class RegionsInfo  {
     /**
      * true if a backend request is pending
      * @memberof RegionsInfo
@@ -98,7 +95,7 @@ export default class RegionsInfo extends EventSubscriber {
      * @memberof RegionsInfo
      * @type {Array.<objects>}
      */
-    copied_shapes = null;
+    copied_shapes = [];
 
     /**
      * the presently used regions modes
@@ -146,20 +143,10 @@ export default class RegionsInfo extends EventSubscriber {
     roi_id = -1;
 
     /**
-     * our list of events we subscribe to via the EventSubscriber
-     * @memberof RegionsInfo
-     * @type {Map}
-     */
-    sub_list = [
-        [IMAGE_CONFIG_UPDATE,
-            (params={}) => this.handleImageConfigUpdate(params)]];
-
-    /**
      * @constructor
      * @param {ImageInfo} image_info the associated image
      */
     constructor(image_info) {
-        super(image_info.context.eventbus);
         this.image_info = image_info;
         // we want history
         this.history = new RegionsHistory(this);
@@ -169,19 +156,10 @@ export default class RegionsInfo extends EventSubscriber {
             this.copied_shapes =
                 JSON.parse(
                     window.localStorage.getItem("omero_iviewer.copied_shapes"));
+            if (!Misc.isArray(this.copied_shapes)) this.copied_shapes = [];
         } catch(ignored) {}
         // init default shape colors
         this.resetShapeDefaults();
-    }
-
-    /**
-     * Even though we are not an Aurelia View we stick to Aurelia's lifecycle
-     * terminology and use the method bind for initialization purposes
-     *
-     * @memberof RegionsInfo
-     */
-    bind() {
-        this.subscribe();
     }
 
     /**
@@ -191,23 +169,8 @@ export default class RegionsInfo extends EventSubscriber {
      * @memberof RegionsInfo
      */
     unbind() {
-        this.unsubscribe();
         this.resetRegionsInfo();
         this.history = null;
-    }
-
-    /**
-     * Handles received image config updates (IMAGE_CONFIG_UPDATE)
-     *
-     * @memberof RegionsInfo
-     * @param {Object} params the event notification parameters
-     */
-    handleImageConfigUpdate(params = {}) {
-        // we ignore notifications that don't concern us
-        if (params.config_id !== this.image_info.config_id ||
-            !params.ready) return;
-
-        if (this.image_info.context.isRoisTabActive()) this.requestData(true);
     }
 
     /**
@@ -321,8 +284,7 @@ export default class RegionsInfo extends EventSubscriber {
                     });
                     this.number_of_shapes = count;
                     this.ready = true;
-                    this.image_info.context.publish(
-                        REGIONS_INIT, {data: response});
+                    this.tmp_data = response;
                 } catch(err) {
                     console.error("Failed to load Rois: " + err);
                 }
@@ -449,20 +411,21 @@ export default class RegionsInfo extends EventSubscriber {
     /**
      * Returns the last of the selected shapes (taking into account permissions)
      *
+     * @param {string} permission the permission to check for
      * @return {Object|null} the last selected shape with(out) permission
      *                       or null (if no shapes are selected)
-     * @memberof RegionsEdit
+     * @memberof RegionsInfo
      */
-    getLastSelectedShape() {
+    getLastSelectedShape(permission = 'canEdit') {
         let len = this.selected_shapes.length;
-        if (len === 0) return null;
+        if (len === 0 || typeof permission !== 'string') return null;
 
         let ret =  this.getShape(this.selected_shapes[len-1]);
-        if (this.checkShapeForPermission(ret, "canEdit")) return ret;
+        if (this.checkShapeForPermission(ret, permission)) return ret;
         // look for the next one that has permissions and return it
         for (let i=len-2;i>=0;i--) {
             let s = this.getShape(this.selected_shapes[i]);
-            if (this.checkShapeForPermission(s, "canEdit")) return s;
+            if (this.checkShapeForPermission(s, permission)) return s;
         }
         return ret;
     }
@@ -470,7 +433,7 @@ export default class RegionsInfo extends EventSubscriber {
     /**
      * Resets to default fill/stroke color settings
      *
-     * @memberof RegionsEdit
+     * @memberof RegionsInfo
      */
     resetShapeDefaults() {
         this.shape_defaults['StrokeColor'] = -65281;
@@ -489,7 +452,7 @@ export default class RegionsInfo extends EventSubscriber {
      * @param {Object} shape the shape object
      * @param {string} permission the permission to check for
      * @param {boolean} true if permission is on given shape, false otherwise
-     * @memberof RegionsEdit
+     * @memberof RegionsInfo
      */
     checkShapeForPermission(shape, permission) {
         if (typeof shape !== 'object' || shape === null ||
@@ -509,10 +472,77 @@ export default class RegionsInfo extends EventSubscriber {
      * Returns the number of deleted shapes
      *
      * @return {number} the number of deleted shapes
-     * @memberof RegionsEdit
+     * @memberof RegionsInfo
      */
     getNumberOfDeletedShapes() {
         return this.unsophisticatedShapeFilter(
             ["deleted"], [true], ['canDelete']).length;
+    }
+
+    /**
+     * Copies shapes
+     *
+     * @memberof RegionsInfo
+     */
+    copyShapes() {
+        if (!this.ready) return;
+
+        this.image_info.context.publish(
+            REGIONS_COPY_SHAPES, {config_id : this.image_info.config_id});
+    }
+
+    /**
+     * Paste Shapes
+     *
+     * @param {Array.<number>} pixel the pixel location as: [x,y]
+     * @memberof RegionsInfo
+     */
+    pasteShapes(pixel=null) {
+        if (!this.ready) return;
+
+        if (!this.image_info.can_annotate) {
+                Ui.showModalMessage("You don't have permission to paste", true);
+                return;
+        }
+
+        let params = {
+            config_id: this.image_info.config_id,
+            number: 1, paste: true,
+            shapes: this.copied_shapes,
+            hist_id: this.history.getHistoryId(),
+            random: !(Misc.isArray(pixel) && pixel.length === 2)
+        };
+        this.image_info.context.publish(REGIONS_GENERATE_SHAPES, params);
+    }
+
+    /**
+     * Deletes selected shapes (incl. permissions check)
+     *
+     * @memberof RegionsInfo
+     */
+    deleteShapes() {
+        if (!this.ready || this.selected_shapes.length === 0) return;
+
+        // find selected
+        let ids = this.unsophisticatedShapeFilter(
+                    ["deleted"], [false], ["delete"], this.selected_shapes);
+        if (ids.length === 0) return;
+
+        let opts = {
+            config_id : this.image_info.config_id,
+            property: 'state', shapes : ids, value: 'delete'
+        };
+
+        // history entry
+        let hist_id = this.history.getHistoryId();
+        opts.callback = (shape) => {
+            if (typeof shape !== 'object' || shape === null) return;
+            this.history.addHistory(
+                hist_id, this.history.action.SHAPES,
+                {shape_id: shape.shape_id,
+                    diffs: [Object.assign({}, shape)],
+                    old_vals: true, new_vals: false});
+        };
+        this.image_info.context.publish(REGIONS_SET_PROPERTY, opts);
     }
 }

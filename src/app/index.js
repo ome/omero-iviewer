@@ -30,6 +30,8 @@ require('../../node_modules/jquery-ui/themes/base/images/ui-icons_ffffff_256x240
 import {inject} from 'aurelia-framework';
 import Context from './context';
 import Misc from '../utils/misc';
+import Ui from '../utils/ui';
+import {PLUGIN_PREFIX} from '../utils/constants';
 import {IMAGE_VIEWER_RESIZE} from '../events/events';
 
 /**
@@ -55,6 +57,7 @@ export class Index  {
      * @memberof Index
      */
     attached() {
+        // listen to resizing of the browser window
         window.onresize =
             () => this.context.publish(IMAGE_VIEWER_RESIZE,
                 {config_id: -1, window_resize: true});
@@ -69,6 +72,11 @@ export class Index  {
                            "If you leave you'll lose your changes.";
             return null;
         };
+        // register resize and collapse handlers
+        Ui.registerSidePanelHandlers(
+            this.context.eventbus,
+            this.context.getPrefixedURI(PLUGIN_PREFIX, true),
+        );
     }
 
     /**

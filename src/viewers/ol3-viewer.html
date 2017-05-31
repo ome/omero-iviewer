@@ -23,7 +23,7 @@
                 ${image_config.image_info.dimensions.max_t > 1 ? 'show-tSlider' : ''}
                 ${image_config.image_info.dimensions.max_z > 1 ? 'show-zSlider' : ''}">
         <dimension-slider
-            config_id.bind="config_id"
+            image_config.bind="image_config"
             dim="z"
             player_info.bind="player_info"
             class="plane-slider">
@@ -39,7 +39,7 @@
                 ${image_config.image_info.dimensions.max_z > 1 ?
                     'show-zSlider' : ''}">
             <dimension-slider
-                config_id.bind="config_id"
+                image_config.bind="image_config"
                 dim="t"
                 player_info.bind="player_info"
                 class="time-slider"

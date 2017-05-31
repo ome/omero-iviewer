@@ -357,6 +357,7 @@ a.ui-button:active,
 .plane-slider .slider-value {
     margin-bottom: -20px;
     left: 30px;
+    width: auto;
 }
 .time-slider .slider-value {
     margin-bottom: -20px;
@@ -473,7 +474,7 @@ thumbnail-slider img {
 
 .right-hand-panel {
     width: 350px;
-    max-width: 800px;
+    max-width: 1000px;
     overflow-y: hidden;
 }
 
@@ -483,7 +484,6 @@ thumbnail-slider img {
 
 .right-hand-panel .row {
     min-width: 350px;
-    max-width: 800px;
     margin-bottom: 2px;
     margin-left: 0px;
     margin-right: 0px;
@@ -633,22 +633,22 @@ thumbnail-slider img {
 .regions-tabs, .regions-tabs .tab-pane, .regions-container {
     height: 100%;
 }
+.regions-container {
+    width: 100%;
+    min-width: 330px;
+}
 
 .regions-list {
     float: left;
-    height: auto!important;
-    min-width: 0px!important;
-    overflow-x: auto;
-    overflow-y: hidden
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
 }
 
 .regions-header {
-    border-collapse: collapse;
+    position: fixed;
+    background-color: #f8f8f8;
     height: 40px;
-}
-.regions-header .regions-table-col {
-    border: solid 2px transparent;
-    height: 36px;
     line-height: 36px;
     font-weight: bold;
     font-size: 13px;
@@ -656,27 +656,36 @@ thumbnail-slider img {
 
 .regions-table {
     border-collapse: collapse;
-    max-height: 300px;
-    overflow-y: scroll;
+    overflow-y: auto;
     overflow-x: hidden;
     height: 100%;
+    position: relative;
+}
+
+.regions-table .regions-table-first-row {
+    line-height: 36px;
+    height: 40px;
 }
 
 .regions-table-row {
-    display: table-row;
+    float: left;
     line-height: 25px;
     height: 25px;
+    width: 100%;
+}
+.regions-table-row * {
+    height: 100%;
 }
 
 .regions-table-col {
-    display: table-cell;
+    float: left;
     min-width: 10px;
     box-sizing: border-box;
     white-space: nowrap;
     text-align: center;
     border-style: solid;
     border-color: rgba(255,255,255,0);
-    border-width: 0px 2px 0px 2px;
+    border-width: 0px 1px 0px 1px;
     font-size: 13px;
     overflow: hidden;
 }
@@ -689,26 +698,26 @@ thumbnail-slider img {
 }
 
 .roi-toggle {
-    min-width: 15px;
-    max-width: 15px;
+    min-width: 5%;
+    max-width: 5%;
 }
 .shape-z, .shape-t {
-    min-width: 40px;
-    max-width: 40px;
+    min-width: 10%;
+    max-width: 10%;
 }
 .shape-type {
-    min-width: 35px;
-    max-width: 35px;
+    min-width: 10%;
+    max-width: 10%;
     background-repeat: no-repeat;
     background-position: center;
 }
 .shape-comment {
-    min-width: 135px;
-    max-width: 135px;
+    min-width: 45%;
+    max-width: 45%;
 }
 .shape-show {
-    min-width: 60px;
-    max-width: 60px;
+    min-width: 20%;
+    max-width: 20%;
 }
 
 .rectangle-icon {
@@ -806,6 +815,10 @@ thumbnail-slider img {
 .rois-dropdown, .regions-tools {
     float: left;
 }
+.regions-tools {
+    width: 100%;
+}
+
 .rois-dropdown>.dropdown-menu>li>a:hover,
 .rois-dropdown>.dropdown-menu>li>a:focus,
 .rois-dropdown>.dropdown-menu>.active>a,
@@ -1005,3 +1018,10 @@ thumbnail-slider img {
 .text-weight-bold {
    font-weight: 700;
  }
+
+#viewer-context-menu {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    display: none;
+}

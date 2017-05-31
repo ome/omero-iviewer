@@ -21,37 +21,30 @@ import Context from '../app/context';
 import Misc from '../utils/misc';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {CHANNEL_SETTINGS_MODE, WEBGATEWAY} from '../utils/constants';
-import {
-    IMAGE_CONFIG_UPDATE, IMAGE_SETTINGS_CHANGE, EventSubscriber
-} from '../events/events';
+import { IMAGE_SETTINGS_CHANGE} from '../events/events';
 
 /**
  * Represents the settings section in the right hand panel
- * @extends {EventSubscriber}
  */
 @customElement('channel-settings')
 @inject(Context, BindingEngine)
-export default class ChannelSettings extends EventSubscriber {
+export default class ChannelSettings {
     /**
-     * which image config do we belong to (bound in template)
-     * @memberof ChannelSettings
-     * @type {number}
-     */
-    @bindable config_id = null;
-
-    /**
-     * a reference to the image config
+     * a reference to the image config (bound in template)
      * @memberof ChannelSettings
      * @type {ImageConfig}
      */
-    image_config = null;
+    @bindable image_config = null;
+    image_configChanged(newVal, oldVal) {
+        this.waitForImageInfoReady();
+    }
 
     /**
      * the present channel settings mode
      * @memberof ChannelSettings
      * @type {number}
      */
-    mode = null;
+    mode = CHANNEL_SETTINGS_MODE.MIN_MAX;
 
     /**
      * unfortunately necessary to detect transition in special circumstances
@@ -72,9 +65,16 @@ export default class ChannelSettings extends EventSubscriber {
     /**
      * property observers
      * @memberof ChannelSettings
-     * @type {Array.<object>}
+     * @type {Array.<Object>}
      */
     observers = [];
+
+    /**
+     * the image info ready observers
+     * @memberof ChannelSettings
+     * @type {Object}
+     */
+    image_info_ready_observer = null;
 
     /**
      * list of properties that ought to be observed
@@ -90,20 +90,11 @@ export default class ChannelSettings extends EventSubscriber {
     ];
 
     /**
-     * events we subscribe to
-     * @memberof ChannelSettings
-     * @type {Array.<string,function>}
-     */
-    sub_list = [[IMAGE_CONFIG_UPDATE,
-                    (params = {}) => this.onImageConfigChange(params)]];
-
-    /**
      * @constructor
      * @param {Context} context the application context (injected)
      * @param {BindingEngine} bindingEngine injected instance of BindingEngine
      */
     constructor(context, bindingEngine) {
-        super(context.eventbus);
         this.context = context;
         this.bindingEngine = bindingEngine;
     }
@@ -116,23 +107,50 @@ export default class ChannelSettings extends EventSubscriber {
      * @memberof ChannelSettings
      */
     bind() {
-        this.subscribe();
-        this.registerObservers();
-
-        if (this.image_config === null ||
-                this.image_config.image_info === null) return;
-
-        this.mode = CHANNEL_SETTINGS_MODE.MIN_MAX;
+        this.waitForImageInfoReady();
     }
 
     /**
-     * Unregisters the property observers for model change
+     * Makes sure that all image info data is there
      *
+     * @memberof Settings
+     */
+    waitForImageInfoReady() {
+        let onceReady = () => {
+            // register observer
+            this.registerObservers();
+            this.mode = CHANNEL_SETTINGS_MODE.MIN_MAX;
+        };
+
+        // tear down old observers
+        this.unregisterObservers();
+        if (this.image_config.image_info.ready) {
+            onceReady();
+            return;
+        }
+
+        // we are not yet ready, wait for ready via observer
+        if (this.image_info_ready_observer === null)
+            this.image_info_ready_observer =
+                this.bindingEngine.propertyObserver(
+                    this.image_config.image_info, 'ready').subscribe(
+                        (newValue, oldValue) => onceReady());
+    }
+
+    /**
+     * Unregisters the the observers (property and image info ready)
+     *
+     * @param {boolean} property_only true if only property observers are cleaned up
      * @memberof ChannelSettings
      */
-    unregisterObservers() {
-        this.observers.map((o) => o.dispose());
+    unregisterObservers(property_only = false) {
+        this.observers.map((o) => {if (o) o.dispose();});
         this.observers = [];
+        if (property_only) return;
+        if (this.image_info_ready_observer) {
+            this.image_info_ready_observer.dispose();
+            this.image_info_ready_observer = null;
+        }
     }
 
     /**
@@ -141,10 +159,6 @@ export default class ChannelSettings extends EventSubscriber {
      * @memberof ChannelSettings
      */
     registerObservers() {
-        if (this.image_config === null ||
-            this.image_config.image_info === null ||
-            !Misc.isArray(this.image_config.image_info.channels)) return;
-        this.unregisterObservers();
         let image_info = this.image_config.image_info;
         for (let i=0;i<image_info.channels.length;i++)
             for (let p=0;p<this.observedProperties.length;p++) {
@@ -195,8 +209,7 @@ export default class ChannelSettings extends EventSubscriber {
             for (let i=0;i<imgInfo.channels.length;i++)
                 this.takeChannelSnapshot(newValue, i, history);
 
-                if (this.enable_mode_history && history.length > 0 &&
-                        newValue !== oldValue) {
+                if (this.enable_mode_history && newValue !== oldValue) {
                     // the order of these is essential
                     //this is to force the initial values
                     let modeAdditions = [];
@@ -219,6 +232,7 @@ export default class ChannelSettings extends EventSubscriber {
                  };
 
             conf.addHistory(history);
+            conf.changed();
         });
         // for imported we do this (potentially) async
         if (newValue === CHANNEL_SETTINGS_MODE.IMPORTED)
@@ -237,91 +251,93 @@ export default class ChannelSettings extends EventSubscriber {
          let imgInf = this.image_config.image_info;
          let minMaxValues =
              imgInf.getChannelMinMaxValues(mode, index);
+
          let chan = imgInf.channels[index];
-         if (chan.window.start !== minMaxValues.start_val)
+         if (chan.window.start !== minMaxValues.start_val) {
              history.push({
                  prop: ['image_info', 'channels', '' + index, 'window', 'start'],
                  old_val : chan.window.start,
                  new_val: minMaxValues.start_val,
                  type: 'number'});
-         if (chan.window.end !== minMaxValues.end_val)
+             chan.window.start = minMaxValues.start_val;
+         }
+         if (chan.window.end !== minMaxValues.end_val) {
              history.push({
                  prop: ['image_info', 'channels', '' + index, 'window', 'end'],
                  old_val : chan.window.end,
                  new_val: minMaxValues.end_val,
                  type: 'number'});
+             chan.window.end = minMaxValues.end_val;
+         }
          // we have to also reset channel color, dimensions
          // model and projection
          if (mode === CHANNEL_SETTINGS_MODE.IMPORTED) {
              let impImgData = imgInf.imported_settings;
              // log channel color
-             if (chan.color !== impImgData.c[index].color)
+             if (chan.color !== impImgData.c[index].color) {
                 history.push({
                     prop: ['image_info', 'channels', '' + index, 'color'],
                     old_val : chan.color,
                     new_val: impImgData.c[index].color,
                     type: 'string'});
+                chan.color = impImgData.c[index].color;
+             }
             // log reverse intensity
             //(taking into account that it might not be supported)
             if (typeof impImgData.c[index].reverseIntensity === 'undefined')
                 impImgData.c[index].reverseIntensity = null;
-            if (chan.reverseIntensity !== impImgData.c[index].reverseIntensity)
-               history.push({
+            if (chan.reverseIntensity !== impImgData.c[index].reverseIntensity) {
+                history.push({
                    prop: ['image_info', 'channels', '' + index, 'reverseIntensity'],
                    old_val : chan.reverseIntensity,
                    new_val: impImgData.c[index].reverseIntensity,
                    type: 'boolean'});
+                chan.reverseIntensity = impImgData.c[index].reverseIntensity;
+             }
              // remember active
-             if (chan.active !== impImgData.c[index].active)
+             if (chan.active !== impImgData.c[index].active) {
                  history.push({
                      prop: ['image_info', 'channels', '' + index, 'active'],
                      old_val : chan.active,
                      new_val: impImgData.c[index].active,
                      type: 'boolean'});
+                 chan.active = impImgData.c[index].active;
+             }
              // log z and t
-             if (imgInf.dimensions.t !== impImgData.t)
+             if (imgInf.dimensions.t !== impImgData.t) {
                  history.push({
                      prop: ['image_info', 'dimensions', 't'],
                      old_val : imgInf.dimensions.t,
                      new_val: impImgData.t,
                      type: 'number'});
-             if (imgInf.dimensions.z !== impImgData.z)
+                 imgInf.dimensions.t = impImgData.t;
+             }
+             if (imgInf.dimensions.z !== impImgData.z) {
                  history.push({
                      prop: ['image_info', 'dimensions', 'z'],
                      old_val : imgInf.dimensions.z,
                      new_val: impImgData.z,
                      type: 'number'});
+                 imgInf.dimensions.z = impImgData.z;
+             }
              // remember model and projection
-             if (imgInf.model !== impImgData.m)
+             if (imgInf.model !== impImgData.m) {
                  history.push({
                      prop: ['image_info', 'model'],
                      old_val : imgInf.model,
                      new_val: impImgData.m,
                      type: 'string'});
-             if (imgInf.projection !== impImgData.p)
+                 imgInf.model = impImgData.m;
+             }
+             if (imgInf.projection !== impImgData.p) {
                  history.push({
                      prop: ['image_info', 'projection'],
                      old_val : imgInf.projection,
                      new_val: impImgData.p,
                      type: 'string'});
+                 imgInf.projection = impImgData.p;
+             }
          }
-     }
-
-    /**
-     * Handles changes of the associated ImageConfig
-     *
-     * @memberof ChannelSettings
-     * @param {Object} params the event notification parameters
-     */
-     onImageConfigChange(params = {}) {
-         // if the event is for another config, forget it...
-         if (params.config_id !== this.config_id) return;
-
-         // change image config and update image info
-         this.config_id = params.config_id;
-         if (this.context.getImageConfig(params.config_id) === null) return;
-         this.image_config = this.context.getImageConfig(params.config_id);
-         this.bind();
      }
 
      /**
@@ -361,7 +377,7 @@ export default class ChannelSettings extends EventSubscriber {
        let c = this.image_config.image_info.channels[index];
 
        let params = {
-           config_id: this.config_id,
+           config_id: this.image_config.id,
            prop: prop,
            ranges:[
                {index: index, start: c.window.start, end: c.window.end,
@@ -379,8 +395,6 @@ export default class ChannelSettings extends EventSubscriber {
      * @memberof ChannelSettings
      */
     unbind() {
-        this.unsubscribe()
         this.unregisterObservers();
-        this.image_config = null;
     }
 }

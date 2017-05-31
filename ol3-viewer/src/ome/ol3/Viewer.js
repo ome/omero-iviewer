@@ -521,14 +521,6 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
        this.viewerState_[contr] = defaultControls[contr];
     }
 
-    var targetElement = document.getElementById(this.container_);
-    if (targetElement === null) return;
-
-    var children =
-       Array.prototype.slice.call(targetElement.childNodes);
-    for (var child in children)
-       targetElement.removeChild(children[child]);
-
     // finally construct the open layers map object
     this.viewer_ = new ol.Map({
        logo: false,
@@ -540,9 +532,21 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
        view: view
     });
 
-    // collapse/expand bird's eye view depending on whether we have tile sources
-    this.viewerState_["birdseye"]['ref'].setCollapsed(
-        !source.use_tiled_retrieval_);
+    // expand bird's eye view if we have tiled sources
+    if (source.use_tiled_retrieval_)
+        this.viewerState_["birdseye"]['ref'].setCollapsed(false);
+    // tweak source element for fullscreen to include dim sliders (iviewer only)
+    var targetId = this.getTargetId();
+    var viewerFrame = targetId ? document.getElementById(targetId) : null;
+    if (targetId && viewerFrame) {
+        this.viewerState_["fullscreen"]['ref'].source_ = viewerFrame;
+        this.viewerState_["dragPan"]['ref'].condition_ =
+            function(e) {
+                // ignore right clicks (from context)
+                return ol.events.condition.noModifierKeys(e) &&
+                    ol.events.condition.primaryAction(e);
+            };
+    }
     // enable scalebar by default
     this.toggleScaleBar(true);
 
@@ -740,21 +744,24 @@ ome.ol3.Viewer.prototype.changeToImage =
  * [addRegions]{@link ome.ol3.Viewer#addRegions} again if you want it back which is more expensive
  * than toggling visibility
  *
- * @param {Object=} options additional options for region initialization
+ * @param {Array=} data regions data (optional)
  */
-ome.ol3.Viewer.prototype.addRegions = function(options) {
+ome.ol3.Viewer.prototype.addRegions = function(data) {
     // without a map, no need for a regions overlay...
     if (!(this.viewer_ instanceof ol.Map)) {
         this.tried_regions_ = true;
-        if (ome.ol3.utils.Misc.isArray(options['data']))
-            this.tried_regions_data_ = options['data'];
+        if (ome.ol3.utils.Misc.isArray(data))
+            this.tried_regions_data_ = data;
         return;
     }
     this.tried_regions_ = false;
     this.tried_regions_data_ = null;
     if (this.regions_ instanceof ome.ol3.source.Regions) return;
 
+    var options = {};
+    if (data) options['data'] = data;
     this.regions_ = new ome.ol3.source.Regions(this, options);
+
     // add a vector layer with the regions
     if (this.regions_) {
         this.viewer_.addLayer(new ol.layer.Vector({source : this.regions_}));
@@ -1671,21 +1678,6 @@ ome.ol3.Viewer.prototype.storeRegions =
 }
 
 /**
- * Enables/Disables context menu for regions
- * see: {@link ome.ol3.interaction.Select.enableContextMenu}
- *
- * @param {boolean} flag if true the context menu will be shown on right click,
- *                       otherwise not
- */
-ome.ol3.Viewer.prototype.enableRegionsContextMenu = function(flag) {
-    if (!(this.regions_ instanceof ome.ol3.source.Regions) ||
-        !(this.regions_.select_ instanceof ome.ol3.interaction.Select))
-            return; // no regions or select => no context menu...
-
-    this.regions_.select_.enableContextMenu(flag);
-}
-
-/**
  * Enables the drawing of one shape of a given type
  * To do so it sets the regions mode to draw, storing previously chosen
  * modes, adds the openlayers draw interaction to then switch back to
@@ -2100,11 +2092,6 @@ goog.exportProperty(
     ome.ol3.Viewer.prototype,
     'storeRegions',
     ome.ol3.Viewer.prototype.storeRegions);
-
-goog.exportProperty(
-    ome.ol3.Viewer.prototype,
-    'enableRegionsContextMenu',
-    ome.ol3.Viewer.prototype.enableRegionsContextMenu);
 
 goog.exportProperty(
     ome.ol3.Viewer.prototype,

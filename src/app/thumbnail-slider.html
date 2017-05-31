@@ -25,8 +25,8 @@
              style="width: 100%; margin-top: 5px; margin-bottom: 5px; cursor: pointer"
              title="Show more images">
         </div>
-        <img repeat.for="thumb of thumbnails"
-             css="${image_showing === thumb.id ?
+        <img id="${'img-thumb-' + thumb.id}" repeat.for="thumb of thumbnails"
+             css="${image_config.image_info.image_id === thumb.id ?
                  'border: 2px solid rgba(0,60,136,0.5)' : 'border: none'}"
              src.bind="thumb.url + '?version=' + thumb.revision"
              title="${thumb.title}"

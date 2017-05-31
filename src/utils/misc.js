@@ -168,8 +168,8 @@ export default class Misc {
             if (pos === -1) continue;
             let rTok = c.substring(0, pos).split(':');
             if (rTok.length !== 2) continue; // we need start and end
-            let rStart = parseInt(rTok[0]);
-            let rEnd = parseInt(rTok[1]);
+            let rStart = parseFloat(rTok[0]);
+            let rEnd = parseFloat(rTok[1]);
             if (isNaN(rStart) || isNaN(rEnd)) continue;
             tmp['start'] = rStart;
             tmp['end'] = rEnd;

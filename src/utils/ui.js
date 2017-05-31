@@ -291,27 +291,33 @@ export default class Ui {
      }
 
       /**
-       * Scrolls the regions table to the row with the given id
-       * if the row is outside the visible portion of the table
+       * Scrolls a container with a scrollbar in order to
+       * put one of its children into the visible part of the container
+       * if it cannot be seen already.
        *
-       * @param {string} id a row id of the form roi_id:shape_id
+       * @param {string} id the id of the child to scroll to
+       * @param {string} container the selector for the container element
+       * @param {number} header_height optional height of a header
        * @static
        */
-      static scrollRegionsTable(id) {
-          if (typeof id !== 'string') return;
+      static scrollContainer(id, container, header_height) {
+          if (typeof id !== 'string' || typeof container !== 'string') return;
 
-          let el = document.getElementById('roi-' + id);
+          let el = document.getElementById(id);
           if (el === null) return;
 
-          let regTable = $('.regions-table');
-          let offsetRegTable = regTable.prop("offsetTop");
-          let scrollTop = regTable.scrollTop();
-          let scrollBottom = scrollTop + regTable.outerHeight();
-          let elTop = el.offsetTop - offsetRegTable;
+          if (typeof header_height !== 'number' || header_height < 0)
+            header_height = 0;
+          let contEl = $(container);
+          let scrollTop = contEl.scrollTop();
+          let scrollBottom = scrollTop + contEl.outerHeight();
+          let elTop = el.offsetTop - header_height;
           let elBottom = elTop + el.offsetHeight;
           if (elTop > scrollTop && elBottom < scrollBottom) return;
 
-          regTable.scrollTop(elTop);
+          let pos =
+              elTop - parseInt((contEl.outerHeight() - el.offsetHeight) / 2);
+          contEl.scrollTop(pos < 0 ? elTop : pos);
       }
 
       /**
@@ -334,5 +340,57 @@ export default class Ui {
           outer.parentNode.removeChild(outer);
 
           return widthNoScroll - widthWithScroll;
+    }
+
+    /**
+     * A helper function to register a list of keyhandlers via the context
+     * @param {Context} context a reference to the Context instance
+     * @param {Array.<Object>} handler_info array of objects providing key code and handler
+     * @param {string} group the group info for registration, default: global
+     * @param {Object} scope the scope for the handler function, default: null
+     * @static
+     */
+    static registerKeyHandlers(context, handler_info, group='global', scope=null) {
+        handler_info.map(
+            (action) =>
+                context.addKeyListener(
+                    action.key,
+                    (event) => {
+                        let command =
+                            Misc.isApple() ? 'metaKey' : 'ctrlKey';
+                            if ((group !== 'global' &&
+                                context.selected_tab !== group) ||
+                                !event[command]) return true;
+                            try {
+                                action.func.apply(scope, action.args);
+                            } catch(err) {
+                                console.error("Key Handler failed: " + err);
+                            }
+                            return false;
+                }, group));
+    }
+
+    /**
+     * Returns the prefix for the full screen api functionality
+     * @return {string|null} the prefix or null if no support
+     * @static
+     */
+    static getFullScreenApiPrefix() {
+        try {
+            let ret = null;
+
+            if (document.body.webkitRequestFullscreen) ret = 'webkit'
+            else if (document.body.mozRequestFullScreen) ret = 'moz'
+            else if (document.body.msRequestFullscreen) ret = 'ms'
+            else if (document.body.requestFullscreen) ret = "";
+
+            // no support
+            if (ret === null) return null;
+
+            // now check the corresponding enabled flag
+            if (document[ret + 'FullScreenEnabled'] ||
+                document[ret + 'FullscreenEnabled']) return ret
+        } catch(ignored){}
+        return null;
     }
 }

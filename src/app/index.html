@@ -18,6 +18,7 @@
 
 <template>
     <require from="../viewers/ol3-viewer"></require>
+    <require from="../viewers/viewer-context-menu"></require>
     <require from="./header"></require>
     <require from="./thumbnail-slider"></require>
     <require from="./right-hand-panel"></require>
@@ -56,6 +57,8 @@
         </div>
     </div>
 
+    <viewer-context-menu></viewer-context-menu>
+
     <div class="row center">
         <thumbnail-slider
             class="thumbnail-panel sidebar">
@@ -65,21 +68,18 @@
             <img src="../css/images/collapse-left.png"/>
         </div>
 
-        <span repeat.for="[id, conf] of context.image_configs">
-            <div class="frame col-xs-12">
-                <ol3-viewer show.bind="conf.image_info.ready"
-                            config_id.bind="id">
+        <div class="frame col-xs-12">
+            <div class="viewer" repeat.for="[id, conf] of context.image_configs">
+                <ol3-viewer image_config.bind="conf">
                 </ol3-viewer>
             </div>
+        </div>
 
-            <div class="col-splitter right-split">
-                <img src="../css/images/collapse-right.png"/>
-            </div>
+        <div class="col-splitter right-split">
+            <img src="../css/images/collapse-right.png"/>
+        </div>
 
-            <right-hand-panel class="right-hand-panel sidebar"
-                              config_id.bind="id">
-            </right-hand-panel>
-        </span>
+        <right-hand-panel class="right-hand-panel sidebar"></right-hand-panel>
     </div>
 
 </template>

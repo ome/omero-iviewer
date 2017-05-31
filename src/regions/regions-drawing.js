@@ -37,10 +37,14 @@ import {
 export default class RegionsDrawing extends EventSubscriber {
     /**
      * a bound reference to regions_info
+     * and its associated change handler
      * @memberof RegionsDrawing
      * @type {RegionsInfo}
      */
     @bindable regions_info = null;
+    regions_infoChanged(newVal, oldVal) {
+        this.waitForRegionsInfoReady();
+    }
 
     /**
      * a list of supported shapes for iteration
@@ -69,11 +73,18 @@ export default class RegionsDrawing extends EventSubscriber {
             (params={}) => this.onModeChange(params)]];
 
     /**
-     * the list of observers
+     * the list of property observers
      * @memberof RegionsDrawing
      * @type {Array.<Object>}
      */
     observers = [];
+
+    /**
+     * the regions info ready observers
+     * @memberof RegionsDrawing
+     * @type {Object}
+     */
+    regions_ready_observer = null;
 
     /**
      * @constructor
@@ -92,53 +103,48 @@ export default class RegionsDrawing extends EventSubscriber {
      * @memberof RegionsDrawing
      */
     registerObservers() {
-        let createObservers = () => {
-            this.unregisterObservers();
-            let action = () => {
-                let idx =
-                    this.supported_shapes.indexOf(
-                        this.regions_info.shape_to_be_drawn);
-                if (idx < 0) return;
-                this.onDrawShape(idx);
-            };
-            this.observers.push(
-                this.bindingEngine.propertyObserver(
-                    this.regions_info, "drawing_mode")
-                        .subscribe((newValue, oldValue) => action()));
-            for (let p in this.regions_info.shape_defaults)
-                this.observers.push(
-                    this.bindingEngine.propertyObserver(
-                        this.regions_info.shape_defaults, p)
-                            .subscribe((newValue, oldValue) => action()));
-            this.observers.push(
-                this.bindingEngine.propertyObserver(
-                    this.context, 'selected_tab').subscribe(
-                        (newValue, oldValue) => {
-                            if (this.regions_info.shape_to_be_drawn !== null &&
-                                !this.context.isRoisTabActive())
-                                    this.onModeChange(
-                                        { config_id:
-                                            this.regions_info.image_info.config_id
-                                        });}));
+        let action = () => {
+            let idx =
+                this.supported_shapes.indexOf(
+                    this.regions_info.shape_to_be_drawn);
+            if (idx < 0) return;
+            this.onDrawShape(idx);
         };
-
-        if (this.regions_info === null) {
+        this.observers.push(
+            this.bindingEngine.propertyObserver(
+                this.regions_info, "drawing_mode")
+                    .subscribe((newValue, oldValue) => action()));
+        for (let p in this.regions_info.shape_defaults)
             this.observers.push(
-                this.bindingEngine.propertyObserver(this, 'regions_info')
-                    .subscribe((newValue, oldValue) => {
-                        if (oldValue === null && newValue) createObservers();
-                }));
-        } else createObservers();
+                this.bindingEngine.propertyObserver(
+                    this.regions_info.shape_defaults, p)
+                        .subscribe((newValue, oldValue) => action()));
+        this.observers.push(
+            this.bindingEngine.propertyObserver(
+                this.context, 'selected_tab').subscribe(
+                    (newValue, oldValue) => {
+                        if (this.regions_info.shape_to_be_drawn !== null &&
+                            !this.context.isRoisTabActive())
+                                this.onModeChange(
+                                    { config_id:
+                                        this.regions_info.image_info.config_id
+                                    });}));
     }
 
     /**
-     * Unregisters observers
+     * Unregisters the the observers (property and regions info ready)
      *
+     * @param {boolean} property_only true if only property observers are cleaned up
      * @memberof RegionsDrawing
      */
-    unregisterObservers() {
-        this.observers.map((o) => o.dispose());
+    unregisterObservers(property_only = false) {
+        this.observers.map((o) => {if (o) o.dispose();});
         this.observers = [];
+        if (property_only) return;
+        if (this.regions_ready_observer) {
+            this.regions_ready_observer.dispose();
+            this.regions_ready_observer = null;
+        }
     }
 
     /**
@@ -226,8 +232,9 @@ export default class RegionsDrawing extends EventSubscriber {
         // scroll to end of list
         if (len !== 0)
             setTimeout(
-                Ui.scrollRegionsTable.bind(
-                    null,generatedShapes[len-1].shape_id), 50);
+                Ui.scrollContainer.bind(null,
+                    'roi-' + generatedShapes[len-1].shape_id,
+                    '.regions-table'), 50);
 
         // only if we have to generate more shapes we continue
         if (!params.drawn || len === 0) return;
@@ -305,17 +312,45 @@ export default class RegionsDrawing extends EventSubscriber {
             REGIONS_DRAW_SHAPE, {config_id: params.config_id, abort: true});
      }
 
-    /**
-     * Overridden aurelia lifecycle method:
-     * called whenever the view is bound within aurelia
-     * in other words an 'init' hook that happens before 'attached'
-     *
-     * @memberof RegionsDrawing
-     */
-    bind() {
-        this.subscribe();
-        this.registerObservers();
-    }
+     /**
+      * Overridden aurelia lifecycle method:
+      * called whenever the view is bound within aurelia
+      * in other words an 'init' hook that happens before 'attached'
+      *
+      * @memberof RegionsDrawing
+      */
+     bind() {
+         this.waitForRegionsInfoReady();
+     }
+
+     /**
+      * Makes sure that all regions info data is there
+      *
+      * @memberof RegionsDrawing
+      */
+     waitForRegionsInfoReady() {
+         let onceReady = () => {
+             // register observer
+             this.registerObservers();
+             // subscribe
+             this.subscribe();
+         };
+
+         // tear down old observers/subscription
+         this.unregisterObservers();
+         this.unsubscribe();
+         if (this.regions_info.ready) {
+             onceReady();
+             return;
+         }
+
+         // we are not yet ready, wait for ready via observer
+         if (this.regions_ready_observer === null)
+             this.regions_ready_observer =
+                 this.bindingEngine.propertyObserver(
+                     this.regions_info, 'ready').subscribe(
+                         (newValue, oldValue) => onceReady());
+     }
 
     /**
      * Overridden aurelia lifecycle method:

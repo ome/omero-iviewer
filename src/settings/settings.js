@@ -21,12 +21,11 @@ import Context from '../app/context';
 import Misc from '../utils/misc';
 import Histogram from './histogram';
 import Ui from '../utils/ui';
-import {CHANNEL_SETTINGS_MODE, WEBGATEWAY} from '../utils/constants';
+import {CHANNEL_SETTINGS_MODE, TABS, WEBGATEWAY} from '../utils/constants';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 
 import {
-    IMAGE_SETTINGS_CHANGE, THUMBNAILS_UPDATE,
-    EventSubscriber
+    IMAGE_SETTINGS_CHANGE, THUMBNAILS_UPDATE, EventSubscriber
 } from '../events/events';
 
 /**
@@ -38,18 +37,27 @@ import {
 @inject(Context, BindingEngine)
 export default class Settings extends EventSubscriber {
     /**
-     * which image config do we belong to (bound in template)
-     * @memberof Settings
-     * @type {number}
-     */
-    @bindable config_id = null;
-
-    /**
-     * a reference to the image config
+     * a reference to the image config (bound in template)
      * @memberof Settings
      * @type {ImageConfig}
      */
-    image_config = null;
+    @bindable image_config = null;
+    image_configChanged(newVal, oldVal) {
+        this.waitForImageInfoReady();
+    }
+
+    /**
+     * a list of keys we want to listen for
+     * @memberof Settings
+     * @type {Object}
+     */
+    key_actions = [
+        { key: 83, func: this.saveImageSettings},            // ctrl - s
+        { key: 89, func: this.redo},                         // ctrl - y
+        { key: 90, func: this.undo},                         // ctrl - z
+        { key: 67, func: this.copy},                         // ctrl - v
+        { key: 86, func: this.paste}                         // ctrl - y
+    ];
 
     /**
      * a revision count that forces updates of user setting thumbs after save
@@ -72,6 +80,20 @@ export default class Settings extends EventSubscriber {
      */
      histogram = null;
 
+     /**
+      * the property observer
+      * @memberof Settings
+      * @type {Object}
+      */
+     observer = null;
+
+     /**
+      * the image info ready observers
+      * @memberof Settings
+      * @type {Object}
+      */
+     image_info_ready_observer = null;
+
     /**
      * events we subscribe to
      * @memberof Settings
@@ -83,6 +105,7 @@ export default class Settings extends EventSubscriber {
     /**
      * @constructor
      * @param {Context} context the application context (injected)
+     * @param {BindingEngine} bindingEngine the BindingEngine (injected)
      */
     constructor(context, bindingEngine) {
         super(context.eventbus);
@@ -98,15 +121,41 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     bind() {
-        this.image_config =
-            this.context.getImageConfig(this.config_id);
+        this.waitForImageInfoReady();
+    }
 
-        // event subscriptions and property observation
-        this.subscribe();
-        this.registerObserver();
+    /**
+     * Makes sure that all image info data is there
+     *
+     * @memberof Settings
+     */
+    waitForImageInfoReady() {
+        let onceReady = () => {
+            // register observer
+            this.registerObserver();
+            // event subscriptions
+            this.subscribe();
+            // fire off ajax request for rendering defs
+            this.requestAllRenderingDefs();
+            // instantiate histogram
+            if (this.histogram) this.histogram.destroyHistogram();
+            this.histogram = new Histogram(this.image_config.image_info);
+        };
 
-        // fire off ajax request for rendering defs
-        this.requestAllRenderingDefs();
+        // tear down old observers/subscription
+        this.unregisterObservers();
+        this.unsubscribe();
+        if (this.image_config.image_info.ready) {
+            onceReady();
+            return;
+        }
+
+        // we are not yet ready, wait for ready via observer
+        if (this.image_info_ready_observer === null)
+            this.image_info_ready_observer =
+                this.bindingEngine.propertyObserver(
+                    this.image_config.image_info, 'ready').subscribe(
+                        (newValue, oldValue) => onceReady());
     }
 
     /**
@@ -116,10 +165,8 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     attached() {
-        // create histogram instance (if not tiled)
-        if (this.image_config && this.image_config.image_info &&
-            !this.image_config.image_info.tiled)
-            this.histogram = new Histogram(this.image_config.image_info);
+        Ui.registerKeyHandlers(
+            this.context, this.key_actions, TABS.SETTINGS, this);
     }
 
     /**
@@ -129,8 +176,7 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     requestAllRenderingDefs(action) {
-        if (this.image_config === null || this.image_config.image_info === null)
-            return;
+        if (!this.image_config.image_info.ready) return;
 
         let img_id = this.image_config.image_info.image_id;
         $.ajax({
@@ -138,7 +184,8 @@ export default class Settings extends EventSubscriber {
                     this.context.getPrefixedURI(WEBGATEWAY) +
                         "/get_image_rdefs_json/" + img_id + '/',
             success : (response) => {
-                if (!Misc.isArray(response.rdefs)) return;
+                if (!Misc.isArray(response.rdefs) ||
+                    img_id !== this.image_config.image_info.image_id) return;
 
                 // merge in lut info
                 response.rdefs.map((rdef) => {
@@ -175,12 +222,17 @@ export default class Settings extends EventSubscriber {
     /**
      * Shows and hides the histogram
      *
+     * @param {Object} event the mouse event object
      * @memberof Settings
      */
-    toggleHistogram(checked) {
+    toggleHistogram(event) {
+        event.stopPropagation();
+        event.preventDefault();
+
         if (this.histogram) {
-            this.histogram.toggleHistogramVisibilty(checked);
+            this.histogram.toggleHistogramVisibilty(event.target.checked);
         }
+        return false;
     }
 
     /**
@@ -232,6 +284,11 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     saveImageSettings() {
+        if (!this.image_config.image_info.ready ||
+            !this.image_config.image_info.can_annotate ||
+            this.image_config.history.length === 0 ||
+            this.image_config.historyPointer < 0) return;
+
         $('.save-settings').children('button').blur();
         if (Misc.useJsonp(this.context.server)) {
             alert("Saving the rendering settings will not work cross-domain!");
@@ -259,7 +316,7 @@ export default class Settings extends EventSubscriber {
                 let action =
                     (() => this.context.publish(
                             THUMBNAILS_UPDATE,
-                            { config_id : this.config_id,
+                            { config_id : this.image_config.id,
                               ids: [image_info.image_id]}));
                 this.requestAllRenderingDefs(action);
             },
@@ -273,6 +330,8 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     saveImageSettingsToAll() {
+        if (!this.image_config.image_info.ready) return;
+
         // we delegate (after confirming choice)
         let desc = "Do you want to apply the settings to all Images ";
         if (typeof this.image_config.image_info.dataset_id === 'number')
@@ -289,7 +348,7 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     undo() {
-        if (this.image_config) {
+        if (this.image_config.image_info.ready) {
             this.image_config.undoHistory();
             this.image_config.changed();
         }
@@ -301,7 +360,7 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     redo() {
-        if (this.image_config) {
+        if (this.image_config.image_info.ready) {
             this.image_config.redoHistory();
             this.image_config.changed();
         }
@@ -315,8 +374,10 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     copy(toAll=false) {
+        if (!this.image_config.image_info.ready) return;
+
         if (toAll && Misc.useJsonp(this.context.server)) {
-            alert("Saving to All will not work cross-domain!");
+            Ui.showModalMessage("Saving to All will not work cross-domain!", true);
             return;
         }
 
@@ -356,7 +417,7 @@ export default class Settings extends EventSubscriber {
                     let action =
                         (() => this.context.publish(
                                 THUMBNAILS_UPDATE,
-                                { config_id : this.config_id, ids: thumbIds}));
+                                { config_id : imgInf.config_id, ids: thumbIds}));
                     this.requestAllRenderingDefs(action);
                 }
         } else params.success =
@@ -476,6 +537,9 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     paste() {
+        if (!this.image_config.image_info.ready ||
+            this.image_config.image_info.copied_img_rdef === null) return;
+
         this.image_config.image_info.requestImgRDef(
             this.applyRenderingSettings.bind(this));
     }
@@ -496,9 +560,6 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     registerObserver() {
-        if (this.image_config === null ||
-            this.image_config.image_info === null) return;
-        this.unregisterObserver();
         this.observer =
             this.bindingEngine.propertyObserver(
                 this.image_config.image_info, 'model')
@@ -506,19 +567,39 @@ export default class Settings extends EventSubscriber {
                         (newValue, oldValue) =>
                             this.context.publish(
                                 IMAGE_SETTINGS_CHANGE,
-                                { config_id: this.config_id, model: newValue}));
+                                { config_id: this.image_config.id,
+                                  model: newValue}));
     }
 
     /**
-     * Unregisters the model(color/greyscale) property listener for model change
+     * Unregisters the the observers (property and image info ready)
      *
+     * @param {boolean} property_only true if only property observers are cleaned up
      * @memberof Settings
      */
-    unregisterObserver() {
+    unregisterObservers(property_only = false) {
         if (this.observer) {
             this.observer.dispose();
             this.observer = null;
         }
+        if (property_only) return;
+        if (this.image_info_ready_observer) {
+            this.image_info_ready_observer.dispose();
+            this.image_info_ready_observer = null;
+        }
+    }
+
+    /**
+     * Overridden aurelia lifecycle method:
+     * called when the view and its elemetns are detached from the PAL
+     * (dom abstraction)
+     *
+     * @memberof Settings
+     */
+    detached() {
+        this.key_actions.map(
+            (action) =>
+                this.context.removeKeyListener(action.key, TABS.SETTINGS));
     }
 
     /**
@@ -529,9 +610,8 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     unbind() {
-        this.unregisterObserver();
-        this.unsubscribe();
         if (this.histogram) this.histogram.destroyHistogram();
-        this.image_config = null;
+        this.unregisterObservers();
+        this.unsubscribe();
     }
 }
