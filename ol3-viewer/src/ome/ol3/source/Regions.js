@@ -211,22 +211,23 @@ ome.ol3.source.Regions = function(viewerReference, options) {
          // define request settings
          var reqParams = {
              "server" : scope.viewer_.getServer(),
-             "uri" : scope.viewer_.getPrefixedURI(ome.ol3.PLUGIN_PREFIX) +
-                        '/request_rois/' + scope.viewer_.getId(),
-             "success" : function(data) {
-                 if (typeof(data) === 'string') {
+             "uri" : scope.viewer_.getPrefixedURI(ome.ol3.WEB_API_BASE) +
+                     ome.ol3.REGIONS_REQUEST_URL +
+                     '/?image=' + scope.viewer_.getId(),
+             "success" : function(response) {
+                 if (typeof(response) === 'string') {
                      try {
-                         data = JSON.parse(data);
+                         response = JSON.parse(response);
                      } catch(parseError) {
                          console.error("Failed to parse json response!");
                      }
                  }
-                 if (typeof(data) !== 'object' || data === null) {
+                 if (typeof(response) !== 'object' || response === null) {
                      console.error("Regions Request did not receive proper response!");
                      return;
                  }
                  // delegate
-                 init0(data);
+                 init0(response.data);
              }, "error" : function(error) {
                     console.error("Error retrieving regions info for id: " +
                     scope.viewer_.getId() +

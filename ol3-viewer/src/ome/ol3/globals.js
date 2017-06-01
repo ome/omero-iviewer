@@ -32,11 +32,18 @@ goog.require('ol.interaction.DragBox');
 goog.require('ol.events.condition');
 
 /**
- * a simple string lookup constant for PLUGIN_PRFIX
+ * a simple string lookup constant for WEB_API_BASE
  * @const
  * @type {string}
  */
-ome.ol3.PLUGIN_PREFIX = 'PLUGIN_PREFIX';
+ome.ol3.WEB_API_BASE = 'WEB_API_BASE';
+
+/**
+ * the url for the regions request (relative to WEB_API_BASE)
+ * @const
+ * @type {string}
+ */
+ome.ol3.REGIONS_REQUEST_URL = '/m/rois';
 
 /**
  * a simple string lookup constant for WEBGATEWAY
@@ -59,7 +66,7 @@ ome.ol3.WEBCLIENT = 'WEBCLIENT';
  * @type {Array.<string>}
  */
 ome.ol3.PREFIXED_URIS =
-    [ome.ol3.PLUGIN_PREFIX, ome.ol3.WEBCLIENT, ome.ol3.WEBGATEWAY];
+    [ome.ol3.WEB_API_BASE, ome.ol3.WEBCLIENT, ome.ol3.WEBGATEWAY];
 
 /**
  * A lookup table to get or set dimension indices
