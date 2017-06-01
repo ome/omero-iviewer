@@ -779,8 +779,12 @@ thumbnail-slider img {
     background-image: url('images/draw_polygon.png');
 }
 
-.draw-line-icon, .draw-polyline-icon {
+.draw-line-icon {
     background-image: url('images/draw_line.png');
+}
+
+.draw-polyline-icon {
+    background-image: url('images/draw_polyline.png');
 }
 
 .draw-arrow-icon {

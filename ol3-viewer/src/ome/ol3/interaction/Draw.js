@@ -249,6 +249,9 @@ ome.ol3.interaction.Draw.prototype.drawShape = function(shape, roi_id, opts) {
         case "ellipse" :
             typeFunction = ome.ol3.interaction.Draw.prototype.drawEllipse_;
             break;
+        case "polyline" :
+            typeFunction = ome.ol3.interaction.Draw.prototype.drawPolyLine_;
+            break;
         case "line" :
             typeFunction = ome.ol3.interaction.Draw.prototype.drawLine_;
             break;
@@ -395,12 +398,12 @@ ome.ol3.interaction.Draw.prototype.drawPolygon_ = function(event) {
 };
 
 /**
- * Drawing interaction for (Poly)Lines
+ * Drawing interaction for polylines
  *
  * @private
  * @param {Object} event the event object for the drawing interaction
  */
-ome.ol3.interaction.Draw.prototype.drawLine_ = function(event) {
+ome.ol3.interaction.Draw.prototype.drawPolyLine_ = function(event) {
     this.drawShapeCommonCode_('LineString', 'polyline',
         function(coordinates, opt_geometry) {
             var geometry = new ome.ol3.geom.Line(coordinates);
@@ -411,6 +414,17 @@ ome.ol3.interaction.Draw.prototype.drawLine_ = function(event) {
 
             return geometry;
         });
+};
+
+/**
+ * Drawing interaction for lines (delegates to polyline)
+ *
+ * @private
+ * @param {Object} event the event object for the drawing interaction
+ */
+ome.ol3.interaction.Draw.prototype.drawLine_ = function(event) {
+    this.abort_polyline_ = true;
+    this.drawPolyLine_();
 };
 
 /**
