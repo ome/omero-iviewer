@@ -40,6 +40,13 @@ import {spectrum} from 'spectrum-colorpicker';
 @inject(Context, Element, BindingEngine)
 export default class ChannelRange  {
     /**
+     * the floating point precision used
+     * @memberof ChannelRange
+     * @type {number}
+     */
+    FLOATING_POINT_PRECISION = 3;
+
+    /**
      * channel informetion (bound in template)
      * @memberof ChannelRange
      * @type {Object}
@@ -52,6 +59,20 @@ export default class ChannelRange  {
      * @type {number}
      */
     @bindable index = null;
+
+    /**
+     * the channel's full range (min,max)
+     * @memberof ChannelRange
+     * @type {number}
+     */
+    full_range_min_max = null;
+
+    /**
+     * the channel's min-max range
+     * @memberof ChannelRange
+     * @type {number}
+     */
+    min_max_range = null;
 
     /**
      * the revision count (used for history)
@@ -114,19 +135,31 @@ export default class ChannelRange  {
         // just in case
         this.detached();
 
-        if (this.channel === null) return;
-
         let imgConf = this.context.getSelectedImageConfig();
         let imgInf = imgConf.image_info;
-        let minMaxRange =
+        this.full_range_min_max =
             imgInf.getChannelMinMaxValues(
-                CHANNEL_SETTINGS_MODE.FULL_RANGE,this.index);
-        let minMaxValues = imgInf.getChannelMinMaxValues(this.mode,this.index);
+                CHANNEL_SETTINGS_MODE.FULL_RANGE, this.index,
+                    this.FLOATING_POINT_PRECISION);
+        this.min_max_range =
+            imgInf.getChannelMinMaxValues(this.mode, this.index,
+                this.FLOATING_POINT_PRECISION);
+        // round if we are floating point
+        if (this.min_max_range.step_size !== 1) {
+            this.channel.window.start =
+                Misc.roundAtDecimal(
+                    this.channel.window.start, this.FLOATING_POINT_PRECISION);
+            this.channel.window.end =
+                Misc.roundAtDecimal(
+                    this.channel.window.end, this.FLOATING_POINT_PRECISION);
+        }
 
         // channel start
         let channelStart = $(this.element).find(".channel-start");
-        channelStart.spinner(
-            {min: minMaxRange.start_min, max: minMaxRange.start_max});
+        channelStart.spinner({
+            min: this.full_range_min_max.start_min, max: this.full_range_min_max.start_max,
+            step: this.min_max_range.step_size
+        });
         let channelStartArrows =
             $(channelStart).parent().find('a.ui-spinner-button');
         channelStartArrows.css('display','none');
@@ -143,21 +176,22 @@ export default class ChannelRange  {
                     event.keyCode === 13)
                         this.onRangeChange(event.target.value, true);
             });
-        channelStart.spinner("value", minMaxValues.start_val);
+        channelStart.spinner("value", this.min_max_range.start_val);
 
         // channel range slider
         let channelRange = $(this.element).find(".channel-slider");
         channelRange.slider({
             min: this.mode === CHANNEL_SETTINGS_MODE.FULL_RANGE ?
-                minMaxRange.start_min :
-                    minMaxValues.start_val > minMaxValues.start_min ?
-                        minMaxValues.start_min : minMaxValues.start_val,
+                this.full_range_min_max.start_min :
+                    this.min_max_range.start_val > this.min_max_range.start_min ?
+                        this.min_max_range.start_min : this.min_max_range.start_val,
             max: this.mode === CHANNEL_SETTINGS_MODE.FULL_RANGE ?
-                minMaxRange.end_max :
-                    minMaxValues.end_val < minMaxValues.end_max ?
-                        minMaxValues.end_max : minMaxValues.end_val,
+                this.full_range_min_max.end_max :
+                    this.min_max_range.end_val < this.min_max_range.end_max ?
+                        this.min_max_range.end_max : this.min_max_range.end_val,
+            step: this.min_max_range.step_size,
             range: true,
-            values: [minMaxValues.start_val, minMaxValues.end_val],
+            values: [this.min_max_range.start_val, this.min_max_range.end_val],
             change: (event, ui) => {
                 // if slide update is pending => clear it
                 if (this.lastUpdate) {
@@ -202,8 +236,10 @@ export default class ChannelRange  {
 
         //channel end
         let channelEnd = $(this.element).find(".channel-end");
-        channelEnd.spinner(
-            {min: minMaxRange.end_min, max: minMaxRange.end_max});
+        channelEnd.spinner({
+            min: this.full_range_min_max.end_min, max: this.full_range_min_max.end_max,
+            step: this.min_max_range.step_size
+        });
         let channelEndArrows =
             $(channelEnd).parent().find('a.ui-spinner-button');
         channelEndArrows.css('display','none');
@@ -225,7 +261,7 @@ export default class ChannelRange  {
                     event.keyCode === 13)
                         this.onRangeChange(event.target.value)
             });
-        channelEnd.spinner("value",minMaxValues.end_val);
+        channelEnd.spinner("value", this.min_max_range.end_val);
 
         //channel color
         $(this.element).find(".spectrum-input").spectrum({
@@ -331,15 +367,22 @@ export default class ChannelRange  {
     onRangeChangeBoth(values, ui_triggered=false) {
         if (!ui_triggered || !Misc.isArray(values)) return;
 
+        if (this.min_max_range.step_size !== 1) {
+            values[0] = Misc.roundAtDecimal(
+                values[0],this.FLOATING_POINT_PRECISION);
+            values[1] = Misc.roundAtDecimal(
+                values[1],this.FLOATING_POINT_PRECISION);
+        }
+
         let startManipulated = this.channel.window.start !== values[0];
         if (startManipulated) {
             if (values[0] >= values[1]) {
-                values[0] = values[1]-1;
+                values[0] = values[1] - this.min_max_range.step_size;
             }
             this.onRangeChange(values[0], true);
         } else {
             if (values[1] <= values[0]) {
-                values[1] = values[0]+1;
+                values[1] = values[0] + this.min_max_range.step_size;
             }
             this.onRangeChange(values[1], false);
         }
@@ -357,7 +400,7 @@ export default class ChannelRange  {
     onRangeChange(value, is_start=false, replace_empty_value=false) {
         let clazz = is_start ? '.channel-start' : '.channel-end';
         let oldValue =
-        is_start ? this.channel.window.start : this.channel.window.end;
+            is_start ? this.channel.window.start : this.channel.window.end;
 
         // some sanity checks
         if (typeof value !== 'number' && typeof value !== 'string') return;
@@ -377,19 +420,20 @@ export default class ChannelRange  {
                     "border-color", "rgb(255,0,0)");
                 return;
             }
+            if (this.min_max_range.step_size !== 1)
+                value = Misc.roundAtDecimal(
+                    value,this.FLOATING_POINT_PRECISION);
         }
 
-        // get appropriate min/max for start/end
-        let minMaxRange = this.context.getSelectedImageConfig().
-        image_info.getChannelMinMaxValues(
-            CHANNEL_SETTINGS_MODE.FULL_RANGE, this.index);
-        let min = is_start ? minMaxRange.start_min : minMaxRange.end_min;
-        let max = is_start ? minMaxRange.start_max : minMaxRange.end_max;
-        let minMaxValues =
-            this.context.getSelectedImageConfig().
-                image_info.getChannelMinMaxValues(this.mode, this.index);
-        let sliderMin = is_start ? minMaxValues.start_min : minMaxValues.end_min;
-        let sliderMax = is_start ? minMaxValues.start_max : minMaxValues.end_max;
+        // set appropriate min/max for start/end
+        let min = is_start ?
+            this.full_range_min_max.start_min : this.full_range_min_max.end_min;
+        let max = is_start ?
+            this.full_range_min_max.start_max : this.full_range_min_max.end_max;
+        let sliderMin = is_start ?
+            this.min_max_range.start_min : this.min_max_range.end_min;
+        let sliderMax = is_start ?
+            this.min_max_range.start_max : this.min_max_range.end_max;
 
         // clamp
         let exceededBounds = false;
@@ -406,8 +450,7 @@ export default class ChannelRange  {
             let otherClazz = is_start ? '.channel-end' : '.channel-start';
             $(this.element).children("span").css(
                 "border-color", "rgb(170,170,170)");
-            if ((is_start && value === this.channel.window.start) ||
-                (!is_start && value === this.channel.window.end)) return;
+            if (oldValue === value) return;
 
             if (is_start) this.channel.window.start = value;
             else this.channel.window.end = value;
@@ -419,11 +462,13 @@ export default class ChannelRange  {
                     [this.channel.window.start, this.channel.window.end]);
 
                 if (is_start) {
-                    $(this.element).find(otherClazz).spinner("option", "min", value+1);
+                    $(this.element).find(otherClazz).spinner(
+                        "option", "min", value + this.min_max_range.step_size);
                     $(this.element).find(".channel-slider").slider(
                         "option", "min", value < sliderMin ? value : sliderMin);
                 } else {
-                    $(this.element).find(otherClazz).spinner("option", "max", value-1);
+                    $(this.element).find(otherClazz).spinner(
+                        "option", "max", value - this.min_max_range.step_size);
                     $(this.element).find(".channel-slider").slider(
                         "option", "max",value > sliderMax ? value : sliderMax);
                 }
