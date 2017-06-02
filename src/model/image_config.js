@@ -20,7 +20,6 @@ import {noView} from 'aurelia-framework';
 import ImageInfo from '../model/image_info';
 import RegionsInfo from '../model/regions_info';
 import Misc from '../utils/misc';
-import {LUTS_NAMES, WEBGATEWAY} from '../utils/constants';
 import History from './history';
 
 /**
@@ -63,21 +62,6 @@ export default class ImageConfig extends History {
     regions_info = null;
 
     /**
-     * @memberof ImageConfig
-     * @type {Map}
-     */
-    luts = null;
-
-    /**
-     * @memberof ImageConfig
-     * @type {Object}
-     */
-    luts_png = {
-        url : '',
-        height : 0
-    }
-
-    /**
      * @constructor
      * @param {Context} context the application context
      * @param {number} image_id the image id to be queried
@@ -90,10 +74,6 @@ export default class ImageConfig extends History {
         // go create the data objects for an image and its associated region
         this.image_info = new ImageInfo(context, this.id, image_id, dataset_id);
         this.regions_info = new RegionsInfo(this.image_info)
-        // set luts png url
-        this.luts_png.url =
-            context.server + context.getPrefixedURI(WEBGATEWAY, true) +
-            '/img/luts_10.png';
     }
 
     /**
@@ -103,7 +83,6 @@ export default class ImageConfig extends History {
      * @memberof ImageConfig
      */
     bind() {
-        this.requestLookupTables();
         this.image_info.bind();
     }
 
@@ -133,66 +112,5 @@ export default class ImageConfig extends History {
      */
     changed() {
         this.revision++;
-    }
-
-    /**
-     * Retrieves the lookup tables via ajax
-     *
-     * @param {function} callback a callback for success
-     * @memberof ImageConfig
-     */
-    requestLookupTables(callback = null) {
-        if (this.luts) {
-            if (typeof callback === 'function') callback(this.luts);
-            return;
-        }
-        // determine the luts png height
-        let lutsPng = new Image();
-        lutsPng.onload = (e) => {
-            this.luts_png.height = e.target.naturalHeight;
-            this.changed();
-        }
-        lutsPng.src = this.luts_png.url;
-
-        // now query the luts list
-        let server = this.image_info.context.server;
-        let uri_prefix =  this.image_info.context.getPrefixedURI(WEBGATEWAY);
-        $.ajax(
-            {url : server + uri_prefix + "/luts/",
-            success : (response) => {
-                if (typeof response !== 'object' || response === null ||
-                    !Misc.isArray(response.luts)) return;
-
-                this.luts = new Map();
-                let i=0;
-                response.luts.map(
-                    (l) => {
-                        let idx = LUTS_NAMES.indexOf(l.name);
-                        let mapValue =
-                            Object.assign({
-                                nice_name :
-                                    l.name.replace(/.lut/g, "").replace(/_/g, " "),
-                                index : idx
-                            }, l);
-                        this.luts.set(mapValue.name, mapValue);
-                        if (idx >= 0) i++;
-                    });
-                if (typeof callback === 'function') callback(this.luts);
-            }
-        });
-    }
-
-    /**
-     * Queries whether a lut by the given name is in our map
-     *
-     * @param {string} name the lut name
-     * @param {boolean} true if the lut was found, false otherwise
-     * @memberof ImageConfig
-     */
-    hasLookupTableEntry(name) {
-        if (this.luts === null || typeof name !== 'string') return false;
-
-        let lut = this.luts.get(name);
-        return typeof lut === 'object';
     }
 }
