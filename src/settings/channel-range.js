@@ -196,7 +196,7 @@ export default class ChannelRange  {
                 this.lastUpdate = setTimeout(delayedUpdate, 100);
         }});
         channelRange.css("background", "white");
-        let isLut = imgConf.hasLookupTableEntry(this.channel.color);
+        let isLut = this.context.hasLookupTableEntry(this.channel.color);
         // change slider background
         this.setBackgroundAfterColorChange(isLut);
 
@@ -248,7 +248,7 @@ export default class ChannelRange  {
     */
     onColorChange(value) {
         let imgConf = this.context.getSelectedImageConfig();
-        let isLut = imgConf.hasLookupTableEntry(value);
+        let isLut = this.context.hasLookupTableEntry(value);
         let oldValue = this.channel.color;
         this.channel.color = isLut ? value : value.substring(1);
         // change slider background
@@ -284,11 +284,10 @@ export default class ChannelRange  {
      * @memberof ChannelRange
      */
     setBackgroundAfterColorChange(isLut) {
-        let conf = this.context.getSelectedImageConfig();
-        let height = conf.luts_png.height * 3;
+        let height = this.context.luts_png.height * 3;
         let blackGradientOffset = height - 29;
         let css = {
-            "background-image" : "url('" + conf.luts_png.url + "')",
+            "background-image" : "url('" + this.context.luts_png.url + "')",
             "background-size" : "100% " + height + "px",
             "background-repeat": "no-repeat",
             "background-position" : "0px -" + blackGradientOffset + "px",
@@ -304,7 +303,7 @@ export default class ChannelRange  {
             css['transform'] = "";
         };
         if (isLut) {
-            let idx = conf.luts.get(this.channel.color).index;
+            let idx = this.context.luts.get(this.channel.color).index;
             if (idx >= 0) idx = idx * 30 + 1;
             else idx = blackGradientOffset;
             css['background-position'] = "0px -" + idx + "px";

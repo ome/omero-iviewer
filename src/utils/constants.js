@@ -159,7 +159,13 @@ export const PERMISSION_TOOLTIPS = {
     CANNOT_DELETE: "No permission to delete"
 }
 
-/*
+/**
+ * the luts png url (relative to webgateway prefix)
+ * @type {string}
+ */
+export const LUTS_PNG_URL = '/img/luts_10.png';
+
+/**
  * luts list for pre-generated png
  * @type {Object}
  */
