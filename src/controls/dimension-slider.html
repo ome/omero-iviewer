@@ -27,9 +27,23 @@
              click.delegate="onArrowClick(-1)">
         </div>
         <span class='dim-current'>${image_config.image_info.dimensions[dim]+1}</span>
+        <span class="dim-projection
+                     ${player_info.handle !== null && player_info.dim === dim &&
+                       player_info.forwards ? 'disabled-color' : ''}"
+              title="${player_info.handle !== null && player_info.dim === dim &&
+                        player_info.forwards ? 'Projection disabled' :
+                            image_config.image_info.projection === 'intmax' ?
+                                'Turn off projection' : 'Turn on projection'}"
+              click.delegate="toggleProjection()">
+        </span>
         <div class="dim-arrows glyphicon
                 ${player_info.handle !== null && player_info.dim === dim &&
-                  player_info.forwards ? 'glyphicon-stop' : 'glyphicon-play'}"
+                  player_info.forwards ? 'glyphicon-stop' : 'glyphicon-play'}
+                ${image_config.image_info.projection === 'intmax' ?
+                    'disabled-color' : ''}"
+             title="${image_config.image_info.projection === 'intmax' ? 'Play disabled' :
+                    player_info.handle !== null && player_info.dim === dim &&
+                    player_info.forwards ? 'Stop' : 'Play'}"
              click.delegate="playDimension(true)">
         </div>
         <span class='dim-label'>${dim.toUpperCase()}</span>
@@ -40,6 +54,8 @@
         <div class="dim-arrows glyphicon
                 ${player_info.handle !== null && player_info.dim === dim &&
                   player_info.forwards ? 'glyphicon-stop' : 'glyphicon-play'}"
+              title="${player_info.handle !== null && player_info.dim === dim &&
+                player_info.forwards ? 'Stop' : 'Play'}"
              click.delegate="playDimension(true)">
         </div>
         <span class='dim-current'>${image_config.image_info.dimensions[dim]+1}</span>

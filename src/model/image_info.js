@@ -168,6 +168,16 @@ export default class ImageInfo {
     projection = "normal";
 
     /**
+     * the projection options (start/end)
+     * @memberof ImageInfo
+     * @type {Object}
+     */
+    projection_opts = {
+        start: 0,
+        end: 0
+    }
+
+    /**
      * model defaults to 'color'
      * @memberof ImageInfo
      * @type {string}
@@ -323,9 +333,27 @@ export default class ImageInfo {
         };
 
         // store projection and model
-        this.projection =
-            initialProjection !== null ?
-                initialProjection.toLowerCase() : response.rdefs.projection;
+        initialProjection =
+            Misc.parseProjectionParameter(
+                initialProjection !== null ?
+                    initialProjection.toLowerCase() :
+                    response.rdefs.projection);
+        this.projection = initialProjection.projection;
+        this.projection_opts = {
+            start:
+                typeof initialProjection.start === 'number' &&
+                initialProjection.start >= 0 &&
+                initialProjection.start < this.dimensions.max_z ?
+                    initialProjection.start : this.dimensions.z,
+            end:
+                typeof initialProjection.end === 'number' &&
+                initialProjection.end >= 0 &&
+                initialProjection.end < this.dimensions.max_z ?
+                    initialProjection.end : this.dimensions.max_z - 1
+        };
+        if (this.dimensions.max_z > 1 &&
+            this.projection_opts.start >= this.projection_opts.end)
+                this.projection_opts.start = this.projection_opts.end - 1;
         this.model = initialModel !== null ?
             initialModel.toLowerCase() : response.rdefs.model;
 

@@ -313,3 +313,39 @@ ome.ol3.utils.Misc.parseChannelParameters = function(channel_info, maps_info) {
 
     return ret;
 }
+
+/**
+ * Takes a string with projection information of the form 'normal or intmax|0:2'
+ * and returns an object containing the projection type as well as additional
+ * projection information such as start/end
+ *
+ * @static
+ * @function
+ * @param {string} projection_info a string containing the projection info
+ * @return {Object} an object containing the parsed projection info
+ */
+ome.ol3.utils.Misc.parseProjectionParameter = function(projection_info) {
+    var ret = {
+        projection: ome.ol3.PROJECTION['NORMAL']
+    };
+    if (typeof projection_info !== 'string' || projection_info.length === 0)
+        return ret;
+
+    var pipePos = projection_info.indexOf('|');
+    if (pipePos !== -1) {
+        ret.projection = projection_info.substring(0, pipePos);
+        var tokens = projection_info.substring(pipePos+1).split(":");
+        if (tokens.length === 2) {
+            ret.start = parseInt(tokens[0]);
+            ret.end = parseInt(tokens[1]);
+        }
+    } else ret.projection = projection_info;
+
+    // last sanity check before returning
+    if (ret.projection !== ome.ol3.PROJECTION['NORMAL'] &&
+       ret.projection !== ome.ol3.PROJECTION['INTMAX'] &&
+       ret.projection !== ome.ol3.PROJECTION['SPLIT'])
+            ret.projection = ome.ol3.PROJECTION['NORMAL'];
+
+    return ret;
+}

@@ -131,12 +131,22 @@ ome.ol3.source.Image = function(options) {
     this.split_ = typeof opts.split === 'boolean' ? opts.split : false;
 
     /**
+     * the omero image projection - optional params, e.g. start/end
+     * @type {Object}
+     * @private
+     */
+    this.projection_opts_ = {
+        'start': opts.img_proj.start,
+        'end': opts.img_proj.end
+    };
+
+    /**
      * the omero image projection
      * @type {string}
      * @private
      */
-    this.image_projection_ = "normal";
-    this.setImageProjection(opts.img_proj);
+    this.image_projection_ = opts.img_proj.projection;
+    this.setImageProjection(this.image_projection_, this.projection_opts_);
 
     /**
      * the omero image model (color: 'c' or greyscale: 'g')
@@ -273,7 +283,16 @@ ome.ol3.source.Image = function(options) {
             }
             url += "&maps=" + JSON.stringify(maps);
             url += '&m=' + this.image_model_;
-            url += '&p=' + (this.split_ ? 'split' : this.image_projection_);
+            url += '&p=' +
+                        (this.split_ ?
+                            ome.ol3.PROJECTION['SPLIT'] :
+                            this.image_projection_);
+            if (this.image_projection_ === ome.ol3.PROJECTION['INTMAX'] &&
+                typeof this.projection_opts_ === 'object' &&
+                this.projection_opts_ !== null) {
+                    url += '|' + this.projection_opts_.start +
+                           ':' + this.projection_opts_.end;
+            }
             url += '&q=0.9';
 
             return url;
@@ -433,15 +452,21 @@ ome.ol3.source.Image.prototype.setChannels = function(value) {
  * Acceptable values are "normal", "intmax"
  *
  * @param {string} value a string indicating the image projection
+ * @param {Object=} opts additional options, e.g. intmax projection start/end
  */
-ome.ol3.source.Image.prototype.setImageProjection = function(value) {
-    if (typeof value !== 'string' || value.length === 0 ||
-        (value.toLowerCase() !== 'normal' &&
-         value.toLowerCase() !== 'split' &&
-         value.toLowerCase() !== 'intmax')) return;
+ome.ol3.source.Image.prototype.setImageProjection = function(value, opts) {
+    if (typeof value !== 'string' || value.length === 0) return;
 
-    this.image_projection_ = value.toLowerCase();
-    this.forceRender();
+    try {
+        this.image_projection_ = ome.ol3.PROJECTION[value.toUpperCase()];
+        if (typeof opts === 'object' && typeof opts['start'] === 'number' &&
+            opts['start'] >= 0 && typeof opts['end'] === 'number' &&
+            opts['end'] >= 0 && opts['end'] > opts['start']) {
+                this.projection_opts_ =
+                    {start: opts['start'], end: opts['end']};
+        } else this.projection_opts_ = null;
+        this.forceRender();
+     } catch(not_found) {}
 }
 
 /**
@@ -509,7 +534,10 @@ ome.ol3.source.Image.prototype.changeChannelRange = function(ranges, rerender) {
 */
 ome.ol3.source.Image.prototype.captureImageSettings = function() {
     var ret = {
-        'projection' : this.image_projection_,
+        'projection' :
+            this.image_projection_ === ome.ol3.PROJECTION['INTMAX'] ?
+                (this.image_projection_ + '|' + this.projection_opts_.start +
+                ':' + this.projection_opts_.end) : this.image_projection_,
         'model' : this.image_model_,
         'channels' : [],
         'time' : this.time_,

@@ -20,10 +20,12 @@ require('../../node_modules/jquery-ui/themes/base/slider.css');
 
 import Context from '../app/context';
 import {inject,customElement, bindable, BindingEngine} from 'aurelia-framework';
+import Misc from '../utils/misc';
 import {slider} from 'jquery-ui/ui/widgets/slider';
 
 import {
-    IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY, EventSubscriber
+    IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY, IMAGE_SETTINGS_CHANGE,
+    EventSubscriber
 } from '../events/events';
 
 /**
@@ -62,11 +64,11 @@ export default class DimensionSlider {
     @bindable player_info = {dim: null, forwards: null, handle: null};
 
     /**
-     * Watches for dimension changes
+     * the property observers
      * @memberof DimensionSlider
      * @type {Object}
      */
-    observer = null;
+    observers = [];
 
     /**
      * the image info  observers
@@ -83,6 +85,13 @@ export default class DimensionSlider {
     last_player_start = null;
 
     /**
+     * we log selectively for projection
+     * @memberof DimensionSlider
+     * @type {boolean}
+     */
+    add_projection_history = false;
+
+    /**
      * @constructor
      * @param {Context} context the application context (injected)
      * @param {Element} element the associated dom element (injected)
@@ -95,6 +104,8 @@ export default class DimensionSlider {
     }
 
     playDimension(forwards) {
+        if (this.image_config.image_info.projection === 'intmax') return;
+
         let stop =
             this.player_info.dim !== null &&
             this.player_info.dim === this.dim &&
@@ -142,7 +153,7 @@ export default class DimensionSlider {
      */
     attached() {
         let imageDataReady = () => {
-            this.registerObserver();
+            this.registerObservers();
             this.initSlider();
         };
         // if the data is ready we initalize the viewer now,
@@ -173,11 +184,9 @@ export default class DimensionSlider {
      *
      * @memberof DimensionSlider
      */
-    unregisterObserver() {
-        if (this.observer) {
-            this.observer.dispose();
-            this.observer = null;
-        }
+    unregisterObservers() {
+        this.observers.map((o) => o.dispose());
+        this.observers = [];
         if (this.image_info_ready_observer) {
             this.image_info_ready_observer.dispose();
             this.image_info_ready_observer = null;
@@ -185,12 +194,12 @@ export default class DimensionSlider {
     }
 
     /**
-     * Registers the dimension property listener for dimension changes
+     * Registers the property observers
      *
      * @memberof DimensionSlider
      */
-    registerObserver() {
-        this.observer =
+    registerObservers() {
+        this.observers.push(
             this.bindingEngine.propertyObserver(
                 this.image_config.image_info.dimensions, this.dim)
                     .subscribe(
@@ -202,7 +211,22 @@ export default class DimensionSlider {
                                     {config_id: this.image_config.id,
                                      dim: this.dim,
                                      value: [newValue]});
-                        })
+                        }));
+        this.observers.push(
+            this.bindingEngine.propertyObserver(
+                this.image_config.image_info, 'projection')
+                    .subscribe(
+                        (newValue, oldValue) => {
+                            this.detached();
+                            this.initSlider(true);
+                        }));
+        this.observers.push(
+            this.bindingEngine.propertyObserver(
+                this.image_config.image_info, 'projection_opts')
+                    .subscribe(
+                        (newValue, oldValue) =>
+                            this.changeProjection(
+                                [newValue.start, newValue.end], false)));
     }
 
     /**
@@ -234,21 +258,34 @@ export default class DimensionSlider {
     /**
      * Initialize jquery slider
      *
+     * @param {boolean} toggle true if init was called after a projection toggle
      * @memberof DimensionSlider
      */
-    initSlider() {
+    initSlider(toggle=false) {
         let imgInf = this.image_config.image_info;
         // no slider for a 0 length dimension
         if (imgInf.dimensions['max_' + this.dim] <= 1) return;
 
         // create jquery slider
-        $(this.elSelector).slider({
+        let options = {
             orientation: this.dim === 'z' ? "vertical" : "horizontal",
             min: 0,
             max: imgInf.dimensions['max_' + this.dim] - 1 ,
-            step: 0.01, value: imgInf.dimensions[this.dim],
+            step: 0.01,
             slide: (event, ui) => {
                 if (this.player_info.handle !== null) return false;
+
+                // we don't allow min going past max and vice versa
+                // with 2 handles
+                if (Misc.isArray(ui.values)) {
+                    let idx =
+                        ui.values[0] === ui.value ? 0 :
+                            ui.values[1] === ui.value ? 1 : -1;
+                    if ((idx === 0 && ui.value >= ui.values[1]) ||
+                        (idx === 1 && ui.value <= ui.values[0]))
+                            return false;
+                }
+
                 if (typeof event.keyCode === 'number') {
                     let upKey =
                         (event.keyCode === 38 || event.keyCode === 39);
@@ -280,12 +317,81 @@ export default class DimensionSlider {
                 let sliderValueSpan = $(this.elSelector + ' .slider-value');
                 sliderValueSpan.text("");
                 sliderValueSpan.hide();
-                //$(this.elSelector).slider('value',  Math.round(ui.value));
-            },
-            change: (event, ui) => this.onChange(ui.value,
-                event.originalEvent ? true : false)
-        });
+            }
+        };
+
+        if (imgInf.projection === 'intmax') {
+            options.change =
+                (event, ui) => {
+                    if (event.originalEvent) {
+                        this.add_projection_history = true;
+                        this.changeProjection(ui.values);
+                    }
+                };
+            options.values = [
+                this.image_config.image_info.dimensions[this.dim],
+                this.image_config.image_info.dimensions['max_' + this.dim] - 1
+            ];
+            if (options.values[0] > options.values[1])
+                options.values[0]--;
+        } else {
+            options.value = imgInf.dimensions[this.dim];
+            options.change =
+                (event, ui) => this.onChange(ui.value,
+                                    event.originalEvent ? true : false);
+        }
+
+        $(this.elSelector).slider(options);
         $(this.element).show();
+        this.changeProjection(options.values, toggle);
+    }
+
+    /**
+     * Notifies the ol3-viewer of projection changes
+     *
+     * @param {Array.<number>} values an array of start/end for the projection
+     * @param {boolean} toggle true if called after projection toggle
+     * @memberof DimensionSlider
+     */
+    changeProjection(values, toggle=false) {
+        if (Misc.isArray(values)) {
+            values[0] = Math.round(parseFloat(values[0]));
+            values[1] = Math.round(parseFloat(values[1]));
+            let oldOpts =
+                Object.assign({}, this.image_config.image_info.projection_opts);
+            this.image_config.image_info.projection_opts.start = values[0];
+            this.image_config.image_info.projection_opts.end = values[1];
+            if (this.image_config.image_info.projection === 'intmax')
+                $(this.elSelector).slider("option", "values", values);
+            if (this.add_projection_history) {
+                let entries = [];
+                if (toggle) {
+                    let oldVal =
+                        this.image_config.image_info.projection === 'intmax' ?
+                            'normal' : 'intmax';
+                    entries.push({
+                        prop: ['image_info', 'projection'],
+                        old_val : oldVal,
+                        new_val: this.image_config.image_info.projection,
+                        type : "string"
+                    });
+                };
+                entries.push({
+                    prop: ['image_info', 'projection_opts'],
+                    old_val : oldOpts,
+                    new_val:
+                        Object.assign(
+                            {}, this.image_config.image_info.projection_opts),
+                    type : "object"
+                });
+                this.image_config.addHistory(entries);
+                this.add_projection_history = false;
+            };
+        };
+        this.context.publish(IMAGE_SETTINGS_CHANGE, {
+            config_id: this.image_config.id,
+            projection: this.image_config.image_info.projection
+        });
     }
 
     /**
@@ -307,7 +413,21 @@ export default class DimensionSlider {
      * @memberof DimensionSlider
      */
     unbind() {
-        this.unregisterObserver();
+        this.unregisterObservers();
         this.image_config = null;
+    }
+
+    /**
+     * Toggles between normal and intmax view
+     *
+     * @memberof DimensionSlider
+     */
+    toggleProjection() {
+        if (this.player_info.handle !== null) return;
+
+        this.add_projection_history = true;
+        this.image_config.image_info.projection =
+            this.image_config.image_info.projection === 'normal' ?
+                'intmax': 'normal';
     }
 }

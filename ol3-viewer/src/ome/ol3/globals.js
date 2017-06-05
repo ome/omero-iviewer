@@ -351,6 +351,20 @@ ome.ol3.RENDER_STATUS = {
 };
 
 /**
+ * Enum for Projection.
+ * @static
+ * @enum {string}
+ */
+ome.ol3.PROJECTION = {
+    /** normal **/
+    "NORMAL" : 'normal',
+    /** intmax **/
+    "INTMAX" : 'intmax',
+    /** split  **/
+    "SPLIT" : 'split'
+};
+
+/**
  * Limit for untiled image retrieval: 2K^2
  * @const
  * @type {number}
