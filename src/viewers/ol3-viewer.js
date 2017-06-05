@@ -878,7 +878,7 @@ export default class Ol3Viewer extends EventSubscriber {
             this.player_info.dim = null;
             this.player_info.forwards = null;
             this.player_info.handle = null;
-            this.image_config.history.undo_redo_enabled = true;
+            this.image_config.undo_redo_enabled = true;
             this.viewer.getRenderStatus(true);
         }).bind(this);
 
@@ -914,7 +914,7 @@ export default class Ol3Viewer extends EventSubscriber {
 
         this.player_info.dim = dim;
         this.player_info.forwards = forwards;
-        this.image_config.history.undo_redo_enabled = false;
+        this.image_config.undo_redo_enabled = false;
         this.player_info.handle =
             setInterval(
                 () => {

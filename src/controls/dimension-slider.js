@@ -329,8 +329,8 @@ export default class DimensionSlider {
                     }
                 };
             options.values = [
-                this.image_config.image_info.dimensions[this.dim],
-                this.image_config.image_info.dimensions['max_' + this.dim] - 1
+                this.image_config.image_info.projection_opts.start,
+                this.image_config.image_info.projection_opts.end
             ];
             if (options.values[0] > options.values[1])
                 options.values[0]--;

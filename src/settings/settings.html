@@ -39,12 +39,12 @@
 
     <div class="btn-group history">
         <button type="button" click.delegate="undo()"
-            disabled.bind="!(image_config.history.undo_redo_enabled &&
+            disabled.bind="!(image_config.undo_redo_enabled &&
                             image_config.history.length > 0 &&
                             image_config.historyPointer >= 0)"
             class="btn btn-default btn-sm">Undo</button>
         <button type="button" click.delegate="redo()"
-            disabled.bind="!(image_config.history.undo_redo_enabled &&
+            disabled.bind="!(image_config.undo_redo_enabled &&
                             image_config.history.length > 0 &&
                             image_config.historyPointer < image_config.history.length-1)"
             class="btn btn-default btn-sm">Redo</button>
