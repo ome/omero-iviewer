@@ -22,6 +22,7 @@ import Misc from '../utils/misc';
 import Ui from '../utils/ui';
 import {TABS} from '../utils/constants';
 import {REGIONS_STORE_SHAPES, REGIONS_SHOW_COMMENTS} from '../events/events';
+import {PROJECTION} from '../utils/constants';
 import {inject, customElement, bindable} from 'aurelia-framework';
 
 /**
@@ -30,6 +31,13 @@ import {inject, customElement, bindable} from 'aurelia-framework';
 @customElement('regions')
 @inject(Context)
 export default class Regions {
+    /**
+     * expose constant to template
+     * @memberof Regions
+     * @type {string}
+     */
+    SPLIT = PROJECTION.SPLIT;
+
     /**
      * a bound reference to regions_info
      * and its associated change handler

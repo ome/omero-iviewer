@@ -17,6 +17,7 @@
 //
 
 import {noView} from 'aurelia-framework';
+import {PROJECTION} from '../utils/constants'
 
 /**
  * A utility class with various static helper methods
@@ -211,7 +212,7 @@ export default class Misc {
      * @return {Object} an object containing the parsed projection info
      */
     static parseProjectionParameter(projection_info) {
-        let ret = {projection: 'normal'};
+        let ret = {projection: PROJECTION.NORMAL};
         if (typeof projection_info !== 'string' || projection_info.length === 0)
             return ret;
 
@@ -226,9 +227,10 @@ export default class Misc {
         } else ret.projection = projection_info;
 
         // last sanity check before returning
-        if (ret.projection !== 'normal' &&
-           ret.projection !== 'intmax' &&
-           ret.projection !== 'split') ret.projection = 'normal';
+        if (ret.projection !== PROJECTION.NORMAL &&
+           ret.projection !== PROJECTION.INTMAX &&
+           ret.projection !== PROJECTION.SPLIT)
+                ret.projection = PROJECTION.NORMAL;
 
         return ret;
     }

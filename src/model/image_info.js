@@ -19,7 +19,7 @@
 import {noView} from 'aurelia-framework';
 import Misc from '../utils/misc';
 import {
-    REQUEST_PARAMS, WEBGATEWAY, CHANNEL_SETTINGS_MODE, IVIEWER
+    CHANNEL_SETTINGS_MODE, IVIEWER, PROJECTION, REQUEST_PARAMS, WEBGATEWAY
 } from '../utils/constants'
 
 /**
@@ -165,7 +165,7 @@ export default class ImageInfo {
      * @memberof ImageInfo
      * @type {string}
      */
-    projection = "normal";
+    projection = PROJECTION.NORMAL;
 
     /**
      * the projection options (start/end)
@@ -380,11 +380,6 @@ export default class ImageInfo {
             case 'g': this.model = 'greyscale'; break;
             default: this.model = 'color';
         }
-        let lowerCaseProjection = this.projection.toLowerCase();
-        if (lowerCaseProjection !== 'normal' &&
-                lowerCaseProjection !== 'intmax' &&
-                lowerCaseProjection !== 'split')
-            this.projection = 'normal';
     }
 
     /**

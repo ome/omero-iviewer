@@ -32,16 +32,16 @@
                        player_info.forwards ? 'disabled-color' : ''}"
               title="${player_info.handle !== null && player_info.dim === dim &&
                         player_info.forwards ? 'Projection disabled' :
-                            image_config.image_info.projection === 'intmax' ?
+                            image_config.image_info.projection === INTMAX ?
                                 'Turn off projection' : 'Turn on projection'}"
               click.delegate="toggleProjection()">
         </span>
         <div class="dim-arrows glyphicon
                 ${player_info.handle !== null && player_info.dim === dim &&
                   player_info.forwards ? 'glyphicon-stop' : 'glyphicon-play'}
-                ${image_config.image_info.projection === 'intmax' ?
+                ${image_config.image_info.projection === INTMAX ?
                     'disabled-color' : ''}"
-             title="${image_config.image_info.projection === 'intmax' ? 'Play disabled' :
+             title="${image_config.image_info.projection === INTMAX ? 'Play disabled' :
                     player_info.handle !== null && player_info.dim === dim &&
                     player_info.forwards ? 'Stop' : 'Play'}"
              click.delegate="playDimension(true)">
