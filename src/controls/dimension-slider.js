@@ -211,7 +211,8 @@ export default class DimensionSlider {
                 this.image_config.image_info.dimensions, this.dim)
                     .subscribe(
                         (newValue, oldValue) => {
-                            $(this.elSelector).slider({value: newValue});
+                            $(this.elSelector).slider(
+                                'option', 'value', newValue);
                             // send out a dimension change notification
                             this.context.publish(
                                 IMAGE_DIMENSION_CHANGE,
@@ -336,11 +337,9 @@ export default class DimensionSlider {
                     }
                 };
             options.values = [
-                this.image_config.image_info.projection_opts.start,
-                this.image_config.image_info.projection_opts.end
+                imgInf.projection_opts.start,
+                imgInf.projection_opts.end
             ];
-            if (options.values[0] > options.values[1])
-                options.values[0]--;
         } else {
             options.value = imgInf.dimensions[this.dim];
             options.change =
@@ -362,36 +361,42 @@ export default class DimensionSlider {
      */
     changeProjection(values, toggle=false) {
         let conf = this.image_config;
+        let entries = [];
         if (Misc.isArray(values)) {
             values[0] = Math.round(parseFloat(values[0]));
             values[1] = Math.round(parseFloat(values[1]));
             let oldOpts = Object.assign({}, conf.image_info.projection_opts);
             conf.image_info.projection_opts.start = values[0];
             conf.image_info.projection_opts.end = values[1];
-            if (conf.image_info.projection === PROJECTION.INTMAX)
-                $(this.elSelector).slider("option", "values", values);
+            $(this.elSelector).slider("option", "values", values);
             if (this.add_projection_history) {
-                let entries = [];
                 if (toggle) {
-                    let oldVal =
-                        conf.image_info.projection === PROJECTION.INTMAX ?
-                            PROJECTION.NORMAL : PROJECTION.INTMAX;
                     entries.push({
                         prop: ['image_info', 'projection'],
-                        old_val : oldVal,
-                        new_val: conf.image_info.projection,
+                        old_val : PROJECTION.NORMAL,
+                        new_val: PROJECTION.INTMAX,
                         type : "string"
                     });
-                };
-                entries.push({
-                    prop: ['image_info', 'projection_opts'],
-                    old_val : oldOpts,
-                    new_val: Object.assign({}, conf.image_info.projection_opts),
-                    type : "object"
-                });
+                } else {
+                    entries.push({
+                        prop: ['image_info', 'projection_opts'],
+                        old_val : oldOpts,
+                        new_val: Object.assign({}, conf.image_info.projection_opts),
+                        type : "object"
+                    });
+                }
                 conf.addHistory(entries);
                 this.add_projection_history = false;
             };
+        } else if (toggle && this.add_projection_history) {
+            entries.push({
+                prop: ['image_info', 'projection'],
+                old_val : PROJECTION.INTMAX,
+                new_val: PROJECTION.NORMAL,
+                type : "string"
+            });
+            conf.addHistory(entries);
+            this.add_projection_history = false;
         };
         this.context.publish(IMAGE_SETTINGS_CHANGE, {
             config_id: conf.id, projection: conf.image_info.projection
@@ -429,9 +434,13 @@ export default class DimensionSlider {
     toggleProjection() {
         if (this.player_info.handle !== null) return;
 
+        let imgInf = this.image_config.image_info;
+        imgInf.projection_opts.start = imgInf.dimensions[this.dim];
+        imgInf.projection_opts.end = imgInf.dimensions['max_' + this.dim]-1;
+
         this.add_projection_history = true;
-        this.image_config.image_info.projection =
-            this.image_config.image_info.projection === PROJECTION.NORMAL ?
+        imgInf.projection =
+            imgInf.projection === PROJECTION.NORMAL ?
                 PROJECTION.INTMAX: PROJECTION.NORMAL;
     }
 }
