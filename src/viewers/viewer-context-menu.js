@@ -300,7 +300,7 @@ export default class ViewerContextMenu {
      * @memberof ViewerContextMenu
      */
     pasteShapes() {
-        this.image_config.regions_info.pasteShapes();
+        this.image_config.regions_info.pasteShapes(this.viewport_location);
         // hide context menu
         this.hideContextMenu();
         // prevent link click behavior

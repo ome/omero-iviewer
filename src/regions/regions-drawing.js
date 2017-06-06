@@ -260,8 +260,7 @@ export default class RegionsDrawing extends EventSubscriber {
             {
                 config_id : this.regions_info.image_info.config_id,
                 shapes : [newShape],
-                number : theDims.length,
-                random : false, theDims : theDims,
+                number : theDims.length, theDims : theDims,
                 hist_id : params.hist_id, roi_id: roi_id
             });
     }

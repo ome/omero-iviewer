@@ -180,6 +180,37 @@ ome.ol3.utils.Regions.featureFactory = function(shape_info) {
 };
 
 /**
+ * A helper method to scale text and labels
+ *
+ * @static
+ * @param {ol.Feature} feature the ol feature with its geometry and style
+ * @param {number} factor the scale factor that should be applied
+ */
+ome.ol3.utils.Regions.scaleTextAndLabels = function(feature, factor) {
+    if (!(feature instanceof ol.Feature) || typeof factor !== 'number') return;
+
+    var featureStyle = feature.getStyle();
+    if (!(featureStyle instanceof ol.style.Style) ||
+        !(featureStyle.getText() instanceof ol.style.Text) ||
+        typeof featureStyle.getText().getFont() !== 'string') return;
+
+    var tok = featureStyle.getText().getFont().split(" ");
+    if (tok.length === 3) {
+        var scaledFontSize = parseInt(tok[1]) * factor;
+        if (scaledFontSize < 10) scaledFontSize = 10;
+        featureStyle.getText().font_ =
+            tok[0] + " " + scaledFontSize + "px " + tok[2];
+        if (feature.getGeometry() instanceof ome.ol3.geom.Label) {
+            var resizedDims =
+                ome.ol3.utils.Style.measureTextDimensions(
+                    featureStyle.getText().getText(),
+                    featureStyle.getText().getFont(), null);
+            feature.getGeometry().resize(resizedDims);
+        }
+    }
+}
+
+/**
  * A helper method to generate a certain number of regions.
  *
  * <pre>
@@ -193,26 +224,24 @@ ome.ol3.utils.Regions.featureFactory = function(shape_info) {
  * @param {Object} shape_info the roi shape information (in 'get_rois_json' format )
  * @param {number} number the number of shapes that should be generated
  * @param {ol.Extent} extent the portion of the image used for generation (bbox format)
- * @param {boolean} random_placement should the shapes be generated in random places?
+ * @param {Array.<number>|null} position the position to place the shape(s) or null (meaning random placement)
+ * @param {number=} scale_factor an optional scale factor to apply
  * @return {Array<ol.Feature>|null} an array of open layers feature or null if something went wrong
  */
 ome.ol3.utils.Regions.generateRegions =
-    function(shape_info, number, extent, random_placement) {
+    function(shape_info, number, extent, position, scale_factor) {
         // sanity checks
+        if (!ome.ol3.utils.Misc.isArray(extent) || extent.length != 4 ||
+            typeof number !== 'number' || number <= 0) return;
+
         var lookedUpTypeFunction =
             ome.ol3.utils.Regions.lookupFeatureFunction(shape_info['type']);
         if (lookedUpTypeFunction == null) return null;
 
-        // we also need an extent to have an idea of placement
-        if (!ome.ol3.utils.Misc.isArray(extent) || extent.length != 4)
-            return null;
-
         // check if, at a minimum, we received style information to render the shapes
         ome.ol3.utils.Style.remedyStyleIfNecessary(shape_info);
-
         // check if, at a minimum, we received the essential information to construct the shape
-        ome.ol3.utils.Style.remedyShapeInfoIfNecessary(
-            shape_info, number, extent, random_placement);
+        ome.ol3.utils.Style.remedyShapeInfoIfNecessary(shape_info);
 
         // generate the prototype feature
         var prototypeFeature = ome.ol3.utils.Regions.featureFactory(shape_info);
@@ -221,66 +250,52 @@ ome.ol3.utils.Regions.generateRegions =
 
         var ret = []; // our return array
 
-        // all of this section deals with randomized placement and the
-        // adjustments that are necessary
-        if (random_placement) {
-            // get the bounding box for our prototype
-            var bboxPrototype = prototypeFeature.getGeometry().getExtent();
-            var bboxWidth = ol.extent.getWidth(bboxPrototype);
-            var bboxHeight = ol.extent.getHeight(bboxPrototype);
-
-            // can happen for lines
-            if (bboxHeight === 0) bboxHeight = 1;
-            if (bboxWidth === 0) bboxWidth = 1;
-
-            // check if the width/height exceeds our available extent
-            var availableWidth = ol.extent.getWidth(extent);
-            var availableHeight = ol.extent.getHeight(extent);
-            if (availableWidth === 0 || availableHeight === 0 ||
-                bboxWidth > availableWidth || bboxHeight > availableHeight) {
-                    var deltaWidth = bboxWidth - availableWidth;
-                var deltaHeight = bboxHeight - availableHeight;
-                var higherOfTheTwo =
-                    deltaWidth > deltaHeight ? deltaWidth : deltaHeight;
-                var scaleFactor =
-                    deltaWidth === higherOfTheTwo ?
-                        availableWidth / bboxWidth : availableHeight / bboxHeight;
-                prototypeFeature.getGeometry().scale(scaleFactor);
-                var prototypeStyle = prototypeFeature.getStyle();
-                if (prototypeStyle &&
-                    prototypeStyle.getText() instanceof ol.style.Text &&
-                    typeof prototypeStyle.getText().getFont() === 'string') {
-                        var tok = prototypeStyle.getText().getFont().split(" ");
-                        if (tok.length === 3) {
-                            var scaledFontSize = parseInt(tok[1]) * scaleFactor;
-                            if (scaledFontSize < 10) scaledFontSize = 10;
-                            prototypeStyle.getText().font_ =
-                                tok[0] + " " + scaledFontSize + "px " + tok[2];
-                            if (prototypeFeature.getGeometry()
-                                    instanceof ome.ol3.geom.Label) {
-                                var resizedDims =
-                                    ome.ol3.utils.Style.measureTextDimensions(
-                                        prototypeStyle.getText().getText(),
-                                        prototypeStyle.getText().getFont(), null);
-                                prototypeFeature.getGeometry().resize(resizedDims);
-                            }
-                        }
-                }
-                bboxWidth = parseInt(bboxWidth * scaleFactor) - 1;
-                bboxHeight = parseInt(bboxHeight * scaleFactor) - 1;
-                bboxPrototype = prototypeFeature.getGeometry().getExtent();
-            }
-
-            // we take our prototype to the top left corner of our available Extent
-            var upperLeftCornerOfPrototype = ol.extent.getTopLeft(bboxPrototype);
-            prototypeFeature.getGeometry().translate(
-                -upperLeftCornerOfPrototype[0], -upperLeftCornerOfPrototype[1]);
-            // We'd like to adjust our future extent for randomization purposes
-            // so that we are always going to be inside when we pick a random point
-            // for the upper left corner
-            extent =
-                [0,0,(availableWidth - bboxWidth), (availableHeight - bboxHeight)];
+        // if we have a scale factor, apply it now
+        if (typeof scale_factor === 'number') {
+            prototypeFeature.getGeometry().scale(scale_factor);
+            ome.ol3.utils.Regions.scaleTextAndLabels(
+                prototypeFeature, scale_factor);
         }
+
+        // get the bounding box for our prototype
+        var bboxPrototype = prototypeFeature.getGeometry().getExtent();
+        var bboxWidth = ol.extent.getWidth(bboxPrototype);
+        var bboxHeight = ol.extent.getHeight(bboxPrototype);
+
+        // can happen for lines
+        if (bboxHeight === 0) bboxHeight = 1;
+        if (bboxWidth === 0) bboxWidth = 1;
+
+        // check if the width/height exceeds our available extent still
+        var availableWidth = ol.extent.getWidth(extent);
+        var availableHeight = ol.extent.getHeight(extent);
+        if (availableWidth === 0 || availableHeight === 0 ||
+            bboxWidth > availableWidth || bboxHeight > availableHeight) {
+                var deltaWidth = bboxWidth - availableWidth;
+            var deltaHeight = bboxHeight - availableHeight;
+            var higherOfTheTwo =
+                deltaWidth > deltaHeight ? deltaWidth : deltaHeight;
+            var scaleFactor =
+                deltaWidth === higherOfTheTwo ?
+                    availableWidth / bboxWidth : availableHeight / bboxHeight;
+            prototypeFeature.getGeometry().scale(scaleFactor);
+            ome.ol3.utils.Regions.scaleTextAndLabels(
+                prototypeFeature, scaleFactor);
+            bboxWidth = parseInt(bboxWidth * scaleFactor) - 1;
+            bboxHeight = parseInt(bboxHeight * scaleFactor) - 1;
+            bboxPrototype = prototypeFeature.getGeometry().getExtent();
+        }
+
+        // we take our prototype to the top left corner of our available Extent
+        var upperLeftCornerOfPrototype = ol.extent.getTopLeft(bboxPrototype);
+        prototypeFeature.getGeometry().translate(
+            -upperLeftCornerOfPrototype[0], -upperLeftCornerOfPrototype[1]);
+        // We'd like to adjust our future extent for randomization purposes
+        // so that we are always going to be inside when we pick a random point
+        // for the upper left corner
+        var topLeftCornerOfExtent = ol.extent.getTopLeft(extent);
+        extent =
+            [0,0,(availableWidth - bboxWidth), (availableHeight - bboxHeight)];
 
         // the actual creation loop
         for (var n=0;n<number;n++) { // we want number instances of that type...
@@ -302,69 +317,21 @@ ome.ol3.utils.Regions.generateRegions =
             else newFeature.setId(shape_info['shape_id']); // state: added
                 newFeature['state'] = ome.ol3.REGIONS_STATE.ADDED;
 
-            // put us in a random location within the extent
-            if (random_placement) {
-                var randomTopLeftCorner =
-                    ome.ol3.utils.Regions.getRandomCoordinateWithinExtent(extent);
-                if (randomTopLeftCorner === null) break;
-
-                // we translate relative to our origin based on the randomized offset
+            // put us either in the desired position or a random location
+            var location = null;
+            if (!ome.ol3.utils.Misc.isArray(position) || position.length !== 2) {
                 newFeature.getGeometry().translate(
-                    randomTopLeftCorner[0], -randomTopLeftCorner[1]);
-            }
+                    topLeftCornerOfExtent[0], topLeftCornerOfExtent[1]);
+                location =
+                    ome.ol3.utils.Regions.getRandomCoordinateWithinExtent(extent);
+            } else location = position.slice();
+            newFeature.getGeometry().translate(location[0], location[1]);
 
             ret.push(newFeature);
         }
 
         return ret;
 };
-
-/**
- * Determines the row and column fits of objects of a certain width/height
- * given an extent and the number of overall objects to achieve
- * Do only call internally/with care since no sanity checks are applied any more
- *
- * @static
- * @private
- * @param {number} number the overall number of objects
- * @param {ol.Extent} extent the maximum extent for fitting
- * @param {number} width the width of one such object
- * @param {number} height the height of one such object
- * @return {Array.<number>} an object with properties fitsPerRow/fitsPerColumn
- */
-ome.ol3.utils.Regions.getFitsWithinExtent =
-    function(number, extent, width, height) {
-
-        if (width <= 0) width = 1;
-        if (height <= 0) height = 1;
-
-        var ret = {
-            "fitsPerRow" : parseInt(ol.extent.getWidth(extent) / width),
-            "fitsPerColumn" : parseInt(ol.extent.getHeight(extent) / height)
-        };
-        var ratio = number / (ret["fitsPerRow"] * ret["fitsPerColumn"]);
-        if (ratio > 1) {
-            // we cannot just align them next to each other, they will have to overlap
-            // we'll double the capacity of row/column iteratively to reach our desired
-            // number, which should not take long at all
-            while (ratio > 1) {
-                ret["fitsPerRow"] *= 2;
-                ret["fitsPerColumn"] *= 2;
-                ratio = number / (ret["fitsPerRow"] * ret["fitsPerColumn"]);
-            }
-            // let's determine the step size for a row/column based on the calculated fits...
-            ret['stepX'] = parseInt(ol.extent.getWidth(extent)  / ret['fitsPerRow']);
-            ret['stepY'] = parseInt(ol.extent.getHeight(extent) / ret['fitsPerColumn']);
-        } else {
-            if (ret['fitsPerRow'] >  number)
-                ret['stepX'] = parseInt(ol.extent.getWidth(extent)  / number);
-            else
-                ret['stepX'] = parseInt(ol.extent.getWidth(extent)  / ret['fitsPerRow']);
-                ret['stepY'] = parseInt(ol.extent.getHeight(extent)  / ret['fitsPerColumn']);
-        }
-
-        return ret;
-}
 
 
 /**
@@ -388,7 +355,7 @@ ome.ol3.utils.Regions.getRandomCoordinateWithinExtent = function(extent) {
     var randomY =
         Math.floor(Math.random() * (randomMax - randomMin + 1)) + randomMin;
 
-    return [randomX, randomY];
+    return [randomX, -randomY];
 }
 
 /**

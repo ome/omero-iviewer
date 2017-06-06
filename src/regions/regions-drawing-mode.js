@@ -130,7 +130,7 @@ export default class RegionsDrawingMode {
                          {
                              config_id: this.regions_info.image_info.config_id,
                              shapes: [shape],
-                             number : theDims.length, random : false,
+                             number : theDims.length,
                              roi_id: Converters.extractRoiAndShapeId(id).roi_id,
                              hist_id: hist_id,
                              theDims : theDims

@@ -101,7 +101,7 @@ ome.ol3.utils.Style.createFeatureStyle = function(shape_info, is_label, fill_in_
         font += (shape_info['FontStyle'] + " ");
     else if (fill_in_defaults) font += "normal ";
     if (typeof(shape_info['FontSize']) === 'object' &&
-        shape_info['FontSize'] !== 'null')
+        shape_info['FontSize'] !== null)
         font += (shape_info['FontSize']['Value'] + "px ");
     else if (fill_in_defaults) font += "10px ";
     if (typeof(shape_info['FontFamily']) === 'string')
@@ -624,28 +624,14 @@ ome.ol3.utils.Style.modifyStyles =
  * @static
  * @private
  * @param {Object} shape_info the roi shape information
- * @param {number} number the number of shapes that should be generated
- * @param {ol.Extent} extent the portion of the image used for generation (bbox format)
- * @param {boolean=} random_placement should the shapes be generated in random places?
  */
 ome.ol3.utils.Style.remedyShapeInfoIfNecessary =
-    function(shape_info, number, extent, random_placement) {
+    function(shape_info) {
         // no shape info, no good
         if (typeof(shape_info) !== 'object') return;
 
         if (typeof(shape_info['type']) !== 'string' ||
             shape_info['type'].length === 0) return;
-
-        // we also need an extent to have an idea of placement
-        if (!ome.ol3.utils.Misc.isArray(extent) || extent.length != 4)
-            return null;
-
-        // if no number has been given, we default to 1
-        if (typeof(number) !== 'number') number = 1;
-        if (number < 0) number = 1;
-
-        // random_placement is optional, we default to false
-        if (typeof(random_placement) !== 'boolean') random_placement = false;
 
         var type = shape_info['type'].toLowerCase();
         if (type === 'point') {
