@@ -197,16 +197,9 @@ export default class ChannelRange  {
                 this.full_range_min_max.end_max :
                 this.min_max_range.end_val < this.min_max_range.end_max ?
                     this.min_max_range.end_max : this.min_max_range.end_val;
-        if (this.min_max_range.step_size !== 1) {
-            // counteract jquery logic for max setting in some float cases
-            let jqueryCalculatedMax =
-                channelRangeMin +
-                Math.round((channelRangeMax - channelRangeMin) /
-                            this.min_max_range.step_size) *
-                this.min_max_range.step_size;
-            if (jqueryCalculatedMax > channelRangeMax)
-                channelRangeMax += this.min_max_range.step_size;
-        }
+        if (this.min_max_range.step_size !== 1)
+            channelRangeMax =
+                this.adjustCalculatedMax(channelRangeMin, channelRangeMax);
         channelRange.slider({
             min: channelRangeMin,
             max: channelRangeMax,
@@ -297,6 +290,28 @@ export default class ChannelRange  {
             appendTo: $(this.element).find('.channel-color'),
             change: (color) => this.onColorChange(color.toHexString())
         });
+    }
+
+    /**
+     * Adjusts max for floating point cases such that it does not end up being
+     * 1 step size under (after jquery corrects it internally for the slider)
+     *
+     * @private
+     * @param {number} range_min the minimum for the slider range
+     * @param {number} range_max the maximum for the slider range
+     * @return {number} the adjusted max range
+     * @memberof ChannelRange
+    */
+    adjustCalculatedMax(range_min, range_max) {
+        // counteract jquery logic for max setting in some float cases
+        let jqueryCalculatedMax =
+            range_min +
+            Math.round((range_max - range_min) /
+                        this.min_max_range.step_size) *
+            this.min_max_range.step_size;
+
+        return (jqueryCalculatedMax > range_max) ?
+                    range_max + this.min_max_range.step_size : range_max;
     }
 
     /**
@@ -458,6 +473,8 @@ export default class ChannelRange  {
             this.min_max_range.start_min : this.min_max_range.end_min;
         let sliderMax = is_start ?
             this.min_max_range.start_max : this.min_max_range.end_max;
+        if (!is_start && this.min_max_range.step_size !== 1)
+            sliderMax = this.adjustCalculatedMax(sliderMin, sliderMax);
 
         // clamp
         let exceededBounds = false;
