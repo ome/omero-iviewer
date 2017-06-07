@@ -20,8 +20,8 @@ import {EventAggregator} from 'aurelia-event-aggregator';
 import Misc from '../utils/misc';
 import ImageConfig from '../model/image_config';
 import {
-    API_PREFIX, IVIEWER, APP_NAME, LUTS_NAMES, LUTS_PNG_URL, PLUGIN_NAME,
-    PLUGIN_PREFIX, REQUEST_PARAMS, TABS, WEBCLIENT, WEBGATEWAY, URI_PREFIX
+    APP_NAME, IVIEWER, LUTS_NAMES, LUTS_PNG_URL, PLUGIN_NAME, PLUGIN_PREFIX,
+    REQUEST_PARAMS, TABS, URI_PREFIX, WEB_API_BASE, WEBCLIENT, WEBGATEWAY
 } from '../utils/constants';
 
 /**
@@ -62,14 +62,6 @@ export default class Context {
      * @type {string}
      */
     server = null;
-
-    /**
-     * api prefix
-     *
-     * @memberof Context
-     * @type {string}
-     */
-    api_prefix = 'api/v0/m/';
 
     /**
      * a list of potentially prefixes resources
@@ -302,12 +294,9 @@ export default class Context {
             typeof params[URI_PREFIX] === 'string' ?
                 Misc.prepareURI(params[URI_PREFIX]) : "";
         this.prefixed_uris.set(URI_PREFIX, prefix);
-        this.prefixed_uris.set(API_PREFIX, prefix + "/" + this.api_prefix);
-        let iViewerPrefixed = prefix + "/" + PLUGIN_NAME;
         this.prefixed_uris.set(IVIEWER, APP_NAME);
-        this.prefixed_uris.set(PLUGIN_PREFIX, iViewerPrefixed);
-        params[PLUGIN_PREFIX] = iViewerPrefixed;
-        [WEBGATEWAY, WEBCLIENT].map(
+        this.prefixed_uris.set(PLUGIN_PREFIX, prefix + "/" + PLUGIN_NAME);
+        [WEB_API_BASE, WEBGATEWAY, WEBCLIENT].map(
             (key) =>
                 this.prefixed_uris.set(
                     key, typeof params[key] === 'string' ? params[key] :

@@ -529,7 +529,8 @@ ome.ol3.utils.Regions.addMask = function(regions, shape_info) {
             source: new ol.source.ImageStatic({
                 attributions: null,
                 url: regions.viewer_.getServer()['full'] +
-                    '/webgateway/render_shape_mask/' +  shape_info['id'],
+                        regions.viewer_.getPrefixedURI(ome.ol3.WEBGATEWAY) +
+                        '/render_shape_mask/' +  shape_info['id'],
                     projection:
                     regions.viewer_.viewer_.getView().getProjection(),
                 imageExtent: [

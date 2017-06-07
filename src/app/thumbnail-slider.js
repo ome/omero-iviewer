@@ -21,7 +21,9 @@ import {inject,customElement, BindingEngine} from 'aurelia-framework';
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import UI from '../utils/ui';
-import {API_PREFIX, WEBCLIENT, WEBGATEWAY} from '../utils/constants';
+import {
+    DATASETS_REQUEST_URL, WEB_API_BASE, WEBCLIENT, WEBGATEWAY
+} from '../utils/constants';
 import {REGIONS_STORE_SHAPES, REGIONS_STORED_SHAPES} from '../events/events';
 import {THUMBNAILS_UPDATE, EventSubscriber} from '../events/events';
 
@@ -48,11 +50,11 @@ export default class ThumbnailSlider extends EventSubscriber {
     image_config = null;
 
     /**
-     * the api prefix for requests
+     * the web api base url for requests
      * @memberof ThumbnailSlider
      * @type {string}
      */
-    api_prefix = '';
+    web_api_base = '';
 
     /**
      * a possible gateway prefix for the urls
@@ -144,8 +146,8 @@ export default class ThumbnailSlider extends EventSubscriber {
         this.element = element;
         this.bindingEngine = bindingEngine;
 
-        // get prefixes
-        this.api_prefix = this.context.getPrefixedURI(API_PREFIX);
+        // get webgateway prefix and web api base
+        this.web_api_base = this.context.getPrefixedURI(WEB_API_BASE);
         this.gateway_prefix = this.context.getPrefixedURI(WEBGATEWAY);
     }
 
@@ -331,8 +333,8 @@ export default class ThumbnailSlider extends EventSubscriber {
             offset = 0;
         }
         let url =
-            this.context.server + this.api_prefix + "/datasets/" +
-            this.image_config.image_info.dataset_id + '/images/?offset=' +
+            this.context.server + this.web_api_base + DATASETS_REQUEST_URL +
+            '/' + this.image_config.image_info.dataset_id + '/images/?offset=' +
             offset + '&limit=' + limit;
 
         $.ajax(

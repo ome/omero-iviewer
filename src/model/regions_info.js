@@ -24,7 +24,8 @@ import {
     REGIONS_COPY_SHAPES, REGIONS_GENERATE_SHAPES, REGIONS_SET_PROPERTY
 } from '../events/events';
 import {
-    IVIEWER, REGIONS_DRAWING_MODE, REGIONS_MODE
+    IVIEWER, REGIONS_DRAWING_MODE, REGIONS_MODE, REGIONS_REQUEST_URL,
+    WEB_API_BASE
 } from '../utils/constants';
 
 /**
@@ -250,13 +251,13 @@ export default class RegionsInfo  {
         // send request
         $.ajax({
             url : this.image_info.context.server +
-                  this.image_info.context.getPrefixedURI(IVIEWER) +
-                  "/request_rois/" + this.image_info.image_id + '/',
+                  this.image_info.context.getPrefixedURI(WEB_API_BASE) +
+                  REGIONS_REQUEST_URL + '/?image=' + this.image_info.image_id,
             success : (response) => {
                 this.is_pending = false;
                 try {
                     let count = 0;
-                    response.map((roi) => {
+                    response.data.map((roi) => {
                         let shapes = new Map();
 
                         // set shape properties and store the object

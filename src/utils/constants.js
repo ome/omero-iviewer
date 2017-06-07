@@ -29,10 +29,22 @@ export const APP_NAME = 'iviewer';
 export const PLUGIN_NAME = 'omero_iviewer';
 
 /**
- * a convenience string lookup for API_PREFIX
+ * a convenience string lookup for WEB_API_BASE
  * @type {string}
  */
-export const API_PREFIX = "API_PREFIX";
+export const WEB_API_BASE = "WEB_API_BASE";
+
+/**
+ * the datasets request url (relative to WEB_API_BASE)
+ * @type {string}
+ */
+export const DATASETS_REQUEST_URL = "/m/datasets";
+
+/**
+ * the regions request url (relative to WEB_API_BASE)
+ * @type {string}
+ */
+export const REGIONS_REQUEST_URL = "/m/rois";
 
 /**
  * a convenience string lookup for URI_PREFIX
