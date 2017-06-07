@@ -20,8 +20,8 @@ import {EventAggregator} from 'aurelia-event-aggregator';
 import Misc from '../utils/misc';
 import ImageConfig from '../model/image_config';
 import {
-    APP_NAME, IVIEWER, PLUGIN_NAME, PLUGIN_PREFIX, REQUEST_PARAMS, TABS,
-    URI_PREFIX, WEB_API_BASE, WEBCLIENT, WEBGATEWAY
+    APP_NAME, IVIEWER, LUTS_NAMES, LUTS_PNG_URL, PLUGIN_NAME, PLUGIN_PREFIX,
+    REQUEST_PARAMS, TABS, URI_PREFIX, WEB_API_BASE, WEBCLIENT, WEBGATEWAY
 } from '../utils/constants';
 
 /**
