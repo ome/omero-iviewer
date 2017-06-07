@@ -330,4 +330,16 @@ export default class Misc {
     static isApple() {
         return (new RegExp('Mac|iPod|iPhone|iPad')).test(navigator.platform);
     }
+
+    /**
+     * Returns the rounded float
+     *
+     * @param {string} value the numeric value to round
+     * @param {number} digits the number of digits
+     * @return {number} the rounded number
+     * @static
+     */
+    static roundAtDecimal(value, digits) {
+        return Number(Math.round(value +'e' + digits) + 'e-' + digits);
+    }
 }
