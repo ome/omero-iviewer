@@ -2005,12 +2005,14 @@ ome.ol3.Viewer.prototype.getRenderStatus = function(reset) {
  * @param {boolean} smoothing if true the viewer uses smoothing, otherwise not
  */
 ome.ol3.Viewer.prototype.enableSmoothing = function(smoothing) {
-    this.viewer_.on('precompose', function(e) {
-      e.context['imageSmoothingEnabled'] = smoothing;
-      e.context['webkitImageSmoothingEnabled'] = smoothing;
-      e.context['mozImageSmoothingEnabled'] = smoothing;
-      e.context['msImageSmoothingEnabled'] = smoothing;
+    this.viewer_.once('precompose', function(e) {
+        e.context['imageSmoothingEnabled'] = smoothing;
+        e.context['webkitImageSmoothingEnabled'] = smoothing;
+        e.context['mozImageSmoothingEnabled'] = smoothing;
+        e.context['msImageSmoothingEnabled'] = smoothing;
     });
+
+    // force rerender
     this.viewer_.updateSize();
 }
 

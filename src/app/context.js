@@ -96,6 +96,12 @@ export default class Context {
      selected_tab = TABS.SETTINGS;
 
      /**
+      * should interpolation should be used for image rendering?
+      * @type {boolean}
+      */
+     interpolate = true;
+
+     /**
       * application wide keyhandlers.
       * see addKeyListener/removeKeyListener
       * entries in the map are of the following format

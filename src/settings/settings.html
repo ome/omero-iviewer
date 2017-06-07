@@ -76,10 +76,20 @@
             Show Histogram
             </label>
         </div>
+        <div>
+            <label>
+                <input type="checkbox"
+                    checked.one-way="context.interpolate"
+                    disabled.bind="!(image_config && image_config.image_info &&
+                                     image_config.image_info.ready)"
+                    change.delegate="toggleInterpolation($event)" />
+               Interpolate
+           </label>
+        </div>
     </div>
 
     <div show.bind="image_config.image_info.ready &&
-                    !image_config.image_info.tiled && 
+                    !image_config.image_info.tiled &&
                     histogram && histogram.visible" class="row">
         <div class="histogram"></div>
     </div>
