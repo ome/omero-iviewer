@@ -61,6 +61,13 @@ export default class ChannelRange  {
     @bindable index = null;
 
     /**
+     * the mode
+     * @memberof ChannelRange
+     * @type {number}
+     */
+    @bindable mode = null;
+
+    /**
      * the channel's full range (min,max)
      * @memberof ChannelRange
      * @type {number}
@@ -180,15 +187,29 @@ export default class ChannelRange  {
 
         // channel range slider
         let channelRange = $(this.element).find(".channel-slider");
-        channelRange.slider({
-            min: this.mode === CHANNEL_SETTINGS_MODE.FULL_RANGE ?
+        let channelRangeMin =
+            this.mode === CHANNEL_SETTINGS_MODE.FULL_RANGE ?
                 this.full_range_min_max.start_min :
-                    this.min_max_range.start_val > this.min_max_range.start_min ?
-                        this.min_max_range.start_min : this.min_max_range.start_val,
-            max: this.mode === CHANNEL_SETTINGS_MODE.FULL_RANGE ?
+                this.min_max_range.start_val > this.min_max_range.start_min ?
+                    this.min_max_range.start_min : this.min_max_range.start_val;
+        let channelRangeMax =
+            this.mode === CHANNEL_SETTINGS_MODE.FULL_RANGE ?
                 this.full_range_min_max.end_max :
-                    this.min_max_range.end_val < this.min_max_range.end_max ?
-                        this.min_max_range.end_max : this.min_max_range.end_val,
+                this.min_max_range.end_val < this.min_max_range.end_max ?
+                    this.min_max_range.end_max : this.min_max_range.end_val;
+        if (this.min_max_range.step_size !== 1) {
+            // counteract jquery logic for max setting in some float cases
+            let jqueryCalculatedMax =
+                channelRangeMin +
+                Math.round((channelRangeMax - channelRangeMin) /
+                            this.min_max_range.step_size) *
+                this.min_max_range.step_size;
+            if (jqueryCalculatedMax > channelRangeMax)
+                channelRangeMax += this.min_max_range.step_size;
+        }
+        channelRange.slider({
+            min: channelRangeMin,
+            max: channelRangeMax,
             step: this.min_max_range.step_size,
             range: true,
             values: [this.min_max_range.start_val, this.min_max_range.end_val],
@@ -198,16 +219,18 @@ export default class ChannelRange  {
                     clearTimeout(this.lastUpdate);
                     this.lastUpdate = null;
                 }
-                this.onRangeChangeBoth(ui.values,
+                this.onRangeChangeBoth(ui,
                     event.originalEvent ? true : false);
             }, slide: (event,ui) => {
                 if (ui.values[0] >= ui.values[1]) return false;
 
-                // adjust value in input fields instantly
-                $(this.element).find(".channel-start").spinner(
-                    "value", ui.values[0]);
-                $(this.element).find(".channel-end").spinner(
-                    "value", ui.values[1]);
+                // adjust value in respective input field
+                if (ui.value === ui.values[0])
+                    $(this.element).find(".channel-start").spinner(
+                        "value", ui.values[0]);
+                if (ui.value === ui.values[1])
+                    $(this.element).find(".channel-end").spinner(
+                        "value", ui.values[1]);
 
                 let imgConf = this.context.getSelectedImageConfig();
                 if (imgConf.image_info.tiled) return true;
@@ -360,11 +383,12 @@ export default class ChannelRange  {
     /**
      * channel range change handler for changing start and end
      *
-     * @param {Array.<number>} values the new value
+     * @param {Object} ui the jquery ui object (with values)
      * @param {boolean} ui_triggered was triggered by ui interaction
      * @memberof ChannelRange
     */
-    onRangeChangeBoth(values, ui_triggered=false) {
+    onRangeChangeBoth(ui, ui_triggered=false) {
+        let values = ui.values;
         if (!ui_triggered || !Misc.isArray(values)) return;
 
         if (this.min_max_range.step_size !== 1) {
@@ -374,7 +398,7 @@ export default class ChannelRange  {
                 values[1],this.FLOATING_POINT_PRECISION);
         }
 
-        let startManipulated = this.channel.window.start !== values[0];
+        let startManipulated = ui.value === ui.values[0];
         if (startManipulated) {
             if (values[0] >= values[1]) {
                 values[0] = values[1] - this.min_max_range.step_size;
