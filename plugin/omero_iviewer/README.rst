@@ -13,7 +13,7 @@ An OMERO.web app for visualizing images in OMERO.
 Requirements
 ============
 
-* OMERO 5.3.0 or newer.
+* OMERO 5.3.2 or newer.
 
 
 Installing from PyPI
