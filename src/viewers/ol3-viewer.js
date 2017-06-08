@@ -27,7 +27,7 @@ import Ui from '../utils/ui';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {ol3} from '../../libs/ol3-viewer.js';
 import {
-    IVIEWER, PLUGIN_PREFIX, REGIONS_DRAWING_MODE, RENDER_STATUS,
+    IVIEWER, PLUGIN_PREFIX, PROJECTION, REGIONS_DRAWING_MODE, RENDER_STATUS,
     VIEWER_ELEMENT_PREFIX
 } from '../utils/constants';
 import {
@@ -567,6 +567,10 @@ export default class Ol3Viewer extends EventSubscriber {
         let add = true;
         let unattached = [];
         switch (this.image_config.regions_info.drawing_mode) {
+            case REGIONS_DRAWING_MODE.PRESENT_Z_AND_T:
+                if (this.image_config.image_info.projection === PROJECTION.INTMAX)
+                    unattached.push('z');
+                break;
             case REGIONS_DRAWING_MODE.NEITHER_Z_NOR_T:
                 unattached = ['z', 't'];
                 break;
