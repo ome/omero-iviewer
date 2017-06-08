@@ -478,11 +478,7 @@ ome.ol3.source.Regions.prototype.setRotateText = function(rotateText) {
 
 /**
  * We override the standard implementation to control which features are being
- * rendered. We filter taking into account the following criteria:
- * - visibility
- * - deleted
- * - presently showing z/t/c (incl. unattached)
- * - (potential) projection range (z)
+ * rendered.
  *
  * @param {ol.Extent} extent Extent.
  * @param {function} callback for each feature in extent
@@ -491,44 +487,57 @@ ome.ol3.source.Regions.prototype.setRotateText = function(rotateText) {
  */
 ome.ol3.source.Regions.prototype.forEachFeatureInExtent =
     function(extent, callback, opt_this) {
-
-    return this.featuresRtree_.forEachInExtent(extent, function(feature) {
-        var projection =  this.viewer_.getImage().image_projection_;
-        if (projection === ome.ol3.PROJECTION['SPLIT']) return;
-
-        var visible =
-            typeof(feature['visible']) !== 'boolean' || feature['visible'];
-        var deleted =
-            typeof feature['state'] === 'number' &&
-                feature['state'] === ome.ol3.REGIONS_STATE.REMOVED;
-
-        var shapeT = typeof feature['TheT'] === 'number' ? feature['TheT'] : -1;
-        var shapeZ = typeof feature['TheZ'] === 'number' ? feature['TheZ'] : -1;
-        var shapeC = typeof feature['TheC'] === 'number' ? feature['TheC'] : -1;
-        var viewerT = this.viewer_.getDimensionIndex('t');
-        var viewerZ = this.viewer_.getDimensionIndex('z');
-        var viewerCs = this.viewer_.getDimensionIndex('c');
-
-        // show only shapes that match the dimensions or are unattached
-        // for projection the shapes have to be unattached or be within the
-        // projection range
-        var belongsToDimension = true;
-        var excludeZ = function() {
-            if (projection === ome.ol3.PROJECTION['INTMAX']) {
-                var projectionBounds = this.viewer_.getImage().projection_opts_;
-                var lowerBoundZ = projectionBounds ? projectionBounds['start'] : viewerZ;
-                var upperBoundZ = projectionBounds ? projectionBounds['end'] : viewerZ;
-                return (shapeZ < lowerBoundZ || shapeZ > upperBoundZ);
-            } else return (shapeZ !== -1 && shapeZ !== viewerZ);
-        }.bind(this);
-        if ((shapeC !== -1 && viewerCs.indexOf(shapeC) === -1) ||
-            (shapeT !== -1 && shapeT !== viewerT) || excludeZ())
-                belongsToDimension = false;
-
-        if (visible && !deleted && belongsToDimension)
-            callback.call(this, feature);
-    }, this);
+        return this.featuresRtree_.forEachInExtent(extent, function(feature) {
+            if (this.renderFeature(feature)) callback.call(this, feature);
+        }, this);
 };
+
+/**
+ * This method decides whether a feature is being rendered or not
+ * using the following criteria
+ * - visibility
+ * - deleted
+ * - presently showing z/t/c (incl. unattached)
+ * - (potential) projection range (z)
+ *
+ * @param {ol.Feature} feature an instance of ol.Feature
+ * @return {boolean} true if the feature fulfills the criteria to be rendered
+ */
+ome.ol3.source.Regions.prototype.renderFeature = function(feature) {
+    var projection =  this.viewer_.getImage().image_projection_;
+    if (projection === ome.ol3.PROJECTION['SPLIT']) return false;
+
+    var visible =
+        typeof(feature['visible']) !== 'boolean' || feature['visible'];
+    var deleted =
+        typeof feature['state'] === 'number' &&
+            feature['state'] === ome.ol3.REGIONS_STATE.REMOVED;
+
+    var shapeT = typeof feature['TheT'] === 'number' ? feature['TheT'] : -1;
+    var shapeZ = typeof feature['TheZ'] === 'number' ? feature['TheZ'] : -1;
+    var shapeC = typeof feature['TheC'] === 'number' ? feature['TheC'] : -1;
+    var viewerT = this.viewer_.getDimensionIndex('t');
+    var viewerZ = this.viewer_.getDimensionIndex('z');
+    var viewerCs = this.viewer_.getDimensionIndex('c');
+
+    // show only shapes that match the dimensions or are unattached
+    // for projection the shapes have to be unattached or be within the
+    // projection range
+    var belongsToDimension = true;
+    var excludeZ = function() {
+        if (projection === ome.ol3.PROJECTION['INTMAX']) {
+            var projectionBounds = this.viewer_.getImage().projection_opts_;
+            var lowerBoundZ = projectionBounds ? projectionBounds['start'] : viewerZ;
+            var upperBoundZ = projectionBounds ? projectionBounds['end'] : viewerZ;
+            return (shapeZ < lowerBoundZ || shapeZ > upperBoundZ);
+        } else return (shapeZ !== -1 && shapeZ !== viewerZ);
+    }.bind(this);
+    if ((shapeC !== -1 && viewerCs.indexOf(shapeC) === -1) ||
+        (shapeT !== -1 && shapeT !== viewerT) || excludeZ())
+            belongsToDimension = false;
+
+    return (visible && !deleted && belongsToDimension);
+}
 
 /**
  * Persists modified/added shapes

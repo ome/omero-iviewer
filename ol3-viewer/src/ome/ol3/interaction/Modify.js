@@ -96,16 +96,9 @@ goog.inherits(ome.ol3.interaction.Modify, ol.interaction.Modify);
  */
 ome.ol3.interaction.Modify.prototype.handleFeatureAdd_ = function(evt) {
     var feature = evt.element;
-    var theT = this.regions_.viewer_.getDimensionIndex('t');
-    var theZ = this.regions_.viewer_.getDimensionIndex('z');
-    var featureT = feature['TheT'];
-    var featureZ = feature['TheZ'];
 
-    if ((typeof feature['visible'] === 'boolean' && !feature['visible']) ||
-         (typeof feature['state'] === 'number' &&
-            feature['state'] === ome.ol3.REGIONS_STATE.REMOVED) ||
-         (featureT !== -1 && featureT !== theT) ||
-         (featureZ !== -1 && featureZ !== theZ) ||
+    var renderFeature = this.regions_.renderFeature(feature);
+    if (!renderFeature ||
          (typeof feature['permissions'] === 'object' &&
             feature['permissions'] !== null &&
             typeof feature['permissions']['canEdit'] === 'boolean' &&
