@@ -529,7 +529,7 @@ ome.ol3.source.Regions.prototype.renderFeature = function(feature) {
             var projectionBounds = this.viewer_.getImage().projection_opts_;
             var lowerBoundZ = projectionBounds ? projectionBounds['start'] : viewerZ;
             var upperBoundZ = projectionBounds ? projectionBounds['end'] : viewerZ;
-            return (shapeZ < lowerBoundZ || shapeZ > upperBoundZ);
+            return (shapeZ !== -1 && (shapeZ < lowerBoundZ || shapeZ > upperBoundZ));
         } else return (shapeZ !== -1 && shapeZ !== viewerZ);
     }.bind(this);
     if ((shapeC !== -1 && viewerCs.indexOf(shapeC) === -1) ||
