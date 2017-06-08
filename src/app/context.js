@@ -294,7 +294,7 @@ export default class Context {
             typeof params[URI_PREFIX] === 'string' ?
                 Misc.prepareURI(params[URI_PREFIX]) : "";
         this.prefixed_uris.set(URI_PREFIX, prefix);
-        this.prefixed_uris.set(IVIEWER, APP_NAME);
+        this.prefixed_uris.set(IVIEWER, prefix + "/" + APP_NAME);
         this.prefixed_uris.set(PLUGIN_PREFIX, prefix + "/" + PLUGIN_NAME);
         [WEB_API_BASE, WEBGATEWAY, WEBCLIENT].map(
             (key) =>
