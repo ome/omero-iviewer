@@ -461,7 +461,7 @@ ome.ol3.source.Image.prototype.setImageProjection = function(value, opts) {
         this.image_projection_ = ome.ol3.PROJECTION[value.toUpperCase()];
         if (typeof opts === 'object' && typeof opts['start'] === 'number' &&
             opts['start'] >= 0 && typeof opts['end'] === 'number' &&
-            opts['end'] >= 0 && opts['end'] > opts['start']) {
+            opts['end'] >= 0 && opts['end'] >= opts['start']) {
                 this.projection_opts_ =
                     {start: opts['start'], end: opts['end']};
         } else this.projection_opts_ = null;

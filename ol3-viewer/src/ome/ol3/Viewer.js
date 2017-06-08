@@ -1803,6 +1803,9 @@ ome.ol3.Viewer.prototype.changeImageProjection = function(value, opts) {
     if (this.getImage() === null) return;
 
     this.getImage().setImageProjection(value, opts);
+
+    // update regions (if necessary)
+    if (this.getRegionsLayer()) this.getRegions().changed();
 }
 
 /**

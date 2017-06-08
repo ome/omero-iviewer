@@ -477,8 +477,12 @@ ome.ol3.source.Regions.prototype.setRotateText = function(rotateText) {
 }
 
 /**
- * This method determines which features are seen. We overrided the standard
- * implementation to cater for t,p,c visible and removed constraints
+ * We override the standard implementation to control which features are being
+ * rendered. We filter taking into account the following criteria:
+ * - visibility
+ * - deleted
+ * - presently showing z/t/c (incl. unattached)
+ * - (potential) projection range (z)
  *
  * @param {ol.Extent} extent Extent.
  * @param {function} callback for each feature in extent
@@ -489,29 +493,37 @@ ome.ol3.source.Regions.prototype.forEachFeatureInExtent =
     function(extent, callback, opt_this) {
 
     return this.featuresRtree_.forEachInExtent(extent, function(feature) {
-        // here we filter for t,z and c (if applicable)
-        // and deleted flag or whether wie are invisible
+        var projection =  this.viewer_.getImage().image_projection_;
+        if (projection === ome.ol3.PROJECTION['SPLIT']) return;
+
         var visible =
             typeof(feature['visible']) !== 'boolean' || feature['visible'];
         var deleted =
             typeof feature['state'] === 'number' &&
                 feature['state'] === ome.ol3.REGIONS_STATE.REMOVED;
-        var belongsToDimension = true;
 
-        var viewerT = this.viewer_.getDimensionIndex('t');
-        var viewerZ = this.viewer_.getDimensionIndex('z');
-        var viewerCs = this.viewer_.getDimensionIndex('c');
         var shapeT = typeof feature['TheT'] === 'number' ? feature['TheT'] : -1;
         var shapeZ = typeof feature['TheZ'] === 'number' ? feature['TheZ'] : -1;
         var shapeC = typeof feature['TheC'] === 'number' ? feature['TheC'] : -1;
+        var viewerT = this.viewer_.getDimensionIndex('t');
+        var viewerZ = this.viewer_.getDimensionIndex('z');
+        var viewerCs = this.viewer_.getDimensionIndex('c');
 
-        // whenever we have a dimension that the shape belongs but doesn't
-        // correspond with the viewer's present settings
-        // we will not include it in the results
+        // show only shapes that match the dimensions or are unattached
+        // for projection the shapes have to be unattached or be within the
+        // projection range
+        var belongsToDimension = true;
+        var excludeZ = function() {
+            if (projection === ome.ol3.PROJECTION['INTMAX']) {
+                var projectionBounds = this.viewer_.getImage().projection_opts_;
+                var lowerBoundZ = projectionBounds ? projectionBounds['start'] : viewerZ;
+                var upperBoundZ = projectionBounds ? projectionBounds['end'] : viewerZ;
+                return (shapeZ < lowerBoundZ || shapeZ > upperBoundZ);
+            } else return (shapeZ !== -1 && shapeZ !== viewerZ);
+        }.bind(this);
         if ((shapeC !== -1 && viewerCs.indexOf(shapeC) === -1) ||
-                (shapeT !== -1 && shapeT !== viewerT) ||
-                (shapeZ !== -1 && shapeZ !== viewerZ))
-                    belongsToDimension = false;
+            (shapeT !== -1 && shapeT !== viewerT) || excludeZ())
+                belongsToDimension = false;
 
         if (visible && !deleted && belongsToDimension)
             callback.call(this, feature);
