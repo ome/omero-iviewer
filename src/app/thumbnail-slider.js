@@ -22,7 +22,7 @@ import Context from '../app/context';
 import Misc from '../utils/misc';
 import UI from '../utils/ui';
 import {
-    DATASETS_REQUEST_URL, WEB_API_BASE, WEBCLIENT, WEBGATEWAY
+    DATASETS_REQUEST_URL, INITIAL_TYPES, WEB_API_BASE, WEBCLIENT, WEBGATEWAY
 } from '../utils/constants';
 import {REGIONS_STORE_SHAPES, REGIONS_STORED_SHAPES} from '../events/events';
 import {THUMBNAILS_UPDATE, EventSubscriber} from '../events/events';
@@ -180,7 +180,7 @@ export default class ThumbnailSlider extends EventSubscriber {
         // swap out selected image config
         this.image_config = this.context.getSelectedImageConfig();
 
-        if (this.initialized) {
+        if (this.image_config !== null && this.initialized) {
             // scroll to image thumb
             UI.scrollContainer(
                 'img-thumb-' + this.image_config.image_info.image_id,
@@ -191,16 +191,14 @@ export default class ThumbnailSlider extends EventSubscriber {
 
         // ready handler
         let imageInfoReady = () => {
+            this.initializeThumbnails();
             this.initialized = true;
-            if (typeof this.image_config.image_info.dataset_id
-                    !== 'number') this.hideMe();
-            else this.gatherThumbnailMetaInfo(
-                    this.image_config.image_info.image_id);
             this.unregisterObservers(true);
         };
 
         // we don't have a dataset id
-        if (typeof this.image_config.image_info.dataset_id !== 'number') {
+        if (this.context.initial_type === INITIAL_TYPES.IMAGE &&
+            this.image_config.image_info.dataset_id !== 'number') {
             // have we had all the data already
             if (this.image_config.image_info.ready) {
                 // too bad, no dataset id
@@ -247,6 +245,29 @@ export default class ThumbnailSlider extends EventSubscriber {
         this.unregisterObservers();
     }
 
+    /**
+     * Initializes thumbnail data depending on what initial type we are
+     *
+     * @memberof ThumbnailSlider
+     */
+    initializeThumbnails() {
+        // standard case: we are an image
+        if (this.context.initial_type === INITIAL_TYPES.IMAGE) {
+            // if we don't have a dataset id we hide everything
+            // otherwise we delegate to get all the thumbnails for the dataset
+            if (typeof this.image_config.image_info.dataset_id !== 'number')
+                this.hideMe();
+            else this.gatherThumbnailMetaInfo(
+                    this.image_config.image_info.image_id);
+            return;
+        }
+
+        // we are a list of images
+        if (this.context.initial_type === INITIAL_TYPES.IMAGES) {
+            this.thumbnails_count = this.context.initial_ids.length;
+            this.requestMoreThumbnails();
+        }
+    }
 
     /**
      * Initializes thumbnail count and thumbnails_start_index as well as
@@ -321,6 +342,27 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @memberof ThumbnailSlider
      */
     requestMoreThumbnails(init = false, end = true, skip_decrement = false) {
+        if (this.context.initial_type === INITIAL_TYPES.IMAGES) {
+            let until =
+                this.thumbnails_end_index + this.thumbnails_request_size;
+            if (until > this.thumbnails_count) until = this.thumbnails_count;
+            let thumbPrefix =
+                (this.context.server !== "" ?
+                    this.context.server + "/" : "") +
+                this.gateway_prefix + "/render_thumbnail/";
+            for (let x=this.thumbnails_end_index;x<until;x++) {
+                let id = this.context.initial_ids[x];
+                this.thumbnails.push({
+                    id: id,
+                    url: thumbPrefix + id + "/",
+                    title: id,
+                    revision : 0
+                });
+                this.thumbnails_end_index++;
+            };
+            return;
+        }
+
         let offset =
             end ? this.thumbnails_end_index :
                 skip_decrement ? this.thumbnails_start_index :
