@@ -99,6 +99,7 @@ export const REQUEST_PARAMS = {
     PROJECTION: 'P',
     SERVER: 'SERVER',
     TIME: 'T',
+    VERSION: 'VERSION',
     ZOOM: 'ZM'
 }
 

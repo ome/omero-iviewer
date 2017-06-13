@@ -41,7 +41,7 @@ def index(request, iid=None, conn=None, **kwargs):
     if iid is None:
         return HttpResponse("Viewer needs an image id!")
 
-    params = {'IMAGE_ID': iid}
+    params = {'VERSION': __version__, 'IMAGE_ID': iid}
     for key in request.GET:
         if request.GET[key]:
             params[str(key).upper()] = str(request.GET[key])
