@@ -1,3 +1,16 @@
+0.2.0 (June 2017)
+----------------
+
+This version includes:
+
+- support for omero prefix
+- support for floating images with very small pixels range
+- support for maximum intensity projection along Z
+- load of ROIS using the web api
+- add shortcut to draw line
+- improve copy and paste of ROIs
+
+
 0.1.0 (May 2017)
 ----------------
 
