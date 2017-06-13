@@ -19,7 +19,7 @@
 import {noView} from 'aurelia-framework';
 import Misc from '../utils/misc';
 import {
-    REQUEST_PARAMS, WEBGATEWAY, CHANNEL_SETTINGS_MODE, IVIEWER
+    CHANNEL_SETTINGS_MODE, IVIEWER, PROJECTION, REQUEST_PARAMS, WEBGATEWAY
 } from '../utils/constants'
 
 /**
@@ -165,7 +165,17 @@ export default class ImageInfo {
      * @memberof ImageInfo
      * @type {string}
      */
-    projection = "normal";
+    projection = PROJECTION.NORMAL;
+
+    /**
+     * the projection options (start/end)
+     * @memberof ImageInfo
+     * @type {Object}
+     */
+    projection_opts = {
+        start: 0,
+        end: 0
+    }
 
     /**
      * model defaults to 'color'
@@ -323,9 +333,27 @@ export default class ImageInfo {
         };
 
         // store projection and model
-        this.projection =
-            initialProjection !== null ?
-                initialProjection.toLowerCase() : response.rdefs.projection;
+        initialProjection =
+            Misc.parseProjectionParameter(
+                initialProjection !== null ?
+                    initialProjection.toLowerCase() :
+                    response.rdefs.projection);
+        this.projection = initialProjection.projection;
+        this.projection_opts = {
+            start:
+                typeof initialProjection.start === 'number' &&
+                initialProjection.start >= 0 &&
+                initialProjection.start < this.dimensions.max_z ?
+                    initialProjection.start : this.dimensions.z,
+            end:
+                typeof initialProjection.end === 'number' &&
+                initialProjection.end >= 0 &&
+                initialProjection.end < this.dimensions.max_z ?
+                    initialProjection.end : this.dimensions.max_z - 1
+        };
+        if (this.dimensions.max_z > 1 &&
+            this.projection_opts.start >= this.projection_opts.end)
+                this.projection_opts.start = this.projection_opts.end - 1;
         this.model = initialModel !== null ?
             initialModel.toLowerCase() : response.rdefs.model;
 
@@ -352,11 +380,6 @@ export default class ImageInfo {
             case 'g': this.model = 'greyscale'; break;
             default: this.model = 'color';
         }
-        let lowerCaseProjection = this.projection.toLowerCase();
-        if (lowerCaseProjection !== 'normal' &&
-                lowerCaseProjection !== 'intmax' &&
-                lowerCaseProjection !== 'split')
-            this.projection = 'normal';
     }
 
     /**
@@ -542,10 +565,11 @@ export default class ImageInfo {
     *
     * @param {number} mode the channel setting mode
     * @param {number} index the channel index
+    * @param {number} precision a floating point precision
     * @return {Object|null} returns object with the respective min,max properties or null
     * @memberof ChannelRange
     */
-    getChannelMinMaxValues(mode = 0, index=0) {
+    getChannelMinMaxValues(mode = 0, index=0, precision=0) {
         if (typeof mode !== 'number' || mode < 0 || mode > 2 ||
                 typeof index !== 'number' || index < 0 ||
                 index >= this.channels.length) return null;
@@ -556,8 +580,8 @@ export default class ImageInfo {
             case CHANNEL_SETTINGS_MODE.IMPORTED:
             case CHANNEL_SETTINGS_MODE.MIN_MAX:
                 start_min = c.window.min;
-                start_max = c.window.end-1;
-                end_min = c.window.start+1;
+                start_max = c.window.end;
+                end_min = c.window.start;
                 end_max = c.window.max;
                 start_val = this.initial_values ?
                     c.window.start : c.window.min;
@@ -567,21 +591,44 @@ export default class ImageInfo {
 
             case CHANNEL_SETTINGS_MODE.FULL_RANGE:
                 start_min = this.range[0];
-                start_max = c.window.end-1;
-                end_min = c.window.start+1;
+                start_max = c.window.end;
+                end_min = c.window.start;
                 end_max = this.range[1];
                 start_val = this.range[0];
                 end_val = this.range[1];
                 break;
         }
 
+        let step_size = 1;
+        if (this.image_pixels_type === 'float' ||
+            this.image_pixels_type === 'double') {
+                step_size = 0.001;
+                if (typeof precision !== 'number' ||
+                    precision <= 0) precision = 3;
+        } else precision = 0;
+
         return {
-            start_min: start_min,
-            start_max: start_max,
-            end_min: end_min,
-            end_max: end_max,
-            start_val: start_val,
-            end_val: end_val
+            start_min:
+                precision === 0 ?
+                    start_min : Misc.roundAtDecimal(start_min, precision),
+            start_max:
+                (precision === 0 ?
+                    start_max :
+                        Misc.roundAtDecimal(start_max, precision)) - step_size,
+            end_min:
+                (precision === 0 ?
+                    end_min :
+                        Misc.roundAtDecimal(end_min, precision)) + step_size,
+            end_max:
+                precision === 0 ?
+                    end_max : Misc.roundAtDecimal(end_max, precision),
+            start_val:
+                precision === 0 ?
+                    start_val : Misc.roundAtDecimal(start_val, precision),
+            end_val:
+                precision === 0 ?
+                    end_val : Misc.roundAtDecimal(end_val, precision),
+            step_size: step_size
         }
     }
 }

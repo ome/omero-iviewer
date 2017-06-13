@@ -20,8 +20,8 @@ import {EventAggregator} from 'aurelia-event-aggregator';
 import Misc from '../utils/misc';
 import ImageConfig from '../model/image_config';
 import {
-    API_PREFIX, IVIEWER, APP_NAME, PLUGIN_NAME, PLUGIN_PREFIX, REQUEST_PARAMS,
-    TABS, WEBCLIENT, WEBGATEWAY, URI_PREFIX
+    APP_NAME, IVIEWER, LUTS_NAMES, LUTS_PNG_URL, PLUGIN_NAME, PLUGIN_PREFIX,
+    REQUEST_PARAMS, TABS, URI_PREFIX, WEB_API_BASE, WEBCLIENT, WEBGATEWAY
 } from '../utils/constants';
 
 /**
@@ -41,36 +41,39 @@ import {
 export default class Context {
     /**
      * are we running within the wepback dev server
+     *
+     * @memberof Context
      * @type {boolean}
      */
     is_dev_server = false;
 
     /**
      * the aurelia event aggregator
+     *
+     * @memberof Context
      * @type {EventAggregator}
      */
     eventbus = null;
 
     /**
      * server information (if not localhost)
+     *
+     * @memberof Context
      * @type {string}
      */
     server = null;
 
     /**
-     * api prefix
-     * @type {string}
-     */
-    api_prefix = 'api/v0/m/';
-
-    /**
      * a list of potentially prefixes resources
+     *
      * @type {Map}
      */
     prefixed_uris = new Map();
 
     /**
      * a map for a more convenient key based lookup of an ImageConfig instance
+     *
+     * @memberof Context
      * @type {Map}
      */
     image_configs = new Map();
@@ -79,18 +82,24 @@ export default class Context {
      * the key of the presently selected/active ImageConfig
      * this setting gains only importance if useMDI is set to true
      * so that multiple images can be open but only one is active/interacted with
+
+     * @memberof Context
      * @type {number}
      */
     selected_config = null;
 
     /**
      * Are we allowed to open/view/interact with more than one image
+     *
+     * @memberof Context
      * @type {boolean}
      */
     useMDI = false;
 
     /**
      * the global value indicating the selected tab
+     *
+     * @memberof Context
      * @type {String}
      */
      selected_tab = TABS.SETTINGS;
@@ -111,6 +120,25 @@ export default class Context {
       * @type {Map}
       */
      key_listeners = new Map();
+
+     /**
+      * the lookup tables
+      *
+      * @memberof Context
+      * @type {Map}
+      */
+     luts = new Map();
+
+     /**
+      * the lookup png
+      *
+      * @memberof Context
+      * @type {Object}
+      */
+     luts_png = {
+         url : '',
+         height : 0
+     }
 
     /**
      * @constructor
@@ -141,6 +169,9 @@ export default class Context {
             }
         });
 
+        // set up luts
+        this.setUpLuts();
+
         // we set the initial image as the default (if given)
         let initial_dataset_id =
             parseInt(
@@ -151,6 +182,7 @@ export default class Context {
 
         // set up key listener
         this.establishKeyDownListener();
+
         // url navigation
         if (this.hasHTML5HistoryFeatures()) {
             window.onpopstate = (e) => {
@@ -172,6 +204,64 @@ export default class Context {
         return window.history &&
             typeof window.history.pushState === 'function' &&
             typeof window.onpopstate !== 'undefined';
+    }
+
+    /**
+     * Sets up the luts by requesting json and png
+     *
+     * @memberof Context
+     */
+    setUpLuts() {
+        this.luts_png.url =
+            this.server + this.getPrefixedURI(WEBGATEWAY, true) + LUTS_PNG_URL;
+
+        // determine the luts png height
+        let lutsPng = new Image();
+        lutsPng.onload = (e) => {
+            this.luts_png.height = e.target.naturalHeight;
+            for (let [id, conf] of this.image_configs) conf.changed();
+        }
+        lutsPng.src = this.luts_png.url;
+
+        // now query the luts list
+        let server = this.server;
+        let uri_prefix =  this.getPrefixedURI(WEBGATEWAY);
+        $.ajax(
+            {url : server + uri_prefix + "/luts/",
+            success : (response) => {
+                if (typeof response !== 'object' || response === null ||
+                    !Misc.isArray(response.luts)) return;
+
+                let i=0;
+                response.luts.map(
+                    (l) => {
+                        let idx = LUTS_NAMES.indexOf(l.name);
+                        let mapValue =
+                            Object.assign({
+                                nice_name :
+                                    l.name.replace(/.lut/g, "").replace(/_/g, " "),
+                                index : idx
+                            }, l);
+                        this.luts.set(mapValue.name, mapValue);
+                        if (idx >= 0) i++;
+                    });
+                for (let [id, conf] of this.image_configs) conf.changed();
+            }
+        });
+    }
+
+    /**
+     * Queries whether a lut by the given name is in our map
+     *
+     * @param {string} name the lut name
+     * @param {boolean} true if the lut was found, false otherwise
+     * @memberof Context
+     */
+    hasLookupTableEntry(name) {
+        if (typeof name !== 'string') return false;
+
+        let lut = this.luts.get(name);
+        return typeof lut === 'object';
     }
 
     /**
@@ -210,12 +300,9 @@ export default class Context {
             typeof params[URI_PREFIX] === 'string' ?
                 Misc.prepareURI(params[URI_PREFIX]) : "";
         this.prefixed_uris.set(URI_PREFIX, prefix);
-        this.prefixed_uris.set(API_PREFIX, prefix + "/" + this.api_prefix);
-        let iViewerPrefixed = prefix + "/" + PLUGIN_NAME;
-        this.prefixed_uris.set(IVIEWER, APP_NAME);
-        this.prefixed_uris.set(PLUGIN_PREFIX, iViewerPrefixed);
-        params[PLUGIN_PREFIX] = iViewerPrefixed;
-        [WEBGATEWAY, WEBCLIENT].map(
+        this.prefixed_uris.set(IVIEWER, prefix + "/" + APP_NAME);
+        this.prefixed_uris.set(PLUGIN_PREFIX, prefix + "/" + PLUGIN_NAME);
+        [WEB_API_BASE, WEBGATEWAY, WEBCLIENT].map(
             (key) =>
                 this.prefixed_uris.set(
                     key, typeof params[key] === 'string' ? params[key] :

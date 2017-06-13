@@ -17,6 +17,7 @@
 //
 
 import {noView} from 'aurelia-framework';
+import {PROJECTION} from '../utils/constants'
 
 /**
  * A utility class with various static helper methods
@@ -202,6 +203,40 @@ export default class Misc {
     }
 
     /**
+     * Takes a string with projection information of the form 'normal or intmax|0:2'
+     * and returns an object containing the projection type as well as additional
+     * projection information such as start/end
+     *
+     * @static
+     * @param {string} projection_info a string containing the projection info
+     * @return {Object} an object containing the parsed projection info
+     */
+    static parseProjectionParameter(projection_info) {
+        let ret = {projection: PROJECTION.NORMAL};
+        if (typeof projection_info !== 'string' || projection_info.length === 0)
+            return ret;
+
+        let pipePos = projection_info.indexOf('|');
+        if (pipePos !== -1) {
+            ret.projection = projection_info.substring(0, pipePos);
+            let tokens = projection_info.substring(pipePos+1).split(":");
+            if (tokens.length === 2) {
+                ret.start = parseInt(tokens[0]);
+                ret.end = parseInt(tokens[1]);
+            }
+        } else ret.projection = projection_info;
+
+        // last sanity check before returning
+        if (ret.projection !== PROJECTION.NORMAL &&
+           ret.projection !== PROJECTION.INTMAX &&
+           ret.projection !== PROJECTION.SPLIT)
+                ret.projection = PROJECTION.NORMAL;
+
+        return ret;
+    }
+
+
+    /**
      * Integrate the reverse intensity from the maps contents into the channels
      *
      * @param {Array.<Object>} channels array with channels info
@@ -329,5 +364,17 @@ export default class Misc {
      */
     static isApple() {
         return (new RegExp('Mac|iPod|iPhone|iPad')).test(navigator.platform);
+    }
+
+    /**
+     * Returns the rounded float
+     *
+     * @param {string} value the numeric value to round
+     * @param {number} digits the number of digits
+     * @return {number} the rounded number
+     * @static
+     */
+    static roundAtDecimal(value, digits) {
+        return Number(Math.round(value +'e' + digits) + 'e-' + digits);
     }
 }

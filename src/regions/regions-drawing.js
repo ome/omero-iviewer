@@ -115,6 +115,13 @@ export default class RegionsDrawing extends EventSubscriber {
             this.bindingEngine.propertyObserver(
                 this.regions_info, "drawing_mode")
                     .subscribe((newValue, oldValue) => action()));
+        this.observers.push(
+            this.bindingEngine.propertyObserver(
+                this.regions_info.image_info, "projection")
+                    .subscribe((newValue, oldValue) => {
+                        if (this.regions_info.shape_to_be_drawn !== null)
+                            action();
+                    }));
         for (let p in this.regions_info.shape_defaults)
             this.observers.push(
                 this.bindingEngine.propertyObserver(
@@ -228,7 +235,7 @@ export default class RegionsDrawing extends EventSubscriber {
         if (params.drawn)
             this.onDrawShape(
                 this.supported_shapes.indexOf(
-                    this.regions_info.shape_to_be_drawn), true);
+                    this.regions_info.shape_to_be_drawn));
 
         // scroll to end of list
         if (len !== 0)
@@ -260,8 +267,7 @@ export default class RegionsDrawing extends EventSubscriber {
             {
                 config_id : this.regions_info.image_info.config_id,
                 shapes : [newShape],
-                number : theDims.length,
-                random : false, theDims : theDims,
+                number : theDims.length, theDims : theDims,
                 hist_id : params.hist_id, roi_id: roi_id
             });
     }

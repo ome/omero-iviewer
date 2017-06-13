@@ -29,10 +29,22 @@ export const APP_NAME = 'iviewer';
 export const PLUGIN_NAME = 'omero_iviewer';
 
 /**
- * a convenience string lookup for API_PREFIX
+ * a convenience string lookup for WEB_API_BASE
  * @type {string}
  */
-export const API_PREFIX = "API_PREFIX";
+export const WEB_API_BASE = "WEB_API_BASE";
+
+/**
+ * the datasets request url (relative to WEB_API_BASE)
+ * @type {string}
+ */
+export const DATASETS_REQUEST_URL = "/m/datasets";
+
+/**
+ * the regions request url (relative to WEB_API_BASE)
+ * @type {string}
+ */
+export const REGIONS_REQUEST_URL = "/m/rois";
 
 /**
  * a convenience string lookup for URI_PREFIX
@@ -147,7 +159,13 @@ export const PERMISSION_TOOLTIPS = {
     CANNOT_DELETE: "No permission to delete"
 }
 
-/*
+/**
+ * the luts png url (relative to webgateway prefix)
+ * @type {string}
+ */
+export const LUTS_PNG_URL = '/img/luts_10.png';
+
+/**
  * luts list for pre-generated png
  * @type {Object}
  */
@@ -199,4 +217,14 @@ export const TABS = {
     INFO: 'info',
     SETTINGS: 'settings',
     ROIS: 'rois'
+}
+
+/**
+ * possible projection values
+ * @type {Object}
+ */
+export const PROJECTION = {
+    NORMAL: 'normal',
+    INTMAX: 'intmax',
+    SPLIT: 'split'
 }

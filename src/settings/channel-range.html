@@ -78,13 +78,13 @@
                      click.delegate="onColorChange('#00FFFF')">
                     <div class="luts-name">cyan</div>
                 </div>
-                <div class="luts-item" repeat.for="[id, lut] of luts"
+                <div class="luts-item" repeat.for="[id, lut] of context.luts"
                      title="${lut.nice_name}"
                      click.delegate="onColorChange(id)">
                      <div class="luts-preview pixelated"
                          css="${lut.index >= 0 ?
-                                'background-image: url(\'' + luts_png.url + '\');
-                                background-size: 100% ' + (luts_png.height*2) +
+                                'background-image: url(\'' + context.luts_png.url + '\');
+                                background-size: 100% ' + (context.luts_png.height*2) +
                                 'px;background-position: 0px -' + (lut.index*20+1) +
                                 'px' : ''}">
                          <div class="luts-name">${lut.nice_name}</div>
@@ -100,5 +100,5 @@
     </div>
     <input class="channel-start"/>
     <div class="channel-slider"></div>
-    <input class="channel-end" type="text"/>
+    <input class="channel-end"/>
 </template>

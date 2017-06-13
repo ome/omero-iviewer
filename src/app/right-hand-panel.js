@@ -19,7 +19,7 @@
 // js
 import {inject, customElement, BindingEngine} from 'aurelia-framework';
 import Context from './context';
-import {TABS} from '../utils/constants';
+import {PROJECTION, TABS} from '../utils/constants';
 import 'bootstrap';
 
 /**
@@ -109,7 +109,8 @@ export class RightHandPanel {
             if (this.context.isRoisTabActive()) {
                 if (this.image_config === null ||
                     this.image_config.regions_info === null ||
-                    this.image_config.image_info.projection === 'split') return;
+                    this.image_config.image_info.projection === PROJECTION.SPLIT)
+                        return;
 
                 if (!this.image_config.regions_info.ready)
                     this.image_config.regions_info.requestData(true);

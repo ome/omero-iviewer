@@ -229,12 +229,12 @@ a.ui-button:active,
 }
 
 .plane-slider {
-    bottom: 90px;
+    bottom: 115px;
     top: 45px;
     width: 35px;
 }
 .show-tSlider .plane-slider {
-    bottom: 125px;
+    bottom: 150px;
 }
 
 .time-slider {
@@ -271,7 +271,7 @@ a.ui-button:active,
 }
 
 .plane-slider .dim-label {
-    bottom: -90px;
+    bottom: -115px;
 }
 .time-slider .dim-label {
     left: -85px;
@@ -300,6 +300,16 @@ a.ui-button:active,
 
 .time-slider .timestamp {
     right: -165px;
+}
+
+.plane-slider .dim-projection {
+    background-image: url('images/projection.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    width: 20px;
+    height: 20px;
+    left: 4px;
+    bottom: -65px;
 }
 
 /* Make the Z/T sliders look thin,
@@ -350,7 +360,7 @@ a.ui-button:active,
     left: -70px;
 }
 .plane-slider .glyphicon-play, .plane-slider .glyphicon-stop {
-    bottom: -60px;
+    bottom: -85px;
     top: auto;
 }
 

@@ -24,7 +24,8 @@ import {
     REGIONS_COPY_SHAPES, REGIONS_GENERATE_SHAPES, REGIONS_SET_PROPERTY
 } from '../events/events';
 import {
-    REGIONS_DRAWING_MODE, REGIONS_MODE, IVIEWER
+    IVIEWER, REGIONS_DRAWING_MODE, REGIONS_MODE, REGIONS_REQUEST_URL,
+    WEB_API_BASE
 } from '../utils/constants';
 
 /**
@@ -90,12 +91,20 @@ export default class RegionsInfo  {
     visibility_toggles = 0;
 
     /**
-     * the json of the copied shapes
+     * the copied shapes
      * (which uses also local storage -if supported)
      * @memberof RegionsInfo
-     * @type {Array.<objects>}
+     * @type {Array.<Object>}
      */
     copied_shapes = [];
+
+    /**
+     * the image dimensions for the copied shapes
+     * (which uses also local storage -if supported)
+     * @memberof RegionsInfo
+     * @type {Object}
+     */
+    copied_image_dims = null;
 
     /**
      * the presently used regions modes
@@ -153,10 +162,11 @@ export default class RegionsInfo  {
 
         // try to restore localstorage copied shapes
         try {
-            this.copied_shapes =
-                JSON.parse(
-                    window.localStorage.getItem("omero_iviewer.copied_shapes"));
+            this.copied_shapes = JSON.parse(
+                window.localStorage.getItem(IVIEWER + ".copy_shape_defs"));
             if (!Misc.isArray(this.copied_shapes)) this.copied_shapes = [];
+            this.copied_image_dims = JSON.parse(
+                window.localStorage.getItem(IVIEWER + ".copy_image_dims"));
         } catch(ignored) {}
         // init default shape colors
         this.resetShapeDefaults();
@@ -241,13 +251,13 @@ export default class RegionsInfo  {
         // send request
         $.ajax({
             url : this.image_info.context.server +
-                  this.image_info.context.getPrefixedURI(IVIEWER) +
-                  "/request_rois/" + this.image_info.image_id + '/',
+                  this.image_info.context.getPrefixedURI(WEB_API_BASE) +
+                  REGIONS_REQUEST_URL + '/?image=' + this.image_info.image_id,
             success : (response) => {
                 this.is_pending = false;
                 try {
                     let count = 0;
-                    response.map((roi) => {
+                    response.data.map((roi) => {
                         let shapes = new Map();
 
                         // set shape properties and store the object
@@ -505,13 +515,38 @@ export default class RegionsInfo  {
                 return;
         }
 
+        // check the copied image dims with the present ones
+        // and calculate a scale factor if different
+        let scale_factor = 1;
+        if (typeof this.copied_image_dims === 'object' &&
+            this.copied_image_dims !== null &&
+            this.copied_image_dims.width !== this.image_info.dimensions.max_x &&
+            this.copied_image_dims.height !== this.image_info.dimensions.max_y) {
+                let widthDiff =
+                    Math.abs(this.copied_image_dims.width -
+                                this.image_info.dimensions.max_x);
+                let heightDiff =
+                    Math.abs(this.copied_image_dims.height -
+                                this.image_info.dimensions.max_y);
+                if (widthDiff > heightDiff) {
+                    scale_factor =
+                        this.image_info.dimensions.max_x /
+                            this.copied_image_dims.width;
+                } else {
+                    scale_factor =
+                        this.image_info.dimensions.max_y /
+                            this.copied_image_dims.height;
+                }
+        }
+
         let params = {
             config_id: this.image_info.config_id,
             number: 1, paste: true,
             shapes: this.copied_shapes,
             hist_id: this.history.getHistoryId(),
-            random: !(Misc.isArray(pixel) && pixel.length === 2)
+            position: pixel
         };
+        if (scale_factor !== 1) params.scale_factor = scale_factor;
         this.image_info.context.publish(REGIONS_GENERATE_SHAPES, params);
     }
 

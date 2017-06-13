@@ -333,15 +333,13 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
     var initialProjection =
        this.getInitialRequestParam(
            ome.ol3.REQUEST_PARAMS.PROJECTION);
-    initialProjection =
-      initialProjection !== null ? initialProjection.toLowerCase() :
-          this.image_info_['rdefs']['projection']
-    if (initialProjection !== 'normal' &&
-       initialProjection !== 'intmax' &&
-       initialProjection !== 'split')
-       initialProjection = 'normal';
-    if (initialProjection === 'split')
-      this.split_ = true;
+    var parsedInitialProjection =
+        ome.ol3.utils.Misc.parseProjectionParameter(
+            initialProjection !== null ?
+                initialProjection.toLowerCase() :
+                this.image_info_['rdefs']['projection']);
+    initialProjection = parsedInitialProjection.projection;
+    this.split_ = initialProjection === ome.ol3.PROJECTION['SPLIT'];
 
     // in the same spirit we need the model so that in the split channel
     // case we get the proper dimensions from the json
@@ -369,7 +367,7 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
            this.image_info_['tile_size'] =
            {"width" : dims['width'], "height" : dims['height']};
        }
-       initialProjection = "split";
+       initialProjection = ome.ol3.PROJECTION['SPLIT'];
     }
 
     // determine the center
@@ -454,7 +452,7 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
        time: initialTime,
        channels: channels,
        resolutions: zoom > 1 ? zoomLevelScaling : [1],
-       img_proj:  initialProjection,
+       img_proj:  parsedInitialProjection,
        img_model:  initialModel,
        split: this.split_,
        tiled: typeof this.image_info_['tiles'] === 'boolean' &&
@@ -1383,97 +1381,110 @@ ome.ol3.Viewer.prototype.setRegionsModes = function(modes) {
 
 /**
  * This method generates shapes and adds them to the regions layer
- *
  * It uses {@link ome.ol3.utils.Regions.generateRegions} internally
  *
- * @param {Object} shape_info the roi shape information (in 'get_rois_json' format )
- * @param {number} number the number of shapes that should be generated
- * @param {boolean} random_placement should the shapes be generated in random places? default: false
- * @param {ol.Extent=} extent the portion of the image used for generation (bbox format), default: the entire image
- * @param {Array.<Array.<number,number>>=} theDims a list of dims to associate with
- * @param {boolean=} add_history an optional flag if we should consequently not add the generation to the history
- * @param {number=} hist_id a history id to pass through and return
+ * The options argument is optional and can have the following properties:
+ * - shape_info => the roi shape definition (omero marshal format)
+ * - number => the number of copies that should be generated
+ * - position => the position to place the shape(s) or null (random placement)
+ * - extent => a bounding box for generation, default: the entire viewport
+ * - theDims => a list of dims to attach to
+ * - scale_factor => a scale factor to apply because of image dimension differences
+ * - add_history => determines whether we should add the generation to the history
+ * - hist_id => the history id to pass through
  */
-ome.ol3.Viewer.prototype.generateShapes =
-     function(shape_info, number, random_placement, extent, theDims, add_history, hist_id) {
-        // we don't do generation any more for the case where we don't
-        // have a regions layer, nor do we do it without shape definition or
-        // if the given number is nonsensical or if we don't have permission
-        if (!this.image_info_['perms']['canAnnotate'] ||
-            this.getRegionsLayer() === null || typeof shape_info !== 'object' ||
-            typeof number !== 'number' || number <= 0) return;
+ome.ol3.Viewer.prototype.generateShapes = function(shape_info, options) {
+    // elementary check if we have a shape definition to generate from,
+    // a regions layer to add to and the permission to do so
+    if (!this.image_info_['perms']['canAnnotate'] ||
+        this.getRegionsLayer() === null ||
+        typeof shape_info !== 'object') return;
 
-        // more checks
-        // default to false for random_placement if not provided/wrong type
-        if (typeof random_placement !== 'boolean') random_placement = false;
-        // use image extent if none given
-        if (!ome.ol3.utils.Misc.isArray(extent) || extent.length === 0)
-            extent = this.viewer_.getView().getProjection().getExtent();
-        // shouldn't there be dims we want to associate with
-        // we use the present z/t
-        if (!ome.ol3.utils.Misc.isArray(theDims) || theDims.length === 0)
-            theDims = [{
+    if (typeof options !== 'object' || options === null) options = {};
+    // the number of copies we want, default is: 1
+    var number =
+        typeof options['number'] === 'number' && options['number'] > 0  ?
+            options['number'] : 1;
+    // a position to place the copies or else random will be used
+    var position =
+        ome.ol3.utils.Misc.isArray(options['position']) &&
+        options['position'].length === 2 ?
+            this.viewer_.getCoordinateFromPixel(options['position']) : null;
+    // a limiting extent (bounding box) in which to place the copies
+    // defaults to the entire viewport otherwise
+    var extent =
+        ome.ol3.utils.Misc.isArray(options['extent']) &&
+        options['extent'].length === 4 ?
+            options['extent'] : this.getViewExtent();
+    // the dims we want to attach the generated shapes to
+    var theDims =
+        ome.ol3.utils.Misc.isArray(options['theDims']) &&
+        options['theDims'].length > 0 ?
+            options['theDims'] : [{
                 "z" : this.getDimensionIndex('z'),
                 "t" : this.getDimensionIndex('t'),
-                "c" : -1
-            }];
+                "c" : -1}];
 
-        // sanity check: we are going to need matching numbers for shapes
-        // and associated t/zs for the association loop below to make sense
-        // exception is random generation which we allow for only 1 z/t combination
-        if ((random_placement && theDims.length !== 1) ||
-            (!random_placement && number !== theDims.length)) return;
+    // sanity check: we are going to need matching numbers for shapes
+    // and associated t/zs for the association loop below to make sense
+    var dimLen = theDims.length;
+    if (dimLen !== number && dimLen > 1) return;
+    var oneToManyRelationShip = dimLen === 1 && number > 1;
 
-        // delegate
-        var generatedShapes = ome.ol3.utils.Regions.generateRegions(
-            shape_info, number, extent, random_placement);
-        // another brief sanity check in case not all shapes were created
-        if (generatedShapes === null ||
-                (!random_placement &&
-                 generatedShapes.length !== theDims.length)) return;
+    // delegate
+    var generatedShapes =
+        ome.ol3.utils.Regions.generateRegions(
+            shape_info, number, extent, position, options['scale_factor']);
+    // another brief sanity check in case not all shapes were created
+    if (generatedShapes === null ||
+            (!oneToManyRelationShip &&
+             generatedShapes.length !== theDims.length)) return;
 
-        // post generation work
-        // update the styling and associate with dimensions
-        for (var i=0;i<generatedShapes.length;i++) {
-            var f = generatedShapes[i];
-            // and associate them to the proper dims
-            f['TheZ'] =
-                random_placement ? theDims[0]['z'] : theDims[i]['z'];
-            f['TheT'] =
-                random_placement ? theDims[0]['t'] : theDims[i]['t'];
-            var theC =
-                random_placement ? theDims[0]['c'] :
-                    (typeof theDims[i]['c'] === 'number' ?
-                        theDims[i]['c'] : -1);
-            f['TheC'] = theC;
-            // in case we got created in a rotated view
-            var res = this.viewer_.getView().getResolution();
-            var rot = this.viewer_.getView().getRotation();
-            if (f.getGeometry() instanceof ome.ol3.geom.Label && rot !== 0 &&
-                    !this.getRegions().rotate_text_)
-                f.getGeometry().rotate(-rot);
-                ome.ol3.utils.Style.updateStyleFunction(f, this.regions_, true);
-        }
-        this.getRegions().addFeatures(generatedShapes);
+    // post generation work
+    // update the styling and associate with dimensions
+    for (var i=0;i<generatedShapes.length;i++) {
+        var f = generatedShapes[i];
+        // and associate them to the proper dims
+        f['TheZ'] =
+            oneToManyRelationShip ? theDims[0]['z'] : theDims[i]['z'];
+        f['TheT'] =
+            oneToManyRelationShip ? theDims[0]['t'] : theDims[i]['t'];
+        var theC =
+            oneToManyRelationShip ? theDims[0]['c'] :
+                (typeof theDims[i]['c'] === 'number' ?
+                    theDims[i]['c'] : -1);
+        f['TheC'] = theC;
+        // in case we got created in a rotated view
+        var res = this.viewer_.getView().getResolution();
+        var rot = this.viewer_.getView().getRotation();
+        if (f.getGeometry() instanceof ome.ol3.geom.Label && rot !== 0 &&
+                !this.getRegions().rotate_text_)
+            f.getGeometry().rotate(-rot);
+            ome.ol3.utils.Style.updateStyleFunction(f, this.regions_, true);
+    }
+    this.getRegions().addFeatures(generatedShapes);
 
-        // notify about generation
-        var eventbus = this.eventbus_;
-        var config_id = this.getTargetId();
-        if (eventbus)
-            setTimeout(function() {
-                var newRegionsObject =
-                    ome.ol3.utils.Conversion.toJsonObject(
-                        new ol.Collection(generatedShapes), true, true);
-                if (typeof newRegionsObject !== 'object' ||
-                    !ome.ol3.utils.Misc.isArray(newRegionsObject['rois']) ||
-                    newRegionsObject['rois'].length === 0) return;
-                var opts = { "config_id": config_id,
-                                "shapes": newRegionsObject['rois']};
-                if (typeof hist_id === 'number') opts['hist_id'] = hist_id;
-                if (typeof add_history === 'boolean')
-                    opts['add_history'] = add_history;
-                eventbus.publish("REGIONS_SHAPE_GENERATED", opts);
-            },25);
+    // notify about generation
+    var eventbus = this.eventbus_;
+    var config_id = this.getTargetId();
+    if (eventbus)
+        setTimeout(function() {
+            var newRegionsObject =
+                ome.ol3.utils.Conversion.toJsonObject(
+                    new ol.Collection(generatedShapes), true, true);
+            if (typeof newRegionsObject !== 'object' ||
+                !ome.ol3.utils.Misc.isArray(newRegionsObject['rois']) ||
+                newRegionsObject['rois'].length === 0) return;
+            var params = {
+                "config_id": config_id,
+                "shapes": newRegionsObject['rois']
+            };
+            if (typeof options['hist_id'] === 'number')
+                params['hist_id'] = options['hist_id'];
+            if (typeof options['add_history'] === 'boolean')
+                params['add_history'] =  options['add_history'];
+            eventbus.publish("REGIONS_SHAPE_GENERATED", params);
+        },25);
 };
 
 /**
@@ -1491,32 +1502,24 @@ ome.ol3.Viewer.prototype.getViewExtent = function() {
 }
 
 /**
- * Will take the viewport but reduce it to the image extent
- * if the former exceeds either width or height of the latter
- * An example of this is when we are zoomed out and see more than the actual
- * image but want an extent that does not exceed the image boundaries
- * this is useful for pasting
+ * Returns an extent whose coordinates are the smaller of either
+ * the viewport or the image bounding box
+ *
  * @return {ol.Extent|null} an array like this: [minX, minY, maxX, maxY] or null (if no viewer)
  */
 ome.ol3.Viewer.prototype.getSmallestViewExtent = function() {
     var viewport = this.getViewExtent();
     if (viewport === null) return;
 
-    var smallestExtent = viewport.slice();
-
     var image_extent = this.viewer_.getView().getProjection().getExtent();
-    var viewport_width = ol.extent.getWidth(viewport);
-    var image_width = ol.extent.getWidth(image_extent);
-    if (viewport_width > image_width) {
-        smallestExtent[0] = image_extent[0];
-        smallestExtent[2] = image_extent[2];
-    }
-    var viewport_height = Math.abs(ol.extent.getHeight(viewport));
-    var image_height = Math.abs(ol.extent.getHeight(image_extent));
-    if (viewport_height > image_height) {
-        smallestExtent[1] = image_extent[1];
-        smallestExtent[3] = image_extent[3];
-    }
+    var smallestExtent = image_extent.slice();
+    smallestExtent[1] = -smallestExtent[3];
+    smallestExtent[3] = 0;
+
+    if (viewport[0] > image_extent[0]) smallestExtent[0] = viewport[0];
+    if (viewport[1] > -image_extent[3]) smallestExtent[1] = viewport[1];
+    if (viewport[2] < image_extent[2]) smallestExtent[2] = viewport[2];
+    if (viewport[3] < image_extent[1]) smallestExtent[3] = viewport[3];
 
     return smallestExtent;
 }
@@ -1799,11 +1802,15 @@ ome.ol3.Viewer.prototype.changeChannelRange = function(ranges) {
  * see: {@link ome.ol3.source.Image.setImageProjection}
  *
  * @param {string} value the new value
+ * @param {Object=} opts additional options, e.g. intmax projection start/end
  */
-ome.ol3.Viewer.prototype.changeImageProjection = function(value) {
+ome.ol3.Viewer.prototype.changeImageProjection = function(value, opts) {
     if (this.getImage() === null) return;
 
-    this.getImage().setImageProjection(value);
+    this.getImage().setImageProjection(value, opts);
+
+    // update regions (if necessary)
+    if (this.getRegionsLayer()) this.getRegions().changed();
 }
 
 /**
@@ -2198,6 +2205,11 @@ goog.exportProperty(
     ome.ol3.Viewer.prototype,
     'getRenderStatus',
     ome.ol3.Viewer.prototype.getRenderStatus);
+
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
+    'changeImageProjection',
+    ome.ol3.Viewer.prototype.changeImageProjection);
 
 goog.exportProperty(
     ome.ol3.Viewer.prototype,
