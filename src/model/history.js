@@ -35,6 +35,13 @@ export default class History {
     debug = true;
 
     /**
+     * a flag that determines whether undo/redo are enabled
+     * @memberof History
+     * @type {boolean}
+     */
+    undo_redo_enabled = true;
+
+    /**
      * @memberof History
      * @type {Array.<Object>}
      */
@@ -174,7 +181,8 @@ export default class History {
        * @memberof History
        */
        canRedo() {
-           return this.hasHistory() && this.historyPointer < this.history.length-1;
+           return this.hasHistory() && this.undo_redo_enabled &&
+                        this.historyPointer < this.history.length-1;
        }
 
        /**
@@ -182,7 +190,8 @@ export default class History {
         * @memberof History
         */
         canUndo() {
-            return this.hasHistory() && this.historyPointer >= 0;
+            return this.hasHistory() && this.undo_redo_enabled &&
+                        this.historyPointer >= 0;
         }
 
       /**

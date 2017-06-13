@@ -218,3 +218,13 @@ export const TABS = {
     SETTINGS: 'settings',
     ROIS: 'rois'
 }
+
+/**
+ * possible projection values
+ * @type {Object}
+ */
+export const PROJECTION = {
+    NORMAL: 'normal',
+    INTMAX: 'intmax',
+    SPLIT: 'split'
+}
