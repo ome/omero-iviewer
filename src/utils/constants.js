@@ -230,3 +230,13 @@ export const INITIAL_TYPES = {
     IMAGES: 2,
     DATASET: 3
 }
+
+/**
+ * possible projection values
+ * @type {Object}
+ */
+export const PROJECTION = {
+    NORMAL: 'normal',
+    INTMAX: 'intmax',
+    SPLIT: 'split'
+}

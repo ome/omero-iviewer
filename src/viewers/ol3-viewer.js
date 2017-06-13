@@ -27,7 +27,7 @@ import Ui from '../utils/ui';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {ol3} from '../../libs/ol3-viewer.js';
 import {
-    IVIEWER, PLUGIN_PREFIX, REGIONS_DRAWING_MODE, RENDER_STATUS,
+    IVIEWER, PLUGIN_PREFIX, PROJECTION, REGIONS_DRAWING_MODE, RENDER_STATUS,
     VIEWER_ELEMENT_PREFIX
 } from '../utils/constants';
 import {
@@ -272,7 +272,9 @@ export default class Ol3Viewer extends EventSubscriber {
         if (typeof params.model === 'string')
             this.viewer.changeImageModel(params.model);
         if (typeof params.projection === 'string')
-            this.viewer.changeImageProjection(params.projection);
+            this.viewer.changeImageProjection(
+                params.projection,
+                this.image_config.image_info.projection_opts);
         if (Misc.isArray(params.ranges))
             this.viewer.changeChannelRange(params.ranges);
     }
@@ -588,6 +590,9 @@ export default class Ol3Viewer extends EventSubscriber {
             case REGIONS_DRAWING_MODE.CUSTOM_Z_AND_T:
                 add = false;
         }
+        if (unattached.indexOf('z') === -1 &&
+            this.image_config.image_info.projection === PROJECTION.INTMAX)
+                unattached.push('z');
 
         // draw shape
         this.viewer.drawShape(
@@ -892,6 +897,7 @@ export default class Ol3Viewer extends EventSubscriber {
             this.player_info.dim = null;
             this.player_info.forwards = null;
             this.player_info.handle = null;
+            this.image_config.undo_redo_enabled = true;
             this.viewer.getRenderStatus(true);
         }).bind(this);
 
@@ -927,6 +933,7 @@ export default class Ol3Viewer extends EventSubscriber {
 
         this.player_info.dim = dim;
         this.player_info.forwards = forwards;
+        this.image_config.undo_redo_enabled = false;
         this.player_info.handle =
             setInterval(
                 () => {

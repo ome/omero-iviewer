@@ -333,15 +333,13 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
     var initialProjection =
        this.getInitialRequestParam(
            ome.ol3.REQUEST_PARAMS.PROJECTION);
-    initialProjection =
-      initialProjection !== null ? initialProjection.toLowerCase() :
-          this.image_info_['rdefs']['projection']
-    if (initialProjection !== 'normal' &&
-       initialProjection !== 'intmax' &&
-       initialProjection !== 'split')
-       initialProjection = 'normal';
-    if (initialProjection === 'split')
-      this.split_ = true;
+    var parsedInitialProjection =
+        ome.ol3.utils.Misc.parseProjectionParameter(
+            initialProjection !== null ?
+                initialProjection.toLowerCase() :
+                this.image_info_['rdefs']['projection']);
+    initialProjection = parsedInitialProjection.projection;
+    this.split_ = initialProjection === ome.ol3.PROJECTION['SPLIT'];
 
     // in the same spirit we need the model so that in the split channel
     // case we get the proper dimensions from the json
@@ -369,7 +367,7 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
            this.image_info_['tile_size'] =
            {"width" : dims['width'], "height" : dims['height']};
        }
-       initialProjection = "split";
+       initialProjection = ome.ol3.PROJECTION['SPLIT'];
     }
 
     // determine the center
@@ -454,7 +452,7 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
        time: initialTime,
        channels: channels,
        resolutions: zoom > 1 ? zoomLevelScaling : [1],
-       img_proj:  initialProjection,
+       img_proj:  parsedInitialProjection,
        img_model:  initialModel,
        split: this.split_,
        tiled: typeof this.image_info_['tiles'] === 'boolean' &&
@@ -1804,11 +1802,15 @@ ome.ol3.Viewer.prototype.changeChannelRange = function(ranges) {
  * see: {@link ome.ol3.source.Image.setImageProjection}
  *
  * @param {string} value the new value
+ * @param {Object=} opts additional options, e.g. intmax projection start/end
  */
-ome.ol3.Viewer.prototype.changeImageProjection = function(value) {
+ome.ol3.Viewer.prototype.changeImageProjection = function(value, opts) {
     if (this.getImage() === null) return;
 
-    this.getImage().setImageProjection(value);
+    this.getImage().setImageProjection(value, opts);
+
+    // update regions (if necessary)
+    if (this.getRegionsLayer()) this.getRegions().changed();
 }
 
 /**
@@ -2187,3 +2189,8 @@ goog.exportProperty(
     ome.ol3.Viewer.prototype,
     'getRenderStatus',
     ome.ol3.Viewer.prototype.getRenderStatus);
+
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
+    'changeImageProjection',
+    ome.ol3.Viewer.prototype.changeImageProjection);
