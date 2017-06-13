@@ -24,7 +24,7 @@ def get_version(version=None):
     """
 
     version = get_full_version(version)
-    parts = 2 if version[2] == 0 else 3
+    parts = 3
     res = '.'.join(str(x) for x in version[:parts])
     if len(version) > 3:
         res = "%s%s" % (res, version[3])
