@@ -567,10 +567,6 @@ export default class Ol3Viewer extends EventSubscriber {
         let add = true;
         let unattached = [];
         switch (this.image_config.regions_info.drawing_mode) {
-            case REGIONS_DRAWING_MODE.PRESENT_Z_AND_T:
-                if (this.image_config.image_info.projection === PROJECTION.INTMAX)
-                    unattached.push('z');
-                break;
             case REGIONS_DRAWING_MODE.NEITHER_Z_NOR_T:
                 unattached = ['z', 't'];
                 break;
@@ -586,6 +582,9 @@ export default class Ol3Viewer extends EventSubscriber {
             case REGIONS_DRAWING_MODE.CUSTOM_Z_AND_T:
                 add = false;
         }
+        if (unattached.indexOf('z') === -1 &&
+            this.image_config.image_info.projection === PROJECTION.INTMAX)
+                unattached.push('z');
 
         // draw shape
         this.viewer.drawShape(

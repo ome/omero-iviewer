@@ -112,7 +112,8 @@ export default class DimensionSlider {
 
     playDimension(forwards) {
         let conf = this.image_config;
-        if (conf.image_info.projection === PROJECTION.INTMAX) return;
+        if (this.dim === 'z' &&
+            conf.image_info.projection === PROJECTION.INTMAX) return;
 
         let stop =
             this.player_info.dim !== null &&
@@ -328,7 +329,7 @@ export default class DimensionSlider {
             }
         };
 
-        if (imgInf.projection === PROJECTION.INTMAX) {
+        if (this.dim === 'z' && imgInf.projection === PROJECTION.INTMAX) {
             options.change =
                 (event, ui) => {
                     if (event.originalEvent) {

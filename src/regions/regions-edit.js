@@ -23,7 +23,7 @@ import {Utils} from '../utils/regions';
 import Ui from '../utils/ui';
 import {Converters} from '../utils/converters';
 import {
-    REGIONS_DRAWING_MODE, PERMISSION_TOOLTIPS, TABS
+    REGIONS_DRAWING_MODE, PERMISSION_TOOLTIPS, PROJECTION, TABS
 } from '../utils/constants';
 import {
     IMAGE_DIMENSION_CHANGE, REGIONS_MODIFY_SHAPES, REGIONS_SET_PROPERTY,
@@ -423,6 +423,11 @@ export default class RegionsEdit extends EventSubscriber {
                 this.regions_info, 'shape_to_be_drawn')
                     .subscribe(
                         (newValue, oldValue) => this.adjustEditWidgets()));
+        this.observers.push(
+            this.bindingEngine.propertyObserver(
+                this.regions_info.image_info, 'projection')
+                    .subscribe(
+                        (newValue, oldValue) => this.adjustEditWidgets()));
     }
 
     /**
@@ -528,6 +533,8 @@ export default class RegionsEdit extends EventSubscriber {
      */
     adjustAttachmentEdit(canDo=false, showDisabled=true) {
         let dims = this.regions_info.image_info.dimensions;
+        let hasProjection =
+            this.regions_info.image_info.projection === PROJECTION.INTMAX;
         let shapeAttachments =
             $(this.element).find(".shape-edit-attachments").children();
         let shapeAttachmentsInput = shapeAttachments.filter("input");
@@ -550,29 +557,34 @@ export default class RegionsEdit extends EventSubscriber {
                 (d) => {
                     let prop = 'The' + d.toUpperCase();
                     let filter = "[dim='" + d + "']";
+                    let hasMoreThanOneEntry = dims['max_' + d] > 1;
+                    let zProjection =
+                        hasMoreThanOneEntry && d === 'z' && hasProjection;
                     let respectiveAttachementLock =
                         shapeAttachmentsLocks.filter(filter);
-                    let unattached =
-                        this.last_selected ?
-                            this.last_selected[prop] === -1 :
+                    let previouslyUnattached =
+                        d === 'z' ?
+                            this.regions_info.drawing_mode ===
+                                REGIONS_DRAWING_MODE.NOT_Z ||
+                            this.regions_info.drawing_mode ===
+                                REGIONS_DRAWING_MODE.NEITHER_Z_NOR_T :
                             respectiveAttachementLock.attr("locked") === "";
+                    let unattached = this.last_selected ?
+                        this.last_selected[prop] === -1 : previouslyUnattached;
                     respectiveAttachementLock.attr(
-                        'locked', unattached ? "" : "locked");
+                        'locked', unattached || zProjection ? "" : "locked");
                     respectiveAttachementLock.removeClass(
                         unattached ? "dim_locked" : "dim_unlocked");
                     respectiveAttachementLock.addClass(
-                        unattached ? "dim_unlocked" : "dim_locked");
+                        unattached || zProjection ?
+                            "dim_unlocked" : "dim_locked");
                     let respectiveDimensionInput =
                         shapeAttachmentsInput.filter(filter);
-                    respectiveDimensionInput.val(
-                        unattached ?
-                            this.regions_info.image_info.dimensions[d] + 1 :
-                            this.last_selected ?
-                                this.last_selected[prop] + 1 :
-                                    this.regions_info.image_info.dimensions[d] + 1);
-                    let hasMoreThanOneEntry =
-                        this.regions_info.image_info.dimensions['max_' + d] > 1;
-                    if (hasMoreThanOneEntry && (!showDisabled ||
+                    if (zProjection) respectiveDimensionInput.val("");
+                    else respectiveDimensionInput.val(
+                            unattached ? dims[d] + 1 : this.last_selected ?
+                                this.last_selected[prop] + 1 : dims[d] + 1);
+                    if (!zProjection && hasMoreThanOneEntry && (!showDisabled ||
                         (this.regions_info.image_info.can_annotate &&
                          this.last_selected === null))) {
                             let title = "Lock " +
@@ -622,8 +634,9 @@ export default class RegionsEdit extends EventSubscriber {
                     (event) => {
                         if (showDisabled) return;
                         let dim = event.target.getAttribute('dim');
+                        let zProjection = dim === 'z' && hasProjection;
                         if (this.regions_info.image_info.dimensions[
-                            'max_' + dim] <= 1) return;
+                            'max_' + dim] <= 1 || zProjection) return;
                         let locked =
                             event.target.getAttribute('locked') === 'locked';
                         if (locked) {
@@ -640,8 +653,7 @@ export default class RegionsEdit extends EventSubscriber {
                             "locked", locked ? "" : "locked");
                         let respectiveTextInput =
                             shapeAttachmentsInput.filter('[dim="' + dim + '"]');
-                        respectiveTextInput.prop(
-                            'disabled', locked || this.last_selected === null);
+                        respectiveTextInput.prop('disabled', locked);
                     });
             }
         }
