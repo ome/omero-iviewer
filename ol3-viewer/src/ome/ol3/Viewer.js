@@ -1999,12 +1999,28 @@ ome.ol3.Viewer.prototype.watchRenderStatus = function(stopOnTileLoadError) {
 
 /**
  * Gets the present render status
- * @params {boolean} reset if true we reset to NOT_WATCHED
+ * @param {boolean} reset if true we reset to NOT_WATCHED
  * @return {ome.ol3.RENDER_STATUS} the render status
  */
 ome.ol3.Viewer.prototype.getRenderStatus = function(reset) {
     // delegate
     return this.getImage().getRenderStatus(reset);
+}
+
+/**
+ * Turns on/off smoothing for canvas
+ * @param {boolean} smoothing if true the viewer uses smoothing, otherwise not
+ */
+ome.ol3.Viewer.prototype.enableSmoothing = function(smoothing) {
+    this.viewer_.once('precompose', function(e) {
+        e.context['imageSmoothingEnabled'] = smoothing;
+        e.context['webkitImageSmoothingEnabled'] = smoothing;
+        e.context['mozImageSmoothingEnabled'] = smoothing;
+        e.context['msImageSmoothingEnabled'] = smoothing;
+    });
+
+    // force rerender
+    this.viewer_.updateSize();
 }
 
 /*
@@ -2194,3 +2210,8 @@ goog.exportProperty(
     ome.ol3.Viewer.prototype,
     'changeImageProjection',
     ome.ol3.Viewer.prototype.changeImageProjection);
+
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
+    'enableSmoothing',
+    ome.ol3.Viewer.prototype.enableSmoothing);

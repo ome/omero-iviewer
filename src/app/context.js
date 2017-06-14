@@ -122,6 +122,12 @@ export default class Context {
      selected_tab = TABS.SETTINGS;
 
      /**
+      * should interpolation should be used for image rendering?
+      * @type {boolean}
+      */
+     interpolate = true;
+
+     /**
       * application wide keyhandlers.
       * see addKeyListener/removeKeyListener
       * entries in the map are of the following format
@@ -160,11 +166,12 @@ export default class Context {
         // event aggregator is mandatory
         if (typeof eventbus instanceof EventAggregator)
             throw "Invalid EventAggregator given!"
-        this.eventbus = eventbus;
 
-        // process request params and assign members
+        this.eventbus = eventbus;
         this.initParams = params;
-        this.processServerParameter();
+
+        // process inital request params and assign members
+        this.processInitialParameters();
         this.readPrefixedURIs();
 
         // set global ajax request properties
@@ -240,15 +247,15 @@ export default class Context {
                 let i=0;
                 response.luts.map(
                     (l) => {
-                        let idx = LUTS_NAMES.indexOf(l.name);
+                        let isInList = LUTS_NAMES.indexOf(l.name) !== -1;
                         let mapValue =
                             Object.assign({
                                 nice_name :
                                     l.name.replace(/.lut/g, "").replace(/_/g, " "),
-                                index : idx
+                                index : isInList ? i : -1
                             }, l);
                         this.luts.set(mapValue.name, mapValue);
-                        if (idx >= 0) i++;
+                        if (isInList) i++;
                     });
                 for (let [id, conf] of this.image_configs) conf.changed();
             }
@@ -324,11 +331,12 @@ export default class Context {
     }
 
     /**
-     * Processes and sanitizes some of the server param
+     * Processes intial/handed in parameters,
+     * conducting checks and setting defaults
      *
      * @memberof Context
      */
-    processServerParameter() {
+    processInitialParameters() {
         let server = this.initParams[REQUEST_PARAMS.SERVER];
         if (typeof server !== 'string' || server.length === 0) server = "";
         else {
@@ -345,6 +353,11 @@ export default class Context {
         }
         this.server = server;
         delete this.initParams[REQUEST_PARAMS.SERVER];
+
+        let interpolate =
+            typeof this.initParams[REQUEST_PARAMS.INTERPOLATE] === 'string' ?
+                this.initParams[REQUEST_PARAMS.INTERPOLATE].toLowerCase() : 'true';
+        this.interpolate = (interpolate === 'true');
     }
 
     /**
