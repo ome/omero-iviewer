@@ -151,8 +151,8 @@ export default class Context {
         if (typeof eventbus instanceof EventAggregator)
             throw "Invalid EventAggregator given!"
 
-        // process request params and assign members
-        this.processServerParameter(optParams);
+        // process inital request params and assign members
+        this.processInitialParameters(optParams);
         this.readPrefixedURIs(optParams);
         this.eventbus = eventbus;
         this.initParams = optParams;
@@ -265,12 +265,13 @@ export default class Context {
     }
 
     /**
-     * Processes and sanitizes some of the server param
+     * Processes intial/handed in parameters,
+     * conducting chcks and setting defaults
      *
      * @param {Object} params the handed in parameters
      * @memberof Context
      */
-    processServerParameter(params) {
+    processInitialParameters(params) {
         let server = params[REQUEST_PARAMS.SERVER];
         if (typeof server !== 'string' || server.length === 0) server = "";
         else {
@@ -287,6 +288,10 @@ export default class Context {
         }
         this.server = server;
         delete params[REQUEST_PARAMS.SERVER];
+        let interpolate =
+            typeof params[REQUEST_PARAMS.INTERPOLATE] === 'string' ?
+                params[REQUEST_PARAMS.INTERPOLATE].toLowerCase() : 'true';
+        this.interpolate = (interpolate === 'true');
     }
 
     /**
