@@ -187,6 +187,11 @@ export class Info {
              "value": this.image_info.dimensions.max_t,
             }
         ];
+        if (typeof this.image_info.dataset_id === 'number')
+            this.columns.push({
+                "label": "Dataset (Id):",
+                "value": this.image_info.dataset_id
+            });
     }
 
     /**
