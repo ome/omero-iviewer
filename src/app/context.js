@@ -266,7 +266,7 @@ export default class Context {
 
     /**
      * Processes intial/handed in parameters,
-     * conducting chcks and setting defaults
+     * conducting checks and setting defaults
      *
      * @param {Object} params the handed in parameters
      * @memberof Context
