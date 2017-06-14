@@ -753,6 +753,10 @@ export default class Ol3Viewer extends EventSubscriber {
             }
         }
 
+        // update roi count
+        this.image_config.image_info.roi_count =
+            this.image_config.regions_info.data.size;
+
         // if we stored as part of a delete request we need to clean up
         // the history for the deleted shapes,
         // otherwise we wipe the history altogether

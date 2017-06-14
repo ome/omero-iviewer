@@ -293,6 +293,7 @@ export default class RegionsInfo  {
                         });
                     });
                     this.number_of_shapes = count;
+                    this.image_info.roi_count = this.data.size;
                     this.ready = true;
                     this.tmp_data = response;
                 } catch(err) {
