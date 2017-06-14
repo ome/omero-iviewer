@@ -46,6 +46,10 @@ def index(request, iid=None, conn=None, **kwargs):
         if request.GET[key]:
             params[str(key).upper()] = str(request.GET[key])
 
+    # set interpolation default
+    server_settings = request.session.get('server_settings', {})
+    params['INTERPOLATE'] = server_settings.get('interpolate_pixels', True)
+
     # we add the (possibly prefixed) uris
     params['WEBGATEWAY'] = reverse('webgateway')
     params['WEBCLIENT'] = reverse('webindex')
