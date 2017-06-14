@@ -229,15 +229,15 @@ export default class Context {
                 let i=0;
                 response.luts.map(
                     (l) => {
-                        let idx = LUTS_NAMES.indexOf(l.name);
+                        let isInList = LUTS_NAMES.indexOf(l.name) !== -1;
                         let mapValue =
                             Object.assign({
                                 nice_name :
                                     l.name.replace(/.lut/g, "").replace(/_/g, " "),
-                                index : idx
+                                index : isInList ? i : -1
                             }, l);
                         this.luts.set(mapValue.name, mapValue);
-                        if (idx >= 0) i++;
+                        if (isInList) i++;
                     });
                 for (let [id, conf] of this.image_configs) conf.changed();
             }

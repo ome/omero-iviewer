@@ -195,6 +195,8 @@ export const LUTS_NAMES = [
     'orange_hot.lut',
     'phase.lut',
     'physics.lut',
+    'pup_br.lut',
+    'pup_nr.lut',
     'rainbow_rgb.lut',
     'red-green.lut',
     'red_hot.lut',
