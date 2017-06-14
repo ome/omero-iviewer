@@ -470,7 +470,9 @@ export default class ThumbnailSlider extends EventSubscriber {
             this.context.rememberImageConfigChange(
                 image_id, this.image_config.image_info.dataset_id);
             this.context.addImageConfig(
-                image_id, this.image_config.image_info.dataset_id);
+                image_id,
+                this.context.initial_type !== INITIAL_TYPES.IMAGES ?
+                    this.image_config.image_info.dataset_id : null);
         };
 
         // pop up dialog to ask whether user wants to store rois changes
