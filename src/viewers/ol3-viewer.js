@@ -27,7 +27,7 @@ import Ui from '../utils/ui';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {ol3} from '../../libs/ol3-viewer.js';
 import {
-    IVIEWER, PLUGIN_PREFIX, REGIONS_DRAWING_MODE, RENDER_STATUS,
+    IVIEWER, PLUGIN_PREFIX, PROJECTION, REGIONS_DRAWING_MODE, RENDER_STATUS,
     VIEWER_ELEMENT_PREFIX
 } from '../utils/constants';
 import {
@@ -231,6 +231,8 @@ export default class Ol3Viewer extends EventSubscriber {
 
         // only the first request should be affected
         this.context.resetInitParams();
+        // use existing interpolation setting
+        this.viewer.enableSmoothing(this.context.interpolate);
         this.resizeViewer({window_resize: true, delay: 100});
     }
 
@@ -253,28 +255,29 @@ export default class Ol3Viewer extends EventSubscriber {
     }
 
     /**
-     * Handles image model changes (color/grayscale), projection changes
-     * and channel range changes (start,end,color)
-     * which come in the form of an event notification
+     * Handles the following image changes:
+     * - channel range (start, end, color)
+     * - color/grayscale
+     * - projection
+     * - interpolation
      *
      * @memberof Ol3Viewer
      * @param {Object} params the event notification parameters
      */
     changeImageSettings(params = {}) {
-        // we ignore notifications that don't concern us
-        // and don't have the model param
-        if (params.config_id !== this.image_config.id ||
-            this.viewer === null ||
-            (typeof params.model !== 'string' &&
-                typeof params.projection !== 'string' &&
-                !Misc.isArray(params.ranges))) return;
+        if (this.viewer === null) return;
 
-        if (typeof params.model === 'string')
+        let isSameConfig = params.config_id === this.image_config.id;
+        if (isSameConfig && typeof params.model === 'string')
             this.viewer.changeImageModel(params.model);
-        if (typeof params.projection === 'string')
-            this.viewer.changeImageProjection(params.projection);
-        if (Misc.isArray(params.ranges))
+        else if (isSameConfig && typeof params.projection === 'string')
+            this.viewer.changeImageProjection(
+                params.projection,
+                this.image_config.image_info.projection_opts);
+        else if (isSameConfig && Misc.isArray(params.ranges))
             this.viewer.changeChannelRange(params.ranges);
+        else if (typeof params.interpolate === 'boolean')
+            this.viewer.enableSmoothing(params.interpolate);
     }
 
     /**
@@ -588,6 +591,9 @@ export default class Ol3Viewer extends EventSubscriber {
             case REGIONS_DRAWING_MODE.CUSTOM_Z_AND_T:
                 add = false;
         }
+        if (unattached.indexOf('z') === -1 &&
+            this.image_config.image_info.projection === PROJECTION.INTMAX)
+                unattached.push('z');
 
         // draw shape
         this.viewer.drawShape(
@@ -892,6 +898,7 @@ export default class Ol3Viewer extends EventSubscriber {
             this.player_info.dim = null;
             this.player_info.forwards = null;
             this.player_info.handle = null;
+            this.image_config.undo_redo_enabled = true;
             this.viewer.getRenderStatus(true);
         }).bind(this);
 
@@ -927,6 +934,7 @@ export default class Ol3Viewer extends EventSubscriber {
 
         this.player_info.dim = dim;
         this.player_info.forwards = forwards;
+        this.image_config.undo_redo_enabled = false;
         this.player_info.handle =
             setInterval(
                 () => {

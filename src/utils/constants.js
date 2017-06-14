@@ -93,6 +93,7 @@ export const REQUEST_PARAMS = {
     CENTER_Y: 'Y',
     DATASET_ID: 'DATASET',
     IMAGE_ID: 'IMAGE_ID',
+    INTERPOLATE: 'INTERPOLATE',
     MAPS: 'MAPS',
     MODEL: 'M',
     PLANE: 'Z',
@@ -196,6 +197,8 @@ export const LUTS_NAMES = [
     'orange_hot.lut',
     'phase.lut',
     'physics.lut',
+    'pup_br.lut',
+    'pup_nr.lut',
     'rainbow_rgb.lut',
     'red-green.lut',
     'red_hot.lut',
@@ -218,4 +221,14 @@ export const TABS = {
     INFO: 'info',
     SETTINGS: 'settings',
     ROIS: 'rois'
+}
+
+/**
+ * possible projection values
+ * @type {Object}
+ */
+export const PROJECTION = {
+    NORMAL: 'normal',
+    INTMAX: 'intmax',
+    SPLIT: 'split'
 }

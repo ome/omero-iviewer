@@ -105,6 +105,12 @@ export default class Context {
      selected_tab = TABS.SETTINGS;
 
      /**
+      * should interpolation should be used for image rendering?
+      * @type {boolean}
+      */
+     interpolate = true;
+
+     /**
       * application wide keyhandlers.
       * see addKeyListener/removeKeyListener
       * entries in the map are of the following format
@@ -145,8 +151,8 @@ export default class Context {
         if (typeof eventbus instanceof EventAggregator)
             throw "Invalid EventAggregator given!"
 
-        // process request params and assign members
-        this.processServerParameter(optParams);
+        // process inital request params and assign members
+        this.processInitialParameters(optParams);
         this.readPrefixedURIs(optParams);
         this.eventbus = eventbus;
         this.initParams = optParams;
@@ -229,15 +235,15 @@ export default class Context {
                 let i=0;
                 response.luts.map(
                     (l) => {
-                        let idx = LUTS_NAMES.indexOf(l.name);
+                        let isInList = LUTS_NAMES.indexOf(l.name) !== -1;
                         let mapValue =
                             Object.assign({
                                 nice_name :
                                     l.name.replace(/.lut/g, "").replace(/_/g, " "),
-                                index : idx
+                                index : isInList ? i : -1
                             }, l);
                         this.luts.set(mapValue.name, mapValue);
-                        if (idx >= 0) i++;
+                        if (isInList) i++;
                     });
                 for (let [id, conf] of this.image_configs) conf.changed();
             }
@@ -259,12 +265,13 @@ export default class Context {
     }
 
     /**
-     * Processes and sanitizes some of the server param
+     * Processes intial/handed in parameters,
+     * conducting checks and setting defaults
      *
      * @param {Object} params the handed in parameters
      * @memberof Context
      */
-    processServerParameter(params) {
+    processInitialParameters(params) {
         let server = params[REQUEST_PARAMS.SERVER];
         if (typeof server !== 'string' || server.length === 0) server = "";
         else {
@@ -281,6 +288,10 @@ export default class Context {
         }
         this.server = server;
         delete params[REQUEST_PARAMS.SERVER];
+        let interpolate =
+            typeof params[REQUEST_PARAMS.INTERPOLATE] === 'string' ?
+                params[REQUEST_PARAMS.INTERPOLATE].toLowerCase() : 'true';
+        this.interpolate = (interpolate === 'true');
     }
 
     /**
@@ -294,7 +305,7 @@ export default class Context {
             typeof params[URI_PREFIX] === 'string' ?
                 Misc.prepareURI(params[URI_PREFIX]) : "";
         this.prefixed_uris.set(URI_PREFIX, prefix);
-        this.prefixed_uris.set(IVIEWER, APP_NAME);
+        this.prefixed_uris.set(IVIEWER, prefix + "/" + APP_NAME);
         this.prefixed_uris.set(PLUGIN_PREFIX, prefix + "/" + PLUGIN_NAME);
         [WEB_API_BASE, WEBGATEWAY, WEBCLIENT].map(
             (key) =>
