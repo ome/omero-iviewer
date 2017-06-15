@@ -13,7 +13,7 @@ An OMERO.web app for visualizing images in OMERO.
 Requirements
 ============
 
-* OMERO 5.3.2 or newer.
+* OMERO 5.3.3 or newer.
 
 
 Installing from PyPI
@@ -25,7 +25,7 @@ Install the app using `pip <https://pip.pypa.io/en/stable/>`_:
 
 ::
 
-    $ pip install omero-iviewer
+    $ pip install -U omero-iviewer
 
 Add iviewer custom app to your installed web apps:
 
