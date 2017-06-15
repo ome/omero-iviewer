@@ -94,6 +94,7 @@ export const REQUEST_PARAMS = {
     DATASET_ID: 'DATASET',
     IMAGE_ID: 'IMAGE_ID',
     INTERPOLATE: 'INTERPOLATE',
+    IMAGES: 'IMAGES',
     MAPS: 'MAPS',
     MODEL: 'M',
     PLANE: 'Z',
@@ -221,6 +222,17 @@ export const TABS = {
     INFO: 'info',
     SETTINGS: 'settings',
     ROIS: 'rois'
+}
+
+/**
+ * the possible intial types the viewer was openend with
+ * @type {Object}
+ */
+export const INITIAL_TYPES = {
+    NONE: 0,
+    IMAGE: 1,
+    IMAGES: 2,
+    DATASET: 3
 }
 
 /**

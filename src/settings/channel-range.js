@@ -358,40 +358,46 @@ export default class ChannelRange  {
      * @memberof ChannelRange
      */
     setBackgroundAfterColorChange(isLut) {
-        let height = this.context.luts_png.height * 3;
-        let blackGradientOffset = height - 29;
-        let css = {
-            "background-image" : "url('" + this.context.luts_png.url + "')",
-            "background-size" : "100% " + height + "px",
-            "background-repeat": "no-repeat",
-            "background-position" : "0px -" + blackGradientOffset + "px",
-            "transform":
-            this.channel.reverseIntensity ? "scaleX(-1)" : "none",
-            "background-color": ""
-        };
-        let resetCss = (transform_only=false) => {
-            if (!transform_only) {
-                css['background-image'] = ""; css['background-size'] = "";
-                css['background-repeat'] = ""; css['background-position'] = "";
-            };
-            css['transform'] = "";
-        };
+        // style removal helper
+        let removeStyles = (el) => {
+            let styles = el.prop('style');
+            if (styles) {
+                styles.removeProperty('background-color');
+                styles.removeProperty('background-image');
+                styles.removeProperty('background-size');
+                styles.removeProperty('background-position');
+                styles.removeProperty('background-repeat');
+                styles.removeProperty('transform');
+            }
+        }
+        let css = {};
+        if (this.channel.reverseIntensity) css["transform"] = "scaleX(-1)";
+        let channelSlider =
+            $(this.element).find(".channel-slider").find(".ui-slider-range");
         if (isLut) {
             let idx = this.context.luts.get(this.channel.color).index;
-            if (idx >= 0) idx = idx * 30 + 1;
-            else idx = blackGradientOffset;
-            css['background-position'] = "0px -" + idx + "px";
-            $(this.element).find(".channel-slider").find(
-                ".ui-slider-range").css(css);
-            resetCss(idx !== blackGradientOffset);
-            $(this.element).find(".channel").css(css);
+            if (idx === -1) {
+                removeStyles(channelSlider);
+                channelSlider.addClass('gradient-png');
+            } else {
+                channelSlider.removeClass('gradient-png');
+                css["background-image"] =
+                    "url('" + this.context.luts_png.url + "')";
+                css["background-size"] =
+                    "100% " + (this.context.luts_png.height * 3) + "px";
+                css["background-position"] = "0px -" + (idx * 30 + 1) + "px";
+                css["background-repeat"] = "no-repeat";
+            }
         } else {
+            removeStyles(channelSlider);
+            channelSlider.addClass('gradient-png');
             css['background-color'] = "#" + this.channel.color;
-            $(this.element).find(".channel-slider").find(
-                ".ui-slider-range").css(css);
-            resetCss();
-            $(this.element).find(".channel").css(css);
         }
+        channelSlider.css(css);
+        let channelButton = $(this.element).find(".channel");
+        removeStyles(channelButton);
+        delete css['transform'];
+        channelButton.css(css);
     }
 
     /**

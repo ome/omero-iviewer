@@ -16,21 +16,31 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 OME.setOpenWithUrlProvider("omero_iviewer", function(selected, url) {
+    selected_count = selected.length;
+    // last selected image
+    last_selected = selected[selected_count-1];
     // Add image Id to url
-    url += selected[0].id + "/";
+    url += last_selected.id + "/";
 
     // We try to traverse the jstree, to find parent of selected image
-    if ($ && $.jstree) {
+    if (selected_count === 1 && $ && $.jstree) {
         try {
             var inst = $.jstree.reference('#dataTree');
-            var parent = OME.getTreeImageContainerBestGuess(selected[0].id);
+            var parent = OME.getTreeImageContainerBestGuess(last_selected.id);
             if (parent && parent.data) {
                 if (parent.type === 'dataset')
-                    url += '?' + parent.type + '=' + parent.data.id
+                    url += '?' + parent.type + '=' + parent.data.id;
             }
         } catch(err) {
             console.log(err);
         }
+        return url;
     }
-    return url;
+
+    // append image list if more than one image was selected
+    url += '?images=';
+    for (var i=0;i<selected_count-1;i++)
+        url += selected[i].id + ',';
+
+    return url.substring(0, url.length-1);
 });

@@ -106,6 +106,8 @@ export default class ViewerContextMenu {
             this.hideContextMenu();
             // get selected image config
             this.image_config = this.context.getSelectedImageConfig();
+            if (this.image_config === null) return;
+            
             // clean up old observers
             this.unregisterObservers(true);
             // we establish the new context menu once the viewer's ready

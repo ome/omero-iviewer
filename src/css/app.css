@@ -1052,3 +1052,10 @@ thumbnail-slider img {
     left: 0px;
     display: none;
 }
+
+.gradient-png {
+    background-image: url('images/gradient.png');
+    background-size: 100% 30px;
+    background-repeat: no-repeat;
+    background-position: center;
+}
