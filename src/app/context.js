@@ -20,8 +20,9 @@ import {EventAggregator} from 'aurelia-event-aggregator';
 import Misc from '../utils/misc';
 import ImageConfig from '../model/image_config';
 import {
-    APP_NAME, IVIEWER, LUTS_NAMES, LUTS_PNG_URL, PLUGIN_NAME, PLUGIN_PREFIX,
-    REQUEST_PARAMS, TABS, URI_PREFIX, WEB_API_BASE, WEBCLIENT, WEBGATEWAY
+    APP_NAME, IVIEWER, INITIAL_TYPES, LUTS_NAMES, LUTS_PNG_URL, PLUGIN_NAME,
+    PLUGIN_PREFIX, REQUEST_PARAMS, TABS, URI_PREFIX, WEB_API_BASE, WEBCLIENT,
+    WEBGATEWAY
 } from '../utils/constants';
 
 /**
@@ -77,6 +78,22 @@ export default class Context {
      * @type {Map}
      */
     image_configs = new Map();
+
+    /**
+     * the initial type the viewer was opened with
+     *
+     * @memberof Context
+     * @type {number}
+     */
+    initial_type = INITIAL_TYPES.NONE;
+
+    /**
+     * the initial id(s) corresponding to the initial type
+     *
+     * @memberof Context
+     * @type {number}
+     */
+    initial_ids = [];
 
     /**
      * the key of the presently selected/active ImageConfig
@@ -143,19 +160,19 @@ export default class Context {
     /**
      * @constructor
      * @param {EventAggregator} eventbus the aurelia event aggregator
-     * @param {number} initial_image_id the initial image id
-     * @param {object} optParams an object containing optional req params
+     * @param {object} params an object containing the initial request params
      */
-    constructor(eventbus = null, initial_image_id=null, optParams={}) {
+    constructor(eventbus = null, params={}) {
         // event aggregator is mandatory
         if (typeof eventbus instanceof EventAggregator)
             throw "Invalid EventAggregator given!"
 
-        // process inital request params and assign members
-        this.processInitialParameters(optParams);
-        this.readPrefixedURIs(optParams);
         this.eventbus = eventbus;
-        this.initParams = optParams;
+        this.initParams = params;
+
+        // process inital request params and assign members
+        this.processInitialParameters();
+        this.readPrefixedURIs();
 
         // set global ajax request properties
         $.ajaxSetup({
@@ -172,13 +189,8 @@ export default class Context {
         // set up luts
         this.setUpLuts();
 
-        // we set the initial image as the default (if given)
-        let initial_dataset_id =
-            parseInt(
-                this.getInitialRequestParam(REQUEST_PARAMS.DATASET_ID));
-        this.addImageConfig(initial_image_id,
-            typeof initial_dataset_id === 'number' &&
-            !isNaN(initial_dataset_id) ? initial_dataset_id : null);
+        // open what we received as inital parameter
+        this.openWithInitialParams();
 
         // set up key listener
         this.establishKeyDownListener();
@@ -251,6 +263,60 @@ export default class Context {
     }
 
     /**
+     * Depending on what received as the inital parameters
+     * (image(s), dataset, etc) we continue to create and add
+     * an initial image config (or not) and do whatevere is necessary
+     * to bootstrap the initial type
+     *
+     * @memberof Context
+     */
+    openWithInitialParams() {
+        // do we have an intial image id
+        let initial_image_id =
+            typeof this.initParams[REQUEST_PARAMS.IMAGE_ID] !== 'undefined' ?
+            parseInt(this.initParams[REQUEST_PARAMS.IMAGE_ID]) : null;
+        // we set the initial type and add the image id
+        if (typeof initial_image_id === 'number' && !isNaN(initial_image_id)) {
+            delete this.initParams[REQUEST_PARAMS.IMAGE_ID];
+            this.initial_type = INITIAL_TYPES.IMAGE;
+            this.initial_ids.push(initial_image_id);
+        }
+
+        // do we have a list of image ids
+        let initial_image_ids =
+            typeof this.initParams[REQUEST_PARAMS.IMAGES] !== 'undefined' ?
+                this.initParams[REQUEST_PARAMS.IMAGES] : null;
+        if (initial_image_ids) {
+            let tokens = initial_image_ids.split(',');
+            if (tokens.length > 0) {
+                let initialIdCount = this.initial_ids.length;
+                tokens.map((tok) => {
+                    let parsedToken = parseInt(tok);
+                    if (typeof parsedToken === 'number' && !isNaN(parsedToken))
+                        this.initial_ids.push(parsedToken);
+                });
+                if (this.initial_ids.length > initialIdCount)
+                    this.initial_type = INITIAL_TYPES.IMAGES;
+            }
+        }
+
+        // do we have an initial dataset id
+        let initial_dataset_id =
+            parseInt(
+                this.getInitialRequestParam(REQUEST_PARAMS.DATASET_ID));
+        if (typeof initial_dataset_id !== 'number' || isNaN(initial_dataset_id))
+            initial_dataset_id = null;
+
+        // add image config if we have image ids
+        if (this.initial_ids.length > 0)
+            this.addImageConfig(this.initial_ids[0], initial_dataset_id);
+        else if (initial_dataset_id) {
+            this.initial_type = INITIAL_TYPES.DATASET;
+            this.initial_ids = [initial_dataset_id];
+        }
+    }
+
+    /**
      * Queries whether a lut by the given name is in our map
      *
      * @param {string} name the lut name
@@ -268,11 +334,10 @@ export default class Context {
      * Processes intial/handed in parameters,
      * conducting checks and setting defaults
      *
-     * @param {Object} params the handed in parameters
      * @memberof Context
      */
-    processInitialParameters(params) {
-        let server = params[REQUEST_PARAMS.SERVER];
+    processInitialParameters() {
+        let server = this.initParams[REQUEST_PARAMS.SERVER];
         if (typeof server !== 'string' || server.length === 0) server = "";
         else {
             // check for localhost and if we need to prefix for requests
@@ -287,31 +352,31 @@ export default class Context {
                 server = "http://" + server;
         }
         this.server = server;
-        delete params[REQUEST_PARAMS.SERVER];
+        delete this.initParams[REQUEST_PARAMS.SERVER];
+
         let interpolate =
-            typeof params[REQUEST_PARAMS.INTERPOLATE] === 'string' ?
-                params[REQUEST_PARAMS.INTERPOLATE].toLowerCase() : 'true';
+            typeof this.initParams[REQUEST_PARAMS.INTERPOLATE] === 'string' ?
+                this.initParams[REQUEST_PARAMS.INTERPOLATE].toLowerCase() : 'true';
         this.interpolate = (interpolate === 'true');
     }
 
     /**
      * Reads the list of uris that we need
      *
-     * @param {Object} params the handed in parameters
      * @memberof Context
      */
-    readPrefixedURIs(params) {
+    readPrefixedURIs() {
         let prefix =
-            typeof params[URI_PREFIX] === 'string' ?
-                Misc.prepareURI(params[URI_PREFIX]) : "";
+            typeof this.initParams[URI_PREFIX] === 'string' ?
+                Misc.prepareURI(this.initParams[URI_PREFIX]) : "";
         this.prefixed_uris.set(URI_PREFIX, prefix);
         this.prefixed_uris.set(IVIEWER, prefix + "/" + APP_NAME);
         this.prefixed_uris.set(PLUGIN_PREFIX, prefix + "/" + PLUGIN_NAME);
         [WEB_API_BASE, WEBGATEWAY, WEBCLIENT].map(
             (key) =>
                 this.prefixed_uris.set(
-                    key, typeof params[key] === 'string' ? params[key] :
-                        '/' + key.toLowerCase()));
+                    key, typeof this.initParams[key] === 'string' ?
+                            this.initParams[key] : '/' + key.toLowerCase()));
     }
 
     /**
@@ -429,15 +494,21 @@ export default class Context {
     }
 
     rememberImageConfigChange(image_id, dataset_id) {
-        if (!this.hasHTML5HistoryFeatures()) return;
+        if (!this.hasHTML5HistoryFeatures() ||
+            this.getSelectedImageConfig() === null) return;
 
         let old_image_id =
             this.getSelectedImageConfig().image_info.image_id;
         let oldPath = window.location.pathname;
         let newPath =
             oldPath.replace(old_image_id, image_id);
-        if (typeof dataset_id === 'number')
-            newPath += '?dataset=' + dataset_id;
+        if (this.initial_type === INITIAL_TYPES.IMAGE &&
+            typeof dataset_id === 'number') newPath += '?dataset=' + dataset_id;
+        else if (this.initial_type === INITIAL_TYPES.IMAGES) {
+            let newQueryString =
+                window.location.search.replace(image_id, old_image_id);
+            newPath += newQueryString;
+        }
         if (this.is_dev_server) {
             newPath += (newPath.indexOf('?') === -1) ? '?' : '&';
             newPath += 'haveMadeCrossOriginLogin_';

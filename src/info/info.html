@@ -21,12 +21,25 @@
     <h4 show.bind="image_info.ready">${image_info.image_name}</h4>
 
     <table show.bind="image_info.ready" class="table table-condensed">
+        <tr>
+            <td class="col-sm-6 text-weight-bold">Image ID:</td>
+            <td class="col-sm-6">${image_info.image_id}</td>
+        </tr>
+        <tr show.bind="dataset_info !== null">
+            <td class="col-sm-6 text-weight-bold">Dataset:</td>
+            <td class="col-sm-6">
+                <a href="${dataset_info.url}"
+                   title="Show Dataset in webclient" target="_blank">
+                    ${dataset_info.name}
+                </a>
+            </td>
+        </tr>        
         <tr repeat.for="column of columns">
-            <th class="col-sm-6 text-weight-bold">${column.label}</th>
+            <td class="col-sm-6 text-weight-bold">${column.label}</td>
             <td class="col-sm-6">${column.value}</td>
         </tr>
         <tr>
-            <th class="col-sm-6 text-weight-bold">Channels:</th>
+            <td class="col-sm-6 text-weight-bold">Channels:</td>
             <td class="col-sm-6">
                 <span repeat.for="channel of image_info.channels">
                     ${channel.label}${!$last ? ', ' : ''}

@@ -20,7 +20,7 @@
 import Context from '../app/context';
 
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
-
+import {WEBCLIENT} from '../utils/constants';
 
 @customElement('info')
 @inject(Context, BindingEngine)
@@ -32,6 +32,13 @@ export class Info {
      * @type {ImageInfo}
      */
     @bindable image_info = null;
+
+    /**
+     * the associated dataset info
+     * @memberof Info
+     * @type {Object}
+     */
+    dataset_info = null;
 
     /**
      * the list of observers
@@ -162,9 +169,6 @@ export class Info {
         pixels_size_label += ":";
         let size_xy = this.image_info.dimensions.max_x+" x "+this.image_info.dimensions.max_y
         this.columns = [
-            {"label": "Image ID:",
-             "value": this.image_info.image_id,
-            },
             {"label": "Owner:",
              "value": this.image_info.author,
             },
@@ -187,6 +191,17 @@ export class Info {
              "value": this.image_info.dimensions.max_t,
             }
         ];
+        if (typeof this.image_info.dataset_id === 'number') {
+            this.dataset_info = {
+                url: this.context.server +
+                        this.context.getPrefixedURI(WEBCLIENT) +
+                        '/?show=dataset-' + this.image_info.dataset_id,
+                name:
+                    this.image_info.dataset_name === 'Multiple' ?
+                        this.image_info.dataset_id :
+                        this.image_info.dataset_name
+            }
+        } else this.dataset_info = null;
     }
 
     /**

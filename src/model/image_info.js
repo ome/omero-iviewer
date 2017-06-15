@@ -43,6 +43,13 @@ export default class ImageInfo {
     dataset_id = null;
 
     /**
+     * the associated dataset name
+     * @memberof ImageInfo
+     * @type {string}
+     */
+    dataset_name = null;
+
+    /**
      * a flag that signals whether we have successfully
      * received all backend info or not
      * @memberof ImageInfo
@@ -281,6 +288,8 @@ export default class ImageInfo {
             this.image_pixels_type = response.meta.pixelsType;
         this.image_timestamp = response.meta.imageTimestamp;
         this.setFormattedDeltaT(response);
+        if (typeof response.meta.datasetName === 'string')
+            this.dataset_name = response.meta.datasetName;
 
         // signal that we are ready
         this.ready = true;
