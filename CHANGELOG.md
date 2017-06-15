@@ -9,6 +9,9 @@ This version includes:
 - load of ROIS using the web api
 - add shortcut to draw line
 - improve copy and paste of ROIs
+- add support for new Lookup tables
+- ability to open several images
+- improve layout of rois table
 
 
 0.1.0 (May 2017)
