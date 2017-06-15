@@ -259,38 +259,39 @@ export default class RegionsInfo  {
                     let count = 0;
                     response.data.map((roi) => {
                         let shapes = new Map();
-
-                        // set shape properties and store the object
-                        let roiId = roi['@id'];
-                        roi.shapes.sort(function(s1, s2) {
-                            var z1 = parseInt(s1['TheZ']);
-                            var z2 = parseInt(s2['TheZ']);
-                            var t1 = parseInt(s1['TheT']);
-                            var t2 = parseInt(s2['TheT']);
-                            if (z1 === z2) {
-                                return (t1 < t2) ? -1 : (t1 > t2) ? 1: 0;
-                            }
-                            return (z1 < z2) ? -1: 1;
-                        });
-                        roi.shapes.map((shape) => {
-                            let newShape =
-                            Converters.amendShapeDefinition(
-                                Object.assign({}, shape));
-                            let shapeId = newShape['@id']
-                            newShape.shape_id = "" + roiId + ":" + shapeId;
-                            // we add some flags we are going to need
-                            newShape.visible = true;
-                            newShape.selected = false;
-                            newShape.deleted = false;
-                            newShape.modified = false;
-                            shapes.set(shapeId, newShape);
-                            count++;
-                        });
-                        this.data.set(roiId, {
-                            shapes: shapes,
-                            show: false,
-                            deleted: 0
-                        });
+                        if (Misc.isArray(roi.shapes) && roi.shapes.length > 0) {
+                            // set shape properties and store the object
+                            let roiId = roi['@id'];
+                            roi.shapes.sort(function(s1, s2) {
+                                var z1 = parseInt(s1['TheZ']);
+                                var z2 = parseInt(s2['TheZ']);
+                                var t1 = parseInt(s1['TheT']);
+                                var t2 = parseInt(s2['TheT']);
+                                if (z1 === z2) {
+                                    return (t1 < t2) ? -1 : (t1 > t2) ? 1: 0;
+                                }
+                                return (z1 < z2) ? -1: 1;
+                            });
+                            roi.shapes.map((shape) => {
+                                let newShape =
+                                Converters.amendShapeDefinition(
+                                    Object.assign({}, shape));
+                                let shapeId = newShape['@id']
+                                newShape.shape_id = "" + roiId + ":" + shapeId;
+                                // we add some flags we are going to need
+                                newShape.visible = true;
+                                newShape.selected = false;
+                                newShape.deleted = false;
+                                newShape.modified = false;
+                                shapes.set(shapeId, newShape);
+                                count++;
+                            });
+                            this.data.set(roiId, {
+                                shapes: shapes,
+                                show: false,
+                                deleted: 0
+                            });
+                        }
                     });
                     this.number_of_shapes = count;
                     this.image_info.roi_count = this.data.size;
@@ -516,30 +517,6 @@ export default class RegionsInfo  {
                 return;
         }
 
-        // check the copied image dims with the present ones
-        // and calculate a scale factor if different
-        let scale_factor = 1;
-        if (typeof this.copied_image_dims === 'object' &&
-            this.copied_image_dims !== null &&
-            this.copied_image_dims.width !== this.image_info.dimensions.max_x &&
-            this.copied_image_dims.height !== this.image_info.dimensions.max_y) {
-                let widthDiff =
-                    Math.abs(this.copied_image_dims.width -
-                                this.image_info.dimensions.max_x);
-                let heightDiff =
-                    Math.abs(this.copied_image_dims.height -
-                                this.image_info.dimensions.max_y);
-                if (widthDiff > heightDiff) {
-                    scale_factor =
-                        this.image_info.dimensions.max_x /
-                            this.copied_image_dims.width;
-                } else {
-                    scale_factor =
-                        this.image_info.dimensions.max_y /
-                            this.copied_image_dims.height;
-                }
-        }
-
         let params = {
             config_id: this.image_info.config_id,
             number: 1, paste: true,
@@ -547,7 +524,6 @@ export default class RegionsInfo  {
             hist_id: this.history.getHistoryId(),
             position: pixel
         };
-        if (scale_factor !== 1) params.scale_factor = scale_factor;
         this.image_info.context.publish(REGIONS_GENERATE_SHAPES, params);
     }
 

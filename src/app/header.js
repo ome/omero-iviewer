@@ -88,6 +88,8 @@ export class Header {
      * @memberof Header
      */
      onImageConfigChange() {
+        if (this.context.getSelectedImageConfig() === null) return;
+        
         this.image_info = this.context.getSelectedImageConfig().image_info;
 
         let imageInfoReady = () => {

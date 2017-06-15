@@ -21,7 +21,7 @@ import {EventAggregator} from 'aurelia-event-aggregator';
 import Context from './app/context';
 import Index from './app/index';
 import Misc from './utils/misc';
-import {REQUEST_PARAMS, URI_PREFIX, PLUGIN_NAME} from './utils/constants';
+import {URI_PREFIX, PLUGIN_NAME} from './utils/constants';
 
 let req = window.INITIAL_REQUEST_PARAMS || {};
 
@@ -47,17 +47,7 @@ bootstrap(function(aurelia) {
     .standardConfiguration()
     .developmentLogging();
 
-    let init_id =
-        typeof req[REQUEST_PARAMS.IMAGE_ID] !== 'undefined' ?
-        parseInt(req[REQUEST_PARAMS.IMAGE_ID]) : null;
-    if (typeof init_id !== 'number') {
-        console.error(
-            "Please supply an initial image id by setting 'window.INITIAL_IMAGE_ID'");
-        return;
-    }
-    delete req[REQUEST_PARAMS.IMAGE_ID]; // don't process it any more
-
-    let ctx = new Context(aurelia.container.get(EventAggregator), init_id, req);
+    let ctx = new Context(aurelia.container.get(EventAggregator), req);
     if (is_dev_server) ctx.tweakForDevServer();
     aurelia.container.registerInstance(Context,ctx);
 

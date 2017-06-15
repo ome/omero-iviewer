@@ -93,13 +93,15 @@ export const REQUEST_PARAMS = {
     CENTER_Y: 'Y',
     DATASET_ID: 'DATASET',
     IMAGE_ID: 'IMAGE_ID',
+    IMAGES: 'IMAGES',
     MAPS: 'MAPS',
     MODEL: 'M',
     PLANE: 'Z',
     PROJECTION: 'P',
     SERVER: 'SERVER',
     TIME: 'T',
-    ZOOM: 'ZM'
+    ZOOM: 'ZM',
+    INTERPOLATE: 'INTERPOLATE'
 }
 
 /**
@@ -195,6 +197,8 @@ export const LUTS_NAMES = [
     'orange_hot.lut',
     'phase.lut',
     'physics.lut',
+    'pup_br.lut',
+    'pup_nr.lut',
     'rainbow_rgb.lut',
     'red-green.lut',
     'red_hot.lut',
@@ -217,6 +221,17 @@ export const TABS = {
     INFO: 'info',
     SETTINGS: 'settings',
     ROIS: 'rois'
+}
+
+/**
+ * the possible intial types the viewer was openend with
+ * @type {Object}
+ */
+export const INITIAL_TYPES = {
+    NONE: 0,
+    IMAGE: 1,
+    IMAGES: 2,
+    DATASET: 3
 }
 
 /**

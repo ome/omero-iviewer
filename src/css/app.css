@@ -505,6 +505,12 @@ thumbnail-slider img {
     padding-left: 5px;
 }
 
+.save-settings {
+    min-width: 125px;
+}
+.history {
+    min-width: 200px;
+}
 .save-settings .btn-sm, .history .btn-sm {
     padding: 5px 9px;
 }
@@ -516,10 +522,11 @@ thumbnail-slider img {
     margin-left: 10px;
     margin-top: 8px;
     margin-bottom: 0px;
+    min-width: 350px;
 }
 .checkbox-settings div {
     float: left;
-    margin-right: 20px;
+    margin-right: 10px;
 }
 
 #panel-tabs li a {
@@ -1038,4 +1045,11 @@ thumbnail-slider img {
     top: 0px;
     left: 0px;
     display: none;
+}
+
+.gradient-png {
+    background-image: url('images/gradient.png');
+    background-size: 100% 30px;
+    background-repeat: no-repeat;
+    background-position: center;
 }

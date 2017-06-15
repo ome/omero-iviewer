@@ -251,11 +251,11 @@ ome.ol3.utils.Regions.generateRegions =
         var ret = []; // our return array
 
         // if we have a scale factor, apply it now
-        if (typeof scale_factor === 'number') {
+        if (typeof scale_factor === 'number' && scale_factor !== 1) {
             prototypeFeature.getGeometry().scale(scale_factor);
             ome.ol3.utils.Regions.scaleTextAndLabels(
                 prototypeFeature, scale_factor);
-        }
+        } else scale_factor = 1;
 
         // get the bounding box for our prototype
         var bboxPrototype = prototypeFeature.getGeometry().getExtent();
@@ -269,8 +269,9 @@ ome.ol3.utils.Regions.generateRegions =
         // check if the width/height exceeds our available extent still
         var availableWidth = ol.extent.getWidth(extent);
         var availableHeight = ol.extent.getHeight(extent);
-        if (availableWidth === 0 || availableHeight === 0 ||
-            bboxWidth > availableWidth || bboxHeight > availableHeight) {
+        if (scale_factor !== 1 &&
+            (availableWidth === 0 || availableHeight === 0 ||
+            bboxWidth > availableWidth || bboxHeight > availableHeight)) {
                 var deltaWidth = bboxWidth - availableWidth;
             var deltaHeight = bboxHeight - availableHeight;
             var higherOfTheTwo =

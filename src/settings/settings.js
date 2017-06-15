@@ -572,6 +572,23 @@ export default class Settings extends EventSubscriber {
     }
 
     /**
+     * Toggles interpolation for image
+     *
+     * @param {Object} event the event object
+     * @memberof Settings
+     */
+    toggleInterpolation(event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        this.context.interpolate = event.target.checked;
+        this.context.publish(
+            IMAGE_SETTINGS_CHANGE, {interpolate: this.context.interpolate});
+
+        return false;
+    }
+
+    /**
      * Unregisters the the observers (property and image info ready)
      *
      * @param {boolean} property_only true if only property observers are cleaned up
