@@ -279,7 +279,6 @@ export default class Context {
         if (typeof initial_image_id === 'number' && !isNaN(initial_image_id)) {
             delete this.initParams[REQUEST_PARAMS.IMAGE_ID];
             this.initial_type = INITIAL_TYPES.IMAGE;
-            this.initial_ids.push(initial_image_id);
         }
 
         // do we have a list of image ids
@@ -504,11 +503,8 @@ export default class Context {
             oldPath.replace(old_image_id, image_id);
         if (this.initial_type === INITIAL_TYPES.IMAGE &&
             typeof dataset_id === 'number') newPath += '?dataset=' + dataset_id;
-        else if (this.initial_type === INITIAL_TYPES.IMAGES) {
-            let newQueryString =
-                window.location.search.replace(image_id, old_image_id);
-            newPath += newQueryString;
-        }
+        else if (this.initial_type === INITIAL_TYPES.IMAGES)
+            newPath += window.location.search;
         if (this.is_dev_server) {
             newPath += (newPath.indexOf('?') === -1) ? '?' : '&';
             newPath += 'haveMadeCrossOriginLogin_';

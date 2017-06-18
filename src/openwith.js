@@ -17,16 +17,16 @@
 //
 OME.setOpenWithUrlProvider("omero_iviewer", function(selected, url) {
     selected_count = selected.length;
-    // last selected image
-    last_selected = selected[selected_count-1];
-    // Add image Id to url
-    url += last_selected.id + "/";
+    // initial image to be shown is first in list
+    initial_image = selected[0];
+    // start constructing url with initial image
+    url += initial_image.id + "/";
 
     // We try to traverse the jstree, to find parent of selected image
     if (selected_count === 1 && $ && $.jstree) {
         try {
             var inst = $.jstree.reference('#dataTree');
-            var parent = OME.getTreeImageContainerBestGuess(last_selected.id);
+            var parent = OME.getTreeImageContainerBestGuess(initial_image.id);
             if (parent && parent.data) {
                 if (parent.type === 'dataset')
                     url += '?' + parent.type + '=' + parent.data.id;
@@ -39,8 +39,7 @@ OME.setOpenWithUrlProvider("omero_iviewer", function(selected, url) {
 
     // append image list if more than one image was selected
     url += '?images=';
-    for (var i=0;i<selected_count-1;i++)
-        url += selected[i].id + ',';
+    selected.map((img) => url += img.id + ',');
 
     return url.substring(0, url.length-1);
 });
