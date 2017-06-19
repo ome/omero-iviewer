@@ -307,8 +307,11 @@ export default class Context {
             initial_dataset_id = null;
 
         // add image config if we have image ids
-        if (this.initial_ids.length > 0)
-            this.addImageConfig(this.initial_ids[0], initial_dataset_id);
+        if (this.initial_type === INITIAL_TYPES.IMAGES &&
+            this.initial_ids.length > 0)
+                this.addImageConfig(this.initial_ids[0], initial_dataset_id);
+        else if (this.initial_type === INITIAL_TYPES.IMAGE)
+            this.addImageConfig(initial_image_id, initial_dataset_id);
         else if (initial_dataset_id) {
             this.initial_type = INITIAL_TYPES.DATASET;
             this.initial_ids = [initial_dataset_id];
