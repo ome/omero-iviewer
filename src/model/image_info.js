@@ -348,17 +348,29 @@ export default class ImageInfo {
                     initialProjection.toLowerCase() :
                     response.rdefs.projection);
         this.projection = initialProjection.projection;
-        this.projection_opts = {
-            start:
-                typeof initialProjection.start === 'number' &&
+
+        let v_s = 0, diff = 0, v_e = this.dimensions.max_z - 1;
+        if (typeof initialProjection.start === 'number' &&
                 initialProjection.start >= 0 &&
-                initialProjection.start < this.dimensions.max_z ?
-                    initialProjection.start : this.dimensions.z,
-            end:
-                typeof initialProjection.end === 'number' &&
+                initialProjection.start < this.dimensions.max_z) {
+            v_s = initialProjection.start;
+        } else {
+            diff = this.dimensions.z-5;
+            if (diff > 0) v_s = diff;
+        }
+            
+        if (typeof initialProjection.end === 'number' &&
                 initialProjection.end >= 0 &&
-                initialProjection.end < this.dimensions.max_z ?
-                    initialProjection.end : this.dimensions.max_z - 1
+                initialProjection.end < this.dimensions.max_z) {
+                v_e = initialProjection.end;
+        } else {
+            diff =  this.dimensions.z+5;
+            if (diff < this.dimensions.max_z - 1)
+                v_e = diff;
+        }
+        this.projection_opts = {
+            start: v_s,
+            end: v_e
         };
         if (this.dimensions.max_z > 1 &&
             this.projection_opts.start >= this.projection_opts.end)
