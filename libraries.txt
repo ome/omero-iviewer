@@ -1,5 +1,5 @@
 Managed manually
------------------
+----------------
 
 Library: OpenLayers 3
 License: 2-Clause BSD
