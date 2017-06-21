@@ -39,7 +39,8 @@ OME.setOpenWithUrlProvider("omero_iviewer", function(selected, url) {
 
     // append image list if more than one image was selected
     url += '?images=';
-    selected.map((img) => url += img.id + ',');
+    for (var i=0;i<selected_count;i++)
+        url += selected[i].id + ',';
 
     return url.substring(0, url.length-1);
 });
