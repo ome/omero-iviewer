@@ -11,7 +11,7 @@ This version includes:
 - improved copy and paste of ROIs and add a new context menu for these actions
 - added support for new Lookup tables
 - added ability to open multiple selected images
-- improved layout of rois table
+- improved layout of ROIs table
 - added support for 2 new lookup tables from `Janelia <https://www.janelia.org/>`_
 
 
