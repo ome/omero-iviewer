@@ -93,6 +93,7 @@ export const REQUEST_PARAMS = {
     CENTER_Y: 'Y',
     DATASET_ID: 'DATASET',
     IMAGE_ID: 'IMAGE_ID',
+    INTERPOLATE: 'INTERPOLATE',
     IMAGES: 'IMAGES',
     MAPS: 'MAPS',
     MODEL: 'M',
@@ -100,8 +101,8 @@ export const REQUEST_PARAMS = {
     PROJECTION: 'P',
     SERVER: 'SERVER',
     TIME: 'T',
-    ZOOM: 'ZM',
-    INTERPOLATE: 'INTERPOLATE'
+    VERSION: 'VERSION',
+    ZOOM: 'ZM'
 }
 
 /**

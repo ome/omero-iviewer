@@ -183,6 +183,12 @@ a.ui-button:active,
     color: white;
     margin-top: 5px;
 }
+.fixed-header-text .app-version {
+    float: right;
+    margin-right: 5px;
+    margin-top: 4px;
+    font-size: 18px;
+}
 
 .frame {
     margin-left: -105px;

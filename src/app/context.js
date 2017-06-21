@@ -679,4 +679,14 @@ export default class Context {
         // we do need our uri prefixes again
         this.prefixed_uris.forEach((value, key) => this.initParams[key] = value);
     }
+
+    /**
+     * Returns version information
+     *
+     * @return {string} the version
+     * @memberof Context
+     */
+    getVersion() {
+        return 'v' + this.getInitialRequestParam(REQUEST_PARAMS.VERSION);
+    }
 }
