@@ -6,13 +6,12 @@ This version includes:
 - support for omero prefix
 - improved manipulation of rendering setting for floating images with very small pixels range
 - support for maximum intensity projection along Z
-- load of ROIS using the web api
+- loaded ROIS using the web api
 - added ability to draw line
 - improved copy and paste of ROIs and add a new context menu for these actions
-- added support for new Lookup tables
 - added ability to open multiple selected images
 - improved layout of ROIs table
-- added support for two new lookup tables from `Janelia <https://www.janelia.org/>`_
+- added support for two new Lookup tables from `Janelia <https://www.janelia.org/>`_
 
 
 0.1.0 (May 2017)
