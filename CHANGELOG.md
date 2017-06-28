@@ -12,6 +12,7 @@ This version includes:
 - added ability to open multiple selected images
 - improved layout of ROIs table
 - added support for two new Lookup tables from `Janelia <https://www.janelia.org/>`_
+- added option to turn on or off the interpolation
 
 
 0.1.0 (May 2017)
