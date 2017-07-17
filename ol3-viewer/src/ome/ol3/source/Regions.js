@@ -200,6 +200,7 @@ ome.ol3.source.Regions = function(viewerReference, options) {
             if (ome.ol3.utils.Misc.isArray(regionsAsFeatures) &&
                 regionsAsFeatures.length > 0)
                     scope.addFeatures(regionsAsFeatures);
+            // TODO: calculate measures and notify
         }
 
         // we use provided data if there
@@ -859,6 +860,55 @@ ome.ol3.source.Regions.prototype.sendHistoryNotification = function(hist_id, ids
     if (config_id && eventbus) // publish
         eventbus.publish("REGIONS_HISTORY_ENTRY",
                 {"config_id": config_id, "hist_id": hist_id, "shape_ids": ids});
+}
+
+/**
+ * Returns the area and length values for a given shape
+ *
+ * @param {ol.Feature} feature the ol3 feature representing the shape
+ * @param {boolean} recalculate flag: if true we redo the measurement (default: false)
+ * @return {Object|null} an object containing shape id, area and length or null
+ */
+ome.ol3.source.Regions.prototype.getLengthAndAreaForShape =
+    function(feature, recalculate) {
+        if (!(feature instanceof ol.Feature)) return null;
+
+        if (typeof recalculate !== 'boolean') recalculate = false;
+
+        var pixel_size =
+            this.viewer_.viewer_.getView().getProjection().getMetersPerUnit();
+        if (typeof pixel_size !== 'number') pixel_size = 1;
+
+        var geom = feature.getGeometry();
+        // we represent points as circles
+        var hasArea =
+            !(geom instanceof ol.geom.Circle) &&
+            !(geom instanceof ome.ol3.geom.Line) &&
+            !(geom instanceof ome.ol3.geom.Label);
+        var hasLength =
+            !(geom instanceof ol.geom.Circle) &&
+            !(geom instanceof ome.ol3.geom.Label);
+        // we recalculate regardless if we don't have a length/area yet
+        if (typeof feature['Area'] !== 'number' || recalculate)
+            feature['Area'] = hasArea ?
+                geom.getArea() * (pixel_size * pixel_size) : -1;
+        if (typeof feature['Length'] !== 'number' || recalculate)
+            feature['Length'] = hasLength ?
+                ol.geom.flat.length.lineString(
+                    geom.flatCoordinates, 0,
+                    geom.flatCoordinates.length, geom.stride) * pixel_size : -1;
+
+        var roundAfterThreeDecimals = function(value) {
+            if (value < 0) return value;
+
+            return Number(Math.round(value +'e3') + 'e-3');
+        };
+
+        return {
+            'id' : feature.getId(),
+            'Area': roundAfterThreeDecimals(feature['Area']),
+            'Length': roundAfterThreeDecimals(feature['Length'])
+        };
 }
 
 /**

@@ -294,8 +294,8 @@ export default class RegionsInfo  {
                         }
                     });
                     this.number_of_shapes = count;
-                    this.ready = true;
                     this.tmp_data = response;
+                    this.ready = true;
                 } catch(err) {
                     console.error("Failed to load Rois: " + err);
                 }

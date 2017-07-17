@@ -614,7 +614,7 @@ ome.ol3.utils.Conversion.integrateStyleIntoJsonObject = function(feature, jsonOb
 }
 
 /**
- * Adds miscellanous information linked to the shape that wants to be persisted.
+ * Adds miscellanous information related to the shape.
  * see: {@link ome.ol3.utils.Conversion.toJsonObject}
  *
  * @static
@@ -635,6 +635,11 @@ ome.ol3.utils.Conversion.integrateMiscInfoIntoJsonObject  = function(feature, js
 
     if (feature['state'] === ome.ol3.REGIONS_STATE.REMOVED)
         jsonObject['markedForDeletion'] = true;
+
+    if (typeof feature['Area'] === 'number')
+        jsonObject['Area'] = feature['Area'];
+    if (typeof feature['Length'] === 'number')
+        jsonObject['Length'] = feature['Length'];
 }
 
 /**

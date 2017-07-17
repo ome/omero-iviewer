@@ -148,6 +148,8 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                 event.feature.setStyle(this.default_style_);
                 ome.ol3.utils.Style.updateStyleFunction(
                     event.feature, this.regions_, true);
+                // calculate measurements
+                this.regions_.getLengthAndAreaForShape(event.feature, true);
 
                 var add =
                     typeof this.opts_['add'] !== 'boolean' || this.opts_['add'];

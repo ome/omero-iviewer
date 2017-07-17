@@ -342,6 +342,17 @@ export default class Ol3Viewer extends EventSubscriber {
                     refOrCopy = Object.assign({}, refOrCopy);
                 if (typeof params.callback === 'function')
                     params.callback(refOrCopy, hasBeenModified);
+                // update measurement info (if shape was modified)
+                if (prop === 'modified') {
+                    let measurements =
+                        this.viewer.getLengthAndAreaForShapes([shape], true);
+                    if (Misc.isArray(measurements) &&
+                        measurements.length > 0 &&
+                        measurements[0].id === shape) {
+                            refOrCopy.Area = measurements[0].Area;
+                            refOrCopy.Length = measurements[0].Length;
+                    }
+                }
             }
      }
 
