@@ -79,8 +79,10 @@ ome.ol3.interaction.Modify = function(regions_reference) {
                 var featId = event.features.array_[0].getId();
                 this.regions_.addHistory(
                     event.features.array_, false, this.hist_id_);
-                this.regions_.sendHistoryNotification(
-                    this.hist_id_, [featId]);
+                ome.ol3.utils.Misc.sendEventNotification(
+                    this.regions_.viewer_,
+                    "REGIONS_HISTORY_ENTRY",
+                    {"hist_id": this.hist_id_, "shape_ids": [featId]});
                 this.regions_.setProperty(
                     [featId], "state", ome.ol3.REGIONS_STATE.MODIFIED);
             }

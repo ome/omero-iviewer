@@ -572,13 +572,14 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
            ol.events.listen(
                this.viewer_, ol.MapEventType.MOVEEND,
                function(event) {
-                   this.eventbus_.publish(
-                       "IMAGE_INTERACTION",
-                       {"config_id": this.getTargetId(),
-                        "z": this.getDimensionIndex('z'),
-                        "t": this.getDimensionIndex('t'),
-                        "c": this.getDimensionIndex('c'),
-                        "center": this.viewer_.getView().getCenter()});
+                   ome.ol3.utils.Misc.sendEventNotification(
+                       this.viewer_, "IMAGE_INTERACTION",
+                       {
+                           "z": this.getDimensionIndex('z'),
+                           "t": this.getDimensionIndex('t'),
+                           "c": this.getDimensionIndex('c'),
+                           "center": this.viewer_.getView().getCenter()
+                       });
                }, this);
     }
 }
@@ -1467,26 +1468,22 @@ ome.ol3.Viewer.prototype.generateShapes = function(shape_info, options) {
     this.getRegions().addFeatures(generatedShapes);
 
     // notify about generation
-    var eventbus = this.eventbus_;
-    var config_id = this.getTargetId();
-    if (eventbus)
-        setTimeout(function() {
-            var newRegionsObject =
-                ome.ol3.utils.Conversion.toJsonObject(
-                    new ol.Collection(generatedShapes), true, true);
-            if (typeof newRegionsObject !== 'object' ||
-                !ome.ol3.utils.Misc.isArray(newRegionsObject['rois']) ||
-                newRegionsObject['rois'].length === 0) return;
-            var params = {
-                "config_id": config_id,
-                "shapes": newRegionsObject['rois']
-            };
-            if (typeof options['hist_id'] === 'number')
-                params['hist_id'] = options['hist_id'];
-            if (typeof options['add_history'] === 'boolean')
-                params['add_history'] =  options['add_history'];
-            eventbus.publish("REGIONS_SHAPE_GENERATED", params);
-        },25);
+    if (this.eventbus_) {
+        var newRegionsObject =
+            ome.ol3.utils.Conversion.toJsonObject(
+                new ol.Collection(generatedShapes), true, true);
+        if (typeof newRegionsObject !== 'object' ||
+            !ome.ol3.utils.Misc.isArray(newRegionsObject['rois']) ||
+            newRegionsObject['rois'].length === 0) return;
+        var params = {"shapes": newRegionsObject['rois']};
+        if (typeof options['hist_id'] === 'number')
+            params['hist_id'] = options['hist_id'];
+        if (typeof options['add_history'] === 'boolean')
+            params['add_history'] =  options['add_history'];
+
+        ome.ol3.utils.Misc.sendEventNotification(
+            this, "REGIONS_SHAPE_GENERATED", params, 25);
+    }
 };
 
 /**

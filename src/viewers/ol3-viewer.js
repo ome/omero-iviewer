@@ -547,6 +547,26 @@ export default class Ol3Viewer extends EventSubscriber {
         delete this.image_config.regions_info.tmp_data;
         this.changeRegionsModes(
             { modes: this.image_config.regions_info.regions_modes});
+
+        let updateMeasurements = () => {
+            if (this.viewer === null) return;
+            let ids =
+                this.image_config.regions_info.unsophisticatedShapeFilter();
+            let measurements = this.viewer.getLengthAndAreaForShapes(ids);
+            for (let i=0;i<measurements.length;i++) {
+                let measurement = measurements[i];
+                if (typeof measurement !== 'object' ||
+                    measurement === null || typeof measurement.id !== 'string')
+                        continue;
+                let shape =
+                    this.image_config.regions_info.getShape(measurement.id);
+                if (shape !== null) {
+                    shape.Area = measurement.Area;
+                    shape.Length = measurement.Length;
+                }
+            }
+        };
+        setTimeout(updateMeasurements, 50);
     }
 
     /**

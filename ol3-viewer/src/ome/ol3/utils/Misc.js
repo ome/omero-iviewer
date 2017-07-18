@@ -349,3 +349,31 @@ ome.ol3.utils.Misc.parseProjectionParameter = function(projection_info) {
 
     return ret;
 }
+
+/**
+ * Sends out an event notification
+ *
+ * @static
+ * @param {ome.ol3.Viewer} viewer an instance of the ome.ol3.Viewer
+ * @param {string} type the event type
+ * @param {Object=} content the event content as an object (optional)
+ * @param {number=} delay delay for sending (optional)
+ */
+ome.ol3.utils.Misc.sendEventNotification = function(viewer, type, content, delay) {
+    if (!(viewer instanceof ome.ol3.Viewer) ||
+        typeof type !== 'string' ||
+        type.length === 0) return;
+
+    var config_id = viewer.getTargetId();
+    var eventbus = viewer.eventbus_;
+    if (config_id && eventbus) { // publish
+        if (typeof content !== 'object' || content === null) content = {};
+        content['config_id'] = config_id;
+        var triggerEvent = function() {
+            eventbus.publish(type, content);
+        };
+        if (typeof delay === 'number' && delay > 0)
+            setTimeout(triggerEvent, delay);
+        else triggerEvent();
+    }
+}

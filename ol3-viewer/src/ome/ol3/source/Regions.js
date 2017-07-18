@@ -200,7 +200,6 @@ ome.ol3.source.Regions = function(viewerReference, options) {
             if (ome.ol3.utils.Misc.isArray(regionsAsFeatures) &&
                 regionsAsFeatures.length > 0)
                     scope.addFeatures(regionsAsFeatures);
-            // TODO: calculate measures and notify
         }
 
         // we use provided data if there
@@ -589,17 +588,6 @@ ome.ol3.source.Regions.prototype.storeRegions =
         };
 
         var capturedRegionsReference = this;
-        // the event notification
-        var sendEventNotification = function(viewer, params) {
-            if (!(viewer instanceof ome.ol3.Viewer)) return;
-            var config_id = viewer.getTargetId();
-            var eventbus = viewer.eventbus_;
-            if (config_id && eventbus) {
-                params['config_id'] = config_id;
-                params['is_delete'] = roisAsJsonObject['is_delete'];
-                eventbus.publish("REGIONS_STORED_SHAPES", params);
-            }
-        }
 
         // the success handler for the POST
         properties["success"] = function(data) {
@@ -642,7 +630,8 @@ ome.ol3.source.Regions.prototype.storeRegions =
             };
             if (error) params['error'] = error;
 
-            sendEventNotification(capturedRegionsReference.viewer_, params);
+            ome.ol3.utils.Misc.sendEventNotification(
+                capturedRegionsReference.viewer_, "REGIONS_STORED_SHAPES", params);
         };
 
         // the error handler for the POST
@@ -651,7 +640,8 @@ ome.ol3.source.Regions.prototype.storeRegions =
                 "shapes": [],
                 "error" : error
             };
-            sendEventNotification(capturedRegionsReference.viewer_, params);
+            ome.ol3.utils.Misc.sendEventNotification(
+                capturedRegionsReference.viewer_, "REGIONS_STORED_SHAPES", params);
         };
 
         // send request
@@ -761,17 +751,14 @@ ome.ol3.source.Regions.prototype.setProperty =
     }
     this.changed();
 
-    var config_id = this.viewer_.getTargetId();
-    var eventbus = this.viewer_.eventbus_;
-    if (config_id && eventbus) // publish
-        setTimeout(function() {
-            eventbus.publish("REGIONS_PROPERTY_CHANGED",
-                {"config_id": config_id,
-                    "properties" : changedProperties,
-                    "shapes": changedFeatures,
-                    "values": changedValues,
-                    "callback": callback });
-        },25);
+    ome.ol3.utils.Misc.sendEventNotification(
+        this.viewer_, "REGIONS_PROPERTY_CHANGED",
+        {
+            "properties" : changedProperties,
+            "shapes": changedFeatures,
+            "values": changedValues,
+            "callback": callback
+        }, 25);
 }
 
 /**
@@ -848,21 +835,6 @@ ome.ol3.source.Regions.prototype.doHistory = function(hist_id, undo) {
 }
 
 /**
- * Sends out an event notification with the associated history id
- *
- * @param {number} hist_id the id for the history entry we like to un/redo
- * @param {Array.<string>} ids the ids of the shapes in the history entry
- */
-ome.ol3.source.Regions.prototype.sendHistoryNotification = function(hist_id, ids) {
-    // send out notification with shape ids
-    var config_id = this.viewer_.getTargetId();
-    var eventbus = this.viewer_.eventbus_;
-    if (config_id && eventbus) // publish
-        eventbus.publish("REGIONS_HISTORY_ENTRY",
-                {"config_id": config_id, "hist_id": hist_id, "shape_ids": ids});
-}
-
-/**
  * Returns the area and length values for a given shape
  *
  * @param {ol.Feature} feature the ol3 feature representing the shape
@@ -876,7 +848,7 @@ ome.ol3.source.Regions.prototype.getLengthAndAreaForShape =
         if (typeof recalculate !== 'boolean') recalculate = false;
 
         return ome.ol3.utils.Regions.calculateLengthAndArea(
-            feature,
+            feature, recalculate,
             this.viewer_.viewer_.getView().getProjection().getMetersPerUnit());
 }
 
