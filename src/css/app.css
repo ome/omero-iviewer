@@ -738,6 +738,10 @@ thumbnail-slider img {
     min-width: 45%;
     max-width: 45%;
 }
+.shape-area,.shape-length {
+    min-width: 22.5%;
+    max-width: 22.5%;
+}
 .shape-show {
     min-width: 20%;
     max-width: 20%;
@@ -1058,4 +1062,24 @@ thumbnail-slider img {
     background-size: 100% 30px;
     background-repeat: no-repeat;
     background-position: center;
+}
+
+.columns-dropdown {
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    z-index: 1000;
+}
+.columns-dropdown .dropdown-menu {
+    right: 0px;
+    left: initial;
+}
+.columns-dropdown .dropdown-menu span {
+    display: inline-block;
+    margin-left: 2px;
+    width: 12px;
+}
+.columns-dropdown .dropdown-menu a {
+    display: inline-block;
+    padding-left: 0px;
 }
