@@ -1,7 +1,7 @@
-var path = require('path');
-var HtmlWebpackPlugin = require('html-webpack-plugin');
-var AureliaWebpackPlugin = require('aurelia-webpack-plugin');
-var ProvidePlugin = require('webpack/lib/ProvidePlugin');
+const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const {AureliaPlugin} = require('aurelia-webpack-plugin');
+const ProvidePlugin = require('webpack/lib/ProvidePlugin');
 
 module.exports = {
   devServer: {
@@ -10,7 +10,7 @@ module.exports = {
   },
   entry: {
     main: [
-      './src/main.js'
+      './src/main'
     ]
   },
   output: {
@@ -18,29 +18,33 @@ module.exports = {
     filename: 'bundle.js'
   },
   plugins: [
-    new AureliaWebpackPlugin({nameExternalModules: false}),
+    new AureliaPlugin({aureliaApp: undefined}),
+    new ProvidePlugin({
+        Promise: 'bluebird',
+        $: 'jquery',
+        jQuery: 'jquery',
+        'window.jQuery': 'jquery'
+    }),
     new HtmlWebpackPlugin({
       template : './src/index-dev.html',
       filename: 'index.html'
-  }),
-    new ProvidePlugin({
-      Promise: 'bluebird',
-      $: 'jquery',
-      jQuery: 'jquery',
-      'window.jQuery': 'jquery'
-    })
-  ],
+  })],
+  resolve: {
+      extensions: [".js"],
+         modules: ["src", "node_modules"]
+  },
   module: {
     noParse: [/libs\/ol3-viewer.js$/],
-    loaders: [
-      { test: /\.js$/, loader: 'babel', exclude: /node_modules/,
-        query: { compact: false,
-            presets: ['es2015-loose', 'stage-1'],
-            plugins: ['transform-decorators-legacy'] } },
-      { test: /\.css?$/, loader: 'file?name=css/[name].[ext]' },
-      { test: /\.(png|gif|jpg|jpeg)$/, loader: 'file?name=css/images/[name].[ext]' },
-      { test: /\.(woff|woff2)$/, loader: 'file?name=css/fonts/[name].[ext]' },
-      { test: /\.html$/, loader: 'html' }
+    rules: [
+        { test: /\.js$/, loader: 'babel-loader', exclude: /node_modules/,
+          query: { compact: false,
+              presets: [['env', {"loose": true, modules: false}]],
+              plugins: ['istanbul', "transform-class-properties",
+                        'transform-decorators-legacy'] } },
+      { test: /\.css?$/, loader: 'file-loader?name=css/[name].[ext]' },
+      { test: /\.(png|gif|jpg|jpeg)$/, loader: 'file-loader?name=css/images/[name].[ext]' },
+      { test: /\.(woff|woff2)$/, loader: 'file-loader?name=css/fonts/[name].[ext]' },
+      { test: /\.html$/, loader: 'html-loader' }
     ]
   }
 };

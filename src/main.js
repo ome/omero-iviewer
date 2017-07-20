@@ -16,12 +16,15 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-import { bootstrap } from 'aurelia-bootstrapper-webpack';
+import { bootstrap } from 'aurelia-bootstrapper';
 import {EventAggregator} from 'aurelia-event-aggregator';
 import Context from './app/context';
 import Index from './app/index';
 import Misc from './utils/misc';
 import {URI_PREFIX, PLUGIN_NAME} from './utils/constants';
+import * as Bluebird from 'bluebird';
+
+Bluebird.config({ warnings: { wForgottenReturn: false } });
 
 let req = window.INITIAL_REQUEST_PARAMS || {};
 
@@ -51,5 +54,6 @@ bootstrap(function(aurelia) {
     if (is_dev_server) ctx.tweakForDevServer();
     aurelia.container.registerInstance(Context,ctx);
 
-    aurelia.start().then(() => aurelia.setRoot('app/index', document.body));
+    aurelia.start().then(
+        () => aurelia.setRoot(PLATFORM.moduleName('app/index'), document.body));
 });
