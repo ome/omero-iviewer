@@ -31,14 +31,8 @@ module.exports = {
     rules: [
         { test: /\.js$/, loader: 'babel-loader', exclude: /node_modules/,
           query: { compact: false,
-              presets: [[
-                  'env', {
-                      "loose": true, modules: false,
-                      "targets" : {
-                            "uglify": process.env.NODE_ENV === 'production'}
-                    }]],
-              plugins: ['istanbul', "transform-class-properties",
-                        'transform-decorators-legacy'] } },
+                   presets: ['es2015-loose', 'stage-1'],
+                   plugins: ['transform-decorators-legacy'] } },
         { test: /[\/\\]node_modules[\/\\]bluebird[\/\\].+\.js$/, loader: 'expose-loader?Promise' },
         { test: require.resolve('jquery'), loader: 'expose-loader?$!expose-loader?jQuery' },
         { test: /\.css?$/, loader: 'file-loader?name=css/[name].[ext]' },

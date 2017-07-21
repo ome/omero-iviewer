@@ -36,11 +36,12 @@ module.exports = {
   module: {
     noParse: [/libs\/ol3-viewer.js$/],
     rules: [
-        { test: /\.js$/, loader: 'babel-loader', exclude: /node_modules/,
+      { test: /\.js$/, loader: 'babel-loader', exclude: /node_modules/,
           query: { compact: false,
-              presets: [['env', {"loose": true, modules: false}]],
-              plugins: ['istanbul', "transform-class-properties",
-                        'transform-decorators-legacy'] } },
+                   presets: ['es2015-loose', 'stage-1'],
+                   plugins: ['transform-decorators-legacy'] } },
+      { test: /[\/\\]node_modules[\/\\]bluebird[\/\\].+\.js$/, loader: 'expose-loader?Promise' },
+      { test: require.resolve('jquery'), loader: 'expose-loader?$!expose-loader?jQuery' },
       { test: /\.css?$/, loader: 'file-loader?name=css/[name].[ext]' },
       { test: /\.(png|gif|jpg|jpeg)$/, loader: 'file-loader?name=css/images/[name].[ext]' },
       { test: /\.(woff|woff2)$/, loader: 'file-loader?name=css/fonts/[name].[ext]' },
