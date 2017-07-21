@@ -938,24 +938,31 @@ export default class Ol3Viewer extends EventSubscriber {
         this.player_info.handle =
             setInterval(
                 () => {
-                    // if we get an in progress status the dimension has not yet
-                    // rendered and we return to wait for the next iteration
-                    let renderStatus = this.viewer.getRenderStatus();
-                    if (renderStatus === RENDER_STATUS.IN_PROGRESS) return;
+                    try {
+                        // keep handle backup in window in case of error
+                        window.interval_handle = this.player_info.handle;
 
-                    // get present dim index and check if we have hit a bound
-                    // if so => abort play
-                    pres_dim = dims[dim];
-                    if (renderStatus === RENDER_STATUS.ERROR ||
-                            (forwards && pres_dim >= max_dim) ||
-                            (!forwards && pres_dim <= min_dim)) {
-                                stopPlay(); return;}
+                        // if we get an in progress status the dimension has not yet
+                        // rendered and we return to wait for the next iteration
+                        let renderStatus = this.viewer.getRenderStatus();
+                        if (renderStatus === RENDER_STATUS.IN_PROGRESS) return;
 
-                    // arrange for the render status to be watched
-                    if (!this.viewer.watchRenderStatus(true))
-                        this.viewer.getRenderStatus(true);
-                    // set the new dimension index
-                    dims[dim] = pres_dim + (forwards ? 1 : -1);
+                        // get present dim index and check if we have hit a bound
+                        // if so => abort play
+                        pres_dim = dims[dim];
+                        if (renderStatus === RENDER_STATUS.ERROR ||
+                                (forwards && pres_dim >= max_dim) ||
+                                (!forwards && pres_dim <= min_dim)) {
+                                    stopPlay(); return;}
+
+                        // arrange for the render status to be watched
+                        if (!this.viewer.watchRenderStatus(true))
+                            this.viewer.getRenderStatus(true);
+                        // set the new dimension index
+                        dims[dim] = pres_dim + (forwards ? 1 : -1);
+                    } catch(ignored) {
+                        clearInterval(window.interval_handle);
+                    }
                 }, delay);
     }
 }

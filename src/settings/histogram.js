@@ -164,6 +164,10 @@ export default class Histogram extends EventSubscriber {
      * @memberof Histogram
      */
     handleSettingsChanges(params = {}) {
+        if (this.image_info === null ||
+                (typeof params.config_id === 'number' &&
+                 params.config_id !== this.image_info.config_id)) return;
+
         // use handed channel index or the last active channel that was used
         let prop =
             typeof params.prop === 'string' ? params.prop : null;
