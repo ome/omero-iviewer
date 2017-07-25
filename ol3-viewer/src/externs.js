@@ -21,3 +21,5 @@
  */
 
 function publish() {};
+function toBlob() {};
+function msToBlob() {};

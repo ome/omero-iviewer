@@ -2023,6 +2023,98 @@ ome.ol3.Viewer.prototype.enableSmoothing = function(smoothing) {
     this.viewer_.updateSize();
 }
 
+/**
+ * Captures the canvas content, sending the data via event notification
+ * (which is necessary since the loading is async and has to complete)
+ * @param {boolean} as_blob if true canvas content is converted to blob
+ *                          otherwise a base64 data url is returned
+ *                          (default: true)
+ * @param {boolean} full_extent if true the image is scaled to show at a 100%
+ *                              (default: false)
+ */
+ome.ol3.Viewer.prototype.sendCanvasContent = function(as_blob, full_extent) {
+    if (this.viewer_ === null || this.eventbus_ === null) return;
+
+    if (typeof as_blob !== 'boolean') as_blob = true;
+    var supported = !as_blob ? true : false;
+
+    if (as_blob) {
+        try {
+            var MyBlob = new Blob(['test text'], {type : 'text/plain'});
+            if (MyBlob instanceof Blob) supported = true;
+        } catch(not_supported) {}
+    }
+
+    var omeroImage = this.getImage();
+    if (omeroImage === null) return;
+
+    var loading = 0;
+    var loaded = 0;
+    var that = this;
+
+    var tileLoadStart = function() {
+        ++loading;
+    };
+
+    var sendNotification0 = function(data) {
+        if (that.eventbus_ === null) return;
+        that.eventbus_.publish(
+            "IMAGE_CANVAS_DATA",
+            {"config_id": that.getTargetId(),
+             "as_blob": as_blob,
+             "supported": supported,
+             "data": data
+             });
+    };
+
+    var sendNotification = function(canvas) {
+        if (as_blob && supported) {
+            if (navigator['msSaveBlob'])
+                sendNotification0(canvas.msToBlob());
+            else canvas.toBlob(
+                    function(blob) {sendNotification0(blob);});
+        } else sendNotification0(canvas.toDataURL('image/png', 1));
+    };
+
+    var tileLoadEnd = function() {
+        ++loaded;
+        var ctx = this;
+        if (loading === loaded) {
+            omeroImage.un('tileloadstart', tileLoadStart);
+            omeroImage.un('tileloadend', tileLoadEnd, ctx.canvas);
+            omeroImage.un('tileloaderror', tileLoadEnd, ctx.canvas);
+
+            sendNotification(ctx.canvas);
+        }
+   };
+
+   this.viewer_.once('postcompose', function(event) {
+     omeroImage.on('tileloadstart', tileLoadStart);
+     omeroImage.on('tileloadend', tileLoadEnd, event.context);
+     omeroImage.on('tileloaderror', tileLoadEnd, event.context);
+
+     setTimeout(function() {
+         if (loading === 0) {
+             omeroImage.un('tileloadstart', tileLoadStart);
+             omeroImage.un('tileloadend', tileLoadEnd, event.context);
+             omeroImage.un('tileloaderror', tileLoadEnd, event.context);
+
+             sendNotification(event.context.canvas);
+        }
+     }, 50);
+   });
+
+   if (this.viewer_ && typeof full_extent === 'boolean' && full_extent) {
+       var view = this.viewer_ ? this.viewer_.getView() : null;
+       if (view === null) return;
+
+       var ext = view.getProjection().getExtent();
+       view.fit([ext[0], -ext[3], ext[2], ext[1]]);
+   }
+   this.viewer_.renderSync();
+}
+
+
 /*
  * This section determines which methods are exposed and usable after compilation
  */
@@ -2215,3 +2307,8 @@ goog.exportProperty(
     ome.ol3.Viewer.prototype,
     'enableSmoothing',
     ome.ol3.Viewer.prototype.enableSmoothing);
+
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
+    'sendCanvasContent',
+    ome.ol3.Viewer.prototype.sendCanvasContent);
