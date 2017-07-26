@@ -19,6 +19,7 @@
 // dependencies
 import Context from '../app/context';
 import {inject, customElement, BindingEngine} from 'aurelia-framework';
+import {IMAGE_VIEWPORT_CAPTURE} from '../events/events';
 import Ui from '../utils/ui';
 import { VIEWER_ELEMENT_PREFIX } from '../utils/constants';
 
@@ -107,7 +108,7 @@ export default class ViewerContextMenu {
             // get selected image config
             this.image_config = this.context.getSelectedImageConfig();
             if (this.image_config === null) return;
-            
+
             // clean up old observers
             this.unregisterObservers(true);
             // we establish the new context menu once the viewer's ready
@@ -316,6 +317,20 @@ export default class ViewerContextMenu {
      */
     deleteShapes(event) {
         this.image_config.regions_info.deleteShapes();
+        // hide context menu
+        this.hideContextMenu();
+        // prevent link click behavior
+        return false;
+    }
+
+    /**
+     * Sends event to captures viewport as png
+     *
+     * @memberof ViewerContextMenu
+     */
+    captureViewport() {
+        this.context.eventbus.publish(
+            IMAGE_VIEWPORT_CAPTURE, { "config_id": this.image_config.id});
         // hide context menu
         this.hideContextMenu();
         // prevent link click behavior
