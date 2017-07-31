@@ -29,7 +29,7 @@ import {ol3} from '../../libs/ol3-viewer.js';
 import * as FileSaver from '../../node_modules/file-saver';
 import {
     IVIEWER, PLUGIN_PREFIX, PROJECTION, REGIONS_DRAWING_MODE, RENDER_STATUS,
-    VIEWER_ELEMENT_PREFIX
+    VIEWER_ELEMENT_PREFIX, WEBCLIENT
 } from '../utils/constants';
 import {
     IMAGE_CANVAS_DATA, IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY,
@@ -976,7 +976,7 @@ export default class Ol3Viewer extends EventSubscriber {
     captureViewport(params) {
         if (this.viewer === null ||
             params.config_id !== this.image_config.id) return;
-        this.viewer.sendCanvasContent();
+        this.viewer.sendCanvasContent(params.as_attachment);
     }
 
     /**
@@ -989,9 +989,50 @@ export default class Ol3Viewer extends EventSubscriber {
     saveCanvasData(params) {
         if (this.image_config === null || // sanity check
             this.image_config.id !== params.config_id || // not for us
-            !params.as_blob || !params.supported) return; // not a blob
+            !params.supported) { // blob not supported
+                console.error("Capturing Viewport as Blob not supported");
+                return;
+        }
 
-        FileSaver.saveAs(
-            params.data, this.image_config.image_info.image_name + ".png");
+        if (typeof params.as_attachment === 'boolean' && params.as_attachment) {
+                let formData = new FormData();
+                let image_id = this.image_config.image_info.image_id;
+                formData.append('data', params.data);
+                formData.append('image', image_id);
+                let now = new Date();
+                let timeinfo =
+                    now.getDay() + "." + now.getMonth() + "." +
+                    now.getFullYear() + " (" +
+                    now.getMinutes() + ":" + now.getHours() + ":" +
+                    now.getSeconds() + ")";
+                formData.append('name', "screen-" + timeinfo + ".png");
+
+                $.ajax({
+                    url: this.context.server +
+                        this.context.getPrefixedURI(IVIEWER) +
+                        '/capture_screen_as_attachment',
+                    method: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: (resp) => {
+                        let msg = "";
+                        if (typeof resp.success === 'string') {
+                            let linkSrc = this.context.server +
+                                this.context.getPrefixedURI(WEBCLIENT) +
+                                "/?show=image-" + image_id;
+                            msg = "<a href='" + linkSrc + "'>" +
+                                "View Annotated Image</a>";
+                        } else {
+                            msg = "Failed to attach screen capture";
+                            if (typeof resp.error === 'string')
+                                console.error(resp.err);
+                        }
+                        Ui.showModalMessage(msg, true);
+                    }
+                });
+            } else
+                FileSaver.saveAs(params.data,
+                    this.image_config.image_info.image_name + ".png");
     }
 }

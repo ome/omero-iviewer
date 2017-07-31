@@ -45,6 +45,10 @@
             <a click.delegate="captureViewport()"
                tabindex="-1" href="#">Capture Viewport (as png)</a>
         </li>
+        <li show.bind="image_config.image_info.ready">
+            <a click.delegate="captureViewport(true)"
+               tabindex="-1" href="#">Save Viewport as File Attachment</a>
+        </li>
     </ul>
 
 </template>

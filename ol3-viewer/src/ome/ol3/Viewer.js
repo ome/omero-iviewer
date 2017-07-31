@@ -2026,54 +2026,48 @@ ome.ol3.Viewer.prototype.enableSmoothing = function(smoothing) {
 /**
  * Captures the canvas content, sending the data via event notification
  * (which is necessary since the loading is async and has to complete)
- * @param {boolean} as_blob if true canvas content is converted to blob
- *                          otherwise a base64 data url is returned
- *                          (default: true)
+ * @param {boolean} as_attachment pass through whether we ought to be
+                        stored as an attachment lateron or not
  * @param {boolean} full_extent if true the image is scaled to show at a 100%
  *                              (default: false)
  */
-ome.ol3.Viewer.prototype.sendCanvasContent = function(as_blob, full_extent) {
-    if (this.viewer_ === null || this.eventbus_ === null) return;
+ome.ol3.Viewer.prototype.sendCanvasContent =
+    function(as_attachment, full_extent) {
+        if (this.viewer_ === null || this.eventbus_ === null) return;
 
-    if (typeof as_blob !== 'boolean') as_blob = true;
-    var supported = !as_blob ? true : false;
+    var supported = false;
+    try {
+        var MyBlob = new Blob(['test text'], {type : 'text/plain'});
+        if (MyBlob instanceof Blob) supported = true;
+    } catch(not_supported) {}
 
-    if (as_blob) {
-        try {
-            var MyBlob = new Blob(['test text'], {type : 'text/plain'});
-            if (MyBlob instanceof Blob) supported = true;
-        } catch(not_supported) {}
-    }
-
-    var omeroImage = this.getImage();
-    if (omeroImage === null) return;
-
-    var loading = 0;
-    var loaded = 0;
     var that = this;
-
-    var tileLoadStart = function() {
-        ++loading;
-    };
-
     var sendNotification0 = function(data) {
         if (that.eventbus_ === null) return;
         that.eventbus_.publish(
             "IMAGE_CANVAS_DATA",
             {"config_id": that.getTargetId(),
-             "as_blob": as_blob,
+             "as_attachment": as_attachment,
              "supported": supported,
              "data": data
              });
     };
+    var omeroImage = this.getImage();
+    if (omeroImage === null || !supported) {
+        sendNotification0();
+        return;
+    }
 
+    var loading = 0;
+    var loaded = 0;
+    var tileLoadStart = function() {
+        ++loading;
+    };
     var sendNotification = function(canvas) {
-        if (as_blob && supported) {
-            if (navigator['msSaveBlob'])
-                sendNotification0(canvas.msToBlob());
-            else canvas.toBlob(
-                    function(blob) {sendNotification0(blob);});
-        } else sendNotification0(canvas.toDataURL('image/png', 1));
+        if (navigator['msSaveBlob'])
+            sendNotification0(canvas.msToBlob());
+        else canvas.toBlob(
+                function(blob) {sendNotification0(blob);});
     };
 
     var tileLoadEnd = function() {

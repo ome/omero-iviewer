@@ -29,4 +29,7 @@ urlpatterns = patterns(
     url(r'^persist_rois/?$', views.persist_rois,
         name='omero_iviewer_persist_rois'),
     url(r'^image_data/(?P<image_id>[0-9]+)/$', views.image_data,
-        name='omero_iviewer_image_data'))
+        name='omero_iviewer_image_data'),
+    url(r'^capture_screen_as_attachment/?$',
+        views.capture_screen_as_attachment,
+        name='capture_screen_as_attachment'))

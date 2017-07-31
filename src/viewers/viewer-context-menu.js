@@ -326,11 +326,16 @@ export default class ViewerContextMenu {
     /**
      * Sends event to captures viewport as png
      *
+     * @param {boolean} as_attachment if true we store as an attachment in omero,
+     *                                otherwise we download as png
      * @memberof ViewerContextMenu
      */
-    captureViewport() {
-        this.context.eventbus.publish(
-            IMAGE_VIEWPORT_CAPTURE, { "config_id": this.image_config.id});
+    captureViewport(as_attachment) {
+        let params = {
+            "config_id": this.image_config.id,
+            "as_attachment": typeof as_attachment === 'boolean' && as_attachment
+        };
+        this.context.eventbus.publish(IMAGE_VIEWPORT_CAPTURE, params);
         // hide context menu
         this.hideContextMenu();
         // prevent link click behavior
