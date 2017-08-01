@@ -303,8 +303,8 @@ def save_as_new_image(request, conn=None, **kwargs):
     new_id = None
     try:
         # use pixel service to copy data
-        pixSvc = conn.getPixelsService()
-        new_id = pixSvc.copyAndResizeImage(
+        pix_svc = conn.getPixelsService()
+        new_id = pix_svc.copyAndResizeImage(
             img.getId(), rint(img.getSizeX()), rint(img.getSizeY()),
             rint(img.getSizeZ()), rint(img.getSizeT()),
             range(img.getSizeC()), file_name, True)
@@ -323,13 +323,13 @@ def save_as_new_image(request, conn=None, **kwargs):
 
         # if we have a dataset id => we try to link to it
         if dataset_id is not None:
-            updSvc = conn.getUpdateService()
+            upd_svc = conn.getUpdateService()
             conn.SERVICE_OPTS.setOmeroGroup(
                 conn.getGroupFromContext().getId())
             link = omero.model.DatasetImageLinkI()
             link.parent = omero.model.DatasetI(long(dataset_id), False)
             link.child = omero.model.ImageI(new_id, False)
-            updSvc.saveObject(link, conn.SERVICE_OPTS)
+            upd_svc.saveObject(link, conn.SERVICE_OPTS)
     except Exception as save_new_file_exception:
         return JsonResponse({"error": repr(save_new_file_exception)})
 
