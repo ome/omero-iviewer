@@ -29,6 +29,9 @@ from omeroweb.webgateway.templatetags.common_filters import lengthformat,\
 import json
 import omero_marshal
 import omero
+import time
+
+from omero.rtypes import rint
 
 from version import __version__
 
@@ -277,3 +280,57 @@ def format_value_with_units(value):
         else:
             unit = value.getSymbol()
         return (length, unit)
+
+
+@login_required()
+def save_as_new_image(request, conn=None, **kwargs):
+    # check for image id
+    image_id = request.GET.get("image", None)
+    if image_id is None:
+        return JsonResponse({"error": "Image id not supplied"})
+
+    # check for (optional) dataset id (for linking)
+    dataset_id = request.GET.get("dataset", None)
+
+    # retrieve image object
+    img = conn.getObject("Image", image_id, opts=conn.SERVICE_OPTS)
+    if img is None:
+        return JsonResponse({"error": "Image not Found"}, status=404)
+
+    # assemble new file name
+    file_name = img.getName() + "-" + time.strftime("%d.%m.%Y (%H:%M:%S)")
+
+    new_id = None
+    try:
+        # use pixel service to copy data
+        pixSvc = conn.getPixelsService()
+        new_id = pixSvc.copyAndResizeImage(
+            img.getId(), rint(img.getSizeX()), rint(img.getSizeY()),
+            rint(img.getSizeZ()), rint(img.getSizeT()),
+            range(img.getSizeC()), file_name, True)
+
+        # include projection
+        new_image = None
+        proj = request.GET.get("projection", None)
+        if proj is not None:
+            new_image = conn.getObject("Image", new_id, opts=conn.SERVICE_OPTS)
+            new_image.setProjection(proj)
+            start = request.GET.get("start", None)
+            end = request.GET.get("end", None)
+            if start is not None and end is not None:
+                new_image.setProjectionRange(int(start), int(end))
+                new_image.saveDefaults()
+
+        # if we have a dataset id => we try to link to it
+        if dataset_id is not None:
+            updSvc = conn.getUpdateService()
+            conn.SERVICE_OPTS.setOmeroGroup(
+                conn.getGroupFromContext().getId())
+            link = omero.model.DatasetImageLinkI()
+            link.parent = omero.model.DatasetI(long(dataset_id), False)
+            link.child = omero.model.ImageI(new_id, False)
+            updSvc.saveObject(link, conn.SERVICE_OPTS)
+    except Exception as save_new_file_exception:
+        return JsonResponse({"error": repr(save_new_file_exception)})
+
+    return JsonResponse({"id": new_id.getValue()})

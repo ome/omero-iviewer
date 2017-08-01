@@ -29,4 +29,6 @@ urlpatterns = patterns(
     url(r'^persist_rois/?$', views.persist_rois,
         name='omero_iviewer_persist_rois'),
     url(r'^image_data/(?P<image_id>[0-9]+)/$', views.image_data,
-        name='omero_iviewer_image_data'))
+        name='omero_iviewer_image_data'),
+    url(r'^save_as_new_image/?$', views.save_as_new_image,
+        name='omero_iviewer_save_as_new_image'))

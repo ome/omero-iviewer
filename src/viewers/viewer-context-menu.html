@@ -41,6 +41,11 @@
             <a click.delegate="deleteShapes()"
                tabindex="-1" href="#">Delete Rois</a>
         </li>
+        <li show.bind="image_config.image_info.ready &&
+            image_config.image_info.projection !== PROJECTION.NORMAL">
+            <a click.delegate="saveAsNewImage()"
+               tabindex="-1" href="#">Save as new Image</a>
+        </li>
     </ul>
 
 </template>

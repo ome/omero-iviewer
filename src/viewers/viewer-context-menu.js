@@ -20,7 +20,9 @@
 import Context from '../app/context';
 import {inject, customElement, BindingEngine} from 'aurelia-framework';
 import Ui from '../utils/ui';
-import { VIEWER_ELEMENT_PREFIX } from '../utils/constants';
+import {
+    IVIEWER, PROJECTION, VIEWER_ELEMENT_PREFIX, WEBCLIENT
+} from '../utils/constants';
 
 /**
  * A Context Menu for the Viewer/Viewport
@@ -35,6 +37,13 @@ export default class ViewerContextMenu {
      * @type {string}
      */
     SELECTOR = "#viewer-context-menu";
+
+    /**
+     * expose PROJECTION constant to template
+     * @memberof ViewerContextMenu
+     * @type {Object}
+     */
+    PROJECTION = PROJECTION;
 
     /**
      * a prefix for the full screen api methods
@@ -107,7 +116,7 @@ export default class ViewerContextMenu {
             // get selected image config
             this.image_config = this.context.getSelectedImageConfig();
             if (this.image_config === null) return;
-            
+
             // clean up old observers
             this.unregisterObservers(true);
             // we establish the new context menu once the viewer's ready
@@ -320,6 +329,45 @@ export default class ViewerContextMenu {
         this.hideContextMenu();
         // prevent link click behavior
         return false;
+    }
+
+    /**
+     * Saves image (as is) as a new image in omero
+     *
+     * @memberof ViewerContextMenu
+     */
+    saveAsNewImage() {
+        let imgInf = this.image_config.image_info;
+        let url =
+            this.context.server + this.context.getPrefixedURI(IVIEWER) +
+            '/save_as_new_image/?image=' + imgInf.image_id;
+        if (typeof imgInf.dataset_id === 'number')
+            url += "&dataset=" + imgInf.dataset_id;
+        // add projection for now
+        if (typeof imgInf.projection !== PROJECTION.NORMAL) {
+            url += "&projection=" + imgInf.projection +
+                   "&start=" + imgInf.projection_opts.start +
+                   "&end=" + imgInf.projection_opts.end;
+        }
+
+        $.ajax({
+            url: url,
+            success: (resp) => {
+                let msg = "";
+                if (typeof resp.id === 'number') {
+                    let linkSrc = this.context.server +
+                        this.context.getPrefixedURI(WEBCLIENT) +
+                        "/?show=image-" + resp.id;
+                        msg = "<a href='" + linkSrc + "'>" +
+                            "View New Image</a>";
+                } else {
+                    msg = "Failed to create new image";
+                    if (typeof resp.error === 'string')
+                        console.error(resp.error);
+                }
+                Ui.showModalMessage(msg, true);
+            }
+        });
     }
 
     /**
