@@ -1026,7 +1026,7 @@ export default class Ol3Viewer extends EventSubscriber {
                         } else {
                             msg = "Failed to attach screen capture";
                             if (typeof resp.error === 'string')
-                                console.error(resp.err);
+                                console.error(resp.error);
                         }
                         Ui.showModalMessage(msg, true);
                     }
