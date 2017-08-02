@@ -31,12 +31,17 @@ import omero_marshal
 import omero
 import time
 
-from omero.rtypes import rint
-
 from version import __version__
 
 
 WEB_API_VERSION = 0
+
+PROJECTIONS = {
+    'normal': -1,
+    'intmax': omero.constants.projection.ProjectionType.MAXIMUMINTENSITY,
+    'intmean': omero.constants.projection.ProjectionType.MEANINTENSITY,
+    'intsum': omero.constants.projection.ProjectionType.SUMINTENSITY,
+}
 
 
 @login_required()
@@ -283,13 +288,20 @@ def format_value_with_units(value):
 
 
 @login_required()
-def save_as_new_image(request, conn=None, **kwargs):
-    # check for image id
+def save_projection(request, conn=None, **kwargs):
+    # check for mandatory parameters
     image_id = request.GET.get("image", None)
-    if image_id is None:
-        return JsonResponse({"error": "Image id not supplied"})
+    proj = request.GET.get("projection", None)
+    if image_id is None or proj is None:
+        return JsonResponse({"error": "Image id/Projection not supplied"})
+    proj = PROJECTIONS.get(proj, -1)
+    # we do only create new images for listed projections
+    if proj == -1:
+        return JsonResponse({"error": "Projection type not listed"})
 
-    # check for (optional) dataset id (for linking)
+    # optional parameters
+    start = request.GET.get("start", None)
+    end = request.GET.get("end", None)
     dataset_id = request.GET.get("dataset", None)
 
     # retrieve image object
@@ -300,26 +312,27 @@ def save_as_new_image(request, conn=None, **kwargs):
     # assemble new file name
     file_name = img.getName() + "-" + time.strftime("%d.%m.%Y (%H:%M:%S)")
 
-    new_id = None
+    new_image_id = None
     try:
-        # use pixel service to copy data
-        pix_svc = conn.getPixelsService()
-        new_id = pix_svc.copyAndResizeImage(
-            img.getId(), rint(img.getSizeX()), rint(img.getSizeY()),
-            rint(img.getSizeZ()), rint(img.getSizeT()),
-            range(img.getSizeC()), file_name, True)
+        # no getter defined in gateway...
+        proj_svc = conn._proxies['projection']
 
-        # include projection
-        new_image = None
-        proj = request.GET.get("projection", None)
-        if proj is not None:
-            new_image = conn.getObject("Image", new_id, opts=conn.SERVICE_OPTS)
-            new_image.setProjection(proj)
-            start = request.GET.get("start", None)
-            end = request.GET.get("end", None)
-            if start is not None and end is not None:
-                new_image.setProjectionRange(int(start), int(end))
-                new_image.saveDefaults()
+        # gather params needed for projection call
+        pixels_id = img.getPixelsId()
+        pixels = img.getPrimaryPixels()
+        pixels_type = pixels.getPixelsType()._obj
+
+        # delegate to projectPixels
+        new_image_id = proj_svc.projectPixels(
+            pixels_id, pixels_type, proj, 0, img.getSizeT()-1,
+            range(img.getSizeC()), 1, int(start), int(end), file_name)
+
+        # apply present rendering settings
+        try:
+            rnd = conn.getRenderingSettingsService()
+            rnd.applySettingsToImage(pixels_id, new_image_id)
+        except Exception:
+            pass
 
         # if we have a dataset id => we try to link to it
         if dataset_id is not None:
@@ -328,9 +341,9 @@ def save_as_new_image(request, conn=None, **kwargs):
                 conn.getGroupFromContext().getId())
             link = omero.model.DatasetImageLinkI()
             link.parent = omero.model.DatasetI(long(dataset_id), False)
-            link.child = omero.model.ImageI(new_id, False)
+            link.child = omero.model.ImageI(new_image_id, False)
             upd_svc.saveObject(link, conn.SERVICE_OPTS)
-    except Exception as save_new_file_exception:
-        return JsonResponse({"error": repr(save_new_file_exception)})
+    except Exception as save_projection_exception:
+        return JsonResponse({"error": repr(save_projection_exception)})
 
-    return JsonResponse({"id": new_id.getValue()})
+    return JsonResponse({"id": new_image_id})

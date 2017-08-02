@@ -332,42 +332,45 @@ export default class ViewerContextMenu {
     }
 
     /**
-     * Saves image (as is) as a new image in omero
+     * Creates new
      *
      * @memberof ViewerContextMenu
      */
-    saveAsNewImage() {
+    saveProjectedImage() {
         let imgInf = this.image_config.image_info;
-        let url =
-            this.context.server + this.context.getPrefixedURI(IVIEWER) +
-            '/save_as_new_image/?image=' + imgInf.image_id;
-        if (typeof imgInf.dataset_id === 'number')
-            url += "&dataset=" + imgInf.dataset_id;
-        // add projection for now
-        if (typeof imgInf.projection !== PROJECTION.NORMAL) {
-            url += "&projection=" + imgInf.projection +
-                   "&start=" + imgInf.projection_opts.start +
-                   "&end=" + imgInf.projection_opts.end;
-        }
 
-        $.ajax({
-            url: url,
-            success: (resp) => {
-                let msg = "";
-                if (typeof resp.id === 'number') {
-                    let linkSrc = this.context.server +
-                        this.context.getPrefixedURI(WEBCLIENT) +
-                        "/?show=image-" + resp.id;
-                        msg = "<a href='" + linkSrc + "'>" +
-                            "View New Image</a>";
-                } else {
-                    msg = "Failed to create new image";
-                    if (typeof resp.error === 'string')
-                        console.error(resp.error);
+        if (typeof imgInf.projection !== PROJECTION.NORMAL) {
+            let url =
+                this.context.server + this.context.getPrefixedURI(IVIEWER) +
+                '/save_projection/?image=' + imgInf.image_id +
+                "&projection=" + imgInf.projection +
+                "&start=" + imgInf.projection_opts.start +
+                "&end=" + imgInf.projection_opts.end;
+            if (typeof imgInf.dataset_id === 'number')
+                url += "&dataset=" + imgInf.dataset_id
+
+            $.ajax({
+                url: url,
+                success: (resp) => {
+                    let msg = "";
+                    if (typeof resp.id === 'number') {
+                        let linkSrc = this.context.server +
+                            this.context.getPrefixedURI(WEBCLIENT) +
+                            "/?show=image-" + resp.id;
+                            msg = "<a href='" + linkSrc + "'>" +
+                                "View projected Image</a>";
+                    } else {
+                        msg = "Failed to create projected image";
+                        if (typeof resp.error === 'string')
+                            console.error(resp.error);
+                    }
+                    Ui.showModalMessage(msg, true);
                 }
-                Ui.showModalMessage(msg, true);
-            }
-        });
+            });
+        }
+        this.hideContextMenu();
+        // prevent link click behavior
+        return false;
     }
 
     /**
