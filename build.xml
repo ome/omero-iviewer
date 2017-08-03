@@ -105,6 +105,7 @@
             <fileset file="${src}/ome/ome.js"/>
             <fileset file="${src}/ome/ol3/ol3.js"/>
             <fileset file="${src}/ome/ol3/utils/utils.js"/>
+            <fileset file="${src}/ome/ol3/utils/Transform.js"/>
             <fileset file="${src}/ome/ol3/utils/Conversion.js"/>
             <fileset file="${src}/ome/ol3/utils/Net.js"/>
             <fileset file="${src}/ome/ol3/utils/Misc.js"/>

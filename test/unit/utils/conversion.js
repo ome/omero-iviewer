@@ -258,7 +258,7 @@ describe("Conversion", function() {
         assert.equal(jsonObject['FontFamily'] , 'arial');
         assert.equal(jsonObject['FontStyle'] , 'bold');
         assert.equal(jsonObject['FontSize']['@type'] , 'TBD#LengthI');
-        assert.equal(jsonObject['FontSize']['Unit'] , 'PIXEL');
+        assert.equal(jsonObject['FontSize']['Unit'] , 'POINT');
         assert.equal(jsonObject['FontSize']['Value'] , 666);
     });
 

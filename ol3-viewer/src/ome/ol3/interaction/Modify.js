@@ -246,7 +246,8 @@ ome.ol3.interaction.Modify.handleDragEvent_ = function(mapBrowserEvent) {
             var potentialTransform = geometry.getTransform();
             var v = vertex;
             if (potentialTransform)
-                v = geometry.applyInverseTransform([v[0], v[1]]);
+                v = ome.ol3.utils.Transform.applyInverseTransform(
+                    potentialTransform, [v[0], v[1]]);
             geometry.rx_ = Math.abs(geometry.cx_-v[0]);
             geometry.ry_ = Math.abs(geometry.cy_-v[1]);
             var tmp =

@@ -352,7 +352,7 @@ ome.ol3.utils.Conversion.ellipseToJsonObject = function(geometry, shape_id) {
     var radius = geometry.getRadius();
     ret['RadiusX'] = radius[0];
     ret['RadiusY'] = radius[1];
-    var trans = geometry.getTransform(true);
+    var trans = geometry.getTransform();
     if (typeof trans === 'object' && trans !== null) {
         trans['@type'] =
             "http://www.openmicroscopy.org/Schemas/OME/2016-06#AffineTransform";
@@ -600,8 +600,8 @@ ome.ol3.utils.Conversion.integrateStyleIntoJsonObject = function(feature, jsonOb
                     jsonObject['FontStyle'] = fontTokens[0];
                     jsonObject['FontSize'] =  {
                         '@type': 'TBD#LengthI',
-                        'Unit': 'PIXEL',
-                        'Symbol': 'px',
+                        'Unit': 'POINT',
+                        'Symbol': 'pt',
                         'Value': parseInt(fontTokens[1])
                     };
                     jsonObject['FontFamily'] = fontTokens[2];
