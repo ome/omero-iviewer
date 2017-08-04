@@ -114,6 +114,7 @@
             <fileset file="${src}/ome/ol3/geom/Ellipse.js"/>
             <fileset file="${src}/ome/ol3/geom/LabelRectangle.js"/>
             <fileset file="${src}/ome/ol3/geom/Line.js"/>
+            <fileset file="${src}/ome/ol3/geom/Polygon.js"/>
             <fileset file="${src}/ome/ol3/interaction/interaction.js"/>
             <fileset file="${src}/ome/ol3/interaction/Rotate.js"/>
             <fileset file="${src}/ome/ol3/interaction/BoxSelect.js"/>

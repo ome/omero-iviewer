@@ -143,9 +143,12 @@ ome.ol3.interaction.Modify.prototype.handlePointerAtPixel_ = function(pixel, map
         // get closest node
         var node = nodes[0];
 
-        // we only continue if we don't have an unmodifyable labels
-        if (!(node.geometry instanceof ome.ol3.geom.Label) &&
-            !(node.geometry instanceof ol.geom.Circle)) {
+        var disallowModification =
+            node.geometry instanceof ome.ol3.geom.Label ||
+            node.geometry instanceof ol.geom.Circle ||
+            (ome.ol3.utils.Misc.isArray(node.geometry.transform_) &&
+                    !(node.geometry instanceof ome.ol3.geom.Ellipse));
+        if (!disallowModification) {
             var closestSegment = node.segment;
             var vertex =
                 (ol.coordinate.closestOnSegment(
@@ -243,11 +246,11 @@ ome.ol3.interaction.Modify.handleDragEvent_ = function(mapBrowserEvent) {
             coordinates[depth[0]][segmentData.index + index] = vertex;
             segment[index] = vertex;
         } else if (geometry instanceof ome.ol3.geom.Ellipse) {
-            var potentialTransform = geometry.getTransform();
+            var potentialTransform =geometry.getTransform();
             var v = vertex;
             if (potentialTransform)
                 v = ome.ol3.utils.Transform.applyInverseTransform(
-                    potentialTransform, [v[0], v[1]]);
+                    geometry.transform_, [v[0], v[1]]);
             geometry.rx_ = Math.abs(geometry.cx_-v[0]);
             geometry.ry_ = Math.abs(geometry.cy_-v[1]);
             var tmp =

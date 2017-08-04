@@ -35,14 +35,21 @@ goog.require('ol.geom.Polygon');
  * @param {number} y the y coordinate of the upper left corner
  * @param {number} w the width of the rectangle
  * @param {number} h the height of the rectangle
+ * @param {Object=} transform an AffineTransform object according to omero marshal
  */
-ome.ol3.geom.Rectangle = function(x, y, w, h) {
-
+ome.ol3.geom.Rectangle = function(x, y, w, h, transform) {
     // preliminary checks: set sensible defaults if violated
     if (typeof x !== 'number') x = 0;
     if (typeof y !== 'number') y = 0;
     if (typeof w !== 'number' || w <= 0) w = 1;
     if (typeof h !== 'number' || h <= 0) h = 1;
+
+    /**
+     * the initial coordinates as a flat array
+     * @type {Array.<number>}
+     * @private
+     */
+    this.initial_coords_ = null;
 
     // set the rectangle coordinates
     var coords = [[
@@ -53,8 +60,22 @@ ome.ol3.geom.Rectangle = function(x, y, w, h) {
         [x, y]
     ]];
 
+    /**
+     * the transformation matrix of length 6
+     * @type {Array.<number>|null}
+     * @private
+     */
+    this.transform_ =
+        ome.ol3.utils.Transform.convertAffineTransformIntoMatrix(transform);
+
     // call super and hand in our coordinate array
     goog.base(this, coords, ol.geom.GeometryLayout.XY);
+    this.initial_coords_ =  this.getFlatCoordinates();
+
+    // apply potential transform
+    this.flatCoordinates =
+        ome.ol3.utils.Transform.applyTransform(
+            this.transform_, this.initial_coords_);
 }
 goog.inherits(ome.ol3.geom.Rectangle, ol.geom.Polygon);
 
@@ -153,14 +174,63 @@ ome.ol3.geom.Rectangle.prototype.changeRectangle = function(x,y,w,h) {
 }
 
 /**
+ * Override translation to take care of possible transformation
+ *
+ * @private
+ */
+ome.ol3.geom.Rectangle.prototype.translate = function(deltaX, deltaY) {
+    // delegate
+    if (this.transform_) {
+        this.transform_[4] += deltaX;
+        this.transform_[5] -= deltaY;
+        this.flatCoordinates =
+            ome.ol3.utils.Transform.applyTransform(
+                this.transform_, this.initial_coords_);
+        this.changed();
+    } else ol.geom.SimpleGeometry.prototype.translate.call(this, deltaX, deltaY);
+};
+
+/**
+ * Override scale to include possible transformation
+ *
+ * @private
+ */
+ome.ol3.geom.Rectangle.prototype.scale = function(factor) {
+    // delegate
+    if (this.transform_) {
+        this.transform_[0] *= factor;
+        this.transform_[1] *= factor;
+        this.transform_[2] *= factor;
+        this.transform_[3] *= factor;
+    };
+    ol.geom.SimpleGeometry.prototype.scale.call(this, factor);
+};
+
+/**
+ * Turns the tansformation matrix back into the ome model object
+ * @return {Object|null} the ome model transformation
+ */
+ome.ol3.geom.Rectangle.prototype.getTransform = function() {
+    if (!ome.ol3.utils.Misc.isArray(this.transform_)) return null;
+
+    return {'@type': "http://www.openmicroscopy.org/Schemas/OME/2016-06#AffineTransform",
+            'A00' : this.transform_[0], 'A10' : this.transform_[1],
+            'A01' : this.transform_[2], 'A11' : this.transform_[3],
+            'A02' : this.transform_[4], 'A12' : this.transform_[5]
+    };
+}
+
+/**
  * Make a complete copy of the geometry.
  * @return {ome.ol3.geom.Rectangle} Clone.
  */
 ome.ol3.geom.Rectangle.prototype.clone = function() {
     var topLeft = this.getUpperLeftCorner();
     return new ome.ol3.geom.Rectangle(
-        topLeft[0], topLeft[1], this.getWidth(), this.getHeight());
+        topLeft[0], topLeft[1], this.getWidth(), this.getHeight(),
+        this.getTransform());
 };
+
 
 goog.provide('ome.ol3.geom.Label');
 

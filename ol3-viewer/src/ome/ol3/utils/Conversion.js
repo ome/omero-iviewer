@@ -384,6 +384,13 @@ ome.ol3.utils.Conversion.rectangleToJsonObject = function(geometry, shape_id) {
     ret['Width'] = geometry.getWidth();
     ret['Height'] = geometry.getHeight();
 
+    var trans = geometry.getTransform();
+    if (typeof trans === 'object' && trans !== null) {
+        trans['@type'] =
+            "http://www.openmicroscopy.org/Schemas/OME/2016-06#AffineTransform";
+        ret['Transform'] = trans;
+    }
+
     return ret;
 }
 
@@ -416,6 +423,13 @@ ome.ol3.utils.Conversion.lineToJsonObject = function(geometry, shape_id) {
 
     if (geometry.has_start_arrow_) ret['MarkerStart'] = "Arrow";
     if (geometry.has_end_arrow_) ret['MarkerEnd'] = "Arrow";
+
+    var trans = geometry.getTransform();
+    if (typeof trans === 'object' && trans !== null) {
+        trans['@type'] =
+            "http://www.openmicroscopy.org/Schemas/OME/2016-06#AffineTransform";
+        ret['Transform'] = trans;
+    }
 
     return ret;
 }
@@ -450,6 +464,13 @@ ome.ol3.utils.Conversion.polylineToJsonObject = function(geometry, shape_id) {
 
     if (geometry.has_start_arrow_) ret['MarkerStart'] = "Arrow";
     if (geometry.has_end_arrow_) ret['MarkerEnd'] = "Arrow";
+
+    var trans = geometry.getTransform();
+    if (typeof trans === 'object' && trans !== null) {
+        trans['@type'] =
+            "http://www.openmicroscopy.org/Schemas/OME/2016-06#AffineTransform";
+        ret['Transform'] = trans;
+    }
 
     return ret;
 }
