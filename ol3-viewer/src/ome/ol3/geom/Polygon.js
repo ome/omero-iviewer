@@ -67,7 +67,7 @@ goog.inherits(ome.ol3.geom.Polygon, ol.geom.Polygon);
  * Returns the coordinates as a flat array (excl. any potential transform)
  * @return {Array.<number>} the coordinates as a flat array
  */
-ome.ol3.geom.Line.prototype.getPolygonCoordinates = function() {
+ome.ol3.geom.Polygon.prototype.getPolygonCoordinates = function() {
     return (
         this.transform_ ? this.initial_coords_ : this.getFlatCoordinates()
     );

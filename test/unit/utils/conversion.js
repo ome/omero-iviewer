@@ -207,7 +207,7 @@ describe("Conversion", function() {
     });
 
     var polygonFeature = new ol.Feature({
-        geometry: new ol.geom.Polygon(
+        geometry: new ome.ol3.geom.Polygon(
             [[[0,0],[10,-10], [0,-100], [0,0]]])
     });
 
