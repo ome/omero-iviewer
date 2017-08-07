@@ -735,16 +735,16 @@ thumbnail-slider img {
     background-position: center;
 }
 .shape-comment {
-    min-width: 45%;
-    max-width: 45%;
+    min-width: 50%;
+    max-width: 50%;
 }
 .shape-area,.shape-length {
-    min-width: 22.5%;
-    max-width: 22.5%;
+    min-width: 25%;
+    max-width: 25%;
 }
 .shape-show {
-    min-width: 20%;
-    max-width: 20%;
+    min-width: 15%;
+    max-width: 15%;
 }
 
 .rectangle-icon {
