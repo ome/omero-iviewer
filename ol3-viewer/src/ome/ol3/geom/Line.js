@@ -153,12 +153,19 @@ ome.ol3.geom.Line.prototype.getArrowGeometry = function(head, width, height) {
                   tip[1] - direction*height*unitLine[1] - width*perpLine[1]];
     var point2 = [tip[0] - direction*height*unitLine[0] + width*perpLine[0],
                   tip[1] - direction*height*unitLine[1] + width*perpLine[1]];
-    //var direction = head ? 1 : -1;
-    //tip = [tip[0] + direction*height*unitLine[0],
-    //       tip[1] + direction*height*unitLine[1]];
 
     return new ol.geom.Polygon([[tip, point1, point2]]);
 };
+
+/**
+ * Returns the coordinates as a flat array (excl. any potential transform)
+ * @return {Array.<number>} the coordinates as a flat array
+ */
+ome.ol3.geom.Line.prototype.getLineCoordinates = function() {
+    return (
+        this.transform_ ? this.initial_coords_ : this.getFlatCoordinates()
+    );
+}
 
 /**
  * Gets the transformation associated with the Line

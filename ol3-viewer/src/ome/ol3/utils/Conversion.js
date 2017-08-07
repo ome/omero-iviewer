@@ -409,7 +409,7 @@ ome.ol3.utils.Conversion.lineToJsonObject = function(geometry, shape_id) {
 
     var ret = {};
     if (typeof shape_id === 'number') ret['@id'] = shape_id;
-    var flatCoords = geometry.getFlatCoordinates();
+    var flatCoords = geometry.getLineCoordinates();
     //delegate if we happen to have turned into a polyline
     if (geometry.isPolyline())
         return ome.ol3.utils.Conversion.polylineToJsonObject.call(
@@ -449,7 +449,7 @@ ome.ol3.utils.Conversion.polylineToJsonObject = function(geometry, shape_id) {
 
     var ret = {};
     if (typeof shape_id === 'number') ret['@id'] = shape_id;
-    var flatCoords = geometry.getFlatCoordinates();
+    var flatCoords = geometry.getLineCoordinates();
     //delegate if we happen to have turned into a line
     if (!geometry.isPolyline())
         return ome.ol3.utils.Conversion.lineToJsonObject.call(
@@ -509,13 +509,13 @@ ome.ol3.utils.Conversion.labelToJsonObject = function(geometry, shape_id) {
  * @return {Object} returns an object ready to be turned into json
  */
 ome.ol3.utils.Conversion.polygonToJsonObject = function(geometry, shape_id) {
-    if (!(geometry instanceof ol.geom.Polygon))
-        throw "shape type polygon must be of instance ol.geom.Polygon!";
+    if (!(geometry instanceof ome.ol3.geom.Polygon))
+        throw "shape type polygon must be of instance ome.ol3.geom.Polygon!";
 
     var ret = {};
     if (typeof shape_id === 'number') ret['@id'] = shape_id;
     ret['@type'] = "http://www.openmicroscopy.org/Schemas/OME/2016-06#Polygon";
-    var flatCoords = geometry.getFlatCoordinates();
+    var flatCoords = geometry.getPolygonCoordinates();
 
     ret['Points'] = "";
     for (var i=0; i<flatCoords.length;i+= 2) {
