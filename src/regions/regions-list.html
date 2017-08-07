@@ -60,9 +60,15 @@
                      show.bind="active_column === 'comments'">Comment
                  </div>
                 <div class="regions-table-col shape-area"
-                     show.bind="active_column === 'measurements'">Area (&#181;m)</div>
+                     show.bind="active_column === 'measurements'">
+                     Area (${regions_info.image_info.image_pixels_size.symbol_x ||
+                             '&#181;m'})
+                 </div>
                 <div class="regions-table-col shape-length"
-                     show.bind="active_column === 'measurements'">Length (&#181;m)</div>
+                     show.bind="active_column === 'measurements'">
+                     Length (${regions_info.image_info.image_pixels_size.symbol_x ||
+                               '&#181;m'})
+                 </div>
             </div>
 
             <div class="regions-table-row regions-table-first-row"></div>

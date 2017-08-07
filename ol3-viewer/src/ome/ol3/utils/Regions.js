@@ -552,10 +552,11 @@ ome.ol3.utils.Regions.addMask = function(regions, shape_info) {
  * @param {ol.Feature} feature the feature containing the geometry
  * @param {boolean} recalculate flag: if true we redo the measurement (default: false)
  * @param {number} pixel_size the pixel_size
+ * @param {string} pixel_symbol the pixel_symbol
  * @return {Object} an object containing shape id, area and length
  */
 ome.ol3.utils.Regions.calculateLengthAndArea =
-    function(feature, recalculate, pixel_size) {
+    function(feature, recalculate, pixel_size, pixel_symbol) {
         if (typeof pixel_size !== 'number') pixel_size = 1;
 
         var geom = feature.getGeometry();
@@ -567,6 +568,18 @@ ome.ol3.utils.Regions.calculateLengthAndArea =
         var hasLength =
             !(geom instanceof ol.geom.Circle) &&
             !(geom instanceof ome.ol3.geom.Label);
+
+        // if we are not micron we convert
+        if (typeof pixel_symbol !== 'string' ||
+            pixel_symbol.localeCompare('\u00B5m') !== 0) {
+            for (var u=0;u<ome.ol3.UNITS_LENGTH.length;u++) {
+                var unit = ome.ol3.UNITS_LENGTH[u];
+                if (unit.symbol.localeCompare(pixel_symbol) === 0) {
+                    pixel_size *= unit.multiplier;
+                    break;
+                }
+            }
+        }
 
         // rounding helper
         var roundAfterThreeDecimals = function(value) {

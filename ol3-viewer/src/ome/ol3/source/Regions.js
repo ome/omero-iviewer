@@ -849,7 +849,9 @@ ome.ol3.source.Regions.prototype.getLengthAndAreaForShape =
 
         return ome.ol3.utils.Regions.calculateLengthAndArea(
             feature, recalculate,
-            this.viewer_.viewer_.getView().getProjection().getMetersPerUnit());
+            this.viewer_.viewer_.getView().getProjection().getMetersPerUnit(),
+            this.viewer_.image_info_['pixel_size']['symbol_x'] || '\u00B5m'
+        );
 }
 
 /**
