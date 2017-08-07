@@ -567,25 +567,30 @@ ome.ol3.utils.Regions.calculateLengthAndArea =
         var hasLength =
             !(geom instanceof ol.geom.Circle) &&
             !(geom instanceof ome.ol3.geom.Label);
-        // we recalculate regardless if we don't have a length/area yet
-        if (typeof feature['Area'] !== 'number' || recalculate)
-            feature['Area'] = hasArea ?
-                geom.getArea() * (pixel_size * pixel_size) : -1;
-        if (typeof feature['Length'] !== 'number' || recalculate)
-            feature['Length'] = hasLength ?
-                ol.geom.flat.length.lineString(
-                    geom.flatCoordinates, 0,
-                    geom.flatCoordinates.length, geom.stride) * pixel_size : -1;
 
+        // rounding helper
         var roundAfterThreeDecimals = function(value) {
             if (value < 0) return value;
 
             return Number(Math.round(value +'e3') + 'e-3');
         };
 
+        // we recalculate regardless if we don't have a length/area yet
+        if (typeof feature['Area'] !== 'number' || recalculate)
+            feature['Area'] = hasArea ?
+                roundAfterThreeDecimals(
+                    geom.getArea() * (pixel_size * pixel_size)) : -1;
+        if (typeof feature['Length'] !== 'number' || recalculate)
+            feature['Length'] = hasLength ?
+                roundAfterThreeDecimals(
+                    ol.geom.flat.length.lineString(
+                        geom.flatCoordinates, 0,
+                        geom.flatCoordinates.length, geom.stride)
+                            * pixel_size) : -1;
+
         return {
             'id' : feature.getId(),
-            'Area': roundAfterThreeDecimals(feature['Area']),
-            'Length': roundAfterThreeDecimals(feature['Length'])
+            'Area': feature['Area'],
+            'Length': feature['Length']
         };
 }
