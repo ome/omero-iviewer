@@ -495,7 +495,7 @@ thumbnail-slider img {
 }
 
 .tab-pane {
-    padding: 10px;
+    padding: 5px;
 }
 
 .right-hand-panel .row {
@@ -738,7 +738,11 @@ thumbnail-slider img {
     min-width: 50%;
     max-width: 50%;
 }
-.shape-area,.shape-length {
+.shape-area {
+    min-width: 20%;
+    max-width: 20%;
+}
+.shape-length {
     min-width: 25%;
     max-width: 25%;
 }
