@@ -1076,7 +1076,7 @@ thumbnail-slider img {
 }
 .columns-dropdown .dropdown-menu {
     right: 0px;
-    left: initial;
+    left: auto;
 }
 .columns-dropdown .dropdown-menu span {
     display: inline-block;
