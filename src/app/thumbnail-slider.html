@@ -42,4 +42,8 @@
          show.bind="requesting_thumbnail_data">
             Gathering<br>Thumbnail<br>Info...
     </div>
+    <div class="disabled-color" style="position: relative;top: 40%;"
+         show.bind="image_config.image_info.error && !initialized">
+            No Image Data
+    </div>
 </template>

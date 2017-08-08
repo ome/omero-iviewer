@@ -219,19 +219,24 @@ export default class Ui {
      * Shows a bootstrap modal message box
      *
      * @param {string} message the title of the dialog
-     * @param {boolean} ok_button true will display an ok button, false won't
+     * @param {string} button_text a button with the given text will be shown
+     *                             if a non-empty string is provided
      * @static
      */
-    static showModalMessage(message, ok_button) {
+    static showModalMessage(message, button_text) {
         if (typeof message !== 'string') message = '';
-        if (typeof ok_button !== 'boolean') ok_button = false;
+        if (typeof button_text === 'string')
+            button_text = button_text.replace(/\s/g, "")
+        else button_text = '';
 
         let modal = $('.modal-message');
         if (modal.length === 0) return;
 
         let footer = modal.find('.modal-footer');
-        if (ok_button) footer.show();
-        else footer.hide();
+        if (button_text) {
+            footer.find('button').html(button_text);
+            footer.show();
+        } else footer.hide();
 
         modal.find('.modal-body').html(message);
         modal.modal();

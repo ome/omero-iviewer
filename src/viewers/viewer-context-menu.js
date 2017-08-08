@@ -354,17 +354,25 @@ export default class ViewerContextMenu {
                 success: (resp) => {
                     let msg = "";
                     if (typeof resp.id === 'number') {
-                        let linkSrc = this.context.server +
+                        let linkWebclient = this.context.server +
                             this.context.getPrefixedURI(WEBCLIENT) +
                             "/?show=image-" + resp.id;
-                            msg = "<a href='" + linkSrc + "'>" +
-                                "View projected Image</a>";
+                        let linkIviewer = this.context.server +
+                            this.context.getPrefixedURI(IVIEWER) +
+                            "/" + resp.id;
+                        if (typeof imgInf.dataset_id === 'number')
+                            linkIviewer += "/?dataset=" + imgInf.dataset_id;
+                    msg =
+                        "<a href='" + linkWebclient + "'>" +
+                        "Navigate to Image in Webclient</a><br>" +
+                        "<br><a href='" + linkIviewer + "'>" +
+                        "Open Image in iViewer</a>";
                     } else {
                         msg = "Failed to create projected image";
                         if (typeof resp.error === 'string')
                             console.error(resp.error);
                     }
-                    Ui.showModalMessage(msg, true);
+                    Ui.showModalMessage(msg, 'Close');
                 }
             });
         }

@@ -206,58 +206,60 @@ def image_data(request, image_id, conn=None, **kwargs):
     if image is None:
         return JsonResponse({"error": "Image not found"}, status=404)
 
-    rv = imageMarshal(image)
+    try:
+        rv = imageMarshal(image)
 
-    # Add extra parameters with units data
-    # Note ['pixel_size']['x'] will have size in MICROMETER
-    px = image.getPrimaryPixels().getPhysicalSizeX()
-    if (px is not None):
-        size = image.getPixelSizeX(True)
-        value = format_value_with_units(size)
-        rv['pixel_size']['unit_x'] = value[0]
-        rv['pixel_size']['symbol_x'] = value[1]
-    py = image.getPrimaryPixels().getPhysicalSizeY()
-    if (py is not None):
-        size = image.getPixelSizeY(True)
-        value = format_value_with_units(size)
-        rv['pixel_size']['unit_y'] = value[0]
-        rv['pixel_size']['symbol_y'] = value[1]
-    pz = image.getPrimaryPixels().getPhysicalSizeZ()
-    if (pz is not None):
-        size = image.getPixelSizeZ(True)
-        value = format_value_with_units(size)
-        rv['pixel_size']['unit_z'] = value[0]
-        rv['pixel_size']['symbol_z'] = value[1]
+        # Add extra parameters with units data
+        # Note ['pixel_size']['x'] will have size in MICROMETER
+        px = image.getPrimaryPixels().getPhysicalSizeX()
+        if (px is not None):
+            size = image.getPixelSizeX(True)
+            value = format_value_with_units(size)
+            rv['pixel_size']['unit_x'] = value[0]
+            rv['pixel_size']['symbol_x'] = value[1]
+        py = image.getPrimaryPixels().getPhysicalSizeY()
+        if (py is not None):
+            size = image.getPixelSizeY(True)
+            value = format_value_with_units(size)
+            rv['pixel_size']['unit_y'] = value[0]
+            rv['pixel_size']['symbol_y'] = value[1]
+        pz = image.getPrimaryPixels().getPhysicalSizeZ()
+        if (pz is not None):
+            size = image.getPixelSizeZ(True)
+            value = format_value_with_units(size)
+            rv['pixel_size']['unit_z'] = value[0]
+            rv['pixel_size']['symbol_z'] = value[1]
 
-    size_t = image.getSizeT()
-    time_list = []
-    delta_t_unit_symbol = None
-    if size_t > 1:
-        params = omero.sys.ParametersI()
-        params.addLong('pid', image.getPixelsId())
-        z = 0
-        c = 0
-        query = "from PlaneInfo as Info where"\
-            " Info.theZ=%s and Info.theC=%s and pixels.id=:pid" % (z, c)
-        info_list = conn.getQueryService().findAllByQuery(
-            query, params, conn.SERVICE_OPTS)
-        timemap = {}
-        for info in info_list:
-            t_index = info.theT.getValue()
-            if info.deltaT is not None:
-                value = format_value_with_units(info.deltaT)
-                timemap[t_index] = value[0]
-                if delta_t_unit_symbol is None:
-                    delta_t_unit_symbol = value[1]
-        for t in range(image.getSizeT()):
-            if t in timemap:
-                time_list.append(timemap[t])
+        size_t = image.getSizeT()
+        time_list = []
+        delta_t_unit_symbol = None
+        if size_t > 1:
+            params = omero.sys.ParametersI()
+            params.addLong('pid', image.getPixelsId())
+            z = 0
+            c = 0
+            query = "from PlaneInfo as Info where"\
+                " Info.theZ=%s and Info.theC=%s and pixels.id=:pid" % (z, c)
+            info_list = conn.getQueryService().findAllByQuery(
+                query, params, conn.SERVICE_OPTS)
+            timemap = {}
+            for info in info_list:
+                t_index = info.theT.getValue()
+                if info.deltaT is not None:
+                    value = format_value_with_units(info.deltaT)
+                    timemap[t_index] = value[0]
+                    if delta_t_unit_symbol is None:
+                        delta_t_unit_symbol = value[1]
+            for t in range(image.getSizeT()):
+                if t in timemap:
+                    time_list.append(timemap[t])
 
-    rv['delta_t'] = time_list
-    rv['delta_t_unit_symbol'] = delta_t_unit_symbol
+        rv['delta_t'] = time_list
+        rv['delta_t_unit_symbol'] = delta_t_unit_symbol
 
-    return JsonResponse(rv)
-
+        return JsonResponse(rv)
+    except Exception as image_data_retrieval_exception:
+        return JsonResponse({'error': repr(image_data_retrieval_exception)})
 
 def format_value_with_units(value):
         """
