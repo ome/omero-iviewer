@@ -261,6 +261,7 @@ def image_data(request, image_id, conn=None, **kwargs):
     except Exception as image_data_retrieval_exception:
         return JsonResponse({'error': repr(image_data_retrieval_exception)})
 
+
 def format_value_with_units(value):
         """
         Formats the response for methods above.
@@ -293,10 +294,10 @@ def format_value_with_units(value):
 def save_projection(request, conn=None, **kwargs):
     # check for mandatory parameters
     image_id = request.GET.get("image", None)
-    proj = request.GET.get("projection", None)
-    if image_id is None or proj is None:
+    proj_type = request.GET.get("projection", None)
+    if image_id is None or proj_type is None:
         return JsonResponse({"error": "Image id/Projection not supplied"})
-    proj = PROJECTIONS.get(proj, -1)
+    proj = PROJECTIONS.get(proj_type, -1)
     # we do only create new images for listed projections
     if proj == -1:
         return JsonResponse({"error": "Projection type not listed"})
@@ -311,9 +312,6 @@ def save_projection(request, conn=None, **kwargs):
     if img is None:
         return JsonResponse({"error": "Image not Found"}, status=404)
 
-    # assemble new file name
-    file_name = img.getName() + "-" + time.strftime("%d.%m.%Y (%H:%M:%S)")
-
     new_image_id = None
     try:
         # no getter defined in gateway...
@@ -323,6 +321,9 @@ def save_projection(request, conn=None, **kwargs):
         pixels_id = img.getPixelsId()
         pixels = img.getPrimaryPixels()
         pixels_type = pixels.getPixelsType()._obj
+
+        # assemble new file name
+        file_name = img.getName() + "-" + time.strftime("%d.%m.%Y (%H:%M:%S)")
 
         # delegate to projectPixels
         new_image_id = proj_svc.projectPixels(
@@ -335,6 +336,25 @@ def save_projection(request, conn=None, **kwargs):
             rnd.applySettingsToImage(pixels_id, new_image_id)
         except Exception:
             pass
+
+        # set image decription
+        details = []
+        details.append("Original Image: " + img.getName())
+        details.append("Original Image ID: " + image_id)
+        details.append("Projection Type: " + proj_type)
+        details.append(
+            "z-sections: " + str(int(start)+1) + "-" + str(int(end)+1))
+        size_t = img.getSizeT()
+        if size_t == 1:
+            details.append("timepoint: " + str(size_t))
+        else:
+            details.append("timepoints: 1-" + str(size_t))
+        description = "\n".join(details)
+
+        new_img = conn.getObject(
+            "Image", new_image_id, opts=conn.SERVICE_OPTS)
+        new_img.setDescription(description)
+        new_img.save()
 
         # if we have a dataset id => we try to link to it
         if dataset_id is not None:
