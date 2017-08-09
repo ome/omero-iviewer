@@ -572,13 +572,14 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
            ol.events.listen(
                this.viewer_, ol.MapEventType.MOVEEND,
                function(event) {
-                   this.eventbus_.publish(
-                       "IMAGE_INTERACTION",
-                       {"config_id": this.getTargetId(),
-                        "z": this.getDimensionIndex('z'),
-                        "t": this.getDimensionIndex('t'),
-                        "c": this.getDimensionIndex('c'),
-                        "center": this.viewer_.getView().getCenter()});
+                   ome.ol3.utils.Misc.sendEventNotification(
+                       this.viewer_, "IMAGE_INTERACTION",
+                       {
+                           "z": this.getDimensionIndex('z'),
+                           "t": this.getDimensionIndex('t'),
+                           "c": this.getDimensionIndex('c'),
+                           "center": this.viewer_.getView().getCenter()
+                       });
                }, this);
     }
 }
@@ -1461,30 +1462,28 @@ ome.ol3.Viewer.prototype.generateShapes = function(shape_info, options) {
                 !this.getRegions().rotate_text_)
             f.getGeometry().rotate(-rot);
             ome.ol3.utils.Style.updateStyleFunction(f, this.regions_, true);
+        // calculate measurements
+        this.getRegions().getLengthAndAreaForShape(f, true);
     }
     this.getRegions().addFeatures(generatedShapes);
 
     // notify about generation
-    var eventbus = this.eventbus_;
-    var config_id = this.getTargetId();
-    if (eventbus)
-        setTimeout(function() {
-            var newRegionsObject =
-                ome.ol3.utils.Conversion.toJsonObject(
-                    new ol.Collection(generatedShapes), true, true);
-            if (typeof newRegionsObject !== 'object' ||
-                !ome.ol3.utils.Misc.isArray(newRegionsObject['rois']) ||
-                newRegionsObject['rois'].length === 0) return;
-            var params = {
-                "config_id": config_id,
-                "shapes": newRegionsObject['rois']
-            };
-            if (typeof options['hist_id'] === 'number')
-                params['hist_id'] = options['hist_id'];
-            if (typeof options['add_history'] === 'boolean')
-                params['add_history'] =  options['add_history'];
-            eventbus.publish("REGIONS_SHAPE_GENERATED", params);
-        },25);
+    if (this.eventbus_) {
+        var newRegionsObject =
+            ome.ol3.utils.Conversion.toJsonObject(
+                new ol.Collection(generatedShapes), true, true);
+        if (typeof newRegionsObject !== 'object' ||
+            !ome.ol3.utils.Misc.isArray(newRegionsObject['rois']) ||
+            newRegionsObject['rois'].length === 0) return;
+        var params = {"shapes": newRegionsObject['rois']};
+        if (typeof options['hist_id'] === 'number')
+            params['hist_id'] = options['hist_id'];
+        if (typeof options['add_history'] === 'boolean')
+            params['add_history'] =  options['add_history'];
+
+        ome.ol3.utils.Misc.sendEventNotification(
+            this, "REGIONS_SHAPE_GENERATED", params, 25);
+    }
 };
 
 /**
@@ -2023,6 +2022,32 @@ ome.ol3.Viewer.prototype.enableSmoothing = function(smoothing) {
     this.viewer_.updateSize();
 }
 
+/**
+ * Returns the area and length values for given shapes
+ * @param {Array.<string>} ids the shape ids in the format roi_id:shape_id
+ * @param {boolean} recalculate flag: if true we redo the measurement (default: false)
+ * @return {Array.<Object>} an array of objects containing shape id, area and length
+ */
+ome.ol3.Viewer.prototype.getLengthAndAreaForShapes = function(ids, recalculate) {
+    var regions = this.getRegions();
+    if (regions === null || !ome.ol3.utils.Misc.isArray(ids) ||
+        ids.length === 0) return [];
+
+    var ret = [];
+    for (var x=0;x<ids.length;x++) {
+        if (typeof ids[x] !== 'string' ||
+            typeof regions.idIndex_ !== 'object' ||
+            !(regions.idIndex_[ids[x]] instanceof ol.Feature)) continue;
+        // delegate
+        var measurement =
+            regions.getLengthAndAreaForShape(regions.idIndex_[ids[x]], recalculate);
+        if (measurement !== null) ret.push(measurement);
+    }
+
+    return ret;
+}
+
+
 /*
  * This section determines which methods are exposed and usable after compilation
  */
@@ -2215,3 +2240,8 @@ goog.exportProperty(
     ome.ol3.Viewer.prototype,
     'enableSmoothing',
     ome.ol3.Viewer.prototype.enableSmoothing);
+
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
+    'getLengthAndAreaForShapes',
+    ome.ol3.Viewer.prototype.getLengthAndAreaForShapes);
