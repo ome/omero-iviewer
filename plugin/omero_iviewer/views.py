@@ -324,7 +324,7 @@ def save_projection(request, conn=None, **kwargs):
         pixels_type = pixels.getPixelsType()._obj
 
         # assemble new file name
-        filename,extension = splitext(img.getName())
+        filename, extension = splitext(img.getName())
         file_name = filename + '_proj' + extension
 
         # delegate to projectPixels
