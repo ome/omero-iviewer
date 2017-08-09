@@ -515,7 +515,7 @@ thumbnail-slider img {
 }
 
 .tab-pane {
-    padding: 10px;
+    padding: 5px;
 }
 
 .right-hand-panel .row {
@@ -755,12 +755,20 @@ thumbnail-slider img {
     background-position: center;
 }
 .shape-comment {
-    min-width: 45%;
-    max-width: 45%;
+    min-width: 50%;
+    max-width: 50%;
 }
-.shape-show {
+.shape-area {
     min-width: 20%;
     max-width: 20%;
+}
+.shape-length {
+    min-width: 25%;
+    max-width: 25%;
+}
+.shape-show {
+    min-width: 15%;
+    max-width: 15%;
 }
 
 .rectangle-icon {
@@ -1091,4 +1099,24 @@ thumbnail-slider img {
     background-position: center;
     cursor: pointer;
     z-index: 10;
+}
+
+.columns-dropdown {
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    z-index: 1000;
+}
+.columns-dropdown .dropdown-menu {
+    right: 0px;
+    left: auto;
+}
+.columns-dropdown .dropdown-menu span {
+    display: inline-block;
+    margin-left: 2px;
+    width: 12px;
+}
+.columns-dropdown .dropdown-menu a {
+    display: inline-block;
+    padding-left: 0px;
 }

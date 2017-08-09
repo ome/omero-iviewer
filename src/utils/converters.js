@@ -173,6 +173,10 @@ export class Converters {
         if (typeof shape[d] !== 'number') shape[d] = -1;
       });
 
+      // initialize area/length info (if not there)
+      if (typeof shape.Length !== 'number') shape.Length = -1;
+      if (typeof shape.Area !== 'number') shape.Area = -1;
+
       return shape;
     }
 }
