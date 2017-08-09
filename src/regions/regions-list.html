@@ -62,7 +62,7 @@
                 <div class="regions-table-col shape-area"
                      show.bind="active_column === 'measurements'">
                      Area (${regions_info.image_info.image_pixels_size.symbol_x ||
-                             '&#181;m'})
+                             '&#181;m'}&#178;)
                  </div>
                 <div class="regions-table-col shape-length"
                      show.bind="active_column === 'measurements'">
@@ -126,11 +126,13 @@
                                 ${shape.Text ? shape.Text : ''}
                         </div>
                         <div class="regions-table-col shape-area"
-                             show.bind="active_column === 'measurements'">
+                             show.bind="active_column === 'measurements'"
+                             title="${shape.Area && shape.Area > 0 ? shape.Area : ''}">
                                 ${shape.Area && shape.Area > 0 ? shape.Area : ''}
                         </div>
                         <div class="regions-table-col shape-length"
-                             show.bind="active_column === 'measurements'">
+                             show.bind="active_column === 'measurements'"
+                             title="${shape.Length && shape.Length > 0 ? shape.Length : ''}">
                                 ${shape.Length && shape.Length > 0 ? shape.Length : ''}
                         </div>
                     </div>
