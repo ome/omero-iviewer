@@ -100,9 +100,27 @@ ome.ol3.geom.Polygon.prototype.translate = function(deltaX, deltaY) {
 };
 
 /**
+ * Returns the coordinates after (potentially) inverting a transformation
+ * @return {Array} the coordinate array
+ */
+ome.ol3.geom.Polygon.prototype.getInvertedCoordinates = function() {
+    if (this.transform_ === null) return this.getCoordinates();
+
+    var coords = this.getCoordinates();
+    var invCoords = new Array(coords[0].length);
+    for (var i=0;i<coords[0].length;i++)
+        invCoords[i] =
+            ome.ol3.utils.Transform.applyInverseTransform(
+                this.transform_, coords[0][i]);
+
+    return [invCoords];
+}
+
+/**
  * Make a complete copy of the geometry.
  * @return {ome.ol3.geom.Polygon} Clone.
  */
 ome.ol3.geom.Polygon.prototype.clone = function() {
-    return new ome.ol3.geom.Polygon(this.getCoordinates(), this.getTransform());
+    return new ome.ol3.geom.Polygon(
+            this.getInvertedCoordinates(), this.getTransform());
 };

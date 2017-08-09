@@ -523,6 +523,13 @@ ome.ol3.utils.Conversion.polygonToJsonObject = function(geometry, shape_id) {
         ret['Points'] += flatCoords[i] + "," + (-flatCoords[i+1]);
     }
 
+    var trans = geometry.getTransform();
+    if (typeof trans === 'object' && trans !== null) {
+        trans['@type'] =
+            "http://www.openmicroscopy.org/Schemas/OME/2016-06#AffineTransform";
+        ret['Transform'] = trans;
+    }
+
     return ret;
 }
 

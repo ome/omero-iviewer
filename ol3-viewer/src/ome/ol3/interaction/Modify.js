@@ -145,9 +145,10 @@ ome.ol3.interaction.Modify.prototype.handlePointerAtPixel_ = function(pixel, map
 
         var disallowModification =
             node.geometry instanceof ome.ol3.geom.Label ||
-            node.geometry instanceof ol.geom.Circle ||
-            (ome.ol3.utils.Misc.isArray(node.geometry.transform_) &&
-                    !(node.geometry instanceof ome.ol3.geom.Ellipse));
+            node.geometry instanceof ol.geom.Circle;
+            // ||
+            //(ome.ol3.utils.Misc.isArray(node.geometry.transform_) &&
+            //        !(node.geometry instanceof ome.ol3.geom.Ellipse));
         if (!disallowModification) {
             var closestSegment = node.segment;
             var vertex =
@@ -230,6 +231,7 @@ ome.ol3.interaction.Modify.handleDragEvent_ = function(mapBrowserEvent) {
         var coordinates = geometry.getCoordinates();
         var segment = segmentData.segment;
         var index = dragSegment[1];
+        var potentialTransform = geometry.getTransform();
 
         while (vertex.length < geometry.getStride()) vertex.push(0);
 
@@ -241,16 +243,26 @@ ome.ol3.interaction.Modify.handleDragEvent_ = function(mapBrowserEvent) {
             segment[0] = segment[1] = vertex;
         } else if (geometry instanceof ol.geom.LineString) {
             coordinates[segmentData.index + index] = vertex;
+
+            if (potentialTransform) {
+                var tmp =
+                    new ome.ol3.geom.Line(
+                        geometry.getInvertedCoordinates(),
+                        geometry.has_start_arrow_,
+                        geometry.has_end_arrow_,
+                        potentialTransform);
+                geometry.initial_coords_ = tmp.getLineCoordinates();
+            }
+
             segment[index] = vertex;
         } else if (geometry instanceof ol.geom.MultiLineString) {
             coordinates[depth[0]][segmentData.index + index] = vertex;
             segment[index] = vertex;
         } else if (geometry instanceof ome.ol3.geom.Ellipse) {
-            var potentialTransform =geometry.getTransform();
-            var v = vertex;
+            var v = vertex.slice();
             if (potentialTransform)
                 v = ome.ol3.utils.Transform.applyInverseTransform(
-                    geometry.transform_, [v[0], v[1]]);
+                    geometry.transform_, v);
             geometry.rx_ = Math.abs(geometry.cx_-v[0]);
             geometry.ry_ = Math.abs(geometry.cy_-v[1]);
             var tmp =
@@ -262,38 +274,58 @@ ome.ol3.interaction.Modify.handleDragEvent_ = function(mapBrowserEvent) {
         } else if (geometry instanceof ome.ol3.geom.Rectangle) {
             var vertexBeingDragged =
                 this.vertexFeature_.getGeometry().getCoordinates();
+            if (potentialTransform) {
+                vertexBeingDragged =
+                    ome.ol3.utils.Transform.applyInverseTransform(
+                        geometry.transform_, vertexBeingDragged);
+            }
+
             if (this.oppVertBeingDragged == null)
-                for (var j=0;j<coordinates[depth[0]].length;j++)
-                    if (coordinates[depth[0]][j][0] !=  vertexBeingDragged[0] &&
-                        coordinates[depth[0]][j][1] !=  vertexBeingDragged[1]) {
-                            this.oppVertBeingDragged = coordinates[depth[0]][j];
+                for (var j=0;j<coordinates[depth[0]].length;j++) {
+                    var c =
+                        ome.ol3.utils.Transform.applyInverseTransform(
+                            geometry.transform_,
+                            coordinates[depth[0]][j]);
+                    if (c[0] !==  vertexBeingDragged[0] &&
+                        c[1] !==  vertexBeingDragged[1]) {
+                            this.oppVertBeingDragged = c;
                             break;
                     }
+                }
 
                 var minX =
-                    vertex[0] < this.oppVertBeingDragged[0] ?
-                        vertex[0] : this.oppVertBeingDragged[0];
+                    vertexBeingDragged[0] < this.oppVertBeingDragged[0] ?
+                        vertexBeingDragged[0] : this.oppVertBeingDragged[0];
                 var maxX =
-                    vertex[0] > this.oppVertBeingDragged[0] ?
-                        vertex[0] : this.oppVertBeingDragged[0];
+                    vertexBeingDragged[0] > this.oppVertBeingDragged[0] ?
+                        vertexBeingDragged[0] : this.oppVertBeingDragged[0];
                 var minY =
-                    -vertex[1] < -this.oppVertBeingDragged[1] ?
-                        vertex[1] : this.oppVertBeingDragged[1];
+                    -vertexBeingDragged[1] < -this.oppVertBeingDragged[1] ?
+                        vertexBeingDragged[1] : this.oppVertBeingDragged[1];
                 var maxY =
-                    -vertex[1] > -this.oppVertBeingDragged[1] ?
-                        vertex[1] : this.oppVertBeingDragged[1];
+                    -vertexBeingDragged[1] > -this.oppVertBeingDragged[1] ?
+                        vertexBeingDragged[1] : this.oppVertBeingDragged[1];
 
-                // set new top left corner
-                coordinates[depth[0]][0] = [minX, minY];
-                coordinates[depth[0]][1] = [maxX, minY];
-                coordinates[depth[0]][2] = [maxX, maxY];
-                coordinates[depth[0]][3] = [minX, maxY];
-                coordinates[depth[0]][4] = [minX, minY];
+                var tmp =
+                    new ome.ol3.geom.Rectangle(
+                        minX, minY, maxX - minX, Math.abs(maxY - minY),
+                        potentialTransform);
+                coordinates = tmp.getCoordinates();
+                geometry.initial_coords_ = tmp.initial_coords_;
 
                 segment[index] =
                     geometry.getExtent().slice(index*2, (index+1)*2);
             } else if (geometry instanceof ol.geom.Polygon) {
                 coordinates[depth[0]][segmentData.index + index] = vertex;
+
+                if (potentialTransform) {
+                    var tmp =
+                        new ome.ol3.geom.Polygon(
+                            geometry.getInvertedCoordinates(),
+                            potentialTransform);
+                    geometry.initial_coords_ = tmp.getPolygonCoordinates();
+                }
+
                 segment[index] = vertex;
             } else if (geometry instanceof ol.geom.MultiPolygon) {
                 coordinates[depth[1]][depth[0]][segmentData.index + index] =
@@ -391,4 +423,144 @@ ome.ol3.interaction.Modify.handleEvent = function(mapBrowserEvent) {
 
     return ol.interaction.Pointer.handleEvent.call(this, mapBrowserEvent) &&
             !handled;
+};
+
+/**
+ * Removes a vertex from all matching features
+ *
+ * @return {boolean} True when a vertex was removed.
+ * @private
+ */
+ome.ol3.interaction.Modify.prototype.removeVertex_ = function() {
+    var dragSegments = this.dragSegments_;
+    var segmentsByFeature = {};
+    var deleted = false;
+    var component, coordinates, dragSegment, geometry, i, index, left;
+    var newIndex, right, segmentData, uid;
+
+    for (i = dragSegments.length - 1; i >= 0; --i) {
+        dragSegment = dragSegments[i];
+        segmentData = dragSegment[0];
+        uid = ol.getUid(segmentData.feature);
+        if (segmentData.depth) {
+            // separate feature components
+            uid += '-' + segmentData.depth.join('-');
+        }
+        if (!(uid in segmentsByFeature)) {
+            segmentsByFeature[uid] = {};
+        }
+        if (dragSegment[1] === 0) {
+            segmentsByFeature[uid].right = segmentData;
+            segmentsByFeature[uid].index = segmentData.index;
+        } else if (dragSegment[1] == 1) {
+            segmentsByFeature[uid].left = segmentData;
+            segmentsByFeature[uid].index = segmentData.index + 1;
+        }
+    }
+
+    for (uid in segmentsByFeature) {
+        right = segmentsByFeature[uid].right;
+        left = segmentsByFeature[uid].left;
+        index = segmentsByFeature[uid].index;
+        newIndex = index - 1;
+        if (left !== undefined) {
+            segmentData = left;
+        } else {
+            segmentData = right;
+        }
+        if (newIndex < 0) {
+            newIndex = 0;
+        }
+        geometry = segmentData.geometry;
+        coordinates = geometry.getCoordinates();
+        component = coordinates;
+        deleted = false;
+        var potentialTransform = geometry.getTransform();
+        switch (geometry.getType()) {
+            case ol.geom.GeometryType.MULTI_LINE_STRING:
+                if (coordinates[segmentData.depth[0]].length > 2) {
+                    coordinates[segmentData.depth[0]].splice(index, 1);
+                    deleted = true;
+                }
+                break;
+            case ol.geom.GeometryType.LINE_STRING:
+                if (coordinates.length > 2) {
+                    coordinates.splice(index, 1);
+                    deleted = true;
+                    if (potentialTransform) {
+                        this.setGeometryCoordinates_(geometry, coordinates);
+                        var tmp =
+                            new ome.ol3.geom.Line(
+                                geometry.getInvertedCoordinates(),
+                                geometry.has_start_arrow_,
+                                geometry.has_end_arrow_,
+                                potentialTransform);
+                        geometry.initial_coords_ = tmp.getLineCoordinates();
+                    }
+                }
+                break;
+            case ol.geom.GeometryType.MULTI_POLYGON:
+                component = component[segmentData.depth[1]];
+                /* falls through */
+            case ol.geom.GeometryType.POLYGON:
+                component = component[segmentData.depth[0]];
+                if (component.length > 4) {
+                    if (index == component.length - 1) {
+                        index = 0;
+                    }
+                component.splice(index, 1);
+                deleted = true;
+                if (index === 0) {
+                    // close the ring again
+                    component.pop();
+                    component.push(component[0]);
+                    newIndex = component.length - 1;
+                }
+                if (potentialTransform) {
+                    this.setGeometryCoordinates_(geometry, coordinates);
+                    var tmp =
+                        new ome.ol3.geom.Polygon(
+                            geometry.getInvertedCoordinates(),
+                            potentialTransform);
+                    geometry.initial_coords_ = tmp.getPolygonCoordinates();
+                }
+            }
+            break;
+            default:
+            // pass
+        }
+
+        if (deleted) {
+            this.setGeometryCoordinates_(geometry, coordinates);
+            var segments = [];
+            if (left !== undefined) {
+                this.rBush_.remove(left);
+                segments.push(left.segment[0]);
+            }
+            if (right !== undefined) {
+                this.rBush_.remove(right);
+                segments.push(right.segment[1]);
+            }
+            if (left !== undefined && right !== undefined) {
+                var newSegmentData = /** @type {ol.ModifySegmentDataType} */ ({
+                    depth: segmentData.depth,
+                    feature: segmentData.feature,
+                    geometry: segmentData.geometry,
+                    index: newIndex,
+                    segment: segments
+                });
+                this.rBush_.insert(
+                    ol.extent.boundingExtent(newSegmentData.segment),
+                    newSegmentData);
+            }
+            this.updateSegmentIndices_(geometry, index, segmentData.depth, -1);
+            if (this.vertexFeature_) {
+                this.overlay_.getSource().removeFeature(this.vertexFeature_);
+                this.vertexFeature_ = null;
+            }
+            dragSegments.length = 0;
+        }
+  }
+
+  return deleted;
 };

@@ -84,8 +84,7 @@ goog.inherits(ome.ol3.geom.Rectangle, ol.geom.Polygon);
  * @return {Array.<number>} the upper left corner
  */
 ome.ol3.geom.Rectangle.prototype.getUpperLeftCorner = function() {
-    var flatCoords =
-        this.transform_ ? this.initial_coords_ : this.getFlatCoordinates();
+    var flatCoords = this.getRectangleCoordinates();
     if (!ome.ol3.utils.Misc.isArray(flatCoords) || flatCoords.length != 10)
         return null;
 
@@ -107,8 +106,7 @@ ome.ol3.geom.Rectangle.prototype.setUpperLeftCorner = function(value) {
  * @return {number} the width of the rectangle
  */
 ome.ol3.geom.Rectangle.prototype.getWidth = function() {
-    var flatCoords =
-        this.transform_ ? this.initial_coords_ : this.getFlatCoordinates();
+    var flatCoords = this.getRectangleCoordinates();
     if (!ome.ol3.utils.Misc.isArray(flatCoords) || flatCoords.length != 10)
         return 0;
 
@@ -129,8 +127,7 @@ ome.ol3.geom.Rectangle.prototype.setWidth = function(value) {
  * @return {number} the height of the rectangle
  */
 ome.ol3.geom.Rectangle.prototype.getHeight = function() {
-    var flatCoords =
-        this.transform_ ? this.initial_coords_ : this.getFlatCoordinates();
+    var flatCoords = this.getRectangleCoordinates();
     if (!ome.ol3.utils.Misc.isArray(flatCoords) || flatCoords.length != 10)
         return 0;
 
@@ -157,8 +154,7 @@ ome.ol3.geom.Rectangle.prototype.setHeight = function(value) {
  * @param {number} h the height of the rectangle
  */
 ome.ol3.geom.Rectangle.prototype.changeRectangle = function(x,y,w,h) {
-    var flatCoords =
-        this.transform_ ? this.initial_coords_ : this.getFlatCoordinates();
+    var flatCoords = this.getRectangleCoordinates();
     if (!ome.ol3.utils.Misc.isArray(flatCoords) || flatCoords.length != 10)
         return;
 
@@ -206,6 +202,16 @@ ome.ol3.geom.Rectangle.prototype.getTransform = function() {
             'A01' : this.transform_[2], 'A11' : this.transform_[3],
             'A02' : this.transform_[4], 'A12' : this.transform_[5]
     };
+}
+
+/**
+ * Returns the coordinates as a flat array (excl. any potential transform)
+ * @return {Array.<number>} the coordinates as a flat array
+ */
+ome.ol3.geom.Rectangle.prototype.getRectangleCoordinates = function() {
+    return (
+        this.transform_ ? this.initial_coords_ : this.getFlatCoordinates()
+    );
 }
 
 /**

@@ -177,12 +177,29 @@ ome.ol3.geom.Line.prototype.getTransform = function() {
 }
 
 /**
+ * Returns the coordinates after (potentially) inverting a transformation
+ * @return {Array} the coordinate array
+ */
+ome.ol3.geom.Line.prototype.getInvertedCoordinates = function() {
+    if (this.transform_ === null) return this.getCoordinates();
+
+    var coords = this.getCoordinates();
+    var invCoords = new Array(coords.length);
+    for (var i=0;i<coords.length;i++)
+        invCoords[i] =
+            ome.ol3.utils.Transform.applyInverseTransform(
+                this.transform_, coords[i]);
+                
+    return invCoords;
+}
+
+/**
  * Make a complete copy of the geometry.
  * @return {ome.ol3.geom.Line} Clone.
  * @api stable
  */
 ome.ol3.geom.Line.prototype.clone = function() {
   return new ome.ol3.geom.Line(
-      this.getCoordinates().slice(),
+      this.getInvertedCoordinates().slice(),
         this.has_start_arrow_, this.has_end_arrow_, this.getTransform());
 };
