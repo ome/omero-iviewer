@@ -137,3 +137,41 @@ ome.ol3.utils.Transform.applyInverseTransform = function(transform, coords) {
 
     return transCoords;
 }
+
+/**
+ * Takes the 3x2 transformation matrix and extracts the rotation and scaling
+ *
+ * @static
+ * @param {Array.<number>} transform a flat transformation matrix (length: 3 * 2)
+ * @return {Object|null} an object properties for scale_x, scale_y,
+ *                       rot_deg and rot_rad or null (if invalid matrix)
+ */
+ome.ol3.utils.Transform.getRotationAndScaling = function(transform) {
+    // preliminary checks:
+    if (!ome.ol3.utils.Misc.isArray(transform) ||
+        transform.length !== 6) return null;
+
+    // extract scale factors for x/y
+    var scale_x =
+        Math.sqrt(
+            transform[0] * transform[0] + transform[1] * transform[1]);
+    var scale_y =
+        Math.sqrt(
+            transform[2] * transform[2] + transform[3] * transform[3]);
+    // recover angle in radians
+    var rot_rad = Math.atan2(transform[2],transform[3]);
+    // see if scales are negative
+    if ((rot_rad >= 0 && rot_rad <= Math.PI && transform[0] < 0) ||
+        (rot_rad > Math.PI && rot_rad < Math.PI*2) && transform[0] > 0)
+            scale_x *= -1;
+    if ((rot_rad >= 0 && rot_rad <= Math.PI && transform[3] < 0) ||
+        (rot_rad > Math.PI && rot_rad < Math.PI*2) && transform[3] > 0)
+            scale_y *= -1;
+
+    return {
+        'scale_x': scale_x,
+        'scale_y': scale_y,
+        'rot_rad': rot_rad,
+        'rot_deg': rot_rad * (180 / Math.PI)
+    };
+}
