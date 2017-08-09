@@ -192,7 +192,6 @@ export default class ThumbnailSlider extends EventSubscriber {
         // ready handler
         let imageInfoReady = () => {
             this.initializeThumbnails();
-            this.initialized = true;
             this.unregisterObservers(true);
         };
 
@@ -259,14 +258,12 @@ export default class ThumbnailSlider extends EventSubscriber {
                 this.hideMe();
             else this.gatherThumbnailMetaInfo(
                     this.image_config.image_info.image_id);
-            return;
-        }
-
-        // we are a list of images
-        if (this.context.initial_type === INITIAL_TYPES.IMAGES) {
+        } else if (this.context.initial_type === INITIAL_TYPES.IMAGES) {
+            // we are a list of images
             this.thumbnails_count = this.context.initial_ids.length;
             this.requestMoreThumbnails();
         }
+        this.initialized = true;
     }
 
     /**
@@ -548,5 +545,25 @@ export default class ThumbnailSlider extends EventSubscriber {
                     return;
                 }
             }, 2000);
+    }
+
+    /**
+     * Refresh thumbnail slider contents by reinitialization
+     *
+     * @memberof ThumbnailSlider
+     */
+    refreshThumbnails() {
+        // we are already requesting
+        if (this.requesting_thumbnail_data) return;
+
+        // reset
+        this.initialized = false;
+        this.thumbnails_start_index = 0;
+        this.thumbnails_end_index = 0;
+        this.thumbnails_count = 0;
+        this.thumbnails = [];
+
+        // request again
+        this.initializeThumbnails();
     }
 }
