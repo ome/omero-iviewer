@@ -21,6 +21,8 @@ from django.http import HttpResponse
 from django.conf import settings
 from django.core.urlresolvers import reverse
 
+from os.path import splitext
+
 from omeroweb.decorators import login_required
 from omeroweb.webgateway.marshal import imageMarshal
 from omeroweb.webgateway.templatetags.common_filters import lengthformat,\
@@ -29,7 +31,6 @@ from omeroweb.webgateway.templatetags.common_filters import lengthformat,\
 import json
 import omero_marshal
 import omero
-import time
 
 from version import __version__
 
@@ -323,7 +324,8 @@ def save_projection(request, conn=None, **kwargs):
         pixels_type = pixels.getPixelsType()._obj
 
         # assemble new file name
-        file_name = img.getName() + "-" + time.strftime("%d.%m.%Y (%H:%M:%S)")
+        filename,extension = splitext(img.getName())
+        file_name = filename + '_proj' + extension
 
         # delegate to projectPixels
         new_image_id = proj_svc.projectPixels(

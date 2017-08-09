@@ -363,10 +363,10 @@ export default class ViewerContextMenu {
                         if (typeof imgInf.dataset_id === 'number')
                             linkIviewer += "/?dataset=" + imgInf.dataset_id;
                     msg =
-                        "<a href='" + linkWebclient + "'>" +
+                        "<a href='" + linkWebclient + "' target='_blank'>" +
                         "Navigate to Image in Webclient</a><br>" +
-                        "<br><a href='" + linkIviewer + "'>" +
-                        "Open Image in iViewer</a>";
+                        "<br><a href='" + linkIviewer + "' target='_blank'>" +
+                        "Open Image in iviewer</a>";
                     } else {
                         msg = "Failed to create projected image";
                         if (typeof resp.error === 'string')
