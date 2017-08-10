@@ -34,6 +34,13 @@ import {
 @noView
 export default class RegionsInfo  {
     /**
+     * roi request limit
+     * @memberof RegionsInfo
+     * @type {number}
+     */
+    REQUEST_LIMIT = 5000;
+
+    /**
      * true if a backend request is pending
      * @memberof RegionsInfo
      * @type {boolean}
@@ -252,7 +259,8 @@ export default class RegionsInfo  {
         $.ajax({
             url : this.image_info.context.server +
                   this.image_info.context.getPrefixedURI(WEB_API_BASE) +
-                  REGIONS_REQUEST_URL + '/?image=' + this.image_info.image_id,
+                  REGIONS_REQUEST_URL + '/?image=' + this.image_info.image_id +
+                  '&limit=' + this.REQUEST_LIMIT,
             success : (response) => {
                 this.is_pending = false;
                 try {
@@ -295,8 +303,8 @@ export default class RegionsInfo  {
                     });
                     this.number_of_shapes = count;
                     this.image_info.roi_count = this.data.size;
+                    this.tmp_data = response.data;
                     this.ready = true;
-                    this.tmp_data = response;
                 } catch(err) {
                     console.error("Failed to load Rois: " + err);
                 }

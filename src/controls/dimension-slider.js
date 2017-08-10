@@ -436,9 +436,17 @@ export default class DimensionSlider {
         if (this.player_info.handle !== null) return;
 
         let imgInf = this.image_config.image_info;
-        imgInf.projection_opts.start = imgInf.dimensions[this.dim];
-        imgInf.projection_opts.end = imgInf.dimensions['max_' + this.dim]-1;
-
+        imgInf.projection_opts.start = 0;
+        let diff = 0;
+        imgInf.projection_opts.end = imgInf.dimensions['max_' + this.dim] - 1;
+        diff = imgInf.dimensions[this.dim]-5;
+        if (diff > 0) {
+            imgInf.projection_opts.start = diff;
+        }
+        diff =  imgInf.dimensions[this.dim]+5;
+        if (diff < imgInf.dimensions['max_' + this.dim] - 1) {
+            imgInf.projection_opts.end = diff;
+        }
         this.add_projection_history = true;
         imgInf.projection =
             imgInf.projection === PROJECTION.NORMAL ?

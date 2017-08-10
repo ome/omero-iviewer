@@ -44,6 +44,13 @@ export default class RegionsList extends EventSubscriber {
     }
 
     /**
+     * the column showing (only one - mutually exclusive for now)
+     * @memberof RegionsList
+     * @type {number}
+     */
+     active_column = 'comments';
+
+    /**
      * the list of property observers
      * @memberof RegionsList
      * @type {Array.<Object>}
@@ -336,6 +343,18 @@ export default class RegionsList extends EventSubscriber {
                config_id: this.regions_info.image_info.config_id,
                property : "visible",
                shapes : ids, value : show});
+    }
+
+    /**
+     * Selects column (mutally exclusive for now)
+     *
+     * @param {string} which the column name
+     * @memberof RegionsList
+     */
+    showColumn(which) {
+        if (typeof which !== 'string' || which.length === 0 ||
+            which === this.active_column) return;
+        this.active_column = which;
     }
 
     /**

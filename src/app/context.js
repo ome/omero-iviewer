@@ -279,7 +279,6 @@ export default class Context {
         if (typeof initial_image_id === 'number' && !isNaN(initial_image_id)) {
             delete this.initParams[REQUEST_PARAMS.IMAGE_ID];
             this.initial_type = INITIAL_TYPES.IMAGE;
-            this.initial_ids.push(initial_image_id);
         }
 
         // do we have a list of image ids
@@ -308,8 +307,11 @@ export default class Context {
             initial_dataset_id = null;
 
         // add image config if we have image ids
-        if (this.initial_ids.length > 0)
-            this.addImageConfig(this.initial_ids[0], initial_dataset_id);
+        if (this.initial_type === INITIAL_TYPES.IMAGES &&
+            this.initial_ids.length > 0)
+                this.addImageConfig(this.initial_ids[0], initial_dataset_id);
+        else if (this.initial_type === INITIAL_TYPES.IMAGE)
+            this.addImageConfig(initial_image_id, initial_dataset_id);
         else if (initial_dataset_id) {
             this.initial_type = INITIAL_TYPES.DATASET;
             this.initial_ids = [initial_dataset_id];
@@ -504,11 +506,8 @@ export default class Context {
             oldPath.replace(old_image_id, image_id);
         if (this.initial_type === INITIAL_TYPES.IMAGE &&
             typeof dataset_id === 'number') newPath += '?dataset=' + dataset_id;
-        else if (this.initial_type === INITIAL_TYPES.IMAGES) {
-            let newQueryString =
-                window.location.search.replace(image_id, old_image_id);
-            newPath += newQueryString;
-        }
+        else if (this.initial_type === INITIAL_TYPES.IMAGES)
+            newPath += window.location.search;
         if (this.is_dev_server) {
             newPath += (newPath.indexOf('?') === -1) ? '?' : '&';
             newPath += 'haveMadeCrossOriginLogin_';
@@ -678,5 +677,15 @@ export default class Context {
         this.initParams = {};
         // we do need our uri prefixes again
         this.prefixed_uris.forEach((value, key) => this.initParams[key] = value);
+    }
+
+    /**
+     * Returns version information
+     *
+     * @return {string} the version
+     * @memberof Context
+     */
+    getVersion() {
+        return 'v' + this.getInitialRequestParam(REQUEST_PARAMS.VERSION);
     }
 }

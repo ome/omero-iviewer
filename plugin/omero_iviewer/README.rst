@@ -13,7 +13,7 @@ An OMERO.web app for visualizing images in OMERO.
 Requirements
 ============
 
-* OMERO 5.3.0 or newer.
+* OMERO 5.3.3 or newer.
 
 
 Installing from PyPI
@@ -25,7 +25,7 @@ Install the app using `pip <https://pip.pypa.io/en/stable/>`_:
 
 ::
 
-    $ pip install omero-iviewer
+    $ pip install -U omero-iviewer
 
 Add iviewer custom app to your installed web apps:
 
@@ -44,7 +44,7 @@ To enable the "open with" feature:
 ::
 
     $ bin/omero config append omero.web.open_with '["omero_iviewer", "omero_iviewer_index",
-      {"supported_objects":["image"], "script_url": "omero_iviewer/openwith.js"}]'
+      {"supported_objects":["image"], "script_url": "omero_iviewer/openwith.js", "label": "OMERO.iviewer"}]'
 
 Now restart OMERO.web as normal.
 

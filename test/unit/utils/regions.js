@@ -133,4 +133,31 @@ describe("Regions", function() {
         }
     });
 
+    it('measureRegions', function() {
+        var feature = ome.ol3.utils.Regions.featureFactory(rectangle_info);
+        var measurement =
+            ome.ol3.utils.Regions.calculateLengthAndArea(feature);
+
+        assert.instanceOf(measurement, Object);
+        expect(measurement.Area).to.eql(180);
+        expect(measurement.Length).to.eql(54);
+
+        feature = ome.ol3.utils.Regions.featureFactory(line_info);
+        measurement =
+            ome.ol3.utils.Regions.calculateLengthAndArea(feature);
+
+        assert.instanceOf(measurement, Object);
+        expect(measurement.Area).to.eql(-1);
+        expect(measurement.Length).to.eql(81.394);
+
+        feature = ome.ol3.utils.Regions.featureFactory(point_info);
+        measurement =
+            ome.ol3.utils.Regions.calculateLengthAndArea(feature);
+
+        assert.instanceOf(measurement, Object);
+        expect(measurement.Area).to.eql(-1);
+        expect(measurement.Length).to.eql(-1);
+
+    });
+
 });

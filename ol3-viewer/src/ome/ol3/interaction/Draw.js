@@ -148,33 +148,35 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                 event.feature.setStyle(this.default_style_);
                 ome.ol3.utils.Style.updateStyleFunction(
                     event.feature, this.regions_, true);
+                // calculate measurements
+                this.regions_.getLengthAndAreaForShape(event.feature, true);
 
                 var add =
                     typeof this.opts_['add'] !== 'boolean' || this.opts_['add'];
                 if (add) this.regions_.addFeature(event.feature);
 
                 var eventbus = this.regions_.viewer_.eventbus_;
-                var config_id = this.regions_.viewer_.getTargetId();
-                var hist_id = this.history_id_;
-                if (this.roi_id_ < 0) event.feature['roi_id'] = this.roi_id_;
-                if (eventbus)
-                    setTimeout(function() {
-                        var newRegionsObject =
-                            ome.ol3.utils.Conversion.toJsonObject(
-                                new ol.Collection([event.feature]), false, true);
-                        if (typeof newRegionsObject !== 'object' ||
-                            !ome.ol3.utils.Misc.isArray(newRegionsObject['rois']) ||
-                            newRegionsObject['rois'].length === 0) return;
-                        var opts = {
-                            "config_id": config_id,
-                            "shapes": newRegionsObject['rois'],
-                            "drawn" : true, "add": add
-                        };
-                        if (typeof hist_id === 'number') opts['hist_id'] = hist_id;
-                        if (typeof event.feature['roi_id'] === 'number')
-                            opts['roi_id'] = event.feature['roi_id'];
-                        eventbus.publish("REGIONS_SHAPE_GENERATED", opts);
-                    },25);
+                if (this.regions_.viewer_.eventbus_) {
+                    var hist_id = this.history_id_;
+                    if (this.roi_id_ < 0) event.feature['roi_id'] = this.roi_id_;
+                    var newRegionsObject =
+                        ome.ol3.utils.Conversion.toJsonObject(
+                            new ol.Collection([event.feature]), false, true);
+                    if (typeof newRegionsObject !== 'object' ||
+                        !ome.ol3.utils.Misc.isArray(newRegionsObject['rois']) ||
+                        newRegionsObject['rois'].length === 0) return;
+                    var opts = {
+                        "shapes": newRegionsObject['rois'],
+                        "drawn" : true, "add": add
+                    };
+                    if (typeof hist_id === 'number') opts['hist_id'] = hist_id;
+                    if (typeof event.feature['roi_id'] === 'number')
+                        opts['roi_id'] = event.feature['roi_id'];
+
+                    ome.ol3.utils.Misc.sendEventNotification(
+                        this.regions_.viewer_, "REGIONS_SHAPE_GENERATED",
+                        opts, 25);
+                }
                 this.history_id_ = null;
                 this.rois_id_ = 0;
             }
