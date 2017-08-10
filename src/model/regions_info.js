@@ -520,7 +520,7 @@ export default class RegionsInfo  {
         if (!this.ready) return;
 
         if (!this.image_info.can_annotate) {
-                Ui.showModalMessage("You don't have permission to paste", true);
+                Ui.showModalMessage("You don't have permission to paste", 'OK');
                 return;
         }
 

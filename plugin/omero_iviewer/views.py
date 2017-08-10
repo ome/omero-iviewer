@@ -21,6 +21,8 @@ from django.http import HttpResponse
 from django.conf import settings
 from django.core.urlresolvers import reverse
 
+from os.path import splitext
+
 from omeroweb.decorators import login_required
 from omeroweb.webgateway.marshal import imageMarshal
 from omeroweb.webgateway.templatetags.common_filters import lengthformat,\
@@ -34,6 +36,13 @@ from version import __version__
 
 
 WEB_API_VERSION = 0
+
+PROJECTIONS = {
+    'normal': -1,
+    'intmax': omero.constants.projection.ProjectionType.MAXIMUMINTENSITY,
+    'intmean': omero.constants.projection.ProjectionType.MEANINTENSITY,
+    'intsum': omero.constants.projection.ProjectionType.SUMINTENSITY,
+}
 
 
 @login_required()
@@ -198,57 +207,60 @@ def image_data(request, image_id, conn=None, **kwargs):
     if image is None:
         return JsonResponse({"error": "Image not found"}, status=404)
 
-    rv = imageMarshal(image)
+    try:
+        rv = imageMarshal(image)
 
-    # Add extra parameters with units data
-    # Note ['pixel_size']['x'] will have size in MICROMETER
-    px = image.getPrimaryPixels().getPhysicalSizeX()
-    if (px is not None):
-        size = image.getPixelSizeX(True)
-        value = format_value_with_units(size)
-        rv['pixel_size']['unit_x'] = value[0]
-        rv['pixel_size']['symbol_x'] = value[1]
-    py = image.getPrimaryPixels().getPhysicalSizeY()
-    if (py is not None):
-        size = image.getPixelSizeY(True)
-        value = format_value_with_units(size)
-        rv['pixel_size']['unit_y'] = value[0]
-        rv['pixel_size']['symbol_y'] = value[1]
-    pz = image.getPrimaryPixels().getPhysicalSizeZ()
-    if (pz is not None):
-        size = image.getPixelSizeZ(True)
-        value = format_value_with_units(size)
-        rv['pixel_size']['unit_z'] = value[0]
-        rv['pixel_size']['symbol_z'] = value[1]
+        # Add extra parameters with units data
+        # Note ['pixel_size']['x'] will have size in MICROMETER
+        px = image.getPrimaryPixels().getPhysicalSizeX()
+        if (px is not None):
+            size = image.getPixelSizeX(True)
+            value = format_value_with_units(size)
+            rv['pixel_size']['unit_x'] = value[0]
+            rv['pixel_size']['symbol_x'] = value[1]
+        py = image.getPrimaryPixels().getPhysicalSizeY()
+        if (py is not None):
+            size = image.getPixelSizeY(True)
+            value = format_value_with_units(size)
+            rv['pixel_size']['unit_y'] = value[0]
+            rv['pixel_size']['symbol_y'] = value[1]
+        pz = image.getPrimaryPixels().getPhysicalSizeZ()
+        if (pz is not None):
+            size = image.getPixelSizeZ(True)
+            value = format_value_with_units(size)
+            rv['pixel_size']['unit_z'] = value[0]
+            rv['pixel_size']['symbol_z'] = value[1]
 
-    size_t = image.getSizeT()
-    time_list = []
-    delta_t_unit_symbol = None
-    if size_t > 1:
-        params = omero.sys.ParametersI()
-        params.addLong('pid', image.getPixelsId())
-        z = 0
-        c = 0
-        query = "from PlaneInfo as Info where"\
-            " Info.theZ=%s and Info.theC=%s and pixels.id=:pid" % (z, c)
-        info_list = conn.getQueryService().findAllByQuery(
-            query, params, conn.SERVICE_OPTS)
-        timemap = {}
-        for info in info_list:
-            t_index = info.theT.getValue()
-            if info.deltaT is not None:
-                value = format_value_with_units(info.deltaT)
-                timemap[t_index] = value[0]
-                if delta_t_unit_symbol is None:
-                    delta_t_unit_symbol = value[1]
-        for t in range(image.getSizeT()):
-            if t in timemap:
-                time_list.append(timemap[t])
+        size_t = image.getSizeT()
+        time_list = []
+        delta_t_unit_symbol = None
+        if size_t > 1:
+            params = omero.sys.ParametersI()
+            params.addLong('pid', image.getPixelsId())
+            z = 0
+            c = 0
+            query = "from PlaneInfo as Info where"\
+                " Info.theZ=%s and Info.theC=%s and pixels.id=:pid" % (z, c)
+            info_list = conn.getQueryService().findAllByQuery(
+                query, params, conn.SERVICE_OPTS)
+            timemap = {}
+            for info in info_list:
+                t_index = info.theT.getValue()
+                if info.deltaT is not None:
+                    value = format_value_with_units(info.deltaT)
+                    timemap[t_index] = value[0]
+                    if delta_t_unit_symbol is None:
+                        delta_t_unit_symbol = value[1]
+            for t in range(image.getSizeT()):
+                if t in timemap:
+                    time_list.append(timemap[t])
 
-    rv['delta_t'] = time_list
-    rv['delta_t_unit_symbol'] = delta_t_unit_symbol
+        rv['delta_t'] = time_list
+        rv['delta_t_unit_symbol'] = delta_t_unit_symbol
 
-    return JsonResponse(rv)
+        return JsonResponse(rv)
+    except Exception as image_data_retrieval_exception:
+        return JsonResponse({'error': repr(image_data_retrieval_exception)})
 
 
 def format_value_with_units(value):
@@ -277,3 +289,85 @@ def format_value_with_units(value):
         else:
             unit = value.getSymbol()
         return (length, unit)
+
+
+@login_required()
+def save_projection(request, conn=None, **kwargs):
+    # check for mandatory parameters
+    image_id = request.GET.get("image", None)
+    proj_type = request.GET.get("projection", None)
+    if image_id is None or proj_type is None:
+        return JsonResponse({"error": "Image id/Projection not supplied"})
+    proj = PROJECTIONS.get(proj_type, -1)
+    # we do only create new images for listed projections
+    if proj == -1:
+        return JsonResponse({"error": "Projection type not listed"})
+
+    # optional parameters
+    start = request.GET.get("start", None)
+    end = request.GET.get("end", None)
+    dataset_id = request.GET.get("dataset", None)
+
+    # retrieve image object
+    img = conn.getObject("Image", image_id, opts=conn.SERVICE_OPTS)
+    if img is None:
+        return JsonResponse({"error": "Image not Found"}, status=404)
+
+    new_image_id = None
+    try:
+        # no getter defined in gateway...
+        proj_svc = conn._proxies['projection']
+
+        # gather params needed for projection call
+        pixels_id = img.getPixelsId()
+        pixels = img.getPrimaryPixels()
+        pixels_type = pixels.getPixelsType()._obj
+
+        # assemble new file name
+        filename, extension = splitext(img.getName())
+        file_name = filename + '_proj' + extension
+
+        # delegate to projectPixels
+        new_image_id = proj_svc.projectPixels(
+            pixels_id, pixels_type, proj, 0, img.getSizeT()-1,
+            range(img.getSizeC()), 1, int(start), int(end), file_name)
+
+        # apply present rendering settings
+        try:
+            rnd = conn.getRenderingSettingsService()
+            rnd.applySettingsToImage(pixels_id, new_image_id)
+        except Exception:
+            pass
+
+        # set image decription
+        details = []
+        details.append("Original Image: " + img.getName())
+        details.append("Original Image ID: " + image_id)
+        details.append("Projection Type: " + proj_type)
+        details.append(
+            "z-sections: " + str(int(start)+1) + "-" + str(int(end)+1))
+        size_t = img.getSizeT()
+        if size_t == 1:
+            details.append("timepoint: " + str(size_t))
+        else:
+            details.append("timepoints: 1-" + str(size_t))
+        description = "\n".join(details)
+
+        new_img = conn.getObject(
+            "Image", new_image_id, opts=conn.SERVICE_OPTS)
+        new_img.setDescription(description)
+        new_img.save()
+
+        # if we have a dataset id => we try to link to it
+        if dataset_id is not None:
+            upd_svc = conn.getUpdateService()
+            conn.SERVICE_OPTS.setOmeroGroup(
+                conn.getGroupFromContext().getId())
+            link = omero.model.DatasetImageLinkI()
+            link.parent = omero.model.DatasetI(long(dataset_id), False)
+            link.child = omero.model.ImageI(new_image_id, False)
+            upd_svc.saveObject(link, conn.SERVICE_OPTS)
+    except Exception as save_projection_exception:
+        return JsonResponse({"error": repr(save_projection_exception)})
+
+    return JsonResponse({"id": new_image_id})
