@@ -69,6 +69,132 @@ ome.ol3.PREFIXED_URIS =
     [ome.ol3.WEB_API_BASE, ome.ol3.WEBCLIENT, ome.ol3.WEBGATEWAY];
 
 /**
+ * Limit for untiled image retrieval: 2K^2
+ * @const
+ * @type {number}
+ */
+ome.ol3.UNTILED_RETRIEVAL_LIMIT = 4000000;
+
+/**
+ * Enum for RequestParams.
+ * @static
+ * @enum {string}
+ */
+ome.ol3.REQUEST_PARAMS = {
+    CHANNELS: 'C',
+    CENTER_X: 'X',
+    CENTER_Y: 'Y',
+    IMAGE_ID : 'IMAGE_ID',
+    MAPS: 'MAPS',
+    MODEL: 'M',
+    PLANE: 'Z',
+    PROJECTION: 'P',
+    SERVER: 'SERVER',
+    TIME: 'T',
+    ZOOM: 'ZM'
+};
+
+/**
+ * Enum for RegionsState.
+ * @static
+ * @enum {number}
+ */
+ome.ol3.REGIONS_STATE = {
+    /** the original state */
+    "DEFAULT" : 0,
+    /** the changed state */
+    "MODIFIED" : 1,
+    /** the new state */
+    "ADDED" : 2,
+    /** the deleted state */
+    "REMOVED" : 3,
+    /** a state used for rollback */
+    "ROLLBACK" : 4
+};
+
+/**
+ * Enum for RegionsMode.
+ * Depending on the mode, various interactions will be active.
+ * <p>
+ * Note, however, that some modes are inclusive and others mutually exclusive!
+ * </p>
+ * <ul>
+ * <li>DEFAULT: means no interaction at all. Takes precendence over any other and is mutually exclusive with any others</li>
+ * <li>SELECT: means that features can be selected via click but nothing more</li>
+ * <li>TRANSLATE: means features can be translates. Implies: SELECT</li>
+ * <li>MODIFY: features can be modified. Implies: SELECT. Can be combined with TRANSLATE but NEVER DRAW</li>
+ * <li>DRAW: features can be drawn. Mutually exclusive with all others</li>
+ *</ul>
+ *
+ * @static
+ * @enum {number}
+ */
+ome.ol3.REGIONS_MODE = {
+    /** the original state i.e. no interaction possible, only display */
+    "DEFAULT" : 0,
+    /** select interaction */
+    "SELECT" : 1,
+    /** translate interaction */
+    "TRANSLATE" : 2,
+    /** modify interaction */
+    "MODIFY" : 3,
+    /** draw interaction */
+    "DRAW" : 4
+};
+
+/**
+ * Enum for Render Status.
+ * @static
+ * @enum {number}
+ */
+ome.ol3.RENDER_STATUS = {
+    /** we did no render watching */
+    "NOT_WATCHED" : 0,
+    /** we are watching and in progress */
+    "IN_PROGRESS" : 1,
+    /** we watched and are fininshed rendering */
+    "RENDERED" : 2,
+    /** we watched and got tile load errors  */
+    "ERROR" : 3
+};
+
+/**
+ * Enum for Projection.
+ * @static
+ * @enum {string}
+ */
+ome.ol3.PROJECTION = {
+    /** normal **/
+    "NORMAL" : 'normal',
+    /** intmax **/
+    "INTMAX" : 'intmax',
+    /** split  **/
+    "SPLIT" : 'split'
+};
+
+/**
+ * list of length units incl. symbol, threshold for usage
+ * and micron multiplication factor
+ *
+ * @const
+ * @type {Object}
+ */
+ome.ol3.UNITS_LENGTH = [
+    { unit: 'angstrom',
+      threshold: 0.1, multiplier: 10000, symbol: '\u212B'},
+    { unit: 'nanometer',
+      threshold: 1, multiplier: 1000, symbol: 'nm'},
+    { unit: 'micron',
+      threshold: 1000, multiplier: 1, symbol:  '\u00B5m'},
+    { unit: 'millimeter',
+      threshold: 100000, multiplier: 0.001, symbol: 'mm'},
+    { unit: 'centimeter',
+      threshold: 1000000, multiplier: 0.0001, symbol: 'cm'},
+    { unit: 'meter',
+      threshold: 100000000, multiplier: 0.000001, symbol: 'm'}
+ ];
+
+/**
  * A lookup table to get or set dimension indices
  *
  * @const
@@ -274,109 +400,6 @@ ome.ol3.defaultInteractions = function() {
     return ret;
 };
 
-/**
- * Enum for RequestParams.
- * @static
- * @enum {string}
- */
-ome.ol3.REQUEST_PARAMS = {
-    CHANNELS: 'C',
-    CENTER_X: 'X',
-    CENTER_Y: 'Y',
-    IMAGE_ID : 'IMAGE_ID',
-    MAPS: 'MAPS',
-    MODEL: 'M',
-    PLANE: 'Z',
-    PROJECTION: 'P',
-    SERVER: 'SERVER',
-    TIME: 'T',
-    ZOOM: 'ZM'
-};
-
-/**
- * Enum for RegionsState.
- * @static
- * @enum {number}
- */
-ome.ol3.REGIONS_STATE = {
-    /** the original state */
-    "DEFAULT" : 0,
-    /** the changed state */
-    "MODIFIED" : 1,
-    /** the new state */
-    "ADDED" : 2,
-    /** the deleted state */
-    "REMOVED" : 3,
-    /** a state used for rollback */
-    "ROLLBACK" : 4
-};
-
-/**
- * Enum for RegionsMode.
- * Depending on the mode, various interactions will be active.
- * <p>
- * Note, however, that some modes are inclusive and others mutually exclusive!
- * </p>
- * <ul>
- * <li>DEFAULT: means no interaction at all. Takes precendence over any other and is mutually exclusive with any others</li>
- * <li>SELECT: means that features can be selected via click but nothing more</li>
- * <li>TRANSLATE: means features can be translates. Implies: SELECT</li>
- * <li>MODIFY: features can be modified. Implies: SELECT. Can be combined with TRANSLATE but NEVER DRAW</li>
- * <li>DRAW: features can be drawn. Mutually exclusive with all others</li>
- *</ul>
- *
- * @static
- * @enum {number}
- */
-ome.ol3.REGIONS_MODE = {
-    /** the original state i.e. no interaction possible, only display */
-    "DEFAULT" : 0,
-    /** select interaction */
-    "SELECT" : 1,
-    /** translate interaction */
-    "TRANSLATE" : 2,
-    /** modify interaction */
-    "MODIFY" : 3,
-    /** draw interaction */
-    "DRAW" : 4
-};
-
-/**
- * Enum for Render Status.
- * @static
- * @enum {number}
- */
-ome.ol3.RENDER_STATUS = {
-    /** we did no render watching */
-    "NOT_WATCHED" : 0,
-    /** we are watching and in progress */
-    "IN_PROGRESS" : 1,
-    /** we watched and are fininshed rendering */
-    "RENDERED" : 2,
-    /** we watched and got tile load errors  */
-    "ERROR" : 3
-};
-
-/**
- * Enum for Projection.
- * @static
- * @enum {string}
- */
-ome.ol3.PROJECTION = {
-    /** normal **/
-    "NORMAL" : 'normal',
-    /** intmax **/
-    "INTMAX" : 'intmax',
-    /** split  **/
-    "SPLIT" : 'split'
-};
-
-/**
- * Limit for untiled image retrieval: 2K^2
- * @const
- * @type {number}
- */
-ome.ol3.UNTILED_RETRIEVAL_LIMIT = 4000000;
 
 goog.exportSymbol(
     'ome.ol3.REGIONS_MODE',

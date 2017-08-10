@@ -367,6 +367,7 @@ ome.ol3.utils.Regions.getRandomCoordinateWithinExtent = function(extent) {
  * see: {@link ome.ol3.REGIONS_STATE}
  *
  * @private
+ * @static
  * @param {ome.ol3.source.Regions} regions an instance of the Regions
  * @param {boolean=} include_new_features should new, unsaved features be included?
  * @return {Array.<ol.Feature>|null} an array of converted shapes or null
@@ -473,6 +474,8 @@ ome.ol3.utils.Regions.createFeaturesFromRegionsResponse =
                 actualFeature['owner'] = owner;
                 actualFeature['permissions'] =
                     shape['omero:details']['permissions'];
+                // calculate area/length
+                regions.getLengthAndAreaForShape(actualFeature, true);
                 // add us to the return array
                 ret.push(actualFeature);
             }
@@ -504,6 +507,7 @@ ome.ol3.utils.Regions.createFeaturesFromRegionsResponse =
  * and prior to the rois.
  *
  * @private
+ * @static
  * @param {ome.ol3.source.Regions} regions an instance of the OmeroRegions
  * @param {Object} shape_info the shape info object (from json)
  */
@@ -539,4 +543,67 @@ ome.ol3.utils.Regions.addMask = function(regions, shape_info) {
                     shape_info['x'] + shape_info['width'], -shape_info['y']
                 ]
         })}));
+}
+
+/**
+ * Uses the respective ol3 code to get the length and area of a geometry
+ *
+ * @static
+ * @param {ol.Feature} feature the feature containing the geometry
+ * @param {boolean} recalculate flag: if true we redo the measurement (default: false)
+ * @param {number} pixel_size the pixel_size
+ * @param {string} pixel_symbol the pixel_symbol
+ * @return {Object} an object containing shape id, area and length
+ */
+ome.ol3.utils.Regions.calculateLengthAndArea =
+    function(feature, recalculate, pixel_size, pixel_symbol) {
+        if (typeof pixel_size !== 'number') pixel_size = 1;
+
+        var geom = feature.getGeometry();
+        // we represent points as circles
+        var hasArea =
+            !(geom instanceof ol.geom.Circle) &&
+            !(geom instanceof ome.ol3.geom.Line) &&
+            !(geom instanceof ome.ol3.geom.Label);
+        var hasLength =
+            !(geom instanceof ol.geom.Circle) &&
+            !(geom instanceof ome.ol3.geom.Label);
+
+        // if we are not micron we convert
+        if (typeof pixel_symbol !== 'string' ||
+            pixel_symbol.localeCompare('\u00B5m') !== 0) {
+            for (var u=0;u<ome.ol3.UNITS_LENGTH.length;u++) {
+                var unit = ome.ol3.UNITS_LENGTH[u];
+                if (unit.symbol.localeCompare(pixel_symbol) === 0) {
+                    pixel_size *= unit.multiplier;
+                    break;
+                }
+            }
+        }
+
+        // rounding helper
+        var roundAfterThreeDecimals = function(value) {
+            if (value < 0) return value;
+
+            return Number(Math.round(value +'e3') + 'e-3');
+        };
+
+        // we recalculate regardless if we don't have a length/area yet
+        if (typeof feature['Area'] !== 'number' || recalculate)
+            feature['Area'] = hasArea ?
+                roundAfterThreeDecimals(
+                    geom.getArea() * (pixel_size * pixel_size)) : -1;
+        if (typeof feature['Length'] !== 'number' || recalculate)
+            feature['Length'] = hasLength ?
+                roundAfterThreeDecimals(
+                    ol.geom.flat.length.lineString(
+                        geom.flatCoordinates, 0,
+                        geom.flatCoordinates.length, geom.stride)
+                            * pixel_size) : -1;
+
+        return {
+            'id' : feature.getId(),
+            'Area': feature['Area'],
+            'Length': feature['Length']
+        };
 }

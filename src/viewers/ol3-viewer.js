@@ -349,6 +349,17 @@ export default class Ol3Viewer extends EventSubscriber {
                     refOrCopy = Object.assign({}, refOrCopy);
                 if (typeof params.callback === 'function')
                     params.callback(refOrCopy, hasBeenModified);
+                // update measurement info (if shape was modified)
+                if (prop === 'modified') {
+                    let measurements =
+                        this.viewer.getLengthAndAreaForShapes([shape], true);
+                    if (Misc.isArray(measurements) &&
+                        measurements.length > 0 &&
+                        measurements[0].id === shape) {
+                            refOrCopy.Area = measurements[0].Area;
+                            refOrCopy.Length = measurements[0].Length;
+                    }
+                }
             }
      }
 
@@ -543,6 +554,26 @@ export default class Ol3Viewer extends EventSubscriber {
         delete this.image_config.regions_info.tmp_data;
         this.changeRegionsModes(
             { modes: this.image_config.regions_info.regions_modes});
+
+        let updateMeasurements = () => {
+            if (this.viewer === null) return;
+            let ids =
+                this.image_config.regions_info.unsophisticatedShapeFilter();
+            let measurements = this.viewer.getLengthAndAreaForShapes(ids);
+            for (let i=0;i<measurements.length;i++) {
+                let measurement = measurements[i];
+                if (typeof measurement !== 'object' ||
+                    measurement === null || typeof measurement.id !== 'string')
+                        continue;
+                let shape =
+                    this.image_config.regions_info.getShape(measurement.id);
+                if (shape !== null) {
+                    shape.Area = measurement.Area;
+                    shape.Length = measurement.Length;
+                }
+            }
+        };
+        setTimeout(updateMeasurements, 50);
     }
 
     /**
