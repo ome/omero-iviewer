@@ -35,7 +35,13 @@
         </li>
     </ul>
 
-    <div class="tab-content regions-tabs">
+    <div class="disabled-color loading-text"
+         show.bind="!image_config.image_info.ready &&
+                    image_config.image_info.error">
+            No Image Data
+    </div>
+    <div class="tab-content regions-tabs"
+         show.bind="!image_config.image_info.error">
         <div id="${TABS.INFO}" role="tabpanel"
              class="tab-pane ${context.selected_tab === TABS.INFO ? 'active' : ''}">
             <info image_info.bind="image_config.image_info"></info>

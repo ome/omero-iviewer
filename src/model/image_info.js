@@ -18,6 +18,7 @@
 
 import {noView} from 'aurelia-framework';
 import Misc from '../utils/misc';
+import Ui from '../utils/ui';
 import {
     CHANNEL_SETTINGS_MODE, IVIEWER, PROJECTION, REQUEST_PARAMS, WEBGATEWAY
 } from '../utils/constants'
@@ -56,6 +57,13 @@ export default class ImageInfo {
      * @type {boolean}
      */
     ready = false;
+
+    /**
+     * a flag to mark that the backend request failed
+     * @memberof ImageInfo
+     * @type {boolean}
+     */
+    error = false;
 
     /**
      * is the image tiled
@@ -264,9 +272,17 @@ export default class ImageInfo {
             },
             error : (error) => {
                 this.ready = false;
+                this.error = true;
+                if (typeof error.responseText === 'string')
+                    console.error(error.responseText);
                 // we wanted a new image info => remove old
                 if (typeof this.config_id === 'number')
                     this.context.removeImageConfig(this.config_id);
+                // show message in case of error
+                let errMsg =
+                    error.status === 404 ?
+                        "Image not found" : "Failed to get image data";
+                Ui.showModalMessage(errMsg, 'OK');
             }
         });
     }
@@ -366,7 +382,7 @@ export default class ImageInfo {
             diff = this.dimensions.z-5;
             if (diff > 0) v_s = diff;
         }
-            
+
         if (typeof initialProjection.end === 'number' &&
                 initialProjection.end >= 0 &&
                 initialProjection.end < this.dimensions.max_z) {

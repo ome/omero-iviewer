@@ -801,7 +801,7 @@ export default class Ol3Viewer extends EventSubscriber {
             let msg = "Saving of Rois/Shapes failed.";
             if (params.error.indexOf("SecurityViolation") !== -1)
                 msg = "Insufficient Permissions to save some Rois/Shapes.";
-            Ui.showModalMessage(msg, true);
+            Ui.showModalMessage(msg, 'OK');
             console.error(params.error);
             return;
         }

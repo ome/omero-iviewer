@@ -471,16 +471,36 @@ a.ui-button:active,
 }
 
 .thumbnail-panel {
+    padding-top: 30px;
     width: 100px;
     max-width: 100px;
     text-align: center;
     overflow-x: hidden;
-    overflow-y: auto;
+    overflow-y: hidden;
 }
-
+.thumbnail-panel .thumbnail-scroll-panel {
+    padding-bottom: 30px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    height: 100%;
+    width: 100%;
+}
 thumbnail-slider img {
     margin-top: 10px;
     cursor: pointer;
+}
+.thumbnail-panel .thumbnail-collapse {
+    height: 28px;
+    position: absolute;
+    cursor: pointer;
+    background-color: #f8f8f8;
+    width: 100%;
+}
+.thumbnail-panel .collapse-up {
+    top: 0px;
+}
+.thumbnail-panel .expand-down {
+    bottom: 0px;
 }
 
 #info .table>tbody>tr>th, #info .table>tbody>tr>td {
@@ -1066,6 +1086,19 @@ thumbnail-slider img {
     background-size: 100% 30px;
     background-repeat: no-repeat;
     background-position: center;
+}
+
+.refresh_thumbnails {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 5px;
+    right: 5px;
+    background-image: url('images/refresh.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    cursor: pointer;
+    z-index: 10;
 }
 
 .columns-dropdown {
