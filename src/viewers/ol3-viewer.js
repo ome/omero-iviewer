@@ -804,7 +804,7 @@ export default class Ol3Viewer extends EventSubscriber {
             let msg = "Saving of Rois/Shapes failed.";
             if (params.error.indexOf("SecurityViolation") !== -1)
                 msg = "Insufficient Permissions to save some Rois/Shapes.";
-            Ui.showModalMessage(msg, true);
+            Ui.showModalMessage(msg, 'OK');
             console.error(params.error);
             return;
         }
@@ -1052,14 +1052,15 @@ export default class Ol3Viewer extends EventSubscriber {
                             let linkSrc = this.context.server +
                                 this.context.getPrefixedURI(WEBCLIENT) +
                                 "/?show=image-" + image_id;
-                            msg = "<a href='" + linkSrc + "'>" +
-                                "View Annotated Image</a>";
+                            msg = "<a href='" + linkSrc + "' " +
+                                  "target='_blank'>" +
+                                "Navigate to Image in Webclient</a>";
                         } else {
                             msg = "Failed to attach screen capture";
                             if (typeof resp.error === 'string')
                                 console.error(resp.error);
                         }
-                        Ui.showModalMessage(msg, true);
+                        Ui.showModalMessage(msg, "Close");
                     }
                 });
             } else

@@ -21,7 +21,9 @@ import Context from '../app/context';
 import {inject, customElement, BindingEngine} from 'aurelia-framework';
 import {IMAGE_VIEWPORT_CAPTURE} from '../events/events';
 import Ui from '../utils/ui';
-import { VIEWER_ELEMENT_PREFIX } from '../utils/constants';
+import {
+    IVIEWER, PROJECTION, VIEWER_ELEMENT_PREFIX, WEBCLIENT
+} from '../utils/constants';
 
 /**
  * A Context Menu for the Viewer/Viewport
@@ -36,6 +38,13 @@ export default class ViewerContextMenu {
      * @type {string}
      */
     SELECTOR = "#viewer-context-menu";
+
+    /**
+     * expose PROJECTION constant to template
+     * @memberof ViewerContextMenu
+     * @type {Object}
+     */
+    PROJECTION = PROJECTION;
 
     /**
      * a prefix for the full screen api methods
@@ -317,6 +326,57 @@ export default class ViewerContextMenu {
      */
     deleteShapes(event) {
         this.image_config.regions_info.deleteShapes();
+        // hide context menu
+        this.hideContextMenu();
+        // prevent link click behavior
+        return false;
+    }
+
+    /**
+     * Creates new
+     *
+     * @memberof ViewerContextMenu
+     */
+    saveProjectedImage() {
+        let imgInf = this.image_config.image_info;
+
+        if (typeof imgInf.projection !== PROJECTION.NORMAL) {
+            let url =
+                this.context.server + this.context.getPrefixedURI(IVIEWER) +
+                '/save_projection/?image=' + imgInf.image_id +
+                "&projection=" + imgInf.projection +
+                "&start=" + imgInf.projection_opts.start +
+                "&end=" + imgInf.projection_opts.end;
+            if (typeof imgInf.dataset_id === 'number')
+                url += "&dataset=" + imgInf.dataset_id
+
+            $.ajax({
+                url: url,
+                success: (resp) => {
+                    let msg = "";
+                    if (typeof resp.id === 'number') {
+                        let linkWebclient = this.context.server +
+                            this.context.getPrefixedURI(WEBCLIENT) +
+                            "/?show=image-" + resp.id;
+                        let linkIviewer = this.context.server +
+                            this.context.getPrefixedURI(IVIEWER) +
+                            "/" + resp.id;
+                        if (typeof imgInf.dataset_id === 'number')
+                            linkIviewer += "/?dataset=" + imgInf.dataset_id;
+                    msg =
+                        "<a href='" + linkWebclient + "' target='_blank'>" +
+                        "Navigate to Image in Webclient</a><br>" +
+                        "<br><a href='" + linkIviewer + "' target='_blank'>" +
+                        "Open Image in iviewer</a>";
+                    } else {
+                        msg = "Failed to create projected image";
+                        if (typeof resp.error === 'string')
+                            console.error(resp.error);
+                    }
+                    Ui.showModalMessage(msg, 'Close');
+                }
+            });
+        }
         // hide context menu
         this.hideContextMenu();
         // prevent link click behavior

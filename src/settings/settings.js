@@ -377,7 +377,7 @@ export default class Settings extends EventSubscriber {
         if (!this.image_config.image_info.ready) return;
 
         if (toAll && Misc.useJsonp(this.context.server)) {
-            Ui.showModalMessage("Saving to All will not work cross-domain!", true);
+            Ui.showModalMessage("Saving to All will not work cross-domain!", 'OK');
             return;
         }
 
