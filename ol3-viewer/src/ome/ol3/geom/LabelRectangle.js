@@ -80,7 +80,7 @@ ome.ol3.geom.Rectangle = function(x, y, w, h, transform) {
 goog.inherits(ome.ol3.geom.Rectangle, ol.geom.Polygon);
 
 /**
- * Gets the upper left corner coordinates as an arry [x,y]
+ * Gets the upper left corner coordinates as an array [x,y]
  * @return {Array.<number>} the upper left corner
  */
 ome.ol3.geom.Rectangle.prototype.getUpperLeftCorner = function() {

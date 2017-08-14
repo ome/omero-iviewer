@@ -85,4 +85,29 @@ describe("Geometries", function() {
         expect(polyline.getFlatCoordinates()).to.eql([500,400,1000,800,1100,700]);
     });
 
+    it('createPolygon', function() {
+        var polygon =
+            new ome.ol3.geom.Polygon([[[250,0], [400,200], [100,200], [250,0]]]);
+
+        assert.instanceOf(polygon, ome.ol3.geom.Polygon);
+        expect(polygon.getFlatCoordinates()).to.eql(
+            [250,0,400,200,100,200,250,0]);
+
+        // test translation
+        polygon.translate(-150,100);
+        expect(polygon.getFlatCoordinates()).to.eql(
+            [100,100,250,300,-50,300,100,100]);
+    });
+
+    it('createPoint', function() {
+        var point = new ome.ol3.geom.Point([500, 500]);
+
+        assert.instanceOf(point, ome.ol3.geom.Point);
+        expect(point.getPointCoordinates()).to.eql([500,500]);
+
+        // test translation
+        point.translate(-500,-500);
+        expect(point.getPointCoordinates()).to.eql([0,0]);
+    });
+
 });

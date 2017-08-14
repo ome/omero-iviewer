@@ -464,7 +464,7 @@ ome.ol3.interaction.Draw.prototype.drawArrow_ = function(event) {
 ome.ol3.interaction.Draw.prototype.drawPoint_ = function(event) {
     this.drawShapeCommonCode_('Point', "point",
         function(coordinates, opt_geometry) {
-            return new ol.geom.Circle(coordinates, 5);
+            return new ome.ol3.geom.Point(coordinates);
     });
 };
 

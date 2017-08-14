@@ -90,7 +90,7 @@ describe("Regions", function() {
 
         feature = ome.ol3.utils.Regions.featureFactory(point_info);
         assert.instanceOf(feature, ol.Feature);
-        assert.instanceOf(feature.getGeometry(),  ol.geom.Circle);
+        assert.instanceOf(feature.getGeometry(),  ome.ol3.geom.Point);
         expect(feature.getGeometry().getCenter()).to.eql([10,-25]);
         expect(feature.getGeometry().getRadius()).to.eql(5);
 

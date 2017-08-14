@@ -112,7 +112,7 @@ describe("Conversion", function() {
     });
 
     var pointFeature = new ol.Feature({
-        geometry: new ol.geom.Circle([10,-10], 2)
+        geometry: new ome.ol3.geom.Point([10,-10])
     });
 
     it('pointToJsonObject', function() {

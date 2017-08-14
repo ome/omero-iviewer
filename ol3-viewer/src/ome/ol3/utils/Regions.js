@@ -22,8 +22,6 @@
 goog.provide('ome.ol3.utils.Regions');
 
 goog.require('ol.Feature');
-goog.require('ol.geom.Circle');
-goog.require('ol.geom.Polygon');
 goog.require('ol.extent');
 
 /**
@@ -37,8 +35,11 @@ goog.require('ol.extent');
 ome.ol3.utils.Regions.FEATURE_FACTORY_LOOKUP_TABLE = {
     "point" : function(shape) {
         var feat =
-            new ol.Feature({"geometry" : new ol.geom.Circle(
-                [shape['X'], -shape['Y']], 5)});
+            new ol.Feature({
+                "geometry" : new ome.ol3.geom.Point(
+                    [shape['X'], -shape['Y']],
+                    typeof shape['Transform'] === 'object' ?
+                        shape['Transform'] : null)});
         feat['type'] = "point";
         feat.setStyle(ome.ol3.utils.Style.createFeatureStyle(shape));
         return feat;

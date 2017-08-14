@@ -272,69 +272,68 @@ ome.ol3.interaction.Modify.handleDragEvent_ = function(mapBrowserEvent) {
                     potentialTransform);
             coordinates = tmp.getCoordinates();
         } else if (geometry instanceof ome.ol3.geom.Rectangle) {
-            var vertexBeingDragged =
-                this.vertexFeature_.getGeometry().getCoordinates();
-            if (potentialTransform) {
-                vertexBeingDragged =
-                    ome.ol3.utils.Transform.applyInverseTransform(
-                        geometry.transform_, vertexBeingDragged);
-            }
-
-            if (this.oppVertBeingDragged == null)
-                for (var j=0;j<coordinates[depth[0]].length;j++) {
-                    var c =
-                        ome.ol3.utils.Transform.applyInverseTransform(
-                            geometry.transform_,
-                            coordinates[depth[0]][j]);
-                    if (c[0] !==  vertexBeingDragged[0] &&
-                        c[1] !==  vertexBeingDragged[1]) {
-                            this.oppVertBeingDragged = c;
+            if (this.oppVertBeingDragged == null) {
+                var vertexBeingDragged =
+                    this.vertexFeature_.getGeometry().getCoordinates();
+                var dragVertexIndex = 0;
+                for (var j=0;j<coordinates[depth[0]].length;j++)
+                    if (coordinates[depth[0]][j][0] ===  vertexBeingDragged[0] &&
+                        coordinates[depth[0]][j][1] ===  vertexBeingDragged[1]) {
+                            dragVertexIndex = j;
                             break;
                     }
-                }
 
-                var minX =
-                    vertexBeingDragged[0] < this.oppVertBeingDragged[0] ?
-                        vertexBeingDragged[0] : this.oppVertBeingDragged[0];
-                var maxX =
-                    vertexBeingDragged[0] > this.oppVertBeingDragged[0] ?
-                        vertexBeingDragged[0] : this.oppVertBeingDragged[0];
-                var minY =
-                    -vertexBeingDragged[1] < -this.oppVertBeingDragged[1] ?
-                        vertexBeingDragged[1] : this.oppVertBeingDragged[1];
-                var maxY =
-                    -vertexBeingDragged[1] > -this.oppVertBeingDragged[1] ?
-                        vertexBeingDragged[1] : this.oppVertBeingDragged[1];
-
-                var tmp =
-                    new ome.ol3.geom.Rectangle(
-                        minX, minY, maxX - minX, Math.abs(maxY - minY),
-                        potentialTransform);
-                coordinates = tmp.getCoordinates();
-                geometry.initial_coords_ = tmp.initial_coords_;
-
-                segment[index] =
-                    geometry.getExtent().slice(index*2, (index+1)*2);
-            } else if (geometry instanceof ol.geom.Polygon) {
-                coordinates[depth[0]][segmentData.index + index] = vertex;
-
-                if (potentialTransform) {
-                    var tmp =
-                        new ome.ol3.geom.Polygon(
-                            geometry.getInvertedCoordinates(),
-                            potentialTransform);
-                    geometry.initial_coords_ = tmp.getPolygonCoordinates();
-                }
-
-                segment[index] = vertex;
-            } else if (geometry instanceof ol.geom.MultiPolygon) {
-                coordinates[depth[1]][depth[0]][segmentData.index + index] =
-                    vertex;
-                segment[index] = vertex;
+                if (dragVertexIndex > 2) dragVertexIndex++;
+                var oppVertexIndex = (dragVertexIndex + 2)  % 5;
+                this.oppVertBeingDragged = [
+                    geometry.initial_coords_[oppVertexIndex*2],
+                    geometry.initial_coords_[oppVertexIndex*2+1]
+                ];
             }
-            this.setGeometryCoordinates_(geometry, coordinates);
+
+            var v =
+                ome.ol3.utils.Transform.applyInverseTransform(
+                    geometry.transform_, vertex.slice());
+            var minX =
+                v[0] < this.oppVertBeingDragged[0] ?
+                    v[0] : this.oppVertBeingDragged[0];
+            var maxX =
+                v[0] > this.oppVertBeingDragged[0] ?
+                    v[0] : this.oppVertBeingDragged[0];
+            var minY =
+                -v[1] < -this.oppVertBeingDragged[1] ?
+                    v[1] : this.oppVertBeingDragged[1];
+            var maxY =
+                -v[1] > -this.oppVertBeingDragged[1] ?
+                    v[1] : this.oppVertBeingDragged[1];
+
+            var tmp =
+                new ome.ol3.geom.Rectangle(
+                    minX, minY,
+                    Math.abs(maxX - minX), Math.abs(maxY - minY),
+                    potentialTransform);
+            coordinates = tmp.getCoordinates();
+            geometry.initial_coords_ = tmp.initial_coords_;
+        } else if (geometry instanceof ol.geom.Polygon) {
+            coordinates[depth[0]][segmentData.index + index] = vertex;
+
+            if (potentialTransform) {
+                var tmp =
+                    new ome.ol3.geom.Polygon(
+                        geometry.getInvertedCoordinates(),
+                        potentialTransform);
+                geometry.initial_coords_ = tmp.getPolygonCoordinates();
+            }
+
+            segment[index] = vertex;
+        } else if (geometry instanceof ol.geom.MultiPolygon) {
+            coordinates[depth[1]][depth[0]][segmentData.index + index] =
+                vertex;
+            segment[index] = vertex;
         }
-        this.createOrUpdateVertexFeature_(vertex);
+        this.setGeometryCoordinates_(geometry, coordinates);
+    }
+    this.createOrUpdateVertexFeature_(vertex);
 };
 
 /**
