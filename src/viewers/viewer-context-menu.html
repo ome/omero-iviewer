@@ -46,6 +46,12 @@
             <a click.delegate="saveProjectedImage()"
                tabindex="-1" href="#">Save as new Image</a>
         </li>
+        <li show.bind="image_config.regions_info.ready"
+            class="${image_config.regions_info.selected_shapes.length > 0 ?
+                        '' : 'disabled-color'}">
+            <a click.delegate="saveRoiMeasurements()"
+               tabindex="-1" href="#">Save Roi Measurements (csv)</a>
+        </li>
     </ul>
 
 </template>

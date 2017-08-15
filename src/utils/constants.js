@@ -244,3 +244,9 @@ export const PROJECTION = {
     INTMAX: 'intmax',
     SPLIT: 'split'
 }
+
+/**
+ * CSV line endings
+ * @type {string}
+ */
+export const CSV_LINE_BREAK = '\u000D\u000A';

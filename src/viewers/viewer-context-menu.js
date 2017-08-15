@@ -20,8 +20,9 @@
 import Context from '../app/context';
 import {inject, customElement, BindingEngine} from 'aurelia-framework';
 import Ui from '../utils/ui';
+import * as FileSaver from '../../node_modules/file-saver';
 import {
-    IVIEWER, PROJECTION, VIEWER_ELEMENT_PREFIX, WEBCLIENT
+    CSV_LINE_BREAK, IVIEWER, PROJECTION, VIEWER_ELEMENT_PREFIX, WEBCLIENT
 } from '../utils/constants';
 
 /**
@@ -332,7 +333,7 @@ export default class ViewerContextMenu {
     }
 
     /**
-     * Creates new
+     * Creates new image on server using projection settings
      *
      * @memberof ViewerContextMenu
      */
@@ -376,6 +377,40 @@ export default class ViewerContextMenu {
                 }
             });
         }
+        this.hideContextMenu();
+        // prevent link click behavior
+        return false;
+    }
+
+    /**
+     * Creates csv file that contains area and length for selected shapes
+     *
+     * @memberof ViewerContextMenu
+     */
+    saveRoiMeasurements() {
+        let regInf = this.image_config.regions_info;
+        if (regInf.selected_shapes.length === 0) return;
+
+        let csv = "roi_id,shape_id,type,area,length" + CSV_LINE_BREAK;
+        for (let i in regInf.selected_shapes) {
+            let id = regInf.selected_shapes[i];
+            let shape = regInf.getShape(id);
+            if (shape === null) continue;
+            let roi_id = id.substring(0, id.indexOf(':'));
+            csv += roi_id + "," + shape['@id'] + "," + shape.type + "," +
+                    (shape.Area < 0 ? '' : shape.Area) + "," +
+                    (shape.Length < 0 ? '' : shape.Length) + CSV_LINE_BREAK;
+        }
+
+        let data = null;
+        try {
+            data = new Blob([csv], {type: 'text/csv'});
+        } catch(not_supported) {}
+        if (data instanceof Blob)
+            FileSaver.saveAs(
+                data, regInf.image_info.image_id + "_roi_measurements.csv");
+        else console.error("Blob not supported");
+
         this.hideContextMenu();
         // prevent link click behavior
         return false;
