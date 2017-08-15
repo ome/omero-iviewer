@@ -1007,7 +1007,7 @@ export default class Ol3Viewer extends EventSubscriber {
     captureViewport(params) {
         if (this.viewer === null ||
             params.config_id !== this.image_config.id) return;
-        this.viewer.sendCanvasContent(params.as_attachment);
+        this.viewer.sendCanvasContent();
     }
 
     /**
@@ -1025,46 +1025,7 @@ export default class Ol3Viewer extends EventSubscriber {
                 return;
         }
 
-        if (typeof params.as_attachment === 'boolean' && params.as_attachment) {
-                let formData = new FormData();
-                let image_id = this.image_config.image_info.image_id;
-                formData.append('data', params.data);
-                formData.append('image', image_id);
-                let now = new Date();
-                let timeinfo =
-                    now.getDay() + "." + now.getMonth() + "." +
-                    now.getFullYear() + " (" +
-                    now.getMinutes() + ":" + now.getHours() + ":" +
-                    now.getSeconds() + ")";
-                formData.append('name', "screen-" + timeinfo + ".png");
-
-                $.ajax({
-                    url: this.context.server +
-                        this.context.getPrefixedURI(IVIEWER) +
-                        '/capture_screen_as_attachment',
-                    method: 'POST',
-                    data: formData,
-                    contentType: false,
-                    processData: false,
-                    success: (resp) => {
-                        let msg = "";
-                        if (typeof resp.success === 'string') {
-                            let linkSrc = this.context.server +
-                                this.context.getPrefixedURI(WEBCLIENT) +
-                                "/?show=image-" + image_id;
-                            msg = "<a href='" + linkSrc + "' " +
-                                  "target='_blank'>" +
-                                "Navigate to Image in Webclient</a>";
-                        } else {
-                            msg = "Failed to attach screen capture";
-                            if (typeof resp.error === 'string')
-                                console.error(resp.error);
-                        }
-                        Ui.showModalMessage(msg, "Close");
-                    }
-                });
-            } else
-                FileSaver.saveAs(params.data,
-                    this.image_config.image_info.image_name + ".png");
+        FileSaver.saveAs(
+            params.data, this.image_config.image_info.image_name + ".png");
     }
 }

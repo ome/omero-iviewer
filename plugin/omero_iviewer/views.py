@@ -29,10 +29,8 @@ from omeroweb.webgateway.templatetags.common_filters import lengthformat,\
     lengthunit
 
 import json
-import time
 import omero_marshal
 import omero
-from omero.rtypes import rlong, rstring
 
 from version import __version__
 
@@ -373,76 +371,3 @@ def save_projection(request, conn=None, **kwargs):
         return JsonResponse({"error": repr(save_projection_exception)})
 
     return JsonResponse({"id": new_image_id})
-
-
-@login_required()
-def capture_screen_as_attachment(request, conn=None, **kwargs):
-    # check for file data
-    f = request.FILES.get("data", None)
-    if f is None:
-        return JsonResponse({"error": "Image not found"}, status=404)
-
-    # check for image to cross link file annotation
-    image_id = request.POST.get("image", None)
-    if image_id is None:
-        return JsonResponse({"error": "Missing image id"})
-    img = conn.getObject("Image", image_id, opts=conn.SERVICE_OPTS)
-    if img is None or not img.canAnnotate():
-        return JsonResponse({"error": "Not allowed to link to image"})
-    # check for file name
-    file_name = request.POST.get("name", None)
-    if file_name is None:
-        file_name = 'screen-' + time.strftime("%d.%m.%Y (%H:%M:%S)")
-    raw_file_store = conn.createRawFileStore()
-
-    try:
-        # create image file for screen capture
-        screen_capture = omero.model.OriginalFileI()
-        screen_capture.setName(rstring(file_name))
-        screen_capture.setPath(rstring(""))
-        screen_capture.mimetype = rstring(f.content_type)
-        file_size = long(f.size)
-        screen_capture.setSize(rlong(file_size))
-        upd = conn.getUpdateService()
-        conn.SERVICE_OPTS.setOmeroGroup(
-            conn.getGroupFromContext().getId())
-        screen_capture = upd.saveAndReturnObject(
-            screen_capture, conn.SERVICE_OPTS)
-
-        # write captured image data to newly created omero file
-        f.seek(0)
-        raw_file_store.setFileId(screen_capture.getId().getValue(),
-                                 conn.SERVICE_OPTS)
-        buf = 10000
-        for pos in range(0, file_size, buf):
-            block = None
-            if file_size-pos < buf:
-                block_size = file_size-pos
-            else:
-                block_size = buf
-            f.seek(pos)
-            block = f.read(block_size)
-            raw_file_store.write(block, pos, block_size, conn.SERVICE_OPTS)
-        screen_capture = raw_file_store.save(conn.SERVICE_OPTS)
-
-        # create file annotation
-        fa = omero.model.FileAnnotationI()
-        fa.setFile(omero.model.OriginalFileI(screen_capture.getId(), False))
-        fa.setDescription(rstring(file_name))
-        fa = upd.saveAndReturnObject(fa, conn.SERVICE_OPTS)
-        # link file annotation to
-        links = []
-        l = omero.model.ImageAnnotationLinkI()
-        l.parent = omero.model.ImageI(img.getId(), False)
-        l.child = fa
-        links.append(l)
-        try:
-            upd.saveArray(links, conn.SERVICE_OPTS)
-        except Exception as link_error:
-            return JsonResponse({"error": repr(link_error)})
-    except Exception as save_attachment_exception:
-        return JsonResponse({"error": repr(save_attachment_exception)})
-    finally:
-        raw_file_store.close()
-
-    return JsonResponse({"success": file_name})

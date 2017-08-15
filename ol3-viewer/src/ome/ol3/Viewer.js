@@ -2025,14 +2025,12 @@ ome.ol3.Viewer.prototype.enableSmoothing = function(smoothing) {
 /**
  * Captures the canvas content, sending the data via event notification
  * (which is necessary since the loading is async and has to complete)
- * @param {boolean} as_attachment pass through whether we ought to be
-                        stored as an attachment lateron or not
+ *
  * @param {boolean} full_extent if true the image is scaled to show at a 100%
  *                              (default: false)
  */
-ome.ol3.Viewer.prototype.sendCanvasContent =
-    function(as_attachment, full_extent) {
-        if (this.viewer_ === null || this.eventbus_ === null) return;
+ome.ol3.Viewer.prototype.sendCanvasContent = function(full_extent) {
+    if (this.viewer_ === null || this.eventbus_ === null) return;
 
     var supported = false;
     try {
@@ -2041,19 +2039,18 @@ ome.ol3.Viewer.prototype.sendCanvasContent =
     } catch(not_supported) {}
 
     var that = this;
-    var sendNotification0 = function(data) {
+    var publishEvent = function(data) {
         if (that.eventbus_ === null) return;
         that.eventbus_.publish(
             "IMAGE_CANVAS_DATA",
             {"config_id": that.getTargetId(),
-             "as_attachment": as_attachment,
              "supported": supported,
              "data": data
              });
     };
     var omeroImage = this.getImage();
     if (omeroImage === null || !supported) {
-        sendNotification0();
+        publishEvent();
         return;
     }
 
@@ -2064,9 +2061,9 @@ ome.ol3.Viewer.prototype.sendCanvasContent =
     };
     var sendNotification = function(canvas) {
         if (navigator['msSaveBlob'])
-            sendNotification0(canvas.msToBlob());
+            publishEvent(canvas.msToBlob());
         else canvas.toBlob(
-                function(blob) {sendNotification0(blob);});
+                function(blob) {publishEvent(blob);});
     };
 
     var tileLoadEnd = function() {
