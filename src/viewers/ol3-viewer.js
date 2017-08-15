@@ -26,17 +26,20 @@ import {Converters} from '../utils/converters';
 import Ui from '../utils/ui';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {ol3} from '../../libs/ol3-viewer.js';
+import * as FileSaver from '../../node_modules/file-saver';
 import {
     IVIEWER, PLUGIN_PREFIX, PROJECTION, REGIONS_DRAWING_MODE, RENDER_STATUS,
-    VIEWER_ELEMENT_PREFIX
+    VIEWER_ELEMENT_PREFIX, WEBCLIENT
 } from '../utils/constants';
 import {
-    IMAGE_VIEWER_RESIZE, IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY,
-    IMAGE_SETTINGS_CHANGE, REGIONS_SET_PROPERTY, REGIONS_PROPERTY_CHANGED,
-    VIEWER_IMAGE_SETTINGS, IMAGE_VIEWER_SPLIT_VIEW, REGIONS_DRAW_SHAPE,
-    REGIONS_CHANGE_MODES, REGIONS_SHOW_COMMENTS, REGIONS_GENERATE_SHAPES,
-    REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES, REGIONS_HISTORY_ENTRY,
-    REGIONS_HISTORY_ACTION, REGIONS_MODIFY_SHAPES, REGIONS_COPY_SHAPES,
+    IMAGE_CANVAS_DATA, IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY,
+    IMAGE_SETTINGS_CHANGE, IMAGE_VIEWER_RESIZE, IMAGE_VIEWER_SPLIT_VIEW,
+    IMAGE_VIEWPORT_CAPTURE,
+    REGIONS_CHANGE_MODES, REGIONS_COPY_SHAPES, REGIONS_DRAW_SHAPE,
+    REGIONS_GENERATE_SHAPES, REGIONS_HISTORY_ACTION, REGIONS_HISTORY_ENTRY,
+    REGIONS_MODIFY_SHAPES, REGIONS_PROPERTY_CHANGED, REGIONS_SET_PROPERTY,
+    REGIONS_SHOW_COMMENTS, REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES,
+    VIEWER_IMAGE_SETTINGS,
     EventSubscriber
 } from '../events/events';
 
@@ -118,7 +121,11 @@ export default class Ol3Viewer extends EventSubscriber {
         [REGIONS_COPY_SHAPES,
             (params={}) => this.copyShapeDefinitions(params)],
         [REGIONS_SHOW_COMMENTS,
-            (params={}) => this.showComments(params)]];
+            (params={}) => this.showComments(params)],
+        [IMAGE_VIEWPORT_CAPTURE,
+            (params={}) => this.captureViewport(params)],
+        [IMAGE_CANVAS_DATA,
+            (params={}) => this.saveCanvasData(params)]];
 
     /**
      * @constructor
@@ -671,7 +678,7 @@ export default class Ol3Viewer extends EventSubscriber {
             if (requestMade) Ui.showModalMessage("Saving Regions. Please wait...");
             else if (params.omit_client_update)
                 this.context.eventbus.publish(
-                    "REGIONS_STORED_SHAPES", { omit_client_update: true});
+                    REGIONS_STORED_SHAPES, { omit_client_update: true});
         };
 
         if (numberOfdeletedShapes > 0) {
@@ -682,7 +689,7 @@ export default class Ol3Viewer extends EventSubscriber {
                 storeRois, () => {
                     if (params.omit_client_update)
                         this.context.eventbus.publish(
-                            "REGIONS_STORED_SHAPES", { omit_client_update: false});
+                            REGIONS_STORED_SHAPES, { omit_client_update: false});
                 });
         } else storeRois();
     }
@@ -988,5 +995,37 @@ export default class Ol3Viewer extends EventSubscriber {
                     // set the new dimension index
                     dims[dim] = pres_dim + (forwards ? 1 : -1);
                 }, delay);
+    }
+
+    /**
+     * Captures Viewport Canvas Data
+     *
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     * @return
+     */
+    captureViewport(params) {
+        if (this.viewer === null ||
+            params.config_id !== this.image_config.id) return;
+        this.viewer.sendCanvasContent();
+    }
+
+    /**
+     * Saves Viewport Canvas Data
+     *
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     * @return
+     */
+    saveCanvasData(params) {
+        if (this.image_config === null || // sanity check
+            this.image_config.id !== params.config_id || // not for us
+            !params.supported) { // blob not supported
+                console.error("Capturing Viewport as Blob not supported");
+                return;
+        }
+
+        FileSaver.saveAs(
+            params.data, this.image_config.image_info.image_name + ".png");
     }
 }
