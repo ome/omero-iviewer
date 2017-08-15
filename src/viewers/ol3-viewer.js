@@ -250,8 +250,7 @@ export default class Ol3Viewer extends EventSubscriber {
             typeof params.dim !== 'string' ||
             !Misc.isArray(params.value)) return;
 
-        this.viewer.setDimensionIndex.apply(
-            this.viewer, [params.dim].concat(params.value));
+        this.viewer.setDimensionIndex(params.dim, params.value);
     }
 
     /**
