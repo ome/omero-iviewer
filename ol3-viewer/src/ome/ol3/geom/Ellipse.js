@@ -93,7 +93,7 @@ ome.ol3.geom.Ellipse = function(cx, cy, rx, ry, transform) {
         ome.ol3.utils.Transform.convertAffineTransformIntoMatrix(transform);
 
     /**
-     * step the step size for plotting
+     * the step size for plotting
      * @type {number}
      * @private
      */
