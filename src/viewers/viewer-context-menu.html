@@ -52,6 +52,10 @@
             <a click.delegate="saveRoiMeasurements()"
                tabindex="-1" href="#">Save Roi Measurements (csv)</a>
         </li>
+        <li show.bind="image_config.image_info.ready">
+            <a click.delegate="captureViewport()"
+               tabindex="-1" href="#">Capture Viewport (as png)</a>
+        </li>
     </ul>
 
 </template>

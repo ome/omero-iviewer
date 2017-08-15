@@ -16,8 +16,8 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-/** whenever an image config has been updated */
-export const IMAGE_CONFIG_UPDATE = "IMAGE_CONFIG_UPDATE";
+/** whenever the image canvas data was retrieved */
+export const IMAGE_CANVAS_DATA = "IMAGE_CANVAS_DATA";
 /** whenever the image viewer needs to be resized */
 export const IMAGE_VIEWER_RESIZE = "IMAGE_VIEWER_RESIZE";
 /** whenever the image viewer split view is turned on/off */
@@ -28,6 +28,8 @@ export const IMAGE_SETTINGS_CHANGE = "IMAGE_SETTINGS_CHANGE";
 export const IMAGE_DIMENSION_CHANGE = "IMAGE_DIMENSION_CHANGE";
 /** whenever the dimension play should be started/stopped */
 export const IMAGE_DIMENSION_PLAY = "IMAGE_DIMENSION_PLAY";
+/** whenever the viewport canvas data should be captured */
+export const IMAGE_VIEWPORT_CAPTURE = "IMAGE_VIEWPORT_CAPTURE";
 /** to set rois/shape properties such as visibility and selection */
 export const REGIONS_SET_PROPERTY = "REGIONS_SET_PROPERTY";
 /** whenever a region property change is received, e.g. selection, modification */
@@ -80,7 +82,7 @@ export class EventSubscriber {
      * consisting of an array with 2 entries:
      * the first one an EVENTS constant (see above) to denote the type
      * the second is a function/handler to be called, e.g.
-     * [EVENTS.IMAGE_CONFIG_UPDATE, (params) => handleMe()]
+     * [EVENTS.IMAGE_VIEWER_RESIZE, (params) => handleMe()]
      *
      * @memberof EventSubscriber
      * @type {Array.<string,function>}

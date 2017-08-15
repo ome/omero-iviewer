@@ -19,6 +19,7 @@
 // dependencies
 import Context from '../app/context';
 import {inject, customElement, BindingEngine} from 'aurelia-framework';
+import {IMAGE_VIEWPORT_CAPTURE} from '../events/events';
 import Ui from '../utils/ui';
 import * as FileSaver from '../../node_modules/file-saver';
 import {
@@ -377,6 +378,21 @@ export default class ViewerContextMenu {
                 }
             });
         }
+        // hide context menu
+        this.hideContextMenu();
+        // prevent link click behavior
+        return false;
+    }
+
+    /**
+     * Sends event to captures viewport as png
+     *
+     * @memberof ViewerContextMenu
+     */
+    captureViewport() {
+        this.context.eventbus.publish(
+            IMAGE_VIEWPORT_CAPTURE, {"config_id": this.image_config.id});
+        // hide context menu
         this.hideContextMenu();
         // prevent link click behavior
         return false;
