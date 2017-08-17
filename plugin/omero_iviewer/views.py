@@ -405,8 +405,10 @@ def get_intensity(request, conn=None, **kwargs):
     try:
         raw_pixel_store = conn.createRawPixelsStore()
         raw_pixel_store.setPixelsId(img.getPixelsId(), True)
-        pixels = img.getPrimaryPixels()
-        pixels_type = pixels.getPixelsType().getValue()
+        pixels_type = img.getPrimaryPixels().getPixelsType().getValue()
+        print type(pixels_type)
+        conversion = '>' + pixelstypetopython.toPython(pixels_type)
+
         results = []
         # loop over all channels and collect that one pixel with getTile 1x1
         c = 0
@@ -414,7 +416,6 @@ def get_intensity(request, conn=None, **kwargs):
         for chan in channels:
             label = chan.getLabel()
             point_data = raw_pixel_store.getTile(z, c, t, x, y, 1, 1)
-            conversion = '>' + pixelstypetopython.toPython(pixels_type)
             unpacked_point_data = unpack(conversion, point_data)
             results.append({label: unpacked_point_data[0]})
             c += 1
