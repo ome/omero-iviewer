@@ -407,7 +407,10 @@ export default class ViewerContextMenu {
         let regInf = this.image_config.regions_info;
         if (regInf.selected_shapes.length === 0) return;
 
-        let csv = "roi_id,shape_id,type,area,length" + CSV_LINE_BREAK;
+        let units = regInf.image_info.image_pixels_size.symbol_x || 'px';
+        let csv =
+            "roi_id,shape_id,type,\"area (" + units +
+            "\u00b2)\",\"length (" + units + ")\"" + CSV_LINE_BREAK;
         for (let i in regInf.selected_shapes) {
             let id = regInf.selected_shapes[i];
             let shape = regInf.getShape(id);
@@ -424,7 +427,7 @@ export default class ViewerContextMenu {
         } catch(not_supported) {}
         if (data instanceof Blob)
             FileSaver.saveAs(
-                data, regInf.image_info.image_id + "_roi_measurements.csv");
+                data, regInf.image_info.image_name + "_roi_measurements.csv");
         else console.error("Blob not supported");
 
         this.hideContextMenu();
