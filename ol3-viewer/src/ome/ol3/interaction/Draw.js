@@ -396,7 +396,16 @@ ome.ol3.interaction.Draw.prototype.endDrawingInteraction = function(reset) {
  * @param {Object} event the event object for the drawing interaction
  */
 ome.ol3.interaction.Draw.prototype.drawPolygon_ = function(event) {
-    this.drawShapeCommonCode_('Polygon', 'polygon');
+    this.drawShapeCommonCode_('Polygon', 'polygon',
+        function(coordinates, opt_geometry) {
+            var geometry = new ome.ol3.geom.Polygon(coordinates);
+
+            if (opt_geometry) {
+                opt_geometry.setCoordinates(geometry.getCoordinates());
+            }
+
+            return geometry;
+        });
 };
 
 /**
@@ -457,7 +466,7 @@ ome.ol3.interaction.Draw.prototype.drawArrow_ = function(event) {
 ome.ol3.interaction.Draw.prototype.drawPoint_ = function(event) {
     this.drawShapeCommonCode_('Point', "point",
         function(coordinates, opt_geometry) {
-            return new ol.geom.Circle(coordinates, 5);
+            return new ome.ol3.geom.Point(coordinates);
     });
 };
 
