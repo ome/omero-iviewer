@@ -79,7 +79,7 @@ export class Header {
      }
 
      /**
-      * Unregisters the the observer (image selection)
+      * Unregisters the selected config observer
       *
       * @memberof Header
       */
