@@ -312,20 +312,26 @@ ome.ol3.utils.Conversion.convertColorToSignedInteger = function(color, alpha) {
  *
  * @static
  * @function
- * @param {ol.geom.Circle} geometry the circle instance for the point feature
+ * @param {ome.ol3.geom.Point} geometry the point geometry
  * @param {number=} shape_id the optional shape id
  * @return {Object} returns an object ready to be turned into json
  */
 ome.ol3.utils.Conversion.pointToJsonObject = function(geometry, shape_id) {
-    if (!(geometry instanceof ol.geom.Circle))
-        throw "shape type point must be of instance ol.geom.Circle!";
+    if (!(geometry instanceof ome.ol3.geom.Point))
+        throw "shape type point must be of instance ome.ol3.geom.Point!";
 
     var ret = {};
     if (typeof shape_id === 'number') ret['@id'] = shape_id;
     ret['@type'] = "http://www.openmicroscopy.org/Schemas/OME/2016-06#Point";
-    var center = geometry.getCenter();
+    var center = geometry.getPointCoordinates();
     ret['X'] = center[0];
     ret['Y'] = -center[1];
+    var trans = geometry.getTransform();
+    if (typeof trans === 'object' && trans !== null) {
+        trans['@type'] =
+            "http://www.openmicroscopy.org/Schemas/OME/2016-06#AffineTransform";
+        ret['Transform'] = trans;
+    }
 
     return ret;
 }
@@ -352,7 +358,7 @@ ome.ol3.utils.Conversion.ellipseToJsonObject = function(geometry, shape_id) {
     var radius = geometry.getRadius();
     ret['RadiusX'] = radius[0];
     ret['RadiusY'] = radius[1];
-    var trans = geometry.getTransform(true);
+    var trans = geometry.getTransform();
     if (typeof trans === 'object' && trans !== null) {
         trans['@type'] =
             "http://www.openmicroscopy.org/Schemas/OME/2016-06#AffineTransform";
@@ -384,6 +390,13 @@ ome.ol3.utils.Conversion.rectangleToJsonObject = function(geometry, shape_id) {
     ret['Width'] = geometry.getWidth();
     ret['Height'] = geometry.getHeight();
 
+    var trans = geometry.getTransform();
+    if (typeof trans === 'object' && trans !== null) {
+        trans['@type'] =
+            "http://www.openmicroscopy.org/Schemas/OME/2016-06#AffineTransform";
+        ret['Transform'] = trans;
+    }
+
     return ret;
 }
 
@@ -402,7 +415,7 @@ ome.ol3.utils.Conversion.lineToJsonObject = function(geometry, shape_id) {
 
     var ret = {};
     if (typeof shape_id === 'number') ret['@id'] = shape_id;
-    var flatCoords = geometry.getFlatCoordinates();
+    var flatCoords = geometry.getLineCoordinates();
     //delegate if we happen to have turned into a polyline
     if (geometry.isPolyline())
         return ome.ol3.utils.Conversion.polylineToJsonObject.call(
@@ -416,6 +429,13 @@ ome.ol3.utils.Conversion.lineToJsonObject = function(geometry, shape_id) {
 
     if (geometry.has_start_arrow_) ret['MarkerStart'] = "Arrow";
     if (geometry.has_end_arrow_) ret['MarkerEnd'] = "Arrow";
+
+    var trans = geometry.getTransform();
+    if (typeof trans === 'object' && trans !== null) {
+        trans['@type'] =
+            "http://www.openmicroscopy.org/Schemas/OME/2016-06#AffineTransform";
+        ret['Transform'] = trans;
+    }
 
     return ret;
 }
@@ -435,7 +455,7 @@ ome.ol3.utils.Conversion.polylineToJsonObject = function(geometry, shape_id) {
 
     var ret = {};
     if (typeof shape_id === 'number') ret['@id'] = shape_id;
-    var flatCoords = geometry.getFlatCoordinates();
+    var flatCoords = geometry.getLineCoordinates();
     //delegate if we happen to have turned into a line
     if (!geometry.isPolyline())
         return ome.ol3.utils.Conversion.lineToJsonObject.call(
@@ -450,6 +470,13 @@ ome.ol3.utils.Conversion.polylineToJsonObject = function(geometry, shape_id) {
 
     if (geometry.has_start_arrow_) ret['MarkerStart'] = "Arrow";
     if (geometry.has_end_arrow_) ret['MarkerEnd'] = "Arrow";
+
+    var trans = geometry.getTransform();
+    if (typeof trans === 'object' && trans !== null) {
+        trans['@type'] =
+            "http://www.openmicroscopy.org/Schemas/OME/2016-06#AffineTransform";
+        ret['Transform'] = trans;
+    }
 
     return ret;
 }
@@ -488,18 +515,25 @@ ome.ol3.utils.Conversion.labelToJsonObject = function(geometry, shape_id) {
  * @return {Object} returns an object ready to be turned into json
  */
 ome.ol3.utils.Conversion.polygonToJsonObject = function(geometry, shape_id) {
-    if (!(geometry instanceof ol.geom.Polygon))
-        throw "shape type polygon must be of instance ol.geom.Polygon!";
+    if (!(geometry instanceof ome.ol3.geom.Polygon))
+        throw "shape type polygon must be of instance ome.ol3.geom.Polygon!";
 
     var ret = {};
     if (typeof shape_id === 'number') ret['@id'] = shape_id;
     ret['@type'] = "http://www.openmicroscopy.org/Schemas/OME/2016-06#Polygon";
-    var flatCoords = geometry.getFlatCoordinates();
+    var flatCoords = geometry.getPolygonCoordinates();
 
     ret['Points'] = "";
     for (var i=0; i<flatCoords.length;i+= 2) {
         if (i !== 0 && i % 2 === 0) ret['Points'] += " ";
         ret['Points'] += flatCoords[i] + "," + (-flatCoords[i+1]);
+    }
+
+    var trans = geometry.getTransform();
+    if (typeof trans === 'object' && trans !== null) {
+        trans['@type'] =
+            "http://www.openmicroscopy.org/Schemas/OME/2016-06#AffineTransform";
+        ret['Transform'] = trans;
     }
 
     return ret;
@@ -600,8 +634,8 @@ ome.ol3.utils.Conversion.integrateStyleIntoJsonObject = function(feature, jsonOb
                     jsonObject['FontStyle'] = fontTokens[0];
                     jsonObject['FontSize'] =  {
                         '@type': 'TBD#LengthI',
-                        'Unit': 'PIXEL',
-                        'Symbol': 'px',
+                        'Unit': 'POINT',
+                        'Symbol': 'pt',
                         'Value': parseInt(fontTokens[1])
                     };
                     jsonObject['FontFamily'] = fontTokens[2];

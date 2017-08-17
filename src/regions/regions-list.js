@@ -180,7 +180,6 @@ export default class RegionsList extends EventSubscriber {
          let idOflastEntry = this.regions_info.selected_shapes[nrOfSelShapes-1];
          let lastSelShape = this.regions_info.getLastSelectedShape();
          if (lastSelShape === null) return;
-
          let lastCanEdit =
             this.regions_info.checkShapeForPermission(lastSelShape, "canEdit");
 
