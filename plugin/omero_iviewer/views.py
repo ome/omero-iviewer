@@ -406,7 +406,6 @@ def get_intensity(request, conn=None, **kwargs):
         raw_pixel_store = conn.createRawPixelsStore()
         raw_pixel_store.setPixelsId(img.getPixelsId(), True)
         pixels_type = img.getPrimaryPixels().getPixelsType().getValue()
-        print type(pixels_type)
         conversion = '>' + pixelstypetopython.toPython(pixels_type)
 
         results = []
