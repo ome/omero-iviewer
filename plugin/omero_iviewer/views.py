@@ -31,6 +31,9 @@ from omeroweb.webgateway.templatetags.common_filters import lengthformat,\
 import json
 import omero_marshal
 import omero
+import omero.util.pixelstypetopython as pixelstypetopython
+
+from struct import unpack
 
 from version import __version__
 
@@ -371,3 +374,50 @@ def save_projection(request, conn=None, **kwargs):
         return JsonResponse({"error": repr(save_projection_exception)})
 
     return JsonResponse({"id": new_image_id})
+
+
+@login_required()
+def get_intensity(request, conn=None, **kwargs):
+    # get mandatory params
+    image_id = request.GET.get("image", None)
+    x, y = request.GET.get("x", None), request.GET.get("y", None)
+    z, t = request.GET.get("z", None), request.GET.get("t", None)
+
+    # checks
+    if image_id is None or x is None or y is None or z is None or t is None:
+        return JsonResponse(
+            {"error": "Mandatory params are: image,x,y,z and t"})
+
+    # retrieve image object
+    img = conn.getObject("Image", image_id, opts=conn.SERVICE_OPTS)
+    if img is None:
+        return JsonResponse({"error": "Image not Found"}, status=404)
+
+    # further bound checks
+    x, y, z, t = int(x), int(y), int(z), int(t)
+    size_x, size_y = img.getSizeX()-1, img.getSizeY()-1
+    size_z, size_t = img.getSizeZ()-1, img.getSizeT()-1
+    if (x < 0 or x > size_x or y < 0 or y > size_y or
+            z < 0 or z > size_z or t < 0 or t > size_t):
+        return JsonResponse(
+            {"error": "Either one or more x,y,z.t are out of bounds"})
+
+    try:
+        raw_pixel_store = conn.createRawPixelsStore()
+        raw_pixel_store.setPixelsId(img.getPixelsId(), True)
+        pixels = img.getPrimaryPixels()
+        pixels_type = pixels.getPixelsType().getValue()
+        results = []
+        # loop over all channels and collect that one pixel with getTile 1x1
+        c = 0
+        channels = img.getChannels()
+        for chan in channels:
+            label = chan.getLabel()
+            point_data = raw_pixel_store.getTile(z, c, t, x, y, 1, 1)
+            conversion = '>' + pixelstypetopython.toPython(pixels_type)
+            unpacked_point_data = unpack(conversion, point_data)
+            results.append({label: unpacked_point_data[0]})
+            c += 1
+        return JsonResponse(results, safe=False)
+    except Exception as pixel_service_exception:
+        return JsonResponse({"error": repr(pixel_service_exception)})
