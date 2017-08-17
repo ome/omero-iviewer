@@ -42,20 +42,6 @@ export class Header {
     selected_image_observer = null;
 
     /**
-     * observer watching for when the image info data is ready
-     * @memberof Header
-     * @type {Object}
-     */
-    image_info_ready_observer = null;
-
-    /**
-     * shorter version of the image name
-     * @memberof Header
-     * @type {String}
-     */
-     short_image_name = ""
-
-    /**
      * Overridden aurelia lifecycle method:
      * called whenever the view is bound within aurelia
      * in other words an 'init' hook that happens before 'attached'
@@ -89,39 +75,15 @@ export class Header {
      */
      onImageConfigChange() {
         if (this.context.getSelectedImageConfig() === null) return;
-        
         this.image_info = this.context.getSelectedImageConfig().image_info;
-
-        let imageInfoReady = () => {
-            let fullPath = this.image_info.image_name.replace("\\", "/");
-            let fields = fullPath.split("/");
-            this.short_image_name = fields[fields.length-1];
-        };
-
-        if (this.image_info.ready) {
-            imageInfoReady();
-            return;
-        }
-
-        this.unregisterObservers(true);
-        this.image_info_ready_observer =
-            this.bindingEngine.propertyObserver(
-                this.image_info, 'ready').subscribe(
-                    (newValue, oldValue) => imageInfoReady());
      }
 
      /**
-      * Unregisters the the observers (image selection and image data ready)
+      * Unregisters the the observer (image selection)
       *
-      * @param {boolean} ready_only true if only the image data ready observer is cleaned up
       * @memberof Header
       */
-     unregisterObservers(ready_only = false) {
-         if (this.image_info_ready_observer) {
-             this.image_info_ready_observer.dispose();
-             this.image_info_ready_observer = null;
-         }
-         if (ready_only) return;
+     unregisterObserver() {
          if (this.selected_image_observer) {
              this.selected_image_observer.dispose();
              this.selected_image_observer = null;
@@ -136,6 +98,6 @@ export class Header {
      * @memberof Header
      */
     unbind() {
-        this.unregisterObservers();
+        this.unregisterObserver();
     }
 }

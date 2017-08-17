@@ -427,7 +427,8 @@ export default class ViewerContextMenu {
         } catch(not_supported) {}
         if (data instanceof Blob)
             FileSaver.saveAs(
-                data, regInf.image_info.image_name + "_roi_measurements.csv");
+                data,
+                regInf.image_info.short_image_name + "_roi_measurements.csv");
         else console.error("Blob not supported");
 
         this.hideContextMenu();
