@@ -47,13 +47,13 @@ ome.ol3.controls.IntensityDisplay = function() {
     this.prefix_ = "";
 
     /**
-     * the disabled look of the intensity display
+     * the look of the intensity display
      * @type {string}
      * @private
      */
-    this.disabled_style_ =
+    this.style_ =
         "filter:alpha(opacity=55);-webkit-box-shadow:none;" +
-        "box-shadow:none;opacity:.55;color: red";
+        "box-shadow:none;opacity:.55;";
 
     /**
      * flag that controls whether we query the intensity or not
@@ -113,7 +113,7 @@ ome.ol3.controls.IntensityDisplay.prototype.createUiElements_ = function() {
     button.setAttribute('type', 'button');
     button.appendChild(document.createTextNode(""));
     button.title = 'Click to turn ON intensity querying';
-    button.style = this.disabled_style_;
+    button.style = this.style_;
 
     this.toggle_intensity_listener_ =
         ol.events.listen(
@@ -214,11 +214,11 @@ ome.ol3.controls.IntensityDisplay.prototype.toggleIntensityDisplay_ = function()
     if (this.query_intensity_) {
         this.query_intensity_ = false;
         el.title = "Click to turn ON intensity querying";
-        el.style = this.disabled_style_;
+        el.style = this.style_;
     } else {
         this.query_intensity_ = true;
         el.title = "Click to turn OFF intensity querying";
-        el.style = "";
+        el.style = this.style_ + 'border-color: #000';
     }
     el.blur();
 }
