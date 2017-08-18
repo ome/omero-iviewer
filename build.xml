@@ -124,6 +124,7 @@
             <fileset file="${src}/ome/ol3/controls/BirdsEye.js"/>
             <fileset file="${src}/ome/ol3/controls/Zoom.js"/>
             <fileset file="${src}/ome/ol3/controls/ScaleBar.js"/>
+            <fileset file="${src}/ome/ol3/controls/IntensityDisplay.js"/>
             <fileset file="${src}/ome/ol3/globals.js"/>
             <fileset file="${src}/ome/ol3/tiles/tiles.js"/>
             <fileset file="${src}/ome/ol3/tiles/ImageTile.js"/>

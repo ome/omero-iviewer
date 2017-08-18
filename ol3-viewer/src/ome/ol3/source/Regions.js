@@ -544,13 +544,12 @@ ome.ol3.source.Regions.prototype.renderFeature = function(feature) {
  * Persists modified/added shapes
  *
  * @param {Object} roisAsJsonObject a populated object for json serialization
- * @param {string} uri a uri to post to for persistance
  * @param {boolean} omit_client_update an optional flag that's handed back to the client
  *                  to indicate that a client side update to the response is not needed
  * @return {boolean} true if peristence request was made, false otherwise
  */
 ome.ol3.source.Regions.prototype.storeRegions =
-    function(roisAsJsonObject, uri, omit_client_update) {
+    function(roisAsJsonObject, omit_client_update) {
 
     if (typeof omit_client_update !== 'boolean') omit_client_update = false;
 
@@ -580,7 +579,8 @@ ome.ol3.source.Regions.prototype.storeRegions =
         // set properties for ajax request
         var properties = {
             "server" : this.viewer_.getServer(),
-            "uri" : uri,
+            "uri" : this.viewer_.getPrefixedURI(ome.ol3.PLUGIN_PREFIX) +
+                    '/persist_rois',
             "method" : 'POST',
             "content" : JSON.stringify(postContent),
             "headers" : {"X-CSRFToken" : ome.ol3.utils.Misc.getCookie("csrftoken")},

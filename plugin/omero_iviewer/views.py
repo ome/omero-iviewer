@@ -394,7 +394,7 @@ def get_intensity(request, conn=None, **kwargs):
         return JsonResponse({"error": "Image not Found"}, status=404)
 
     # further bound checks
-    x, y, z, t = int(x), int(y), int(z), int(t)
+    x, y, z, t = int(float(x)), int(float(y)), int(float(z)), int(float(t))
     size_x, size_y = img.getSizeX()-1, img.getSizeY()-1
     size_z, size_t = img.getSizeZ()-1, img.getSizeT()-1
     if (x < 0 or x > size_x or y < 0 or y > size_y or

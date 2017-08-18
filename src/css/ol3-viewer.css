@@ -65,7 +65,7 @@
     -ms-user-select: auto;
     user-select: auto;
  }
- 
+
 .ol-grabbing {
   cursor: -webkit-grabbing;
   cursor: -moz-grabbing;
@@ -308,4 +308,14 @@
     height: 30px;
     text-align: center;
     font-weight: bold;
+}
+
+.ol-intensity {
+    top: 0.5em;
+    right: 6em;
+}
+.ol-intensity button {
+    width: 100px;
+    height: 30px;
+    font-size: 15px;
 }

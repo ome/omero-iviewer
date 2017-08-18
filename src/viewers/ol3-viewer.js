@@ -671,9 +671,8 @@ export default class Ol3Viewer extends EventSubscriber {
         let storeRois = () => {
             let requestMade =
                 this.viewer.storeRegions(
-                    Misc.isArray(params.deleted) ? params.deleted : [], false,
-                    this.context.getPrefixedURI(IVIEWER) + '/persist_rois',
-                    params.omit_client_update);
+                    Misc.isArray(params.deleted) ? params.deleted : [],
+                    false, params.omit_client_update);
 
             if (requestMade) Ui.showModalMessage("Saving Regions. Please wait...");
             else if (params.omit_client_update)
