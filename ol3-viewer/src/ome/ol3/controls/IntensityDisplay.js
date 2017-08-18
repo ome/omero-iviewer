@@ -182,12 +182,15 @@ ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
         clearTimeout(this.movement_handle_);
         this.movement_handle_ = null;
 
+        var activeChannels = this.image_.getChannels();
+        if (activeChannels.length === 0) return;
         var reqParams = {
             "server" : this.image_.server_,
             "uri" : this.prefix_ + "/get_intensity/?image=" + this.image_.id_ +
                     "&z=" + this.image_.getPlane() +
                     "&t=" + this.image_.getTime() + "&x=" +
-                    parseInt(x) + "&y=" + parseInt(y),
+                    parseInt(x) + "&y=" + parseInt(y) + "&c=" +
+                    activeChannels.join(','),
             "success" : function(resp) {console.info(resp)},
             "error" : function(err) {console.info(err)}
         };

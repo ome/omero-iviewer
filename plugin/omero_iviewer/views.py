@@ -402,6 +402,23 @@ def get_intensity(request, conn=None, **kwargs):
         return JsonResponse(
             {"error": "Either one or more x,y,z.t are out of bounds"})
 
+    # check for optional channel info and use it
+    cs = request.GET.get("c", None)
+    channel_lookup = {}
+    if cs is not None:
+        try:
+            tokens = cs.split(',')
+            size_c = img.getSizeC()
+            for tok in tokens:
+                tok = int(tok)
+                if tok < 0 or tok >= size_c:
+                    return JsonResponse(
+                        {"error": "One or more channels are out of bounds"})
+                channel_lookup[str(tok)] = tok
+        except:
+            return JsonResponse(
+                {"error": "The channels have to be a comma separated string"})
+
     try:
         raw_pixel_store = conn.createRawPixelsStore()
         raw_pixel_store.setPixelsId(img.getPixelsId(), True)
@@ -412,7 +429,13 @@ def get_intensity(request, conn=None, **kwargs):
         # loop over all channels and collect that one pixel with getTile 1x1
         c = 0
         channels = img.getChannels()
+        given_channels = len(channel_lookup)
+        print
         for chan in channels:
+            # should we have channels provided we take only those
+            if given_channels > 0 and channel_lookup.get(str(c)) is None:
+                c += 1
+                continue
             label = chan.getLabel()
             point_data = raw_pixel_store.getTile(z, c, t, x, y, 1, 1)
             unpacked_point_data = unpack(conversion, point_data)
