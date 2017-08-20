@@ -408,7 +408,7 @@ export default class ViewerContextMenu {
         if (regInf.selected_shapes.length === 0) return;
 
         let units = regInf.image_info.image_pixels_size.symbol_x || 'px';
-        let csv =
+        let csv = "\ufeff" +
             "roi_id,shape_id,type,\"area (" + units +
             "\u00b2)\",\"length (" + units + ")\"" + CSV_LINE_BREAK;
         for (let i in regInf.selected_shapes) {
@@ -423,7 +423,7 @@ export default class ViewerContextMenu {
 
         let data = null;
         try {
-            data = new Blob([csv], {type: 'text/csv'});
+            data = new Blob([csv], {type: 'text/csv; charset=UTF-8'});
         } catch(not_supported) {}
         if (data instanceof Blob)
             FileSaver.saveAs(
