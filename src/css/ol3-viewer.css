@@ -319,3 +319,13 @@
     height: 30px;
     font-size: 15px;
 }
+.ol-intensity-popup {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    padding: 2px;
+    z-index: 4;
+}
+.ol-intensity-popup div span {
+    font-weight: bold;
+}

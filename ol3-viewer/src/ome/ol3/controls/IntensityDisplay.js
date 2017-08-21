@@ -40,6 +40,13 @@ ome.ol3.controls.IntensityDisplay = function() {
     this.movement_handle_ = null;
 
     /**
+     * the last cursor position
+     * @type {Array.<number>}
+     * @private
+     */
+    this.last_cursor_ = [0,0];
+
+    /**
      * a possible request prefix we need to include
      * @type {string}
      * @private
@@ -151,10 +158,7 @@ ome.ol3.controls.IntensityDisplay.prototype.disable = function() {
         ol.events.unlistenByKey(this.pointer_move_listener_);
         this.pointer_move_listener_ = null;
     }
-    if (typeof this.movement_handle_ === 'number') {
-        clearTimeout(this.movement_handle_);
-        this.movement_handle_ = null;
-    }
+    this.resetMoveTracking_();
     this.image_ = null;
     var el = document.getElementById('intensity-display-toggler');
     if (el) {
@@ -164,24 +168,80 @@ ome.ol3.controls.IntensityDisplay.prototype.disable = function() {
 }
 
 /**
+ * Shows/Hides Mouse Tooltip
+ * @private
+ */
+ome.ol3.controls.IntensityDisplay.prototype.toggleTooltip = function(data, pixel) {
+    var tooltip = document.getElementById('intensity-tooltip');
+    if (!ome.ol3.utils.Misc.isArray(data) || data.length === 0) {
+        if (tooltip) tooltip.style.display = "none";
+        return;
+    }
+
+    var createTooltip = typeof tooltip === 'undefined' || tooltip === null;
+    if (createTooltip) {
+        tooltip = document.createElement('div');
+        tooltip.id='intensity-tooltip';
+        tooltip.className = 'ol-intensity-popup';
+    }
+    tooltip.innerHTML = "";
+    tooltip.style.position = 'absolute';
+    tooltip.style.left = "" + (pixel[0] +  10) + "px";
+    tooltip.style.top = "" + (pixel[1]) + "px";
+    for (var x=0;x<data.length;x++) {
+        var row = data[x];
+        for (var s in row) {
+            var r = document.createElement('div');
+            r.innerHTML = '<span>' + s + ':</span>' + '&nbsp;' +
+                            row[s].toFixed(3);
+            tooltip.appendChild(r);
+        }
+    }
+    if (this.last_cursor_[0] === pixel[0] &&
+        this.last_cursor_[1] === pixel[1]) {
+        tooltip.style.display = "";
+        if (createTooltip) {
+            var target = this.getMap().getTargetElement();
+            if (target) target.childNodes[0].appendChild(tooltip);
+        }
+    }
+}
+
+/**
+ * Resets params for move 'tracking'
+ * @param {Array.<number>} pixel the pixel coordinates to reset to
+ * @private
+ */
+ome.ol3.controls.IntensityDisplay.prototype.resetMoveTracking_ = function(pixel) {
+    this.last_cursor_ =
+        ome.ol3.utils.Misc.isArray(pixel) && pixel.length === 2 ?
+            pixel : [0,0];
+    this.toggleTooltip();
+    if (typeof this.movement_handle_ === 'number') {
+        clearTimeout(this.movement_handle_);
+        this.movement_handle_ = null;
+    }
+}
+
+/**
  * Handles the pointer move
  * (display of coordinates and a potential triggering of the intensity request)
  * @private
  */
 ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
+    this.resetMoveTracking_(e.pixel);
+    if (e.dragging) return;
+
     var el = document.getElementById('intensity-display-toggler');
     var x = e.coordinate[0], y = -e.coordinate[1];
     if (x < 0 || x >= this.image_.getWidth() ||
         y < 0 || y >= this.image_.getHeight()) {
-            el.innerHTML = "";
+            el.innerHTML = "OUTSIDE";
             return;
         }
     el.innerHTML = x.toFixed(0) + "," + y.toFixed(0);
 
     if (this.query_intensity_) {
-        clearTimeout(this.movement_handle_);
-        this.movement_handle_ = null;
-
         var activeChannels = this.image_.getChannels();
         if (activeChannels.length === 0) return;
         var reqParams = {
@@ -191,14 +251,29 @@ ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
                     "&t=" + this.image_.getTime() + "&x=" +
                     parseInt(x) + "&y=" + parseInt(y) + "&c=" +
                     activeChannels.join(','),
-            "success" : function(resp) {console.info(resp)},
-            "error" : function(err) {console.info(err)}
+            "success" : function(resp) {
+                try {
+                    el.innerHTML = x.toFixed(0) + "," + y.toFixed(0);
+                    this.toggleTooltip(JSON.parse(resp), e.pixel);
+                } catch(parseError) {
+                    console.error(parseError);
+                }
+            }.bind(this),
+            "error" : function(err) {
+                el.innerHTML = x.toFixed(0) + "," + y.toFixed(0);
+                this.toggleTooltip();
+                console.info(err);
+            }.bind(this)
         };
 
         this.movement_handle_ = setTimeout(
             function() {
-                ome.ol3.utils.Net.sendRequest(reqParams);
-            }, 500);
+                if (this.last_cursor_[0] === e.pixel[0] &&
+                    this.last_cursor_[1] === e.pixel[1]) {
+                        el.innerHTML = "Querying...";
+                        ome.ol3.utils.Net.sendRequest(reqParams);
+                }
+            }.bind(this), 500);
     }
 }
 
@@ -221,7 +296,7 @@ ome.ol3.controls.IntensityDisplay.prototype.toggleIntensityDisplay_ = function()
     } else {
         this.query_intensity_ = true;
         el.title = "Click to turn OFF intensity querying";
-        el.style = this.style_ + 'border-color: #000';
+        el.style = this.style_ + 'border-color: #F00';
     }
     el.blur();
 }
