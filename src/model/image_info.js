@@ -575,8 +575,8 @@ export default class ImageInfo {
         channels.map((c) => {
             if (typeof c.lut  === 'string' && c.lut.length > 0)
                 c.color = c.lut;
-            if (typeof c.reverseIntensity !== 'boolean')
-                c.reverseIntensity = null;
+            if (typeof c.inverted !== 'boolean')
+                c.inverted = null;
         });
 
         // mix in initial channel settings if exist
@@ -588,8 +588,8 @@ export default class ImageInfo {
                 chan.window.start = c.start;
                 chan.window.end = c.end;
                 chan.color = c.color;
-                if (typeof c.reverseIntensity === 'boolean')
-                    chan.reverseIntensity = c.reverseIntensity;
+                if (typeof c.inverted === 'boolean')
+                    chan.inverted = c.inverted;
             }
         });
 
