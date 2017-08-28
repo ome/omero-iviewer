@@ -100,6 +100,8 @@ export default class RegionsList extends EventSubscriber {
      * @memberof RegionsList
      */
     waitForRegionsInfoReady() {
+        if (this.regions_info === null) return;
+
         let onceReady = () => {
             $('#shapes_visibility_toggler').prop('checked', true);
             // register observer

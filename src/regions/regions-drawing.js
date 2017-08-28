@@ -336,6 +336,8 @@ export default class RegionsDrawing extends EventSubscriber {
       * @memberof RegionsDrawing
       */
      waitForRegionsInfoReady() {
+         if (this.regions_info === null) return;
+
          let onceReady = () => {
              // register observer
              this.registerObservers();

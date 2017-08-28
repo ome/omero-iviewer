@@ -22,7 +22,7 @@ import {inject, customElement, BindingEngine} from 'aurelia-framework';
 import {IMAGE_VIEWPORT_CAPTURE} from '../events/events';
 import Ui from '../utils/ui';
 import {
-    IVIEWER, PROJECTION, VIEWER_ELEMENT_PREFIX, WEBCLIENT
+    INITIAL_TYPES, IVIEWER, PROJECTION, VIEWER_ELEMENT_PREFIX, WEBCLIENT
 } from '../utils/constants';
 
 /**
@@ -347,8 +347,9 @@ export default class ViewerContextMenu {
                 "&projection=" + imgInf.projection +
                 "&start=" + imgInf.projection_opts.start +
                 "&end=" + imgInf.projection_opts.end;
-            if (typeof imgInf.dataset_id === 'number')
-                url += "&dataset=" + imgInf.dataset_id
+            if (this.context.initial_type !== INITIAL_TYPES.WELL &&
+                typeof imgInf.parent_id === 'number')
+                    url += "&dataset=" + imgInf.parent_id;
 
             $.ajax({
                 url: url,
@@ -361,8 +362,9 @@ export default class ViewerContextMenu {
                         let linkIviewer = this.context.server +
                             this.context.getPrefixedURI(IVIEWER) +
                             "/" + resp.id;
-                        if (typeof imgInf.dataset_id === 'number')
-                            linkIviewer += "/?dataset=" + imgInf.dataset_id;
+                        if (this.context.initial_type !== INITIAL_TYPES.WELL &&
+                            typeof imgInf.parent_id === 'number')
+                                linkIviewer += "/?dataset=" + imgInf.parent_id;
                     msg =
                         "<a href='" + linkWebclient + "' target='_blank'>" +
                         "Navigate to Image in Webclient</a><br>" +

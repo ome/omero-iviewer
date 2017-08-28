@@ -17,7 +17,6 @@
 
 from django.shortcuts import render
 from django.http import JsonResponse
-from django.http import HttpResponse
 from django.conf import settings
 from django.core.urlresolvers import reverse
 
@@ -31,6 +30,8 @@ from omeroweb.webgateway.templatetags.common_filters import lengthformat,\
 import json
 import omero_marshal
 import omero
+from omero.rtypes import rlong
+from omero_sys_ParametersI import ParametersI
 
 from version import __version__
 
@@ -46,11 +47,9 @@ PROJECTIONS = {
 
 
 @login_required()
-def index(request, iid=None, conn=None, **kwargs):
-    if iid is None:
-        return HttpResponse("Viewer needs an image id!")
-
-    params = {'VERSION': __version__, 'IMAGE_ID': iid}
+def index(request, conn=None, **kwargs):
+    # set params
+    params = {'VERSION': __version__}
     for key in request.GET:
         if request.GET[key]:
             params[str(key).upper()] = str(request.GET[key])
@@ -371,3 +370,31 @@ def save_projection(request, conn=None, **kwargs):
         return JsonResponse({"error": repr(save_projection_exception)})
 
     return JsonResponse({"id": new_image_id})
+
+
+@login_required()
+def well_images(request, conn=None, **kwargs):
+    # check for mandatory parameter id
+    well_id = request.GET.get("id", None)
+    if well_id is None:
+        return JsonResponse({"error": "No well id provided."})
+
+    try:
+        query_service = conn.getQueryService()
+
+        params = ParametersI()
+        params.add("well_id", rlong(long(well_id)))
+        images = query_service.findAllByQuery(
+            "select ws.image from WellSample ws " +
+            "where ws.well.id = :well_id", params)
+        results = {"data": [], "meta": {"totalCount": len(images)}}
+
+        for img in images:
+            img_ret = {"@id": img.getId().getValue()}
+            if img.getName() is not None:
+                img_ret["Name"] = img.getName().getValue()
+            results["data"].append(img_ret)
+
+        return JsonResponse(results)
+    except Exception as get_well_images_exception:
+        return JsonResponse({"error": repr(get_well_images_exception)})

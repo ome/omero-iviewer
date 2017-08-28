@@ -116,6 +116,9 @@ export default class ChannelSettings {
      * @memberof Settings
      */
     waitForImageInfoReady() {
+        if (this.image_config === null ||
+            this.image_config.image_info === null) return;
+            
         let onceReady = () => {
             // register observer
             this.registerObservers();

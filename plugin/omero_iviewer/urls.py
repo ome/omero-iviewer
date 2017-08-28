@@ -25,10 +25,12 @@ urlpatterns = patterns(
     'django.views.generic.simple',
 
     # index 'home page' of the iviewer app
-    url(r'^(?P<iid>[0-9]+)?/?$', views.index, name='omero_iviewer_index'),
+    url(r'^/?$', views.index, name='omero_iviewer_index'),
     url(r'^persist_rois/?$', views.persist_rois,
         name='omero_iviewer_persist_rois'),
     url(r'^image_data/(?P<image_id>[0-9]+)/$', views.image_data,
         name='omero_iviewer_image_data'),
     url(r'^save_projection/?$', views.save_projection,
-        name='omero_iviewer_save_projection'))
+        name='omero_iviewer_save_projection'),
+    url(r'^well_images/?$', views.well_images,
+        name='omero_iviewer_well_images'))
