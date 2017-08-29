@@ -23,7 +23,6 @@ import {IMAGE_VIEWPORT_CAPTURE} from '../events/events';
 import Ui from '../utils/ui';
 import * as FileSaver from '../../node_modules/file-saver';
 import * as TextEncoding from "../../node_modules/text-encoding";
-import "../../node_modules/text-encoding/lib/encoding-indexes.js";
 import {
     CSV_LINE_BREAK, IVIEWER, PROJECTION, VIEWER_ELEMENT_PREFIX, WEBCLIENT
 } from '../utils/constants';
@@ -411,7 +410,7 @@ export default class ViewerContextMenu {
 
         let units = regInf.image_info.image_pixels_size.symbol_x || 'px';
         let csv =
-            "roi_id,shape_id,type,\"area (" + units +
+            "roi_id,shape_id,type,z,t,\"area (" + units +
             "\u00b2)\",\"length (" + units + ")\"" + CSV_LINE_BREAK;
         for (let i in regInf.selected_shapes) {
             let id = regInf.selected_shapes[i];
@@ -419,28 +418,28 @@ export default class ViewerContextMenu {
             if (shape === null) continue;
             let roi_id = id.substring(0, id.indexOf(':'));
             csv += roi_id + "," + shape['@id'] + "," + shape.type + "," +
+                    (shape.TheZ+1) + "," + (shape.TheT+1) + "," +
                     (shape.Area < 0 ? '' : shape.Area) + "," +
                     (shape.Length < 0 ? '' : shape.Length) + CSV_LINE_BREAK;
         }
 
         let data = null;
+        let encErr = true;
         try {
-            var type = 'text/csv; charset=UTF-8';
-            if (true) {
-                type = 'text/csv; charset=windows-1252';
-                let ansiEncoder = new TextEncoding.TextEncoder(
-                    'windows-1252', {
-                        NONSTANDARD_allowLegacyEncoding: true
-                });
-                csv = ansiEncoder.encode(csv);
-            }
-            data = new Blob([csv], {type: type});
+            // use windows-1252 character set to satisfy excel
+            let type = 'text/csv; charset=windows-1252';
+            let ansiEncoder =
+                new TextEncoding.TextEncoder(
+                    'windows-1252', {NONSTANDARD_allowLegacyEncoding: true});
+            encErr = false;
+            data = new Blob([ansiEncoder.encode(csv)], {type: type});
         } catch(not_supported) {}
         if (data instanceof Blob)
             FileSaver.saveAs(
                 data,
                 regInf.image_info.short_image_name + "_roi_measurements.csv");
-        else console.error("Blob not supported");
+        else console.error(
+                encErr ? "Error encoding csv" : "Blob not supported");
 
         this.hideContextMenu();
         // prevent link click behavior
