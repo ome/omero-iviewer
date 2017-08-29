@@ -69,7 +69,12 @@
         </div>
 
         <div class="frame col-xs-12">
-            <div class="viewer" repeat.for="[id, conf] of context.image_configs">
+            <div class="viewer" repeat.for="[id, conf] of context.image_configs"
+                 click="context.selectConfig(id)"
+                 css="${context.useMDI && context.selected_config === id ?
+                            'zIndex: 15;' : ''}">
+                <div show.bind="context.useMDI && context.image_configs.size > 1"
+                     class='viewer-handle'><span class="close">X</span></div>
                 <ol3-viewer image_config.bind="conf">
                 </ol3-viewer>
             </div>

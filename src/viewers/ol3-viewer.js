@@ -27,6 +27,7 @@ import Ui from '../utils/ui';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {ol3} from '../../libs/ol3-viewer.js';
 import * as FileSaver from '../../node_modules/file-saver';
+import {draggable} from 'jquery-ui/ui/widgets/draggable';
 import {
     IVIEWER, PLUGIN_PREFIX, PROJECTION, REGIONS_DRAWING_MODE, RENDER_STATUS,
     VIEWER_ELEMENT_PREFIX, WEBCLIENT
@@ -147,6 +148,7 @@ export default class Ol3Viewer extends EventSubscriber {
      * @memberof Ol3Viewer
      */
     attached() {
+        // TODO: MDI watch image_configs, set draggable/resizable (if not set)
         let imageDataReady = () => {
             // create viewer instance, register event subscriptions
             this.initViewer();
@@ -187,6 +189,11 @@ export default class Ol3Viewer extends EventSubscriber {
      * @memberof Ol3Viewer
      */
     detached() {
+        if (this.context.useMDI) {
+            try {
+                $(this.element).parent().draggable("destroy");
+            } catch(ignored) {}
+        }
         if (this.viewer) {
             this.viewer.destroyViewer();
             this.viewer = null;

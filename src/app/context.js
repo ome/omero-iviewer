@@ -111,7 +111,7 @@ export default class Context {
      * @memberof Context
      * @type {boolean}
      */
-    useMDI = false;
+    useMDI = true;
 
     /**
      * the global value indicating the selected tab
@@ -520,18 +520,12 @@ export default class Context {
      * Creates and adds an ImageConfig instance by handing it an id of an image
      * stored on the server, as well as making it the selected/active image config.
      *
-     * The returned ImageConfig object will have an id set on it by which it
-     * can be uniquely identified and retrieved which makes it possible for
-     * the same image to be used in multiple ImageConfigs.
-     *
      * @memberof Context
      * @param {number} image_id the image id
      * @param {number} dataset_id an optional dataset_id
-     * @return {ImageConfig} an ImageConfig object
      */
     addImageConfig(image_id, dataset_id) {
-        if (typeof image_id !== 'number' || image_id < 0)
-            return null;
+        if (typeof image_id !== 'number' || image_id < 0) return;
 
         // we do not keep the other configs around unless we are in MDI mode.
         if (!this.useMDI)
@@ -544,7 +538,7 @@ export default class Context {
         this.selectConfig(image_config.id);
         image_config.bind();
 
-        return image_config;
+        // TODO: handle mdi handle placement
     }
 
     /**
@@ -585,8 +579,8 @@ export default class Context {
      */
     selectConfig(id=null) {
         if (typeof id !== 'number' || id < 0 ||
-            !(this.image_configs.get(id) instanceof ImageConfig))
-            return null;
+            !(this.image_configs.get(id) instanceof ImageConfig) ||
+            this.selected_config === id) return;
 
         this.selected_config = id;
     }
