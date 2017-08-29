@@ -396,11 +396,12 @@ export default class ThumbnailSlider extends EventSubscriber {
 
         let url = this.context.server;
         if (this.context.initial_type === INITIAL_TYPES.DATASET)
-            url += this.web_api_base + DATASETS_REQUEST_URL + '/' + parent_id +
-                    '/images/?offset=' + offset + '&limit=' + limit;
+            url += this.web_api_base + DATASETS_REQUEST_URL +
+                    '/' + parent_id + '/images/?';
         else if (this.context.initial_type === INITIAL_TYPES.WELL)
             url += this.context.getPrefixedURI(IVIEWER) +
-                    "/well_images/?id=" + parent_id;
+                    "/well_images/?id=" + parent_id + "&";
+        url += 'offset=' + offset + '&limit=' + limit;
 
         $.ajax(
             {url : url,

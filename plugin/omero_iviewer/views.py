@@ -30,7 +30,7 @@ from omeroweb.webgateway.templatetags.common_filters import lengthformat,\
 import json
 import omero_marshal
 import omero
-from omero.rtypes import rlong
+from omero.rtypes import rint, rlong
 from omero_sys_ParametersI import ParametersI
 
 from version import __version__
@@ -382,13 +382,23 @@ def well_images(request, conn=None, **kwargs):
     try:
         query_service = conn.getQueryService()
 
+        # set well id
         params = ParametersI()
         params.add("well_id", rlong(long(well_id)))
+
+        # set offset and limit
+        filter = omero.sys.Filter()
+        filter.offset = rint(request.GET.get("offset", 0))
+        filter.limit = rint(request.GET.get("limit", 10))
+        params.theFilter = filter
+
+        # fire off query
         images = query_service.findAllByQuery(
             "select ws.image from WellSample ws " +
             "where ws.well.id = :well_id", params)
         results = {"data": [], "meta": {"totalCount": len(images)}}
 
+        # we need only image id and name for our purposes
         for img in images:
             img_ret = {"@id": img.getId().getValue()}
             if img.getName() is not None:
