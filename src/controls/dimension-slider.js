@@ -82,7 +82,7 @@ export default class DimensionSlider {
      * @memberof DimensionSlider
      * @type {Object}
      */
-    image_info__observer = null;
+    image_info_ready_observer = null;
 
     /**
      * the starting point of play

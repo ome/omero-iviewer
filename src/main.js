@@ -16,20 +16,23 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-import { bootstrap } from 'aurelia-bootstrapper-webpack';
+import { bootstrap } from 'aurelia-bootstrapper';
 import {EventAggregator} from 'aurelia-event-aggregator';
 import Context from './app/context';
 import Index from './app/index';
 import Misc from './utils/misc';
 import {URI_PREFIX, PLUGIN_NAME, WINDOWS_1252} from './utils/constants';
+import * as Bluebird from 'bluebird';
 
-let req = window.INITIAL_REQUEST_PARAMS || {};
+// global scope settings
+Bluebird.config({ warnings: { wForgottenReturn: false } });
 window['encoding-indexes'] = {"windows-1252": WINDOWS_1252};
 
 /* IMPORTANT:
  * we have to set the public path here to include any potential prefix
  * has to happen before the bootstrap!
  */
+let req = window.INITIAL_REQUEST_PARAMS || {};
 let is_dev_server = typeof req["DEV_SERVER"] === 'boolean' && req["DEV_SERVER"];
 if (!is_dev_server) {
     let prefix =
@@ -52,5 +55,6 @@ bootstrap(function(aurelia) {
     if (is_dev_server) ctx.tweakForDevServer();
     aurelia.container.registerInstance(Context,ctx);
 
-    aurelia.start().then(() => aurelia.setRoot('app/index', document.body));
+    aurelia.start().then(
+        () => aurelia.setRoot(PLATFORM.moduleName('app/index'), document.body));
 });

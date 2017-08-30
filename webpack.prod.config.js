@@ -1,12 +1,12 @@
-var path = require('path');
-var AureliaWebpackPlugin = require('aurelia-webpack-plugin');
-var ProvidePlugin = require('webpack/lib/ProvidePlugin');
-var pkg = require('./package.json');
+const path = require('path');
+const {AureliaPlugin} = require('aurelia-webpack-plugin');
+const ProvidePlugin = require('webpack/lib/ProvidePlugin');
+const pkg = require('./package.json');
 
 module.exports = {
   entry: {
     main: [
-      './src/main.js'
+      './src/main'
     ]
   },
   output: {
@@ -15,7 +15,7 @@ module.exports = {
     chunkFilename: "[chunkhash].bundle.js"
   },
   plugins: [
-    new AureliaWebpackPlugin({nameExternalModules: false}),
+    new AureliaPlugin({aureliaApp: undefined, includeAll: 'src'}),
     new ProvidePlugin({
       Promise: 'bluebird',
       $: 'jquery',
@@ -23,19 +23,22 @@ module.exports = {
       'window.jQuery': 'jquery'
   })],
   resolve: {
-    root: [
-      path.resolve('./')
-    ]
+      extensions: [".js"],
+         modules: ["src", "node_modules"]
   },
   module: {
     noParse: [/libs\/ol3-viewer.js$/],
-    loaders: [
-      { test: /\.js$/, loader: 'babel', exclude: /node_modules/,
-        query: { compact: false, presets: ['es2015-loose', 'stage-1'], plugins: ['transform-decorators-legacy'] } },
-      { test: /\.css?$/, loader: 'file?name=css/[name].[ext]' },
-      { test: /\.(png|gif|jpg|jpeg)$/, loader: 'file?name=css/images/[name].[ext]' },
-      { test: /\.(woff|woff2)$/, loader: 'file?name=css/fonts/[name].[ext]' },
-      { test: /\.html$/, loader: 'html' }
+    rules: [
+        { test: /\.js$/, loader: 'babel-loader', exclude: /node_modules/,
+          query: { compact: false,
+                   presets: ['es2015-loose', 'stage-1'],
+                   plugins: ['transform-decorators-legacy'] } },
+        { test: /[\/\\]node_modules[\/\\]bluebird[\/\\].+\.js$/, loader: 'expose-loader?Promise' },
+        { test: require.resolve('jquery'), loader: 'expose-loader?$!expose-loader?jQuery' },
+        { test: /\.css?$/, loader: 'file-loader?name=css/[name].[ext]' },
+        { test: /\.(png|gif|jpg|jpeg)$/, loader: 'file-loader?name=css/images/[name].[ext]' },
+        { test: /\.(woff|woff2)$/, loader: 'file-loader?name=css/fonts/[name].[ext]' },
+        { test: /\.html$/, loader: 'html-loader' }
     ]
   }
 };

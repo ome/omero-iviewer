@@ -112,7 +112,7 @@ describe("Conversion", function() {
     });
 
     var pointFeature = new ol.Feature({
-        geometry: new ol.geom.Circle([10,-10], 2)
+        geometry: new ome.ol3.geom.Point([10,-10])
     });
 
     it('pointToJsonObject', function() {
@@ -207,7 +207,7 @@ describe("Conversion", function() {
     });
 
     var polygonFeature = new ol.Feature({
-        geometry: new ol.geom.Polygon(
+        geometry: new ome.ol3.geom.Polygon(
             [[[0,0],[10,-10], [0,-100], [0,0]]])
     });
 
@@ -258,7 +258,7 @@ describe("Conversion", function() {
         assert.equal(jsonObject['FontFamily'] , 'arial');
         assert.equal(jsonObject['FontStyle'] , 'bold');
         assert.equal(jsonObject['FontSize']['@type'] , 'TBD#LengthI');
-        assert.equal(jsonObject['FontSize']['Unit'] , 'PIXEL');
+        assert.equal(jsonObject['FontSize']['Unit'] , 'POINT');
         assert.equal(jsonObject['FontSize']['Value'] , 666);
     });
 
