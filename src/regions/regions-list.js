@@ -175,6 +175,7 @@ export default class RegionsList extends EventSubscriber {
      */
      actUponSelectionChange() {
          if (this.regions_info.selected_shapes.length === 0) return;
+
          let nrOfSelShapes = this.regions_info.selected_shapes.length;
          let idOflastEntry = this.regions_info.selected_shapes[nrOfSelShapes-1];
          let lastSelShape = this.regions_info.getLastSelectedShape();

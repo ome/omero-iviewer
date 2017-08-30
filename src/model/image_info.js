@@ -170,6 +170,13 @@ export default class ImageInfo {
     channels = null;
 
     /**
+     * the roi count
+     * @memberof ImageInfo
+     * @type {number}
+     */
+    roi_count = 0;
+
+    /**
      * @memberof ImageInfo
      * @type {Array.<number>}
      */
@@ -304,6 +311,7 @@ export default class ImageInfo {
             this.image_pixels_type = response.meta.pixelsType;
         this.image_timestamp = response.meta.imageTimestamp;
         this.setFormattedDeltaT(response);
+        this.roi_count = response.roi_count;
         if (typeof response.meta.datasetName === 'string')
             this.dataset_name = response.meta.datasetName;
 
