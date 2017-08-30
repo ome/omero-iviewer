@@ -19,7 +19,8 @@
 <template>
     <require from="../controls/dimension-slider"></require>
 
-    <div class="center-row1
+    <div class="${context.useMDI && context.image_configs.size  > 1 ?
+                    'center-row1-mdi' : 'center-row1'}
                 ${image_config.image_info.dimensions.max_t > 1 ? 'show-tSlider' : ''}
                 ${image_config.image_info.dimensions.max_z > 1 ? 'show-zSlider' : ''}">
         <dimension-slider
@@ -27,7 +28,9 @@
             image_config.bind="image_config"
             dim="z"
             player_info.bind="player_info"
-            class="plane-slider">
+            class="plane-slider"
+            css="${context.useMDI && context.image_configs.size > 1 ?
+                    'margin-top: 20px' : ''}">
         </dimension-slider>
 
         <div class="viewer">

@@ -259,9 +259,9 @@ export default class ImageInfo {
                 // fetch copied img RDef
                 this.requestImgRDef();
                 // request regions data if rois tab showing
+                let conf = this.context.getImageConfig(this.config_id);
                 if (this.context.isRoisTabActive())
-                    this.context.getSelectedImageConfig().
-                        regions_info.requestData(true);
+                    conf.regions_info.requestData();
             },
             error : (error) => {
                 this.ready = false;

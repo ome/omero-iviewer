@@ -364,7 +364,7 @@ ome.ol3.utils.Misc.sendEventNotification = function(viewer, type, content, delay
         typeof type !== 'string' ||
         type.length === 0) return;
 
-    var config_id = viewer.getTargetId();
+    var config_id = ome.ol3.utils.Misc.getTargetId(viewer.viewer_);
     var eventbus = viewer.eventbus_;
     if (config_id && eventbus) { // publish
         if (typeof content !== 'object' || content === null) content = {};
@@ -375,5 +375,36 @@ ome.ol3.utils.Misc.sendEventNotification = function(viewer, type, content, delay
         if (typeof delay === 'number' && delay > 0)
             setTimeout(triggerEvent, delay);
         else triggerEvent();
+    }
+}
+
+/**
+ * Extracts the id which is part of the viewer's target element id
+ * e.g. xxxxx_344455
+ *
+ * @static
+ * @param {ol.Map} target the viewer target
+ * @return {number|null} the target element's id or null (if not found)
+ */
+ome.ol3.utils.Misc.getTargetId = function(target) {
+    if (!(target instanceof ol.Map)) return null;
+    try {
+        var elemId =
+            typeof target.getTargetElement() === 'string' ?
+                target.getTargetElement() :
+                    typeof target.getTargetElement() === 'object' &&
+                    typeof target.getTargetElement().id === 'string' ?
+                        target.getTargetElement().id : null;
+
+        var _pos = -1;
+        if (elemId === null ||
+            ((_pos = elemId.lastIndexOf("_")) === -1)) return null;
+
+        var id = parseInt(elemId.substring(_pos+1));
+        if (isNaN(id)) return null;
+
+        return id;
+    } catch(no_care) {
+        return null;
     }
 }

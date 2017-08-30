@@ -561,8 +561,10 @@ export default class Context {
 
         // deselect if we were selected
         let selId = this.getSelectedImageConfig();
-        if (selId && selId === conf.id)
-            this.selected_config = null;
+        if (selId && selId === conf.id) this.selected_config = null;
+        // if in mdi, select another open config
+        if (this.useMDI && this.image_configs.size > 0)
+            this.selected_config = this.image_configs.keys().next().value;
 
         // call unbind and wipe reference
         conf.unbind();

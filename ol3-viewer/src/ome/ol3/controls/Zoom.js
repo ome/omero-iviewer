@@ -155,7 +155,10 @@ ome.ol3.controls.Zoom.prototype.changeResolution_ = function(value) {
             view.constrainResolution(1 / (value / 100), 0, 0);
             view.setResolution(constrainedResolution);
     }
-    var zoomDisplayElement = document.getElementsByClassName('ol-zoom-display');
+    var targetId = ome.ol3.utils.Misc.getTargetId(map);
+    var zoomDisplayElement =
+        document.getElementById('' + targetId).querySelectorAll(
+            '.ol-zoom-display')
     if (zoomDisplayElement.length === 0) return;
     zoomDisplayElement[0].value = Math.round((1 / view.getResolution()) * 100);
 }

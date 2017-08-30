@@ -534,7 +534,7 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
     if (source.use_tiled_retrieval_)
         this.viewerState_["birdseye"]['ref'].setCollapsed(false);
     // tweak source element for fullscreen to include dim sliders (iviewer only)
-    var targetId = this.getTargetId();
+    var targetId = ome.ol3.utils.Misc.getTargetId(this.viewer_);
     var viewerFrame = targetId ? document.getElementById(targetId) : null;
     if (targetId && viewerFrame) {
         this.viewerState_["fullscreen"]['ref'].source_ = viewerFrame;
@@ -1658,7 +1658,9 @@ ome.ol3.Viewer.prototype.storeRegions =
                     if (this.eventbus_) {
                         this.eventbus_.publish(
                             "REGIONS_STORED_SHAPES", {
-                                'config_id': this.getTargetId(),
+                                'config_id':
+                                    ome.ol3.utils.Misc.getTargetId(
+                                        this.viewer_),
                                 'shapes': ids,
                                 'is_delete': isDeleteRequest
                             });
@@ -1878,32 +1880,6 @@ ome.ol3.Viewer.prototype.redraw = function(delay) {
 }
 
 /**
- * Extracts the id which is part of the viewer's target element id
- * e.g. xxxxx_344455
- */
-ome.ol3.Viewer.prototype.getTargetId = function() {
-    try {
-        var elemId =
-            typeof this.viewer_.getTargetElement() === 'string' ?
-                this.viewer_.getTargetElement() :
-                    typeof this.viewer_.getTargetElement() === 'object' &&
-                    typeof this.viewer_.getTargetElement().id === 'string' ?
-                        this.viewer_.getTargetElement().id : null;
-
-        var _pos = -1;
-        if (elemId === null ||
-            ((_pos = elemId.lastIndexOf("_")) === -1)) return null;
-
-        var id = parseInt(elemId.substring(_pos+1));
-        if (!isNaN(id)) return id;
-    } catch(no_care) {
-        return null;
-    }
-
-    return null;
-}
-
-/**
  * Retrieves initial request parameter by key
  *
  * @private
@@ -1968,8 +1944,10 @@ ome.ol3.Viewer.prototype.getShapeDefinition = function(shape_id) {
  * Displays resolution as a percentage
  */
 ome.ol3.Viewer.prototype.displayResolutionInPercent = function() {
+    var targetId = ome.ol3.utils.Misc.getTargetId(this.viewer_);
     var zoomDisplay =
-        document.getElementsByClassName('ol-zoom-display');
+        document.getElementById('' + targetId).querySelectorAll(
+            '.ol-zoom-display')
     if (typeof zoomDisplay !== 'object' ||
         typeof zoomDisplay.length !== 'number' ||
         zoomDisplay.length === 0) return;
@@ -2037,7 +2015,7 @@ ome.ol3.Viewer.prototype.sendCanvasContent = function(full_extent) {
         if (that.eventbus_ === null) return;
         that.eventbus_.publish(
             "IMAGE_CANVAS_DATA",
-            {"config_id": that.getTargetId(),
+            {"config_id": ome.ol3.utils.Misc.getTargetId(that.viewer_),
              "supported": supported,
              "data": data
              });

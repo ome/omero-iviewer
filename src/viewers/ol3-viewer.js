@@ -160,7 +160,10 @@ export default class Ol3Viewer extends EventSubscriber {
      */
     attached() {
         let container = this.getContainer();
-        container.draggable({handle: '.viewer-handle'});
+        container.draggable({
+            handle: '.viewer-handle',
+            start: () => this.context.selectConfig(this.image_config.id)
+        });
         container.resizable({containment: "parent", handles: "se"});
         let imageDataReady = () => {
             // create viewer instance, register event subscriptions

@@ -206,6 +206,11 @@ a.ui-button:active,
     height: 100%;
     padding: 0px;
 }
+.center-row1-mdi {
+    background-color: rgba(255,255,255,1);
+    height: calc(100% - 40px);
+    padding: 0px;
+}
 
 .show-tSlider {
     padding-bottom: 35px;
@@ -216,6 +221,14 @@ a.ui-button:active,
     margin-top: -35px;
     position: relative;
 }
+.center-row2 {
+    height: 35px;
+    margin-top: -35px;
+    position: relative;
+    background-color: rgba(255,255,255,1);
+    margin-right: 10px;
+}
+
 .center-row2-hidden {
     display: none;
 }
@@ -458,13 +471,20 @@ a.ui-button:active,
 .viewer {
     height: 100%;
     width: 100%;
+    top: 0px;
+    left: 0px;
 }
 
 .viewer-mdi {
+    position: absolute;
+    min-width: 320px;
+    min-height: 250px;
     top: 40px;
     left: 100px;
     height: 50%;
     width: 50%;
+    background-color: rgba(255,255,255,1);
+    border: solid 2px rgba(31,106,170,1);
 }
 
 .show-zSlider .viewer {
@@ -1131,11 +1151,16 @@ thumbnail-slider img {
 .viewer-handle {
     width: 100%;
     height: 20px;
-    background-color: gray;
+    background-color: rgba(31,106,170,1);
 }
 .viewer-handle .close {
-    color: black;
+    color: white;
+    opacity: 1px;
 }
 .viewer-mdi .ui-resizable-se {
     float: right;
+}
+.mdi-selected {
+    z-index: 15;
+    border-color: rgba(255,0,0,0.5);
 }
