@@ -460,6 +460,13 @@ a.ui-button:active,
     width: 100%;
 }
 
+.viewer-mdi {
+    top: 40px;
+    left: 100px;
+    height: 50%;
+    width: 50%;
+}
+
 .show-zSlider .viewer {
     padding-left: 35px;
 }
@@ -1127,5 +1134,8 @@ thumbnail-slider img {
     background-color: gray;
 }
 .viewer-handle .close {
-    color: red;
+    color: black;
+}
+.viewer-mdi .ui-resizable-se {
+    float: right;
 }

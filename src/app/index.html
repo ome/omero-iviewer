@@ -69,12 +69,21 @@
         </div>
 
         <div class="frame col-xs-12">
-            <div class="viewer" repeat.for="[id, conf] of context.image_configs"
-                 click="context.selectConfig(id)"
+            <div class="${context.useMDI &&
+                            context.image_configs.size > 1 ?
+                                'viewer-mdi' : 'viewer'}"
+                 repeat.for="[id, conf] of context.image_configs"
+                 click.delegate="context.selectConfig(id)"
                  css="${context.useMDI && context.selected_config === id ?
-                            'zIndex: 15;' : ''}">
+                            'zIndex: 15;' : ''}
+                      ${context.useMDI && context.image_configs.size  > 1 ?
+                            '' : 'top: 0px;left: 0px'}">
                 <div show.bind="context.useMDI && context.image_configs.size > 1"
-                     class='viewer-handle'><span class="close">X</span></div>
+                     class='viewer-handle'
+                     css="${context.useMDI && context.selected_config === id ?
+                                'background-color: red;' : ''}">
+                     <span click.delegate="context.removeImageConfig(id)"
+                           class="close">X</span></div>
                 <ol3-viewer image_config.bind="conf">
                 </ol3-viewer>
             </div>

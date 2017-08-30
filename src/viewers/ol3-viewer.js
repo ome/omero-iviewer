@@ -28,6 +28,7 @@ import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework'
 import {ol3} from '../../libs/ol3-viewer.js';
 import * as FileSaver from '../../node_modules/file-saver';
 import {draggable} from 'jquery-ui/ui/widgets/draggable';
+import {resizable} from 'jquery-ui/ui/widgets/resizable';
 import {
     IVIEWER, PLUGIN_PREFIX, PROJECTION, REGIONS_DRAWING_MODE, RENDER_STATUS,
     VIEWER_ELEMENT_PREFIX, WEBCLIENT
@@ -142,13 +143,25 @@ export default class Ol3Viewer extends EventSubscriber {
     }
 
     /**
+     * Returns the viewer's container element
+     *
+     * @return {Object} the viewer's html container(jquery)
+     * @memberof Ol3Viewer
+     */
+    getContainer() {
+        return $(this.element).parent();
+    }
+
+    /**
      * Overridden aurelia lifecycle method:
      * fired when PAL (dom abstraction) is ready for use
      *
      * @memberof Ol3Viewer
      */
     attached() {
-        // TODO: MDI watch image_configs, set draggable/resizable (if not set)
+        let container = this.getContainer();
+        container.draggable({handle: '.viewer-handle'});
+        container.resizable({containment: "parent", handles: "se"});
         let imageDataReady = () => {
             // create viewer instance, register event subscriptions
             this.initViewer();
@@ -190,9 +203,9 @@ export default class Ol3Viewer extends EventSubscriber {
      */
     detached() {
         if (this.context.useMDI) {
-            try {
-                $(this.element).parent().draggable("destroy");
-            } catch(ignored) {}
+            let container = this.getContainer();
+            try {container.draggable("destroy")} catch(ignored) {}
+            try {container.resizable("destroy")} catch(ignored) {}
         }
         if (this.viewer) {
             this.viewer.destroyViewer();

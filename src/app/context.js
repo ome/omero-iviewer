@@ -537,8 +537,6 @@ export default class Context {
         this.image_configs.set(image_config.id, image_config);
         this.selectConfig(image_config.id);
         image_config.bind();
-
-        // TODO: handle mdi handle placement
     }
 
     /**
