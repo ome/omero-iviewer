@@ -475,7 +475,7 @@ export default class ThumbnailSlider extends EventSubscriber {
         // pop up dialog to ask whether user wants to store rois changes
         // if we have a regions history, we have modifications
         // and are not cross domain
-        if (this.image_config &&
+        if (!this.context.useMDI && this.image_config &&
             this.image_config.regions_info &&
             this.image_config.regions_info.hasBeenModified() &&
             !Misc.useJsonp(this.context.server) &&

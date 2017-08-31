@@ -50,7 +50,6 @@ import {
  * The openlayers 3 viewer wrapped for better aurelia integration
  * @extends {EventSubscriber}
  */
-
 @customElement('ol3-viewer')
 @inject(Context, Element, BindingEngine)
 export default class Ol3Viewer extends EventSubscriber {
@@ -162,9 +161,20 @@ export default class Ol3Viewer extends EventSubscriber {
         let container = this.getContainer();
         container.draggable({
             handle: '.viewer-handle',
-            start: () => this.context.selectConfig(this.image_config.id)
+            start: () => this.context.selectConfig(this.image_config.id),
+            stop: (event, ui) => {
+                this.image_config.position.top = ui.position.top + 'px';
+                this.image_config.position.left = ui.position.left + 'px';
+            }
         });
-        container.resizable({containment: "parent", handles: "se"});
+        container.resizable({
+            containment: "parent", handles: "se",
+            stop: (e, ui) => {
+                this.image_config.size.width = ui.size.width + 'px';
+                this.image_config.size.height = ui.size.height + 'px';
+                this.resizeViewer();
+            }
+        });
         let imageDataReady = () => {
             // create viewer instance, register event subscriptions
             this.initViewer();
@@ -263,6 +273,8 @@ export default class Ol3Viewer extends EventSubscriber {
         this.context.resetInitParams();
         // use existing interpolation setting
         this.viewer.enableSmoothing(this.context.interpolate);
+        // initialize regions if rois tab active
+        if (this.context.isRoisTabActive()) this.initRegions();
         this.resizeViewer({window_resize: true, delay: 100});
     }
 
@@ -344,11 +356,16 @@ export default class Ol3Viewer extends EventSubscriber {
          // or at least not undefined in which case one property/value respectively
          // belongs to multiple shapes
          if (typeof params !== 'object' ||
-            !Misc.isArray(params.shapes) || params.shapes.length === 0 ||
-            (!Misc.isArray(params.properties) && typeof params.properties !== 'string') ||
-            (Misc.isArray(params.properties) && params.properties.length !== params.shapes.length) ||
-            (!Misc.isArray(params.values) && typeof params.values === 'undefined') ||
-            (Misc.isArray(params.values) && params.values.length !== params.shapes.length)) return;
+             params.config_id !== this.image_config.id ||
+             !Misc.isArray(params.shapes) || params.shapes.length === 0 ||
+             (!Misc.isArray(params.properties) &&
+                typeof params.properties !== 'string') ||
+             (Misc.isArray(params.properties) &&
+                params.properties.length !== params.shapes.length) ||
+             (!Misc.isArray(params.values) &&
+                typeof params.values === 'undefined') ||
+             (Misc.isArray(params.values) &&
+                params.values.length !== params.shapes.length)) return;
 
             // loop over all shapes, trying to set the property
             for (let i in params.shapes) {
@@ -396,7 +413,8 @@ export default class Ol3Viewer extends EventSubscriber {
          // at a minimum we need a viewer and params with a property
          if (this.viewer === null ||
              typeof params !== 'object' ||
-             typeof params.property !== 'string') return
+             typeof params.property !== 'string'||
+             params.config_id !== this.image_config.id) return
 
         // delegate to individual handler
         let prop = params.property.toLowerCase();
@@ -570,7 +588,11 @@ export default class Ol3Viewer extends EventSubscriber {
      * @memberof Ol3Viewer
      */
     initRegions() {
-        if (this.viewer === null) return;
+        if (this.viewer === null ||
+            this.image_config === null ||
+            this.image_config.regions_info === null ||
+            !this.image_config.regions_info.ready ||
+            !Misc.isArray(this.image_config.regions_info.tmp_data)) return;
 
         this.viewer.addRegions(this.image_config.regions_info.tmp_data);
         delete this.image_config.regions_info.tmp_data;

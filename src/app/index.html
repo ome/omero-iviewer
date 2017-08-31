@@ -75,10 +75,18 @@
                         ${context.useMDI && context.selected_config === id ?
                                    'mdi-selected' : ''}"
                  repeat.for="[id, conf] of context.image_configs"
+                 css="${'z-index:' +
+                        (context.useMDI && context.selected_config === id ?
+                            (conf.zIndex+1000) : conf.zIndex)}
+                      ${context.useMDI && context.image_configs.size > 1 ?
+                        ';position: absolute;top:' + conf.position.top +
+                        ';left:' + conf.position.left +
+                        ';width:' + conf.size.width +
+                        ';height:' + conf.size.height : ''}"
                  click.delegate="context.selectConfig(id)">
                 <div show.bind="context.useMDI && context.image_configs.size > 1"
                      class='viewer-handle'>
-                     <span click.delegate="context.removeImageConfig(id)"
+                     <span click.delegate="closeViewerInMDI(id)"
                            class="close">X</span>
                 </div>
                 <ol3-viewer image_config.bind="conf">

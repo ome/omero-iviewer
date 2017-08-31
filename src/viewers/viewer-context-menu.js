@@ -30,7 +30,7 @@ import {
  */
 
 @customElement('viewer-context-menu')
-@inject(Context, BindingEngine)
+@inject(Context, Element, BindingEngine)
 export default class ViewerContextMenu {
     /**
      * the selector for the context menu
@@ -52,6 +52,13 @@ export default class ViewerContextMenu {
      * @type {string}
      */
     full_screen_api_prefix = null;
+
+    /**
+     * flag if MDI needs restoring after fullscreen change
+     * @memberof ViewerContextMenu
+     * @type {boolean}
+     */
+    restoreMDI = false;
 
     /**
      * the location of the context menu click
@@ -92,10 +99,12 @@ export default class ViewerContextMenu {
     /**
      * @constructor
      * @param {Context} context the application context (injected)
+     * @param {Element} element the associated dom element (injected)
      * @param {BindingEngine} bindingEngine the BindingEngine (injected)
      */
-    constructor(context, bindingEngine) {
+    constructor(context, element, bindingEngine) {
         this.context = context;
+        this.element = element;
         this.bindingEngine = bindingEngine;
         // set initial image config
         this.image_config = this.context.getSelectedImageConfig();
@@ -190,16 +199,21 @@ export default class ViewerContextMenu {
      * @memberof ViewerContextMenu
      */
     onFullScreenChange() {
-        this.hideContextMenu();
         let isInFullScreen =
             document[this.full_screen_api_prefix + 'isFullScreen'] ||
             document[this.full_screen_api_prefix + 'FullScreen'] ||
             document[this.full_screen_api_prefix + 'FullscreenElement'];
 
         let contextMenu = this.getElement();
-        if (isInFullScreen)
-            $('#' + this.image_config.id).append(contextMenu)
-        else contextMenu.insertBefore(".center");
+        if (isInFullScreen) {
+            this.restoreMDI = this.context.useMDI;
+            if (this.restoreMDI) this.context.useMDI = false;
+            $('#' + this.image_config.id).append(contextMenu);
+        } else {
+            if (this.restoreMDI) this.context.useMDI = true;
+            $(this.element).append(contextMenu);
+        }
+        this.hideContextMenu();
     }
 
     /**

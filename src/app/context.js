@@ -19,6 +19,7 @@ import {noView} from 'aurelia-framework';
 import {EventAggregator} from 'aurelia-event-aggregator';
 import Misc from '../utils/misc';
 import ImageConfig from '../model/image_config';
+import {IMAGE_VIEWER_RESIZE} from '../events/events';
 import {
     APP_NAME, IVIEWER, INITIAL_TYPES, LUTS_NAMES, LUTS_PNG_URL, PLUGIN_NAME,
     PLUGIN_PREFIX, REQUEST_PARAMS, TABS, URI_PREFIX, WEB_API_BASE, WEBCLIENT,
@@ -111,7 +112,15 @@ export default class Context {
      * @memberof Context
      * @type {boolean}
      */
-    useMDI = true;
+    useMDI = false;
+
+    /**
+     * zIndex counter to keep order
+     *
+     * @memberof Context
+     * @type {boolean}
+     */
+    zIndexForMDI = 15;
 
     /**
      * the global value indicating the selected tab
@@ -497,6 +506,7 @@ export default class Context {
 
     rememberImageConfigChange(image_id, dataset_id) {
         if (!this.hasHTML5HistoryFeatures() ||
+            this.useMDI &&
             this.getSelectedImageConfig() === null) return;
 
         let old_image_id =
@@ -531,6 +541,10 @@ export default class Context {
         if (!this.useMDI)
             for (let [id, conf] of this.image_configs)
                 this.removeImageConfig(id,conf)
+        else {
+            this.zIndexForMDI++;
+            this.publish(IMAGE_VIEWER_RESIZE, {config_id: -1, delay: 100});
+        }
 
         let image_config = new ImageConfig(this, image_id, dataset_id);
         // store the image config in the map and make it the selected one
@@ -563,8 +577,12 @@ export default class Context {
         let selId = this.getSelectedImageConfig();
         if (selId && selId === conf.id) this.selected_config = null;
         // if in mdi, select another open config
-        if (this.useMDI && this.image_configs.size > 0)
+        let confSize = this.image_configs.size;
+        if (this.useMDI && confSize > 0) {
             this.selected_config = this.image_configs.keys().next().value;
+            if (confSize === 1)
+                this.publish(IMAGE_VIEWER_RESIZE, {config_id: -1, delay: 100});
+        }
 
         // call unbind and wipe reference
         conf.unbind();

@@ -166,15 +166,8 @@ export default class RegionsInfo  {
         this.image_info = image_info;
         // we want history
         this.history = new RegionsHistory(this);
-
-        // try to restore localstorage copied shapes
-        try {
-            this.copied_shapes = JSON.parse(
-                window.localStorage.getItem(IVIEWER + ".copy_shape_defs"));
-            if (!Misc.isArray(this.copied_shapes)) this.copied_shapes = [];
-            this.copied_image_dims = JSON.parse(
-                window.localStorage.getItem(IVIEWER + ".copy_image_dims"));
-        } catch(ignored) {}
+        // sync copied shapes with localStorage
+        this.syncCopiedShapesWithLocalStorage();
         // init default shape colors
         this.resetShapeDefaults();
     }
@@ -188,6 +181,22 @@ export default class RegionsInfo  {
     unbind() {
         this.resetRegionsInfo();
         this.history = null;
+    }
+
+    /**
+     * Updates the copied shapes list with what's presently in localStorage
+     *
+     * @memberof RegionsInfo
+     */
+    syncCopiedShapesWithLocalStorage() {
+        // try to restore localstorage copied shapes
+        try {
+            this.copied_shapes = JSON.parse(
+                window.localStorage.getItem(IVIEWER + ".copy_shape_defs"));
+            if (!Misc.isArray(this.copied_shapes)) this.copied_shapes = [];
+            this.copied_image_dims = JSON.parse(
+                window.localStorage.getItem(IVIEWER + ".copy_image_dims"));
+        } catch(ignored) {}
     }
 
     /**
@@ -524,6 +533,7 @@ export default class RegionsInfo  {
                 return;
         }
 
+        this.syncCopiedShapesWithLocalStorage();
         let params = {
             config_id: this.image_info.config_id,
             number: 1, paste: true,

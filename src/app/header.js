@@ -89,7 +89,7 @@ export class Header {
      */
      onImageConfigChange() {
         if (this.context.getSelectedImageConfig() === null) return;
-        
+
         this.image_info = this.context.getSelectedImageConfig().image_info;
 
         let imageInfoReady = () => {
@@ -108,6 +108,19 @@ export class Header {
             this.bindingEngine.propertyObserver(
                 this.image_info, 'ready').subscribe(
                     (newValue, oldValue) => imageInfoReady());
+     }
+
+     /**
+      * Toggles MDI/single image viewing mode
+      *
+      * @memberof Header
+      */
+     toggleMDI() {
+         if (this.context.useMDI)
+             for (let [id, conf] of this.context.image_configs)
+                 if (id !== this.context.selected_config)
+                      this.context.removeImageConfig(id,conf)
+         this.context.useMDI = !this.context.useMDI;
      }
 
      /**

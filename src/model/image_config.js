@@ -62,6 +62,27 @@ export default class ImageConfig extends History {
     regions_info = null;
 
     /**
+     * ui position
+     * @memberof ImageConfig
+     * @type {Object}
+     */
+    position = {top: '50px', left: '120px'};
+
+    /**
+     * ui size
+     * @memberof ImageConfig
+     * @type {Object}
+     */
+    size = {width: '320px', height: '250px'};
+
+    /**
+     * z-index
+     * @memberof ImageConfig
+     * @type {number}
+     */
+    zIndex = 15;
+
+    /**
      * @constructor
      * @param {Context} context the application context
      * @param {number} image_id the image id to be queried
@@ -71,6 +92,8 @@ export default class ImageConfig extends History {
         super(); // for history
         // for now this should suffice, especially given js 1 threaded nature
         this.id = new Date().getTime();
+        // we assign it the incremented zIndex
+        this.zIndex = context.zIndexForMDI;
         // go create the data objects for an image and its associated region
         this.image_info = new ImageInfo(context, this.id, image_id, dataset_id);
         this.regions_info = new RegionsInfo(this.image_info)

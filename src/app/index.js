@@ -33,7 +33,8 @@ import Context from './context';
 import Misc from '../utils/misc';
 import Ui from '../utils/ui';
 import {PLUGIN_PREFIX} from '../utils/constants';
-import {IMAGE_VIEWER_RESIZE} from '../events/events';
+import {IMAGE_VIEWER_RESIZE,
+        REGIONS_STORE_SHAPES, REGIONS_STORED_SHAPES} from '../events/events';
 
 /**
  * @classdesc
@@ -42,6 +43,12 @@ import {IMAGE_VIEWER_RESIZE} from '../events/events';
  */
 @inject(Context)
 export class Index  {
+    /**
+     * the handle on the the resize function (from setTimeout)
+     * @memberof Index
+     * @type {number}
+     */
+    resizeHandle = null;
 
     /**
      * @constructor
@@ -59,18 +66,30 @@ export class Index  {
      */
     attached() {
         // listen to resizing of the browser window
-        window.onresize =
-            () => this.context.publish(IMAGE_VIEWER_RESIZE,
+        let publishResize =
+            () => this.context.publish(
+                IMAGE_VIEWER_RESIZE,
                 {config_id: -1, window_resize: true});
+        window.onresize = () => {
+            if (typeof this.resizeHandle !== null) {
+                clearTimeout(this.resizeHandle);
+                this.resizeHandle = null;
+            }
+            this.resizeHandle = setTimeout(publishResize, 50);
+        };
         window.onbeforeunload = () => {
             if (Misc.useJsonp(this.context.server)) return null;
-            let conf = this.context.getSelectedImageConfig();
-            if (conf && conf.regions_info &&
-                !Misc.useJsonp(this.context.server) &&
-                conf.regions_info.hasBeenModified() &&
-                conf.regions_info.image_info.can_annotate)
-                    return "You have new/deleted/modified ROI(S).\n" +
-                           "If you leave you'll lose your changes.";
+            let hasBeenModified = false;
+            for (var [k,v] of this.context.image_configs) {
+                if (v && v.regions_info && v.regions_info.hasBeenModified() &&
+                    v.regions_info.image_info.can_annotate) {
+                    hasBeenModified = true;
+                    break;
+                }
+            }
+            if (hasBeenModified)
+                return "You have new/deleted/modified ROI(S).\n" +
+                        "If you leave you'll lose your changes.";
             return null;
         };
         // register resize and collapse handlers
@@ -78,6 +97,45 @@ export class Index  {
             this.context.eventbus,
             this.context.getPrefixedURI(PLUGIN_PREFIX, true),
         );
+    }
+
+    /**
+     * Closes viewer in MDI mode checking whether there is a need
+     * to store
+     *
+     * @memberof Index
+     */
+    closeViewerInMDI(id) {
+        if (!this.context.useMDI) return;
+
+        let conf = this.context.getImageConfig(id);
+        if (conf === null || conf.regions_info === null ||
+            !conf.regions_info.hasBeenModified() ||
+            Misc.useJsonp(this.context.server) ||
+            !conf.regions_info.image_info.can_annotate) {
+                this.context.removeImageConfig(id);
+                return;
+            };
+
+            let saveHandler = () => {
+                let tmpSub =
+                    this.context.eventbus.subscribe(
+                        REGIONS_STORED_SHAPES,
+                        (params={}) => {
+                            tmpSub.dispose();
+                            this.context.removeImageConfig(id);
+                    });
+                setTimeout(()=>
+                    this.context.publish(
+                        REGIONS_STORE_SHAPES,
+                        {config_id : conf.id,
+                         omit_client_update: true}), 20);
+            };
+            Ui.showConfirmationDialog(
+                'Save ROIS?',
+                'You have new/deleted/modified ROI(S).<br>' +
+                'Do you want to save your changes?',
+                saveHandler, () => this.context.removeImageConfig(id));
     }
 
     /**
