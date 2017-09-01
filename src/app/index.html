@@ -83,7 +83,7 @@
                         ';left:' + conf.position.left +
                         ';width:' + conf.size.width +
                         ';height:' + conf.size.height : ''}"
-                 click.delegate="context.selectConfig(id)">
+                 mousedown.delegate="context.selectConfig(id)">
                 <div show.bind="context.useMDI && context.image_configs.size > 1"
                      class='viewer-handle'>
                      <span click.delegate="closeViewerInMDI(id)"

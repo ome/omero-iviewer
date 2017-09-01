@@ -17,8 +17,8 @@
 //
 
 import {noView} from 'aurelia-framework';
-import ImageInfo from '../model/image_info';
-import RegionsInfo from '../model/regions_info';
+import ImageInfo from './image_info';
+import RegionsInfo from './regions_info';
 import Misc from '../utils/misc';
 import History from './history';
 
@@ -74,6 +74,13 @@ export default class ImageConfig extends History {
      * @type {Object}
      */
     size = {width: '320px', height: '250px'};
+
+    /**
+     * show histogram flag
+     * @memberof ImageConfig
+     * @type {boolean}
+     */
+    show_histogram = false;
 
     /**
      * z-index

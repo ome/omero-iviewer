@@ -140,6 +140,8 @@ export default class Settings extends EventSubscriber {
             // instantiate histogram
             if (this.histogram) this.histogram.destroyHistogram();
             this.histogram = new Histogram(this.image_config.image_info);
+            if (this.image_config.show_histogram)
+                this.histogram.toggleHistogramVisibilty(true);
         };
 
         // tear down old observers/subscription
@@ -230,7 +232,8 @@ export default class Settings extends EventSubscriber {
         event.preventDefault();
 
         if (this.histogram) {
-            this.histogram.toggleHistogramVisibilty(event.target.checked);
+            this.image_config.show_histogram =
+                this.histogram.toggleHistogramVisibilty(event.target.checked);
         }
         return false;
     }

@@ -159,9 +159,10 @@ export default class Ol3Viewer extends EventSubscriber {
      */
     attached() {
         let container = this.getContainer();
+        // additions that are necessary for mdi
+        // we need the viewers to be draggable, resizable
         container.draggable({
             handle: '.viewer-handle',
-            start: () => this.context.selectConfig(this.image_config.id),
             stop: (event, ui) => {
                 this.image_config.position.top = ui.position.top + 'px';
                 this.image_config.position.left = ui.position.left + 'px';
@@ -184,6 +185,10 @@ export default class Ol3Viewer extends EventSubscriber {
                 this.bindingEngine.propertyObserver(
                     this.image_config.regions_info, 'ready').subscribe(
                         (newValue, oldValue) => this.initRegions());
+            // mdi needs to switch image config when using controls
+            container.find('.ol-control').on(
+                'mousedown',
+                () => this.context.selectConfig(this.image_config.id))
         };
         // if the data is ready we initalize the viewer now,
         // otherwise we listen via the observer
@@ -217,6 +222,7 @@ export default class Ol3Viewer extends EventSubscriber {
     detached() {
         if (this.context.useMDI) {
             let container = this.getContainer();
+            container.find('.ol-control').off('mousedown');
             try {container.draggable("destroy")} catch(ignored) {}
             try {container.resizable("destroy")} catch(ignored) {}
         }
