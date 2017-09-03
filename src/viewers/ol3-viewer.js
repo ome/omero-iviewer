@@ -161,6 +161,20 @@ export default class Ol3Viewer extends EventSubscriber {
         let container = this.getContainer();
         // additions that are necessary for mdi
         // we need the viewers to be draggable, resizable
+        // also place the viewer within the frame boundaries
+        let frame = $('.frame');
+        let minX = frame.position().left+10;
+        let maxX =
+            frame.position().left+frame.width()-
+                parseInt(this.image_config.size.width);
+        let minY = frame.position().top+10;
+        let maxY =
+            frame.position().top+frame.height()-
+                parseInt(this.image_config.size.height);
+        this.image_config.position.top =
+            Misc.getRandomInteger(minY,maxY) + 'px';
+        this.image_config.position.left =
+            Misc.getRandomInteger(minX,maxX) + 'px';
         container.draggable({
             handle: '.viewer-handle',
             stop: (event, ui) => {
