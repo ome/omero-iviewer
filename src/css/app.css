@@ -1143,7 +1143,7 @@ thumbnail-slider img {
 
 .viewer-handle {
     width: 100%;
-    height: 20px;
+    height: 25px;
     background-color: rgba(31,106,170,1);
 }
 .viewer-handle .close {
@@ -1165,4 +1165,13 @@ thumbnail-slider img {
     height: 30px;
     float: left;
     margin-left: 5px;
+}
+
+.dropdown-image-config {
+    position: absolute;
+    float: left;
+}
+.dropdown-image-config button {
+    padding: 1px 10px;
+    margin: 1px;
 }

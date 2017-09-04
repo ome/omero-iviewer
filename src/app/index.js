@@ -139,6 +139,32 @@ export class Index  {
     }
 
     /**
+     * Links the image config
+     * @memberof Index
+     */
+    linkImageConfig(id, link_id) {
+        let conf = this.context.getImageConfig(id);
+        if (conf === null) return;
+
+        if (typeof link_id === "string" && link_id === 'none') {
+            // remove any previous image config links
+            conf.linked_image_config = null;
+            $('#' + id + " .dropdown-image-config button").text("None");
+            return;
+        }
+
+        let linked_conf = this.context.getImageConfig(link_id);
+        if (linked_conf !== null) {
+            conf.linked_image_config = link_id;
+            $('#' + id + " .dropdown-image-config button").text(link_id);
+        }
+    }
+
+    highlightImageConfig(link_id, flag=false) {
+        $('#' + link_id).css("border-color", flag ? "yellow" : "");
+    }
+
+    /**
      * Overridden aurelia lifecycle method:
      * called when the view and its elemetns are detached from the PAL
      * (dom abstraction)

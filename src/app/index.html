@@ -84,6 +84,27 @@
                         ';width:' + conf.size.width +
                         ';height:' + conf.size.height : ''}"
                  mousedown.delegate="context.selectConfig(id)">
+                 <div class="dropdown dropdown-image-config"
+                      show.bind="context.useMDI && context.image_configs.size > 1"
+                      title="Link Interaction">
+                     <button type="button"
+                         class="btn btn-default btn-sm dropdown-toggle"
+                         data-toggle="dropdown">None</button>
+                     <ul class="dropdown-menu">
+                         <li click.delegate="linkImageConfig(id, 'none')">
+                             <a href="#">None</a>
+                         </li>
+                         <li repeat.for="[link_id, link_conf] of context.image_configs"
+                             show.bind="link_id !== id &&
+                                        link_conf.linked_image_config !== id &&
+                                        conf.linked_image_config !== link_id"
+                             click.delegate="linkImageConfig(id, link_id)"
+                             mouseover.delegate="highlightImageConfig(link_id, true)"
+                             mouseout.delegate="highlightImageConfig(link_id)">
+                             <a href="#">${link_id}</a>
+                         </li>
+                     </ul>
+                 </div>
                 <div show.bind="context.useMDI && context.image_configs.size > 1"
                      class='viewer-handle'>
                      <span click.delegate="closeViewerInMDI(id)"

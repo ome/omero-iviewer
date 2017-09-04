@@ -38,13 +38,6 @@ export default class ImageConfig extends History {
     /**
      * revision for history
      * @memberof ImageConfig
-     * @type {ImageInfo}
-     */
-    old_revision = 0;
-
-    /**
-     * revision for history
-     * @memberof ImageConfig
      * @type {number}
      */
     revision = 0;
@@ -60,6 +53,12 @@ export default class ImageConfig extends History {
      * @type {RegionsInfo}
      */
     regions_info = null;
+
+    /**
+     * @memberof ImageConfig
+     * @type {number}
+     */
+    linked_image_config = null;
 
     /**
      * ui position
@@ -125,15 +124,6 @@ export default class ImageConfig extends History {
     unbind() {
         this.regions_info.unbind();
         this.image_info.unbind();
-    }
-
-    /**
-     * Returns whether the revisions align or there has been a change
-     * @memberof ImageConfig
-     * @return {boolean} true if the revisions changed, i.e. if we need to save to history
-     */
-    hasChanged() {
-        return this.old_revision !== this.revision;
     }
 
     /**
