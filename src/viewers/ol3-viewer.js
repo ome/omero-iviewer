@@ -26,6 +26,7 @@ import {Converters} from '../utils/converters';
 import Ui from '../utils/ui';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {ol3} from '../../libs/ol3-viewer.js';
+import Ol3ViewerLinkedEvents from './ol3-viewer-linked-events';
 import * as FileSaver from '../../node_modules/file-saver';
 import {draggable} from 'jquery-ui/ui/widgets/draggable';
 import {resizable} from 'jquery-ui/ui/widgets/resizable';
@@ -53,6 +54,13 @@ import {
 @customElement('ol3-viewer')
 @inject(Context, Element, BindingEngine)
 export default class Ol3Viewer extends EventSubscriber {
+    /**
+     * handles mdi and linked image config syncing
+     * @memberof Ol3Viewer
+     * @type {Ol3ViewerLinkedEvents}
+     */
+     linked_events = new Ol3ViewerLinkedEvents(this);
+
     /**
      * the image config reference to work with (bound via template)
      * @memberof Ol3Viewer
@@ -307,10 +315,11 @@ export default class Ol3Viewer extends EventSubscriber {
     changeDimension(params = {}) {
         // we ignore notifications that don't concern us
         // and need a dim identifier as well an array value
-        if (params.config_id !== this.image_config.id ||
-            this.viewer === null ||
+        if (this.viewer === null ||
+            params.config_id !== this.image_config.id ||
             typeof params.dim !== 'string' ||
-            !Misc.isArray(params.value)) return;
+            !Misc.isArray(params.value) ||
+            params.value.length === 0) return;
 
         this.viewer.setDimensionIndex(params.dim, params.value);
     }
@@ -329,15 +338,22 @@ export default class Ol3Viewer extends EventSubscriber {
         if (this.viewer === null) return;
 
         let isSameConfig = params.config_id === this.image_config.id;
-        if (isSameConfig && typeof params.model === 'string')
+        let isLinkedConfig =
+            params.config_id === this.image_config.linked_image_config;
+
+        if ((isSameConfig || isLinkedConfig) &&
+            typeof params.model === 'string') {
             this.viewer.changeImageModel(params.model);
-        else if (isSameConfig && typeof params.projection === 'string')
+            this.linked_events.changeImageSettings(params);
+        } else if (isSameConfig && typeof params.projection === 'string')
             this.viewer.changeImageProjection(
                 params.projection,
                 this.image_config.image_info.projection_opts);
-        else if (isSameConfig && Misc.isArray(params.ranges))
+        else if ((isSameConfig || isLinkedConfig) &&
+                    Misc.isArray(params.ranges) && params.ranges.length > 0) {
             this.viewer.changeChannelRange(params.ranges);
-        else if (typeof params.interpolate === 'boolean')
+            this.linked_events.changeImageSettings(params);
+        } else if (typeof params.interpolate === 'boolean')
             this.viewer.enableSmoothing(params.interpolate);
     }
 

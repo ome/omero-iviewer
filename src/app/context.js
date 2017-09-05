@@ -578,10 +578,18 @@ export default class Context {
         if (selId && selId === conf.id) this.selected_config = null;
         // if in mdi, select another open config
         let confSize = this.image_configs.size;
-        if (this.useMDI && confSize > 0) {
-            this.selected_config = this.image_configs.keys().next().value;
-            if (confSize === 1)
-                this.publish(IMAGE_VIEWER_RESIZE, {config_id: -1, delay: 100});
+        if (this.useMDI) {
+            // remove all links to the deleted config
+            for (let [id, c] of this.image_configs)
+                if (c.linked_image_config === conf.id)
+                    c.linked_image_config = null;
+            // choose next selected image config
+            if (confSize > 0) {
+                this.selected_config = this.image_configs.keys().next().value;
+                if (confSize === 1)
+                    this.publish(
+                        IMAGE_VIEWER_RESIZE, {config_id: -1, delay: 100});
+            }
         }
 
         // call unbind and wipe reference

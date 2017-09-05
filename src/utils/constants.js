@@ -84,6 +84,12 @@ export const PLUGIN_PREFIX = "PLUGIN_PREFIX";
 export const VIEWER_ELEMENT_PREFIX = "ol3_viewer_";
 
 /**
+ * the floating point precision used for channel settings
+ * @type {number}
+ */
+export const FLOATING_POINT_PRECISION = 3;
+
+/**
  * the possible request params that we accept
  * @type {Object}
  */

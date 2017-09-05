@@ -86,10 +86,13 @@
                  mousedown.delegate="context.selectConfig(id)">
                  <div class="dropdown dropdown-image-config"
                       show.bind="context.useMDI && context.image_configs.size > 1"
-                      title="Link Interaction">
+                      title="Link Image Settings">
                      <button type="button"
                          class="btn btn-default btn-sm dropdown-toggle"
-                         data-toggle="dropdown">None</button>
+                         data-toggle="dropdown">
+                            ${conf.linked_image_config === null ?
+                            'None' : conf.linked_image_config}
+                     </button>
                      <ul class="dropdown-menu">
                          <li click.delegate="linkImageConfig(id, 'none')">
                              <a href="#">None</a>

@@ -140,6 +140,8 @@ export class Index  {
 
     /**
      * Links the image config
+     * @param {number} id the image config id
+     * @param {number} link_id the image config id we want to link to
      * @memberof Index
      */
     linkImageConfig(id, link_id) {
@@ -149,17 +151,23 @@ export class Index  {
         if (typeof link_id === "string" && link_id === 'none') {
             // remove any previous image config links
             conf.linked_image_config = null;
-            $('#' + id + " .dropdown-image-config button").text("None");
+            //$('#' + id + " .dropdown-image-config button").text("None");
             return;
         }
 
         let linked_conf = this.context.getImageConfig(link_id);
         if (linked_conf !== null) {
             conf.linked_image_config = link_id;
-            $('#' + id + " .dropdown-image-config button").text(link_id);
+            //$('#' + id + " .dropdown-image-config button").text(link_id);
         }
     }
 
+    /**
+     * Visually highlights border of hovered over image config
+     * @param {number} link_id the linked image config id
+     * @param {boolean} flag sets highlighted border style if true
+     * @memberof Index
+     */
     highlightImageConfig(link_id, flag=false) {
         $('#' + link_id).css("border-color", flag ? "yellow" : "");
     }
