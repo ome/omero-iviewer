@@ -409,15 +409,18 @@ export default class ViewerContextMenu {
         if (regInf.selected_shapes.length === 0) return;
 
         let units = regInf.image_info.image_pixels_size.symbol_x || 'px';
+        let img_id = regInf.image_info.image_id;
+        let img_name = regInf.image_info.short_image_name;
         let csv =
-            "roi_id,shape_id,type,z,t,\"area (" + units +
+            "image_id,image_name,roi_id,shape_id,type,z,t,\"area (" + units +
             "\u00b2)\",\"length (" + units + ")\"" + CSV_LINE_BREAK;
         for (let i in regInf.selected_shapes) {
             let id = regInf.selected_shapes[i];
             let shape = regInf.getShape(id);
             if (shape === null) continue;
             let roi_id = id.substring(0, id.indexOf(':'));
-            csv += roi_id + "," + shape['@id'] + "," + shape.type + "," +
+            csv += img_id + ",\"" + img_name + "\"," +
+                    roi_id + "," + shape['@id'] + "," + shape.type + "," +
                     (shape.TheZ+1) + "," + (shape.TheT+1) + "," +
                     (shape.Area < 0 ? '' : shape.Area) + "," +
                     (shape.Length < 0 ? '' : shape.Length) + CSV_LINE_BREAK;
