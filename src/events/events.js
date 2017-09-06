@@ -20,6 +20,8 @@
 export const IMAGE_CANVAS_DATA = "IMAGE_CANVAS_DATA";
 /** whenever the image viewer needs to be resized */
 export const IMAGE_VIEWER_RESIZE = "IMAGE_VIEWER_RESIZE";
+/** whenever an image viewer interaction (zoom/drag) ocurrs */
+export const IMAGE_VIEWER_INTERACTION = "IMAGE_VIEWER_INTERACTION";
 /** whenever the image viewer split view is turned on/off */
 export const IMAGE_VIEWER_SPLIT_VIEW = "IMAGE_VIEWER_SPLIT_VIEW";
 /** whenever the image rendering settings change: channel, model, projection*/

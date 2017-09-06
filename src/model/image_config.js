@@ -61,6 +61,16 @@ export default class ImageConfig extends History {
     linked_image_config = null;
 
     /**
+     * @memberof ImageConfig
+     * @type {Object}
+     */
+    dimension_locks = {
+        z: true,
+        t: true,
+        c: false
+    }
+
+    /**
      * ui position
      * @memberof ImageConfig
      * @type {Object}

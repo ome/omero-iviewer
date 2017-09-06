@@ -84,30 +84,59 @@
                         ';width:' + conf.size.width +
                         ';height:' + conf.size.height : ''}"
                  mousedown.delegate="context.selectConfig(id)">
-                 <div class="dropdown dropdown-image-config"
-                      show.bind="context.useMDI && context.image_configs.size > 1"
-                      title="Link Image Settings">
-                     <button type="button"
-                         class="btn btn-default btn-sm dropdown-toggle"
-                         data-toggle="dropdown">
-                            ${conf.linked_image_config === null ?
-                            'None' : conf.linked_image_config}
-                     </button>
-                     <ul class="dropdown-menu">
-                         <li click.delegate="linkImageConfig(id, 'none')">
-                             <a href="#">None</a>
-                         </li>
-                         <li repeat.for="[link_id, link_conf] of context.image_configs"
-                             show.bind="link_id !== id &&
-                                        link_conf.linked_image_config !== id &&
-                                        conf.linked_image_config !== link_id"
-                             click.delegate="linkImageConfig(id, link_id)"
-                             mouseover.delegate="highlightImageConfig(link_id, true)"
-                             mouseout.delegate="highlightImageConfig(link_id)">
-                             <a href="#">${link_id}</a>
-                         </li>
-                     </ul>
-                 </div>
+                 <div class="config-linking">
+                     <div class="dropdown dropdown-image-config"
+                          show.bind="context.useMDI && context.image_configs.size > 1"
+                          title="Link Image Settings">
+                         <button type="button"
+                             class="btn btn-default btn-sm dropdown-toggle"
+                             data-toggle="dropdown">
+                                ${conf.linked_image_config === null ?
+                                'None' : conf.linked_image_config}
+                         </button>
+                         <ul class="dropdown-menu">
+                             <li click.delegate="linkImageConfig(id, 'none')">
+                                 <a href="#">None</a>
+                             </li>
+                             <li repeat.for="[link_id, link_conf] of context.image_configs"
+                                 show.bind="link_id !== id &&
+                                            link_conf.linked_image_config !== id &&
+                                            conf.linked_image_config !== link_id"
+                                 click.delegate="linkImageConfig(id, link_id)"
+                                 mouseover.delegate="highlightImageConfig(link_id, true)"
+                                 mouseout.delegate="highlightImageConfig(link_id)">
+                                 <a href="#">${link_id}</a>
+                             </li>
+                         </ul>
+                     </div>
+                     <div class="config-locks" show.bind="conf.linked_image_config !== null">
+                         <label show.bind="conf.image_info.ready &&
+                                            conf.image_info.dimensions.max_z > 1"
+                                title="Lock Z">
+                             <input type="checkbox"
+                                 checked.bind="conf.dimension_locks.z"
+                                 change.delegate="
+                                     lockDimension(id, 'z', $event.target.checked)"/>
+                             &nbsp;Z
+                         </label>
+                         <label show.bind="conf.image_info.ready &&
+                                            conf.image_info.dimensions.max_t > 1"
+                                title="Lock T">
+                             <input type="checkbox"
+                                 checked.bind="conf.dimension_locks.t"
+                                 change.delegate="
+                                    lockDimension(id, 't', $event.target.checked)"/>
+                             &nbsp;T
+                         </label>
+                         <label title="Lock Channel Settings">
+                             <input type="checkbox"
+                                 checked.bind="conf.dimension_locks.c"
+                                 change.delegate="
+                                    lockDimension(id, 'c', $event.target.checked)"/>
+                             &nbsp;C
+                         </label>
+                    </div>
+                </div>
                 <div show.bind="context.useMDI && context.image_configs.size > 1"
                      class='viewer-handle'>
                      <span click.delegate="closeViewerInMDI(id)"

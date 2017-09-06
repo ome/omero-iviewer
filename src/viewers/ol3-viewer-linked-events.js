@@ -78,6 +78,18 @@ export default class Ol3ViewerLinkedEvents {
     }
 
     /**
+     * Enables/disabled event sending
+     *
+     * @memberof Ol3ViewerLinkedEvents
+     * @param {boolean} flag if true we allow event publishing, otherwise not
+     */
+    preventEventPublish(flag = false) {
+        if (!this.hasViewerInstance()) return;
+
+        this.ol3_viewer.context.prevent_event_notification = flag;
+    }
+
+    /**
      * Checks whether the present Ol3Viewer instance (and its ImageConfig)
      * are linked to the given image config id
      *
@@ -104,17 +116,22 @@ export default class Ol3ViewerLinkedEvents {
         if (!this.isValidAndLinkedViewerInstance(params.config_id)) return;
 
         let conf = this.getImageConfig();
+        // only if the lock flag for c is set
+        if (!conf.dimension_locks.c) return;
+
         if (typeof params.model === 'string') {
             let oldValue = conf.image_info.model;
             let newValue = params.model;
-            // update data
-            conf.image_info.model = newValue;
-            // add a change entry
-            conf.addHistory({
-                prop: ['image_info', 'model'],
-                old_val : oldValue, new_val: newValue, type: 'string'});
-            // propagate to ol3 viewer
-            this.getViewer().changeImageModel(params.model);
+            if (oldValue !== newValue) {
+                // update data
+                conf.image_info.model = newValue;
+                // add a change entry
+                conf.addHistory({
+                    prop: ['image_info', 'model'],
+                    old_val : oldValue, new_val: newValue, type: 'string'});
+                // propagate to ol3 viewer
+                this.getViewer().changeImageModel(params.model);
+            }
         } else if (Misc.isArray(params.ranges) && params.ranges.length > 0) {
             // make a copy because we need to alter it potentially
             // if we exceed bounds and have to clamp at the min/max
@@ -191,8 +208,61 @@ export default class Ol3ViewerLinkedEvents {
                     }
                 }
             }
-            if (history.length > 0) conf.addHistory(history);
-            this.getViewer().changeChannelRange(ranges);
+            if (history.length > 0) {
+                conf.addHistory(history);
+                this.getViewer().changeChannelRange(ranges);
+            }
         }
+    }
+
+    /**
+     * Deals with dimension changes for linked image configs
+     *
+     * @memberof Ol3ViewerLinkedEvents
+     * @param {Object} params the event notification parameters
+     */
+    setDimensionIndex(params = {}) {
+        if (!this.isValidAndLinkedViewerInstance(params.config_id)) return;
+
+        let conf = this.getImageConfig();
+        // only if the lock flag for c is set
+        if (!conf.dimension_locks[params.dim]) return;
+
+        let dims = conf.image_info.dimensions;
+        let oldValue = dims[params.dim];
+        let dim_max = dims['max_' + params.dim];
+        let newValue = params.value[0];
+        // we must not exceed the bound
+        if (newValue >= dim_max) return;
+
+        this.preventEventPublish(true);
+        try {
+            if (oldValue !== newValue) {
+                // update data
+                dims[params.dim] = newValue;
+                // add a change entry
+                conf.addHistory({
+                    prop: ['image_info', 'dimensions', params.dim],
+                    old_val : oldValue, new_val: newValue, type: 'number'});
+                // propagate to ol3 viewer
+                this.getViewer().setDimensionIndex(params.dim, [newValue]);
+            }
+        } catch(just_in_case) {
+            console.error(just_in_case);
+        }
+        this.preventEventPublish(false);
+    }
+
+    /**
+     * Synchronizes zoom and center of any linked Ol3 Viewer
+     *
+     * @memberof Ol3ViewerLinkedEvents
+     * @param {Object} params the event notification parameters
+     */
+    syncLinkedViewer(params = {}) {
+        if (!this.isValidAndLinkedViewerInstance(params.config_id)) return;
+
+        this.getViewer().setCenterAndResolution(
+            params.center, params.resolution);
     }
 }

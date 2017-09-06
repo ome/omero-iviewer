@@ -1168,10 +1168,20 @@ thumbnail-slider img {
 }
 
 .dropdown-image-config {
-    position: absolute;
     float: left;
 }
 .dropdown-image-config button {
     padding: 1px 10px;
     margin: 1px;
+}
+
+.config-linking {
+    position: absolute;
+}
+.config-linking .config-locks {
+    float: right;
+    color: rgba(255,255,255,1);
+}
+.config-locks label {
+    margin-left: 10px;
 }

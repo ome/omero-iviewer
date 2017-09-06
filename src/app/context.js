@@ -58,6 +58,14 @@ export default class Context {
     eventbus = null;
 
     /**
+     * Flag to disable event notification
+     *
+     * @memberof Context
+     * @type {EventAggregator}
+     */
+    prevent_event_notification = false;
+
+    /**
      * server information (if not localhost)
      *
      * @memberof Context
@@ -656,6 +664,7 @@ export default class Context {
      * @memberof Context
      */
     publish() {
+        if (this.prevent_event_notification) return;
         this.eventbus.publish.apply(this.eventbus, arguments);
     }
 

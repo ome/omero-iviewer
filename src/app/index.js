@@ -173,6 +173,20 @@ export class Index  {
     }
 
     /**
+     *
+     * @param {number} id the image config id
+     * @param {string} dim the dimension to lock, e.g. z,t,c
+     * @param {boolean} flag if true the dimension is locked to the linked config
+     * @memberof Index
+     */
+    lockDimension(id, dim = 'c', flag) {
+        let conf = this.context.getImageConfig(id);
+        if (conf === null) return;
+
+        conf.dimension_locks[dim] = flag;
+    }
+
+    /**
      * Overridden aurelia lifecycle method:
      * called when the view and its elemetns are detached from the PAL
      * (dom abstraction)

@@ -223,6 +223,14 @@ ome.ol3.Viewer = function(id, options) {
         opts['eventbus'] : null;
 
     /**
+     * a flag to indicate the no events should be sent
+     *
+     * @type {boolean}
+     * @private
+     */
+    this.prevent_event_notification_ = false;
+
+    /**
      * The initialization function performs the following steps:
      * 1. Request image data as json (if not handed in)
      * 2. Store the image data internally (if not handed in)
@@ -548,12 +556,26 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
     // enable scalebar by default
     this.toggleScaleBar(true);
 
+    // helper to broadcast a viewer interaction (zoom and drag)
+    var notifyAboutViewerInteraction = function(viewer) {
+        ome.ol3.utils.Misc.sendEventNotification(
+            viewer, "IMAGE_VIEWER_INTERACTION",
+            {
+                "z": viewer.getDimensionIndex('z'),
+                "t": viewer.getDimensionIndex('t'),
+                "c": viewer.getDimensionIndex('c'),
+                "center": viewer.viewer_.getView().getCenter(),
+                "resolution": viewer.viewer_.getView().getResolution()
+            });
+    };
+
     // listens to resolution changes
     this.onViewResolutionListener =
        ol.events.listen( // register a resolution handler for zoom display
            this.viewer_.getView(), "change:resolution",
            function(event) {
                this.displayResolutionInPercent();
+               if (this.eventbus_) notifyAboutViewerInteraction(this);
            }, this);
     this.displayResolutionInPercent();
 
@@ -572,14 +594,7 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
            ol.events.listen(
                this.viewer_, ol.MapEventType.MOVEEND,
                function(event) {
-                   ome.ol3.utils.Misc.sendEventNotification(
-                       this.viewer_, "IMAGE_INTERACTION",
-                       {
-                           "z": this.getDimensionIndex('z'),
-                           "t": this.getDimensionIndex('t'),
-                           "c": this.getDimensionIndex('c'),
-                           "center": this.viewer_.getView().getCenter()
-                       });
+                   notifyAboutViewerInteraction(this);
                }, this);
     }
 }
@@ -1135,10 +1150,11 @@ ome.ol3.Viewer.prototype.removeInteractionOrControl = function(key, descend) {
  * @param {Array.<number>} values the value(s)
  */
 ome.ol3.Viewer.prototype.setDimensionIndex = function(key, values) {
-    if (typeof(key) !== 'string' || key.length === 0) // dimension key checks
-        return;
-    var lowerCaseKey = key.substr(0,1).toLowerCase();
+    // dimension key and values check
+    if (typeof(key) !== 'string' || key.length === 0 ||
+        !ome.ol3.utils.Misc.isArray(values)) return;
 
+    var lowerCaseKey = key.substr(0,1).toLowerCase();
     var omeroImage = this.getImage();
     var dimLookup =
         typeof ome.ol3.DIMENSION_LOOKUP[lowerCaseKey] === 'object' ?
@@ -1656,14 +1672,9 @@ ome.ol3.Viewer.prototype.storeRegions =
                         }
                     }
                     if (this.eventbus_) {
-                        this.eventbus_.publish(
-                            "REGIONS_STORED_SHAPES", {
-                                'config_id':
-                                    ome.ol3.utils.Misc.getTargetId(
-                                        this.viewer_),
-                                'shapes': ids,
-                                'is_delete': isDeleteRequest
-                            });
+                        ome.ol3.utils.Misc.sendEventNotification(
+                            this, "REGIONS_STORED_SHAPES", {
+                                'shapes': ids, 'is_delete': isDeleteRequest});
                     }
             }
             return false;
@@ -2013,12 +2024,8 @@ ome.ol3.Viewer.prototype.sendCanvasContent = function(full_extent) {
     var that = this;
     var publishEvent = function(data) {
         if (that.eventbus_ === null) return;
-        that.eventbus_.publish(
-            "IMAGE_CANVAS_DATA",
-            {"config_id": ome.ol3.utils.Misc.getTargetId(that.viewer_),
-             "supported": supported,
-             "data": data
-             });
+        ome.ol3.utils.Misc.sendEventNotification(
+            that, "IMAGE_CANVAS_DATA", {"supported": supported, "data": data});
     };
     var omeroImage = this.getImage();
     if (omeroImage === null || !supported) {
@@ -2099,6 +2106,32 @@ ome.ol3.Viewer.prototype.getLengthAndAreaForShapes = function(ids, recalculate) 
     }
 
     return ret;
+}
+
+/**
+ * Sets center and resolution for view
+ *
+ * @param {Array.<number>=} center the new center as an array: [x,y]
+ * @param {number=} resolution the new resolution
+ */
+ome.ol3.Viewer.prototype.setCenterAndResolution = function(center, resolution) {
+    this.prevent_event_notification_ = true;
+    try {
+        // resolution first (if given)
+        if (typeof resolution === 'number' && !isNaN(resolution)) {
+            var constrainedResolution =
+                this.viewer_.getView().constrainResolution(resolution);
+            if (typeof constrainedResolution === 'number')
+                this.viewer_.getView().setResolution(constrainedResolution);
+        }
+
+        // center next (if given)
+        if (ome.ol3.utils.Misc.isArray(center) && center.length === 2 &&
+            typeof center[0] === 'number' && typeof center[1] === 'number') {
+            this.viewer_.getView().setCenter(center);
+        }
+    } catch(just_in_case) {}
+    this.prevent_event_notification_ = false;
 }
 
 
@@ -2304,3 +2337,8 @@ goog.exportProperty(
     ome.ol3.Viewer.prototype,
     'getLengthAndAreaForShapes',
     ome.ol3.Viewer.prototype.getLengthAndAreaForShapes);
+
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
+    'setCenterAndResolution',
+    ome.ol3.Viewer.prototype.setCenterAndResolution);

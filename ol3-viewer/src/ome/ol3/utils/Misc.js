@@ -361,6 +361,7 @@ ome.ol3.utils.Misc.parseProjectionParameter = function(projection_info) {
  */
 ome.ol3.utils.Misc.sendEventNotification = function(viewer, type, content, delay) {
     if (!(viewer instanceof ome.ol3.Viewer) ||
+        viewer.prevent_event_notification_ ||
         typeof type !== 'string' ||
         type.length === 0) return;
 

@@ -36,8 +36,8 @@ import {
 } from '../utils/constants';
 import {
     IMAGE_CANVAS_DATA, IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY,
-    IMAGE_SETTINGS_CHANGE, IMAGE_VIEWER_RESIZE, IMAGE_VIEWER_SPLIT_VIEW,
-    IMAGE_VIEWPORT_CAPTURE,
+    IMAGE_SETTINGS_CHANGE, IMAGE_VIEWER_INTERACTION, IMAGE_VIEWER_RESIZE,
+    IMAGE_VIEWER_SPLIT_VIEW, IMAGE_VIEWPORT_CAPTURE,
     REGIONS_CHANGE_MODES, REGIONS_COPY_SHAPES, REGIONS_DRAW_SHAPE,
     REGIONS_GENERATE_SHAPES, REGIONS_HISTORY_ACTION, REGIONS_HISTORY_ENTRY,
     REGIONS_MODIFY_SHAPES, REGIONS_PROPERTY_CHANGED, REGIONS_SET_PROPERTY,
@@ -95,6 +95,8 @@ export default class Ol3Viewer extends EventSubscriber {
      * @type {Array.<string,function>}
      */
     sub_list = [
+        [IMAGE_VIEWER_INTERACTION,
+            (params={}) => this.syncLinkedViewer(params)],
         [IMAGE_VIEWER_RESIZE,
             (params={}) => this.resizeViewer(params)],
         [IMAGE_DIMENSION_CHANGE,
@@ -316,12 +318,13 @@ export default class Ol3Viewer extends EventSubscriber {
         // we ignore notifications that don't concern us
         // and need a dim identifier as well an array value
         if (this.viewer === null ||
-            params.config_id !== this.image_config.id ||
             typeof params.dim !== 'string' ||
             !Misc.isArray(params.value) ||
             params.value.length === 0) return;
 
-        this.viewer.setDimensionIndex(params.dim, params.value);
+        if (params.config_id === this.image_config.id)
+            this.viewer.setDimensionIndex(params.dim, params.value);
+        else this.linked_events.setDimensionIndex(params);
     }
 
     /**
@@ -338,21 +341,16 @@ export default class Ol3Viewer extends EventSubscriber {
         if (this.viewer === null) return;
 
         let isSameConfig = params.config_id === this.image_config.id;
-        let isLinkedConfig =
-            params.config_id === this.image_config.linked_image_config;
-
-        if ((isSameConfig || isLinkedConfig) &&
-            typeof params.model === 'string') {
-            this.viewer.changeImageModel(params.model);
-            this.linked_events.changeImageSettings(params);
+        if (typeof params.model === 'string') {
+            if (isSameConfig) this.viewer.changeImageModel(params.model);
+            else this.linked_events.changeImageSettings(params);
         } else if (isSameConfig && typeof params.projection === 'string')
             this.viewer.changeImageProjection(
                 params.projection,
                 this.image_config.image_info.projection_opts);
-        else if ((isSameConfig || isLinkedConfig) &&
-                    Misc.isArray(params.ranges) && params.ranges.length > 0) {
-            this.viewer.changeChannelRange(params.ranges);
-            this.linked_events.changeImageSettings(params);
+        else if (Misc.isArray(params.ranges) && params.ranges.length > 0) {
+            if (isSameConfig) this.viewer.changeChannelRange(params.ranges);
+            else this.linked_events.changeImageSettings(params);
         } else if (typeof params.interpolate === 'boolean')
             this.viewer.enableSmoothing(params.interpolate);
     }
@@ -1091,7 +1089,7 @@ export default class Ol3Viewer extends EventSubscriber {
      * @param {Object} params the event notification parameters
      * @return
      */
-    captureViewport(params) {
+    captureViewport(params={}) {
         if (this.viewer === null ||
             params.config_id !== this.image_config.id) return;
         this.viewer.sendCanvasContent();
@@ -1104,15 +1102,30 @@ export default class Ol3Viewer extends EventSubscriber {
      * @param {Object} params the event notification parameters
      * @return
      */
-    saveCanvasData(params) {
+    saveCanvasData(params={}) {
         if (this.image_config === null || // sanity check
-            this.image_config.id !== params.config_id || // not for us
-            !params.supported) { // blob not supported
+            this.image_config.id !== params.config_id) return; // not for us
+        if (!params.supported) { // blob not supported
                 console.error("Capturing Viewport as Blob not supported");
                 return;
         }
 
         FileSaver.saveAs(
             params.data, this.image_config.image_info.image_name + ".png");
+    }
+
+    /**
+     * Propagates image interaction such as zoom/drag to any linked
+     * image configs/viewers
+     *
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     * @return
+     */
+    syncLinkedViewer(params={}) {
+        // not intended for ourselves...only for linked configs
+        if (this.viewer === null ||
+            params.config_id === this.image_config.id) return;
+        this.linked_events.syncLinkedViewer(params);
     }
 }
