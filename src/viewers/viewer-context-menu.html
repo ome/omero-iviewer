@@ -46,6 +46,12 @@
             <a click.delegate="saveProjectedImage()"
                tabindex="-1" href="#">Save as new Image</a>
         </li>
+        <li show.bind="image_config.regions_info.ready"
+            class="${image_config.regions_info.selected_shapes.length > 0 ?
+                        '' : 'disabled-color'}">
+            <a click.delegate="saveRoiMeasurements()"
+               tabindex="-1" href="#">Export Roi Measurements (Excel)</a>
+        </li>
         <li show.bind="image_config.image_info.ready">
             <a click.delegate="captureViewport()"
                tabindex="-1" href="#">Capture Viewport (as png)</a>

@@ -94,6 +94,13 @@ export default class ImageInfo {
     image_name = null;
 
     /**
+     * shorter version of the image name
+     * @memberof ImageInfo
+     * @type {String}
+     */
+     short_image_name = ""
+
+    /**
      * the acquisition date in the json response
      * @memberof ImageInfo
      * @type {string}
@@ -305,8 +312,13 @@ export default class ImageInfo {
         this.can_annotate = response.perms.canAnnotate;
         if (typeof response.meta.imageAuthor === 'string')
             this.author = response.meta.imageAuthor;
-        if (typeof response.meta.imageName === 'string')
+        if (typeof response.meta.imageName === 'string') {
             this.image_name = response.meta.imageName;
+            let fullPath = this.image_name.replace("\\", "/");
+            let fields = fullPath.split("/");
+            if (fields.length > 0)
+                this.short_image_name = fields[fields.length-1];
+        }
         if (typeof response.meta.pixelsType === 'string')
             this.image_pixels_type = response.meta.pixelsType;
         this.image_timestamp = response.meta.imageTimestamp;
