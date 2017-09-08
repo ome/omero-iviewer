@@ -84,9 +84,9 @@
                         ';width:' + conf.size.width +
                         ';height:' + conf.size.height : ''}"
                  mousedown.delegate="context.selectConfig(id)">
-                 <div class="config-linking">
+                 <div class="config-linking"
+                      show.bind="context.useMDI && context.image_configs.size > 1">
                      <div class="dropdown dropdown-image-config"
-                          show.bind="context.useMDI && context.image_configs.size > 1"
                           title="Link Image Settings">
                          <button type="button"
                              class="btn btn-default btn-sm dropdown-toggle"
@@ -109,7 +109,8 @@
                              </li>
                          </ul>
                      </div>
-                     <div class="config-locks" show.bind="conf.linked_image_config !== null">
+                     <div class="config-locks"
+                          show.bind="context.useMDI && conf.linked_image_config !== null">
                          <label show.bind="conf.image_info.ready &&
                                             conf.image_info.dimensions.max_z > 1"
                                 title="Lock Z">
