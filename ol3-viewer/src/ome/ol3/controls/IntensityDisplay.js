@@ -115,8 +115,7 @@ ome.ol3.controls.IntensityDisplay.prototype.createUiElements_ = function() {
     element.className = cssClasses;
 
     var button = document.createElement('button');
-    button.id = 'intensity-display-toggler';
-    button.className ="btn btn-default";
+    button.className ="btn btn-default intensity-display-toggler";
     button.setAttribute('type', 'button');
     button.appendChild(document.createTextNode(""));
     button.title = 'Click to turn ON intensity querying';
@@ -160,7 +159,7 @@ ome.ol3.controls.IntensityDisplay.prototype.disable = function() {
     }
     this.resetMoveTracking_();
     this.image_ = null;
-    var el = document.getElementById('intensity-display-toggler');
+    var el = this.getIntensityTogglerElement();
     if (el) {
         el.style = "";
         el.innerHTML = "";
@@ -172,7 +171,10 @@ ome.ol3.controls.IntensityDisplay.prototype.disable = function() {
  * @private
  */
 ome.ol3.controls.IntensityDisplay.prototype.toggleTooltip = function(data, pixel) {
-    var tooltip = document.getElementById('intensity-tooltip');
+    var targetId = ome.ol3.utils.Misc.getTargetId(this.getMap());
+    var els = document.getElementById('' + targetId).querySelectorAll(
+        '.ol-intensity-popup');
+    var tooltip = els && els.length > 0 ? els[0] : null;
     if (!ome.ol3.utils.Misc.isArray(data) || data.length === 0) {
         if (tooltip) tooltip.style.display = "none";
         return;
@@ -181,7 +183,6 @@ ome.ol3.controls.IntensityDisplay.prototype.toggleTooltip = function(data, pixel
     var createTooltip = typeof tooltip === 'undefined' || tooltip === null;
     if (createTooltip) {
         tooltip = document.createElement('div');
-        tooltip.id='intensity-tooltip';
         tooltip.className = 'ol-intensity-popup';
     }
     tooltip.innerHTML = "";
@@ -224,6 +225,17 @@ ome.ol3.controls.IntensityDisplay.prototype.resetMoveTracking_ = function(pixel)
 }
 
 /**
+ * Returns the intensity toggler element
+ * @return {Element} the intensity toggler element
+ */
+ome.ol3.controls.IntensityDisplay.prototype.getIntensityTogglerElement = function() {
+    var targetId = ome.ol3.utils.Misc.getTargetId(this.getMap());
+    var els = document.getElementById('' + targetId).querySelectorAll(
+            '.intensity-display-toggler');
+    if (els && els.length > 0) return els[0];
+}
+
+/**
  * Handles the pointer move
  * (display of coordinates and a potential triggering of the intensity request)
  * @private
@@ -232,7 +244,7 @@ ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
     this.resetMoveTracking_(e.pixel);
     if (e.dragging) return;
 
-    var el = document.getElementById('intensity-display-toggler');
+    var el = this.getIntensityTogglerElement();
     var x = e.coordinate[0], y = -e.coordinate[1];
     if (x < 0 || x >= this.image_.getWidth() ||
         y < 0 || y >= this.image_.getHeight()) {
@@ -262,7 +274,7 @@ ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
             "error" : function(err) {
                 el.innerHTML = x.toFixed(0) + "," + y.toFixed(0);
                 this.toggleTooltip();
-                console.info(err);
+                console.error(err);
             }.bind(this)
         };
 
@@ -288,7 +300,7 @@ ome.ol3.controls.IntensityDisplay.prototype.toggleIntensityDisplay_ = function()
         this.enable(this.prefix_);
     };
 
-    var el = document.getElementById('intensity-display-toggler');
+    var el = this.getIntensityTogglerElement();
     if (this.query_intensity_) {
         this.query_intensity_ = false;
         el.title = "Click to turn ON intensity querying";

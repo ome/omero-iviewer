@@ -312,12 +312,12 @@
 
 .ol-intensity {
     top: 0.5em;
-    right: 6em;
+    right: 5.9em;
 }
 .ol-intensity button {
-    width: 100px;
+    width: 70px;
     height: 30px;
-    font-size: 15px;
+    font-size: 10px;
 }
 .ol-intensity-popup {
     background-color: #fff;
