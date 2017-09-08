@@ -26,7 +26,9 @@
                      'Click to use multiple image viewing mode'}"
                  click.delegate="toggleMDI()">
            </span>
-           <span>${short_image_name}</span>
+           <span>${image_info.ready && !image_info.error ?
+                    image_info.short_image_name : ''}
+           </span>
            <span class="app-version">${context.getVersion()}</span>
        </div>
     </nav>
