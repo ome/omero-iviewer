@@ -18,7 +18,10 @@
 
 <template>
 
-    <h4 show.bind="image_info.ready">${image_info.image_name}</h4>
+    <h4 show.bind="image_info.ready"
+        title="${image_info.image_name}">
+        ${image_info.short_image_name}
+    </h4>
 
     <table show.bind="image_info.ready" class="table table-condensed">
         <tr>

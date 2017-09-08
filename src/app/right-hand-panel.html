@@ -29,7 +29,9 @@
             <a href="${'#' + TABS.SETTINGS}" role="tab">Settings</a>
         </li>
         <li class="${context.selected_tab === TABS.ROIS ? 'active' : ''}">
-            <a href="${'#' + TABS.ROIS}" role="tab">ROIs</a>
+            <a href="${'#' + TABS.ROIS}" role="tab">
+                ROIs ${'[' + image_config.image_info.roi_count + ']'}
+            </a>
         </li>
     </ul>
 
