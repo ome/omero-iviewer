@@ -210,6 +210,9 @@ def image_data(request, image_id, conn=None, **kwargs):
     try:
         rv = imageMarshal(image)
 
+        # set roi count
+        rv['roi_count'] = image.getROICount()
+
         # Add extra parameters with units data
         # Note ['pixel_size']['x'] will have size in MICROMETER
         px = image.getPrimaryPixels().getPhysicalSizeX()

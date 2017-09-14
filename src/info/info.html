@@ -18,7 +18,10 @@
 
 <template>
 
-    <h4 show.bind="image_info.ready">${image_info.image_name}</h4>
+    <h4 show.bind="image_info.ready"
+        title="${image_info.image_name}">
+        ${image_info.short_image_name}
+    </h4>
 
     <table show.bind="image_info.ready" class="table table-condensed">
         <tr>
@@ -33,7 +36,7 @@
                     ${dataset_info.name}
                 </a>
             </td>
-        </tr>        
+        </tr>
         <tr repeat.for="column of columns">
             <td class="col-sm-6 text-weight-bold">${column.label}</td>
             <td class="col-sm-6">${column.value}</td>

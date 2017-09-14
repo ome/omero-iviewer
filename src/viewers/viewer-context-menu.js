@@ -21,8 +21,10 @@ import Context from '../app/context';
 import {inject, customElement, BindingEngine} from 'aurelia-framework';
 import {IMAGE_VIEWPORT_CAPTURE} from '../events/events';
 import Ui from '../utils/ui';
+import * as FileSaver from '../../node_modules/file-saver';
+import * as TextEncoding from "../../node_modules/text-encoding";
 import {
-    IVIEWER, PROJECTION, VIEWER_ELEMENT_PREFIX, WEBCLIENT
+    CSV_LINE_BREAK, IVIEWER, PROJECTION, VIEWER_ELEMENT_PREFIX, WEBCLIENT
 } from '../utils/constants';
 
 /**
@@ -333,7 +335,7 @@ export default class ViewerContextMenu {
     }
 
     /**
-     * Creates new
+     * Creates new image on server using projection settings
      *
      * @memberof ViewerContextMenu
      */
@@ -392,6 +394,56 @@ export default class ViewerContextMenu {
         this.context.eventbus.publish(
             IMAGE_VIEWPORT_CAPTURE, {"config_id": this.image_config.id});
         // hide context menu
+        this.hideContextMenu();
+        // prevent link click behavior
+        return false;
+    }
+
+    /**
+     * Creates csv file that contains area and length for selected shapes
+     *
+     * @memberof ViewerContextMenu
+     */
+    saveRoiMeasurements() {
+        let regInf = this.image_config.regions_info;
+        if (regInf.selected_shapes.length === 0) return;
+
+        let units = regInf.image_info.image_pixels_size.symbol_x || 'px';
+        let img_id = regInf.image_info.image_id;
+        let img_name = regInf.image_info.short_image_name;
+        let csv =
+            "image_id,image_name,roi_id,shape_id,type,z,t,\"area (" + units +
+            "\u00b2)\",\"length (" + units + ")\"" + CSV_LINE_BREAK;
+        for (let i in regInf.selected_shapes) {
+            let id = regInf.selected_shapes[i];
+            let shape = regInf.getShape(id);
+            if (shape === null) continue;
+            let roi_id = id.substring(0, id.indexOf(':'));
+            csv += img_id + ",\"" + img_name + "\"," +
+                    roi_id + "," + shape['@id'] + "," + shape.type + "," +
+                    (shape.TheZ+1) + "," + (shape.TheT+1) + "," +
+                    (shape.Area < 0 ? '' : shape.Area) + "," +
+                    (shape.Length < 0 ? '' : shape.Length) + CSV_LINE_BREAK;
+        }
+
+        let data = null;
+        let encErr = true;
+        try {
+            // use windows-1252 character set to satisfy excel
+            let type = 'text/csv; charset=windows-1252';
+            let ansiEncoder =
+                new TextEncoding.TextEncoder(
+                    'windows-1252', {NONSTANDARD_allowLegacyEncoding: true});
+            encErr = false;
+            data = new Blob([ansiEncoder.encode(csv)], {type: type});
+        } catch(not_supported) {}
+        if (data instanceof Blob)
+            FileSaver.saveAs(
+                data,
+                regInf.image_info.short_image_name + "_roi_measurements.csv");
+        else console.error(
+                encErr ? "Error encoding csv" : "Blob not supported");
+
         this.hideContextMenu();
         // prevent link click behavior
         return false;
