@@ -183,14 +183,14 @@
     <target name="unit-tests-only">
         <echo>Fetching test libraries ....</echo>
         <exec dir="${basedir}" executable="npm">
-            <arg line="install karma karma-chrome-launcher karma-mocha karma-chai mocha chai karma-babel-preprocessor"/>
+            <arg line="install karma karma-chrome-launcher karma-mocha karma-chai mocha chai karma-babel-preprocessor karma-spec-reporter"/>
         </exec>
         <echo>Running Test Suite ....</echo>
         <exec dir="${basedir}" resultproperty="result" executable="${karma}" >
             <arg value="start"/>
-             <arg value="--single-run"/>
-             <arg value="--browsers ChromeHeadless"/>
-             <arg value="karma.conf.js"/>
+            <arg value="--single-run"/>
+            <arg value="--browsers ChromeHeadless"/>
+            <arg value="karma.conf.js"/>
         </exec>
         <fail status="${result}">
             <condition>

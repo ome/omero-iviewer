@@ -3,7 +3,7 @@ module.exports = function(config) {
     frameworks: ['mocha', 'chai'],
     files: ['test/build/ol3-viewer-test.js','test/unit/**/*.js'],
     exclude: ['test/unit/debug_mocha.js'],
-    reporters: ['progress'],
+    reporters: ['spec'],
     port: 9876,
     colors: true,
     logLevel: config.LOG_INFO,
