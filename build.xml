@@ -183,7 +183,7 @@
     <target name="unit-tests-only">
         <echo>Fetching test libraries ....</echo>
         <exec dir="${basedir}" executable="npm">
-            <arg line="install karma karma-chrome-launcher karma-mocha karma-chai mocha chai"/>
+            <arg line="install karma karma-chrome-launcher karma-mocha karma-chai mocha chai karma-babel-preprocessor"/>
         </exec>
         <echo>Getting rid of js docs and comments in ${test.name} ....</echo>
         <exec executable="java" >

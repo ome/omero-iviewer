@@ -9,6 +9,7 @@ module.exports = function(config) {
     logLevel: config.LOG_INFO,
     browsers: ['ChromeHeadless'],
     autoWatch: false,
-    concurrency: Infinity
+    concurrency: Infinity,
+    preprocessors: {"test/build/ol3-viewer-test.js": ["babel"]}
   })
 }
