@@ -175,7 +175,7 @@
         <echo>Preparing test build directory ....</echo>
         <delete dir="${test.build.dir}" />
         <mkdir dir="${test.build.dir}" />
-        <copy file="${debug.name}" tofile="${test.build.dir}/ol3-viewer-debug.js" overwrite="true"/>
+        <copy file="${debug.name}" tofile="${test.name}" overwrite="true"/>
     </target>
 
     <target name="unit-tests" depends="build-debug, prepare-unit-tests, unit-tests-only" description="runs unit tests" />
@@ -184,12 +184,6 @@
         <echo>Fetching test libraries ....</echo>
         <exec dir="${basedir}" executable="npm">
             <arg line="install karma karma-chrome-launcher karma-mocha karma-chai mocha chai karma-babel-preprocessor"/>
-        </exec>
-        <echo>Getting rid of js docs and comments in ${test.name} ....</echo>
-        <exec executable="java" >
-            <arg value="-jar"/>
-            <arg line="${closure-compiler.jar} --compilation_level WHITESPACE_ONLY --js ${test.build.dir}/ol3-viewer-debug.js"/>
-            <redirector output="${test.name}"/>
         </exec>
         <echo>Running Test Suite ....</echo>
         <exec dir="${basedir}" resultproperty="result" executable="${karma}" >
