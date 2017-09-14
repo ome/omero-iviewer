@@ -15,7 +15,7 @@
     <property name="ol.js" value="${node_modules}/openlayers" />
     <property name="ol-sources" value="${ol.js}/src" />
     <property name="ol-patches" value="${ant.project.name}/patches" />
-    <property name="mocha-phantomjs" value="${node_modules}/mocha-phantomjs/bin/mocha-phantomjs" />
+    <property name="karma" value="${node_modules}/.bin/karma" />
 
     <property name="src" value="${basedir}/${ant.project.name}/src" />
     <property name="build.dir" value="${basedir}/build" />
@@ -183,7 +183,7 @@
     <target name="unit-tests-only">
         <echo>Fetching test libraries ....</echo>
         <exec dir="${basedir}" executable="npm">
-            <arg line="install mocha chai mocha-phantomjs"/>
+            <arg line="install karma karma-chrome-launcher karma-mocha karma-chai mocha chai"/>
         </exec>
         <echo>Getting rid of js docs and comments in ${test.name} ....</echo>
         <exec executable="java" >
@@ -192,8 +192,11 @@
             <redirector output="${test.name}"/>
         </exec>
         <echo>Running Test Suite ....</echo>
-        <exec dir="${basedir}/test/unit" resultproperty="result" executable="${mocha-phantomjs}" >
-            <arg line="suite.html"/>
+        <exec dir="${basedir}" resultproperty="result" executable="${karma}" >
+            <arg value="start"/>
+             <arg value="--single-run"/>
+             <arg value="--browsers ChromeHeadless"/>
+             <arg value="karma.conf.js"/>
         </exec>
         <fail status="${result}">
             <condition>
