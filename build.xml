@@ -15,7 +15,7 @@
     <property name="ol.js" value="${node_modules}/openlayers" />
     <property name="ol-sources" value="${ol.js}/src" />
     <property name="ol-patches" value="${ant.project.name}/patches" />
-    <property name="mocha-phantomjs" value="${node_modules}/mocha-phantomjs/bin/mocha-phantomjs" />
+    <property name="karma" value="${node_modules}/.bin/karma" />
 
     <property name="src" value="${basedir}/${ant.project.name}/src" />
     <property name="build.dir" value="${basedir}/build" />
@@ -105,6 +105,7 @@
             <fileset file="${src}/ome/ome.js"/>
             <fileset file="${src}/ome/ol3/ol3.js"/>
             <fileset file="${src}/ome/ol3/utils/utils.js"/>
+            <fileset file="${src}/ome/ol3/utils/Transform.js"/>
             <fileset file="${src}/ome/ol3/utils/Conversion.js"/>
             <fileset file="${src}/ome/ol3/utils/Net.js"/>
             <fileset file="${src}/ome/ol3/utils/Misc.js"/>
@@ -113,6 +114,8 @@
             <fileset file="${src}/ome/ol3/geom/Ellipse.js"/>
             <fileset file="${src}/ome/ol3/geom/LabelRectangle.js"/>
             <fileset file="${src}/ome/ol3/geom/Line.js"/>
+            <fileset file="${src}/ome/ol3/geom/Polygon.js"/>
+            <fileset file="${src}/ome/ol3/geom/Point.js"/>
             <fileset file="${src}/ome/ol3/interaction/interaction.js"/>
             <fileset file="${src}/ome/ol3/interaction/Rotate.js"/>
             <fileset file="${src}/ome/ol3/interaction/BoxSelect.js"/>
@@ -173,7 +176,7 @@
         <echo>Preparing test build directory ....</echo>
         <delete dir="${test.build.dir}" />
         <mkdir dir="${test.build.dir}" />
-        <copy file="${debug.name}" tofile="${test.build.dir}/ol3-viewer-debug.js" overwrite="true"/>
+        <copy file="${debug.name}" tofile="${test.name}" overwrite="true"/>
     </target>
 
     <target name="unit-tests" depends="build-debug, prepare-unit-tests, unit-tests-only" description="runs unit tests" />
@@ -181,17 +184,14 @@
     <target name="unit-tests-only">
         <echo>Fetching test libraries ....</echo>
         <exec dir="${basedir}" executable="npm">
-            <arg line="install mocha chai mocha-phantomjs"/>
-        </exec>
-        <echo>Getting rid of js docs and comments in ${test.name} ....</echo>
-        <exec executable="java" >
-            <arg value="-jar"/>
-            <arg line="${closure-compiler.jar} --compilation_level WHITESPACE_ONLY --js ${test.build.dir}/ol3-viewer-debug.js"/>
-            <redirector output="${test.name}"/>
+            <arg line="install karma karma-chrome-launcher karma-mocha karma-chai mocha chai karma-babel-preprocessor karma-spec-reporter"/>
         </exec>
         <echo>Running Test Suite ....</echo>
-        <exec dir="${basedir}/test/unit" resultproperty="result" executable="${mocha-phantomjs}" >
-            <arg line="suite.html"/>
+        <exec dir="${basedir}" resultproperty="result" executable="${karma}" >
+            <arg value="start"/>
+            <arg value="--single-run"/>
+            <arg value="--browsers ChromeHeadless"/>
+            <arg value="karma.conf.js"/>
         </exec>
         <fail status="${result}">
             <condition>

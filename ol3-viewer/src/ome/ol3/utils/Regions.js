@@ -22,8 +22,6 @@
 goog.provide('ome.ol3.utils.Regions');
 
 goog.require('ol.Feature');
-goog.require('ol.geom.Circle');
-goog.require('ol.geom.Polygon');
 goog.require('ol.extent');
 
 /**
@@ -37,8 +35,11 @@ goog.require('ol.extent');
 ome.ol3.utils.Regions.FEATURE_FACTORY_LOOKUP_TABLE = {
     "point" : function(shape) {
         var feat =
-            new ol.Feature({"geometry" : new ol.geom.Circle(
-                [shape['X'], -shape['Y']], 5)});
+            new ol.Feature({
+                "geometry" : new ome.ol3.geom.Point(
+                    [shape['X'], -shape['Y']],
+                    typeof shape['Transform'] === 'object' ?
+                        shape['Transform'] : null)});
         feat['type'] = "point";
         feat.setStyle(ome.ol3.utils.Style.createFeatureStyle(shape));
         return feat;
@@ -55,7 +56,9 @@ ome.ol3.utils.Regions.FEATURE_FACTORY_LOOKUP_TABLE = {
     },
     "rectangle" : function(shape) {
         var feat = new ol.Feature({"geometry" : new ome.ol3.geom.Rectangle(
-            shape['X'], -shape['Y'], shape['Width'], shape['Height'])});
+            shape['X'], -shape['Y'], shape['Width'], shape['Height'],
+            typeof shape['Transform'] === 'object' ?
+                shape['Transform'] : null)});
         feat['type'] = "rectangle";
         feat.setStyle(ome.ol3.utils.Style.createFeatureStyle(shape));
         return feat;
@@ -68,7 +71,9 @@ ome.ol3.utils.Regions.FEATURE_FACTORY_LOOKUP_TABLE = {
                 shape['MarkerEnd'] === 'Arrow';
         var feat = new ol.Feature({"geometry" : new ome.ol3.geom.Line(
                 [[shape['X1'], -shape['Y1']], [shape['X2'], -shape['Y2']]],
-                drawStartArrow, drawEndArrow)});
+                drawStartArrow, drawEndArrow,
+                typeof shape['Transform'] === 'object' ?
+                    shape['Transform'] : null)});
         feat['type'] = "line";
         feat.setStyle(ome.ol3.utils.Style.createFeatureStyle(shape));
         return feat;
@@ -85,7 +90,9 @@ ome.ol3.utils.Regions.FEATURE_FACTORY_LOOKUP_TABLE = {
             typeof shape['MarkerEnd'] === 'string' &&
                 shape['MarkerEnd'] === 'Arrow';
         var feat = new ol.Feature({"geometry" : new ome.ol3.geom.Line(
-                coords, drawStartArrow, drawEndArrow)});
+                coords, drawStartArrow, drawEndArrow,
+                typeof shape['Transform'] === 'object' ?
+                    shape['Transform'] : null)});
         feat['type'] = "polyline";
         feat.setStyle(ome.ol3.utils.Style.createFeatureStyle(shape));
         return feat;
@@ -125,7 +132,10 @@ ome.ol3.utils.Regions.FEATURE_FACTORY_LOOKUP_TABLE = {
             ome.ol3.utils.Conversion.convertPointStringIntoCoords(shape['Points']);
         if (coords === null) return null;
 
-        var feat = new ol.Feature({"geometry" : new ol.geom.Polygon([coords])});
+        var feat = new ol.Feature({"geometry" :
+            new ome.ol3.geom.Polygon([coords],
+                typeof shape['Transform'] === 'object' ?
+                    shape['Transform'] : null)});
         feat['type'] = "polygon";
         feat.setStyle(ome.ol3.utils.Style.createFeatureStyle(shape));
         return feat;

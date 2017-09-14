@@ -1134,9 +1134,9 @@ ome.ol3.Viewer.prototype.removeInteractionOrControl = function(key, descend) {
  * Check also out the code in: {@link ome.ol3.source.Image}
  *
  * @param {string} key a 'key' denoting the dimension. allowed are z,t and c!
- * @param {number|string} value the var-length arguments list
+ * @param {Array.<number>} values the value(s)
  */
-ome.ol3.Viewer.prototype.setDimensionIndex = function(key, value) {
+ome.ol3.Viewer.prototype.setDimensionIndex = function(key, values) {
     if (typeof(key) !== 'string' || key.length === 0) // dimension key checks
         return;
     var lowerCaseKey = key.substr(0,1).toLowerCase();
@@ -1149,26 +1149,20 @@ ome.ol3.Viewer.prototype.setDimensionIndex = function(key, value) {
     if (omeroImage === null || dimLookup == null || !dimLookup['settable'])
         return;
 
-    var values = Array.prototype.slice.call(arguments, 1);
     // do some bounds checking
     var max = 0;
-    try {
-        if (key === 'x') key = 'width'; // use alias
-        if (key === 'y') key = 'height'; // use alias
-         max = this.image_info_.size[key];
-        for (var c in values) {
-            if (typeof(values[c]) === 'string')
-                    values[c] = parseInt(values[c]);
-            if (typeof(values[c]) !== 'number' || values[c] < 0)
-                return;
-            // just in case of the crazy event of floating point
-            values[c] = parseInt(values[c]);
-            if (values[c] > max)
-                return;
-        }
-    } catch(methodNotDefined) {
-        // there is the very remote possibility that the method was not defined
-        return;
+    if (key === 'x') key = 'width'; // use alias
+    if (key === 'y') key = 'height'; // use alias
+    max = this.image_info_.size[key];
+    for (var c in values) {
+        if (typeof(values[c]) === 'string')
+                values[c] = parseInt(values[c]);
+        if (typeof(values[c]) !== 'number' || values[c] < 0)
+            return;
+        // just in case of the crazy event of floating point
+        values[c] = parseInt(values[c]);
+        if (values[c] > max)
+            return;
     }
 
     // now call setter
