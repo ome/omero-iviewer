@@ -129,16 +129,12 @@ export default class ChannelRange  {
     }
 
     /**
-     * Updates the UI elements (jquery)
+     * Updates the range values
      *
+     * @param {ImageInfo} the image info
      * @memberof ChannelRange
      */
-    updateUI() {
-        // just in case
-        this.detached();
-
-        let imgConf = this.context.getSelectedImageConfig();
-        let imgInf = imgConf.image_info;
+    updateRanges(imgInf) {
         this.full_range_min_max =
             imgInf.getChannelMinMaxValues(
                 CHANNEL_SETTINGS_MODE.FULL_RANGE, this.index,
@@ -155,6 +151,20 @@ export default class ChannelRange  {
                 Misc.roundAtDecimal(
                     this.channel.window.end, FLOATING_POINT_PRECISION);
         }
+    }
+
+    /**
+     * Updates the UI elements (jquery)
+     *
+     * @memberof ChannelRange
+     */
+    updateUI() {
+        // just in case
+        this.detached();
+
+        let imgConf = this.context.getSelectedImageConfig();
+        let imgInf = imgConf.image_info;
+        this.updateRanges(imgInf);
 
         // channel start
         let channelStart = $(this.element).find(".channel-start");
@@ -254,16 +264,11 @@ export default class ChannelRange  {
         let channelEndArrows =
             $(channelEnd).parent().find('a.ui-spinner-button');
         channelEndArrows.css('display','none');
-        channelEnd.on("blur",
-            (event) => {
-                channelEndArrows.css('display','none');
-                this.onRangeChange(event.target.value, false, true);
-            });
         channelEnd.on("focus",
             (event) => channelEndArrows.css('display','block'));
         channelEnd.on("blur",
             (event) => {
-                $(channelEnd).find('a.ui-spinner-button').css('display','none');
+                channelEndArrows.css('display','none');
                 this.onRangeChange(event.target.value, false, true);
             });
         channelEnd.on("spinstop",
@@ -510,13 +515,15 @@ export default class ChannelRange  {
                     $(this.element).find(".channel-slider").slider(
                         "option", "max",value > sliderMax ? value : sliderMax);
                 }
+                let conf = this.context.getSelectedImageConfig();
                 // add history record
-                this.context.getSelectedImageConfig().addHistory({
+                conf.addHistory({
                     prop:
                     ['image_info', 'channels', '' + this.index,
                     'window', is_start ? 'start' : 'end'],
                     old_val : oldValue, new_val: value, type : "number"
                 });
+                this.updateRanges(conf.image_info);
             } catch (ignored) {}
         } else $(this.element).find(clazz).parent().css(
             "border-color", "rgb(255,0,0)");
