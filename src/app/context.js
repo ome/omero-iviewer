@@ -219,7 +219,7 @@ export default class Context {
                     window.history.go(0);
                     return;
                 }
-                this.addImageConfig(e.state.image_id, e.state.dataset_id);
+                this.addImageConfig(e.state.image_id, e.state.parent_id);
             };
         }
     }
@@ -288,35 +288,22 @@ export default class Context {
      * @memberof Context
      */
     openWithInitialParams() {
-        // do we have an intial image id
-        let initial_image_id =
-            typeof this.initParams[REQUEST_PARAMS.IMAGE_ID] !== 'undefined' ?
-            parseInt(this.initParams[REQUEST_PARAMS.IMAGE_ID]) : null;
-        // we set the initial type and add the image id
-        if (typeof initial_image_id === 'number' && !isNaN(initial_image_id)) {
-            delete this.initParams[REQUEST_PARAMS.IMAGE_ID];
-            this.initial_type = INITIAL_TYPES.IMAGE;
-        }
-
-        // do we have a list of image ids
+        // do we have any image ids?
         let initial_image_ids =
             typeof this.initParams[REQUEST_PARAMS.IMAGES] !== 'undefined' ?
                 this.initParams[REQUEST_PARAMS.IMAGES] : null;
         if (initial_image_ids) {
             let tokens = initial_image_ids.split(',');
-            if (tokens.length > 0) {
-                let initialIdCount = this.initial_ids.length;
-                tokens.map((tok) => {
-                    let parsedToken = parseInt(tok);
-                    if (typeof parsedToken === 'number' && !isNaN(parsedToken))
-                        this.initial_ids.push(parsedToken);
-                });
-                if (this.initial_ids.length > initialIdCount)
-                    this.initial_type = INITIAL_TYPES.IMAGES;
+            for (let t in tokens) {
+                let parsedToken = parseInt(tokens[t]);
+                if (typeof parsedToken === 'number' &&
+                    !isNaN(parsedToken)) this.initial_ids.push(parsedToken);
             }
+            if (this.initial_ids.length > 0)
+                this.initial_type = INITIAL_TYPES.IMAGES;
         }
 
-        // do we have an initial dataset id
+        // do we have a dataset id
         let initial_dataset_id =
             parseInt(
                 this.getInitialRequestParam(REQUEST_PARAMS.DATASET_ID));
@@ -324,14 +311,21 @@ export default class Context {
             initial_dataset_id = null;
 
         // add image config if we have image ids
-        if (this.initial_type === INITIAL_TYPES.IMAGES &&
-            this.initial_ids.length > 0)
-                this.addImageConfig(this.initial_ids[0], initial_dataset_id);
-        else if (this.initial_type === INITIAL_TYPES.IMAGE)
-            this.addImageConfig(initial_image_id, initial_dataset_id);
-        else if (initial_dataset_id) {
-            this.initial_type = INITIAL_TYPES.DATASET;
-            this.initial_ids = [initial_dataset_id];
+        if (this.initial_type === INITIAL_TYPES.IMAGES)
+            this.addImageConfig(this.initial_ids[0], initial_dataset_id);
+        else {
+            // we could either have a well or just a dataset
+            let initial_well_id =
+                parseInt(
+                    this.getInitialRequestParam(REQUEST_PARAMS.WELL_ID));
+            if (typeof initial_well_id === 'number' &&
+                !isNaN(initial_well_id)) {
+                this.initial_type = INITIAL_TYPES.WELL;
+                this.initial_ids.push(initial_well_id);
+            } else if (initial_dataset_id) {
+                this.initial_type = INITIAL_TYPES.DATASET;
+                this.initial_ids.push(initial_dataset_id);
+            }
         }
     }
 
@@ -512,26 +506,37 @@ export default class Context {
         }
     }
 
-    rememberImageConfigChange(image_id, dataset_id) {
+    /**
+     * Makes a browser history entry for back/forth navigation
+     *
+     * @memberof Context
+     * @param {number} image_id the image id
+     */
+    rememberImageConfigChange(image_id) {
         if (!this.hasHTML5HistoryFeatures() ||
-            this.useMDI &&
             this.getSelectedImageConfig() === null) return;
 
-        let old_image_id =
-            this.getSelectedImageConfig().image_info.image_id;
-        let oldPath = window.location.pathname;
-        let newPath =
-            oldPath.replace(old_image_id, image_id);
-        if (this.initial_type === INITIAL_TYPES.IMAGE &&
-            typeof dataset_id === 'number') newPath += '?dataset=' + dataset_id;
-        else if (this.initial_type === INITIAL_TYPES.IMAGES)
-            newPath += window.location.search;
+        let newPath = window.location.pathname;
+        let parent_id = null;
+        if (this.initial_type === INITIAL_TYPES.IMAGES) {
+            if (this.initial_ids.length > 1)
+                newPath += window.location.search;
+            else {
+                parent_id = this.getSelectedImageConfig().image_info.dataset_id;
+                newPath += '?images=' + image_id + '&dataset=' + parent_id;
+            }
+        } else {
+            parent_id = this.initial_ids[0];
+            let param =
+                this.initial_type === INITIAL_TYPES.WELL ? "well" : "dataset";
+            newPath += "?" + param + "=" + parent_id;
+        }
         if (this.is_dev_server) {
             newPath += (newPath.indexOf('?') === -1) ? '?' : '&';
             newPath += 'haveMadeCrossOriginLogin_';
         }
         window.history.pushState(
-            {image_id: image_id, dataset_id: dataset_id},"",newPath);
+            {image_id: image_id, parent_id: parent_id}, "", newPath);
     }
 
     /**
@@ -540,9 +545,9 @@ export default class Context {
      *
      * @memberof Context
      * @param {number} image_id the image id
-     * @param {number} dataset_id an optional dataset_id
+     * @param {number} parent_id an optional parent_id (e.g. dataset or well)
      */
-    addImageConfig(image_id, dataset_id) {
+    addImageConfig(image_id, parent_id) {
         if (typeof image_id !== 'number' || image_id < 0) return;
 
         // we do not keep the other configs around unless we are in MDI mode.
@@ -554,7 +559,7 @@ export default class Context {
             this.publish(IMAGE_VIEWER_RESIZE, {config_id: -1, delay: 100});
         }
 
-        let image_config = new ImageConfig(this, image_id, dataset_id);
+        let image_config = new ImageConfig(this, image_id, parent_id);
         // store the image config in the map and make it the selected one
         this.image_configs.set(image_config.id, image_config);
         this.selectConfig(image_config.id);
