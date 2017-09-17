@@ -20,7 +20,7 @@
 import Context from '../app/context';
 
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
-import {WEBCLIENT} from '../utils/constants';
+import {INITIAL_TYPES, WEBCLIENT} from '../utils/constants';
 
 @customElement('info')
 @inject(Context, BindingEngine)
@@ -72,6 +72,8 @@ export class Info {
      */
     bind() {
         let changeImageConfig = () => {
+            if (this.image_info === null) return;
+
             if (this.image_info.ready) {
                 this.onImageConfigChange();
                 return;
@@ -191,17 +193,22 @@ export class Info {
              "value": this.image_info.dimensions.max_t,
             }
         ];
-        if (typeof this.image_info.dataset_id === 'number') {
-            this.dataset_info = {
+        if (typeof this.image_info.parent_id === 'number') {
+            let isWell =
+                this.context.initial_type === INITIAL_TYPES.WELL;
+            this.parent_info = {
+                title: isWell ? "Well" : "Dataset",
                 url: this.context.server +
                         this.context.getPrefixedURI(WEBCLIENT) +
-                        '/?show=dataset-' + this.image_info.dataset_id,
-                name:
-                    this.image_info.dataset_name === 'Multiple' ?
-                        this.image_info.dataset_id :
-                        this.image_info.dataset_name
+                        '/?show=' + (isWell ? 'well' : 'dataset') +
+                        '-' + this.image_info.parent_id,
+                name: isWell ?
+                        this.image_info.parent_id :
+                        this.image_info.dataset_name === 'Multiple' ?
+                            this.image_info.parent_id :
+                            this.image_info.dataset_name
             }
-        } else this.dataset_info = null;
+        } else this.parent_info = null;
     }
 
     /**
