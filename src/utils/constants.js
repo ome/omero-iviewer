@@ -106,7 +106,6 @@ export const REQUEST_PARAMS = {
     CENTER_X: 'X',
     CENTER_Y: 'Y',
     DATASET_ID: 'DATASET',
-    IMAGE_ID: 'IMAGE_ID',
     INTERPOLATE: 'INTERPOLATE',
     IMAGES: 'IMAGES',
     MAPS: 'MAPS',
@@ -116,6 +115,7 @@ export const REQUEST_PARAMS = {
     SERVER: 'SERVER',
     TIME: 'T',
     VERSION: 'VERSION',
+    WELL_ID: 'WELL',
     ZOOM: 'ZM'
 }
 
@@ -244,9 +244,9 @@ export const TABS = {
  */
 export const INITIAL_TYPES = {
     NONE: 0,
-    IMAGE: 1,
-    IMAGES: 2,
-    DATASET: 3
+    IMAGES: 1,
+    DATASET: 2,
+    WELL: 3
 }
 
 /**

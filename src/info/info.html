@@ -28,12 +28,12 @@
             <td class="col-sm-6 text-weight-bold">Image ID:</td>
             <td class="col-sm-6">${image_info.image_id}</td>
         </tr>
-        <tr show.bind="dataset_info !== null">
-            <td class="col-sm-6 text-weight-bold">Dataset:</td>
+        <tr show.bind="parent_info !== null">
+            <td class="col-sm-6 text-weight-bold">${parent_info.title}:</td>
             <td class="col-sm-6">
-                <a href="${dataset_info.url}"
-                   title="Show Dataset in webclient" target="_blank">
-                    ${dataset_info.name}
+                <a href="${parent_info.url}"
+                   title="Show ${parent_info.title} in webclient"
+                   target="_blank">${parent_info.name}
                 </a>
             </td>
         </tr>

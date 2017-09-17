@@ -20,7 +20,8 @@ import {noView} from 'aurelia-framework';
 import Misc from '../utils/misc';
 import Ui from '../utils/ui';
 import {
-    CHANNEL_SETTINGS_MODE, IVIEWER, PROJECTION, REQUEST_PARAMS, WEBGATEWAY
+    CHANNEL_SETTINGS_MODE, INITIAL_TYPES, IVIEWER,
+    PROJECTION, REQUEST_PARAMS, WEBGATEWAY
 } from '../utils/constants'
 
 /**
@@ -37,11 +38,11 @@ export default class ImageInfo {
     image_id = null;
 
     /**
-     * the associated dataset id
+     * the associated parent id (dataset or well)
      * @memberof ImageInfo
      * @type {number}
      */
-    dataset_id = null;
+    parent_id = null;
 
     /**
      * the associated dataset name
@@ -218,13 +219,13 @@ export default class ImageInfo {
      * @param {Context} context the application context
      * @param {number} config_id the config id we belong to
      * @param {number} image_id the image id to be queried
-     * @param {number} dataset_id an optional dataset_id
+     * @param {number} parent_id an optional parent_id (e.g. dataset or well)
      */
-    constructor(context, config_id, image_id, dataset_id) {
+    constructor(context, config_id, image_id, parent_id) {
         this.context = context;
         this.config_id = config_id;
         this.image_id = image_id;
-        if (typeof dataset_id === 'number') this.dataset_id = dataset_id;
+        if (typeof parent_id === 'number') this.parent_id = parent_id;
     }
 
     /**
@@ -263,11 +264,12 @@ export default class ImageInfo {
                 // read initial request params
                 this.initializeImageInfo(response);
 
-                // check for a dataset id
-                if (typeof this.dataset_id !== 'number') {
+                // check for a parent id (if not well)
+                if (this.context.initial_type !== INITIAL_TYPES.WELL &&
+                    typeof this.parent_id !== 'number') {
                     if (typeof response.meta === 'object' &&
                             typeof response.meta.datasetId === 'number')
-                        this.dataset_id = response.meta.datasetId;
+                        this.parent_id = response.meta.datasetId;
                 }
 
                 // fetch copied img RDef
@@ -345,7 +347,7 @@ export default class ImageInfo {
                 this.context.getInitialRequestParam(REQUEST_PARAMS.DATASET_ID));
         if (typeof initialDatasetId === 'number' &&
                 !isNaN(initialDatasetId) && initialDatasetId >= 0)
-            this.dataset_id = initialDatasetId;
+            this.parent_id = initialDatasetId;
         let initialTime =
             this.context.getInitialRequestParam(REQUEST_PARAMS.TIME);
         let initialPlane =
