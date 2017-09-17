@@ -429,6 +429,12 @@ export default class ThumbnailSlider extends EventSubscriber {
 
                 // add thumnails to the map which will trigger the loading
                 this.addThumbnails(response.data, end, skip_decrement);
+
+                // open first image for data/well
+                if (this.context.initial_type === INITIAL_TYPES.DATASET ||
+                    this.context.initial_type === INITIAL_TYPES.WELL) {
+                    this.onClick(response.data[0]['@id']);
+                }
             },
             error : (response) => {
                 this.requesting_thumbnail_data = false;
