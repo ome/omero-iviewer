@@ -258,9 +258,10 @@ export default class ThumbnailSlider extends EventSubscriber {
     /**
      * Initializes thumbnail data depending on what initial type we are
      *
+     * @param {boolean} refresh true if the user hit the refresh icon
      * @memberof ThumbnailSlider
      */
-    initializeThumbnails() {
+    initializeThumbnails(refresh = false) {
         // standard case: we are an image
         if (this.context.initial_type === INITIAL_TYPES.IMAGES) {
             if (this.context.initial_ids.length > 1) {
@@ -277,7 +278,7 @@ export default class ThumbnailSlider extends EventSubscriber {
             }
         } else if (this.context.initial_type === INITIAL_TYPES.DATASET ||
                     this.context.initial_type === INITIAL_TYPES.WELL) {
-            this.requestMoreThumbnails(true, true, true);
+            this.requestMoreThumbnails(true, true, true, refresh);
         }
         this.initialized = true;
     }
@@ -352,9 +353,11 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @param {boolean} end if true thumbnails after the end index are requested,
      *                         otherwise before the start index
      * @param {boolean} skip_decrement if true we don't decrement (first fetch)
+     * @param {boolean} refresh true if the user hit the refresh icon
      * @memberof ThumbnailSlider
      */
-    requestMoreThumbnails(init = false, end = true, skip_decrement = false) {
+    requestMoreThumbnails(
+        init = false, end = true, skip_decrement = false, refresh = false) {
         if (this.context.initial_type === INITIAL_TYPES.IMAGES &&
             this.context.initial_ids.length > 1) {
             let until =
@@ -431,8 +434,9 @@ export default class ThumbnailSlider extends EventSubscriber {
                 this.addThumbnails(response.data, end, skip_decrement);
 
                 // open first image for data/well
-                if (this.context.initial_type === INITIAL_TYPES.DATASET ||
-                    this.context.initial_type === INITIAL_TYPES.WELL) {
+                if (init && !refresh &&
+                    (this.context.initial_type === INITIAL_TYPES.DATASET ||
+                    this.context.initial_type === INITIAL_TYPES.WELL)) {
                     this.onClick(response.data[0]['@id']);
                 }
             },
@@ -601,6 +605,6 @@ export default class ThumbnailSlider extends EventSubscriber {
         this.thumbnails = [];
 
         // request again
-        this.initializeThumbnails();
+        this.initializeThumbnails(true);
     }
 }
