@@ -9,6 +9,7 @@ This version includes:
 - saved the projected image as a new image in OMERO
 - improved support for ROIs transformations
 - upgraded Openlayers and Aurelia
+- added rois count
 
 
 0.2.0 (June 2017)
