@@ -513,7 +513,7 @@ export default class Context {
      * @param {number} image_id the image id
      */
     rememberImageConfigChange(image_id) {
-        if (!this.hasHTML5HistoryFeatures() ||
+        if (!this.hasHTML5HistoryFeatures() || this.useMDI ||
             this.getSelectedImageConfig() === null) return;
 
         let newPath = window.location.pathname;
