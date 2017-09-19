@@ -156,12 +156,12 @@ ome.ol3.controls.IntensityDisplay.prototype.disable = function() {
  * - loading message (if querying)
  * - data display (after querying)
  * @private
+ * @param {ol.MapBrowserEvent} event the pointe move event
  * @param {Array.<Object>} data the pixel intensity results
- * @param {Array.<number>} coordinate the query/mouse coordinate (in pixels)
  * @param {boolean} is_querying if true we are querying and display a message
  */
 ome.ol3.controls.IntensityDisplay.prototype.updateTooltip =
-    function(data, coordinate, is_querying) {
+    function(event, data, is_querying) {
         if (typeof is_querying !== 'boolean') is_querying = false;
         var targetId =
             ome.ol3.utils.Misc.getTargetId(this.getMap().getTargetElement());
@@ -169,7 +169,7 @@ ome.ol3.controls.IntensityDisplay.prototype.updateTooltip =
             '.ol-intensity-popup');
         var tooltip = els && els.length > 0 ? els[0] : null;
         var hasData = ome.ol3.utils.Misc.isArray(data) && data.length > 0;
-        var hideTooltip = !is_querying && !hasData;
+        var hideTooltip = event === null || (!is_querying && !hasData);
         if (hideTooltip) {
             if (tooltip) tooltip.style.display = "none";
             return;
@@ -180,26 +180,46 @@ ome.ol3.controls.IntensityDisplay.prototype.updateTooltip =
             tooltip = document.createElement('div');
             tooltip.className = 'ol-intensity-popup';
         }
-        tooltip.innerHTML = "";
+
         tooltip.style.position = 'absolute';
-        tooltip.style.left = "" + (coordinate[0] +  10) + "px";
-        tooltip.style.top = "" + (coordinate[1]) + "px";
+        // visibility hidden let's us measure the dims of the tooltip
+        tooltip.style.display = '';
+        tooltip.style.visibility = 'hidden';
+        tooltip.innerHTML = "";
         if (hasData) {
             for (var x=0;x<data.length;x++) {
                 var row = data[x];
                 for (var s in row) {
                     var r = document.createElement('div');
-                    r.innerHTML = '<span>' + s + ':</span>' + '&nbsp;' +
-                                    row[s].toFixed(3);
+                    r.innerHTML =
+                        '<span>' + s + ':</span>' + '&nbsp;' + row[s].toFixed(3);
                     tooltip.appendChild(r);
                 }
             }
         } else if (is_querying) {
-            tooltip.innerHTML = "Querying Intensity Values...";
+            tooltip.innerHTML = "Querying Intensity...";
         }
-        if (this.last_cursor_[0] === coordinate[0] &&
-            this.last_cursor_[1] === coordinate[1]) {
-            tooltip.style.display = "";
+
+        var coordinate = event.pixel.slice();
+        try {
+            var parent = event.originalEvent.target.parentNode;
+            var w = tooltip.offsetWidth;
+            var h = tooltip.offsetHeight;
+            if (coordinate[0] + w > parent.offsetWidth) {
+                var x = coordinate[0] - w;
+                coordinate[0] = (x >= 0) ? x : 0;
+            }
+            if (coordinate[1] + h > parent.offsetHeight) {
+                var y = coordinate[1] - h;
+                coordinate[1] = (y >= 0) ? y : 0;
+            }
+        } catch (ignored) {}
+        tooltip.style.left = "" + (coordinate[0]) + "px";
+        tooltip.style.top = "" + (coordinate[1]) + "px";
+
+        if (this.last_cursor_[0] === event.pixel[0] &&
+            this.last_cursor_[1] === event.pixel[1]) {
+            tooltip.style.visibility = "visible";
             if (createTooltip) {
                 var target = this.getMap().getTargetElement();
                 if (target) target.childNodes[0].appendChild(tooltip);
@@ -242,7 +262,18 @@ ome.ol3.controls.IntensityDisplay.prototype.getIntensityTogglerElement = functio
  */
 ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
     this.resetMoveTracking_(e.pixel);
-    if (e.dragging) return;
+    var isMainCanvas = false;
+    try {
+        var target =  e.originalEvent.target;
+        var isCanvas = target.nodeName.toUpperCase() === 'CANVAS';
+        if (isCanvas) {
+            isMainCanvas =
+                target.parentNode.parentNode.className.indexOf(
+                    "ol-overviewmap") < 0;
+        }
+    } catch(ignored) {}
+    // we ignore dragging actions and mouse over controls
+    if (!isMainCanvas || e.dragging) return;
 
     var el = this.getIntensityTogglerElement();
     var x = e.coordinate[0], y = -e.coordinate[1];
@@ -267,7 +298,7 @@ ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
             "success" : function(resp) {
                 try {
                     el.innerHTML = x.toFixed(0) + "," + y.toFixed(0);
-                    this.updateTooltip(JSON.parse(resp), e.pixel);
+                    this.updateTooltip(e, JSON.parse(resp));
                 } catch(parseError) {
                     console.error(parseError);
                 }
@@ -283,7 +314,7 @@ ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
             function() {
                 if (this.last_cursor_[0] === e.pixel[0] &&
                     this.last_cursor_[1] === e.pixel[1]) {
-                        this.updateTooltip(null, this.last_cursor_, true);
+                        this.updateTooltip(e, null, true);
                         ome.ol3.utils.Net.sendRequest(reqParams);
                 }
             }.bind(this), 500);

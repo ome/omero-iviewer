@@ -325,7 +325,10 @@
     border-radius: 3px;
     padding: 2px;
     z-index: 4;
+    min-width: 135px;
+    text-align: center;
 }
 .ol-intensity-popup div span {
     font-weight: bold;
+    white-space: pre;
 }
