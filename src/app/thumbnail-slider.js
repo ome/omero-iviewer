@@ -269,11 +269,7 @@ export default class ThumbnailSlider extends EventSubscriber {
                 this.thumbnails_count = this.context.initial_ids.length;
                 this.requestMoreThumbnails();
             } else {
-                // if we don't have a dataset id we hide everything
-                // otherwise we delegate to get all the thumbnails for the dataset
-                if (typeof this.image_config.image_info.parent_id !== 'number')
-                    this.hideMe();
-                else this.gatherThumbnailMetaInfo(
+                this.gatherThumbnailMetaInfo(
                         this.image_config.image_info.image_id);
             }
         } else if (this.context.initial_type === INITIAL_TYPES.DATASET ||
@@ -286,6 +282,9 @@ export default class ThumbnailSlider extends EventSubscriber {
     /**
      * Initializes thumbnail count and thumbnails_start_index as well as
      * thumbnails_end_index using /webclient/api/paths_to_object
+     * For opening images that have no parent information from somewhere else
+     * (e.g. open with) or for images whose parent is a well this method finds
+     * the parent id
      *
      * @param {number} image_id the id of the image in the dataset
      * @param {boolean} is_top_thumbnail if true image appears first
@@ -308,10 +307,11 @@ export default class ThumbnailSlider extends EventSubscriber {
                         return;
                 }
 
-                // find type === dataset
+                // find type === dataset or type === well
                 // dataset has to match the present dataset id
                 // to ensure that we handle images in multiple datasets as well
                 let path = null;
+                let imgInf = this.image_config.image_info;
                 for (let i=0; i<response.paths.length; i++) {
                     let p = response.paths[i];
                     for (let j=0; j<p.length; j++)
@@ -320,8 +320,19 @@ export default class ThumbnailSlider extends EventSubscriber {
                             p[j].id === this.image_config.image_info.parent_id) {
                                 if (typeof p[j].childCount === 'number')
                                     path = p[j];
+                                imgInf.parent_type = INITIAL_TYPES.DATASET;
                                 break;
+                        } else if (typeof p[j].type === 'string' &&
+                                    p[j].type === 'well') {
+                                        imgInf.parent_type = INITIAL_TYPES.WELL;
+                                        imgInf.parent_id = p[j].id;
+                                        break;
                         }
+                }
+
+                if (imgInf.parent_id === null) {
+                    this.hideMe();
+                    return;
                 }
 
                 let initialize = (path === null);
@@ -384,6 +395,10 @@ export default class ThumbnailSlider extends EventSubscriber {
             this.context.initial_type === INITIAL_TYPES.WELL ?
                 this.context.initial_ids[0] :
                 this.image_config.image_info.parent_id;
+        let parent_type =
+            this.context.initial_type === INITIAL_TYPES.IMAGES ?
+                this.image_config.image_info.parent_type :
+                this.context.initial_type;
 
         let offset =
             end ? this.thumbnails_end_index :
@@ -398,12 +413,17 @@ export default class ThumbnailSlider extends EventSubscriber {
         }
 
         let url = this.context.server;
-        if (this.context.initial_type === INITIAL_TYPES.DATASET)
-            url += this.web_api_base + DATASETS_REQUEST_URL +
+        if (this.context.initial_type === INITIAL_TYPES.DATASET ||
+            (this.context.initial_type === INITIAL_TYPES.IMAGES &&
+            parent_type === INITIAL_TYPES.DATASET)) {
+                url += this.web_api_base + DATASETS_REQUEST_URL +
                     '/' + parent_id + '/images/?';
-        else if (this.context.initial_type === INITIAL_TYPES.WELL)
-            url += this.context.getPrefixedURI(IVIEWER) +
-                    "/well_images/?id=" + parent_id + "&";
+        } else if (this.context.initial_type === INITIAL_TYPES.WELL ||
+                    (this.context.initial_type === INITIAL_TYPES.IMAGES &&
+                    parent_type === INITIAL_TYPES.WELL)) {
+                        url += this.context.getPrefixedURI(IVIEWER) +
+                            "/well_images/?id=" + parent_id + "&";
+        }
         url += 'offset=' + offset + '&limit=' + limit;
 
         $.ajax(
@@ -508,9 +528,15 @@ export default class ThumbnailSlider extends EventSubscriber {
                 this.context.initial_type === INITIAL_TYPES.WELL ?
                     this.context.initial_ids[0] :
                         this.context.initial_type === INITIAL_TYPES.IMAGES &&
-                        this.context.initial_ids.length > 1 ?
+                        this.context.initial_ids.length === 1 &&
+                        typeof this.image_config.image_info.parent_id === 'number' ?
                             this.image_config.image_info.parent_id : null;
-            this.context.addImageConfig(image_id, parent_id);
+            let parent_type =
+                parent_id === null ? INITIAL_TYPES.NONE :
+                    this.context.initial_type === INITIAL_TYPES.IMAGES ?
+                        this.image_config.image_info.parent_type :
+                        this.context.initial_type;
+            this.context.addImageConfig(image_id, parent_id, parent_type);
         };
 
         // pop up dialog to ask whether user wants to store rois changes

@@ -82,10 +82,13 @@ export class Info {
             if (this.observers.length > 1 &&
                 typeof this.observers[1] === 'object' &&
                 this.observers[1] !== null) this.observers.pop().dispose();
-            this.observers.push(
-                this.bindingEngine.propertyObserver(
-                    this.image_info, 'ready').subscribe(
-                        (newValue, oldValue) => this.onImageConfigChange()));
+            ['ready', 'parent_type'].map(
+                (p) => {
+                    this.observers.push(
+                        this.bindingEngine.propertyObserver(
+                            this.image_info, p).subscribe(
+                                (newValue, oldValue) => this.onImageConfigChange()));
+                });
         };
         // listen for image info changes
         this.observers.push(
@@ -195,7 +198,8 @@ export class Info {
         ];
         if (typeof this.image_info.parent_id === 'number') {
             let isWell =
-                this.context.initial_type === INITIAL_TYPES.WELL;
+                this.context.initial_type === INITIAL_TYPES.WELL ||
+                this.image_info.parent_type === INITIAL_TYPES.WELL;
             this.parent_info = {
                 title: isWell ? "Well" : "Dataset",
                 url: this.context.server +
