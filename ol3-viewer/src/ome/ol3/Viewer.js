@@ -547,8 +547,8 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
     }
     // enable scalebar by default
     this.toggleScaleBar(true);
-    // enable intensity display
-    this.toggleIntensityDisplay(true);
+    // enable intensity control
+    this.toggleIntensityControl(true);
 
     // listens to resolution changes
     this.onViewResolutionListener =
@@ -1855,7 +1855,7 @@ ome.ol3.Viewer.prototype.changeImageModel = function(value) {
   *
   * @param {boolean} show if true we show the intensity, otherwise not
   */
-  ome.ol3.Viewer.prototype.toggleIntensityDisplay = function(show) {
+  ome.ol3.Viewer.prototype.toggleIntensityControl = function(show) {
      var haveControl =
          typeof this.viewerState_['intensity'] === 'object';
      if (!haveControl && !show) return; // nothing to do
@@ -1896,28 +1896,11 @@ ome.ol3.Viewer.prototype.redraw = function(delay) {
 
 /**
  * Extracts the id which is part of the viewer's target element id
- * e.g. xxxxx_344455
+ * e.g. xxxxx_344455. In a standalone ol3 setup there won't be a number
+ * but just an id
  */
 ome.ol3.Viewer.prototype.getTargetId = function() {
-    try {
-        var elemId =
-            typeof this.viewer_.getTargetElement() === 'string' ?
-                this.viewer_.getTargetElement() :
-                    typeof this.viewer_.getTargetElement() === 'object' &&
-                    typeof this.viewer_.getTargetElement().id === 'string' ?
-                        this.viewer_.getTargetElement().id : null;
-
-        var _pos = -1;
-        if (elemId === null ||
-            ((_pos = elemId.lastIndexOf("_")) === -1)) return null;
-
-        var id = parseInt(elemId.substring(_pos+1));
-        if (!isNaN(id)) return id;
-    } catch(no_care) {
-        return null;
-    }
-
-    return null;
+    return ome.ol3.utils.Misc.getTargetId(this.viewer_.getTargetElement());
 }
 
 /**
@@ -2115,7 +2098,7 @@ ome.ol3.Viewer.prototype.sendCanvasContent = function(full_extent) {
    this.viewer_.renderSync();
 }
 
-/*
+/**
  * Returns the area and length values for given shapes
  * @param {Array.<string>} ids the shape ids in the format roi_id:shape_id
  * @param {boolean} recalculate flag: if true we redo the measurement (default: false)
@@ -2140,6 +2123,17 @@ ome.ol3.Viewer.prototype.getLengthAndAreaForShapes = function(ids, recalculate) 
     return ret;
 }
 
+/**
+ * Turns on/off intensity querying
+ * @param {boolean} flag  if on we turn on intensity querying, otherwise off
+ */
+ome.ol3.Viewer.prototype.toggleIntensityQuerying = function(flag) {
+    try {
+        return this.viewerState_["intensity"]["ref"].toggleIntensityQuerying(flag);
+    } catch(ignored) {
+        return false;
+    }
+}
 
 /*
  * This section determines which methods are exposed and usable after compilation
@@ -2343,3 +2337,8 @@ goog.exportProperty(
     ome.ol3.Viewer.prototype,
     'getLengthAndAreaForShapes',
     ome.ol3.Viewer.prototype.getLengthAndAreaForShapes);
+
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
+    'toggleIntensityQuerying',
+    ome.ol3.Viewer.prototype.toggleIntensityQuerying);

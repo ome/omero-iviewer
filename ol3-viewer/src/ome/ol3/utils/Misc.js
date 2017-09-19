@@ -377,3 +377,32 @@ ome.ol3.utils.Misc.sendEventNotification = function(viewer, type, content, delay
         else triggerEvent();
     }
 }
+
+/**
+ * Extracts the id which is part of the viewer's target element id
+ * e.g. xxxxx_344455. In a standalone ol3 setup there won't be a number
+ * but just an id
+ *
+ * @static
+ * @param {Element|string} target the viewer's target element
+ * @return {number|string} the id as a number/string (latter: for ol3 alone)
+ */
+ome.ol3.utils.Misc.getTargetId = function(target) {
+    try {
+        var elemId =
+            typeof target === 'string' ? target :
+                typeof target === 'object' && typeof target.id === 'string' ?
+                    target.id : null;
+
+        var _pos = -1;
+        if (elemId === null ||
+            ((_pos = elemId.lastIndexOf("_")) === -1)) return null;
+
+        var id = parseInt(elemId.substring(_pos+1));
+        if (isNaN(id)) return elemId;
+
+        return id;
+    } catch(no_care) {
+        return elemId;
+    }
+}

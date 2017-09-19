@@ -77,13 +77,6 @@ ome.ol3.controls.IntensityDisplay = function() {
     this.image_ = null;
 
     /**
-     * handle on the intensity toggle listener
-     * @type {number}
-     * @private
-     */
-    this.toggle_intensity_listener_ = null;
-
-    /**
      * handle on the pointer move listener
      * @type {number}
      * @private
@@ -118,13 +111,7 @@ ome.ol3.controls.IntensityDisplay.prototype.createUiElements_ = function() {
     button.className ="btn btn-default intensity-display-toggler";
     button.setAttribute('type', 'button');
     button.appendChild(document.createTextNode(""));
-    button.title = 'Click to turn ON intensity querying';
     button.style = this.style_;
-
-    this.toggle_intensity_listener_ =
-        ol.events.listen(
-            element, ol.events.EventType.CLICK,
-            ome.ol3.controls.IntensityDisplay.prototype.toggleIntensityDisplay_.bind(this));
 
     element.appendChild(button);
 
@@ -134,7 +121,7 @@ ome.ol3.controls.IntensityDisplay.prototype.createUiElements_ = function() {
 /**
  * Makes control start listening to mouse movements and display coordinates
  * Does not mean that it we start requesting intensity values
- * see {@link toggleIntensityDisplay_}
+ * see {@link toggleIntensityQuerying}
  * @param {string=} prefix the prefix for the intensity request
  */
 ome.ol3.controls.IntensityDisplay.prototype.enable = function(prefix) {
@@ -160,52 +147,64 @@ ome.ol3.controls.IntensityDisplay.prototype.disable = function() {
     this.resetMoveTracking_();
     this.image_ = null;
     var el = this.getIntensityTogglerElement();
-    if (el) {
-        el.style = "";
-        el.innerHTML = "";
-    }
+    if (el) el.innerHTML = "";
 }
 
 /**
- * Shows/Hides Mouse Tooltip
+ * Updates the Mouse Tooltip with either one of the following:
+ * - hiding (if no querying/display)
+ * - loading message (if querying)
+ * - data display (after querying)
  * @private
+ * @param {Array.<Object>} data the pixel intensity results
+ * @param {Array.<number>} coordinate the query/mouse coordinate (in pixels)
+ * @param {boolean} is_querying if true we are querying and display a message
  */
-ome.ol3.controls.IntensityDisplay.prototype.toggleTooltip = function(data, pixel) {
-    var targetId = ome.ol3.utils.Misc.getTargetId(this.getMap());
-    var els = document.getElementById('' + targetId).querySelectorAll(
-        '.ol-intensity-popup');
-    var tooltip = els && els.length > 0 ? els[0] : null;
-    if (!ome.ol3.utils.Misc.isArray(data) || data.length === 0) {
-        if (tooltip) tooltip.style.display = "none";
-        return;
-    }
+ome.ol3.controls.IntensityDisplay.prototype.updateTooltip =
+    function(data, coordinate, is_querying) {
+        if (typeof is_querying !== 'boolean') is_querying = false;
+        var targetId =
+            ome.ol3.utils.Misc.getTargetId(this.getMap().getTargetElement());
+        var els = document.getElementById('' + targetId).querySelectorAll(
+            '.ol-intensity-popup');
+        var tooltip = els && els.length > 0 ? els[0] : null;
+        var hasData = ome.ol3.utils.Misc.isArray(data) && data.length > 0;
+        var hideTooltip = !is_querying && !hasData;
+        if (hideTooltip) {
+            if (tooltip) tooltip.style.display = "none";
+            return;
+        }
 
-    var createTooltip = typeof tooltip === 'undefined' || tooltip === null;
-    if (createTooltip) {
-        tooltip = document.createElement('div');
-        tooltip.className = 'ol-intensity-popup';
-    }
-    tooltip.innerHTML = "";
-    tooltip.style.position = 'absolute';
-    tooltip.style.left = "" + (pixel[0] +  10) + "px";
-    tooltip.style.top = "" + (pixel[1]) + "px";
-    for (var x=0;x<data.length;x++) {
-        var row = data[x];
-        for (var s in row) {
-            var r = document.createElement('div');
-            r.innerHTML = '<span>' + s + ':</span>' + '&nbsp;' +
-                            row[s].toFixed(3);
-            tooltip.appendChild(r);
-        }
-    }
-    if (this.last_cursor_[0] === pixel[0] &&
-        this.last_cursor_[1] === pixel[1]) {
-        tooltip.style.display = "";
+        var createTooltip = typeof tooltip === 'undefined' || tooltip === null;
         if (createTooltip) {
-            var target = this.getMap().getTargetElement();
-            if (target) target.childNodes[0].appendChild(tooltip);
+            tooltip = document.createElement('div');
+            tooltip.className = 'ol-intensity-popup';
         }
-    }
+        tooltip.innerHTML = "";
+        tooltip.style.position = 'absolute';
+        tooltip.style.left = "" + (coordinate[0] +  10) + "px";
+        tooltip.style.top = "" + (coordinate[1]) + "px";
+        if (hasData) {
+            for (var x=0;x<data.length;x++) {
+                var row = data[x];
+                for (var s in row) {
+                    var r = document.createElement('div');
+                    r.innerHTML = '<span>' + s + ':</span>' + '&nbsp;' +
+                                    row[s].toFixed(3);
+                    tooltip.appendChild(r);
+                }
+            }
+        } else if (is_querying) {
+            tooltip.innerHTML = "Querying Intensity Values...";
+        }
+        if (this.last_cursor_[0] === coordinate[0] &&
+            this.last_cursor_[1] === coordinate[1]) {
+            tooltip.style.display = "";
+            if (createTooltip) {
+                var target = this.getMap().getTargetElement();
+                if (target) target.childNodes[0].appendChild(tooltip);
+            }
+        }
 }
 
 /**
@@ -217,7 +216,7 @@ ome.ol3.controls.IntensityDisplay.prototype.resetMoveTracking_ = function(pixel)
     this.last_cursor_ =
         ome.ol3.utils.Misc.isArray(pixel) && pixel.length === 2 ?
             pixel : [0,0];
-    this.toggleTooltip();
+    this.updateTooltip();
     if (typeof this.movement_handle_ === 'number') {
         clearTimeout(this.movement_handle_);
         this.movement_handle_ = null;
@@ -229,7 +228,8 @@ ome.ol3.controls.IntensityDisplay.prototype.resetMoveTracking_ = function(pixel)
  * @return {Element} the intensity toggler element
  */
 ome.ol3.controls.IntensityDisplay.prototype.getIntensityTogglerElement = function() {
-    var targetId = ome.ol3.utils.Misc.getTargetId(this.getMap());
+    var targetId =
+        ome.ol3.utils.Misc.getTargetId(this.getMap().getTargetElement());
     var els = document.getElementById('' + targetId).querySelectorAll(
             '.intensity-display-toggler');
     if (els && els.length > 0) return els[0];
@@ -248,7 +248,7 @@ ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
     var x = e.coordinate[0], y = -e.coordinate[1];
     if (x < 0 || x >= this.image_.getWidth() ||
         y < 0 || y >= this.image_.getHeight()) {
-            el.innerHTML = "OUTSIDE";
+            el.innerHTML = "";
             return;
         }
     el.innerHTML = x.toFixed(0) + "," + y.toFixed(0);
@@ -256,6 +256,7 @@ ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
     if (this.query_intensity_) {
         var activeChannels = this.image_.getChannels();
         if (activeChannels.length === 0) return;
+
         var reqParams = {
             "server" : this.image_.server_,
             "uri" : this.prefix_ + "/get_intensity/?image=" + this.image_.id_ +
@@ -266,14 +267,14 @@ ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
             "success" : function(resp) {
                 try {
                     el.innerHTML = x.toFixed(0) + "," + y.toFixed(0);
-                    this.toggleTooltip(JSON.parse(resp), e.pixel);
+                    this.updateTooltip(JSON.parse(resp), e.pixel);
                 } catch(parseError) {
                     console.error(parseError);
                 }
             }.bind(this),
             "error" : function(err) {
                 el.innerHTML = x.toFixed(0) + "," + y.toFixed(0);
-                this.toggleTooltip();
+                this.updateTooltip();
                 console.error(err);
             }.bind(this)
         };
@@ -282,7 +283,7 @@ ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
             function() {
                 if (this.last_cursor_[0] === e.pixel[0] &&
                     this.last_cursor_[1] === e.pixel[1]) {
-                        el.innerHTML = "Querying...";
+                        this.updateTooltip(null, this.last_cursor_, true);
                         ome.ol3.utils.Net.sendRequest(reqParams);
                 }
             }.bind(this), 500);
@@ -290,34 +291,27 @@ ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
 }
 
 /**
- * Enables/Disables intensity display on pointerdrag
- * @private
+ * Enables/Disables intensity querying on pointerdrag
+ * @param {boolean} flag if true enable intensity querying, otherwise disable it
  */
-ome.ol3.controls.IntensityDisplay.prototype.toggleIntensityDisplay_ = function() {
+ome.ol3.controls.IntensityDisplay.prototype.toggleIntensityQuerying = function(flag) {
     // could be we have not been enabled before
     if (this.pointer_move_listener_ === null || this.image_ === null) {
         this.disable(); // just to make sure
         this.enable(this.prefix_);
     };
 
-    var el = this.getIntensityTogglerElement();
-    if (this.query_intensity_) {
-        this.query_intensity_ = false;
-        el.title = "Click to turn ON intensity querying";
-        el.style = this.style_;
-    } else {
-        this.query_intensity_ = true;
-        el.title = "Click to turn OFF intensity querying";
-        el.style = this.style_ + 'border-color: #F00';
-    }
-    el.blur();
+    if (typeof flag !== 'boolean') flag = false;
+    if ((flag && this.query_intensity_) || // no change
+        (!flag && !this.query_intensity_)) return this.query_intensity_;
+
+    // change value
+    return (this.query_intensity_ = flag);
 }
 
 /**
  * sort of destructor
  */
 ome.ol3.controls.IntensityDisplay.prototype.disposeInternal = function() {
-    if (this.toggle_intensity_listener_)
-        ol.events.unlistenByKey(this.toggle_intensity_listener_);
     this.disable();
 };
