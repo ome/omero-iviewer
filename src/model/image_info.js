@@ -45,6 +45,13 @@ export default class ImageInfo {
     parent_id = null;
 
     /**
+     * the associated parent type (dataset or well)
+     * @memberof ImageInfo
+     * @type {number}
+     */
+    parent_type = INITIAL_TYPES.NONE;
+
+    /**
      * the associated dataset name
      * @memberof ImageInfo
      * @type {string}
@@ -219,13 +226,20 @@ export default class ImageInfo {
      * @param {Context} context the application context
      * @param {number} config_id the config id we belong to
      * @param {number} image_id the image id to be queried
-     * @param {number} parent_id an optional parent_id (e.g. dataset or well)
+     * @param {number} parent_id an optional parent id
+     * @param {number} parent_type an optional parent type (e.g. dataset or well)
      */
-    constructor(context, config_id, image_id, parent_id) {
+    constructor(context, config_id, image_id, parent_id, parent_type) {
         this.context = context;
         this.config_id = config_id;
         this.image_id = image_id;
-        if (typeof parent_id === 'number') this.parent_id = parent_id;
+        if (typeof parent_id === 'number') {
+            this.parent_id = parent_id;
+            if (typeof parent_type === 'number' &&
+                parent_type >= INITIAL_TYPES.NONE &&
+                parent_type <= INITIAL_TYPES.WELL)
+                    this.parent_type = parent_type;
+        }
     }
 
     /**
@@ -312,6 +326,10 @@ export default class ImageInfo {
         this.range = response.pixel_range;
         this.image_pixels_size = response.pixel_size;
         this.can_annotate = response.perms.canAnnotate;
+        if (typeof response.meta.wellId === 'number') {
+            this.parent_id = response.meta.wellId;
+            this.parent_type = INITIAL_TYPES.WELL;
+        }
         if (typeof response.meta.imageAuthor === 'string')
             this.author = response.meta.imageAuthor;
         if (typeof response.meta.imageName === 'string') {
@@ -346,8 +364,10 @@ export default class ImageInfo {
             parseInt(
                 this.context.getInitialRequestParam(REQUEST_PARAMS.DATASET_ID));
         if (typeof initialDatasetId === 'number' &&
-                !isNaN(initialDatasetId) && initialDatasetId >= 0)
+                !isNaN(initialDatasetId) && initialDatasetId >= 0) {
             this.parent_id = initialDatasetId;
+            this.parent_type = INITIAL_TYPES.DATASET;
+        }
         let initialTime =
             this.context.getInitialRequestParam(REQUEST_PARAMS.TIME);
         let initialPlane =
