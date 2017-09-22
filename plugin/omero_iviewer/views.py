@@ -389,6 +389,12 @@ def well_images(request, conn=None, **kwargs):
         params = ParametersI()
         params.add("well_id", rlong(long(well_id)))
 
+        # get total count first
+        count = query_service.projection(
+            "select count(distinct ws.id) from WellSample ws " +
+            "where ws.well.id = :well_id", params, )
+        results = {"data": [], "meta": {"totalCount": count[0][0].val}}
+
         # set offset and limit
         filter = omero.sys.Filter()
         filter.offset = rint(request.GET.get("offset", 0))
@@ -398,8 +404,7 @@ def well_images(request, conn=None, **kwargs):
         # fire off query
         images = query_service.findAllByQuery(
             "select ws.image from WellSample ws " +
-            "where ws.well.id = :well_id", params)
-        results = {"data": [], "meta": {"totalCount": len(images)}}
+            "where ws.well.id = :well_id order by well_index", params)
 
         # we need only image id and name for our purposes
         for img in images:

@@ -20,29 +20,30 @@ OME.setOpenWithUrlProvider("omero_iviewer", function(selected, url) {
     initial_id = selected[0].id;
     initial_type = selected[0].type;
 
-    // we short-circuit for dataset and well
-    if (initial_type === 'dataset')  return url += '?dataset=' + initial_id;
-    if (initial_type === 'well') return url += '?well=' + initial_id;
+    // we short-circuit for anything that is not an image
+    if (initial_type !== 'image') {
+        return url + "?" + initial_type + "=" + initial_id;
+    }
 
-    // We try to traverse the jstree, to find the parent of selected image
+    // add image(s)
+    url += "?images=";
+    for (var i=0;i<selected_count;i++) {
+        if (i !== 0) url += ',';
+        url += selected[i].id;
+    }
+    // add parent for single image
     if (selected_count === 1 && $ && $.jstree) {
         try {
             var inst = $.jstree.reference('#dataTree');
             var parent = OME.getTreeImageContainerBestGuess(initial_id);
             if (parent && parent.data) {
                 if (parent.type === 'dataset')
-                    url += '?' + parent.type + '=' + parent.data.id;
+                    url += '&' + parent.type + '=' + parent.data.id;
             }
         } catch(err) {
             console.log(err);
         }
-        return url;
     }
 
-    // set image ids
-    url += '?images=';
-    for (var i=0;i<selected_count;i++)
-        url += selected[i].id + ',';
-
-    return url.substring(0, url.length-1);
+    return url;
 });

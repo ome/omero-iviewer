@@ -305,21 +305,26 @@ export default class Context {
 
         // do we have a dataset id
         let initial_dataset_id =
-            parseInt(
-                this.getInitialRequestParam(REQUEST_PARAMS.DATASET_ID));
+            parseInt(this.getInitialRequestParam(REQUEST_PARAMS.DATASET_ID));
         if (typeof initial_dataset_id !== 'number' || isNaN(initial_dataset_id))
             initial_dataset_id = null;
+        // do we have a well id
+        let initial_well_id =
+            parseInt(this.getInitialRequestParam(REQUEST_PARAMS.WELL_ID));
+        if (typeof initial_well_id !== 'number' || isNaN(initial_well_id))
+            initial_well_id = null;
 
         // add image config if we have image ids
-        if (this.initial_type === INITIAL_TYPES.IMAGES)
-            this.addImageConfig(this.initial_ids[0], initial_dataset_id);
-        else {
+        if (this.initial_type === INITIAL_TYPES.IMAGES) {
+            let parent_id = initial_dataset_id || initial_well_id;
+            let parent_type =
+                parent_id !== null ?
+                    initial_dataset_id !== null ?
+                        INITIAL_TYPES.DATASET : INITIAL_TYPES.WELL : null;
+            this.addImageConfig(this.initial_ids[0], parent_id, parent_type);
+        } else {
             // we could either have a well or just a dataset
-            let initial_well_id =
-                parseInt(
-                    this.getInitialRequestParam(REQUEST_PARAMS.WELL_ID));
-            if (typeof initial_well_id === 'number' &&
-                !isNaN(initial_well_id)) {
+            if (initial_well_id) { // well takes precedence
                 this.initial_type = INITIAL_TYPES.WELL;
                 this.initial_ids.push(initial_well_id);
             } else if (initial_dataset_id) {
@@ -518,36 +523,45 @@ export default class Context {
 
         let newPath = window.location.pathname;
         let parent_id = null;
+        let selConf = this.getSelectedImageConfig();
+        let parentType =
+            this.initial_type === INITIAL_TYPES.IMAGES ?
+                selConf.image_info.parent_type : this.initial_type;
+        let parentTypeString =
+            parentType === INITIAL_TYPES.WELL ? "well" : "dataset";
+
         if (this.initial_type === INITIAL_TYPES.IMAGES) {
             if (this.initial_ids.length > 1)
                 newPath += window.location.search;
             else {
-                parent_id = this.getSelectedImageConfig().image_info.dataset_id;
-                newPath += '?images=' + image_id + '&dataset=' + parent_id;
+                parent_id = selConf.image_info.parent_id;
+                newPath +=
+                    '?images=' + image_id + '&' + parentTypeString + "=" + parent_id;
             }
         } else {
             parent_id = this.initial_ids[0];
-            let param =
-                this.initial_type === INITIAL_TYPES.WELL ? "well" : "dataset";
-            newPath += "?" + param + "=" + parent_id;
+            newPath += "?" + parentTypeString + "=" + parent_id;
         }
         if (this.is_dev_server) {
             newPath += (newPath.indexOf('?') === -1) ? '?' : '&';
             newPath += 'haveMadeCrossOriginLogin_';
         }
         window.history.pushState(
-            {image_id: image_id, parent_id: parent_id}, "", newPath);
+            {image_id: image_id,
+             parent_id: parent_id,
+             parent_type: parentTypeString
+            }, "", newPath);
     }
 
     /**
      * Creates and adds an ImageConfig instance by handing it an id of an image
      * stored on the server, as well as making it the selected/active image config.
      *
-     * @memberof Context
      * @param {number} image_id the image id
-     * @param {number} parent_id an optional parent_id (e.g. dataset or well)
+     * @param {number} parent_id an optional parent id
+     * @param {number} parent_type an optional parent type  (e.g. dataset or well)
      */
-    addImageConfig(image_id, parent_id) {
+    addImageConfig(image_id, parent_id, parent_type) {
         if (typeof image_id !== 'number' || image_id < 0) return;
 
         // we do not keep the other configs around unless we are in MDI mode.
@@ -559,7 +573,8 @@ export default class Context {
             this.publish(IMAGE_VIEWER_RESIZE, {config_id: -1, delay: 100});
         }
 
-        let image_config = new ImageConfig(this, image_id, parent_id);
+        let image_config =
+            new ImageConfig(this, image_id, parent_id, parent_type);
         // store the image config in the map and make it the selected one
         this.image_configs.set(image_config.id, image_config);
         this.selectConfig(image_config.id);
