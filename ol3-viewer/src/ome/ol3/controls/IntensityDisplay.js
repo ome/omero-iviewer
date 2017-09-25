@@ -345,7 +345,7 @@ ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
         // for the z,t,c,x and y given
         var reqParams = {
             "server" : this.image_.server_,
-            "uri" : /*this.prefix_ + */ "get_intensity/?image=" + this.image_.id_ +
+            "uri" : this.prefix_ + "/get_intensity/?image=" + this.image_.id_ +
                     "&z=" + z + "&t=" + t + "&x=" + x + "&y=" + y +
                     "&c=" + channelsThatNeedToBeRequested.join(','),
             "success" : function(resp) {
