@@ -32,6 +32,32 @@ goog.require('ol.css');
  * @constructor
  */
 ome.ol3.controls.IntensityDisplay = function() {
+
+    /**
+     * maximum number of cached intensity values
+     * @type {number}
+     * @private
+     */
+    this.CACHE_LIMIT = 1000*1000;
+
+    /**
+     * a 2 level cache for intensity values
+     * we don't let it grow too big so we
+     * have a first level per z/t combination
+     * to ensure that we delete z/t entries
+     * other than the present one first once
+     * we reach the maximum count allowed
+     * the second layer is arranged in x-y
+     * location entries with their respective
+     * channel intensitiess
+     * @type {Object}
+     * @private
+     */
+    this.intensities_cache_ = {
+        'count': 0,
+        'intensities': {}
+    }
+
     /**
      * a handle for the setTimeout routine
      * @type {number}
@@ -168,7 +194,7 @@ ome.ol3.controls.IntensityDisplay.prototype.updateTooltip =
         var els = document.getElementById('' + targetId).querySelectorAll(
             '.ol-intensity-popup');
         var tooltip = els && els.length > 0 ? els[0] : null;
-        var hasData = ome.ol3.utils.Misc.isArray(data) && data.length > 0;
+        var hasData = typeof data === 'object' && data !== null;
         var hideTooltip = event === null || (!is_querying && !hasData);
         if (hideTooltip) {
             if (tooltip) tooltip.style.display = "none";
@@ -187,14 +213,14 @@ ome.ol3.controls.IntensityDisplay.prototype.updateTooltip =
         tooltip.style.visibility = 'hidden';
         tooltip.innerHTML = "";
         if (hasData) {
-            for (var x=0;x<data.length;x++) {
-                var row = data[x];
-                for (var s in row) {
-                    var r = document.createElement('div');
-                    r.innerHTML =
-                        '<span>' + s + ':</span>' + '&nbsp;' + row[s].toFixed(3);
-                    tooltip.appendChild(r);
-                }
+            for (var x in data) {
+                if (!this.image_.channels_info_[x]['active']) continue;
+                var val = data[x];
+                var label = this.image_.channels_info_[x]['label'];
+                var r = document.createElement('div');
+                r.innerHTML =
+                    '<span>' + label + ':</span>' + '&nbsp;' + val.toFixed(3);
+                tooltip.appendChild(r);
             }
         } else if (is_querying) {
             tooltip.innerHTML = "Querying Intensity...";
@@ -245,7 +271,7 @@ ome.ol3.controls.IntensityDisplay.prototype.resetMoveTracking_ = function(pixel)
 
 /**
  * Returns the intensity toggler element
- * @return {Element} the intensity toggler element
+ * @return {Element|null} the intensity toggler element
  */
 ome.ol3.controls.IntensityDisplay.prototype.getIntensityTogglerElement = function() {
     var targetId =
@@ -253,6 +279,7 @@ ome.ol3.controls.IntensityDisplay.prototype.getIntensityTogglerElement = functio
     var els = document.getElementById('' + targetId).querySelectorAll(
             '.intensity-display-toggler');
     if (els && els.length > 0) return els[0];
+    return null;
 }
 
 /**
@@ -288,17 +315,44 @@ ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
         var activeChannels = this.image_.getChannels();
         if (activeChannels.length === 0) return;
 
+        x = parseInt(x);
+        y = parseInt(y);
+        var z = this.image_.getPlane();
+        var t = this.image_.getTime();
+        var displayIntensity = function(results) {
+            el.innerHTML = x.toFixed(0) + "," + y.toFixed(0);
+            this.updateTooltip(e, results);
+        }.bind(this);
+
+        var cache_entry = this.getCachedIntensities(z, t, x, y);
+        var channelsThatNeedToBeRequested = []
+        // could be that we need a channel that is missing
+        // while others are there already...
+        // request only the missing ones
+        if (cache_entry !== null) {
+            for (var c in activeChannels)
+                if (typeof cache_entry[c] !== 'number')
+                    channelsThatNeedToBeRequested.push(parseInt(c));
+        } else channelsThatNeedToBeRequested = activeChannels;
+
+        // best case scenario: we have a cached entry
+        if (channelsThatNeedToBeRequested.length === 0) {
+            displayIntensity(cache_entry);
+            return;
+        }
+
+        // we have to request the intensities
+        // for the z,t,c,x and y given
         var reqParams = {
             "server" : this.image_.server_,
-            "uri" : this.prefix_ + "/get_intensity/?image=" + this.image_.id_ +
-                    "&z=" + this.image_.getPlane() +
-                    "&t=" + this.image_.getTime() + "&x=" +
-                    parseInt(x) + "&y=" + parseInt(y) + "&c=" +
-                    activeChannels.join(','),
+            "uri" : /*this.prefix_ + */ "get_intensity/?image=" + this.image_.id_ +
+                    "&z=" + z + "&t=" + t + "&x=" + x + "&y=" + y +
+                    "&c=" + channelsThatNeedToBeRequested.join(','),
             "success" : function(resp) {
                 try {
-                    el.innerHTML = x.toFixed(0) + "," + y.toFixed(0);
-                    this.updateTooltip(e, JSON.parse(resp));
+                    var res = JSON.parse(resp);
+                    this.cacheIntensities(res);
+                    displayIntensity(this.getCachedIntensities(z, t, x, y));
                 } catch(parseError) {
                     console.error(parseError);
                 }
@@ -319,6 +373,83 @@ ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
                 }
             }.bind(this), 500);
     }
+}
+
+/**
+ * Looks up cached intensities using plane and time as well as location
+ *
+ * @param {number} plane
+ * @param {number} time
+ * @param {number} x
+ * @param {number} y
+ * @return {Object} an object with channels and their respective intensity
+ */
+ome.ol3.controls.IntensityDisplay.prototype.getCachedIntensities =
+    function(plane, time, x, y) {
+        if (this.intensities_cache_['count'] === 0) return null;
+        try {
+            var planeTimeEntry =
+                this.intensities_cache_['intensities']["" + plane + "-" + time];
+            if (typeof planeTimeEntry['pixels']["" + x + "-" + y] !== 'object')
+                return null;
+            return planeTimeEntry['pixels']["" + x + "-" + y];
+        } catch(ex) {
+            return null;
+        }
+}
+
+ome.ol3.controls.IntensityDisplay.prototype.cacheIntensities =
+    function(intensities) {
+        try {
+            var plane = this.image_.getPlane();
+            var time = this.image_.getTime();
+            var key = "" + plane + "-" + time;
+
+            // check if we exceed cache limit
+            // if so we remove cache entries
+            // preferably for other plane/time
+            if (this.intensities_cache_['count']  +
+                    intensities['count'] > this.CACHE_LIMIT) {
+                for (var tmp in this.intensities_cache_['intensities']) {
+                    if (tmp !== key) {
+                        this.intensities_cache_['count'] -=
+                            this.intensities_cache_['intensities'][tmp]['count'];
+                        delete this.intensities_cache_['intensities'][tmp];
+                    }
+                    if (this.intensities_cache_['count']  +
+                            intensities['count'] < this.CACHE_LIMIT) break;
+                }
+                if (this.intensities_cache_['count']  +
+                        intensities['count'] > this.CACHE_LIMIT) {
+                    delete this.intensities_cache_['intensities'][key];
+                    this.intensities_cache_['count'] = 0;
+                }
+            }
+
+            if (typeof this.intensities_cache_['intensities'][key] !== 'object') {
+                // set planeTimeEntry to be the new intensities queried
+                this.intensities_cache_['intensities'][key] = intensities;
+                this.intensities_cache_['count'] += intensities['count'];
+            } else {
+                // we have an existing planeTimeEntry with existing intensities
+                // loop over the ones we queried and add them
+                var planeTimeEntry = this.intensities_cache_['intensities'][key];
+                for (var pixel in intensities['pixels']) {
+                    if (typeof planeTimeEntry['pixels'][pixel] !== 'object')
+                        planeTimeEntry['pixels'][pixel] = {}
+                    // add intensity for queries channel (if not exists)
+                    var pixelIntensities = intensities['pixels'][pixel];
+                    for (var chan in pixelIntensities)
+                        if (typeof planeTimeEntry['pixels'][pixel][chan] !== 'number') {
+                            planeTimeEntry['pixels'][pixel][chan] = pixelIntensities[chan];
+                            planeTimeEntry['count']++;
+                            this.intensities_cache_['count']++;
+                        }
+                }
+            }
+        } catch(ex) {
+            console.error("Failed to cache intensities: " + ex);
+        }
 }
 
 /**

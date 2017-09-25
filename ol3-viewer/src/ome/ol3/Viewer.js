@@ -428,6 +428,7 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
        var oldC = this.image_info_['channels'][c];
        var newC = {
            "active" : oldC['active'],
+           "label" : typeof oldC['label'] === 'string' ? oldC['label'] : c,
            "color" :
                typeof oldC['lut'] === 'string' &&
                oldC['lut'].length > 0 ? oldC['lut'] : oldC['color'],
