@@ -469,19 +469,19 @@ def get_intensity(request, conn=None, **kwargs):
         pixels_type = img.getPrimaryPixels().getPixelsType().getValue()
 
         # determine query extent
-        xOffset = x - QUERY_DISTANCE
-        if xOffset < 0:
-            xOffset = 0
-        yOffset = y - QUERY_DISTANCE
-        if yOffset < 0:
-            yOffset = 0
+        x_offset = x - QUERY_DISTANCE
+        if x_offset < 0:
+            x_offset = 0
+        y_offset = y - QUERY_DISTANCE
+        if y_offset < 0:
+            y_offset = 0
         width = 2 * QUERY_DISTANCE + 1
-        if xOffset + width >= size_x:
-            width = size_x - xOffset
+        if x_offset + width >= size_x:
+            width = size_x - x_offset
         height = 2 * QUERY_DISTANCE + 1
-        if yOffset + height >= size_y:
-            height = size_y - yOffset
-        extent = [xOffset, yOffset, xOffset + width, yOffset + height]
+        if y_offset + height >= size_y:
+            height = size_y - y_offset
+        extent = [x_offset, y_offset, x_offset + width, y_offset + height]
         conversion = '>' + str(width * height) +  \
             pixelstypetopython.toPython(pixels_type)
 
@@ -494,7 +494,7 @@ def get_intensity(request, conn=None, **kwargs):
         # contained in extent with getTile (extent width x height)
         for chan in channels:
             point_data = raw_pixel_store.getTile(
-                z, chan, t, xOffset, yOffset, width, height)
+                z, chan, t, x_offset, y_offset, width, height)
             unpacked_point_data = unpack(conversion, point_data)
             i = 0
             for row in range(extent[1], extent[3]):
