@@ -16,12 +16,14 @@
     <property name="ol-sources" value="${ol.js}/src" />
     <property name="ol-patches" value="${ant.project.name}/patches" />
     <property name="karma" value="${node_modules}/.bin/karma" />
+    <property name="clean-css" value="${node_modules}/.bin/cleancss" />
 
     <property name="src" value="${basedir}/${ant.project.name}/src" />
     <property name="build.dir" value="${basedir}/build" />
     <property name="test.build.dir" value="${basedir}/test/build" />
     <property name="plugin.dir.static" value="${basedir}/plugin/${ant.project.name}/static/${ant.project.name}" />
 
+    <property name="dist.css" value="${build.dir}/css" />
     <property name="dist.name" value="${build.dir}/ol3-viewer.js" />
     <property name="debug.name" value="${build.dir}/ol3-viewer-debug.js" />
     <property name="test.name" value="${test.build.dir}/ol3-viewer-test.js" />
@@ -148,7 +150,7 @@
         <mkdir dir="${plugin.dir.static}/js" />
         <mkdir dir="${plugin.dir.static}/css" />
         <copy todir="${plugin.dir.static}/css" overwrite="true">
-            <fileset dir="${basedir}/src/css"/>
+            <fileset dir="${basedir}/css"/>
         </copy>
         <copy file="${debug.name}" todir="${plugin.dir.static}/js" overwrite="true"/>
         <copy file="${dist.name}" todir="${plugin.dir.static}/js" overwrite="true"/>
@@ -171,6 +173,41 @@
         <exec executable="${basedir}/${ant.project.name}/apply_patches.sh" dir="${ol-sources}" failonerror="true" logError="true" />
     </target>
 
+    <target name="prepare-css" description="combine and minify css">
+        <echo>Combine and minify css...</echo>
+        <delete dir="${dist.css}" />
+        <mkdir dir="${dist.css}" />
+        <exec dir="${basedir}" executable="npm">
+            <arg line="install clean-css-cli"/>
+        </exec>
+        <exec dir="${basedir}" executable="${clean-css}">
+            <arg value="-O1"/>
+            <arg value="--skip-rebase"/>
+            <arg value="-o"></arg>
+            <arg value="${dist.css}/jquery-ui.min.css"/>
+            <arg value="${node_modules}/jquery-ui/themes/base/theme.css"/>
+            <arg value="${node_modules}/jquery-ui/themes/base/spinner.css"/>
+            <arg value="${node_modules}/jquery-ui/themes/base/slider.css"/>
+        </exec>
+        <exec dir="${basedir}" executable="${clean-css}">
+            <arg value="-O1"/>
+            <arg value="--skip-rebase"/>
+            <arg value="-o"></arg>
+            <arg value="${dist.css}/app.min.css"/>
+            <arg value="${node_modules}/spectrum-colorpicker/spectrum.css"/>
+            <arg value="${basedir}/css/ol3-viewer.css"/>
+            <arg value="${basedir}/css/app.css"/>
+        </exec>
+        <concat destfile="${dist.css}/all.min.css" overwrite="true">
+            <fileset file="${dist.css}/jquery-ui.min.css"/>
+            <fileset file="${node_modules}/bootstrap/dist/css/bootstrap.min.css"/>
+            <fileset file="${dist.css}/app.min.css"/>
+        </concat>
+        <copy todir="${dist.css}/images">
+            <fileset dir="${basedir}/css/images"/>
+        </copy>
+    </target>
+
     <target name="prepare-unit-tests">
         <echo>Preparing test build directory ....</echo>
         <delete dir="${test.build.dir}" />
@@ -183,7 +220,16 @@
     <target name="unit-tests-only">
         <echo>Fetching test libraries ....</echo>
         <exec dir="${basedir}" executable="npm">
-            <arg line="install karma karma-chrome-launcher karma-mocha karma-chai mocha chai karma-babel-preprocessor karma-spec-reporter"/>
+            <arg value="install"/>
+            <arg value="karma"/>
+            <arg value="karma-chrome-launcher"/>
+            <arg value="karma-mocha"/>
+            <arg value="karma-chai"/>
+            <arg value="mocha"/>
+            <arg value="chai"/>
+            <arg value="babel-core@6.26.0"/>
+            <arg value="karma-babel-preprocessor"/>
+            <arg value="karma-spec-reporter"/>
         </exec>
         <echo>Running Test Suite ....</echo>
         <exec dir="${basedir}" resultproperty="result" executable="${karma}" >

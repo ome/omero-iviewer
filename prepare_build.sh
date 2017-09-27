@@ -19,3 +19,6 @@ rm -rf plugin/omero_iviewer/static plugin/omero_iviewer/templates
 echo "Recreating build/deploy directories..."
 mkdir -p plugin/omero_iviewer/static/omero_iviewer/css/images
 mkdir -p plugin/omero_iviewer/templates/omero_iviewer
+
+#prepare css (combine and minify)
+ant prepare-css

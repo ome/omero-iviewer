@@ -1,41 +1,52 @@
 const path = require('path');
 const {AureliaPlugin} = require('aurelia-webpack-plugin');
 const ProvidePlugin = require('webpack/lib/ProvidePlugin');
+const CommonsChunkPlugin = require('webpack/lib/optimize/CommonsChunkPlugin');
 const pkg = require('./package.json');
 
 module.exports = {
   entry: {
-    main: [
-      './src/main'
-    ]
+    main: './src/main',
+    deps: ['d3', 'file-saver', 'text-encoding']
   },
   output: {
     path: path.join(__dirname, 'build'),
-    filename: 'bundle.js',
-    chunkFilename: "[chunkhash].bundle.js"
+    filename: "[name].js"
   },
   plugins: [
     new AureliaPlugin({aureliaApp: undefined, includeAll: 'src'}),
+    new CommonsChunkPlugin({
+        names: ['deps']
+    }),
+    new CommonsChunkPlugin({
+        names: ['manifest'],
+        filename: 'init.js',
+        minChunks: Infinity
+    }),
     new ProvidePlugin({
       Promise: 'bluebird',
       $: 'jquery',
       jQuery: 'jquery',
       'window.jQuery': 'jquery'
-  })],
+    })],
   resolve: {
       extensions: [".js"],
-         modules: ["src", "node_modules"]
+      modules: ["src", "libs", "node_modules"]
   },
   module: {
     noParse: [/libs\/ol3-viewer.js$/],
     rules: [
         { test: /\.js$/, loader: 'babel-loader', exclude: /node_modules/,
           query: { compact: false,
-                   presets: ['es2015-loose', 'stage-1'],
-                   plugins: ['transform-decorators-legacy'] } },
+                   presets: [[ 'env', {
+                       "loose": true,
+                       "uglify": process.env.NODE_ENV === 'production',
+                       "modules": false,
+                       "useBuiltIns": true } ]],
+                   plugins: ['transform-decorators-legacy',
+                             'transform-class-properties'] } },
         { test: /[\/\\]node_modules[\/\\]bluebird[\/\\].+\.js$/, loader: 'expose-loader?Promise' },
         { test: require.resolve('jquery'), loader: 'expose-loader?$!expose-loader?jQuery' },
-        { test: /\.css?$/, loader: 'file-loader?name=css/[name].[ext]' },
         { test: /\.(png|gif|jpg|jpeg)$/, loader: 'file-loader?name=css/images/[name].[ext]' },
         { test: /\.(woff|woff2)$/, loader: 'file-loader?name=css/fonts/[name].[ext]' },
         { test: /\.html$/, loader: 'html-loader' }
