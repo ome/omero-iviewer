@@ -21,4 +21,8 @@ mkdir -p plugin/omero_iviewer/static/omero_iviewer/css/images
 mkdir -p plugin/omero_iviewer/templates/omero_iviewer
 
 #prepare css (combine and minify)
-ant prepare-css
+if [ "$#" -gt 0 ] && [ "$1" = "DEV" ]; then
+    ant prepare-css-debug
+else
+    ant prepare-css-prod
+fi

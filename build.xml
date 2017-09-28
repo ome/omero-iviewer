@@ -173,39 +173,53 @@
         <exec executable="${basedir}/${ant.project.name}/apply_patches.sh" dir="${ol-sources}" failonerror="true" logError="true" />
     </target>
 
-    <target name="prepare-css" description="combine and minify css">
-        <echo>Combine and minify css...</echo>
+    <target name="clean-css-dir">
         <delete dir="${dist.css}" />
         <mkdir dir="${dist.css}" />
+    </target>
+
+    <target name="copy-images">
+        <copy todir="${dist.css}/images">
+            <fileset dir="${basedir}/css/images"/>
+        </copy>
+    </target>
+
+    <target name="prepare-css-prod"
+            depends="clean-css-dir, copy-images"
+            description="prepares css for production">
+        <echo>Combine and minify css...</echo>
         <exec dir="${basedir}" executable="npm">
             <arg line="install clean-css-cli"/>
         </exec>
         <exec dir="${basedir}" executable="${clean-css}">
             <arg value="-O1"/>
+            <arg value="specialComments:0"/>
             <arg value="--skip-rebase"/>
             <arg value="-o"></arg>
-            <arg value="${dist.css}/jquery-ui.min.css"/>
+            <arg value="${dist.css}/all.min.css"/>
             <arg value="${node_modules}/jquery-ui/themes/base/theme.css"/>
             <arg value="${node_modules}/jquery-ui/themes/base/spinner.css"/>
             <arg value="${node_modules}/jquery-ui/themes/base/slider.css"/>
-        </exec>
-        <exec dir="${basedir}" executable="${clean-css}">
-            <arg value="-O1"/>
-            <arg value="--skip-rebase"/>
-            <arg value="-o"></arg>
-            <arg value="${dist.css}/app.min.css"/>
+            <arg value="${node_modules}/bootstrap/dist/css/bootstrap.min.css"/>
             <arg value="${node_modules}/spectrum-colorpicker/spectrum.css"/>
             <arg value="${basedir}/css/ol3-viewer.css"/>
             <arg value="${basedir}/css/app.css"/>
         </exec>
+    </target>
+
+    <target name="prepare-css-debug"
+            depends="clean-css-dir, copy-images"
+            description="prepares css for debug">
+        <echo>Combine css...</echo>
         <concat destfile="${dist.css}/all.min.css" overwrite="true">
-            <fileset file="${dist.css}/jquery-ui.min.css"/>
+            <fileset file="${node_modules}/jquery-ui/themes/base/theme.css"/>
+            <fileset file="${node_modules}/jquery-ui/themes/base/spinner.css"/>
+            <fileset file="${node_modules}/jquery-ui/themes/base/slider.css"/>
             <fileset file="${node_modules}/bootstrap/dist/css/bootstrap.min.css"/>
-            <fileset file="${dist.css}/app.min.css"/>
+            <fileset file="${node_modules}/spectrum-colorpicker/spectrum.css"/>
+            <fileset file="${basedir}/css/ol3-viewer.css"/>
+            <fileset file="${basedir}/css/app.css"/>
         </concat>
-        <copy todir="${dist.css}/images">
-            <fileset dir="${basedir}/css/images"/>
-        </copy>
     </target>
 
     <target name="prepare-unit-tests">
