@@ -347,43 +347,45 @@ ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
                     channelsThatNeedToBeRequested.push(parseInt(c));
         } else channelsThatNeedToBeRequested = activeChannels;
 
-        // best case scenario: we have a cached entry
-        if (channelsThatNeedToBeRequested.length === 0) {
-            displayIntensity(cache_entry);
-            return;
+        var action = null;
+        var delay = 250;
+        if (channelsThatNeedToBeRequested.length > 0) {
+            delay = 500;
+            action = function() {
+                // we have to request the intensities
+                // for the z,t,c,x and y given
+                var reqParams = {
+                    "server" : this.image_.server_,
+                    "uri" : this.prefix_ + "/get_intensity/?image=" + this.image_.id_ +
+                            "&z=" + z + "&t=" + t + "&x=" + x + "&y=" + y +
+                            "&c=" + channelsThatNeedToBeRequested.join(','),
+                    "success" : function(resp) {
+                        try {
+                            var res = JSON.parse(resp);
+                            this.cacheIntensities(res);
+                            displayIntensity(this.getCachedIntensities(z, t, x, y));
+                        } catch(parseError) {
+                            console.error(parseError);
+                        }
+                    }.bind(this),
+                    "error" : function(err) {
+                        el.innerHTML = x.toFixed(0) + "," + y.toFixed(0);
+                        this.updateTooltip();
+                        console.error(err);
+                    }.bind(this)
+                };
+                this.updateTooltip(e, null, true);
+                ome.ol3.utils.Net.sendRequest(reqParams);
+            }
+        } else {
+            action = function() {displayIntensity(cache_entry);};
         }
-
-        // we have to request the intensities
-        // for the z,t,c,x and y given
-        var reqParams = {
-            "server" : this.image_.server_,
-            "uri" : this.prefix_ + "/get_intensity/?image=" + this.image_.id_ +
-                    "&z=" + z + "&t=" + t + "&x=" + x + "&y=" + y +
-                    "&c=" + channelsThatNeedToBeRequested.join(','),
-            "success" : function(resp) {
-                try {
-                    var res = JSON.parse(resp);
-                    this.cacheIntensities(res);
-                    displayIntensity(this.getCachedIntensities(z, t, x, y));
-                } catch(parseError) {
-                    console.error(parseError);
-                }
-            }.bind(this),
-            "error" : function(err) {
-                el.innerHTML = x.toFixed(0) + "," + y.toFixed(0);
-                this.updateTooltip();
-                console.error(err);
-            }.bind(this)
-        };
 
         this.movement_handle_ = setTimeout(
             function() {
                 if (this.last_cursor_[0] === e.pixel[0] &&
-                    this.last_cursor_[1] === e.pixel[1]) {
-                        this.updateTooltip(e, null, true);
-                        ome.ol3.utils.Net.sendRequest(reqParams);
-                }
-            }.bind(this), 500);
+                    this.last_cursor_[1] === e.pixel[1]) action.call(this);
+            }.bind(this), delay);
     }
 }
 
