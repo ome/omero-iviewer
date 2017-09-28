@@ -236,6 +236,10 @@ ome.ol3.source.Image = function(options) {
         origin: ol.extent.getTopLeft(extent),
         resolutions: this.resolutions_
     });
+    tileGrid.getZForResolution = function(resolution, opt_direction) {
+        var z = ol.array.linearFindNearest(this.resolutions_, resolution, 1);
+        return ol.math.clamp(z, this.minZoom, this.maxZoom);
+    };
 
     // a custom tile url function concatinating all image specificiations
     // needed to retrieve the image from the server
