@@ -252,7 +252,8 @@ ome.ol3.controls.IntensityDisplay.prototype.updateTooltip =
                 var label = this.image_.channels_info_[x]['label'];
                 var r = document.createElement('div');
                 r.innerHTML =
-                    '<span>' + label + ':</span>' + '&nbsp;' + val.toFixed(3);
+                    '<span>' + label + ':</span>' + '&nbsp;' +
+                    (val % 1 === 0 ? val : val.toFixed(3));
                 tooltip.appendChild(r);
             }
         } else if (is_querying) {
@@ -260,7 +261,7 @@ ome.ol3.controls.IntensityDisplay.prototype.updateTooltip =
         }
 
         var coordinate = event.pixel.slice();
-        var offset = [5, 5];
+        var offset = [15, 15];
         try {
             var parent = event.originalEvent.target.parentNode;
             var w = tooltip.offsetWidth;
@@ -372,8 +373,8 @@ ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
         // request only the missing ones
         if (cache_entry !== null) {
             for (var c in activeChannels)
-                if (typeof cache_entry[c] !== 'number')
-                    channelsThatNeedToBeRequested.push(parseInt(c));
+                if (typeof cache_entry[activeChannels[c]] !== 'number')
+                    channelsThatNeedToBeRequested.push(activeChannels[c]);
         } else channelsThatNeedToBeRequested = activeChannels;
 
         var action = null;
