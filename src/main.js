@@ -47,10 +47,7 @@ if (!is_dev_server) {
  * @param {Object} aurelia the aurelia instance
  */
 bootstrap(function(aurelia) {
-  aurelia.use
-    .standardConfiguration()
-    .developmentLogging();
-
+    aurelia.use.basicConfiguration();
     let ctx = new Context(aurelia.container.get(EventAggregator), req);
     if (is_dev_server) ctx.tweakForDevServer();
     aurelia.container.registerInstance(Context,ctx);

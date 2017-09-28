@@ -14,7 +14,10 @@ module.exports = {
     filename: "[name].js"
   },
   plugins: [
-    new AureliaPlugin({aureliaApp: undefined, includeAll: 'src'}),
+    new AureliaPlugin({
+        aureliaApp: undefined,
+        aureliaConfig: "basic",
+        features: {svg: false}}),
     new CommonsChunkPlugin({
         names: ['deps']
     }),
