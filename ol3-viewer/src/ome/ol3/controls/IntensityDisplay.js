@@ -110,8 +110,21 @@ ome.ol3.controls.IntensityDisplay = function() {
     this.pointer_move_listener_ = null;
 
     // set up html
-    var container =
-        ome.ol3.controls.IntensityDisplay.prototype.createUiElements_.call(this);
+    var cssClasses =
+        'ol-intensity ' + ol.css.CLASS_UNSELECTABLE + ' ' +
+            ol.css.CLASS_CONTROL;
+
+    // main container
+    var container = document.createElement('div');
+    container.className = cssClasses;
+
+    var button = document.createElement('button');
+    button.className ="btn btn-default intensity-display-toggler";
+    button.setAttribute('type', 'button');
+    button.appendChild(document.createTextNode(""));
+    button.style = this.style_;
+
+    container.appendChild(button);
 
     // call super
     ol.control.Control.call(this, {
@@ -121,27 +134,30 @@ ome.ol3.controls.IntensityDisplay = function() {
 ol.inherits(ome.ol3.controls.IntensityDisplay, ol.control.Control);
 
 /**
- * Adds the UI elements to display the intensities and turn requests off
- * @private
+ * Overide setMap to avoid listener keys being null when removing the control
+ * @param {ol.Map} map Map.
  */
-ome.ol3.controls.IntensityDisplay.prototype.createUiElements_ = function() {
-    var cssClasses =
-        'ol-intensity ' + ol.css.CLASS_UNSELECTABLE + ' ' +
-            ol.css.CLASS_CONTROL;
+ome.ol3.controls.IntensityDisplay.prototype.setMap = function(map) {
+    if (this.map_) {
+        ol.dom.removeNode(this.element);
+    }
 
-    // main container
-    var element = document.createElement('div');
-    element.className = cssClasses;
+    for (var i = 0, ii = this.listenerKeys.length; i < ii; ++i) {
+        ol.events.unlistenByKey(this.listenerKeys[i]);
+    }
+    this.listenerKeys = [];
+    this.map_ = map;
 
-    var button = document.createElement('button');
-    button.className ="btn btn-default intensity-display-toggler";
-    button.setAttribute('type', 'button');
-    button.appendChild(document.createTextNode(""));
-    button.style = this.style_;
-
-    element.appendChild(button);
-
-    return element;
+    if (this.map_) {
+        var target = this.target_ ?
+            this.target_ : map.getOverlayContainerStopEvent();
+        target.appendChild(this.element);
+        if (this.render !== ol.nullFunction) {
+            this.listenerKeys.push(ol.events.listen(map,
+                ol.MapEventType.POSTRENDER, this.render, this));
+        }
+        map.render();
+    }
 };
 
 /**
@@ -151,9 +167,12 @@ ome.ol3.controls.IntensityDisplay.prototype.createUiElements_ = function() {
  * @param {string=} prefix the prefix for the intensity request
  */
 ome.ol3.controls.IntensityDisplay.prototype.enable = function(prefix) {
+    if (this.getMap() === null) return;
+
     this.query_intensity_ = false;
     this.prefix_ = prefix || "";
     this.image_ = this.getMap().getLayers().item(0).getSource();
+
     this.pointer_move_listener_ =
         ol.events.listen(
             this.getMap(),
@@ -173,11 +192,14 @@ ome.ol3.controls.IntensityDisplay.prototype.disable = function() {
         ol.events.unlistenByKey(this.pointer_move_listener_);
         this.pointer_move_listener_ = null;
     }
-    this.getMap().getTargetElement().onmouseleave = null;
+
+    if (this.getMap() && this.getMap().getTargetElement())
+        this.getMap().getTargetElement().onmouseleave = null;
     this.resetMoveTracking_();
-    this.image_ = null;
+
     var el = this.getIntensityTogglerElement();
     if (el) el.innerHTML = "";
+    this.image_ = null;
 }
 
 /**
@@ -192,14 +214,21 @@ ome.ol3.controls.IntensityDisplay.prototype.disable = function() {
  */
 ome.ol3.controls.IntensityDisplay.prototype.updateTooltip =
     function(event, data, is_querying) {
+        if (this.getMap() === null ||
+            this.getMap().getTargetElement() === null) return;
+
         if (typeof is_querying !== 'boolean') is_querying = false;
         var targetId =
             ome.ol3.utils.Misc.getTargetId(this.getMap().getTargetElement());
+        if (targetId === null) return;
+
         var els = document.getElementById('' + targetId).querySelectorAll(
             '.ol-intensity-popup');
         var tooltip = els && els.length > 0 ? els[0] : null;
         var hasData = typeof data === 'object' && data !== null;
-        var hideTooltip = event === null || (!is_querying && !hasData);
+        var hideTooltip =
+            typeof event !== 'object' ||
+            event === null || (!is_querying && !hasData);
         if (hideTooltip) {
             if (tooltip) tooltip.style.display = "none";
             return;
@@ -281,11 +310,11 @@ ome.ol3.controls.IntensityDisplay.prototype.resetMoveTracking_ = function(pixel)
  * @return {Element|null} the intensity toggler element
  */
 ome.ol3.controls.IntensityDisplay.prototype.getIntensityTogglerElement = function() {
-    var targetId =
-        ome.ol3.utils.Misc.getTargetId(this.getMap().getTargetElement());
-    var els = document.getElementById('' + targetId).querySelectorAll(
-            '.intensity-display-toggler');
+    if (this.element === null) return;
+
+    var els = this.element.querySelectorAll('.intensity-display-toggler');
     if (els && els.length > 0) return els[0];
+
     return null;
 }
 
@@ -295,9 +324,9 @@ ome.ol3.controls.IntensityDisplay.prototype.getIntensityTogglerElement = functio
  * @private
  */
 ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
-    this.resetMoveTracking_(e.pixel);
     var isMainCanvas = false;
     try {
+        this.resetMoveTracking_(e.pixel);
         var target =  e.originalEvent.target;
         var isCanvas = target.nodeName.toUpperCase() === 'CANVAS';
         if (isCanvas) {
@@ -308,8 +337,8 @@ ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
     } catch(ignored) {}
 
     // set cursor style
-        this.getMap().getTargetElement().style.cursor =
-            this.query_intensity_ && isMainCanvas ? 'crosshair' : 'auto';
+    this.getMap().getTargetElement().style.cursor =
+        this.query_intensity_ && isMainCanvas ? 'crosshair' : 'auto';
 
     // we ignore dragging actions and mouse over controls
     if (!isMainCanvas || e.dragging) return;

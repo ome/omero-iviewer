@@ -391,8 +391,9 @@ ome.ol3.utils.Misc.getTargetId = function(target) {
     try {
         var elemId =
             typeof target === 'string' ? target :
-                typeof target === 'object' && typeof target.id === 'string' ?
-                    target.id : null;
+                typeof target === 'object' &&
+                    target !== null && typeof target.id === 'string' ?
+                        target.id : null;
 
         var _pos = -1;
         if (elemId === null ||
