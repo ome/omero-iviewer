@@ -159,6 +159,9 @@ ome.ol3.controls.IntensityDisplay.prototype.enable = function(prefix) {
             this.getMap(),
             ol.MapBrowserEventType.POINTERMOVE,
             ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_.bind(this));
+    this.getMap().getTargetElement().onmouseleave = function() {
+        this.resetMoveTracking_();
+    }.bind(this);
 }
 
 /**
@@ -170,6 +173,7 @@ ome.ol3.controls.IntensityDisplay.prototype.disable = function() {
         ol.events.unlistenByKey(this.pointer_move_listener_);
         this.pointer_move_listener_ = null;
     }
+    this.getMap().getTargetElement().onmouseleave = null;
     this.resetMoveTracking_();
     this.image_ = null;
     var el = this.getIntensityTogglerElement();
@@ -227,6 +231,7 @@ ome.ol3.controls.IntensityDisplay.prototype.updateTooltip =
         }
 
         var coordinate = event.pixel.slice();
+        var offset = [5, 5];
         try {
             var parent = event.originalEvent.target.parentNode;
             var w = tooltip.offsetWidth;
@@ -234,14 +239,16 @@ ome.ol3.controls.IntensityDisplay.prototype.updateTooltip =
             if (coordinate[0] + w > parent.offsetWidth) {
                 var x = coordinate[0] - w;
                 coordinate[0] = (x >= 0) ? x : 0;
+                offset[0] = -offset[0];
             }
             if (coordinate[1] + h > parent.offsetHeight) {
                 var y = coordinate[1] - h;
                 coordinate[1] = (y >= 0) ? y : 0;
+                offset[1] = -offset[1];
             }
         } catch (ignored) {}
-        tooltip.style.left = "" + (coordinate[0]) + "px";
-        tooltip.style.top = "" + (coordinate[1]) + "px";
+        tooltip.style.left = "" + (coordinate[0] + offset[0]) + "px";
+        tooltip.style.top = "" + (coordinate[1] + offset[1]) + "px";
 
         if (this.last_cursor_[0] === event.pixel[0] &&
             this.last_cursor_[1] === event.pixel[1]) {
@@ -299,6 +306,11 @@ ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
                     "ol-overviewmap") < 0;
         }
     } catch(ignored) {}
+
+    // set cursor style
+        this.getMap().getTargetElement().style.cursor =
+            this.query_intensity_ && isMainCanvas ? 'crosshair' : 'auto';
+
     // we ignore dragging actions and mouse over controls
     if (!isMainCanvas || e.dragging) return;
 
