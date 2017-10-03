@@ -426,7 +426,10 @@ def shape_stats(request, conn=None, **kwargs):
     # convert input params
     channels = []
     try:
-        ids = [long(id) for id in ids.split(',') if id != '']
+        ids = [
+            long(id.split(':')[1]) if ':' in id else long(id)
+            for id in ids.split(',') if id != ''
+        ]
         z, t = int(z), int(t)
         # optional cs
         cs = request.GET.get("cs", None)
@@ -440,9 +443,9 @@ def shape_stats(request, conn=None, **kwargs):
         # populating our own return objects for convenience
         rois_service = conn.getRoiService()
         stats = rois_service.getShapeStatsRestricted(ids, z, t, channels)
-        ret = []
+        ret = {}
         for stat in stats:
-            ret_stat = {"shape_id": stat.shapeId, "channels": []}
+            ret_stat = []
             number_of_channels = len(stat.channelIds)
             i = 0
             while i < number_of_channels:
@@ -455,10 +458,10 @@ def shape_stats(request, conn=None, **kwargs):
                     "mean": stat.mean[i],
                     "std_dev": stat.stdDev[i]
                 }
-                ret_stat['channels'].append(ret_stat_chan)
+                ret_stat.append(ret_stat_chan)
                 i += 1
-            ret.append(ret_stat)
-        return JsonResponse(ret, safe=False)
+            ret[str(stat.shapeId)] = ret_stat
+        return JsonResponse(ret,)
     except omero.ApiUsageException as api_exception:
         return JsonResponse({"error": api_exception.message})
     except Exception as stats_call_exception:

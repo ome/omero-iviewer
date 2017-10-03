@@ -411,22 +411,81 @@ export default class ViewerContextMenu {
         let regInf = this.image_config.regions_info;
         if (regInf.selected_shapes.length === 0) return;
 
+        // we cannot query unssaved shapes
+        let ids_for_stats =
+            regInf.selected_shapes.filter((s) => s.indexOf("-") == -1);
+        // if we have no saved shapes or no active channels ...
+        // forget about it
+        if (ids_for_stats.length === 0 ||
+            regInf.image_info.getActiveChannels().length === 0) {
+            this.writeCsv();
+            return;
+        }
+        $.ajax({
+            url:
+                this.context.server + this.context.getPrefixedURI(IVIEWER) +
+                '/shape_stats/?ids=' + ids_for_stats.join(',') +
+                "&z=" + regInf.image_info.dimensions['z'] +
+                "&t=" + regInf.image_info.dimensions['t'] +
+                "&cs=" + regInf.image_info.getActiveChannels().join(','),
+            success: (resp) => this.writeCsv(resp),
+            error: (err) => {
+                console.error(err);
+                this.writeCsv();
+            }
+        });
+
+        this.hideContextMenu();
+        // prevent link click behavior
+        return false;
+    }
+
+    /**
+     * Writes a csv file based on shape data
+     * and the stats retrieved from the backend
+     *
+     * @param {Object} shape_stats the shape stats
+     * @memberof ViewerContextMenu
+     */
+    writeCsv(shape_stats = {}) {
+        let regInf = this.image_config.regions_info;
         let units = regInf.image_info.image_pixels_size.symbol_x || 'px';
         let img_id = regInf.image_info.image_id;
         let img_name = regInf.image_info.short_image_name;
+
         let csv =
             "image_id,image_name,roi_id,shape_id,type,z,t,\"area (" + units +
-            "\u00b2)\",\"length (" + units + ")\"" + CSV_LINE_BREAK;
+            "\u00b2)\",\"length (" + units + ")\",channel,points,min,max," +
+            "sum,mean,std_dev" + CSV_LINE_BREAK;
+
         for (let i in regInf.selected_shapes) {
             let id = regInf.selected_shapes[i];
             let shape = regInf.getShape(id);
             if (shape === null) continue;
             let roi_id = id.substring(0, id.indexOf(':'));
-            csv += img_id + ",\"" + img_name + "\"," +
+
+            let channel = '', points = '', min = '', max = '';
+            let sum = '', mean = '', stddev = '';
+            if (typeof shape_stats[shape['@id']] === 'object') {
+                for (let s in shape_stats[shape['@id']]) {
+                    let stat = shape_stats[shape['@id']][s];
+                    csv += img_id + ",\"" + img_name + "\"," +
+                        roi_id + "," + shape['@id'] + "," + shape.type + "," +
+                        (shape.TheZ+1) + "," + (shape.TheT+1) + "," +
+                        (shape.Area < 0 ? '' : shape.Area) + "," +
+                        (shape.Length < 0 ? '' : shape.Length) + "," +
+                        stat.index + "," + stat.points + "," + stat.min + "," +
+                        stat.max + "," + stat.sum + "," + stat.mean + "," +
+                        stat.std_dev + CSV_LINE_BREAK;
+                }
+            } else {
+                csv += img_id + ",\"" + img_name + "\"," +
                     roi_id + "," + shape['@id'] + "," + shape.type + "," +
                     (shape.TheZ+1) + "," + (shape.TheT+1) + "," +
                     (shape.Area < 0 ? '' : shape.Area) + "," +
-                    (shape.Length < 0 ? '' : shape.Length) + CSV_LINE_BREAK;
+                    (shape.Length < 0 ? '' : shape.Length) +
+                    ",,,,,,," + CSV_LINE_BREAK;
+            }
         }
 
         let data = null;
@@ -440,16 +499,13 @@ export default class ViewerContextMenu {
             encErr = false;
             data = new Blob([ansiEncoder.encode(csv)], {type: type});
         } catch(not_supported) {}
+
         if (data instanceof Blob)
             FileSaver.saveAs(
                 data,
                 regInf.image_info.short_image_name + "_roi_measurements.csv");
         else console.error(
                 encErr ? "Error encoding csv" : "Blob not supported");
-
-        this.hideContextMenu();
-        // prevent link click behavior
-        return false;
     }
 
     /**
