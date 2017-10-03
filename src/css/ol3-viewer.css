@@ -65,7 +65,7 @@
     -ms-user-select: auto;
     user-select: auto;
  }
- 
+
 .ol-grabbing {
   cursor: -webkit-grabbing;
   cursor: -moz-grabbing;
@@ -308,4 +308,27 @@
     height: 30px;
     text-align: center;
     font-weight: bold;
+}
+
+.ol-intensity {
+    top: 0.5em;
+    right: 5.9em;
+}
+.ol-intensity button {
+    width: 70px;
+    height: 30px;
+    font-size: 10px;
+}
+.ol-intensity-popup {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    padding: 2px;
+    z-index: 4;
+    min-width: 135px;
+    text-align: center;
+}
+.ol-intensity-popup div span {
+    font-weight: bold;
+    white-space: pre;
 }
