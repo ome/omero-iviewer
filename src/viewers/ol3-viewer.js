@@ -30,8 +30,8 @@ import {
 } from '../utils/constants';
 import {
     IMAGE_CANVAS_DATA, IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY,
-    IMAGE_SETTINGS_CHANGE, IMAGE_VIEWER_RESIZE, IMAGE_VIEWER_SPLIT_VIEW,
-    IMAGE_VIEWPORT_CAPTURE,
+    IMAGE_INTENSITY_QUERYING, IMAGE_SETTINGS_CHANGE, IMAGE_VIEWER_RESIZE,
+    IMAGE_VIEWER_SPLIT_VIEW, IMAGE_VIEWPORT_CAPTURE,
     REGIONS_CHANGE_MODES, REGIONS_COPY_SHAPES, REGIONS_DRAW_SHAPE,
     REGIONS_GENERATE_SHAPES, REGIONS_HISTORY_ACTION, REGIONS_HISTORY_ENTRY,
     REGIONS_MODIFY_SHAPES, REGIONS_PROPERTY_CHANGED, REGIONS_SET_PROPERTY,
@@ -95,6 +95,8 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.getRegionsPropertyChange(params)],
         [REGIONS_SET_PROPERTY,
             (params={}) => this.setRegionsProperty(params)],
+        [IMAGE_INTENSITY_QUERYING,
+            (params={}) => this.toggleIntensityQuerying(params)],
         [VIEWER_IMAGE_SETTINGS,
             (params={}) => this.getImageSettings(params)],
         [IMAGE_VIEWER_SPLIT_VIEW,
@@ -667,9 +669,8 @@ export default class Ol3Viewer extends EventSubscriber {
         let storeRois = () => {
             let requestMade =
                 this.viewer.storeRegions(
-                    Misc.isArray(params.deleted) ? params.deleted : [], false,
-                    this.context.getPrefixedURI(IVIEWER) + '/persist_rois',
-                    params.omit_client_update);
+                    Misc.isArray(params.deleted) ? params.deleted : [],
+                    false, params.omit_client_update);
 
             if (requestMade) Ui.showModalMessage("Saving Regions. Please wait...");
             else if (params.omit_client_update)
@@ -1034,5 +1035,21 @@ export default class Ol3Viewer extends EventSubscriber {
 
         FileSaver.saveAs(
             params.data, this.image_config.image_info.image_name + ".png");
+    }
+
+    /**
+     * Turns on/off intensity querying
+     *
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     * @return
+     */
+    toggleIntensityQuerying(params) {
+        if (this.viewer === null || this.image_config === null || // sanity checks
+            this.image_config.id !== params.config_id) {// not for us
+                return;
+        }
+        this.image_config.image_info.query_intensity =
+            this.viewer.toggleIntensityQuerying(params.flag);
     }
 }

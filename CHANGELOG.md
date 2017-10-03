@@ -1,3 +1,17 @@
+0.3.0 (September 2017)
+----------------------
+
+This version includes:
+
+- added option to save the image in the viewport as png
+- added option to export basic ROIs measurement (area and length) in a CSV file
+- handled opening of datasets and wells
+- saved the projected image as a new image in OMERO
+- improved support for ROIs transformations
+- upgraded Openlayers and Aurelia
+- added rois count
+
+
 0.2.0 (June 2017)
 ----------------
 

@@ -60,13 +60,22 @@ ome.ol3.WEBGATEWAY = 'WEBGATEWAY';
 ome.ol3.WEBCLIENT = 'WEBCLIENT';
 
 /**
+ * a simple string lookup constant for PLUGIN_PREFIX
+ * @const
+ * @type {string}
+ */
+ome.ol3.PLUGIN_PREFIX = 'PLUGIN_PREFIX';
+
+/**
  * a list of (possibly prefixed) uri resources we need
  *
  * @const
  * @type {Array.<string>}
  */
-ome.ol3.PREFIXED_URIS =
-    [ome.ol3.WEB_API_BASE, ome.ol3.WEBCLIENT, ome.ol3.WEBGATEWAY];
+ome.ol3.PREFIXED_URIS = [
+    ome.ol3.PLUGIN_PREFIX, ome.ol3.WEB_API_BASE,
+    ome.ol3.WEBCLIENT, ome.ol3.WEBGATEWAY
+];
 
 /**
  * Limit for untiled image retrieval: 2K^2
@@ -263,6 +272,12 @@ ome.ol3.AVAILABLE_VIEWER_CONTROLS = {
         "links" : []},
     "scalebar" :
         {"clazz" : ome.ol3.controls.ScaleBar,
+        "options": {},
+        "defaults": true,
+        "enabled": false,
+        "links" : []},
+    "intensity" :
+        {"clazz" : ome.ol3.controls.IntensityDisplay,
         "options": {},
         "defaults": true,
         "enabled": false,

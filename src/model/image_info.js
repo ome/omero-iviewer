@@ -88,6 +88,13 @@ export default class ImageInfo {
     has_scalebar = false;
 
     /**
+     * a flag that signals whether we query the intensity on move move
+     * @memberof ImageInfo
+     * @type {boolean}
+     */
+    query_intensity = false;
+
+    /**
      * the imageAuthor in the json response
      * @memberof ImageInfo
      * @type {string}

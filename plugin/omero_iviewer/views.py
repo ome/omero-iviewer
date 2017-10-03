@@ -21,6 +21,7 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 
 from os.path import splitext
+from struct import unpack
 
 from omeroweb.decorators import login_required
 from omeroweb.webgateway.marshal import imageMarshal
@@ -32,6 +33,7 @@ import omero_marshal
 import omero
 from omero.rtypes import rint, rlong
 from omero_sys_ParametersI import ParametersI
+import omero.util.pixelstypetopython as pixelstypetopython
 
 from version import __version__
 
@@ -44,6 +46,8 @@ PROJECTIONS = {
     'intmean': omero.constants.projection.ProjectionType.MEANINTENSITY,
     'intsum': omero.constants.projection.ProjectionType.SUMINTENSITY,
 }
+
+QUERY_DISTANCE = 25
 
 
 @login_required()
@@ -416,3 +420,98 @@ def well_images(request, conn=None, **kwargs):
         return JsonResponse(results)
     except Exception as get_well_images_exception:
         return JsonResponse({"error": repr(get_well_images_exception)})
+
+
+@login_required()
+def get_intensity(request, conn=None, **kwargs):
+    # get mandatory params
+    image_id = request.GET.get("image", None)
+    x, y = request.GET.get("x", None), request.GET.get("y", None)
+    z, t = request.GET.get("z", None), request.GET.get("t", None)
+    cs = request.GET.get("c", None)
+
+    # checks
+    if image_id is None or x is None or y is None or cs is None \
+            or z is None or t is None:
+                return JsonResponse(
+                    {"error": "Mandatory params are: image,x,y,c, z and t"})
+
+    # retrieve image object
+    img = conn.getObject("Image", image_id, opts=conn.SERVICE_OPTS)
+    if img is None:
+        return JsonResponse({"error": "Image not Found"}, status=404)
+
+    # further bound checks
+    x, y, z, t = int(float(x)), int(float(y)), int(float(z)), int(float(t))
+    size_x, size_y = img.getSizeX(), img.getSizeY()
+    size_z, size_t = img.getSizeZ(), img.getSizeT()
+    if (x < 0 or x >= size_x or y < 0 or y >= size_y or
+            z < 0 or z >= size_z or t < 0 or t >= size_t):
+        return JsonResponse(
+            {"error": "Either one or more x,y,z.t are out of bounds"})
+
+    # check given channels
+    channels = []
+    try:
+        tokens = cs.split(',')
+        size_c = img.getSizeC()
+        for tok in tokens:
+            tok = int(tok)
+            if tok < 0 or tok >= size_c:
+                return JsonResponse(
+                    {"error": "One or more channels are out of bounds"})
+            channels.append(tok)
+    except:
+        return JsonResponse(
+            {"error": "The channels have to be a comma separated string"})
+    if len(channels) == 0:
+        return JsonResponse(
+            {"error": "Please supply a valid list of channels"})
+
+    try:
+        raw_pixel_store = conn.createRawPixelsStore()
+        raw_pixel_store.setPixelsId(img.getPixelsId(), True)
+        pixels_type = img.getPrimaryPixels().getPixelsType().getValue()
+
+        # determine query extent
+        x_offset = x - QUERY_DISTANCE
+        if x_offset < 0:
+            x_offset = 0
+        y_offset = y - QUERY_DISTANCE
+        if y_offset < 0:
+            y_offset = 0
+        width = 2 * QUERY_DISTANCE + 1
+        if x_offset + width >= size_x:
+            width = size_x - x_offset
+        height = 2 * QUERY_DISTANCE + 1
+        if y_offset + height >= size_y:
+            height = size_y - y_offset
+        extent = [x_offset, y_offset, x_offset + width, y_offset + height]
+        conversion = '>' + str(width * height) +  \
+            pixelstypetopython.toPython(pixels_type)
+
+        # prepare return object (setting extent)
+        results = {}
+        results['count'] = 0
+        results['pixels'] = {}
+
+        # loop over all channels and collect the pixel intensities
+        # contained in extent with getTile (extent width x height)
+        for chan in channels:
+            point_data = raw_pixel_store.getTile(
+                z, chan, t, x_offset, y_offset, width, height)
+            unpacked_point_data = unpack(conversion, point_data)
+            i = 0
+            for row in range(extent[1], extent[3]):
+                for col in range(extent[0], extent[2]):
+                    key = str(col) + "-" + str(row)
+                    entry = results['pixels'].get(key)
+                    if entry is None:
+                        entry = {}
+                        results['pixels'][key] = entry
+                    entry[str(chan)] = unpacked_point_data[i]
+                    i += 1
+            results['count'] += i
+        return JsonResponse(results)
+    except Exception as pixel_service_exception:
+        return JsonResponse({"error": repr(pixel_service_exception)})

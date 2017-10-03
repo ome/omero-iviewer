@@ -123,12 +123,13 @@ export class Info {
         if (this.image_info === null) return;
 
         let acquisition_date = "-";
-        if (typeof this.image_info.image_pixels_size.x == 'number') {
+        if (typeof this.image_info.image_timestamp === 'number') {
             acquisition_date = new Date(this.image_info.image_timestamp * 1000).toISOString().slice(-25, -14);
         }
         let pixels_size = "";
         let pixels_size_label = "Pixels Size (XYZ)";
-        if (typeof this.image_info.image_pixels_size === 'object') {
+        if (typeof this.image_info.image_pixels_size === 'object' &&
+            this.image_info.image_pixels_size !== null) {
             let symbol = '\xB5m'; // microns by default
             let unit = 'MICROMETER';
             let count = 0;
