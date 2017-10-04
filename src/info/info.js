@@ -82,10 +82,13 @@ export class Info {
             if (this.observers.length > 1 &&
                 typeof this.observers[1] === 'object' &&
                 this.observers[1] !== null) this.observers.pop().dispose();
-            this.observers.push(
-                this.bindingEngine.propertyObserver(
-                    this.image_info, 'ready').subscribe(
-                        (newValue, oldValue) => this.onImageConfigChange()));
+            ['ready', 'parent_type'].map(
+                (p) => {
+                    this.observers.push(
+                        this.bindingEngine.propertyObserver(
+                            this.image_info, p).subscribe(
+                                (newValue, oldValue) => this.onImageConfigChange()));
+                });
         };
         // listen for image info changes
         this.observers.push(
@@ -120,12 +123,13 @@ export class Info {
         if (this.image_info === null) return;
 
         let acquisition_date = "-";
-        if (typeof this.image_info.image_pixels_size.x == 'number') {
+        if (typeof this.image_info.image_timestamp === 'number') {
             acquisition_date = new Date(this.image_info.image_timestamp * 1000).toISOString().slice(-25, -14);
         }
         let pixels_size = "";
         let pixels_size_label = "Pixels Size (XYZ)";
-        if (typeof this.image_info.image_pixels_size === 'object') {
+        if (typeof this.image_info.image_pixels_size === 'object' &&
+            this.image_info.image_pixels_size !== null) {
             let symbol = '\xB5m'; // microns by default
             let unit = 'MICROMETER';
             let count = 0;
@@ -195,7 +199,8 @@ export class Info {
         ];
         if (typeof this.image_info.parent_id === 'number') {
             let isWell =
-                this.context.initial_type === INITIAL_TYPES.WELL;
+                this.context.initial_type === INITIAL_TYPES.WELL ||
+                this.image_info.parent_type === INITIAL_TYPES.WELL;
             this.parent_info = {
                 title: isWell ? "Well" : "Dataset",
                 url: this.context.server +

@@ -34,5 +34,7 @@ urlpatterns = patterns(
         name='omero_iviewer_save_projection'),
     url(r'^well_images/?$', views.well_images,
         name='omero_iviewer_well_images'),
+    url(r'^get_intensity/?$', views.get_intensity,
+        name='omero_iviewer_get_intensity'),
     url(r'^shape_stats/?$', views.shape_stats,
         name='omero_iviewer_shape_stats'))

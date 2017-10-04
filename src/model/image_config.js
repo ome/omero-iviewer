@@ -65,14 +65,16 @@ export default class ImageConfig extends History {
      * @constructor
      * @param {Context} context the application context
      * @param {number} image_id the image id to be queried
-     * @param {number} parent_id an optional parent_id (e.g. dataset or well)
+     * @param {number} parent_id an optional parent id
+     * @param {number} parent_type an optional parent type  (e.g. dataset or well)
      */
-    constructor(context, image_id, parent_id) {
+    constructor(context, image_id, parent_id, parent_type) {
         super(); // for history
         // for now this should suffice, especially given js 1 threaded nature
         this.id = new Date().getTime();
         // go create the data objects for an image and its associated region
-        this.image_info = new ImageInfo(context, this.id, image_id, parent_id);
+        this.image_info =
+            new ImageInfo(context, this.id, image_id, parent_id, parent_type);
         this.regions_info = new RegionsInfo(this.image_info)
     }
 
