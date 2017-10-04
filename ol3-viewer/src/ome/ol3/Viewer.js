@@ -543,7 +543,7 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
     if (source.use_tiled_retrieval_)
         this.viewerState_["birdseye"]['ref'].setCollapsed(false);
     // tweak source element for fullscreen to include dim sliders (iviewer only)
-    var targetId = ome.ol3.utils.Misc.getTargetId(this.viewer_);
+    var targetId = this.getTargetId();
     var viewerFrame = targetId ? document.getElementById(targetId) : null;
     if (targetId && viewerFrame) {
         this.viewerState_["fullscreen"]['ref'].source_ = viewerFrame;
@@ -1982,7 +1982,7 @@ ome.ol3.Viewer.prototype.getShapeDefinition = function(shape_id) {
  * Displays resolution as a percentage
  */
 ome.ol3.Viewer.prototype.displayResolutionInPercent = function() {
-    var targetId = ome.ol3.utils.Misc.getTargetId(this.viewer_);
+    var targetId = this.getTargetId();
     var zoomDisplay =
         document.getElementById('' + targetId).querySelectorAll(
             '.ol-zoom-display')
