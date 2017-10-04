@@ -19,6 +19,19 @@
     <require from="../utils/converters"></require>
     <require from="./channel-settings"></require>
 
+    <div class="checkbox checkbox-settings">
+        <div>
+            <label>
+                <input type="checkbox"
+                    checked.one-way="context.interpolate"
+                    disabled.bind="!(image_config && image_config.image_info &&
+                                     image_config.image_info.ready)"
+                    change.delegate="toggleInterpolation($event)" />
+               Interpolate
+           </label>
+        </div>
+    </div>
+
     <div class="btn-group save-settings">
         <button type="button"
             disabled.bind="!(image_config.image_info.ready &&
@@ -75,18 +88,22 @@
                                 !image_config.image_info.tiled)"
                 checked.bind="image_config.show_histogram"
                 change.delegate="toggleHistogram($event)" />
-            Show Histogram
+            Histogram
             </label>
         </div>
         <div>
-            <label>
-                <input type="checkbox"
-                    checked.one-way="context.interpolate"
-                    disabled.bind="!(image_config && image_config.image_info &&
-                                     image_config.image_info.ready)"
-                    change.delegate="toggleInterpolation($event)" />
-               Interpolate
-           </label>
+            <label class="${image_config &&
+                            image_config.image_info &&
+                            image_config.image_info.ready ?
+                                '' : 'disabled-color'}">
+            <input type="checkbox"
+                disabled.bind="!(image_config &&
+                                 image_config.image_info &&
+                                 image_config.image_info.ready)"
+                checked.one-way="image_config.image_info.query_intensity"
+                change.delegate="togglePixelIntensity($event)" />
+            Pixel Intensity
+            </label>
         </div>
     </div>
 

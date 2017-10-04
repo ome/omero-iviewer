@@ -361,11 +361,13 @@ ome.ol3.utils.Misc.parseProjectionParameter = function(projection_info) {
  */
 ome.ol3.utils.Misc.sendEventNotification = function(viewer, type, content, delay) {
     if (!(viewer instanceof ome.ol3.Viewer) ||
+        !(viewer.viewer_ instanceof ol.Map) ||
         viewer.prevent_event_notification_ ||
         typeof type !== 'string' ||
         type.length === 0) return;
 
-    var config_id = ome.ol3.utils.Misc.getTargetId(viewer.viewer_);
+    var config_id =
+        ome.ol3.utils.Misc.getTargetId(viewer.viewer_.getTargetElement());
     var eventbus = viewer.eventbus_;
     if (config_id && eventbus) { // publish
         if (typeof content !== 'object' || content === null) content = {};
@@ -381,27 +383,28 @@ ome.ol3.utils.Misc.sendEventNotification = function(viewer, type, content, delay
 
 /**
  * Extracts the id which is part of the viewer's target element id
- * e.g. xxxxx_344455
+ * e.g. xxxxx_344455. In a standalone ol3 setup there won't be a number
+ * but just an id
  *
  * @static
- * @param {ol.Map} target the viewer target
- * @return {number|null} the target element's id or null (if not found)
+ * @param {Element|string} target the viewer's target element
+ * @return {number|string|null} the target element's id as a number/string
+ *                              (latter: for ol3 alone) or null
+ *                              (no element id or parse error)
  */
 ome.ol3.utils.Misc.getTargetId = function(target) {
-    if (!(target instanceof ol.Map)) return null;
     try {
         var elemId =
-            typeof target.getTargetElement() === 'string' ?
-                target.getTargetElement() :
-                    typeof target.getTargetElement() === 'object' &&
-                    typeof target.getTargetElement().id === 'string' ?
-                        target.getTargetElement().id : null;
+            typeof target === 'string' ? target :
+                typeof target === 'object' &&
+                    target !== null && typeof target.id === 'string' ?
+                        target.id : null;
+        if (elemId === null) return null;
 
-        var _pos = -1;
-        if (elemId === null ||
-            ((_pos = elemId.lastIndexOf("_")) === -1)) return null;
+        var pos = elemId.lastIndexOf("_");
+        if (pos === -1) return elemId;
 
-        var id = parseInt(elemId.substring(_pos+1));
+        var id = parseInt(elemId.substring(pos+1));
         if (isNaN(id)) return null;
 
         return id;

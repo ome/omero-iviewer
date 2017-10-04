@@ -155,7 +155,7 @@ ome.ol3.controls.Zoom.prototype.changeResolution_ = function(value) {
             view.constrainResolution(1 / (value / 100), 0, 0);
             view.setResolution(constrainedResolution);
     }
-    var targetId = ome.ol3.utils.Misc.getTargetId(map);
+    var targetId = ome.ol3.utils.Misc.getTargetId(map.getTargetElement());
     var zoomDisplayElement =
         document.getElementById('' + targetId).querySelectorAll(
             '.ol-zoom-display')

@@ -25,7 +25,8 @@ import {CHANNEL_SETTINGS_MODE, TABS, WEBGATEWAY} from '../utils/constants';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 
 import {
-    IMAGE_SETTINGS_CHANGE, THUMBNAILS_UPDATE, EventSubscriber
+    IMAGE_INTENSITY_QUERYING, IMAGE_SETTINGS_CHANGE, THUMBNAILS_UPDATE,
+    EventSubscriber
 } from '../events/events';
 
 /**
@@ -132,7 +133,7 @@ export default class Settings extends EventSubscriber {
     waitForImageInfoReady() {
         if (this.image_config === null ||
             this.image_config.image_info === null) return;
-            
+
         let onceReady = () => {
             // register observer
             this.registerObserver();
@@ -590,6 +591,25 @@ export default class Settings extends EventSubscriber {
         this.context.interpolate = event.target.checked;
         this.context.publish(
             IMAGE_SETTINGS_CHANGE, {interpolate: this.context.interpolate});
+
+        return false;
+    }
+
+    /**
+     * Toggles intensity querying for image
+     *
+     * @param {Object} event the event object
+     * @memberof Settings
+     */
+    togglePixelIntensity(event) {
+        if (this.image_config === null) return;
+        
+        event.preventDefault();
+        event.stopPropagation();
+
+        this.context.publish(
+            IMAGE_INTENSITY_QUERYING,
+            {config_id: this.image_config.id, flag: event.target.checked});
 
         return false;
     }

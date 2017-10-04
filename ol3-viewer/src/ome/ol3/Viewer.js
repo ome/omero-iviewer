@@ -436,6 +436,7 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
        var oldC = this.image_info_['channels'][c];
        var newC = {
            "active" : oldC['active'],
+           "label" : typeof oldC['label'] === 'string' ? oldC['label'] : c,
            "color" :
                typeof oldC['lut'] === 'string' &&
                oldC['lut'].length > 0 ? oldC['lut'] : oldC['color'],
@@ -555,6 +556,8 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
     }
     // enable scalebar by default
     this.toggleScaleBar(true);
+    // enable intensity control
+    this.toggleIntensityControl(true);
 
     // helper to broadcast a viewer interaction (zoom and drag)
     var notifyAboutViewerInteraction = function(viewer) {
@@ -1623,13 +1626,12 @@ ome.ol3.Viewer.prototype.getSmallestViewExtent = function() {
  *
  * @param {Array.<string>} deleted an array of ids for deletion (of the form: roi_id:shape_id)
  * @param {boolean} useSeparateRoiForEachNewShape if false all new shapes are combined within one roi
- * @param {string} uri a server uri to post to for persistance
  * @param {boolean} omit_client_update an optional flag that's handed back to the client
  *                  to indicate that a client side update to the response is not needed
  * @return {boolean} true if a storage request was made, false otherwise
  */
 ome.ol3.Viewer.prototype.storeRegions =
-    function(deleted, useSeparateRoiForEachNewShape, uri, omit_client_update) {
+    function(deleted, useSeparateRoiForEachNewShape, omit_client_update) {
 
         if (!(this.regions_ instanceof ome.ol3.source.Regions))
             return false; // no regions, nothing to persist...
@@ -1639,7 +1641,6 @@ ome.ol3.Viewer.prototype.storeRegions =
         useSeparateRoiForEachNewShape =
             typeof(useSeparateRoiForEachNewShape) === 'boolean' ?
                 useSeparateRoiForEachNewShape : true;
-        if (typeof uri !== 'string' || uri.length === 0) uri = '/persist_rois';
 
         var isDeleteRequest =
             ome.ol3.utils.Misc.isArray(deleted) && deleted.length > 0;
@@ -1682,8 +1683,7 @@ ome.ol3.Viewer.prototype.storeRegions =
 
         // remember deleted ids for history removal
         roisAsJsonObject['is_delete'] = isDeleteRequest;
-        return this.regions_.storeRegions(
-                    roisAsJsonObject, uri, omit_client_update);
+        return this.regions_.storeRegions(roisAsJsonObject, omit_client_update);
 }
 
 /**
@@ -1864,6 +1864,24 @@ ome.ol3.Viewer.prototype.changeImageModel = function(value) {
     return true;
  }
 
+ /**
+  * Enables/disabled intensity display control
+  *
+  * @param {boolean} show if true we show the intensity, otherwise not
+  */
+  ome.ol3.Viewer.prototype.toggleIntensityControl = function(show) {
+     var haveControl =
+         typeof this.viewerState_['intensity'] === 'object';
+     if (!haveControl && !show) return; // nothing to do
+     if (haveControl && !show) { // remove existing one
+         this.removeInteractionOrControl("intensity");
+         return;
+     }
+     if (!haveControl) this.addControl("intensity");
+     this.viewerState_["intensity"]['ref'].enable(
+         this.getPrefixedURI(ome.ol3.PLUGIN_PREFIX));
+  }
+
 /**
  * Triggers a map update with redraw of viewport.
  * Useful if target div has been resized
@@ -1888,6 +1906,15 @@ ome.ol3.Viewer.prototype.redraw = function(delay) {
         }
         setTimeout(update, delay);
     }
+}
+
+/**
+ * Extracts the id which is part of the viewer's target element id
+ * e.g. xxxxx_344455. In a standalone ol3 setup there won't be a number
+ * but just an id
+ */
+ome.ol3.Viewer.prototype.getTargetId = function() {
+    return ome.ol3.utils.Misc.getTargetId(this.viewer_.getTargetElement());
 }
 
 /**
@@ -2083,7 +2110,7 @@ ome.ol3.Viewer.prototype.sendCanvasContent = function(full_extent) {
    this.viewer_.renderSync();
 }
 
-/*
+/**
  * Returns the area and length values for given shapes
  * @param {Array.<string>} ids the shape ids in the format roi_id:shape_id
  * @param {boolean} recalculate flag: if true we redo the measurement (default: false)
@@ -2132,6 +2159,18 @@ ome.ol3.Viewer.prototype.setCenterAndResolution = function(center, resolution) {
         }
     } catch(just_in_case) {}
     this.prevent_event_notification_ = false;
+}
+
+/*
+ * Turns on/off intensity querying
+ * @param {boolean} flag  if on we turn on intensity querying, otherwise off
+ */
+ome.ol3.Viewer.prototype.toggleIntensityQuerying = function(flag) {
+    try {
+        return this.viewerState_["intensity"]["ref"].toggleIntensityQuerying(flag);
+    } catch(ignored) {
+        return false;
+    }
 }
 
 
@@ -2342,3 +2381,8 @@ goog.exportProperty(
     ome.ol3.Viewer.prototype,
     'setCenterAndResolution',
     ome.ol3.Viewer.prototype.setCenterAndResolution);
+
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
+    'toggleIntensityQuerying',
+    ome.ol3.Viewer.prototype.toggleIntensityQuerying);

@@ -18,6 +18,8 @@
 
 /** whenever the image canvas data was retrieved */
 export const IMAGE_CANVAS_DATA = "IMAGE_CANVAS_DATA";
+/** whenever pixel intensity querying should be turned on/off */
+export const IMAGE_INTENSITY_QUERYING = "IMAGE_INTENSITY_QUERYING";
 /** whenever the image viewer needs to be resized */
 export const IMAGE_VIEWER_RESIZE = "IMAGE_VIEWER_RESIZE";
 /** whenever an image viewer interaction (zoom/drag) ocurrs */
