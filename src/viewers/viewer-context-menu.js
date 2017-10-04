@@ -419,21 +419,21 @@ export default class ViewerContextMenu {
         if (ids_for_stats.length === 0 ||
             regInf.image_info.getActiveChannels().length === 0) {
             this.writeCsv();
-            return;
+        } else {
+            $.ajax({
+                url:
+                    this.context.server + this.context.getPrefixedURI(IVIEWER) +
+                    '/shape_stats/?ids=' + ids_for_stats.join(',') +
+                    "&z=" + regInf.image_info.dimensions['z'] +
+                    "&t=" + regInf.image_info.dimensions['t'] +
+                    "&cs=" + regInf.image_info.getActiveChannels().join(','),
+                success: (resp) => this.writeCsv(resp),
+                error: (err) => {
+                    console.error(err);
+                    this.writeCsv();
+                }
+            });
         }
-        $.ajax({
-            url:
-                this.context.server + this.context.getPrefixedURI(IVIEWER) +
-                '/shape_stats/?ids=' + ids_for_stats.join(',') +
-                "&z=" + regInf.image_info.dimensions['z'] +
-                "&t=" + regInf.image_info.dimensions['t'] +
-                "&cs=" + regInf.image_info.getActiveChannels().join(','),
-            success: (resp) => this.writeCsv(resp),
-            error: (err) => {
-                console.error(err);
-                this.writeCsv();
-            }
-        });
 
         this.hideContextMenu();
         // prevent link click behavior
@@ -447,7 +447,7 @@ export default class ViewerContextMenu {
      * @param {Object} shape_stats the shape stats
      * @memberof ViewerContextMenu
      */
-    writeCsv(shape_stats = {}) {
+    writeCsv(shape_stats) {
         let regInf = this.image_config.regions_info;
         let units = regInf.image_info.image_pixels_size.symbol_x || 'px';
         let img_id = regInf.image_info.image_id;
@@ -455,8 +455,9 @@ export default class ViewerContextMenu {
 
         let csv =
             "image_id,image_name,roi_id,shape_id,type,z,t,\"area (" + units +
-            "\u00b2)\",\"length (" + units + ")\",channel,points,min,max," +
-            "sum,mean,std_dev" + CSV_LINE_BREAK;
+            "\u00b2)\",\"length (" + units + ")\"";
+        if (shape_stats) csv += ",channel,points,min,max,sum,mean,std_dev";
+        csv += CSV_LINE_BREAK;
 
         for (let i in regInf.selected_shapes) {
             let id = regInf.selected_shapes[i];
@@ -466,25 +467,24 @@ export default class ViewerContextMenu {
 
             let channel = '', points = '', min = '', max = '';
             let sum = '', mean = '', stddev = '';
-            if (typeof shape_stats[shape['@id']] === 'object') {
+            let commonCsvPortion =
+                img_id + ",\"" + img_name + "\"," +
+                roi_id + "," + shape['@id'] + "," + shape.type + "," +
+                (shape.TheZ+1) + "," + (shape.TheT+1) + "," +
+                (shape.Area < 0 ? '' : shape.Area) + "," +
+                (shape.Length < 0 ? '' : shape.Length);
+
+            if (shape_stats && typeof shape_stats[shape['@id']] === 'object') {
                 for (let s in shape_stats[shape['@id']]) {
                     let stat = shape_stats[shape['@id']][s];
-                    csv += img_id + ",\"" + img_name + "\"," +
-                        roi_id + "," + shape['@id'] + "," + shape.type + "," +
-                        (shape.TheZ+1) + "," + (shape.TheT+1) + "," +
-                        (shape.Area < 0 ? '' : shape.Area) + "," +
-                        (shape.Length < 0 ? '' : shape.Length) + "," +
-                        stat.index + "," + stat.points + "," + stat.min + "," +
-                        stat.max + "," + stat.sum + "," + stat.mean + "," +
-                        stat.std_dev + CSV_LINE_BREAK;
+                    csv += commonCsvPortion + "," +
+                        stat.index + "," + stat.points + "," +
+                        stat.min + "," + stat.max + "," + stat.sum + "," +
+                        stat.mean + "," + stat.std_dev + CSV_LINE_BREAK;
                 }
             } else {
-                csv += img_id + ",\"" + img_name + "\"," +
-                    roi_id + "," + shape['@id'] + "," + shape.type + "," +
-                    (shape.TheZ+1) + "," + (shape.TheT+1) + "," +
-                    (shape.Area < 0 ? '' : shape.Area) + "," +
-                    (shape.Length < 0 ? '' : shape.Length) +
-                    ",,,,,,," + CSV_LINE_BREAK;
+                csv += commonCsvPortion + (shape_stats ? ",,,,,,," : "") +
+                        CSV_LINE_BREAK;
             }
         }
 
