@@ -19,7 +19,7 @@ import Misc from '../utils/misc';
 import ImageConfig from '../model/image_config';
 import {noView} from 'aurelia-framework';
 import {
-    CHANNEL_SETTINGS_MODE, FLOATING_POINT_PRECISION
+    CHANNEL_SETTINGS_MODE, FLOATING_POINT_PRECISION, SYNC_LOCK
 } from '../utils/constants';
 
 /**
@@ -124,21 +124,22 @@ export default class Ol3ViewerLinkedEvents {
         if (group.members.indexOf(conf.id) === -1) return;
 
         // delegate to local syncing function
-        func.call(this, params, group.dimension_locks);
+        func.call(this, params, group.sync_locks);
     }
 
     /**
-     * Checks whether the dimension lock is set for a specific group
+     * Checks whether the sync lock is set for a specific group
      *
      * @memberof Ol3ViewerLinkedEvents
-     * @param {dim} dim the dimension letter: z,t,c
+     * @param {string} lock the lock, e.g z, t, c or v
      * @return {boolean} true if locked, otherwise false
      */
-     isDimensionLocked(dim = "", dim_locks = {}) {
-         if (typeof dim_locks !== 'object' ||
-            dim_locks === null || typeof dim !== 'string') false;
+     isLocked(lock = "", sync_locks = {}) {
+         if (typeof sync_locks !== 'object' ||
+            sync_locks === null ||
+            typeof lock !== 'string') return false;
 
-         return dim_locks[dim];
+         return sync_locks[lock];
      }
 
 
@@ -149,10 +150,10 @@ export default class Ol3ViewerLinkedEvents {
      *
      * @memberof Ol3ViewerLinkedEvents
      * @param {Object} params the event notification parameters
-     * @param {Object} dim_locks the dimension locks for the group
+     * @param {Object} sync_locks the sync locks for the group
      */
-    changeImageSettings(params = {}, dim_locks = {}) {
-        if (!this.isDimensionLocked('c', dim_locks)) return;
+    changeImageSettings(params = {}, sync_locks = {}) {
+        if (!this.isLocked(SYNC_LOCK.CHANNELS.CHAR, sync_locks)) return;
 
         let conf = this.getImageConfig();
         if (typeof params.model === 'string') {
@@ -256,10 +257,10 @@ export default class Ol3ViewerLinkedEvents {
      *
      * @memberof Ol3ViewerLinkedEvents
      * @param {Object} params the event notification parameters
-     * @param {Object} dim_locks the dimension locks for the group
+     * @param {Object} sync_locks the sync locks for the group
      */
-    setDimensionIndex(params = {}, dim_locks = {}) {
-        if (!this.isDimensionLocked(params.dim, dim_locks)) return;
+    setDimensionIndex(params = {}, sync_locks = {}) {
+        if (!this.isLocked(params.dim, sync_locks)) return;
 
         let conf = this.getImageConfig();
         let dims = conf.image_info.dimensions;
@@ -291,9 +292,10 @@ export default class Ol3ViewerLinkedEvents {
      * Synchronizes zoom and center of sync_group members
      *
      * @memberof Ol3ViewerLinkedEvents
-     * @param {Object} dim_locks the dimension locks for the group
+     * @param {Object} sync_locks the sync locks for the group
      */
-    syncView(params = {}, dim_locks = {}) {
+    syncView(params = {}, sync_locks = {}) {
+        if (!this.isLocked(SYNC_LOCK.VIEW.CHAR, sync_locks)) return;
         this.getViewer().setViewParameters(
             params.center, params.resolution, params.rotation);
     }

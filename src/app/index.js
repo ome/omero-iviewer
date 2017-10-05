@@ -32,7 +32,7 @@ import {inject} from 'aurelia-framework';
 import Context from './context';
 import Misc from '../utils/misc';
 import Ui from '../utils/ui';
-import {PLUGIN_PREFIX} from '../utils/constants';
+import {PLUGIN_PREFIX, SYNC_LOCK} from '../utils/constants';
 import {IMAGE_VIEWER_RESIZE,
         REGIONS_STORE_SHAPES, REGIONS_STORED_SHAPES} from '../events/events';
 
@@ -49,6 +49,18 @@ export class Index  {
      * @type {number}
      */
     resizeHandle = null;
+
+    /**
+     * array of possible sync locks
+     * @memberof Index
+     * @type {Array.<Object>}
+     */
+    sync_locks = [
+        SYNC_LOCK.Z,
+        SYNC_LOCK.T,
+        SYNC_LOCK.VIEW,
+        SYNC_LOCK.CHANNELS
+    ];
 
     /**
      * @constructor
@@ -164,18 +176,19 @@ export class Index  {
     }
 
     /**
+     * Turns on/off syncing locks
      *
      * @param {number} id the image config id
-     * @param {string} dim the dimension to lock, e.g. z,t,c
-     * @param {boolean} flag if true the dimension is locked for the group
+     * @param {string} lock the sync lock, e.g. z, t, c or v
+     * @param {boolean} flag if true the lock is applied, otherwise not
      * @memberof Index
      */
-    lockDimension(id, dim = 'c', flag) {
+    toggleSyncLock(id, lock = 'c', flag) {
         let conf = this.context.getImageConfig(id);
         if (conf === null || conf.sync_group === null) return;
         let syncGroup = this.context.sync_groups.get(conf.sync_group);
         if (syncGroup) {
-            syncGroup.dimension_locks[dim] = flag;
+            syncGroup.sync_locks[lock] = flag;
         }
     }
 

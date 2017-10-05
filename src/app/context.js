@@ -22,8 +22,8 @@ import ImageConfig from '../model/image_config';
 import {IMAGE_VIEWER_RESIZE} from '../events/events';
 import {
     APP_NAME, IVIEWER, INITIAL_TYPES, LUTS_NAMES, LUTS_PNG_URL, PLUGIN_NAME,
-    PLUGIN_PREFIX, REQUEST_PARAMS, TABS, URI_PREFIX, WEB_API_BASE, WEBCLIENT,
-    WEBGATEWAY
+    PLUGIN_PREFIX, REQUEST_PARAMS, SYNC_LOCK, TABS, URI_PREFIX, WEB_API_BASE,
+    WEBCLIENT, WEBGATEWAY
 } from '../utils/constants';
 
 /**
@@ -195,10 +195,15 @@ export default class Context {
 
         this.eventbus = eventbus;
         this.initParams = params;
-        this.sync_groups.set(
-            "group", {
-                dimension_locks: {z: true, t: true, c: false},
-                members: []});
+
+        // add sync groups & locks
+        let locks = {};
+        locks[SYNC_LOCK.Z.CHAR] = true;
+        locks[SYNC_LOCK.T.CHAR] = true;
+        locks[SYNC_LOCK.VIEW.CHAR] = true;
+        locks[SYNC_LOCK.CHANNELS.CHAR] = false;
+        [1,2,3].map((i) => this.sync_groups.set(
+            "group" + i, {sync_locks: Object.assign({}, locks), members: []}));
 
         // process inital request params and assign members
         this.processInitialParameters();

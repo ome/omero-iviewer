@@ -106,32 +106,21 @@
                              </li>
                          </ul>
                      </div>
-                     <div class="config-locks"
+                     <div class="sync-locks"
                           show.bind="context.useMDI && conf.sync_group !== null">
-                         <label show.bind="conf.image_info.ready &&
-                                            conf.image_info.dimensions.max_z > 1"
-                                title="Lock Z">
+                         <label repeat.for="lock of sync_locks"
+                                show.bind="conf.image_info.ready &&
+                                           (lock.CHAR === 'c' || lock.CHAR === 'v' ||
+                                            (lock.CHAR === 'z' &&
+                                             conf.image_info.dimensions.max_z > 1) ||
+                                            (lock.CHAR === 't' &&
+                                             conf.image_info.dimensions.max_t > 1))"
+                                title="Lock ${lock.LABEL}}">
                              <input type="checkbox"
-                                 checked.bind="conf.dimension_locks.z"
+                                 checked.bind="conf.sync_locks[lock.CHAR]"
                                  change.delegate="
-                                     lockDimension(id, 'z', $event.target.checked)"/>
-                             &nbsp;Z
-                         </label>
-                         <label show.bind="conf.image_info.ready &&
-                                            conf.image_info.dimensions.max_t > 1"
-                                title="Lock T">
-                             <input type="checkbox"
-                                 checked.bind="conf.dimension_locks.t"
-                                 change.delegate="
-                                    lockDimension(id, 't', $event.target.checked)"/>
-                             &nbsp;T
-                         </label>
-                         <label title="Lock Channel Settings">
-                             <input type="checkbox"
-                                 checked.bind="conf.dimension_locks.c"
-                                 change.delegate="
-                                    lockDimension(id, 'c', $event.target.checked)"/>
-                             &nbsp;C
+                                     toggleSyncLock(id, lock.CHAR, $event.target.checked)"/>
+                             &nbsp;${lock.LABEL}
                          </label>
                     </div>
                 </div>

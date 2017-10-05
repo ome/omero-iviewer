@@ -1160,9 +1160,6 @@ thumbnail-slider img {
 }
 
 .mdi-icon {
-    background-image: url('images/mdi.png');
-    background-repeat: no-repeat;
-    background-position: center;
     width: 32px;
     height: 30px;
     float: left;
@@ -1180,10 +1177,10 @@ thumbnail-slider img {
 .config-linking {
     position: absolute;
 }
-.config-linking .config-locks {
+.config-linking .sync-locks {
     float: right;
     color: rgba(255,255,255,1);
 }
-.config-locks label {
+.sync-locks label {
     margin-left: 10px;
 }

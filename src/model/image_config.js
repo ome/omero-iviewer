@@ -72,7 +72,7 @@ export default class ImageConfig extends History {
      * @memberof ImageConfig
      * @type {Object}
      */
-    dimension_locks = null;
+    sync_locks = null;
 
     /**
      * ui position
@@ -167,7 +167,7 @@ export default class ImageConfig extends History {
             let index = oldSyncGroup.members.indexOf(this.id);
             if (index !== -1) oldSyncGroup.members.splice(index, 1);
             this.sync_group = null;
-            this.dimension_locks = null;
+            this.sync_locks = null;
         }
         // add new sync group (if exists)
         let newSyncGroup =
@@ -176,7 +176,7 @@ export default class ImageConfig extends History {
         if (typeof newSyncGroup === 'object' && newSyncGroup !== null) {
             newSyncGroup.members.push(this.id);
             this.sync_group = sync_group;
-            this.dimension_locks = newSyncGroup.dimension_locks;
+            this.sync_locks = newSyncGroup.sync_locks;
         }
         this.context.publish(
             VIEWER_SET_SYNC_GROUP,
