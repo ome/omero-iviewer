@@ -57,11 +57,20 @@ export default class Context {
      */
     eventbus = null;
 
+
+    /**
+     * The groups for syncing/linking actions
+     *
+     * @memberof Context
+     * @type {Map}
+     */
+    sync_groups = new Map();
+
     /**
      * Flag to disable event notification
      *
      * @memberof Context
-     * @type {EventAggregator}
+     * @type {boolean}
      */
     prevent_event_notification = false;
 
@@ -186,6 +195,10 @@ export default class Context {
 
         this.eventbus = eventbus;
         this.initParams = params;
+        this.sync_groups.set(
+            "group", {
+                dimension_locks: {z: true, t: true, c: false},
+                members: []});
 
         // process inital request params and assign members
         this.processInitialParameters();
@@ -607,10 +620,8 @@ export default class Context {
         // if in mdi, select another open config
         let confSize = this.image_configs.size;
         if (this.useMDI) {
-            // remove all links to the deleted config
-            for (let [id, c] of this.image_configs)
-                if (c.linked_image_config === conf.id)
-                    c.linked_image_config = null;
+            // remove from sync group
+            conf.toggleSyncGroup(null);
             // choose next selected image config
             if (confSize > 0) {
                 this.selected_config = this.image_configs.keys().next().value;

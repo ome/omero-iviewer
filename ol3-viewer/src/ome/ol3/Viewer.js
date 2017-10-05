@@ -138,12 +138,19 @@ ome.ol3.Viewer = function(id, options) {
      */
      this.tried_regions_ = false;
 
-     /**
-      * any handed in regions data when we tried the regions (see tried_regions_)
-      * @type {Array.<Object>}
-      * @private
-      */
-      this.tried_regions_data_ = false;
+    /**
+     * any handed in regions data when we tried the regions (see tried_regions_)
+     * @type {Array.<Object>}
+     * @private
+     */
+     this.tried_regions_data_ = false;
+
+    /**
+     * the viewer's sync group
+     * @type {string|null}
+     * @private
+     */
+     this.sync_group_ = null;
 
     /**
      * a flag that's only relevant if the server is not same orgin.
@@ -568,7 +575,8 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
                 "t": viewer.getDimensionIndex('t'),
                 "c": viewer.getDimensionIndex('c'),
                 "center": viewer.viewer_.getView().getCenter(),
-                "resolution": viewer.viewer_.getView().getResolution()
+                "resolution": viewer.viewer_.getView().getResolution(),
+                "rotation": viewer.viewer_.getView().getRotation()
             });
     };
 
@@ -581,6 +589,15 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
                if (this.eventbus_) notifyAboutViewerInteraction(this);
            }, this);
     this.displayResolutionInPercent();
+    // listen to rotation changes
+    this.onViewRotationListener =
+        ol.events.listen(
+            this.viewer_.getView(), "change:rotation",
+            function(event) {
+                var regions = this.getRegions();
+                if (regions) regions.changed();
+                if (this.eventbus_) notifyAboutViewerInteraction(this);
+            }, this);
 
     // this is for work that needs to be done after,
     // e.g we have just switched images
@@ -788,14 +805,6 @@ ome.ol3.Viewer.prototype.addRegions = function(data) {
             [ome.ol3.REGIONS_MODE['SELECT'],
              ome.ol3.REGIONS_MODE['MODIFY'],
              ome.ol3.REGIONS_MODE['TRANSLATE']]);
-
-        this.onViewRotationListener =
-            ol.events.listen( // register a rerender action on rotation
-                this.viewer_.getView(), "change:rotation",
-                function(event) {
-                    var regions = this.getRegions();
-                    if (regions) regions.changed();
-                }, this);
     }
 }
 
@@ -953,11 +962,6 @@ ome.ol3.Viewer.prototype.removeRegions = function(masks_only) {
         this.regions_.dispose();
         this.regions_ = null;
     }
-
-    // remove any onViewRotationListener
-    if (typeof(this.onViewRotationListener) !== 'undefined' &&
-        this.onViewRotationListener)
-            ol.events.unlistenByKey(this.onViewRotationListener);
 
     var regionsLayer = this.getRegionsLayer();
     if (regionsLayer) {
@@ -1769,6 +1773,10 @@ ome.ol3.Viewer.prototype.dispose = function(rememberEnabled) {
         if (typeof(this.onViewResolutionListener) !== 'undefined' &&
             this.onViewResolutionListener)
                 ol.events.unlistenByKey(this.onViewResolutionListener);
+        if (typeof(this.onViewRotationListener) !== 'undefined' &&
+            this.onViewRotationListener)
+                ol.events.unlistenByKey(this.onViewRotationListener);
+
         this.viewer_.dispose();
     }
 
@@ -2136,32 +2144,44 @@ ome.ol3.Viewer.prototype.getLengthAndAreaForShapes = function(ids, recalculate) 
 }
 
 /**
- * Sets center and resolution for view
+ * Sets view parameters (center, resolution, rotation)
  *
  * @param {Array.<number>=} center the new center as an array: [x,y]
  * @param {number=} resolution the new resolution
+ * @param {number=} rotation the new rotation
  */
-ome.ol3.Viewer.prototype.setCenterAndResolution = function(center, resolution) {
+ome.ol3.Viewer.prototype.setViewParameters = function(center, resolution, rotation) {
     this.prevent_event_notification_ = true;
     try {
         // resolution first (if given)
         if (typeof resolution === 'number' && !isNaN(resolution)) {
             var constrainedResolution =
                 this.viewer_.getView().constrainResolution(resolution);
-            if (typeof constrainedResolution === 'number')
-                this.viewer_.getView().setResolution(constrainedResolution);
+            if (typeof constrainedResolution === 'number' &&
+                constrainedResolution !== this.viewer_.getView().getResolution())
+                    this.viewer_.getView().setResolution(constrainedResolution);
         }
 
         // center next (if given)
+        var presentCenter = this.viewer_.getView().getCenter();
         if (ome.ol3.utils.Misc.isArray(center) && center.length === 2 &&
-            typeof center[0] === 'number' && typeof center[1] === 'number') {
+            typeof center[0] === 'number' && typeof center[1] === 'number' &&
+            presentCenter[0] !== center[0] && presentCenter[1] !== center[1]) {
             this.viewer_.getView().setCenter(center);
         }
+
+        // rotation (if given)
+        if (typeof rotation === 'number' && !isNaN(rotation) &&
+            rotation !== this.viewer_.getView().getRotation()) {
+                this.viewer_.getView().setRotation(rotation);
+        }
+
+        this.viewer_.renderSync();
     } catch(just_in_case) {}
     this.prevent_event_notification_ = false;
 }
 
-/*
+/**
  * Turns on/off intensity querying
  * @param {boolean} flag  if on we turn on intensity querying, otherwise off
  */
@@ -2173,6 +2193,15 @@ ome.ol3.Viewer.prototype.toggleIntensityQuerying = function(flag) {
     }
 }
 
+/**
+ * Sets the sync group
+ * @param {string|null} group the sync group or null
+ */
+ome.ol3.Viewer.prototype.setSyncGroup = function(group) {
+    if (group !== null &&
+        (typeof group !== 'string' || group.length === 0)) return;
+    this.sync_group_ = group
+}
 
 /*
  * This section determines which methods are exposed and usable after compilation
@@ -2379,10 +2408,15 @@ goog.exportProperty(
 
 goog.exportProperty(
     ome.ol3.Viewer.prototype,
-    'setCenterAndResolution',
-    ome.ol3.Viewer.prototype.setCenterAndResolution);
+    'setViewParameters',
+    ome.ol3.Viewer.prototype.setViewParameters);
 
 goog.exportProperty(
     ome.ol3.Viewer.prototype,
     'toggleIntensityQuerying',
     ome.ol3.Viewer.prototype.toggleIntensityQuerying);
+
+    goog.exportProperty(
+        ome.ol3.Viewer.prototype,
+        'setSyncGroup',
+    ome.ol3.Viewer.prototype.setSyncGroup);

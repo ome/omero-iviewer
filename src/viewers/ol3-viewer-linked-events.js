@@ -23,10 +23,9 @@ import {
 } from '../utils/constants';
 
 /**
- * Contains functionality that is used in MDI mode for linked image configs
- * to achieve a "locking"/"syncing" of -broadly speaking- features/behavior
- * Depending on what needs to be achieved the respective function
- * is going to need to handle one or more of the following:
+ * Deals with "locking"/"syncing" of features/behavior for MDI mode
+ * Depending on the action the respective function is going to handle
+ * one or more of the following:
  * - data synchronization
  * - history logging
  * - respective ol3 viewer calls
@@ -78,6 +77,21 @@ export default class Ol3ViewerLinkedEvents {
     }
 
     /**
+     * Checks whether the image config belongs to the given sync group
+     *
+     * @memberof Ol3ViewerLinkedEvents
+     * @param {string} sync_group the sync group to check against
+     * @return {boolean} true if the image config id part of a group
+     */
+    isMemberOfSyncGroup(sync_group = null) {
+        let conf = this.getImageConfig();
+        if (conf === null ||
+            typeof sync_group !== 'string' ||
+            sync_group.length === 0) return false;
+        return conf.sync_group === sync_group;
+    }
+
+    /**
      * Enables/disabled event sending
      *
      * @memberof Ol3ViewerLinkedEvents
@@ -90,35 +104,57 @@ export default class Ol3ViewerLinkedEvents {
     }
 
     /**
-     * Checks whether the present Ol3Viewer instance (and its ImageConfig)
-     * are linked to the given image config id
+     * Syncs action (if group member)
      *
      * @memberof Ol3ViewerLinkedEvents
-     * @param {number} config_id a config id
-     * @return {boolean} true if the present instance is linked to the given id
+     * @param {Objct} params the event notification parameters
+     * @return {string} the action i.e. a matching function in ths class
      */
-    isValidAndLinkedViewerInstance(config_id) {
-        let imgConf = this.getImageConfig();
-        if (!(imgConf instanceof ImageConfig)) return false;
+    syncAction(params={}, action="") {
+        // preliminary checks if we are part of a group
+        // and input params are good
+        if (!this.isMemberOfSyncGroup(params.sync_group) ||
+            typeof action !== "string" || action.length === "" ||
+            typeof this[action] !== "function") return;
 
-        return imgConf.linked_image_config === config_id;
+        let func = this[action];
+        let conf = this.getImageConfig();
+        let group = this.ol3_viewer.context.sync_groups.get(conf.sync_group);
+        // one more cross-check
+        if (group.members.indexOf(conf.id) === -1) return;
+
+        // delegate to local syncing function
+        func.call(this, params, group.dimension_locks);
     }
 
     /**
-     * Handles the following image changes for linked image configs:
+     * Checks whether the dimension lock is set for a specific group
+     *
+     * @memberof Ol3ViewerLinkedEvents
+     * @param {dim} dim the dimension letter: z,t,c
+     * @return {boolean} true if locked, otherwise false
+     */
+     isDimensionLocked(dim = "", dim_locks = {}) {
+         if (typeof dim_locks !== 'object' ||
+            dim_locks === null || typeof dim !== 'string') false;
+
+         return dim_locks[dim];
+     }
+
+
+    /**
+     * Handles the following image changes of sync_group members:
      * - channel range (start, end, color, reverse)
      * - color/grayscale
      *
      * @memberof Ol3ViewerLinkedEvents
      * @param {Object} params the event notification parameters
+     * @param {Object} dim_locks the dimension locks for the group
      */
-    changeImageSettings(params = {}) {
-        if (!this.isValidAndLinkedViewerInstance(params.config_id)) return;
+    changeImageSettings(params = {}, dim_locks = {}) {
+        if (!this.isDimensionLocked('c', dim_locks)) return;
 
         let conf = this.getImageConfig();
-        // only if the lock flag for c is set
-        if (!conf.dimension_locks.c) return;
-
         if (typeof params.model === 'string') {
             let oldValue = conf.image_info.model;
             let newValue = params.model;
@@ -216,18 +252,16 @@ export default class Ol3ViewerLinkedEvents {
     }
 
     /**
-     * Deals with dimension changes for linked image configs
+     * Deals with dimension changes of sync_group members
      *
      * @memberof Ol3ViewerLinkedEvents
      * @param {Object} params the event notification parameters
+     * @param {Object} dim_locks the dimension locks for the group
      */
-    setDimensionIndex(params = {}) {
-        if (!this.isValidAndLinkedViewerInstance(params.config_id)) return;
+    setDimensionIndex(params = {}, dim_locks = {}) {
+        if (!this.isDimensionLocked(params.dim, dim_locks)) return;
 
         let conf = this.getImageConfig();
-        // only if the lock flag for c is set
-        if (!conf.dimension_locks[params.dim]) return;
-
         let dims = conf.image_info.dimensions;
         let oldValue = dims[params.dim];
         let dim_max = dims['max_' + params.dim];
@@ -254,15 +288,13 @@ export default class Ol3ViewerLinkedEvents {
     }
 
     /**
-     * Synchronizes zoom and center of any linked Ol3 Viewer
+     * Synchronizes zoom and center of sync_group members
      *
      * @memberof Ol3ViewerLinkedEvents
-     * @param {Object} params the event notification parameters
+     * @param {Object} dim_locks the dimension locks for the group
      */
-    syncLinkedViewer(params = {}) {
-        if (!this.isValidAndLinkedViewerInstance(params.config_id)) return;
-
-        this.getViewer().setCenterAndResolution(
-            params.center, params.resolution);
+    syncView(params = {}, dim_locks = {}) {
+        this.getViewer().setViewParameters(
+            params.center, params.resolution, params.rotation);
     }
 }

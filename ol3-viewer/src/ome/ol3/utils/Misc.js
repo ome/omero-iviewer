@@ -372,6 +372,7 @@ ome.ol3.utils.Misc.sendEventNotification = function(viewer, type, content, delay
     if (config_id && eventbus) { // publish
         if (typeof content !== 'object' || content === null) content = {};
         content['config_id'] = config_id;
+        content['sync_group'] = viewer.sync_group_;
         var triggerEvent = function() {
             eventbus.publish(type, content);
         };

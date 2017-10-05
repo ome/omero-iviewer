@@ -139,51 +139,44 @@ export class Index  {
     }
 
     /**
-     * Links the image config
+     * Adds/Removes the given image config to the sync group
      * @param {number} id the image config id
-     * @param {number} link_id the image config id we want to link to
+     * @param {string|null} group the sync group or null
      * @memberof Index
      */
-    linkImageConfig(id, link_id) {
+    toggleSyncGroup(id, group=null) {
         let conf = this.context.getImageConfig(id);
         if (conf === null) return;
 
-        if (typeof link_id === "string" && link_id === 'none') {
-            // remove any previous image config links
-            conf.linked_image_config = null;
-            //$('#' + id + " .dropdown-image-config button").text("None");
-            return;
-        }
-
-        let linked_conf = this.context.getImageConfig(link_id);
-        if (linked_conf !== null) {
-            conf.linked_image_config = link_id;
-            //$('#' + id + " .dropdown-image-config button").text(link_id);
-        }
+        conf.toggleSyncGroup(group);
+        this.context
     }
 
     /**
-     * Visually highlights border of hovered over image config
-     * @param {number} link_id the linked image config id
-     * @param {boolean} flag sets highlighted border style if true
+     * Visually highlights image configs contained in group
+     * @param {Array.<number>} group the group containing the image configs
+     * @param {boolean} flag if true we highlight, otherwise not
      * @memberof Index
      */
-    highlightImageConfig(link_id, flag=false) {
-        $('#' + link_id).css("border-color", flag ? "yellow" : "");
+    highlightSyncGroup(group = [], flag) {
+        for (let g in group)
+            $('#' + group[g]).css("border-color", flag ? "yellow" : "");
     }
 
     /**
      *
      * @param {number} id the image config id
      * @param {string} dim the dimension to lock, e.g. z,t,c
-     * @param {boolean} flag if true the dimension is locked to the linked config
+     * @param {boolean} flag if true the dimension is locked for the group
      * @memberof Index
      */
     lockDimension(id, dim = 'c', flag) {
         let conf = this.context.getImageConfig(id);
-        if (conf === null) return;
-
-        conf.dimension_locks[dim] = flag;
+        if (conf === null || conf.sync_group === null) return;
+        let syncGroup = this.context.sync_groups.get(conf.sync_group);
+        if (syncGroup) {
+            syncGroup.dimension_locks[dim] = flag;
+        }
     }
 
     /**

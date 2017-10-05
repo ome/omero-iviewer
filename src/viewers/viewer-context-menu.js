@@ -408,7 +408,7 @@ export default class ViewerContextMenu {
      * @memberof ViewerContextMenu
      */
     captureViewport() {
-        this.context.eventbus.publish(
+        this.context.publish(
             IMAGE_VIEWPORT_CAPTURE, {"config_id": this.image_config.id});
         // hide context menu
         this.hideContextMenu();

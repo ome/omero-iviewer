@@ -208,7 +208,7 @@ a.ui-button:active,
 }
 .center-row1-mdi {
     background-color: rgba(255,255,255,1);
-    height: calc(100% - 40px);
+    height: calc(100% - 25px);
     padding: 0px;
 }
 
@@ -474,7 +474,7 @@ a.ui-button:active,
 }
 
 .viewer-mdi {
-    min-width: 360px;
+    min-width: 400px;
     min-height: 250px;
     background-color: rgba(255,255,255,1);
     border: solid 2px rgba(31,106,170,1);
@@ -1148,7 +1148,12 @@ thumbnail-slider img {
     opacity: 1px;
 }
 .viewer-mdi .ui-resizable-se {
-    float: right;
+    width: 10px;
+    height:10px;
+    cursor: se-resize;
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
 }
 .mdi-selected {
     border-color: rgba(255,0,0,0.5);

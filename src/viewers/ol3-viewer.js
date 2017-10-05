@@ -42,8 +42,7 @@ import {
     REGIONS_GENERATE_SHAPES, REGIONS_HISTORY_ACTION, REGIONS_HISTORY_ENTRY,
     REGIONS_MODIFY_SHAPES, REGIONS_PROPERTY_CHANGED, REGIONS_SET_PROPERTY,
     REGIONS_SHOW_COMMENTS, REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES,
-    VIEWER_IMAGE_SETTINGS,
-    EventSubscriber
+    VIEWER_IMAGE_SETTINGS, VIEWER_SET_SYNC_GROUP, EventSubscriber
 } from '../events/events';
 
 
@@ -55,7 +54,7 @@ import {
 @inject(Context, Element, BindingEngine)
 export default class Ol3Viewer extends EventSubscriber {
     /**
-     * handles mdi and linked image config syncing
+     * handles mdi group syncing
      * @memberof Ol3Viewer
      * @type {Ol3ViewerLinkedEvents}
      */
@@ -96,7 +95,7 @@ export default class Ol3Viewer extends EventSubscriber {
      */
     sub_list = [
         [IMAGE_VIEWER_INTERACTION,
-            (params={}) => this.syncLinkedViewer(params)],
+            (params={}) => this.syncView(params)],
         [IMAGE_VIEWER_RESIZE,
             (params={}) => this.resizeViewer(params)],
         [IMAGE_DIMENSION_CHANGE,
@@ -138,7 +137,9 @@ export default class Ol3Viewer extends EventSubscriber {
         [IMAGE_VIEWPORT_CAPTURE,
             (params={}) => this.captureViewport(params)],
         [IMAGE_CANVAS_DATA,
-            (params={}) => this.saveCanvasData(params)]];
+            (params={}) => this.saveCanvasData(params)],
+        [VIEWER_SET_SYNC_GROUP,
+            (params={}) => this.setSyncGroup(params)]];
 
     /**
      * @constructor
@@ -195,7 +196,7 @@ export default class Ol3Viewer extends EventSubscriber {
             }
         });
         container.resizable({
-            containment: "parent", handles: "se",
+            containment: "parent", handles: {'se': '.ui-resizable-se'},
             stop: (e, ui) => {
                 this.image_config.size.width = ui.size.width + 'px';
                 this.image_config.size.height = ui.size.height + 'px';
@@ -326,7 +327,7 @@ export default class Ol3Viewer extends EventSubscriber {
 
         if (params.config_id === this.image_config.id)
             this.viewer.setDimensionIndex(params.dim, params.value);
-        else this.linked_events.setDimensionIndex(params);
+        else this.linked_events.syncAction(params, "setDimensionIndex");
     }
 
     /**
@@ -345,14 +346,14 @@ export default class Ol3Viewer extends EventSubscriber {
         let isSameConfig = params.config_id === this.image_config.id;
         if (typeof params.model === 'string') {
             if (isSameConfig) this.viewer.changeImageModel(params.model);
-            else this.linked_events.changeImageSettings(params);
+            else this.linked_events.syncAction(params, "changeImageSettings");
         } else if (isSameConfig && typeof params.projection === 'string')
             this.viewer.changeImageProjection(
                 params.projection,
                 this.image_config.image_info.projection_opts);
         else if (Misc.isArray(params.ranges) && params.ranges.length > 0) {
             if (isSameConfig) this.viewer.changeChannelRange(params.ranges);
-            else this.linked_events.changeImageSettings(params);
+            else this.linked_events.syncAction(params, "changeImageSettings");
         } else if (typeof params.interpolate === 'boolean')
             this.viewer.enableSmoothing(params.interpolate);
     }
@@ -756,7 +757,7 @@ export default class Ol3Viewer extends EventSubscriber {
 
             if (requestMade) Ui.showModalMessage("Saving Regions. Please wait...");
             else if (params.omit_client_update)
-                this.context.eventbus.publish(
+                this.context.publish(
                     REGIONS_STORED_SHAPES, { omit_client_update: true});
         };
 
@@ -767,7 +768,7 @@ export default class Ol3Viewer extends EventSubscriber {
                 numberOfdeletedShapes + ' ROIs. Do you want to continue?',
                 storeRois, () => {
                     if (params.omit_client_update)
-                        this.context.eventbus.publish(
+                        this.context.publish(
                             REGIONS_STORED_SHAPES, { omit_client_update: false});
                 });
         } else storeRois();
@@ -1120,19 +1121,30 @@ export default class Ol3Viewer extends EventSubscriber {
     }
 
     /**
-     * Propagates image interaction such as zoom/drag to any linked
-     * image configs/viewers
+     * Propagates image interaction such as zoom/drag
+     * to image configs in the same sync group
      *
      * @memberof Ol3Viewer
      * @param {Object} params the event notification parameters
      */
-     syncLinkedViewer(params={}) {
-         // not intended for ourselves...only for linked configs
+     syncView(params={}) {
+         // not intended for same image configs
          if (this.viewer === null ||
              params.config_id === this.image_config.id) return;
-         this.linked_events.syncLinkedViewer(params);
+         this.linked_events.syncAction(params, "syncView");
      }
 
+     /**
+      * Sets the sync group for the viewer
+      *
+      * @memberof Ol3Viewer
+      * @param {Object} params the event notification parameters
+      */
+      setSyncGroup(params={}) {
+          if (this.viewer === null ||
+              params.config_id !== this.image_config.id) return;
+          this.viewer.setSyncGroup(params.sync_group);
+      }
 
     /**
      * Turns on/off intensity querying

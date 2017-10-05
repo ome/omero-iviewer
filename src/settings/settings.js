@@ -575,6 +575,7 @@ export default class Settings extends EventSubscriber {
                             this.context.publish(
                                 IMAGE_SETTINGS_CHANGE,
                                 { config_id: this.image_config.id,
+                                  sync_group: this.image_config.sync_group,
                                   model: newValue}));
     }
 
@@ -603,7 +604,7 @@ export default class Settings extends EventSubscriber {
      */
     togglePixelIntensity(event) {
         if (this.image_config === null) return;
-        
+
         event.preventDefault();
         event.stopPropagation();
 

@@ -218,6 +218,7 @@ export default class DimensionSlider {
                             this.context.publish(
                                 IMAGE_DIMENSION_CHANGE,
                                     {config_id: this.image_config.id,
+                                     sync_group: this.image_config.sync_group,
                                      dim: this.dim,
                                      value: [newValue]});
                         }));

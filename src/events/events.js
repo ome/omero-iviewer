@@ -56,6 +56,8 @@ export const REGIONS_STORED_SHAPES = "REGIONS_STORED_SHAPES";
 export const REGIONS_MODIFY_SHAPES = "REGIONS_MODIFY_SHAPES";
 /** Retrieves the viewer image settings */
 export const VIEWER_IMAGE_SETTINGS = "VIEWER_IMAGE_SETTINGS";
+/** Sets the viewer's sync group */
+export const VIEWER_SET_SYNC_GROUP = "VIEWER_SET_SYNC_GROUP";
 /** whenever the ol3 viewer has made a history entry */
 export const REGIONS_HISTORY_ENTRY = "REGIONS_HISTORY_ENTRY";
 /** whenever we want to affect an ol3 viewer history undo/redo */

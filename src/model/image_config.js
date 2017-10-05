@@ -21,6 +21,7 @@ import ImageInfo from './image_info';
 import RegionsInfo from './regions_info';
 import Misc from '../utils/misc';
 import History from './history';
+import {VIEWER_SET_SYNC_GROUP} from '../events/events';
 
 /**
  * Holds the combined data/model that is relevant to working with an image:
@@ -28,6 +29,13 @@ import History from './history';
  */
 @noView
 export default class ImageConfig extends History {
+    /**
+     * the context
+     * @memberof ImageConfig
+     * @type {Context}
+     */
+     context = null;
+
     /**
      * id
      * @memberof ImageConfig
@@ -56,19 +64,15 @@ export default class ImageConfig extends History {
 
     /**
      * @memberof ImageConfig
-     * @type {number}
+     * @type {string}
      */
-    linked_image_config = null;
+    sync_group = null;
 
     /**
      * @memberof ImageConfig
      * @type {Object}
      */
-    dimension_locks = {
-        z: true,
-        t: true,
-        c: false
-    }
+    dimension_locks = null;
 
     /**
      * ui position
@@ -82,7 +86,7 @@ export default class ImageConfig extends History {
      * @memberof ImageConfig
      * @type {Object}
      */
-    size = {width: '360px', height: '250px'};
+    size = {width: '400px', height: '250px'};
 
     /**
      * show histogram flag
@@ -107,13 +111,15 @@ export default class ImageConfig extends History {
      */
     constructor(context, image_id, parent_id, parent_type) {
         super(); // for history
+        this.context = context;
         // for now this should suffice, especially given js 1 threaded nature
         this.id = new Date().getTime();
         // we assign it the incremented zIndex
-        this.zIndex = context.zIndexForMDI;
+        this.zIndex = this.context.zIndexForMDI;
         // go create the data objects for an image and its associated region
         this.image_info =
-            new ImageInfo(context, this.id, image_id, parent_id, parent_type);
+            new ImageInfo(
+                this.context, this.id, image_id, parent_id, parent_type);
         this.regions_info = new RegionsInfo(this.image_info)
     }
 
@@ -144,5 +150,36 @@ export default class ImageConfig extends History {
      */
     changed() {
         this.revision++;
+    }
+
+    /**
+     * Adds/removes the image config from the sync group
+     * @param {string|null} sync_group the new sync group or null
+     * @memberof ImageConfig
+     */
+    toggleSyncGroup(sync_group=null) {
+        if (this.sync_group === sync_group) return;
+        let oldSyncGroup =
+            typeof this.sync_group === 'string' ?
+                this.context.sync_groups.get(this.sync_group) : null;
+        // take out old sync group
+        if (typeof oldSyncGroup === 'object' && oldSyncGroup !== null) {
+            let index = oldSyncGroup.members.indexOf(this.id);
+            if (index !== -1) oldSyncGroup.members.splice(index, 1);
+            this.sync_group = null;
+            this.dimension_locks = null;
+        }
+        // add new sync group (if exists)
+        let newSyncGroup =
+            typeof sync_group === 'string' ?
+                this.context.sync_groups.get(sync_group) : null;
+        if (typeof newSyncGroup === 'object' && newSyncGroup !== null) {
+            newSyncGroup.members.push(this.id);
+            this.sync_group = sync_group;
+            this.dimension_locks = newSyncGroup.dimension_locks;
+        }
+        this.context.publish(
+            VIEWER_SET_SYNC_GROUP,
+            {config_id: this.id, "sync_group": this.sync_group});
     }
 }

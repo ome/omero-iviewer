@@ -91,26 +91,23 @@
                          <button type="button"
                              class="btn btn-default btn-sm dropdown-toggle"
                              data-toggle="dropdown">
-                                ${conf.linked_image_config === null ?
-                                'None' : conf.linked_image_config}
+                                ${conf.sync_group === null ?
+                                'None' : conf.sync_group}
                          </button>
                          <ul class="dropdown-menu">
-                             <li click.delegate="linkImageConfig(id, 'none')">
-                                 <a href="#">None</a>
+                             <li click.delegate="toggleSyncGroup(id, null)">
+                                 <a href="#">none</a>
                              </li>
-                             <li repeat.for="[link_id, link_conf] of context.image_configs"
-                                 show.bind="link_id !== id &&
-                                            link_conf.linked_image_config !== id &&
-                                            conf.linked_image_config !== link_id"
-                                 click.delegate="linkImageConfig(id, link_id)"
-                                 mouseover.delegate="highlightImageConfig(link_id, true)"
-                                 mouseout.delegate="highlightImageConfig(link_id)">
-                                 <a href="#">${link_id}</a>
+                             <li repeat.for="[name, group] of context.sync_groups"
+                                 click.delegate="toggleSyncGroup(id, name)"
+                                 mouseover.delegate="highlightSyncGroup(group.members, true)"
+                                 mouseout.delegate="highlightSyncGroup(group.members)">
+                                 <a href="#">${name}</a>
                              </li>
                          </ul>
                      </div>
                      <div class="config-locks"
-                          show.bind="context.useMDI && conf.linked_image_config !== null">
+                          show.bind="context.useMDI && conf.sync_group !== null">
                          <label show.bind="conf.image_info.ready &&
                                             conf.image_info.dimensions.max_z > 1"
                                 title="Lock Z">
@@ -145,6 +142,7 @@
                 </div>
                 <ol3-viewer image_config.bind="conf">
                 </ol3-viewer>
+                <div class="ui-resizable-se"></div>
             </div>
         </div>
 
