@@ -16,9 +16,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-// css
-require('../css/ol3-viewer.css');
-
 // dependencies
 import Context from '../app/context';
 import Misc from '../utils/misc';
