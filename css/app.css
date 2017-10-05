@@ -220,15 +220,9 @@ a.ui-button:active,
     height: 35px;
     margin-top: -35px;
     position: relative;
-}
-.center-row2 {
-    height: 35px;
-    margin-top: -35px;
-    position: relative;
     background-color: rgba(255,255,255,1);
     margin-right: 10px;
 }
-
 .center-row2-hidden {
     display: none;
 }
@@ -437,7 +431,7 @@ a.ui-button:active,
     float:left;
     height:100%;
     position: relative;
-    z-index: 10000;
+    z-index: 5;
     background-color: #f8f8f8;
     overflow-x: hidden;
 }
@@ -449,7 +443,7 @@ a.ui-button:active,
     float: left;
     width: 5px;
     cursor: ew-resize;
-    z-index: 10001;
+    z-index: 10;
 }
 
 .left-split img {
@@ -1164,6 +1158,7 @@ thumbnail-slider img {
     height: 30px;
     float: left;
     margin-left: 5px;
+    cursor: pointer;
 }
 
 .dropdown-image-config {
