@@ -19,13 +19,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-      <link rel="stylesheet" type="text/css" href="{% static 'omero_iviewer/css/theme.css'|add:iviewer_url_suffix %}" />
-      <link rel="stylesheet" type="text/css" href="{% static 'omero_iviewer/css/spinner.css'|add:iviewer_url_suffix %}" />
-      <link rel="stylesheet" type="text/css" href="{% static 'omero_iviewer/css/slider.css'|add:iviewer_url_suffix %}" />
-      <link rel="stylesheet" type="text/css" href="{% static 'omero_iviewer/css/bootstrap.min.css'|add:iviewer_url_suffix %}" />
-      <link rel="stylesheet" type="text/css" href="{% static 'omero_iviewer/css/spectrum.css'|add:iviewer_url_suffix %}" />
-      <link rel="stylesheet" type="text/css" href="{% static 'omero_iviewer/css/ol3-viewer.css'|add:iviewer_url_suffix %}" />
-      <link rel="stylesheet" type="text/css" href="{% static 'omero_iviewer/css/app.css'|add:iviewer_url_suffix %}" />
+      <link rel="stylesheet" type="text/css" href="{% static 'omero_iviewer/css/all.min.css'|add:iviewer_url_suffix %}" />
 
       <script type="text/javascript">
         window.INITIAL_REQUEST_PARAMS = {};
@@ -39,7 +33,13 @@
 
   <body class="container-fluid">
       <script type="text/javascript"
-              src="{% static 'omero_iviewer/bundle.js'|add:iviewer_url_suffix %}">
+              src="{% static 'omero_iviewer/init.js'|add:iviewer_url_suffix %}">
+      </script>
+      <script type="text/javascript"
+              src="{% static 'omero_iviewer/main.js'|add:iviewer_url_suffix %}">
+      </script>
+      <script type="text/javascript"
+              src="{% static 'omero_iviewer/deps.js'|add:iviewer_url_suffix %}">
       </script>
   </body>
 

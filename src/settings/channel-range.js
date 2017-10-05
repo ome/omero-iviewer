@@ -16,13 +16,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-//css & images
-require('../../node_modules/jquery-ui/themes/base/spinner.css');
-require('../../node_modules/spectrum-colorpicker/spectrum.css');
-require('../css/images/close.gif');
-require('../css/images/colorpicker.png');
-
-// js
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import {
