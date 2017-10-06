@@ -18,6 +18,7 @@
 
 <template>
     <require from="../controls/dimension-slider"></require>
+    <require from="./viewer-context-menu"></require>
 
     <div class="${context.useMDI && context.image_configs.size  > 1 ?
                     'center-row1-mdi' : 'center-row1'}
@@ -52,4 +53,5 @@
                        'right: 160px': ''}">
             </dimension-slider>
     </div>
+    <viewer-context-menu image_config.bind="image_config"></viewer-context-menu>
 </template>

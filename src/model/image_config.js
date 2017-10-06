@@ -96,13 +96,6 @@ export default class ImageConfig extends History {
     show_histogram = false;
 
     /**
-     * z-index
-     * @memberof ImageConfig
-     * @type {number}
-     */
-    zIndex = 15;
-
-    /**
      * @constructor
      * @param {Context} context the application context
      * @param {number} image_id the image id to be queried
@@ -114,8 +107,6 @@ export default class ImageConfig extends History {
         this.context = context;
         // for now this should suffice, especially given js 1 threaded nature
         this.id = new Date().getTime();
-        // we assign it the incremented zIndex
-        this.zIndex = this.context.zIndexForMDI;
         // go create the data objects for an image and its associated region
         this.image_info =
             new ImageInfo(

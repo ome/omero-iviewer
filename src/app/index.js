@@ -48,6 +48,19 @@ export class Index  {
     resizeHandle = null;
 
     /**
+     * a prefix for the full screen api methods
+     * @memberof Index
+     * @type {string}
+     */
+    full_screen_api_prefix = null;
+
+    /**
+     * @memberof Index
+     * @type {boolean}
+     */
+    restoreMDI = false;
+
+    /**
      * array of possible sync locks
      * @memberof Index
      * @type {Array.<Object>}
@@ -106,6 +119,15 @@ export class Index  {
             this.context.eventbus,
             this.context.getPrefixedURI(PLUGIN_PREFIX, true),
         );
+
+        // register the fullscreenchange handler
+        this.full_screen_api_prefix = Ui.getFullScreenApiPrefix();
+        if (this.full_screen_api_prefix &&
+            typeof document['on' +
+                this.full_screen_api_prefix + 'fullscreenchange'] !== 'function')
+                document['on' +
+                    this.full_screen_api_prefix + 'fullscreenchange'] =
+                        () => this.onFullScreenChange();
     }
 
     /**
@@ -190,6 +212,26 @@ export class Index  {
     }
 
     /**
+     * Handles fullscreen changes
+     *
+     * @memberof Index
+     */
+    onFullScreenChange() {
+        let isInFullScreen =
+            document[this.full_screen_api_prefix + 'isFullScreen'] ||
+            document[this.full_screen_api_prefix + 'FullScreen'] ||
+            document[this.full_screen_api_prefix + 'FullscreenElement'];
+
+        if (isInFullScreen) {
+            this.restoreMDI = this.context.useMDI;
+            if (this.restoreMDI) this.context.useMDI = false;
+        } else {
+            if (this.restoreMDI) this.context.useMDI = true;
+        }
+        $(".viewer-context-menu").hide();
+    }
+
+    /**
      * Overridden aurelia lifecycle method:
      * called when the view and its elemetns are detached from the PAL
      * (dom abstraction)
@@ -199,5 +241,11 @@ export class Index  {
     detached() {
         window.onresize = null;
         window.onbeforeunload = null;
+        if (this.full_screen_api_prefix !== null &&
+            document['on' +
+                this.full_screen_api_prefix + 'fullscreenchange']) {
+                document['on'
+                    + this.full_screen_api_prefix + 'fullscreenchange'] = null;
+        }
     }
 }

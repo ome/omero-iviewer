@@ -132,14 +132,6 @@ export default class Context {
     useMDI = false;
 
     /**
-     * zIndex counter to keep order
-     *
-     * @memberof Context
-     * @type {boolean}
-     */
-    zIndexForMDI = 15;
-
-    /**
      * the global value indicating the selected tab
      *
      * @memberof Context
@@ -587,7 +579,6 @@ export default class Context {
             for (let [id, conf] of this.image_configs)
                 this.removeImageConfig(id,conf)
         else {
-            this.zIndexForMDI++;
             this.publish(IMAGE_VIEWER_RESIZE, {config_id: -1, delay: 100});
         }
 

@@ -195,6 +195,7 @@ a.ui-button:active,
     padding-left: 110px;
     margin-right: -355px;
     padding-right: 365px;
+    z-index: 0;
 }
 
 .center {
@@ -230,7 +231,6 @@ a.ui-button:active,
 .slider-value {
     position: relative;
     background-color: #FFFFFF;
-    z-index: 10;
     display: none;
     white-space: pre;
 }
@@ -245,6 +245,7 @@ a.ui-button:active,
     bottom: 115px;
     top: 45px;
     width: 35px;
+    z-index: 3;
 }
 .show-tSlider .plane-slider {
     bottom: 150px;
@@ -253,6 +254,7 @@ a.ui-button:active,
 .time-slider {
     left: 90px;
     right: 55px;
+    z-index: 3;
 }
 .show-zSlider .time-slider {
     left: 125px;
@@ -337,7 +339,6 @@ a.ui-button:active,
     height: 100%;
     width: 9px;
     margin-left: 9px;
-    z-index: 3;
 }
 .time-slider .ui-slider {
     width: 100%;
@@ -431,7 +432,7 @@ a.ui-button:active,
     float:left;
     height:100%;
     position: relative;
-    z-index: 5;
+    z-index: 1;
     background-color: #f8f8f8;
     overflow-x: hidden;
 }
@@ -443,7 +444,7 @@ a.ui-button:active,
     float: left;
     width: 5px;
     cursor: ew-resize;
-    z-index: 10;
+    z-index: 1;
 }
 
 .left-split img {
@@ -465,6 +466,7 @@ a.ui-button:active,
 .viewer {
     height: 100%;
     width: 100%;
+    z-index: 0;
 }
 
 .viewer-mdi {
@@ -472,6 +474,7 @@ a.ui-button:active,
     min-height: 250px;
     background-color: rgba(255,255,255,1);
     border: solid 2px rgba(31,106,170,1);
+    z-index: 0;
 }
 
 .show-zSlider .viewer {
@@ -1088,11 +1091,12 @@ thumbnail-slider img {
    font-weight: 700;
  }
 
-#viewer-context-menu {
+.viewer-context-menu {
     position: absolute;
     top: 0px;
     left: 0px;
     display: none;
+    z-index: 5;
 }
 
 .gradient-png {
@@ -1109,14 +1113,14 @@ thumbnail-slider img {
     top: 10px;
     right: 5px;
     cursor: pointer;
-    z-index: 10;
+    z-index: 1;
 }
 
 .columns-dropdown {
     position: absolute;
     right: 0px;
     top: 0px;
-    z-index: 30;
+    z-index: 1;
 }
 .columns-dropdown .dropdown-menu {
     right: 0px;
@@ -1151,6 +1155,7 @@ thumbnail-slider img {
 }
 .mdi-selected {
     border-color: rgba(255,0,0,0.5);
+    z-index: 1;
 }
 
 .mdi-icon {
