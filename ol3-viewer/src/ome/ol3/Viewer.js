@@ -526,7 +526,7 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
        controls: controls,
        interactions:  interactions,
        renderer: ol.renderer.Type.CANVAS,
-       layers: [new ol.layer.Tile({source: source, preload: Infinity})],
+       layers: [new ol.layer.Tile({source: source})],
        target: this.container_,
        view: view
     });
