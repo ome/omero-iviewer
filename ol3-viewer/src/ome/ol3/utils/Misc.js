@@ -87,9 +87,9 @@ ome.ol3.utils.Misc.prepareResolutions = function(resolutions) {
         var resAtI = resolutions[i];
         var resBefI = resolutions[i-1];
         var delta = Math.abs(resBefI - resAtI);
-        // we divide up into 8 levels in between, i.e. 12.5% of the original delta
-        var partialDelta = delta * 0.125;
-        for (var j=1;j<=8;j++) newRes.push(resAtI + j * partialDelta);
+        // we divide up into 4 levels in between, i.e. 12.5% of the original delta
+        var partialDelta = delta * 0.25;
+        for (var j=1;j<=4;j++) newRes.push(resAtI + j * partialDelta);
     }
     // append zoom in factors (if present, unlikely with tiled)
     if (oneToOneIndex < resolutions.length-1)
