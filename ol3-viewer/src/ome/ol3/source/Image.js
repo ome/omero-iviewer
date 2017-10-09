@@ -225,21 +225,12 @@ ome.ol3.source.Image = function(options) {
      */
     this.render_watch_ = null;
 
-    // get rest of parameters and instantiate a tile grid
-    var tileSize =
-        opts.tile_size ||
-            { width: ol.DEFAULT_TILE_SIZE, height: ol.DEFAULT_TILE_SIZE };
-    var extent = [0, -this.height_, this.width_, 0];
-    var tileGrid = new ol.tilegrid.TileGrid({
-        tileSize: [tileSize.width, tileSize.height],
-        extent: extent,
-        origin: ol.extent.getTopLeft(extent),
-        resolutions: this.resolutions_
-    });
-
-    // a custom tile url function concatinating all image specificiations
-    // needed to retrieve the image from the server
-    var tileUrlFunction =
+    /**
+     * our custom tile url function
+     * @type {number}
+     * @private
+     */
+    this.tileUrlFunction_  =
         function tileUrlFunction(tileCoord, pixelRatio, projection) {
             if (!tileCoord) return undefined;
 
@@ -298,12 +289,25 @@ ome.ol3.source.Image = function(options) {
             return url;
     };
 
+    // get rest of parameters and instantiate a tile grid
+    var tileSize =
+        opts.tile_size ||
+            { width: ol.DEFAULT_TILE_SIZE, height: ol.DEFAULT_TILE_SIZE };
+    var extent = [0, -this.height_, this.width_, 0];
+    var tileGrid = new ol.tilegrid.TileGrid({
+        tileSize: [tileSize.width, tileSize.height],
+        extent: extent,
+        origin: ol.extent.getTopLeft(extent),
+        resolutions: this.resolutions_
+    });
+
     // call super constructor and set proprerties needed
     goog.base(this, {
+        transition: 0,
         crossOrigin: opts.crossOrigin,
         tileClass:  ome.ol3.tiles.ImageTile,
         tileGrid: tileGrid,
-        tileUrlFunction: tileUrlFunction,
+        tileUrlFunction: this.tileUrlFunction_
     });
 };
 goog.inherits(ome.ol3.source.Image, ol.source.TileImage);
@@ -338,7 +342,7 @@ ome.ol3.source.Image.prototype.createTile_ =
                 tileUrl !== undefined ?
                     ol.TileState.IDLE : ol.TileState.EMPTY,
                 tileUrl !== undefined ? tileUrl : '',
-                this.crossOrigin, this.tileLoadFunction);
+                this.crossOrigin, this.tileLoadFunction, this.tileOptions);
 
         tile.key = key;
         tile.source = this;
@@ -465,7 +469,6 @@ ome.ol3.source.Image.prototype.setImageProjection = function(value, opts) {
                 this.projection_opts_ =
                     {start: opts['start'], end: opts['end']};
         } else this.projection_opts_ = null;
-        this.forceRender();
      } catch(not_found) {}
 }
 
@@ -483,7 +486,6 @@ ome.ol3.source.Image.prototype.setImageModel = function(value) {
          value.toLowerCase() !== 'c')) return;
 
     this.image_model_ = value[0];
-    this.forceRender();
 }
 
 /**
@@ -491,9 +493,8 @@ ome.ol3.source.Image.prototype.setImageModel = function(value) {
  * given an index for the  channel in question
  *
  * @param {Array.<Object>} ranges an array of objects with above mentioned props
- * @param {boolean} rerender flag to affect rerender (defaults to true)
  */
-ome.ol3.source.Image.prototype.changeChannelRange = function(ranges, rerender) {
+ome.ol3.source.Image.prototype.changeChannelRange = function(ranges) {
     if (!ome.ol3.utils.Misc.isArray(ranges)) return;
 
     for (var r in ranges) {
@@ -522,9 +523,6 @@ ome.ol3.source.Image.prototype.changeChannelRange = function(ranges, rerender) {
         if (typeof range['active'] === 'boolean')
         this.channels_info_[channel_index]['active'] = range['active'];
     }
-
-    rerender = typeof rerender !== 'boolean' ? true : rerender;
-    if (rerender) this.forceRender();
 }
 
 /**
@@ -603,40 +601,20 @@ ome.ol3.source.Image.prototype.getPostTileLoadFunction = function() {
 ome.ol3.source.Image.prototype.setPostTileLoadFunction = function(func) {
     if (typeof(func) !== 'function') return;
     this.postTileLoadFunction_ =  func;
-    this.forceRender();
 }
 
 /**
- * Removes the post tiling function, forcing a rerender of the layers
+ * Removes the post tiling function
  */
 ome.ol3.source.Image.prototype.clearPostTileLoadFunction = function() {
     this.postTileLoadFunction_ =  null;
-    this.forceRender();
-}
-
-/**
- * Forces a rerendering of the layers
- *
- * @param {boolean} clearCache empties the tile cache if true
- * @private
- */
-ome.ol3.source.Image.prototype.forceRender = function(clearCache) {
-    try {
-        // if we didn't get a flag we clear the cache for tiled sources only
-        if (typeof clearCache !== 'boolean')
-            clearCache = this.use_tiled_retrieval_;
-
-        if (clearCache) this.tileCache.clear();
-        else this.cache_version_++;
-        this.changed();
-    } catch(canHappen) {}
 }
 
 /**
  * Watches the render status by setting up a post render event once
  * and registering the appropriate tile load listeners
  *
- * @param {ol.Map} viewer a map reference for postrender
+ * @param {ol.PluggableMap} viewer a map reference for postrender
  * @param {boolean} stopOnTileLoadError we don't continue watching the load
  *                      progress if we experience tile load errors,
  *                      defaults to false

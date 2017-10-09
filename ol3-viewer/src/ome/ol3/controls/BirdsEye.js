@@ -96,7 +96,7 @@ goog.inherits(ome.ol3.controls.BirdsEye, ol.control.OverviewMap);
 
 /**
  * Overridden to add projection to view
- * @param {ol.Map} map
+ * @param {ol.PluggableMap} map
  */
 ome.ol3.controls.BirdsEye.prototype.setMap = function(map) {
   var oldMap = this.getMap();

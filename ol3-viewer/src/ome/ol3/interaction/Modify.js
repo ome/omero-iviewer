@@ -113,7 +113,7 @@ ome.ol3.interaction.Modify.prototype.handleFeatureAdd_ = function(evt) {
  * Overridden method
  *
  * @param {ol.Pixel} pixel Pixel
- * @param {ol.Map} map Map.
+ * @param {ol.PluggableMap} map Map.
  * @private
  */
 ome.ol3.interaction.Modify.prototype.handlePointerAtPixel_ = function(pixel, map) {

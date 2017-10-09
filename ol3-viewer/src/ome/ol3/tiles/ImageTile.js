@@ -35,10 +35,12 @@ goog.require('ol.Tile')
  * @param {string} src Image source URI.
  * @param {?string} crossOrigin Cross origin.
  * @param {ol.TileLoadFunctionType} tileLoadFunction Tile load function.
+ * @param {olx.TileOptions=} opt_options Tile options.
  */
 ome.ol3.tiles.ImageTile = function(
-    tileCoord, state, src, crossOrigin, tileLoadFunction) {
-    goog.base(this, tileCoord, state, src, crossOrigin, tileLoadFunction);
+    tileCoord, state, src, crossOrigin, tileLoadFunction, opt_options) {
+    goog.base(
+        this, tileCoord, state, src, crossOrigin, tileLoadFunction, opt_options);
 
     /**
      * @type {object}

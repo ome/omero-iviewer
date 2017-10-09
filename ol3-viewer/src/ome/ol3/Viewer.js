@@ -24,7 +24,7 @@ goog.require('ol.Collection');
 goog.require('ol.proj.Projection');
 goog.require('ol.layer.Tile');
 goog.require('ol.View');
-goog.require('ol.Map');
+goog.require('ol.PluggableMap');
 
 /**
  * @classdesc
@@ -204,9 +204,9 @@ ome.ol3.Viewer = function(id, options) {
     this.viewerState_ = {};
 
     /**
-     * the viewer (ol.Map) instance
+     * the viewer instance
      *
-     * @type {ol.Map}
+     * @type {ol.PluggableMap}
      * @private
      */
     this.viewer_ = null;
@@ -521,11 +521,10 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
     }
 
     // finally construct the open layers map object
-    this.viewer_ = new ol.Map({
+    this.viewer_ = new ol.PluggableMap({
        logo: false,
        controls: controls,
        interactions:  interactions,
-       renderer: ol.renderer.Type.CANVAS,
        layers: [new ol.layer.Tile({source: source})],
        target: this.container_,
        view: view
@@ -750,7 +749,7 @@ ome.ol3.Viewer.prototype.changeToImage =
  */
 ome.ol3.Viewer.prototype.addRegions = function(data) {
     // without a map, no need for a regions overlay...
-    if (!(this.viewer_ instanceof ol.Map)) {
+    if (!(this.viewer_ instanceof ol.PluggableMap)) {
         this.tried_regions_ = true;
         if (ome.ol3.utils.Misc.isArray(data))
             this.tried_regions_data_ = data;
@@ -1000,7 +999,7 @@ ome.ol3.Viewer.prototype.addInteraction = function(key, interaction) {
          return;
 
     // if we don't have an instance in our viewer state, we return
-    if (!(this.viewer_ instanceof ol.Map) || // could be the viewer was not initialized
+    if (!(this.viewer_ instanceof ol.PluggableMap) || // could be the viewer was not initialized
                 (typeof(key) !== 'string')) // key not a string
                     return;
 
@@ -1040,7 +1039,7 @@ ome.ol3.Viewer.prototype.addControl = function(key) {
  * @param {boolean} descend a flag whether we should follow linked interactions/controls
  */
 ome.ol3.Viewer.prototype.addInteractionOrControl = function(key, type, descend) {
-    if (!(this.viewer_ instanceof ol.Map) || // could be the viewer was not initialized
+    if (!(this.viewer_ instanceof ol.PluggableMap) || // could be the viewer was not initialized
         (typeof(key) !== 'string') || // key not a string
         (typeof(type) !== 'string')) return; // type is not a string
 
@@ -1092,7 +1091,7 @@ ome.ol3.Viewer.prototype.addInteractionOrControl = function(key, type, descend) 
  * @param {boolean} descend a flag whether we should follow linked interactions/controls
  */
 ome.ol3.Viewer.prototype.removeInteractionOrControl = function(key, descend) {
-    if (!(this.viewer_ instanceof ol.Map) || // could be the viewer was not initialized
+    if (!(this.viewer_ instanceof ol.PluggableMap) || // could be the viewer was not initialized
         (typeof(key) !== 'string')) return; // key is not a string
 
     if (typeof this.viewerState_[key] !== 'object')
@@ -1177,7 +1176,7 @@ ome.ol3.Viewer.prototype.setDimensionIndex = function(key, values) {
 
     // we want to affect a rerender,
     // only clearing the cache for tiled sources and channel changes
-    omeroImage.forceRender(omeroImage.use_tiled_retrieval_ && key === 'c');
+    this.affectImageRender(omeroImage.use_tiled_retrieval_ && key === 'c');
 
     // update regions (if necessary)
     if (this.getRegionsLayer()) this.getRegions().changed();
@@ -1229,7 +1228,10 @@ ome.ol3.Viewer.prototype.getDimensionIndex = function(key) {
  */
 ome.ol3.Viewer.prototype.addPostTileLoadHook = function(func) {
     var omeroImage = this.getImage();
-    if (omeroImage) omeroImage.setPostTileLoadFunction(func);
+    if (omeroImage) {
+        omeroImage.setPostTileLoadFunction(func);
+        this.affectImageRender();
+    }
 }
 
 /**
@@ -1238,7 +1240,10 @@ ome.ol3.Viewer.prototype.addPostTileLoadHook = function(func) {
  */
 ome.ol3.Viewer.prototype.removePostTileLoadHook = function() {
     var omeroImage = this.getImage();
-    if (omeroImage) omeroImage.clearPostTileLoadFunction();
+    if (omeroImage) {
+        omeroImage.clearPostTileLoadFunction();
+        this.affectImageRender();
+    }
 }
 
 /**
@@ -1248,7 +1253,7 @@ ome.ol3.Viewer.prototype.removePostTileLoadHook = function() {
  * @return {ol.layer.Tile|null} the open layers tile layer being our image or null
  */
 ome.ol3.Viewer.prototype.getImageLayer = function() {
-    if (!(this.viewer_ instanceof ol.Map) || // mandatory viewer presence check
+    if (!(this.viewer_ instanceof ol.PluggableMap) || // mandatory viewer presence check
         this.viewer_.getLayers().getLength() == 0) // unfathomable event of layer missing...
         return null;
 
@@ -1262,7 +1267,7 @@ ome.ol3.Viewer.prototype.getImageLayer = function() {
  * @return { ol.layer.Vector|null} the open layers vector layer being our regions or null
  */
 ome.ol3.Viewer.prototype.getRegionsLayer = function() {
-    if (!(this.viewer_ instanceof ol.Map) || // mandatory viewer presence check
+    if (!(this.viewer_ instanceof ol.PluggableMap) || // mandatory viewer presence check
         this.viewer_.getLayers().getLength() < 2) // unfathomable event of layer missing...
         return null;
 
@@ -1491,7 +1496,7 @@ ome.ol3.Viewer.prototype.generateShapes = function(shape_info, options) {
  * @return {ol.Extent|null} an array like this: [minX, minY, maxX, maxY] or null (if no viewer)
  */
 ome.ol3.Viewer.prototype.getViewExtent = function() {
-    if (!(this.viewer_ instanceof ol.Map ||
+    if (!(this.viewer_ instanceof ol.PluggableMap ||
             this.viewer_.getView() === null)) return null;
 
     return this.viewer_.getView().calculateExtent(this.viewer_.getSize());
@@ -1727,7 +1732,7 @@ ome.ol3.Viewer.prototype.dispose = function(rememberEnabled) {
     var componentsRegistered = rememberEnabled ? [] : null;
 
     // tidy up viewer incl. layers, controls and interactions
-    if (this.viewer_ instanceof ol.Map) {
+    if (this.viewer_ instanceof ol.PluggableMap) {
         if (rememberEnabled && this.viewerState_) {
             // delete them from the list as well as the viewer
             for (var K in this.viewerState_) {
@@ -1785,9 +1790,11 @@ ome.ol3.Viewer.prototype.destroyViewer = function() {
  * @param {Array.<Object>} ranges an array of objects with channel props
  */
 ome.ol3.Viewer.prototype.changeChannelRange = function(ranges) {
-    if (this.getImage() === null) return;
+    var omeroImage = this.getImage();
+    if (omeroImage === null) return;
 
-    this.getImage().changeChannelRange(ranges);
+    omeroImage.changeChannelRange(ranges);
+    this.affectImageRender();
 }
 
 /**
@@ -1801,6 +1808,7 @@ ome.ol3.Viewer.prototype.changeImageProjection = function(value, opts) {
     if (this.getImage() === null) return;
 
     this.getImage().setImageProjection(value, opts);
+    this.affectImageRender();
 
     // update regions (if necessary)
     if (this.getRegionsLayer()) this.getRegions().changed();
@@ -1816,6 +1824,7 @@ ome.ol3.Viewer.prototype.changeImageModel = function(value) {
     if (this.getImage() === null) return;
 
     this.getImage().setImageModel(value);
+    this.affectImageRender();
 }
 
 /**
@@ -2134,6 +2143,34 @@ ome.ol3.Viewer.prototype.toggleIntensityQuerying = function(flag) {
     } catch(ignored) {
         return false;
     }
+}
+
+/**
+ * Triggers an explicit rerendering of the image (tile) layer
+ *
+ * @param {boolean} clearCache empties the tile cache if true
+ */
+ome.ol3.Viewer.prototype.affectImageRender = function(clearCache) {
+    var imageLayer = this.getImageLayer();
+    if (imageLayer === null) return;
+    var imageSource = imageLayer.getSource();
+
+    try {
+        // if we didn't get a flag we clear the cache for tiled sources only
+        if (typeof clearCache !== 'boolean')
+            clearCache = imageSource.use_tiled_retrieval_;
+
+        if (clearCache) {
+            var renderer = this.viewer_.getRenderer(imageLayer);
+            var imageCanvas = renderer.getLayerRenderer(imageLayer).getImage();
+            imageCanvas.getContext('2d').clearRect(
+                0, 0, imageCanvas.width, imageCanvas.height);
+            imageSource.tileCache.clear();
+        } else {
+            imageSource.cache_version_++;
+        }
+        imageSource.changed();
+    } catch(canHappen) {}
 }
 
 /*
