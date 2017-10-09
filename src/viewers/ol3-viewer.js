@@ -193,7 +193,7 @@ export default class Ol3Viewer extends EventSubscriber {
             }
         });
         container.resizable({
-            containment: "parent", handles: {'se': '.ui-resizable-se'},
+            containment: "parent", handles: 'se',
             stop: (e, ui) => {
                 this.image_config.size.width = ui.size.width + 'px';
                 this.image_config.size.height = ui.size.height + 'px';

@@ -209,7 +209,7 @@ a.ui-button:active,
 }
 .center-row1-mdi {
     background-color: rgba(255,255,255,1);
-    height: calc(100% - 25px);
+    height: calc(100% - 40px);
     padding: 0px;
 }
 
@@ -1146,12 +1146,10 @@ thumbnail-slider img {
     opacity: 1px;
 }
 .viewer-mdi .ui-resizable-se {
-    width: 10px;
-    height:10px;
     cursor: se-resize;
     position: absolute;
-    bottom: -5px;
-    right: -5px;
+    bottom: 0px;
+    right: 0px;
 }
 .mdi-selected {
     border-color: rgba(255,0,0,0.5);
