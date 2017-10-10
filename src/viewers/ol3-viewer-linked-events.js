@@ -296,6 +296,23 @@ export default class Ol3ViewerLinkedEvents {
      */
     syncView(params = {}, sync_locks = {}) {
         if (!this.isLocked(SYNC_LOCK.VIEW.CHAR, sync_locks)) return;
+
+        let w = params.w;
+        let h = params.h;
+        // adjust center for different size images
+        if (typeof w === 'number' && typeof h === 'number' &&
+            !isNaN(w) && !isNaN(h) && w > 0 && h > 0) {
+
+            let conf = this.getImageConfig();
+            let width = conf.image_info.dimensions.max_x;
+            let height = conf.image_info.dimensions.max_y;
+
+            params.center = [
+                params.center[0] * (width / w),
+                params.center[1] * (height / h)
+            ];
+        } else params.center = params.center.slice();
+
         this.getViewer().setViewParameters(
             params.center, params.resolution, params.rotation);
     }

@@ -574,6 +574,8 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
                 "z": viewer.getDimensionIndex('z'),
                 "t": viewer.getDimensionIndex('t'),
                 "c": viewer.getDimensionIndex('c'),
+                "w": viewer.getImage().getWidth(),
+                "h": viewer.getImage().getHeight(),
                 "center": viewer.viewer_.getView().getCenter(),
                 "resolution": viewer.viewer_.getView().getResolution(),
                 "rotation": viewer.viewer_.getView().getRotation()
@@ -585,6 +587,8 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
        ol.events.listen( // register a resolution handler for zoom display
            this.viewer_.getView(), "change:resolution",
            function(event) {
+               console.info("resolution: " + this.getTargetId());
+
                this.displayResolutionInPercent();
                if (this.eventbus_) notifyAboutViewerInteraction(this);
            }, this);
@@ -594,6 +598,8 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
         ol.events.listen(
             this.viewer_.getView(), "change:rotation",
             function(event) {
+                console.info("rotation: " + this.getTargetId());
+
                 var regions = this.getRegions();
                 if (regions) regions.changed();
                 if (this.eventbus_) notifyAboutViewerInteraction(this);
@@ -614,6 +620,7 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
            ol.events.listen(
                this.viewer_, ol.MapEventType.MOVEEND,
                function(event) {
+                   console.info("moveend: " + this.getTargetId());
                    notifyAboutViewerInteraction(this);
                }, this);
     }
@@ -2153,7 +2160,12 @@ ome.ol3.Viewer.prototype.getLengthAndAreaForShapes = function(ids, recalculate) 
 ome.ol3.Viewer.prototype.setViewParameters = function(center, resolution, rotation) {
     this.prevent_event_notification_ = true;
     try {
-        // resolution first (if given)
+        var presentCenter = this.viewer_.getView().getCenter();
+        console.info("get center: " +
+            this.getTargetId() + " => " + presentCenter[0] + "|" + presentCenter[1]);
+        console.info("adjust center: " +
+            this.getTargetId() + " => " + center[0] + "|" + center[1]);
+        //resolution first (if given)
         if (typeof resolution === 'number' && !isNaN(resolution)) {
             var constrainedResolution =
                 this.viewer_.getView().constrainResolution(resolution);
@@ -2163,7 +2175,6 @@ ome.ol3.Viewer.prototype.setViewParameters = function(center, resolution, rotati
         }
 
         // center next (if given)
-        var presentCenter = this.viewer_.getView().getCenter();
         if (ome.ol3.utils.Misc.isArray(center) && center.length === 2 &&
             typeof center[0] === 'number' && typeof center[1] === 'number' &&
             presentCenter[0] !== center[0] && presentCenter[1] !== center[1]) {
