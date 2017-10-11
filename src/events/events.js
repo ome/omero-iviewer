@@ -22,8 +22,6 @@ export const IMAGE_CANVAS_DATA = "IMAGE_CANVAS_DATA";
 export const IMAGE_INTENSITY_QUERYING = "IMAGE_INTENSITY_QUERYING";
 /** whenever the image viewer needs to be resized */
 export const IMAGE_VIEWER_RESIZE = "IMAGE_VIEWER_RESIZE";
-/** whenever the image viewer split view is turned on/off */
-export const IMAGE_VIEWER_SPLIT_VIEW = "IMAGE_VIEWER_SPLIT_VIEW";
 /** whenever the image rendering settings change: channel, model, projection*/
 export const IMAGE_SETTINGS_CHANGE = "IMAGE_SETTINGS_CHANGE";
 /** whenever an image dimension (c,t,z) changes */

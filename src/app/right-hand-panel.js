@@ -108,9 +108,7 @@ export class RightHandPanel {
             // we don't allow an active regions tab if we are in spit view
             if (this.context.isRoisTabActive()) {
                 if (this.image_config === null ||
-                    this.image_config.regions_info === null ||
-                    this.image_config.image_info.projection === PROJECTION.SPLIT)
-                        return;
+                    this.image_config.regions_info === null) return;
 
                 if (!this.image_config.regions_info.ready)
                     this.image_config.regions_info.requestData(true);

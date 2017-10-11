@@ -32,13 +32,6 @@ import {inject, customElement, bindable} from 'aurelia-framework';
 @inject(Context)
 export default class Regions {
     /**
-     * expose constant to template
-     * @memberof Regions
-     * @type {string}
-     */
-    SPLIT = PROJECTION.SPLIT;
-
-    /**
      * a bound reference to regions_info
      * and its associated change handler
      * @memberof Regions

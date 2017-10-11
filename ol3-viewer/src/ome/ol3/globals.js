@@ -176,9 +176,7 @@ ome.ol3.PROJECTION = {
     /** normal **/
     "NORMAL" : 'normal',
     /** intmax **/
-    "INTMAX" : 'intmax',
-    /** split  **/
-    "SPLIT" : 'split'
+    "INTMAX" : 'intmax'
 };
 
 /**

@@ -228,8 +228,7 @@ export default class Misc {
 
         // last sanity check before returning
         if (ret.projection !== PROJECTION.NORMAL &&
-           ret.projection !== PROJECTION.INTMAX &&
-           ret.projection !== PROJECTION.SPLIT)
+            ret.projection !== PROJECTION.INTMAX)
                 ret.projection = PROJECTION.NORMAL;
 
         return ret;

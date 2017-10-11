@@ -60,13 +60,6 @@ goog.require('ol.Map');
  * omeImgViewer.addInteraction("draw");
  *</pre>
  *
- * To view a different image, call the method 'changeToImage' on the existing viewer object:
- *<pre>
- * // the second parameter keeps the added controls
- * ome.ol3.Viewer.changeToImage(2, true);
- *</pre>
- *
- *
  * @constructor
  * @extends {ol.Object}
  *
@@ -90,14 +83,6 @@ ome.ol3.Viewer = function(id, options) {
     } catch(not_a_number) {
         id = -1;
     }
-
-    /**
-     * are we in the split view
-     *
-     * @type {boolean}
-     * @private
-     */
-    this.split_ = false;
 
     /**
      * an omero server address given as a fully qualified address
@@ -328,8 +313,7 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
     }
     var zoom= zoomLevelScaling ? zoomLevelScaling.length : -1;
 
-    // we have to check the initial projection so that we can adjust
-    // the view potentially to cater for split view in the code below
+    // get the initial projection
     var initialProjection =
        this.getInitialRequestParam(
            ome.ol3.REQUEST_PARAMS.PROJECTION);
@@ -339,10 +323,8 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
                 initialProjection.toLowerCase() :
                 this.image_info_['rdefs']['projection']);
     initialProjection = parsedInitialProjection.projection;
-    this.split_ = initialProjection === ome.ol3.PROJECTION['SPLIT'];
 
-    // in the same spirit we need the model so that in the split channel
-    // case we get the proper dimensions from the json
+    // get the initial model (color/greyscale)
     var initialModel =
        this.getInitialRequestParam(ome.ol3.REQUEST_PARAMS.MODEL);
     initialModel =
@@ -354,21 +336,6 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
        case 'g': initialModel = 'greyscale'; break;
        default: initialModel = 'color';
     };
-
-    // should we be in the split view mode, we need to trick ol3
-    // and set the dims and tile sizes accordingly to essentially
-    // request 1 tile with the dimensions of the entire image extent
-    if (this.split_) {
-       var tmpDims =
-           this.image_info_['split_channel'][initialModel[0]];
-       if (typeof tmpDims === 'object' && tmpDims) {
-           dims['width'] = tmpDims['width'];
-           dims['height'] = tmpDims['height'];
-           this.image_info_['tile_size'] =
-           {"width" : dims['width'], "height" : dims['height']};
-       }
-       initialProjection = ome.ol3.PROJECTION['SPLIT'];
-    }
 
     // determine the center
     var imgCenter = [dims['width'] / 2, -dims['height'] / 2];
@@ -455,7 +422,6 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
        resolutions: zoom > 1 ? zoomLevelScaling : [1],
        img_proj:  parsedInitialProjection,
        img_model:  initialModel,
-       split: this.split_,
        tiled: typeof this.image_info_['tiles'] === 'boolean' &&
               this.image_info_['tiles'],
        tile_size: this.image_info_['tile_size'] ?
@@ -601,124 +567,6 @@ ome.ol3.Viewer.prototype.show = function() {
 ome.ol3.Viewer.prototype.hide = function() {
     var viewerElement = document.getElementById(this.container_);
     if (viewerElement) viewerElement.style.visibility = "hidden";
-}
-
-/**
- * Switches between split and normal view
- *
- * @param {boolean} flag true to affect a split view, false otherwise
- */
-ome.ol3.Viewer.prototype.toggleSplitView = function(flag) {
-    // we only act upon a valid flag
-    if (typeof flag !== 'boolean') return;
-
-    // compare with present split value, if we are the same => why change
-    if (this.split_ === flag) return;
-
-    // set new value and force change and reinitialization
-    this.split_ = flag;
-    // need an init hook to be able to reinitialize to the present settings
-    var defT = this.getDimensionIndex('t');
-    var defZ = this.getDimensionIndex('z');
-    var defM = this.getImage().image_model_ === 'g' ? "greyscale" : "color";
-    var defC = [];
-    for (var c in this.getImage().channels_info_) {
-        var oldC = this.getImage().channels_info_[c];
-        defC.push({
-            "active" : oldC.active,
-            "color" : oldC.color,
-            "window" : {
-                "min" : oldC.min,
-                "max" : oldC.max,
-                "start": oldC.start,
-                "end": oldC.end}
-        });
-    }
-    var initHook = function() {
-        if (typeof this.image_info_['rdefs'] !== 'object' ||
-            this.image_info_['rdefs'] === null) this.image_info_['rdefs'] = {};
-        this.image_info_['rdefs']['defaultT'] = defT;
-        this.image_info_['rdefs']['defaultZ'] = defZ;
-        this.image_info_['rdefs']['model'] = defM;
-        this.image_info_['channels'] = defC;
-    }
-    this.changeToImage(this.id_, true, true, initHook);
-}
-
-/**
- * Changes image that is being viewed.
- * The clean up we have to do included the following:
- * <ul>
- * <li>Clear/Remember the controls/interactions (if keep_viewer_state is true)</li>
- * <li>Clear all layers and overlays</li>
- * <li>Reset the stored image info to null</li>
- * <li>Reset the stored regions info to null</li>
- * <li>Reset the internal viewer object</li>
- * <li>Set the internal image id to the new image id</li>
- * <li>Call initialize again to set up things</li>
- *</ul>
- *
- * @param {number} id an image id
- * @param {boolean} keep_viewer_state keeps the viewer 'state',
- *  i.e registered controls and interactions
- * @param {boolean} reinitialize_on_same_image should we reinitialize on the same image
- *  defaults to false and is only useful on rare occasions: e.g. split channel view
- * @param {function=} reinit_handler an optional handler for
- *  defaults to false and is only useful on rare occasions: e.g. split channel view
- */
-ome.ol3.Viewer.prototype.changeToImage =
-    function(id, keep_viewer_state, reinitialize_on_same_image, reinit_handler) {
-        var viewer_state =
-            typeof(keep_viewer_state) === 'boolean' ? keep_viewer_state : false;
-        if (typeof reinitialize_on_same_image !== 'boolean')
-            reinitialize_on_same_image = false;
-        if (id === this.id_ && !reinitialize_on_same_image) return;
-
-        // clean up, remember registered controls/interactions
-        var componentsRegistered = this.dispose(viewer_state);
-
-        // set new id
-        this.id_ = id;
-        try {
-            this.id_ = parseInt(this.id_);
-        } catch(not_a_number) {}
-        if (typeof this.id_ !== 'number' || this.id_ <=0)
-            console.error('Image Id has to be a strictly positive integer');
-
-        /*
-         * add controls and interactions to restore previous 'viewer state'
-         * we also check if after initialization (see above) the control/interaction
-         * hasn't been established already by default so as to avoid multiple Loading
-         * in order to get the interaction/control class that we need to instantiate
-         * we look it up at {@link ome.ol3.AVAILABLE_VIEWER_CONTROLS} or
-         * {@link ome.ol3.AVAILABLE_VIEWER_INTERACTIONS}
-         * via the key value stored for the previously registered components
-         *
-         * Important: all of this needs to be done post reinitialization since we
-         * require an ajax request to get the new image info and reestablishe the
-         * viewer
-         */
-        var postSuccessHook = function() {
-            // reastablish registered controls/interactions
-            for (var c in componentsRegistered) {
-                var prevComp = componentsRegistered[c];
-                var type = prevComp['type'];
-                var key = prevComp['key'];
-
-                this.addInteractionOrControl(key, type);
-            }
-        }
-
-        // reinitialize everything
-        // we also check for cross domain if we have the login flag set to true already
-        // otherwise we don't need to bother
-        if (ome.ol3.utils.Net.isSameOrigin(this.server_) ||
-            this.haveMadeCrossOriginLogin_) {
-                this.initialize_(
-                    this, postSuccessHook,
-                    typeof reinit_handler === 'function' ?
-                        reinit_handler : null);
-        } else ome.ol3.utils.Net.makeCrossDomainLoginRedirect(this.server_);
 }
 
 /**
@@ -2171,11 +2019,6 @@ goog.exportProperty(
 
 goog.exportProperty(
     ome.ol3.Viewer.prototype,
-    'changeToImage',
-    ome.ol3.Viewer.prototype.changeToImage);
-
-goog.exportProperty(
-    ome.ol3.Viewer.prototype,
     'setDimensionIndex',
     ome.ol3.Viewer.prototype.setDimensionIndex);
 
@@ -2273,11 +2116,6 @@ goog.exportProperty(
     ome.ol3.Viewer.prototype,
     'captureViewParameters',
     ome.ol3.Viewer.prototype.captureViewParameters);
-
-goog.exportProperty(
-    ome.ol3.Viewer.prototype,
-    'toggleSplitView',
-    ome.ol3.Viewer.prototype.toggleSplitView);
 
 goog.exportProperty(
     ome.ol3.Viewer.prototype,

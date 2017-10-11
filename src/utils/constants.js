@@ -255,8 +255,7 @@ export const INITIAL_TYPES = {
  */
 export const PROJECTION = {
     NORMAL: 'normal',
-    INTMAX: 'intmax',
-    SPLIT: 'split'
+    INTMAX: 'intmax'
 }
 
 /**
