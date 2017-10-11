@@ -21,6 +21,7 @@ import Context from '../app/context';
 import {inject, customElement, BindingEngine} from 'aurelia-framework';
 import {IMAGE_VIEWPORT_CAPTURE} from '../events/events';
 import Ui from '../utils/ui';
+import Misc from '../utils/misc';
 import * as FileSaver from '../../node_modules/file-saver';
 import * as TextEncoding from "../../node_modules/text-encoding";
 import {
@@ -418,21 +419,10 @@ export default class ViewerContextMenu {
         // forget about it
         if (ids_for_stats.length === 0 ||
             regInf.image_info.getActiveChannels().length === 0) {
-            this.writeCsv();
+            this.writeCsv(regInf.selected_shapes);
         } else {
-            $.ajax({
-                url:
-                    this.context.server + this.context.getPrefixedURI(IVIEWER) +
-                    '/shape_stats/?ids=' + ids_for_stats.join(',') +
-                    "&z=" + regInf.image_info.dimensions['z'] +
-                    "&t=" + regInf.image_info.dimensions['t'] +
-                    "&cs=" + regInf.image_info.getActiveChannels().join(','),
-                success: (resp) => this.writeCsv(resp),
-                error: (err) => {
-                    console.error(err);
-                    this.writeCsv();
-                }
-            });
+            regInf.requestStats(
+                ids_for_stats, () => this.writeCsv(regInf.selected_shapes));
         }
 
         this.hideContextMenu();
@@ -441,13 +431,14 @@ export default class ViewerContextMenu {
     }
 
     /**
-     * Writes a csv file based on shape data
-     * and the stats retrieved from the backend
+     * Generates a csv file for shapes (incl. stats) whose ids are given
      *
-     * @param {Object} shape_stats the shape stats
+     * @param {Array.<string>} ids the shape ids ('roi_id:shape_id')
      * @memberof ViewerContextMenu
      */
-    writeCsv(shape_stats) {
+    writeCsv(ids) {
+        if (!Misc.isArray(ids) || ids.length === 0) return;
+
         let regInf = this.image_config.regions_info;
         let units = regInf.image_info.image_pixels_size.symbol_x || 'px';
         let img_id = regInf.image_info.image_id;
@@ -455,12 +446,11 @@ export default class ViewerContextMenu {
 
         let csv =
             "image_id,image_name,roi_id,shape_id,type,z,t,\"area (" + units +
-            "\u00b2)\",\"length (" + units + ")\"";
-        if (shape_stats) csv += ",channel,points,min,max,sum,mean,std_dev";
-        csv += CSV_LINE_BREAK;
+            "\u00b2)\",\"length (" + units + ")\",channel,points,min,max," +
+            "sum,mean,std_dev" + CSV_LINE_BREAK;
 
-        for (let i in regInf.selected_shapes) {
-            let id = regInf.selected_shapes[i];
+        for (let i in ids) {
+            let id = ids[i];
             let shape = regInf.getShape(id);
             if (shape === null) continue;
             let roi_id = id.substring(0, id.indexOf(':'));
@@ -474,18 +464,15 @@ export default class ViewerContextMenu {
                 (shape.Area < 0 ? '' : shape.Area) + "," +
                 (shape.Length < 0 ? '' : shape.Length);
 
-            if (shape_stats && typeof shape_stats[shape['@id']] === 'object') {
-                for (let s in shape_stats[shape['@id']]) {
-                    let stat = shape_stats[shape['@id']][s];
+            if (typeof shape.stats === 'object' && shape.stats !== null) {
+                for (let s in shape.stats) {
+                    let stat = shape.stats[s];
                     csv += commonCsvPortion + "," +
                         stat.index + "," + stat.points + "," +
                         stat.min + "," + stat.max + "," + stat.sum + "," +
                         stat.mean + "," + stat.std_dev + CSV_LINE_BREAK;
                 }
-            } else {
-                csv += commonCsvPortion + (shape_stats ? ",,,,,,," : "") +
-                        CSV_LINE_BREAK;
-            }
+            } else csv += commonCsvPortion + ",,,,,,," + CSV_LINE_BREAK;
         }
 
         let data = null;

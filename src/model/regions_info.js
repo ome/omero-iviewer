@@ -565,4 +565,98 @@ export default class RegionsInfo  {
         };
         this.image_info.context.publish(REGIONS_SET_PROPERTY, opts);
     }
+
+    /**
+     * Requests stats for the given shape ids and attaches them to their
+     * respective shapes
+     *
+     * @param {Array.<string>} ids an array of ids ('roi_id:shape_id')
+     * @param {function} callback a callback after completion
+     * @memberof RegionsInfo
+     */
+    requestStats(ids, callback) {
+        if (typeof callback !== 'function') callback = () => {};
+        if (!this.ready || !Misc.isArray(ids) || ids.length === 0 ||
+            this.image_info.getActiveChannels().length === 0) {
+                callback();
+                return;
+        }
+
+        let activeChannels = this.image_info.getActiveChannels();
+        let channelsToBeRequested = [];
+        let idsToBeRequested = [];
+        let shapes = new Map();
+        // filters what ids and channels will be requested
+        let addToRequest = (s) => {
+            let statsOnShape = s.stats;
+            // shape stats exist, we might not have all channels yet
+            if (typeof statsOnShape === 'object' && statsOnShape !== null) {
+                for (let c in activeChannels) {
+                    let chan = activeChannels[c];
+                    if (typeof statsOnShape[chan] !== 'object') {
+                        idsToBeRequested.push(s['@id']);
+                        shapes.set(s['@id'], s);
+                        if (channelsToBeRequested.length !==
+                                activeChannels.length &&
+                            channelsToBeRequested.indexOf(chan) === -1)
+                                channelsToBeRequested.push(chan);
+                    }
+                }
+                return;
+            }
+            // shape stats don't exist
+            idsToBeRequested.push(s['@id']);
+            shapes.set(s['@id'], s);
+            if (channelsToBeRequested.length !== activeChannels.length) {
+                channelsToBeRequested = activeChannels.slice();
+            }
+        }
+
+        // loop and reduce what is requested
+        for (let i in ids) {
+            let id = ids[i];
+            if (id.indexOf("-") !== -1) continue;
+            let shape = this.getShape(ids[i]);
+            if (shape === null) continue;
+            if (shape) addToRequest(shape);
+        }
+
+        // we need no request
+        if (idsToBeRequested.length === 0) {
+            callback();
+            return;
+        }
+
+        // send request
+        $.ajax({
+            url:
+                this.image_info.context.server +
+                this.image_info.context.getPrefixedURI(IVIEWER) +
+                '/shape_stats/?ids=' + idsToBeRequested.join(',') +
+                "&z=" + this.image_info.dimensions['z'] +
+                "&t=" + this.image_info.dimensions['t'] +
+                "&cs=" + channelsToBeRequested.join(','),
+            "success": (resp) => {
+                if (typeof resp === 'object' && resp !== null) {
+                    // attach stats to their shapes
+                    for (let r in resp) {
+                        let shape = shapes.get(parseInt(r));
+                        if (shape) {
+                            if (typeof shape.stats !== 'object' ||
+                                shape.stats === null) shape.stats = {};
+                            for (let c in resp[r]) {
+                                let chanStat = resp[r][c];
+                                shape.stats[chanStat.index] =
+                                    Object.assign({}, chanStat);
+                            }
+                        }
+                    }
+                }
+                callback();
+            },"error": (err) => {
+                console.error();
+                callback();
+            }
+        });
+    }
 }

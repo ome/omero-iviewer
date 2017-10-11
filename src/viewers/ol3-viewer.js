@@ -746,8 +746,9 @@ export default class Ol3Viewer extends EventSubscriber {
                 ids.push(id);
                 let oldRoiAndShapeId = Converters.extractRoiAndShapeId(id);
                 let newRoiAndShapeId = Converters.extractRoiAndShapeId(syncId);
-                // we reset modifed
+                // we reset modifed and stats
                 shape.modified = false;
+                shape.stats = null;
                 // new ones are stored under their newly created ids
                 let wasNew = typeof shape.is_new === 'boolean' && shape.is_new;
                 if (wasNew) {
