@@ -69,8 +69,9 @@
             <div class="${context.useMDI &&
                             context.image_configs.size > 1 ?
                                 'viewer-mdi' : 'viewer'}
-                        ${context.useMDI && context.selected_config === id ?
-                                   'mdi-selected' : ''}"
+                        ${context.useMDI && context.selected_config === id  &&
+                            context.image_configs.size > 1 ?
+                                'mdi-selected' : ''}"
                  repeat.for="[id, conf] of context.image_configs"
                  css="${context.useMDI && context.image_configs.size > 1 ?
                         ';position: absolute;top:' + conf.position.top +
@@ -119,9 +120,17 @@
                     </div>
                 </div>
                 <div show.bind="context.useMDI && context.image_configs.size > 1"
-                     class='viewer-handle'>
-                     <span click.delegate="closeViewerInMDI(id)"
-                           class="close">X</span>
+                     class="viewer-handle
+                            ${context.useMDI && context.selected_config === id ?
+                                'viewer-handle-selected' : ''}">
+                    <span click.delegate="closeViewerInMDI(id)"
+                          class="close">&times;</span>
+                    <span click.delegate="toggleViewerControlsInMDI(id)"
+                          title="${conf.show_controls ?
+                                    'Hide Viewer Controls' :
+                                    'Show Viewer Controls'}"
+                          css="${conf.show_controls ? '' : 'opacity: 0.6'}"
+                          class="glyphicon glyphicon-cog cog"></span>
                 </div>
                 <ol3-viewer image_config.bind="conf">
                 </ol3-viewer>

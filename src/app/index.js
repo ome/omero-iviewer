@@ -212,6 +212,25 @@ export class Index  {
     }
 
     /**
+     * Shows/Hides viewer controls
+     *
+     * @param {number} id the image config id
+     * @memberof Index
+     */
+    toggleViewerControlsInMDI(id) {
+        let conf = this.context.getImageConfig(id);
+        if (conf === null) return;
+
+        if (conf.show_controls) {
+            $("#" + conf.id + " .ol-control").hide();
+            conf.show_controls = false;
+        } else {
+            $("#" + conf.id + " .ol-control").show();
+            conf.show_controls = true;
+        }
+    }
+
+    /**
      * Handles fullscreen changes
      *
      * @memberof Index

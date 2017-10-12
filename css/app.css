@@ -204,6 +204,7 @@ a.ui-button:active,
 }
 
 .center-row1 {
+    background-color: rgba(255,255,255,1);
     height: 100%;
     padding: 0px;
 }
@@ -318,6 +319,7 @@ a.ui-button:active,
 }
 
 .plane-slider .dim-projection {
+    cursor: pointer;
     background-image: url('images/projection.png');
     background-repeat: no-repeat;
     background-position: center;
@@ -390,6 +392,7 @@ a.ui-button:active,
 
 
 .dim-arrows {
+    cursor: pointer;
     position: absolute;
 }
 .dim-arrow-up {
@@ -473,7 +476,8 @@ a.ui-button:active,
     min-width: 400px;
     min-height: 250px;
     background-color: rgba(255,255,255,1);
-    border: solid 2px rgba(31,106,170,1);
+    border: solid 2px rgba(31,106,170,0.6);
+    border-radius: 5px;
     z-index: 0;
 }
 
@@ -1137,13 +1141,30 @@ thumbnail-slider img {
 }
 
 .viewer-handle {
+    color: rgba(255,255,255,1);
     width: 100%;
     height: 25px;
-    background-color: rgba(31,106,170,1);
+    background-color: rgba(31,106,170,0.6);
 }
 .viewer-handle .close {
+    font-family: Arial;
+    line-height: 25px;
+    float: right;
+    margin-right: 2px;
     color: white;
-    opacity: 1px;
+    opacity: 1;
+    font-size: 30px;
+}
+.viewer-handle .cog {
+    cursor: pointer;
+    line-height: 25px;
+    float: right;
+    color: white;
+    margin-right: 10px;
+    font-size: 15px;
+}
+.viewer-handle-selected {
+    background-color: rgba(31,106,170,1);
 }
 .viewer-mdi .ui-resizable-se {
     cursor: se-resize;
@@ -1152,7 +1173,7 @@ thumbnail-slider img {
     right: 0px;
 }
 .mdi-selected {
-    border-color: rgba(255,0,0,0.5);
+    border: solid 2px rgba(31,106,170,1);
     z-index: 1;
 }
 

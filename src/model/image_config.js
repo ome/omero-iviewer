@@ -75,6 +75,12 @@ export default class ImageConfig extends History {
     sync_locks = null;
 
     /**
+     * @memberof ImageConfig
+     * @type {boolean}
+     */
+    show_controls = true;
+
+    /**
      * ui position
      * @memberof ImageConfig
      * @type {Object}
