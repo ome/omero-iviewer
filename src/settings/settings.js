@@ -505,18 +505,18 @@ export default class Settings extends EventSubscriber {
                        type: 'string'});
                     actChannel.color = copiedChannel.color;
                 }
-                if (typeof copiedChannel.reverseIntensity === 'undefined')
-                    copiedChannel.reverseIntensity = null;
-                if (actChannel.reverseIntensity !==
-                        copiedChannel.reverseIntensity) {
+                if (typeof copiedChannel.inverted === 'undefined')
+                    copiedChannel.inverted = null;
+                if (actChannel.inverted !==
+                        copiedChannel.inverted) {
                             history.push({
                                 prop: ['image_info',
-                                    'channels', '' + i, 'reverseIntensity'],
-                                old_val : actChannel.reverseIntensity,
-                                new_val: copiedChannel.reverseIntensity,
+                                    'channels', '' + i, 'inverted'],
+                                old_val : actChannel.inverted,
+                                new_val: copiedChannel.inverted,
                                 type: 'boolean'});
-                    actChannel.reverseIntensity =
-                        copiedChannel.reverseIntensity;
+                    actChannel.inverted =
+                        copiedChannel.inverted;
                 }
             };
         if (history.length > 0) {
