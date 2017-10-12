@@ -454,12 +454,14 @@ export default class ViewerContextMenu {
             let shape = regInf.getShape(id);
             if (shape === null) continue;
             let roi_id = id.substring(0, id.indexOf(':'));
+            let is_new = id.indexOf('-') !== -1;
 
             let channel = '', points = '', min = '', max = '';
             let sum = '', mean = '', stddev = '';
             let commonCsvPortion =
                 img_id + ",\"" + img_name + "\"," +
-                roi_id + "," + shape['@id'] + "," + shape.type + "," +
+                (is_new ? "-" : roi_id) + "," +
+                (is_new ? "-" : shape['@id']) + "," + shape.type + "," +
                 (shape.TheZ+1) + "," + (shape.TheT+1) + "," +
                 (shape.Area < 0 ? '' : shape.Area) + "," +
                 (shape.Length < 0 ? '' : shape.Length);
