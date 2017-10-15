@@ -87,11 +87,11 @@
                              class="btn btn-default btn-sm dropdown-toggle"
                              data-toggle="dropdown">
                                 ${conf.sync_group === null ?
-                                'None' : conf.sync_group}
+                                'no sync' : conf.sync_group}
                          </button>
                          <ul class="dropdown-menu">
                              <li click.delegate="toggleSyncGroup(id, null)">
-                                 <a href="#">none</a>
+                                 <a href="#">no sync</a>
                              </li>
                              <li repeat.for="[name, group] of context.sync_groups"
                                  click.delegate="toggleSyncGroup(id, name)"
@@ -109,7 +109,10 @@
                                             (lock.CHAR === 'z' &&
                                              conf.image_info.dimensions.max_z > 1) ||
                                             (lock.CHAR === 't' &&
-                                             conf.image_info.dimensions.max_t > 1))"
+                                             conf.image_info.dimensions.max_t > 1) ||
+                                             (lock.CHAR === 'zt' &&
+                                              conf.image_info.dimensions.max_z > 1 || 
+                                              conf.image_info.dimensions.max_t > 1))"
                                 title="Lock ${lock.LABEL}}">
                              <input type="checkbox"
                                  checked.bind="conf.sync_locks[lock.CHAR]"

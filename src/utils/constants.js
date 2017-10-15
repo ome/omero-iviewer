@@ -276,6 +276,7 @@ export const CSV_LINE_BREAK = '\u000D\u000A';
  * @type {string}
  */
 export const SYNC_LOCK = {
+    ZT: { CHAR: 'zt', LABEL: 'Z/T'},
     Z: { CHAR: 'z', LABEL: 'Z'},
     T: { CHAR: 't', LABEL: 'T'},
     VIEW: { CHAR: 'v', LABEL: 'View'},

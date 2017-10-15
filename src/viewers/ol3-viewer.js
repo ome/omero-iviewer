@@ -33,7 +33,8 @@ import {
 } from '../utils/constants';
 import {
     IMAGE_CANVAS_DATA, IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY,
-    IMAGE_INTENSITY_QUERYING, IMAGE_SETTINGS_CHANGE, IMAGE_VIEWER_INTERACTION,
+    IMAGE_INTENSITY_QUERYING, IMAGE_SETTINGS_CHANGE,
+    IMAGE_VIEWER_CONTROLS_VISIBILITY, IMAGE_VIEWER_INTERACTION,
     IMAGE_VIEWER_RESIZE, IMAGE_VIEWER_SPLIT_VIEW, IMAGE_VIEWPORT_CAPTURE,
     REGIONS_CHANGE_MODES, REGIONS_COPY_SHAPES, REGIONS_DRAW_SHAPE,
     REGIONS_GENERATE_SHAPES, REGIONS_HISTORY_ACTION, REGIONS_HISTORY_ENTRY,
@@ -93,6 +94,8 @@ export default class Ol3Viewer extends EventSubscriber {
     sub_list = [
         [IMAGE_VIEWER_INTERACTION,
             (params={}) => this.syncView(params)],
+        [IMAGE_VIEWER_CONTROLS_VISIBILITY,
+            (params={}) => this.toggleControlsVisibility(params)],
         [IMAGE_VIEWER_RESIZE,
             (params={}) => this.resizeViewer(params)],
         [IMAGE_DIMENSION_CHANGE,
@@ -299,6 +302,11 @@ export default class Ol3Viewer extends EventSubscriber {
                  });
         delete this.image_config.image_info.tmp_data;
 
+        // hide controls for mdi when more than 1 image configs
+        if (this.context.useMDI && this.context.image_configs.size > 1)
+            this.toggleControlsVisibility({
+                config_id: this.image_config.id, flag: false
+            });
         // only the first request should be affected
         this.context.resetInitParams();
         // use existing interpolation setting
@@ -1149,12 +1157,33 @@ export default class Ol3Viewer extends EventSubscriber {
      * @memberof Ol3Viewer
      * @param {Object} params the event notification parameters
      */
-    toggleIntensityQuerying(params) {
+    toggleIntensityQuerying(params = {}) {
         if (this.viewer === null || this.image_config === null || // sanity checks
             this.image_config.id !== params.config_id) {// not for us
                 return;
         }
         this.image_config.image_info.query_intensity =
             this.viewer.toggleIntensityQuerying(params.flag);
+    }
+
+    /**
+     * Shows/hides viewer controls
+     *
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     */
+    toggleControlsVisibility(params = {}) {
+        // sanity checks
+        if (this.viewer === null || this.image_config === null ||
+            this.image_config.id !== params.config_id ||
+            typeof params.flag !== 'boolean') return;
+
+        if (params.flag) {
+            $("#" + this.image_config.id + " .ol-control").show();
+            this.image_config.show_controls = true;
+        } else {
+            $("#" + this.image_config.id + " .ol-control").hide();
+            this.image_config.show_controls = false;
+        }
     }
 }

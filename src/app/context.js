@@ -19,7 +19,9 @@ import {noView} from 'aurelia-framework';
 import {EventAggregator} from 'aurelia-event-aggregator';
 import Misc from '../utils/misc';
 import ImageConfig from '../model/image_config';
-import {IMAGE_VIEWER_RESIZE} from '../events/events';
+import {
+    IMAGE_VIEWER_CONTROLS_VISIBILITY, IMAGE_VIEWER_RESIZE
+} from '../events/events';
 import {
     APP_NAME, IVIEWER, INITIAL_TYPES, LUTS_NAMES, LUTS_PNG_URL, PLUGIN_NAME,
     PLUGIN_PREFIX, REQUEST_PARAMS, SYNC_LOCK, TABS, URI_PREFIX, WEB_API_BASE,
@@ -190,8 +192,7 @@ export default class Context {
 
         // add sync groups & locks
         let locks = {};
-        locks[SYNC_LOCK.Z.CHAR] = true;
-        locks[SYNC_LOCK.T.CHAR] = true;
+        locks[SYNC_LOCK.ZT.CHAR] = true;
         locks[SYNC_LOCK.VIEW.CHAR] = true;
         locks[SYNC_LOCK.CHANNELS.CHAR] = false;
         [1,2,3].map((i) => this.sync_groups.set(
@@ -579,6 +580,12 @@ export default class Context {
             for (let [id, conf] of this.image_configs)
                 this.removeImageConfig(id,conf)
         else {
+            for (let [id, conf] of this.image_configs) {
+                if (conf.show_controls)
+                    this.publish(
+                        IMAGE_VIEWER_CONTROLS_VISIBILITY,
+                        {config_id: this.selected_config, flag: false});
+            };
             this.publish(IMAGE_VIEWER_RESIZE, {config_id: -1, delay: 100});
         }
 
@@ -621,9 +628,13 @@ export default class Context {
             // choose next selected image config
             if (confSize > 0) {
                 this.selected_config = this.image_configs.keys().next().value;
-                if (confSize === 1)
+                if (confSize === 1) {
+                    this.publish(
+                        IMAGE_VIEWER_CONTROLS_VISIBILITY,
+                        {config_id: this.selected_config, flag: true});
                     this.publish(
                         IMAGE_VIEWER_RESIZE, {config_id: -1, delay: 100});
+                }
             }
         }
 

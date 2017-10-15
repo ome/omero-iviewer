@@ -260,7 +260,7 @@ export default class Ol3ViewerLinkedEvents {
      * @param {Object} sync_locks the sync locks for the group
      */
     setDimensionIndex(params = {}, sync_locks = {}) {
-        if (!this.isLocked(params.dim, sync_locks)) return;
+        if (!this.isLocked(SYNC_LOCK.ZT.CHAR, sync_locks)) return;
 
         let conf = this.getImageConfig();
         let dims = conf.image_info.dimensions;

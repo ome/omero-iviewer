@@ -30,7 +30,7 @@ import Context from './context';
 import Misc from '../utils/misc';
 import Ui from '../utils/ui';
 import {PLUGIN_PREFIX, SYNC_LOCK} from '../utils/constants';
-import {IMAGE_VIEWER_RESIZE,
+import {IMAGE_VIEWER_RESIZE, IMAGE_VIEWER_CONTROLS_VISIBILITY,
         REGIONS_STORE_SHAPES, REGIONS_STORED_SHAPES} from '../events/events';
 
 /**
@@ -66,8 +66,7 @@ export class Index  {
      * @type {Array.<Object>}
      */
     sync_locks = [
-        SYNC_LOCK.Z,
-        SYNC_LOCK.T,
+        SYNC_LOCK.ZT,
         SYNC_LOCK.VIEW,
         SYNC_LOCK.CHANNELS
     ];
@@ -221,13 +220,9 @@ export class Index  {
         let conf = this.context.getImageConfig(id);
         if (conf === null) return;
 
-        if (conf.show_controls) {
-            $("#" + conf.id + " .ol-control").hide();
-            conf.show_controls = false;
-        } else {
-            $("#" + conf.id + " .ol-control").show();
-            conf.show_controls = true;
-        }
+        this.context.publish(
+            IMAGE_VIEWER_CONTROLS_VISIBILITY,
+            {config_id : conf.id, flag: !conf.show_controls});
     }
 
     /**
