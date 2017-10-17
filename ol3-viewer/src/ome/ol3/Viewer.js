@@ -569,17 +569,7 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
     // helper to broadcast a viewer interaction (zoom and drag)
     var notifyAboutViewerInteraction = function(viewer) {
         ome.ol3.utils.Misc.sendEventNotification(
-            viewer, "IMAGE_VIEWER_INTERACTION",
-            {
-                "z": viewer.getDimensionIndex('z'),
-                "t": viewer.getDimensionIndex('t'),
-                "c": viewer.getDimensionIndex('c'),
-                "w": viewer.getImage().getWidth(),
-                "h": viewer.getImage().getHeight(),
-                "center": viewer.viewer_.getView().getCenter(),
-                "resolution": viewer.viewer_.getView().getResolution(),
-                "rotation": viewer.viewer_.getView().getRotation()
-            });
+            viewer, "IMAGE_VIEWER_INTERACTION", viewer.getViewParameters());
     };
 
     // listens to resolution changes
@@ -2205,6 +2195,25 @@ ome.ol3.Viewer.prototype.setSyncGroup = function(group) {
     this.sync_group_ = group
 }
 
+/**
+ * Gets the 'view parameters'
+ * @return {Object|null} the view parameters or null
+ */
+ome.ol3.Viewer.prototype.getViewParameters = function() {
+    if (this.viewer_ === null || this.getImage() === null) return null;
+    return {
+        "z": this.getDimensionIndex('z'),
+        "t": this.getDimensionIndex('t'),
+        "c": this.getDimensionIndex('c'),
+        "w": this.getImage().getWidth(),
+        "h": this.getImage().getHeight(),
+        "center": this.viewer_.getView().getCenter().slice(),
+        "resolution": this.viewer_.getView().getResolution(),
+        "rotation": this.viewer_.getView().getRotation()
+    };
+}
+
+
 /*
  * This section determines which methods are exposed and usable after compilation
  */
@@ -2418,7 +2427,12 @@ goog.exportProperty(
     'toggleIntensityQuerying',
     ome.ol3.Viewer.prototype.toggleIntensityQuerying);
 
-    goog.exportProperty(
-        ome.ol3.Viewer.prototype,
-        'setSyncGroup',
-    ome.ol3.Viewer.prototype.setSyncGroup);
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
+    'setSyncGroup',
+ome.ol3.Viewer.prototype.setSyncGroup);
+
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
+    'getViewParameters',
+ome.ol3.Viewer.prototype.getViewParameters);

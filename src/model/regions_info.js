@@ -123,6 +123,13 @@ export default class RegionsInfo  {
     ];
 
     /**
+     * show comments flag
+     * @memberof Regions
+     * @type {RegionsInfo}
+     */
+    show_comments = false;
+
+    /**
      * the type of shape that is to be drawn,
      * i.e. a draw interaction is active if non null.
      * @memberof RegionsInfo
@@ -261,6 +268,7 @@ export default class RegionsInfo  {
     requestData(forceUpdate = false) {
         if (this.is_pending || (this.ready && !forceUpdate)) return;
         // reset regions info data and history
+        this.ready = false;
         this.resetRegionsInfo();
         this.is_pending = true;
 

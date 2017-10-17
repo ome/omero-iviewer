@@ -273,7 +273,7 @@ export const CSV_LINE_BREAK = '\u000D\u000A';
 
 /**
  * lock option for syncing
- * @type {string}
+ * @type {Object}
  */
 export const SYNC_LOCK = {
     ZT: { CHAR: 'zt', LABEL: 'Z/T'},
@@ -281,4 +281,13 @@ export const SYNC_LOCK = {
     T: { CHAR: 't', LABEL: 'T'},
     VIEW: { CHAR: 'v', LABEL: 'View'},
     CHANNELS: { CHAR: 'c', LABEL: 'Channels'}
+}
+
+/**
+ * enum for reload types
+ * @type {Object}
+ */
+export const IMAGE_CONFIG_RELOAD = {
+    IMAGE: 0,
+    REGIONS: 1
 }

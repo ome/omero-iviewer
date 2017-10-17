@@ -19,13 +19,15 @@ import {noView} from 'aurelia-framework';
 import {EventAggregator} from 'aurelia-event-aggregator';
 import Misc from '../utils/misc';
 import ImageConfig from '../model/image_config';
+import ImageInfo from '../model/image_info';
+import RegionsInfo from '../model/regions_info';
 import {
     IMAGE_VIEWER_CONTROLS_VISIBILITY, IMAGE_VIEWER_RESIZE
 } from '../events/events';
 import {
-    APP_NAME, IVIEWER, INITIAL_TYPES, LUTS_NAMES, LUTS_PNG_URL, PLUGIN_NAME,
-    PLUGIN_PREFIX, REQUEST_PARAMS, SYNC_LOCK, TABS, URI_PREFIX, WEB_API_BASE,
-    WEBCLIENT, WEBGATEWAY
+    APP_NAME, IMAGE_CONFIG_RELOAD, IVIEWER, INITIAL_TYPES, LUTS_NAMES,
+    LUTS_PNG_URL, PLUGIN_NAME, PLUGIN_PREFIX, REQUEST_PARAMS, SYNC_LOCK,
+    TABS, URI_PREFIX, WEB_API_BASE, WEBCLIENT, WEBGATEWAY
 } from '../utils/constants';
 
 /**
@@ -754,5 +756,84 @@ export default class Context {
      */
     getVersion() {
         return 'v' + this.getInitialRequestParam(REQUEST_PARAMS.VERSION);
+    }
+
+    /**
+     * Reload image info for a all image configs that have the same parent
+     *
+     * @param {number} what the number designating what should be reloaded
+     * @param {number} exclude_config if given this config will be excluded
+     * @memberof Context
+     */
+    reloadImageConfigsGivenParent(parent_id, parent_type, exclude_config = -1) {
+        if (typeof exclude_config !== 'number' || isNaN(exclude_config))
+            exclude_config = -1;
+
+        for (let [id, conf] of this.image_configs) {
+            if (id === exclude_config ||
+                !(conf.image_info instanceof ImageInfo) ||
+                conf.image_info.parent_type !== parent_type ||
+                conf.image_info.parent_id !== parent_id) continue;
+
+            this.reloadImageConfig(conf, IMAGE_CONFIG_RELOAD.IMAGE);
+        }
+    }
+
+    /**
+     * Reload image/regions for a given image id
+     *
+     * @param {number} image_id the image id
+     * @param {number} what the number designating what should be reloaded
+     * @param {number} exclude_config if given this config will be excluded
+     * @memberof Context
+     */
+    reloadImageConfigForGivenImage(image_id, what, exclude_config = -1) {
+        if (typeof image_id !== 'number' || isNaN(image_id)) return;
+        if (typeof exclude_config !== 'number' || isNaN(exclude_config))
+            exclude_config = -1;
+
+        for (let [id, conf] of this.image_configs) {
+            if (id === exclude_config ||
+                !(conf.image_info instanceof ImageInfo) ||
+                conf.image_info.image_id !== image_id) continue;
+
+            this.reloadImageConfig(conf, what);
+        }
+    }
+
+    /**
+     * Reload image/regions for given image config
+     *
+     * @param {ImageConfig|number} image_config the image config or its id
+     * @param {number} what the number designating what should be reloaded
+     * @memberof Context
+     * @private
+     */
+    reloadImageConfig(image_config, what) {
+        if (typeof image_config === 'undefined' || image_config === null ||
+            typeof what !== 'number' || isNaN(what) ||
+            (what !== IMAGE_CONFIG_RELOAD.IMAGE &&
+             what !== IMAGE_CONFIG_RELOAD.REGIONS)) return;
+
+        let conf = null;
+        if (image_config instanceof ImageConfig)
+            conf = image_config;
+        else if (typeof image_config === 'number')
+            conf = this.getImageConfig(image_config);
+        if (conf === null || !(conf.image_info instanceof ImageInfo) ||
+            (what === IMAGE_CONFIG_RELOAD.REGIONS &&
+                (!(conf.regions_info instanceof RegionsInfo) ||
+                 !conf.regions_info.ready))) return;
+
+        switch (what) {
+            case IMAGE_CONFIG_RELOAD.IMAGE:
+                conf.image_info.refresh = true;
+                conf.resetHistory();
+                conf.image_info.requestData(true);
+                break;
+            case IMAGE_CONFIG_RELOAD.REGIONS:
+                conf.regions_info.requestData(true);
+                break;
+        }
     }
 }

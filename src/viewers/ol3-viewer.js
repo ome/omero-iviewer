@@ -28,8 +28,8 @@ import * as FileSaver from '../../node_modules/file-saver';
 import {draggable} from 'jquery-ui/ui/widgets/draggable';
 import {resizable} from 'jquery-ui/ui/widgets/resizable';
 import {
-    IVIEWER, PLUGIN_PREFIX, PROJECTION, REGIONS_DRAWING_MODE, RENDER_STATUS,
-    VIEWER_ELEMENT_PREFIX, WEBCLIENT
+    IMAGE_CONFIG_RELOAD, IVIEWER, PLUGIN_PREFIX, PROJECTION,
+    REGIONS_DRAWING_MODE, RENDER_STATUS, VIEWER_ELEMENT_PREFIX, WEBCLIENT
 } from '../utils/constants';
 import {
     IMAGE_CANVAS_DATA, IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY,
@@ -204,6 +204,29 @@ export default class Ol3Viewer extends EventSubscriber {
             }
         });
         let imageDataReady = () => {
+            // refresh image settings only
+            if (this.image_config.image_info.refresh) {
+                this.viewer.changeImageModel(
+                    this.image_config.image_info.model);
+                let channels = this.image_config.image_info.channels;
+                let updates = [];
+                for (let i=0;i<channels.length;i++) {
+                    let chan = channels[i];
+                    let chanUpdate = {
+                        index: i,
+                        active: chan.active,
+                        start: chan.window.start,
+                        end: chan.window.end,
+                        color: chan.color,
+                        // TODO: rename after reverseIntensity PR is in...
+                        reverse: chan.reverseIntensity
+                    };
+                    updates.push(chanUpdate);
+                };
+                this.viewer.changeChannelRange(updates);
+                return;
+            }
+
             // create viewer instance, register event subscriptions
             this.initViewer();
             this.subscribe();
@@ -211,19 +234,25 @@ export default class Ol3Viewer extends EventSubscriber {
             this.regions_info_ready_observer =
                 this.bindingEngine.propertyObserver(
                     this.image_config.regions_info, 'ready').subscribe(
-                        (newValue, oldValue) => this.initRegions());
+                        (newValue, oldValue) => {
+                            if (oldValue && !newValue) {
+                                if (this.viewer) this.viewer.removeRegions();
+                                return;
+                            };
+                            this.initRegions();
+                    });
             // mdi needs to switch image config when using controls
             container.find('.ol-control').on(
                 'mousedown',
                 () => this.context.selectConfig(this.image_config.id))
         };
-        // if the data is ready we initalize the viewer now,
-        // otherwise we listen via the observer
-        if (this.image_config.image_info.ready) imageDataReady();
-        else this.image_info_ready_observer =
-                this.bindingEngine.propertyObserver(
-                    this.image_config.image_info, 'ready').subscribe(
-                        (newValue, oldValue) => imageDataReady());
+        // listen via the observer for image ready changes
+        this.image_info_ready_observer =
+            this.bindingEngine.propertyObserver(
+                this.image_config.image_info, 'ready').subscribe(
+                    (newValue, oldValue) => {
+                        if (!oldValue && newValue) imageDataReady();
+                    });
     }
 
     /**
@@ -640,6 +669,8 @@ export default class Ol3Viewer extends EventSubscriber {
         delete this.image_config.regions_info.tmp_data;
         this.changeRegionsModes(
             { modes: this.image_config.regions_info.regions_modes});
+        this.viewer.showShapeComments(
+            this.image_config.regions_info.show_comments);
 
         let updateMeasurements = () => {
             if (this.viewer === null) return;
@@ -817,8 +848,17 @@ export default class Ol3Viewer extends EventSubscriber {
     afterShapeStorage(params = {}) {
         Ui.hideModalMessage();
         // the event doesn't concern us
-        if (params.config_id !== this.image_config.id ||
-                typeof params.shapes !== 'object' ||
+        if (params.config_id !== this.image_config.id) return;
+
+        // reload other configs with the same image id (in mdi)
+        if (this.context.useMDI)
+            this.context.reloadImageConfigForGivenImage(
+                this.image_config.image_info.image_id,
+                IMAGE_CONFIG_RELOAD.REGIONS,
+                this.image_config.id);
+
+        // more checks
+        if (typeof params.shapes !== 'object' ||
                 params.shapes === null ||
                 params.omit_client_update) return;
 
