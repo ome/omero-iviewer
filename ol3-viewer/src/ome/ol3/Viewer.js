@@ -404,8 +404,8 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
            "start" : oldC['window']['start'],
            "end" : oldC['window']['end']
        };
-       if (typeof oldC['reverseIntensity'] === 'boolean')
-           newC['reverse'] = oldC['reverseIntensity'];
+       if (typeof oldC['inverted'] === 'boolean')
+           newC['inverted'] = oldC['inverted'];
        channels.push(newC);
     }
 

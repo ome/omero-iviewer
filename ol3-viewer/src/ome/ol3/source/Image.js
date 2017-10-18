@@ -248,7 +248,7 @@ ome.ol3.source.Image = function(options) {
                     ',' + this.tileGrid.tileSize_[1] + '&';
             }
 
-            // maps parameter (incl. reverse intensity)
+            // maps parameter (incl. inverted)
             var maps = [];
             // add channel param
             url += 'c=';
@@ -262,9 +262,9 @@ ome.ol3.source.Image = function(options) {
                 url += "|" + channelInfo['start'] + ":" + channelInfo['end'];
                 url += "$" + channelInfo['color']; // color info
                 maps.push(
-                    {"reverse" : { "enabled" :
-                        typeof channelInfo['reverse'] === 'boolean' &&
-                        channelInfo['reverse']}
+                    {"inverted" : { "enabled" :
+                        typeof channelInfo['inverted'] === 'boolean' &&
+                        channelInfo['inverted']}
                     });
             }
             url += "&maps=" + JSON.stringify(maps);
@@ -494,12 +494,12 @@ ome.ol3.source.Image.prototype.changeChannelRange = function(ranges, rerender) {
         this.channels_info_[channel_index]['start'] = range['start'];
         this.channels_info_[channel_index]['end'] = range['end'];
 
-        // second sanity check for optional color and reverse setting
+        // second sanity check for optional color and inverted setting
         // cannot do much more to accomodate lookup table strings
         if (typeof range['color'] === 'string' && range['color'].length !== 0)
             this.channels_info_[channel_index]['color'] = range['color'];
-        if (typeof range['reverse'] === 'boolean')
-            this.channels_info_[channel_index]['reverse'] = range['reverse'];
+        if (typeof range['inverted'] === 'boolean')
+            this.channels_info_[channel_index]['inverted'] = range['inverted'];
 
         // third sanity check for optional act setting
         if (typeof range['active'] === 'boolean')
@@ -540,8 +540,8 @@ ome.ol3.source.Image.prototype.captureImageSettings = function() {
                 "end" : chan['end']
             }
         };
-        if (typeof chan['reverse'] === 'boolean')
-            chanSnap['reverseIntensity'] = chan['reverse'];
+        if (typeof chan['inverted'] === 'boolean')
+            chanSnap['inverted'] = chan['inverted'];
         ret['channels'].push(chanSnap);
     }
 

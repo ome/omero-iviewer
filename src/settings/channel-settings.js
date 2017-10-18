@@ -84,7 +84,7 @@ export default class ChannelSettings {
     observedProperties = [
         {obj: null, prop: 'active'},
         {obj: null, prop: 'color'},
-        {obj: null, prop: 'reverseIntensity'},
+        {obj: null, prop: 'inverted'},
         {obj: 'window', prop: 'start'},
         {obj: 'window', prop: 'end'}
     ];
@@ -285,17 +285,17 @@ export default class ChannelSettings {
                     type: 'string'});
                 chan.color = impImgData.c[index].color;
              }
-            // log reverse intensity
+            // log inverted flag
             //(taking into account that it might not be supported)
-            if (typeof impImgData.c[index].reverseIntensity === 'undefined')
-                impImgData.c[index].reverseIntensity = null;
-            if (chan.reverseIntensity !== impImgData.c[index].reverseIntensity) {
+            if (typeof impImgData.c[index].inverted === 'undefined')
+                impImgData.c[index].inverted = null;
+            if (chan.inverted !== impImgData.c[index].inverted) {
                 history.push({
-                   prop: ['image_info', 'channels', '' + index, 'reverseIntensity'],
-                   old_val : chan.reverseIntensity,
-                   new_val: impImgData.c[index].reverseIntensity,
+                   prop: ['image_info', 'channels', '' + index, 'inverted'],
+                   old_val : chan.inverted,
+                   new_val: impImgData.c[index].inverted,
                    type: 'boolean'});
-                chan.reverseIntensity = impImgData.c[index].reverseIntensity;
+                chan.inverted = impImgData.c[index].inverted;
              }
              // remember active
              if (chan.active !== impImgData.c[index].active) {
@@ -384,7 +384,7 @@ export default class ChannelSettings {
            prop: prop,
            ranges:[
                {index: index, start: c.window.start, end: c.window.end,
-                color: c.color, active: c.active, reverse: c.reverseIntensity}
+                color: c.color, active: c.active, inverted: c.inverted}
            ]
        };
        this.context.publish(IMAGE_SETTINGS_CHANGE, params);

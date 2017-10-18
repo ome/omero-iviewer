@@ -330,14 +330,14 @@ export default class ChannelRange  {
     }
 
     /**
-     * reverse intensity toggle, adds only history entry
+     * Adds history entry when inverted flag is toggled
      *
      * @memberof ChannelRange
     */
-    onReverseIntensityToggle() {
-        let value = this.channel.reverseIntensity;
+    onInvertedToggle() {
+        let value = this.channel.inverted;
         this.context.getSelectedImageConfig().addHistory({
-            prop: ['image_info', 'channels', '' + this.index,'reverseIntensity'],
+            prop: ['image_info', 'channels', '' + this.index,'inverted'],
             old_val : !value, new_val: value, type: 'boolean'
         });
         this.updateUI();
@@ -364,7 +364,7 @@ export default class ChannelRange  {
             }
         }
         let css = {};
-        if (this.channel.reverseIntensity) css["transform"] = "scaleX(-1)";
+        if (this.channel.inverted) css["transform"] = "scaleX(-1)";
         let channelSlider =
             $(this.element).find(".channel-slider").find(".ui-slider-range");
         if (isLut) {

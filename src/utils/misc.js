@@ -124,12 +124,12 @@ export default class Misc {
      * Takes a string with channel information in the form:
      * -1|111:343$808080,2|0:255$FF0000 and parses it into an object that contains
      * the respective channel information/properties
-     * Likewise it will take map information in json format and add the reverse
-     * intensity to the channels
+     * Likewise it will take map information in json format
+     * and add the inverted flag to the channels
      *
      * @param {string} channel_info a string containing encoded channel info
      * @param {string|Array.<Object>} maps_info
-     *                    a string in json format containing reverse intensity
+     *                    a string in json format containing the inverted flag
      *                    or an array of alrady parsed json (for convenience)
      *
      * @static
@@ -184,16 +184,16 @@ export default class Misc {
             ret.push(tmp);
         }
 
-        // integrate reverse intensity from maps
+        // integrate inverted flag from maps
         if (Misc.isArray(maps_info)) // we have an array of parsed objects
-            return Misc.integrateReverseIntensityIntoChannels(ret, maps_info);
+            return Misc.integrateInvertedFlagIntoChannels(ret, maps_info);
 
         // we need to parse the json still
         if (typeof maps_info !== 'string' || maps_info.length === 0)
             return ret;
         try {
             maps_info = maps_info.replace(/&quot;/g, '"');
-            return Misc.integrateReverseIntensityIntoChannels(
+            return Misc.integrateInvertedFlagIntoChannels(
                 ret, JSON.parse(maps_info));
         } catch(malformedJson) {
             console.error("Error parsing maps json");
@@ -236,16 +236,16 @@ export default class Misc {
 
 
     /**
-     * Integrate the reverse intensity from the maps contents into the channels
+     * Integrate the inverted flag from the maps contents into the channels
      *
      * @param {Array.<Object>} channels array with channels info
      * @param {Array.<Object>} maps array with maps info
      *
      * @static
      * @private
-     * @return {Array} the channels with reverse intensity integrated
+     * @return {Array} the channels (incl. inverted flag)
      */
-    static integrateReverseIntensityIntoChannels(channels, maps) {
+    static integrateInvertedFlagIntoChannels(channels, maps) {
         if (!Misc.isArray(channels) || !Misc.isArray(maps) ||
             channels.length === 0 || maps.length === 0) return channels;
 
@@ -253,10 +253,10 @@ export default class Misc {
         for (let i=0;i<len && i<maps.length;i++) {
             let m = maps[i];
             if (typeof m !== 'object' || m === null) continue;
-            channels[i]['reverseIntensity'] =
-                typeof m['reverse'] === 'object' && m['reverse'] &&
-                typeof m['reverse']['enabled'] === 'boolean' &&
-                m['reverse']['enabled'];
+            channels[i]['inverted'] =
+                typeof m['inverted'] === 'object' && m['inverted'] &&
+                typeof m['inverted']['enabled'] === 'boolean' &&
+                m['inverted']['enabled'];
         }
 
         return channels;
@@ -286,10 +286,9 @@ export default class Misc {
                 url+= (i !== 0 ? ',' : '') + (!c.active ? '-' : '') + (++i) +
                  "|" + c.window.start + ":" + c.window.end + "$" + c.color;
                  maps.push(
-                     {"reverse" : { "enabled" :
-                         typeof c.reverseIntensity === 'boolean' &&
-                         c.reverseIntensity}
-                     });
+                     {"inverted" : { "enabled" :
+                         typeof c.inverted === 'boolean' && c.inverted
+                     }});
              });
         return url + "&maps=" + JSON.stringify(maps);
     }
