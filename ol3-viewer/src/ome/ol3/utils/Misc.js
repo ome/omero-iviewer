@@ -237,13 +237,13 @@ ome.ol3.utils.Misc.getCookie = function(name) {
  * Takes a string with channel information in the form:
  * -1|111:343$808080,2|0:255$FF0000 and parses it into an object that contains
  * the respective channel information/properties
- * Likewise it will take map information in json format and add the reverse
- * intensity to the channels
+ * Likewise it will take map information in json format
+ * and add the inverted flag to the channels
  *
  * @static
  * @function
  * @param {string} channel_info a string containing encoded channel info
- * @param {string} maps_info a string in json format containing reverse intensity
+ * @param {string} maps_info a string in json format containing inverted flag
  * @return {Array|null} an array of channel objects or null
  */
 ome.ol3.utils.Misc.parseChannelParameters = function(channel_info, maps_info) {
@@ -293,7 +293,7 @@ ome.ol3.utils.Misc.parseChannelParameters = function(channel_info, maps_info) {
         ret.push(tmp);
     }
 
-    // integrate maps info for reverse intensity
+    // integrate maps info for inverted flag
     if (typeof maps_info !== 'string' || maps_info.length === 0)
         return ret;
     try {
@@ -304,10 +304,10 @@ ome.ol3.utils.Misc.parseChannelParameters = function(channel_info, maps_info) {
         for (var i=0;i<len && i<maps.length;i++) {
             var m = maps[i];
             if (typeof m !== 'object' || m === null) continue;
-            ret[i]['reverse'] =
-                typeof m['reverse'] === 'object' && m['reverse'] &&
-                typeof m['reverse']['enabled'] === 'boolean' &&
-                m['reverse']['enabled'];
+            ret[i]['inverted'] =
+                typeof m['inverted'] === 'object' && m['inverted'] &&
+                typeof m['inverted']['enabled'] === 'boolean' &&
+                m['inverted']['enabled'];
         }
     } catch(malformedJson) {}
 

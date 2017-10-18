@@ -452,8 +452,8 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
            "start" : oldC['window']['start'],
            "end" : oldC['window']['end']
        };
-       if (typeof oldC['reverseIntensity'] === 'boolean')
-           newC['reverse'] = oldC['reverseIntensity'];
+       if (typeof oldC['inverted'] === 'boolean')
+           newC['inverted'] = oldC['inverted'];
        channels.push(newC);
     }
 
@@ -541,7 +541,7 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
        controls: controls,
        interactions:  interactions,
        renderer: ol.renderer.Type.CANVAS,
-       layers: [new ol.layer.Tile({source: source, preload: Infinity})],
+       layers: [new ol.layer.Tile({source: source})],
        target: this.container_,
        view: view
     });
