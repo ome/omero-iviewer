@@ -440,6 +440,7 @@ export default class ViewerContextMenu {
         if (!Misc.isArray(ids) || ids.length === 0) return;
 
         let regInf = this.image_config.regions_info;
+        let active = regInf.image_info.getActiveChannels();
         let units = regInf.image_info.image_pixels_size.symbol_x || 'px';
         let img_id = regInf.image_info.image_id;
         let img_name = regInf.image_info.short_image_name;
@@ -466,14 +467,18 @@ export default class ViewerContextMenu {
                 (shape.Area < 0 ? '' : shape.Area) + "," +
                 (shape.Length < 0 ? '' : shape.Length);
 
-            if (typeof shape.stats === 'object' && shape.stats !== null) {
-                for (let s in shape.stats) {
-                    let stat = shape.stats[s];
-                    csv += commonCsvPortion + "," +
-                        stat.index + "," + stat.points + "," +
-                        stat.min + "," + stat.max + "," + stat.sum + "," +
-                        stat.mean + "," + stat.std_dev + CSV_LINE_BREAK;
-                }
+            if (typeof shape.stats === 'object' &&
+                shape.stats !== null &&
+                active.length !== 0) {
+                    for (let s in shape.stats) {
+                        let stat = shape.stats[s];
+                        if (active.indexOf(stat.index) !== -1) {
+                            csv += commonCsvPortion + "," +
+                                stat.index + "," + stat.points + "," +
+                                stat.min + "," + stat.max + "," + stat.sum + "," +
+                                stat.mean + "," + stat.std_dev + CSV_LINE_BREAK;
+                        }
+                    }
             } else csv += commonCsvPortion + ",,,,,,," + CSV_LINE_BREAK;
         }
 
