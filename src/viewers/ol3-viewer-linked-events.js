@@ -217,10 +217,6 @@ export default class Ol3ViewerLinkedEvents {
                                     step_size) newValue = oldValue;
                             }
                             channels[c.index].window[prop] = newValue;
-                        } else if (prop === 'reverse') {
-                            // TODO: remove after reverse intensity rename
-                            oldValue = channels[c.index]['reverseIntensity'];
-                            channels[c.index]['reverseIntensity'] = newValue;
                         } else {
                             oldValue = channels[c.index][prop];
                             channels[c.index][prop] = newValue;
@@ -232,10 +228,7 @@ export default class Ol3ViewerLinkedEvents {
                                 ['image_info', 'channels', '' + c.index];
                             if (prop === 'start' || prop === 'end')
                                 p.push('window');
-                            // TODO: remove after reverse intensity rename
-                            if (prop === 'reverse')
-                                p.push('reverseIntensity');
-                            else p.push(prop);
+                            p.push(prop);
                             history.push({
                                 prop: p,
                                 old_val : oldValue, new_val: newValue,

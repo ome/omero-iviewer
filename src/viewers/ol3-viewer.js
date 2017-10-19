@@ -218,8 +218,7 @@ export default class Ol3Viewer extends EventSubscriber {
                         start: chan.window.start,
                         end: chan.window.end,
                         color: chan.color,
-                        // TODO: rename after reverseIntensity PR is in...
-                        reverse: chan.reverseIntensity
+                        inverted: chan.inverted
                     };
                     updates.push(chanUpdate);
                 };
