@@ -446,9 +446,9 @@ export default class ViewerContextMenu {
         let img_name = regInf.image_info.short_image_name;
 
         let csv =
-            "image_id,image_name,roi_id,shape_id,type,z,t,\"area (" + units +
-            "\u00b2)\",\"length (" + units + ")\",channel,points,min,max," +
-            "sum,mean,std_dev" + CSV_LINE_BREAK;
+            "image_id,image_name,roi_id,shape_id,type,z,t,channel," +
+            "\"area (" + units + "\u00b2)\",\"length (" + units + ")\"," +
+            "points,min,max,sum,mean,std_dev" + CSV_LINE_BREAK;
 
         for (let i in ids) {
             let id = ids[i];
@@ -459,13 +459,14 @@ export default class ViewerContextMenu {
 
             let channel = '', points = '', min = '', max = '';
             let sum = '', mean = '', stddev = '';
-            let commonCsvPortion =
+            let csvCommonInfo =
                 img_id + ",\"" + img_name + "\"," +
                 (is_new ? "-" : roi_id) + "," +
                 (is_new ? "-" : shape['@id']) + "," + shape.type + "," +
-                (shape.TheZ+1) + "," + (shape.TheT+1) + "," +
-                (shape.Area < 0 ? '' : shape.Area) + "," +
-                (shape.Length < 0 ? '' : shape.Length);
+                (shape.TheZ+1) + "," + (shape.TheT+1) + ",";
+            let csvMeasure =
+                "," + (shape.Area < 0 ? '' : shape.Area) + "," +
+                (shape.Length < 0 ? '' : shape.Length) + ",";
 
             if (typeof shape.stats === 'object' &&
                 shape.stats !== null &&
@@ -473,13 +474,14 @@ export default class ViewerContextMenu {
                     for (let s in shape.stats) {
                         let stat = shape.stats[s];
                         if (active.indexOf(stat.index) !== -1) {
-                            csv += commonCsvPortion + "," +
-                                stat.index + "," + stat.points + "," +
-                                stat.min + "," + stat.max + "," + stat.sum + "," +
-                                stat.mean + "," + stat.std_dev + CSV_LINE_BREAK;
+                            csv += csvCommonInfo + stat.index + csvMeasure +
+                                    stat.points + "," + stat.min + "," +
+                                    stat.max + "," + stat.sum + "," +
+                                    stat.mean + "," + stat.std_dev +
+                                    CSV_LINE_BREAK;
                         }
                     }
-            } else csv += commonCsvPortion + ",,,,,,," + CSV_LINE_BREAK;
+            } else csv += csvCommonInfo + csvMeasure + ",,,,," + CSV_LINE_BREAK;
         }
 
         let data = null;
