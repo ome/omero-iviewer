@@ -461,7 +461,7 @@ def get_intensity(request, conn=None, **kwargs):
                 return JsonResponse(
                     {"error": "One or more channels are out of bounds"})
             channels.append(tok)
-    except:
+    except Exception:
         return JsonResponse(
             {"error": "The channels have to be a comma separated string"})
     if len(channels) == 0:
