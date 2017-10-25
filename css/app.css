@@ -556,8 +556,8 @@ thumbnail-slider img {
 }
 
 #panel-tabs li a {
-    padding-left: 20px;
-    padding-right: 20px;
+    padding-left: 15px;
+    padding-right: 15px;
 }
 
 .channel-range {
@@ -1116,4 +1116,9 @@ thumbnail-slider img {
 .columns-dropdown .dropdown-menu a {
     display: inline-block;
     padding-left: 0px;
+}
+
+annotations ul {
+    padding-left: 10px;
+    list-style-type: none;
 }

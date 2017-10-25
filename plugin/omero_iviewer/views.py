@@ -540,4 +540,4 @@ def get_annotations(request, conn=None, **kwargs):
         if ann is not None:
             annotations.append(ann)
 
-        return JsonResponse({"annotations": annotations})
+    return JsonResponse({"annotations": annotations})

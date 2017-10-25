@@ -235,7 +235,8 @@ export const LUTS_NAMES = [
 export const TABS = {
     INFO: 'info',
     SETTINGS: 'settings',
-    ROIS: 'rois'
+    ROIS: 'rois',
+    ANNOTATIONS: 'annotations'
 }
 
 /**

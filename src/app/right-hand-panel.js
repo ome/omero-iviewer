@@ -105,7 +105,7 @@ export class RightHandPanel {
 
             this.context.selected_tab = e.currentTarget.hash.substring(1);
 
-            // we don't allow an active regions tab if we are in spit view
+            // we don't allow an active regions tab if we are in split view
             if (this.context.isRoisTabActive()) {
                 if (this.image_config === null ||
                     this.image_config.regions_info === null ||
@@ -114,7 +114,10 @@ export class RightHandPanel {
 
                 if (!this.image_config.regions_info.ready)
                     this.image_config.regions_info.requestData(true);
-            };
+            } else if (this.context.selected_tab === TABS.ANNOTATIONS &&
+                       this.image_config !== null) {
+                            this.image_config.image_annotations.requestData();
+            }
             $(e.currentTarget).tab('show');
         });
     }
