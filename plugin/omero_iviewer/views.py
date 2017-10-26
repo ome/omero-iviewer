@@ -523,7 +523,7 @@ def get_annotations(request, conn=None, **kwargs):
     image_id = request.GET.get("image", None)
     if image_id is None:
         return JsonResponse(
-            {"error": "Mandatory params are: image,x,y,c, z and t"})
+            {"error": "The image id is a mandatory parameter"})
 
     # retrieve image object
     img = conn.getObject("Image", image_id, opts=conn.SERVICE_OPTS)
