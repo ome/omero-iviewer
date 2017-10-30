@@ -500,28 +500,49 @@ export default class Context {
         let newPath = window.location.pathname;
         let parent_id = null;
         let selConf = this.getSelectedImageConfig();
+
         let parentType =
             this.initial_type === INITIAL_TYPES.IMAGES ?
                 selConf.image_info.parent_type : this.initial_type;
         let parentTypeString =
             parentType === INITIAL_TYPES.WELL ? "well" : "dataset";
 
-        if (this.initial_type === INITIAL_TYPES.IMAGES) {
-            if (this.initial_ids.length > 1)
-                newPath += window.location.search;
-            else {
-                parent_id = selConf.image_info.parent_id;
-                newPath +=
-                    '?images=' + image_id + '&' + parentTypeString + "=" + parent_id;
+        // default viewer url
+        if (newPath.indexOf("webclient/img_detail") !== -1) {
+            let old_image_id =
+                selConf && selConf.image_info ?
+                    selConf.image_info.image_id: null;
+            if (old_image_id) {
+                newPath = newPath.replace(old_image_id, image_id);
+                parent_id =
+                    this.initial_type === INITIAL_TYPES.IMAGES ?
+                        (typeof selConf.image_info.parent_id === 'number' ?
+                            selConf.image_info.parent_id : null) :
+                        this.initial_ids[0];
+                if (parent_id)
+                    newPath += "?" + parentTypeString + "=" + parent_id;
             }
         } else {
-            parent_id = this.initial_ids[0];
-            newPath += "?" + parentTypeString + "=" + parent_id;
+            // 'standard' url
+            if (this.initial_type === INITIAL_TYPES.IMAGES) {
+                if (this.initial_ids.length > 1)
+                    newPath += window.location.search;
+                else {
+                    parent_id = selConf.image_info.parent_id;
+                    newPath +=
+                        '?images=' + image_id + '&' + parentTypeString + "=" + parent_id;
+                }
+            } else {
+                parent_id = this.initial_ids[0];
+                newPath += "?" + parentTypeString + "=" + parent_id;
+            }
+            if (this.is_dev_server) {
+                newPath += (newPath.indexOf('?') === -1) ? '?' : '&';
+                newPath += 'haveMadeCrossOriginLogin_';
+            }
         }
-        if (this.is_dev_server) {
-            newPath += (newPath.indexOf('?') === -1) ? '?' : '&';
-            newPath += 'haveMadeCrossOriginLogin_';
-        }
+
+        // add history entry
         window.history.pushState(
             {image_id: image_id,
              parent_id: parent_id,
