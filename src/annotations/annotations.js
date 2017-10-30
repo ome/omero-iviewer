@@ -56,6 +56,8 @@ export class Annotations {
      * @memberof Annotations
      */
     bind() {
+        if (this.image_annotations === null) return;
+
         // listen for image annotation changes
         this.image_annotations_changes =
             this.bindingEngine.collectionObserver(
