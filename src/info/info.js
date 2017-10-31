@@ -112,6 +112,7 @@ export class Info {
             if (o) o.dispose();
         });
         this.observers = [];
+        this.columns = [];
     }
 
     /**
@@ -215,16 +216,4 @@ export class Info {
             }
         } else this.parent_info = null;
     }
-
-    /**
-     * Overridden aurelia lifecycle method:
-     * called whenever the view is unbound within aurelia
-     * in other words a 'destruction' hook that happens after 'detached'
-     *
-     * @memberof Info
-     */
-    unbind() {
-        this.columns = [];
-    }
-
 }
