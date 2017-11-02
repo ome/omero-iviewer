@@ -2136,6 +2136,31 @@ ome.ol3.Viewer.prototype.toggleIntensityQuerying = function(flag) {
     }
 }
 
+/**
+ * Performs an incrediblty useful animation
+ * @param {number} for_how_long number in millis
+ */
+ome.ol3.Viewer.prototype.doVeryUsefulAnimation = function(for_how_long) {
+    if (typeof for_how_long !== 'number') {
+        for_how_long = 1000;
+    }
+    var view = this.viewer_.getView();
+    var zoom = view.getZoom();
+    view.animate({
+            duration: for_how_long,
+            zoom:  view.getMinZoom(),
+            rotation: 2/3 * Math.PI
+        }, {
+            duration: for_how_long,
+            zoom: view.getMaxZoom(),
+            rotation: 4/3 * Math.PI
+        }, {
+            duration: for_how_long,
+            zoom: zoom,
+            rotation: 2 * Math.PI
+        });
+}
+
 /*
  * This section determines which methods are exposed and usable after compilation
  */
@@ -2343,3 +2368,10 @@ goog.exportProperty(
     ome.ol3.Viewer.prototype,
     'toggleIntensityQuerying',
     ome.ol3.Viewer.prototype.toggleIntensityQuerying);
+
+/*
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
+    'doVeryUsefulAnimation',
+    ome.ol3.Viewer.prototype.doVeryUsefulAnimation);
+*/

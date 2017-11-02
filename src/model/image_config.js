@@ -19,6 +19,7 @@
 import {noView} from 'aurelia-framework';
 import ImageInfo from '../model/image_info';
 import RegionsInfo from '../model/regions_info';
+import ImageAnnotations from '../model/image_annotations';
 import Misc from '../utils/misc';
 import History from './history';
 
@@ -62,6 +63,12 @@ export default class ImageConfig extends History {
     regions_info = null;
 
     /**
+     * @memberof ImageConfig
+     * @type {ImageAnnotations}
+     */
+    image_annotations = null;
+
+    /**
      * @constructor
      * @param {Context} context the application context
      * @param {number} image_id the image id to be queried
@@ -76,6 +83,7 @@ export default class ImageConfig extends History {
         this.image_info =
             new ImageInfo(context, this.id, image_id, parent_id, parent_type);
         this.regions_info = new RegionsInfo(this.image_info)
+        this.image_annotations = new ImageAnnotations(context, image_id);
     }
 
     /**

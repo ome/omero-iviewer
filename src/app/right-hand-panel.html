@@ -20,6 +20,7 @@
     <require from="../settings/settings"></require>
     <require from="../regions/regions"></require>
     <require from="../info/info"></require>
+    <require from="../annotations/annotations"></require>
 
     <ul id="panel-tabs" class="nav nav-tabs" role="tablist">
         <li class="${context.selected_tab === TABS.INFO ? 'active' : ''}">
@@ -33,6 +34,9 @@
                 ROIs ${image_config && image_config.image_info ?
                         '[' + image_config.image_info.roi_count + ']' : ''}
             </a>
+        </li>
+        <li class="${context.selected_tab === TABS.ANNOTATIONS ? 'active' : ''}">
+            <a href="${'#' + TABS.ANNOTATIONS}" role="tab">Annotations</a>
         </li>
     </ul>
 
@@ -56,6 +60,12 @@
         <div id="${TABS.ROIS}" role="tabpanel"
              class="tab-pane ${context.selected_tab === TABS.ROIS ? 'active' : ''}">
             <regions regions_info.bind="image_config.regions_info"></regions>
+        </div>
+        <div id="${TABS.ANNOTATIONS}" role="tabpanel"
+             class="tab-pane ${context.selected_tab === TABS.ANNOTATIONS ? 'active' : ''}">
+            <annotations
+                image_annotations.bind="image_config.image_annotations">
+            </annotations>
         </div>
     </div>
 

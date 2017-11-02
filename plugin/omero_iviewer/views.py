@@ -461,7 +461,7 @@ def get_intensity(request, conn=None, **kwargs):
                 return JsonResponse(
                     {"error": "One or more channels are out of bounds"})
             channels.append(tok)
-    except:
+    except Exception:
         return JsonResponse(
             {"error": "The channels have to be a comma separated string"})
     if len(channels) == 0:
@@ -515,3 +515,29 @@ def get_intensity(request, conn=None, **kwargs):
         return JsonResponse(results)
     except Exception as pixel_service_exception:
         return JsonResponse({"error": repr(pixel_service_exception)})
+
+
+@login_required()
+def get_annotations(request, conn=None, **kwargs):
+    # get mandatory param image id
+    image_id = request.GET.get("image", None)
+    if image_id is None:
+        return JsonResponse(
+            {"error": "The image id is a mandatory parameter"})
+
+    # retrieve image object
+    img = conn.getObject("Image", image_id, opts=conn.SERVICE_OPTS)
+    if img is None:
+        return JsonResponse({"error": "Image not Found"}, status=404)
+
+    # iterate over annotations and marshal them
+    annotations = []
+    for ann in img.listAnnotations():
+        enc = omero_marshal.get_encoder(ann.OMERO_TYPE)
+        if enc is None:
+            enc = omero_marshal.get_encoder(omero.model.Annotation)
+        ann = enc.encode(ann)
+        if ann is not None:
+            annotations.append(ann)
+
+    return JsonResponse({"annotations": annotations})
