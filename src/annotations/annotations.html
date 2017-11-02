@@ -18,7 +18,12 @@
 
 <template>
     <div show.bind="image_annotations.ready">
-        <ul>
+        <div style="text-align: center"
+             show.bind="image_annotations.annotations.length === 0">
+                Image has no annotations
+        </div>
+
+        <ul show.bind="image_annotations.annotations.length > 0">
             <li repeat.for="ann of image_annotations.annotations">
                 ${ann.type}
                 <ul>
