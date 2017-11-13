@@ -21,6 +21,7 @@ import Context from '../app/context';
 import {inject, customElement, BindingEngine} from 'aurelia-framework';
 import {IMAGE_VIEWPORT_CAPTURE} from '../events/events';
 import Ui from '../utils/ui';
+import Misc from '../utils/misc';
 import * as FileSaver from '../../node_modules/file-saver';
 import * as TextEncoding from "../../node_modules/text-encoding";
 import {
@@ -411,22 +412,76 @@ export default class ViewerContextMenu {
         let regInf = this.image_config.regions_info;
         if (regInf.selected_shapes.length === 0) return;
 
+        // we cannot query unssaved shapes
+        let ids_for_stats =
+            regInf.selected_shapes.filter((s) => s.indexOf("-") == -1);
+        // if we have no saved shapes or no active channels ...
+        // forget about it
+        if (ids_for_stats.length === 0 ||
+            regInf.image_info.getActiveChannels().length === 0) {
+            this.writeCsv(regInf.selected_shapes);
+        } else {
+            regInf.requestStats(
+                ids_for_stats, () => this.writeCsv(regInf.selected_shapes));
+        }
+
+        this.hideContextMenu();
+        // prevent link click behavior
+        return false;
+    }
+
+    /**
+     * Generates a csv file for shapes (incl. stats) whose ids are given
+     *
+     * @param {Array.<string>} ids the shape ids ('roi_id:shape_id')
+     * @memberof ViewerContextMenu
+     */
+    writeCsv(ids) {
+        if (!Misc.isArray(ids) || ids.length === 0) return;
+
+        let regInf = this.image_config.regions_info;
+        let active = regInf.image_info.getActiveChannels();
         let units = regInf.image_info.image_pixels_size.symbol_x || 'px';
         let img_id = regInf.image_info.image_id;
         let img_name = regInf.image_info.short_image_name;
+
         let csv =
-            "image_id,image_name,roi_id,shape_id,type,z,t,\"area (" + units +
-            "\u00b2)\",\"length (" + units + ")\"" + CSV_LINE_BREAK;
-        for (let i in regInf.selected_shapes) {
-            let id = regInf.selected_shapes[i];
+            "image_id,image_name,roi_id,shape_id,type,z,t,channel," +
+            "\"area (" + units + "\u00b2)\",\"length (" + units + ")\"," +
+            "points,min,max,sum,mean,std_dev" + CSV_LINE_BREAK;
+
+        for (let i in ids) {
+            let id = ids[i];
             let shape = regInf.getShape(id);
             if (shape === null) continue;
             let roi_id = id.substring(0, id.indexOf(':'));
-            csv += img_id + ",\"" + img_name + "\"," +
-                    roi_id + "," + shape['@id'] + "," + shape.type + "," +
-                    (shape.TheZ+1) + "," + (shape.TheT+1) + "," +
-                    (shape.Area < 0 ? '' : shape.Area) + "," +
-                    (shape.Length < 0 ? '' : shape.Length) + CSV_LINE_BREAK;
+            let is_new = id.indexOf('-') !== -1;
+
+            let channel = '', points = '', min = '', max = '';
+            let sum = '', mean = '', stddev = '';
+            let csvCommonInfo =
+                img_id + ",\"" + img_name + "\"," +
+                (is_new ? "-" : roi_id) + "," +
+                (is_new ? "-" : shape['@id']) + "," + shape.type + "," +
+                (shape.TheZ+1) + "," + (shape.TheT+1) + ",";
+            let csvMeasure =
+                "," + (shape.Area < 0 ? '' : shape.Area) + "," +
+                (shape.Length < 0 ? '' : shape.Length) + ",";
+
+            if (typeof shape.stats === 'object' &&
+                shape.stats !== null &&
+                active.length !== 0) {
+                    for (let s in shape.stats) {
+                        let stat = shape.stats[s];
+                        if (active.indexOf(stat.index) !== -1) {
+                            csv += csvCommonInfo + stat.index + csvMeasure +
+                                    stat.points + "," + stat.min + "," +
+                                    stat.max + "," + stat.sum + "," +
+                                    stat.mean + "," + stat.std_dev +
+                                    CSV_LINE_BREAK;
+                        }
+                    }
+            } else csv += csvCommonInfo + csvMeasure + ",,,,," + CSV_LINE_BREAK;
         }
 
         let data = null;
@@ -440,16 +495,13 @@ export default class ViewerContextMenu {
             encErr = false;
             data = new Blob([ansiEncoder.encode(csv)], {type: type});
         } catch(not_supported) {}
+
         if (data instanceof Blob)
             FileSaver.saveAs(
                 data,
                 regInf.image_info.short_image_name + "_roi_measurements.csv");
         else console.error(
                 encErr ? "Error encoding csv" : "Blob not supported");
-
-        this.hideContextMenu();
-        // prevent link click behavior
-        return false;
     }
 
     /**

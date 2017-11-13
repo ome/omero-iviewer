@@ -461,7 +461,7 @@ def get_intensity(request, conn=None, **kwargs):
                 return JsonResponse(
                     {"error": "One or more channels are out of bounds"})
             channels.append(tok)
-    except:
+    except Exception:
         return JsonResponse(
             {"error": "The channels have to be a comma separated string"})
     if len(channels) == 0:
@@ -515,3 +515,58 @@ def get_intensity(request, conn=None, **kwargs):
         return JsonResponse(results)
     except Exception as pixel_service_exception:
         return JsonResponse({"error": repr(pixel_service_exception)})
+
+
+@login_required()
+def shape_stats(request, conn=None, **kwargs):
+    # check for mandatory parameters
+    ids = request.GET.get("ids", None)
+    z = request.GET.get("z", None)
+    t = request.GET.get("t", None)
+    if ids is None or z is None or t is None:
+        return JsonResponse(
+            {"error": "Parameters ids, z and t are mandatory"})
+
+    # convert input params
+    channels = []
+    try:
+        ids = [
+            long(id.split(':')[1]) if ':' in id else long(id)
+            for id in ids.split(',') if id != ''
+        ]
+        z, t = int(z), int(t)
+        # optional cs
+        cs = request.GET.get("cs", None)
+        if cs is not None:
+            channels = [int(c) for c in cs.split(',') if c != '']
+    except Exception:
+        return JsonResponse({"error": "Invalid Parameter types"})
+
+    try:
+        # call rois service restricted stats method
+        # populating our own return objects for convenience
+        rois_service = conn.getRoiService()
+        stats = rois_service.getShapeStatsRestricted(ids, z, t, channels)
+        ret = {}
+        for stat in stats:
+            ret_stat = []
+            number_of_channels = len(stat.channelIds)
+            i = 0
+            while i < number_of_channels:
+                ret_stat_chan = {
+                    "index": stat.channelIds[i],
+                    "points": stat.pointsCount[i],
+                    "min": stat.min[i],
+                    "max": stat.max[i],
+                    "sum": stat.sum[i],
+                    "mean": stat.mean[i],
+                    "std_dev": stat.stdDev[i]
+                }
+                ret_stat.append(ret_stat_chan)
+                i += 1
+            ret[str(stat.shapeId)] = ret_stat
+        return JsonResponse(ret,)
+    except omero.ApiUsageException as api_exception:
+        return JsonResponse({"error": api_exception.message})
+    except Exception as stats_call_exception:
+        return JsonResponse({"error": repr(stats_call_exception)})
