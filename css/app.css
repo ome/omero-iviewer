@@ -169,25 +169,30 @@ a.ui-button:active,
 .fixed-header {
     position: fixed;
     margin: 0px;
-    overflow: hidden;
+    white-space: nowrap;
     min-height: 40px;
     max-height: 40px;
     background-color: #1F6AAA;
     border-width: 0;
 }
 
-/** Text displayed in the header */
+.fixed-header div {
+    margin-left: 20px;
+    margin-right: 20px;
+    display: inline;
+    line-height: 40px;
+}
 .fixed-header-text {
     text-align:center;
     font-size: 22px;
     color: white;
     margin-top: 5px;
 }
-.fixed-header-text .app-version {
-    float: right;
-    margin-right: 5px;
-    margin-top: 4px;
-    font-size: 18px;
+.fixed-header-webclient a {
+	color: white;
+}
+.fixed-header-webclient a:hover {
+	color: rgba(255,255,255,0.7)
 }
 
 .frame {

@@ -41,6 +41,15 @@ import {
 @noView
 export default class Context {
     /**
+     * the version number
+     * (set via initial params)
+     *
+     * @memberof Context
+     * @type {string}
+     */
+    version = "0.0.0";
+
+    /**
      * are we running within the wepback dev server
      *
      * @memberof Context
@@ -359,6 +368,7 @@ export default class Context {
             typeof this.initParams[REQUEST_PARAMS.INTERPOLATE] === 'string' ?
                 this.initParams[REQUEST_PARAMS.INTERPOLATE].toLowerCase() : 'true';
         this.interpolate = (interpolate === 'true');
+        this.version = this.getInitialRequestParam(REQUEST_PARAMS.VERSION);
     }
 
     /**
@@ -692,15 +702,5 @@ export default class Context {
         this.initParams = {};
         // we do need our uri prefixes again
         this.prefixed_uris.forEach((value, key) => this.initParams[key] = value);
-    }
-
-    /**
-     * Returns version information
-     *
-     * @return {string} the version
-     * @memberof Context
-     */
-    getVersion() {
-        return 'v' + this.getInitialRequestParam(REQUEST_PARAMS.VERSION);
     }
 }

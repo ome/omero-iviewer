@@ -18,6 +18,8 @@
 // js
 import {inject,customElement, BindingEngine} from 'aurelia-framework';
 import Context from './context';
+import Ui from '../utils/ui';
+import { WEBCLIENT } from '../utils/constants';
 
 /**
  * @classdesc
@@ -40,6 +42,13 @@ export class Header {
      * @type {Object}
      */
     selected_image_observer = null;
+
+    /**
+     * the webclient url (pre-fixed)
+     * @memberof Header
+     * @type {string}
+     */
+    webclient_link = null;
 
     /**
      * Overridden aurelia lifecycle method:
@@ -66,6 +75,7 @@ export class Header {
     constructor(context, bindingEngine) {
         this.context = context;
         this.bindingEngine = bindingEngine;
+        this.webclient_link = this.context.getPrefixedURI(WEBCLIENT);
     }
 
     /**
@@ -76,6 +86,15 @@ export class Header {
      onImageConfigChange() {
         if (this.context.getSelectedImageConfig() === null) return;
         this.image_info = this.context.getSelectedImageConfig().image_info;
+     }
+
+     /**
+      * Shows about modal with version info
+      *
+      * @memberof Header
+      */
+     showAbout() {
+         Ui.showModalMessage("Version: " + this.context.version, "Close");
      }
 
      /**
