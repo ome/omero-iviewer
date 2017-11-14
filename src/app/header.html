@@ -32,7 +32,14 @@
                 </button>
                 <ul class="dropdown-menu">
                     <li click.delegate="showAbout()">
-                        <a href="#">About iViewer</a>
+                        <a href="#">About OMERO.iviewer</a>
+                    </li>
+                    <li>
+                        <a  target="_blank"
+                            style="text-decoration: underline;color: #337ab7;"
+                            href="https://github.com/ome/omero-iviewer">
+                            https://github.com/ome/omero-iviewer
+                        </a>
                     </li>
                 </ul>
             </div>
@@ -43,4 +50,35 @@
            </span>
        </div>
     </nav>
+    <div class="modal-about modal" role="dialog"
+        data-backdrop="true" data-keyboard="true">
+        <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close"
+                            data-dismiss="modal"
+                            aria-hidden="true">×
+                    </button>
+                    <h4 class="modal-title">About OMERO.iviewer</h4>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        <span style="font-weight: bold;">Version<span>:
+                            ${context.version}
+                    </p>
+                    <p>
+                        &copy; 2017 University of Dundee &amp; Open Microscopy Environment<br>
+                        OMERO and OMERO.iviewer are distributed under the terms of the GNU GPL.<br>
+                        See: <a target="new" href="http://www.openmicroscopy.org">openmicroscopy.org</a>
+                    </p>
+                </h4>
+                <div class="modal-footer">
+                <button type="button"
+                        class="ok center-block btn btn-default"
+                        data-dismiss="modal">Close
+                </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </template>

@@ -94,7 +94,9 @@ export class Header {
       * @memberof Header
       */
      showAbout() {
-         Ui.showModalMessage("Version: " + this.context.version, "Close");
+         let modal = $('.modal-about');
+         if (modal.length === 0) return;
+         modal.modal();
      }
 
      /**

@@ -1122,3 +1122,15 @@ thumbnail-slider img {
     display: inline-block;
     padding-left: 0px;
 }
+
+.modal-about .modal-content {
+    width: 550px;
+    max-height: 220px;
+}
+.modal-about .modal-dialog {
+    top: 45%;
+    left: 40%;
+}
+.modal-about div, .fixed-header li {
+    text-align: center;
+}
