@@ -108,7 +108,7 @@ export default class Ol3ViewerLinkedEvents {
      *
      * @memberof Ol3ViewerLinkedEvents
      * @param {Objct} params the event notification parameters
-     * @return {string} the action i.e. a matching function in ths class
+     * @param {string} action the action i.e. matching function
      */
     syncAction(params={}, action="") {
         // preliminary checks if we are part of a group
@@ -132,6 +132,7 @@ export default class Ol3ViewerLinkedEvents {
      *
      * @memberof Ol3ViewerLinkedEvents
      * @param {string} lock the lock, e.g z, t, c or v
+     * @param {Object} sync_locks the sync locks for the group
      * @return {boolean} true if locked, otherwise false
      */
      isLocked(lock = "", sync_locks = {}) {
@@ -285,6 +286,7 @@ export default class Ol3ViewerLinkedEvents {
      * Synchronizes zoom and center of sync_group members
      *
      * @memberof Ol3ViewerLinkedEvents
+     * @param {Object} params the event notification parameters
      * @param {Object} sync_locks the sync locks for the group
      */
     syncView(params = {}, sync_locks = {}) {

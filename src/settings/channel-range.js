@@ -124,7 +124,7 @@ export default class ChannelRange  {
     /**
      * Updates the range values
      *
-     * @param {ImageInfo} the image info
+     * @param {ImageInfo} imgInf the image info
      * @memberof ChannelRange
      */
     updateRanges(imgInf) {

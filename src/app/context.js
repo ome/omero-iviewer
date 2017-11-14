@@ -351,7 +351,7 @@ export default class Context {
      * Queries whether a lut by the given name is in our map
      *
      * @param {string} name the lut name
-     * @param {boolean} true if the lut was found, false otherwise
+     * @return {boolean} true if the lut was found, false otherwise
      * @memberof Context
      */
     hasLookupTableEntry(name) {
@@ -759,9 +759,10 @@ export default class Context {
     }
 
     /**
-     * Reload image info for a all image configs that have the same parent
+     * Reload image info for all image configs that have the same parent
      *
-     * @param {number} what the number designating what should be reloaded
+     * @param {number} parent_id the parent id
+     * @param {number} parent_type the parent type, e.g. INITIAL_TYPES.DATASET
      * @param {number} exclude_config if given this config will be excluded
      * @memberof Context
      */

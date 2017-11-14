@@ -488,7 +488,7 @@ export default class RegionsInfo  {
      *
      * @param {Object} shape the shape object
      * @param {string} permission the permission to check for
-     * @param {boolean} true if permission is on given shape, false otherwise
+     * @return {boolean} true if permission is on given shape, false otherwise
      * @memberof RegionsInfo
      */
     checkShapeForPermission(shape, permission) {
