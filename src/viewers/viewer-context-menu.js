@@ -19,15 +19,8 @@
 // dependencies
 import Context from '../app/context';
 import {inject, customElement, BindingEngine} from 'aurelia-framework';
-import {IMAGE_VIEWPORT_CAPTURE} from '../events/events';
 import Ui from '../utils/ui';
-import Misc from '../utils/misc';
-import * as FileSaver from '../../node_modules/file-saver';
-import * as TextEncoding from "../../node_modules/text-encoding";
-import {
-    CSV_LINE_BREAK, INITIAL_TYPES, IVIEWER, PROJECTION,
-    VIEWER_ELEMENT_PREFIX, WEBCLIENT
-} from '../utils/constants';
+import { VIEWER_ELEMENT_PREFIX } from '../utils/constants';
 
 /**
  * A Context Menu for the Viewer/Viewport
@@ -42,13 +35,6 @@ export default class ViewerContextMenu {
      * @type {string}
      */
     SELECTOR = "#viewer-context-menu";
-
-    /**
-     * expose PROJECTION constant to template
-     * @memberof ViewerContextMenu
-     * @type {Object}
-     */
-    PROJECTION = PROJECTION;
 
     /**
      * a prefix for the full screen api methods
@@ -87,13 +73,6 @@ export default class ViewerContextMenu {
     image_config = null;
 
     /**
-     * flag whether the delete option should be shown/enabled
-     * @memberof ViewerContextMenu
-     * @type {boolean}
-     */
-    selected_can_delete = true;
-
-    /**
      * @constructor
      * @param {Context} context the application context (injected)
      * @param {BindingEngine} bindingEngine the BindingEngine (injected)
@@ -121,7 +100,6 @@ export default class ViewerContextMenu {
             // get selected image config
             this.image_config = this.context.getSelectedImageConfig();
             if (this.image_config === null) return;
-
             // clean up old observers
             this.unregisterObservers(true);
             // we establish the new context menu once the viewer's ready
@@ -129,12 +107,6 @@ export default class ViewerContextMenu {
                 this.bindingEngine.propertyObserver(
                     this.image_config.image_info, 'ready').subscribe(
                         (newValue, oldValue) => this.enableContextMenu()
-                    ));
-            // we initalialize the regions context menu options once the data is ready
-            this.observers.push(
-                this.bindingEngine.propertyObserver(
-                    this.image_config.regions_info, 'ready').subscribe(
-                        (newValue, oldValue) => this.initRegionsContextOptions()
                     ));
         };
         // listen for image changes
@@ -268,49 +240,6 @@ export default class ViewerContextMenu {
     }
 
     /**
-     * Initialized the regions context menu options
-     *
-     * @memberof ViewerContextMenu
-     */
-    initRegionsContextOptions () {
-        // listen to changes in selected shapes which determines the options
-        this.observers.push(
-            this.bindingEngine.collectionObserver(
-                this.image_config.regions_info.selected_shapes).subscribe(
-                    (newValue, oldValue) => this.onRoiSelectionChange()));
-    }
-
-    /**
-     * Reacts to roi selection changes to update the corresponding members
-     * such that the template can show/hide/enable/disable the appropriate options
-     *
-     * @memberof ViewerContextMenu
-     */
-    onRoiSelectionChange() {
-        let numberOfshapesSelected =
-            this.image_config.regions_info.selected_shapes.length;
-        if (numberOfshapesSelected === 0) return;
-        let lastSelected =
-            this.image_config.regions_info.getLastSelectedShape("canDelete");
-        this.selected_can_delete =
-            this.image_config.regions_info.checkShapeForPermission(
-                lastSelected, "canDelete");
-    }
-
-    /**
-     * Copies shapes
-     *
-     * @memberof ViewerContextMenu
-     */
-    copyShapes() {
-        this.image_config.regions_info.copyShapes();
-        // hide context menu
-        this.hideContextMenu();
-        // prevent link click behavior
-        return false;
-    }
-
-    /**
      * Paste Shapes
      *
      * @memberof ViewerContextMenu
@@ -321,187 +250,6 @@ export default class ViewerContextMenu {
         this.hideContextMenu();
         // prevent link click behavior
         return false;
-    }
-
-    /**
-     * Deletes selected shapes (incl. permissions check)
-     *
-     * @memberof ViewerContextMenu
-     */
-    deleteShapes(event) {
-        this.image_config.regions_info.deleteShapes();
-        // hide context menu
-        this.hideContextMenu();
-        // prevent link click behavior
-        return false;
-    }
-
-    /**
-     * Creates new image on server using projection settings
-     *
-     * @memberof ViewerContextMenu
-     */
-    saveProjectedImage() {
-        let imgInf = this.image_config.image_info;
-
-        if (typeof imgInf.projection !== PROJECTION.NORMAL) {
-            let url =
-                this.context.server + this.context.getPrefixedURI(IVIEWER) +
-                '/save_projection/?image=' + imgInf.image_id +
-                "&projection=" + imgInf.projection +
-                "&start=" + imgInf.projection_opts.start +
-                "&end=" + imgInf.projection_opts.end;
-            if (this.context.initial_type !== INITIAL_TYPES.WELL &&
-                typeof imgInf.parent_id === 'number')
-                    url += "&dataset=" + imgInf.parent_id;
-
-            $.ajax({
-                url: url,
-                success: (resp) => {
-                    let msg = "";
-                    if (typeof resp.id === 'number') {
-                        let linkWebclient = this.context.server +
-                            this.context.getPrefixedURI(WEBCLIENT) +
-                            "/?show=image-" + resp.id;
-                        let linkIviewer = this.context.server +
-                            this.context.getPrefixedURI(IVIEWER) +
-                            "/" + resp.id;
-                        if (this.context.initial_type !== INITIAL_TYPES.WELL &&
-                            typeof imgInf.parent_id === 'number')
-                                linkIviewer += "/?dataset=" + imgInf.parent_id;
-                    msg =
-                        "<a href='" + linkWebclient + "' target='_blank'>" +
-                        "Navigate to Image in Webclient</a><br>" +
-                        "<br><a href='" + linkIviewer + "' target='_blank'>" +
-                        "Open Image in iviewer</a>";
-                    } else {
-                        msg = "Failed to create projected image";
-                        if (typeof resp.error === 'string')
-                            console.error(resp.error);
-                    }
-                    Ui.showModalMessage(msg, 'Close');
-                }
-            });
-        }
-        // hide context menu
-        this.hideContextMenu();
-        // prevent link click behavior
-        return false;
-    }
-
-    /**
-     * Sends event to captures viewport as png
-     *
-     * @memberof ViewerContextMenu
-     */
-    captureViewport() {
-        this.context.eventbus.publish(
-            IMAGE_VIEWPORT_CAPTURE, {"config_id": this.image_config.id});
-        // hide context menu
-        this.hideContextMenu();
-        // prevent link click behavior
-        return false;
-    }
-
-    /**
-     * Creates csv file that contains area and length for selected shapes
-     *
-     * @memberof ViewerContextMenu
-     */
-    saveRoiMeasurements() {
-        let regInf = this.image_config.regions_info;
-        if (regInf.selected_shapes.length === 0) return;
-
-        // we cannot query unssaved shapes
-        let ids_for_stats =
-            regInf.selected_shapes.filter((s) => s.indexOf("-") == -1);
-        // if we have no saved shapes or no active channels ...
-        // forget about it
-        if (ids_for_stats.length === 0 ||
-            regInf.image_info.getActiveChannels().length === 0) {
-            this.writeCsv(regInf.selected_shapes);
-        } else {
-            regInf.requestStats(
-                ids_for_stats, () => this.writeCsv(regInf.selected_shapes));
-        }
-
-        this.hideContextMenu();
-        // prevent link click behavior
-        return false;
-    }
-
-    /**
-     * Generates a csv file for shapes (incl. stats) whose ids are given
-     *
-     * @param {Array.<string>} ids the shape ids ('roi_id:shape_id')
-     * @memberof ViewerContextMenu
-     */
-    writeCsv(ids) {
-        if (!Misc.isArray(ids) || ids.length === 0) return;
-
-        let regInf = this.image_config.regions_info;
-        let active = regInf.image_info.getActiveChannels();
-        let units = regInf.image_info.image_pixels_size.symbol_x || 'px';
-        let img_id = regInf.image_info.image_id;
-        let img_name = regInf.image_info.short_image_name;
-
-        let csv =
-            "image_id,image_name,roi_id,shape_id,type,z,t,channel," +
-            "\"area (" + units + "\u00b2)\",\"length (" + units + ")\"," +
-            "points,min,max,sum,mean,std_dev" + CSV_LINE_BREAK;
-
-        for (let i in ids) {
-            let id = ids[i];
-            let shape = regInf.getShape(id);
-            if (shape === null) continue;
-            let roi_id = id.substring(0, id.indexOf(':'));
-            let is_new = id.indexOf('-') !== -1;
-
-            let channel = '', points = '', min = '', max = '';
-            let sum = '', mean = '', stddev = '';
-            let csvCommonInfo =
-                img_id + ",\"" + img_name + "\"," +
-                (is_new ? "-" : roi_id) + "," +
-                (is_new ? "-" : shape['@id']) + "," + shape.type + "," +
-                (shape.TheZ+1) + "," + (shape.TheT+1) + ",";
-            let csvMeasure =
-                "," + (shape.Area < 0 ? '' : shape.Area) + "," +
-                (shape.Length < 0 ? '' : shape.Length) + ",";
-
-            if (typeof shape.stats === 'object' &&
-                shape.stats !== null &&
-                active.length !== 0) {
-                    for (let s in shape.stats) {
-                        let stat = shape.stats[s];
-                        if (active.indexOf(stat.index) !== -1) {
-                            csv += csvCommonInfo + stat.index + csvMeasure +
-                                    stat.points + "," + stat.min + "," +
-                                    stat.max + "," + stat.sum + "," +
-                                    stat.mean + "," + stat.std_dev +
-                                    CSV_LINE_BREAK;
-                        }
-                    }
-            } else csv += csvCommonInfo + csvMeasure + ",,,,," + CSV_LINE_BREAK;
-        }
-
-        let data = null;
-        let encErr = true;
-        try {
-            // use windows-1252 character set to satisfy excel
-            let type = 'text/csv; charset=windows-1252';
-            let ansiEncoder =
-                new TextEncoding.TextEncoder(
-                    'windows-1252', {NONSTANDARD_allowLegacyEncoding: true});
-            encErr = false;
-            data = new Blob([ansiEncoder.encode(csv)], {type: type});
-        } catch(not_supported) {}
-
-        if (data instanceof Blob)
-            FileSaver.saveAs(
-                data,
-                regInf.image_info.short_image_name + "_roi_measurements.csv");
-        else console.error(
-                encErr ? "Error encoding csv" : "Blob not supported");
     }
 
     /**

@@ -20,41 +20,11 @@
 
     <ul id="viewer-context-menu" class="dropdown-menu" role="menu">
         <li class="${image_config.regions_info.ready &&
-                     image_config.regions_info.selected_shapes.length > 0 ?
-                     '' : 'disabled-color'}">
-            <a click.delegate="copyShapes()"
-               tabindex="-1" href="#">Copy Rois</a>
-        </li>
-        <li show.bind="image_config.regions_info.ready &&
-                       image_config.image_info.can_annotate &&
-                       image_config.regions_info.copied_shapes.length > 0">
-            <a click.delegate="pasteShapes()"
-               tabindex="-1" href="#">Paste Rois</a>
-        </li>
-        <li show.bind="image_config.regions_info.ready &&
-                       image_config.image_info.can_annotate"
-            class="divider"></li>
-        <li show.bind="image_config.regions_info.ready &&
-                       image_config.image_info.can_annotate"
-            class="${image_config.regions_info.selected_shapes.length > 0 &&
-                     selected_can_delete ? '' : 'disabled-color'}">
-            <a click.delegate="deleteShapes()"
-               tabindex="-1" href="#">Delete Rois</a>
-        </li>
-        <li show.bind="image_config.image_info.ready &&
-            image_config.image_info.projection !== PROJECTION.NORMAL">
-            <a click.delegate="saveProjectedImage()"
-               tabindex="-1" href="#">Save as new Image</a>
-        </li>
-        <li show.bind="image_config.regions_info.ready"
-            class="${image_config.regions_info.selected_shapes.length > 0 ?
+                     image_config.image_info.can_annotate &&
+                     image_config.regions_info.copied_shapes.length > 0 ?
                         '' : 'disabled-color'}">
-            <a click.delegate="saveRoiMeasurements()"
-               tabindex="-1" href="#">Export Roi Measurements (Excel)</a>
-        </li>
-        <li show.bind="image_config.image_info.ready">
-            <a click.delegate="captureViewport()"
-               tabindex="-1" href="#">Capture Viewport (as png)</a>
+            <a click.delegate="pasteShapes()"
+               tabindex="-1" href="#">Paste here</a>
         </li>
     </ul>
 

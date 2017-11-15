@@ -19,11 +19,71 @@
 <template>
     <nav class="navbar navbar-default navbar-fixed-top fixed-header">
         <div class="fixed-header-text">
+            <!-- OMERO -->
             <div class="fixed-header-webclient"
                  show.bind="webclient_link !== null"
                  title="Back to OMERO.webclient">
                 <a href="${webclient_link}">OMERO</a>
             </div>
+
+            <!-- FILE -->
+            <div class="dropdown">
+                <button type="button"
+                        class="btn btn-default btn-sm dropdown-toggle"
+                        data-toggle="dropdown">File
+                        <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li show.bind="image_config.image_info.ready">
+                        <a click.delegate="captureViewport()"
+                           href="#">Save Viewport as PNG)</a>
+                    </li>
+                    <li show.bind="image_config.image_info.ready &&
+                        image_config.image_info.projection !== PROJECTION.NORMAL">
+                        <a click.delegate="saveProjectedImage()"
+                           href="#">Save Projection as new Image</a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- ROIS -->
+            <div class="dropdown">
+                <button type="button"
+                        class="btn btn-default btn-sm dropdown-toggle"
+                        data-toggle="dropdown">Rois
+                        <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li class="${image_config.regions_info.ready &&
+                                 image_config.regions_info.selected_shapes.length > 0 ?
+                                 '' : 'disabled-color'}">
+                        <a click.delegate="image_config.regions_info.copyShapes()"
+                           href="#">Copy &#x2318;C</a>
+                    </li>
+                    <li class="${image_config.regions_info.ready &&
+                               image_config.image_info.can_annotate &&
+                               image_config.regions_info.copied_shapes.length > 0 ?
+                                 '' : 'disabled-color'}">
+                        <a click.delegate="image_config.regions_info.pasteShapes()"
+                           href="#">Paste &#x2318;V</a>
+                    </li>
+                    <li class="${image_config.regions_info.ready &&
+                                 image_config.image_info.can_annotate &&
+                                 image_config.regions_info.selected_shapes.length > 0 &&
+                                    selected_can_delete ? '' : 'disabled-color'}">
+                        <a click.delegate="image_config.regions_info.deleteShapes()"
+                           href="#">Delete</a>
+                    </li>
+                    <li class="${image_config.regions_info.ready &&
+                                 image_config.regions_info.selected_shapes.length > 0 ?
+                                    '' : 'disabled-color'}">
+                        <a click.delegate="saveRoiMeasurements()"
+                           href="#">Export</a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- HELP -->
             <div class="dropdown">
                 <button type="button"
                         class="btn btn-default btn-sm dropdown-toggle"
@@ -45,8 +105,9 @@
             </div>
         </div>
         <div class="fixed-header-text">
-           <span>${image_info.ready && !image_info.error ?
-                    image_info.short_image_name : ''}
+           <span>${image_config.image_info.ready &&
+                   !image_config.image_info.error ?
+                        image_config.image_info.short_image_name : ''}
            </span>
        </div>
     </nav>

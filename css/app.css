@@ -194,6 +194,10 @@ a.ui-button:active,
 .fixed-header-webclient a:hover {
 	color: rgba(255,255,255,0.7)
 }
+.fixed-header .dropdown {
+	margin-left: 0px;
+	margin-right: 0px;
+}
 
 .frame {
     margin-left: -105px;
