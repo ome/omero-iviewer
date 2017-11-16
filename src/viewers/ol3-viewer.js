@@ -73,6 +73,13 @@ export default class Ol3Viewer extends EventSubscriber {
     image_info_ready_observer = null;
 
     /**
+     * watches for selection changes
+     * @memberof Ol3Viewer
+     * @type {Object}
+     */
+    image_config_selection_observer = null;
+
+    /**
      * the internal instance of the ol3.Viewer
      * @memberof Ol3Viewer
      * @type {ol3.Viewer}
@@ -203,6 +210,16 @@ export default class Ol3Viewer extends EventSubscriber {
                 this.resizeViewer();
             }
         });
+        this.createObservers();
+    }
+
+    /**
+     * Creates Observers (used internally)
+     *
+     * @private
+     * @memberof Ol3Viewer
+     */
+    createObservers() {
         let imageDataReady = () => {
             // refresh image settings only
             if (this.image_config.image_info.refresh) {
@@ -234,14 +251,12 @@ export default class Ol3Viewer extends EventSubscriber {
                 this.bindingEngine.propertyObserver(
                     this.image_config.regions_info, 'ready').subscribe(
                         (newValue, oldValue) => {
-                            if (oldValue && !newValue) {
-                                if (this.viewer) this.viewer.removeRegions();
-                                return;
-                            };
-                            this.initRegions();
+                            if (this.viewer === null) return;
+                            this.viewer.removeRegions();
+                            if (newValue) this.initRegions();
                     });
             // mdi needs to switch image config when using controls
-            container.find('.ol-control').on(
+            this.getContainer().find('.ol-control').on(
                 'mousedown',
                 () => this.context.selectConfig(this.image_config.id))
         };
@@ -252,6 +267,35 @@ export default class Ol3Viewer extends EventSubscriber {
                     (newValue, oldValue) => {
                         if (!oldValue && newValue) imageDataReady();
                     });
+        // listens to image config changes for mdi
+        this.image_config_selection_observer =
+            this.bindingEngine.propertyObserver(
+                this.context, 'selected_config').subscribe(
+                    (newValue, oldValue) => {
+                        if (!this.context.useMDI ||
+                            oldValue !== this.image_config.id ||
+                            !this.image_config.regions_info.hasBeenModified()) {
+                                return;
+                            }
+
+                        let sameImageConfs =
+                            this.context.getImageConfigsForGivenImage(
+                                this.image_config.image_info.image_id,
+                                this.image_config.id);
+                        if (sameImageConfs.length === 0) return;
+
+                        // we have another image config for the same image
+                        // let's prompt the user with a warning about rois
+                        Ui.showConfirmationDialog(
+                            'Save ROIS?',
+                            'You have changed ROI(S) on an image ' +
+                            'that\'s been opened multiple times.<br>' +
+                            'Do you want to save now to avoid ' +
+                            'inconsistence (and a potential loss ' +
+                            'of some of your changes)?' ,
+                            () => this.storeShapes(
+                                {"config_id": this.image_config.id}));
+                });
     }
 
     /**
@@ -295,6 +339,10 @@ export default class Ol3Viewer extends EventSubscriber {
      * @memberof Ol3Viewer
      */
     unbind() {
+        if (this.image_config_selection_observer) {
+            this.image_config_selection_observer.dispose();
+            this.image_config_selection_observer = null;
+        }
         if (this.image_info_ready_observer) {
             this.image_info_ready_observer.dispose();
             this.image_info_ready_observer = null;
@@ -854,7 +902,8 @@ export default class Ol3Viewer extends EventSubscriber {
             this.context.reloadImageConfigForGivenImage(
                 this.image_config.image_info.image_id,
                 IMAGE_CONFIG_RELOAD.REGIONS,
-                this.image_config.id);
+                this.image_config.id,
+                this.viewer.getRois());
 
         // more checks
         if (typeof params.shapes !== 'object' ||

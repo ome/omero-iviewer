@@ -759,6 +759,29 @@ export default class Context {
     }
 
     /**
+     * Returns a list of the image configs that contain the same image
+     *
+     * @param {number} image_id the image id
+     * @param {number} exclude_config this config will be excluded
+     * @return {Array.<ImageConfig>} the image configs that refer to the same image
+     * @memberof Context
+     */
+    getImageConfigsForGivenImage(image_id, exclude_config = -1) {
+        if (typeof image_id !== 'number' || isNaN(image_id)) return [];
+        if (typeof exclude_config !== 'number' || isNaN(exclude_config))
+            exclude_config = -1;
+
+        let ret = [];
+        for (let [id, conf] of this.image_configs) {
+            if (id === exclude_config ||
+                !(conf.image_info instanceof ImageInfo) ||
+                conf.image_info.image_id !== image_id) continue;
+            ret.push(conf);
+        }
+        return ret;
+    }
+
+    /**
      * Reload image info for all image configs that have the same parent
      *
      * @param {number} parent_id the parent id
@@ -786,20 +809,14 @@ export default class Context {
      * @param {number} image_id the image id
      * @param {number} what the number designating what should be reloaded
      * @param {number} exclude_config if given this config will be excluded
+     * @param {Array|Object} data data that should be used for reload
      * @memberof Context
      */
-    reloadImageConfigForGivenImage(image_id, what, exclude_config = -1) {
-        if (typeof image_id !== 'number' || isNaN(image_id)) return;
-        if (typeof exclude_config !== 'number' || isNaN(exclude_config))
-            exclude_config = -1;
-
-        for (let [id, conf] of this.image_configs) {
-            if (id === exclude_config ||
-                !(conf.image_info instanceof ImageInfo) ||
-                conf.image_info.image_id !== image_id) continue;
-
-            this.reloadImageConfig(conf, what);
-        }
+    reloadImageConfigForGivenImage(image_id, what, exclude_config = -1, data = null) {
+        let sameImageConfs =
+            this.getImageConfigsForGivenImage(image_id, exclude_config);
+        for (let c in sameImageConfs)
+            this.reloadImageConfig(sameImageConfs[c], what, data);
     }
 
     /**
@@ -807,10 +824,11 @@ export default class Context {
      *
      * @param {ImageConfig|number} image_config the image config or its id
      * @param {number} what the number designating what should be reloaded
+     * @param {Array|Object} data data that should be used for reload/sync
      * @memberof Context
      * @private
      */
-    reloadImageConfig(image_config, what) {
+    reloadImageConfig(image_config, what, data=null) {
         if (typeof image_config === 'undefined' || image_config === null ||
             typeof what !== 'number' || isNaN(what) ||
             (what !== IMAGE_CONFIG_RELOAD.IMAGE &&
@@ -833,7 +851,8 @@ export default class Context {
                 conf.image_info.requestData(true);
                 break;
             case IMAGE_CONFIG_RELOAD.REGIONS:
-                conf.regions_info.requestData(true);
+                if (Misc.isArray(data)) conf.regions_info.setData(data);
+                else conf.regions_info.requestData(true);
                 break;
         }
     }

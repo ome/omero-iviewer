@@ -1079,7 +1079,7 @@ thumbnail-slider img {
 }
 .modal-content {
     width: 300px;
-    max-height: 200px;
+    max-height: 250px;
 }
 .modal-message .ok {
     width: 50px;

@@ -279,57 +279,74 @@ export default class RegionsInfo  {
                   REGIONS_REQUEST_URL + '/?image=' + this.image_info.image_id +
                   '&limit=' + this.REQUEST_LIMIT,
             success : (response) => {
-                this.is_pending = false;
-                try {
-                    let count = 0;
-                    response.data.map((roi) => {
-                        let shapes = new Map();
-                        if (Misc.isArray(roi.shapes) && roi.shapes.length > 0) {
-                            // set shape properties and store the object
-                            let roiId = roi['@id'];
-                            roi.shapes.sort(function(s1, s2) {
-                                var z1 = parseInt(s1['TheZ']);
-                                var z2 = parseInt(s2['TheZ']);
-                                var t1 = parseInt(s1['TheT']);
-                                var t2 = parseInt(s2['TheT']);
-                                if (z1 === z2) {
-                                    return (t1 < t2) ? -1 : (t1 > t2) ? 1: 0;
-                                }
-                                return (z1 < z2) ? -1: 1;
-                            });
-                            roi.shapes.map((shape) => {
-                                let newShape =
-                                Converters.amendShapeDefinition(
-                                    Object.assign({}, shape));
-                                let shapeId = newShape['@id']
-                                newShape.shape_id = "" + roiId + ":" + shapeId;
-                                // we add some flags we are going to need
-                                newShape.visible = true;
-                                newShape.selected = false;
-                                newShape.deleted = false;
-                                newShape.modified = false;
-                                shapes.set(shapeId, newShape);
-                                count++;
-                            });
-                            this.data.set(roiId, {
-                                shapes: shapes,
-                                show: false,
-                                deleted: 0
-                            });
-                        }
-                    });
-                    this.number_of_shapes = count;
-                    this.image_info.roi_count = this.data.size;
-                    this.tmp_data = response.data;
-                    this.ready = true;
-                } catch(err) {
-                    console.error("Failed to load Rois: " + err);
-                }
+                if (this.is_pending) this.setData(response.data)
             }, error : (error) => {
                 this.is_pending = false;
                 console.error("Failed to load Rois: " + error)
             }
         });
+    }
+
+    /**
+     * Uses given data to populate the regions map
+     *
+     * @memberof RegionsInfo
+     * @param {Array.<Object>} data an array of rois (incl. shapes)
+     */
+    setData(data = null) {
+        this.is_pending = false;
+        if (!Misc.isArray(data)) return;
+
+        // reset regions info data and history
+        this.resetRegionsInfo();
+
+        try {
+            let count = 0;
+            for (let r in data) {
+                let shapes = new Map();
+                let roi = data[r];
+                // add shapes
+                if (Misc.isArray(roi.shapes) && roi.shapes.length > 0) {
+                    let roiId = roi['@id'];
+                    roi.shapes.sort(function(s1, s2) {
+                        var z1 = parseInt(s1['TheZ']);
+                        var z2 = parseInt(s2['TheZ']);
+                        var t1 = parseInt(s1['TheT']);
+                        var t2 = parseInt(s2['TheT']);
+                        if (z1 === z2) {
+                            return (t1 < t2) ? -1 : (t1 > t2) ? 1: 0;
+                        }
+                        return (z1 < z2) ? -1: 1;
+                    });
+                    for (let s in roi.shapes) {
+                        let shape = roi.shapes[s];
+                        let newShape =
+                            Converters.amendShapeDefinition(
+                                Object.assign({}, shape));
+                        let shapeId = newShape['@id']
+                        newShape.shape_id = "" + roiId + ":" + shapeId;
+                        // we add some flags we are going to need
+                        newShape.visible = true;
+                        newShape.selected = false;
+                        newShape.deleted = false;
+                        newShape.modified = false;
+                        shapes.set(shapeId, newShape);
+                        count++;
+                    }
+                    this.data.set(roiId, {
+                        shapes: shapes,
+                        show: false,
+                        deleted: 0
+                    });
+                }
+            }
+            this.number_of_shapes = count;
+            this.image_info.roi_count = this.data.size;
+            this.tmp_data = data;
+        } catch(err) {
+            console.error("Failed to sync Rois: " + err);
+        }
+        this.ready = true;
     }
 
     /**

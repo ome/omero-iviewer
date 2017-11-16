@@ -172,7 +172,7 @@ ome.ol3.Viewer = function(id, options) {
      * @type {string}
      * @private
      */
-    this.container_ = "ome_viewer";
+    this.container_ = "ome-viewer";
     if (typeof(opts['container']) === 'string')
         this.container_ = opts['container'];
 
@@ -2213,6 +2213,69 @@ ome.ol3.Viewer.prototype.getViewParameters = function() {
     };
 }
 
+/**
+ * Returns all rois
+ *
+ * @return {Array.<Object>} an array of rois (incl. shapes)
+ */
+ome.ol3.Viewer.prototype.getRois = function() {
+    if (!(this.regions_ instanceof ome.ol3.source.Regions)) return [];
+
+    var rois = {};
+    var feats = this.regions_.getFeatures();
+
+    for (var i=0;i<feats.length;i++) {
+        var feature = feats[i];
+
+        if (!(feature instanceof ol.Feature) ||
+            feature.getGeometry() === null ||
+            (typeof feature['state'] === 'number' &&
+             feature['state'] !== ome.ol3.REGIONS_STATE.DEFAULT)) continue;
+
+        var roiId = -1;
+        var shapeId = -1;
+        try {
+            var id = feature.getId();
+            var colon = id.indexOf(":");
+            roiId = parseInt(id.substring(0,colon));
+            shapeId = parseInt(id.substring(colon+1));
+            if (isNaN(roiId) || isNaN(shapeId)) continue;
+        } catch(parseError) {
+            continue;
+        }
+
+        var roiContainer = null;
+        if (typeof rois[roiId] === 'object') roiContainer = rois[roiId];
+        else {
+            rois[roiId] = {
+                "@id" : roiId,
+                "@type" : 'http://www.openmicroscopy.org/Schemas/OME/2016-06#ROI',
+                "shapes" : []
+            };
+            roiContainer = rois[roiId];
+        }
+
+        var type = feature['type'];
+        try {
+            var jsonObject =
+                ome.ol3.utils.Conversion.LOOKUP[type].call(
+                    null, feature.getGeometry(), shapeId);
+            ome.ol3.utils.Conversion.integrateStyleIntoJsonObject(feature, jsonObject);
+            ome.ol3.utils.Conversion.integrateMiscInfoIntoJsonObject(feature, jsonObject);
+            jsonObject['omero:details'] = {'permissions': feature['permissions']};
+            roiContainer['shapes'].push(jsonObject);
+        } catch(conversion_error) {
+            console.error("Failed to turn feature " + type +
+                "(" + feature.getId() + ") into json => " + conversion_error);
+        }
+    };
+
+    ret = [];
+    for (var r in rois)
+        if (rois[r]['shapes'].length > 0) ret.push(rois[r]);
+    return ret;
+};
+
 
 /*
  * This section determines which methods are exposed and usable after compilation
@@ -2436,3 +2499,8 @@ goog.exportProperty(
     ome.ol3.Viewer.prototype,
     'getViewParameters',
 ome.ol3.Viewer.prototype.getViewParameters);
+
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
+    'getRois',
+ome.ol3.Viewer.prototype.getRois);
