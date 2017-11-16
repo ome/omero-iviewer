@@ -37,13 +37,13 @@ To replace the default omero.web viewer:
 
 ::
 
-    $ bin/omero config set omero.web.viewer.view omero_iviewer_index_default
+    $ bin/omero config set omero.web.viewer.view omero_iviewer.views.index_default
 
 To enable the "open with" feature:
 
 ::
 
-    $ bin/omero config append omero.web.open_with '["omero_iviewer", "omero_iviewer.views.index",
+    $ bin/omero config append omero.web.open_with '["omero_iviewer", "omero_iviewer_index",
       {"supported_objects":["images", "dataset", "well"],
        "script_url": "omero_iviewer/openwith.js", "label": "OMERO.iviewer"}]'
 
