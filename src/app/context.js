@@ -500,7 +500,8 @@ export default class Context {
         let newPath = window.location.pathname;
         let parent_id = null;
         let selConf = this.getSelectedImageConfig();
-
+        if (selConf === null) return;
+        
         let parentType =
             this.initial_type === INITIAL_TYPES.IMAGES ?
                 selConf.image_info.parent_type : this.initial_type;
