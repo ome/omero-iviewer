@@ -2124,18 +2124,6 @@ ome.ol3.Viewer.prototype.getLengthAndAreaForShapes = function(ids, recalculate) 
     return ret;
 }
 
-/**
- * Turns on/off intensity querying
- * @param {boolean} flag  if on we turn on intensity querying, otherwise off
- */
-ome.ol3.Viewer.prototype.toggleIntensityQuerying = function(flag) {
-    try {
-        return this.viewerState_["intensity"]["ref"].toggleIntensityQuerying(flag);
-    } catch(ignored) {
-        return false;
-    }
-}
-
 /*
  * This section determines which methods are exposed and usable after compilation
  */
@@ -2338,8 +2326,3 @@ goog.exportProperty(
     ome.ol3.Viewer.prototype,
     'getLengthAndAreaForShapes',
     ome.ol3.Viewer.prototype.getLengthAndAreaForShapes);
-
-goog.exportProperty(
-    ome.ol3.Viewer.prototype,
-    'toggleIntensityQuerying',
-    ome.ol3.Viewer.prototype.toggleIntensityQuerying);
