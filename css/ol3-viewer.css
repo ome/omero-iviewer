@@ -311,13 +311,38 @@
 }
 
 .ol-intensity {
+    border: 1px solid #ccc;
+    border-radius: 3px;
     top: 0.5em;
     right: 5.9em;
 }
-.ol-intensity button {
-    width: 70px;
-    height: 30px;
+.intensity-toggler {
+    background-image: url('images/crosshair.png');
+    background-repeat: no-repeat;
+    height: 28px;
+    width: 20px;
+    display: inline-block;
+    background-position: 3px 5px;
+    background-color: rgba(70,70,70, 0.2);
+    float: right;
+}
+.intensity-on {
+    background-color: rgba(255,0,0, 0.2);
+}
+.intensity-toggler:hover {
+    background-color:  #adadad;
+}
+.intensity-display {
+    width: 90px;
+    height: 28px;
+    line-height: 28px;
+    padding: 2px;
     font-size: 10px;
+    filter:alpha(opacity=55);
+    -webkit-box-shadow:none;
+    box-shadow:none;
+    opacity:.55;
+    float: left;
 }
 .ol-intensity-popup {
     background-color: #fff;
