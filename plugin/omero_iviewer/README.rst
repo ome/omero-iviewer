@@ -37,7 +37,7 @@ To replace the default omero.web viewer:
 
 ::
 
-    $ bin/omero config set omero.web.viewer.view omero_iviewer.views.index_default
+    $ bin/omero config set omero.web.viewer.view omero_iviewer.views.index
 
 To enable the "open with" feature:
 

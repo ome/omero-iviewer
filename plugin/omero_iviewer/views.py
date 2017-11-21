@@ -51,12 +51,6 @@ QUERY_DISTANCE = 25
 
 
 @login_required()
-def index_default(request, iid=None, conn=None, **kwargs):
-    # delegate to index
-    return index(request, iid=iid, conn=conn)
-
-
-@login_required()
 def index(request, iid=None, conn=None, **kwargs):
     # set params
     params = {'VERSION': __version__}

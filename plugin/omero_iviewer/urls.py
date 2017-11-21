@@ -23,10 +23,6 @@ import views
 urlpatterns = patterns(
 
     'django.views.generic.simple',
-
-    # entry point for default viewer
-    url(r'^/(?P<iid>[0-9]+)/$',
-        views.index_default, name='omero_iviewer_index_default'),
     # general entry point for iviewer app
     url(r'^/?$', views.index, name='omero_iviewer_index'),
     url(r'^persist_rois/?$', views.persist_rois,
