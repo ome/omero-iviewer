@@ -120,7 +120,14 @@ export default class ImageInfo {
      * @memberof ImageInfo
      * @type {string}
      */
-    image_timestamp = null;
+    acquisition_date = null;
+
+    /**
+     * the import date in the json response
+     * @memberof ImageInfo
+     * @type {string}
+     */
+    import_date = null;
 
     /**
      * the pixels type in the json response
@@ -348,7 +355,9 @@ export default class ImageInfo {
         }
         if (typeof response.meta.pixelsType === 'string')
             this.image_pixels_type = response.meta.pixelsType;
-        this.image_timestamp = response.meta.imageTimestamp;
+        this.import_date = response.import_date;
+        if (typeof response.acquisition_date === 'string')
+            this.acquisition_date = response.acquisition_date;
         this.setFormattedDeltaT(response);
         this.roi_count = response.roi_count;
         if (typeof response.meta.datasetName === 'string')

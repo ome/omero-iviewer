@@ -263,6 +263,10 @@ def image_data(request, image_id, conn=None, **kwargs):
 
         rv['delta_t'] = time_list
         rv['delta_t_unit_symbol'] = delta_t_unit_symbol
+        df = "%Y-%m-%d %H:%M:%S"
+        rv['import_date'] = image.creationEventDate().strftime(df)
+        if image.getAcquisitionDate() is not None:
+            rv['acquisition_date'] = image.getAcquisitionDate().strftime(df)
 
         return JsonResponse(rv)
     except Exception as image_data_retrieval_exception:
