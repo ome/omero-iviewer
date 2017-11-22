@@ -531,9 +531,11 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
        view: view
     });
 
-    // expand bird's eye view if we have tiled sources
-    if (source.use_tiled_retrieval_)
-        this.viewerState_["birdseye"]['ref'].setCollapsed(false);
+    // enable bird's eye view
+    this.enableBirdsEye(
+        this.getPrefixedURI(
+            ome.ol3.WEBGATEWAY) + '/render_thumbnail/' + this.id_,
+        !source.use_tiled_retrieval_);
     // tweak source element for fullscreen to include dim sliders (iviewer only)
     var targetId = this.getTargetId();
     var viewerFrame = targetId ? document.getElementById(targetId) : null;
@@ -1880,10 +1882,6 @@ ome.ol3.Viewer.prototype.redraw = function(delay) {
             function() {
                 if (this.viewer_) {
                     this.viewer_.updateSize();
-                    if (this.viewerState_["birdseye"] &&
-                        this.viewerState_["birdseye"]['ref']
-                           instanceof ome.ol3.controls.BirdsEye)
-                                this.viewerState_["birdseye"]['ref'].ovmap_.updateSize();
                 }
             }.bind(this);
 
@@ -2135,6 +2133,35 @@ ome.ol3.Viewer.prototype.toggleIntensityQuerying = function(flag) {
         return false;
     }
 }
+
+/**
+ * Enables the birdseye view
+ * @param {string} url the url for the bird eye image
+ * @param {boolean} collapsed if true the bird eye view is collapsed intially
+ */
+ome.ol3.Viewer.prototype.enableBirdsEye = function(url, collapsed) {
+    var key = 'birdseye';
+    if (!(this.viewer_ instanceof ol.Map) ||
+        typeof this.viewerState_[key] === 'object' ||
+        typeof ome.ol3.AVAILABLE_VIEWER_CONTROLS[key] !== 'object') return;
+
+    var birdEye = ome.ol3.AVAILABLE_VIEWER_CONTROLS[key];
+    var Constructor = birdEye['clazz'];
+    // TODO: adjust map to display image url
+    birdEye['options']['map'] = new ol.Map({
+        controls: new ol.Collection(),
+        interactions: new ol.Collection(),
+    });;
+
+    var newComponent = new Constructor(birdEye['options']);
+    this.viewer_.addControl(newComponent);
+    this.viewerState_[key] = {
+        "type": 'control', "ref": newComponent,
+        "defaults" : birdEye['defaults'], "links" : birdEye['links']
+    };
+    if (!collapsed) newComponent.setCollapsed(false);
+}
+
 
 /*
  * This section determines which methods are exposed and usable after compilation
