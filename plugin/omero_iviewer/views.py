@@ -51,9 +51,15 @@ QUERY_DISTANCE = 25
 
 
 @login_required()
-def index(request, conn=None, **kwargs):
+def index(request, iid=None, conn=None, **kwargs):
     # set params
     params = {'VERSION': __version__}
+
+    # check for image_id (default viewer setup)
+    if iid is not None:
+        params['IMAGES'] = iid
+
+    # add rest of query string params
     for key in request.GET:
         if request.GET[key]:
             params[str(key).upper()] = str(request.GET[key])
