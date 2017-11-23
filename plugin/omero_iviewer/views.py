@@ -51,9 +51,15 @@ QUERY_DISTANCE = 25
 
 
 @login_required()
-def index(request, conn=None, **kwargs):
+def index(request, iid=None, conn=None, **kwargs):
     # set params
     params = {'VERSION': __version__}
+
+    # check for image_id (default viewer setup)
+    if iid is not None:
+        params['IMAGES'] = iid
+
+    # add rest of query string params
     for key in request.GET:
         if request.GET[key]:
             params[str(key).upper()] = str(request.GET[key])
@@ -263,6 +269,10 @@ def image_data(request, image_id, conn=None, **kwargs):
 
         rv['delta_t'] = time_list
         rv['delta_t_unit_symbol'] = delta_t_unit_symbol
+        df = "%Y-%m-%d %H:%M:%S"
+        rv['import_date'] = image.creationEventDate().strftime(df)
+        if image.getAcquisitionDate() is not None:
+            rv['acquisition_date'] = image.getAcquisitionDate().strftime(df)
 
         return JsonResponse(rv)
     except Exception as image_data_retrieval_exception:

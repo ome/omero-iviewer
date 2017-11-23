@@ -303,7 +303,11 @@ export default class ThumbnailSlider extends EventSubscriber {
                 if (typeof response !== 'object' || response === null ||
                     !Misc.isArray(response.paths) ||
                     response.paths.length === 0) {
-                        this.hideMe();
+                        if (typeof this.image_config.image_info.parent_id === 'number' &&
+                            !isNaN(this.image_config.image_info.parent_id) &&
+                            this.image_config.image_info.parent_id > 0) {
+                                this.requestMoreThumbnails(true, true, true);
+                        } else this.hideMe();
                         return;
                 }
 

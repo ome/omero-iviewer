@@ -184,10 +184,10 @@ export class Header {
                              "/?show=image-" + resp.id;
                          let linkIviewer = this.context.server +
                              this.context.getPrefixedURI(IVIEWER) +
-                             "/" + resp.id;
+                             "/?images=" + resp.id;
                          if (this.context.initial_type !== INITIAL_TYPES.WELL &&
                              typeof imgInf.parent_id === 'number')
-                                 linkIviewer += "/?dataset=" + imgInf.parent_id;
+                                 linkIviewer += "&dataset=" + imgInf.parent_id;
                      msg =
                          "<a href='" + linkWebclient + "' target='_blank'>" +
                          "Navigate to Image in Webclient</a><br>" +

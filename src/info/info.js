@@ -123,10 +123,6 @@ export class Info {
     onImageConfigChange() {
         if (this.image_info === null) return;
 
-        let acquisition_date = "-";
-        if (typeof this.image_info.image_timestamp === 'number') {
-            acquisition_date = new Date(this.image_info.image_timestamp * 1000).toISOString().slice(-25, -14);
-        }
         let pixels_size = "";
         let pixels_size_label = "Pixels Size (XYZ)";
         if (typeof this.image_info.image_pixels_size === 'object' &&
@@ -178,26 +174,33 @@ export class Info {
         this.columns = [
             {"label": "Owner:",
              "value": this.image_info.author,
-            },
-            {"label": "Acquisition Date:",
-             "value": acquisition_date,
-            },
-            {"label": "Dimension (XY):",
-             "value": size_xy,
-            },
-            {"label": "Pixels Type:",
-             "value": this.image_info.image_pixels_type,
-            },
-            {"label": pixels_size_label,
-             "value": pixels_size,
-            },
-            {"label": "Z-sections:",
-             "value": this.image_info.dimensions.max_z,
-            },
-            {"label": "Timepoints:",
-             "value": this.image_info.dimensions.max_t,
             }
         ];
+        if (this.image_info.acquisition_date) {
+            this.columns.push(
+                {"label": "Acquisition Date:",
+                 "value": this.image_info.acquisition_date});
+        };
+        this.columns = this.columns.concat([
+            {"label": "Import Date:",
+             "value": this.image_info.import_date
+            },
+            {"label": "Dimension (XY):",
+             "value": size_xy
+            },
+            {"label": "Pixels Type:",
+             "value": this.image_info.image_pixels_type
+            },
+            {"label": pixels_size_label,
+             "value": pixels_size
+            },
+            {"label": "Z-sections:",
+             "value": this.image_info.dimensions.max_z
+            },
+            {"label": "Timepoints:",
+             "value": this.image_info.dimensions.max_t
+            }
+        ]);
         if (typeof this.image_info.parent_id === 'number') {
             let isWell =
                 this.context.initial_type === INITIAL_TYPES.WELL ||
