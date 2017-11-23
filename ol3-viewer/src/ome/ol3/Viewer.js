@@ -532,10 +532,13 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
     });
 
     // enable bird's eye view
-    this.enableBirdsEye(
-        this.getPrefixedURI(
-            ome.ol3.WEBGATEWAY) + '/render_thumbnail/' + this.id_,
-        !source.use_tiled_retrieval_);
+    var birdsEyeOptions = {
+        'url': this.getPrefixedURI(ome.ol3.WEBGATEWAY) +
+                    '/render_thumbnail/' + this.id_,
+        'size': [dims['width'], dims['height']],
+        'collapsed': !source.use_tiled_retrieval_
+    };
+    this.addControl('birdseye', birdsEyeOptions);
     // tweak source element for fullscreen to include dim sliders (iviewer only)
     var targetId = this.getTargetId();
     var viewerFrame = targetId ? document.getElementById(targetId) : null;
@@ -707,7 +710,7 @@ ome.ol3.Viewer.prototype.changeToImage =
                 var type = prevComp['type'];
                 var key = prevComp['key'];
 
-                this.addInteractionOrControl(key, type);
+                this.addInteractionOrControl(key, type, true);
             }
         }
 
@@ -988,7 +991,7 @@ ome.ol3.Viewer.prototype.setTextBehaviorForRegions = function(scaleText, rotateT
 ome.ol3.Viewer.prototype.addInteraction = function(key, interaction) {
     // if we have no interaction given as the second argument => delegate to the factory
     if (typeof interaction !== 'object' || interaction === null) {
-        this.addInteractionOrControl(key, 'interaction');
+        this.addInteractionOrControl(key, 'interaction', true);
         return;
     }
 
@@ -1024,10 +1027,11 @@ ome.ol3.Viewer.prototype.addInteraction = function(key, interaction) {
  * Use the key listed here: {@link ome.ol3.AVAILABLE_VIEWER_CONTROLS}
  *
  * @param {string} key the unique control key
+ * @param {Object=} options (optional) options for control
  */
-ome.ol3.Viewer.prototype.addControl = function(key) {
+ome.ol3.Viewer.prototype.addControl = function(key, options) {
     // delegate
-    this.addInteractionOrControl(key, "control");
+    this.addInteractionOrControl(key, "control", true, options);
 }
 
 /**
@@ -1040,8 +1044,9 @@ ome.ol3.Viewer.prototype.addControl = function(key) {
  * @param {string} type whether it's an interaction or a control
  * @param {string} key the unique interaction or control key
  * @param {boolean} descend a flag whether we should follow linked interactions/controls
+ * @param {Object=} options (optional) options for control
  */
-ome.ol3.Viewer.prototype.addInteractionOrControl = function(key, type, descend) {
+ome.ol3.Viewer.prototype.addInteractionOrControl = function(key, type, descend, options) {
     if (!(this.viewer_ instanceof ol.Map) || // could be the viewer was not initialized
         (typeof(key) !== 'string') || // key not a string
         (typeof(type) !== 'string')) return; // type is not a string
@@ -1063,6 +1068,13 @@ ome.ol3.Viewer.prototype.addInteractionOrControl = function(key, type, descend) 
         return;
 
     var Constructor = componentFound['clazz'];
+    // add in additional options
+    if (typeof options === 'object' &&
+        !ome.ol3.utils.Misc.isArray(options)) {
+        for (var o in options) {
+            componentFound['options'][o] = options[o];
+        }
+    }
     var newComponent = new Constructor(componentFound['options']);
 
     if (type === 'control')
@@ -2132,34 +2144,6 @@ ome.ol3.Viewer.prototype.toggleIntensityQuerying = function(flag) {
     } catch(ignored) {
         return false;
     }
-}
-
-/**
- * Enables the birdseye view
- * @param {string} url the url for the bird eye image
- * @param {boolean} collapsed if true the bird eye view is collapsed intially
- */
-ome.ol3.Viewer.prototype.enableBirdsEye = function(url, collapsed) {
-    var key = 'birdseye';
-    if (!(this.viewer_ instanceof ol.Map) ||
-        typeof this.viewerState_[key] === 'object' ||
-        typeof ome.ol3.AVAILABLE_VIEWER_CONTROLS[key] !== 'object') return;
-
-    var birdEye = ome.ol3.AVAILABLE_VIEWER_CONTROLS[key];
-    var Constructor = birdEye['clazz'];
-    // TODO: adjust map to display image url
-    birdEye['options']['map'] = new ol.Map({
-        controls: new ol.Collection(),
-        interactions: new ol.Collection(),
-    });;
-
-    var newComponent = new Constructor(birdEye['options']);
-    this.viewer_.addControl(newComponent);
-    this.viewerState_[key] = {
-        "type": 'control', "ref": newComponent,
-        "defaults" : birdEye['defaults'], "links" : birdEye['links']
-    };
-    if (!collapsed) newComponent.setCollapsed(false);
 }
 
 

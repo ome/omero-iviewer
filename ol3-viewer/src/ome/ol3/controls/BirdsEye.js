@@ -64,10 +64,34 @@ ome.ol3.controls.BirdsEye = function(options) {
     this.controlDiv_.className = 'ol-overviewmap-map';
 
     /**
+    * @type {string}
+    * @private
+    */
+    this.thumbnail_url_ = options['url'];
+
+    /**
+    * @type {Array.<number>}
+    * @private
+    */
+    this.birdseye_size_ = [150, 100];
+
+    /**
+    * @type {Array.<number>}
+    * @private
+    */
+    this.full_image_size_ = options['size'];
+
+    /**
+    * @type {Array.<number>}
+    * @private
+    */
+    this.thumbnail_size_ = [this.birdseye_size_[0], this.birdseye_size_[1]];
+
+    /**
     * @type {ol.Map}
     * @private
     */
-    this.birds_eye_ = options['map'];
+    this.birds_eye_ = this.init();
 
     var box = document.createElement('DIV');
     box.className = 'ol-overviewmap-box';
@@ -133,10 +157,45 @@ ol.inherits(ome.ol3.controls.BirdsEye, ol.control.Control);
  * Listens to map changes
  */
 ome.ol3.controls.BirdsEye.prototype.setMap = function(map) {
-    if (map) ol.control.Control.prototype.setMap.call(this, map);
+    if (map) {
+        ol.control.Control.prototype.setMap.call(this, map);
+        this.birds_eye_.setTarget(this.controlDiv_);
+    }
     // TODO:  listen to map changes (zoom, rotation)
 };
 
+/**
+ * Creates the ol.Map that represents the bird's eye view
+ * @return {ol.Map} the bird's eye view
+ */
+ome.ol3.controls.BirdsEye.prototype.init = function() {
+    // determine thumbnail size
+    var ext = [0, 0, this.thumbnail_size_[0], this.thumbnail_size_[1]];
+    var proj = new ol.proj.Projection({
+        code: 'BIRDSEYE',
+        units: 'pixels',
+        extent: ext.slice()
+    });
+    var view = new ol.View({
+       projection: proj,
+       center: ol.extent.getCenter(ext),
+       resolutions : [1],
+       resolution : 1
+    });
+    var imageLayer = new ol.layer.Image({
+        source: new ol.source.ImageStatic({
+        url: this.thumbnail_url_,
+        projection: proj,
+        imageExtent: ext})
+    });
+    return new ol.Map({
+        controls: new ol.Collection(),
+        interactions: new ol.Collection(),
+        renderer: ol.renderer.Type.CANVAS,
+        layers: [imageLayer],
+        view: view
+    });
+}
 
 /**
  * Update the bird eye view
@@ -229,11 +288,13 @@ ome.ol3.controls.BirdsEye.prototype.handleToggle_ = function() {
         }
         this.collapsed_ = !this.collapsed_;
 
-        if (!this.collapsed_ && !this.birds_eye_.isRendered()) {
-            ol.events.listenOnce(this.birds_eye_, ol.MapEventType.POSTRENDER,
-                function(event) {
-                    this.updateBox_();
-            }, this);
+        if (!this.collapsed_) {
+            if (!this.birds_eye_.isRendered()) this.birds_eye_.updateSize();
+            else {
+                ol.events.listenOnce(
+                    this.birds_eye_, ol.MapEventType.POSTRENDER,
+                    ome.ol3.controls.BirdsEye.render, this);
+            }
         }
 };
 
