@@ -3,13 +3,13 @@
 
 This version includes:
 
-- displayed acquisition date when available
+- displayed both import date and acquisition date when available
 - fixed configuration issue when used as the default viewer in OMERO.web
 - reduced the size of the bundled javascript
 - renamed the control inverting the color to "invert" instead of "reverse"
 - added option to export basic ROIs statistics in a CSV file
 - added option to query pixels intensity
-- upgraded Openlayers
+- upgraded Openlayers to version 4.3.2
 
 
 0.3.0 (September 2017)
