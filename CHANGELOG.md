@@ -1,4 +1,4 @@
-0.4.0 (November 2017)
+0.4.1 (November 2017)
 ---------------------
 
 This version includes:
