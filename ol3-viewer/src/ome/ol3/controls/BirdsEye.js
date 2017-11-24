@@ -73,19 +73,22 @@ ome.ol3.controls.BirdsEye = function(options) {
     * @type {Array.<number>}
     * @private
     */
-    this.birdseye_size_ = [150, 100];
-
-    /**
-    * @type {Array.<number>}
-    * @private
-    */
     this.full_image_size_ = options['size'];
 
     /**
     * @type {Array.<number>}
     * @private
     */
-    this.thumbnail_size_ = [this.birdseye_size_[0], this.birdseye_size_[1]];
+    this.thumbnail_size_ = [150, 100];
+
+    /**
+    * @type {Array.<number>}
+    * @private
+    */
+    this.ratio_ = [
+        this.thumbnail_size_[0] / this.full_image_size_[0],
+        this.thumbnail_size_[1] / this.full_image_size_[1],
+    ];
 
     /**
     * @type {ol.Map}
@@ -121,37 +124,79 @@ ome.ol3.controls.BirdsEye = function(options) {
         target: options.target
     });
 
-    // TODO: adjust interaction section
-    var scope = this;
-    var overlay = this.boxOverlay_;
-    var overlayBox = this.boxOverlay_.getElement();
-    var computeDesiredMousePosition = function(mousePosition) {
-        return {
-            clientX: mousePosition.clientX - (overlayBox.offsetWidth / 2),
-            clientY: mousePosition.clientY + (overlayBox.offsetHeight / 2)
-        };
-    };
+    this.singleBoxClick = null;
+    this.lastBoxCoordinate = null;
 
-    var birdsEye = this.birds_eye_;
-    var move = function(event) {
-        var coordinates =
-            birdsEye.getEventCoordinate(computeDesiredMousePosition(event));
-        overlay.setPosition(coordinates);
-    };
-    var endMoving = function(event) {
-        var coordinates = birdsEye.getEventCoordinate(event);
-        scope.getMap().getView().setCenter(coordinates);
-        window.removeEventListener('mousemove', move);
-        window.removeEventListener('mouseup', endMoving);
-    };
+    this.birds_eye_.addInteraction(new ol.interaction.Pointer({
+        handleDownEvent : function(event) {
+            if (!(event instanceof ol.MapBrowserPointerEvent) ||
+                this.clickedIntoBox(event.pixel)) return false;
 
-    overlayBox.addEventListener('mousedown', function() {
-        window.addEventListener('mousemove', move);
-        window.addEventListener('mouseup', endMoving);
-    });
+            var boxDims = this.getBoxDims();
+            var newCenterOfBox =
+                [event.pixel[0] - boxDims[0] / 2,
+                 event.pixel[1] + boxDims[1] / 2
+            ];
+
+            this.singleBoxClick = true;
+            this.boxOverlay_.setPosition(
+                this.birds_eye_.getCoordinateFromPixel(newCenterOfBox));
+
+            this.getMap().getView().setCenter(
+                this.convertBirdsEyeCoords(
+                    this.birds_eye_.getCoordinateFromPixel(event.pixel)));
+
+            return false;
+        }.bind(this),
+        handleMoveEvent : function(event) {
+            if (!(event instanceof ol.MapBrowserPointerEvent) ||
+                !(event.originalEvent instanceof MouseEvent) ||
+                event.originalEvent.buttons === 0) return;
+
+            if (this.clickedIntoBox(event.pixel) ||
+                this.lastBoxCoordinate !== null)
+                this.lastBoxCoordinate = event.pixel;
+            else return;
+
+            var boxDims = this.getBoxDims();
+            var newCenterOfBox = [
+                event.pixel[0] - boxDims[0] / 2,
+                event.pixel[1] + boxDims[1] / 2
+            ];
+
+            this.boxOverlay_.setPosition(
+                this.birds_eye_.getCoordinateFromPixel(newCenterOfBox));
+        }.bind(this)}));
+
+        // this is unfortunately necessary
+        // since the mouse up event is not bubbling up
+        this.onUpEvent =
+            ol.events.listen(
+                this.birds_eye_.getTarget(),
+                ol.events.EventType.MOUSEUP,
+                function(event) {
+                    if (this.lastBoxCoordinate === null) return;
+
+                    var newCoord =
+                        this.birds_eye_.getCoordinateFromPixel(
+                            this.lastBoxCoordinate);
+                    this.getMap().getView().setCenter(
+                        this.convertBirdsEyeCoords(newCoord));
+                    this.lastBoxCoordinate = null;
+                }, this);
 };
 ol.inherits(ome.ol3.controls.BirdsEye, ol.control.Control);
 
+/**
+ * Converts the bird's eye coordinates to full image coordinates
+ *
+ * @param {Array.<number>} coords the bird's eye coords
+ * @return {Array.<number>} the corresponsing full image coordinates
+ */
+ome.ol3.controls.BirdsEye.prototype.convertBirdsEyeCoords = function(coords) {
+    return [coords[0] / this.ratio_[0],
+            -(this.full_image_size_[1] - coords[1] / this.ratio_[1])];
+}
 
 /**
  * Listens to map changes
@@ -159,9 +204,9 @@ ol.inherits(ome.ol3.controls.BirdsEye, ol.control.Control);
 ome.ol3.controls.BirdsEye.prototype.setMap = function(map) {
     if (map) {
         ol.control.Control.prototype.setMap.call(this, map);
-        this.birds_eye_.setTarget(this.controlDiv_);
+        this.birds_eye_.updateSize();
+        this.render();
     }
-    // TODO:  listen to map changes (zoom, rotation)
 };
 
 /**
@@ -193,7 +238,8 @@ ome.ol3.controls.BirdsEye.prototype.init = function() {
         interactions: new ol.Collection(),
         renderer: ol.renderer.Type.CANVAS,
         layers: [imageLayer],
-        view: view
+        view: view,
+        target: this.controlDiv_
     });
 }
 
@@ -203,6 +249,10 @@ ome.ol3.controls.BirdsEye.prototype.init = function() {
  * @this {ome.ol3.controls.BirdsEye}
  */
 ome.ol3.controls.BirdsEye.render = function(mapEvent) {
+    if (this.lastBoxCoordinate !== null || this.singleBoxClick) {
+        this.singleBoxClick = false;
+        return;
+    };
     this.updateBox_();
 };
 
@@ -215,25 +265,25 @@ ome.ol3.controls.BirdsEye.prototype.updateBox_ = function() {
     var map = this.getMap();
     if (!map.isRendered() || !this.birds_eye_.isRendered()) return;
 
-    var mapSize = map.getSize();
     var view = map.getView();
-    var ovview = this.birds_eye_.getView();
     var rotation = view.getRotation();
-    var overlay = this.boxOverlay_;
-    var box = this.boxOverlay_.getElement();
-    var extent = view.calculateExtent(mapSize);
-    var ovresolution = ovview.getResolution();
+    this.birds_eye_.getView().setRotation(rotation);
+    var extent =
+        ol.extent.getForViewAndSize(
+            view.getCenter(), view.getResolution(),
+            0, map.getSize());
     var bottomLeft = ol.extent.getBottomLeft(extent);
     var topRight = ol.extent.getTopRight(extent);
 
-    // set position using bottom left coordinates
-    var rotateBottomLeft = this.calculateCoordinateRotate_(rotation, bottomLeft);
-    overlay.setPosition(rotateBottomLeft);
+    var rotatedBottomLeft = this.calculateCoordinateRotate_(rotation, bottomLeft);
+    this.boxOverlay_.setPosition(
+        [rotatedBottomLeft[0] * this.ratio_[0],
+        (this.full_image_size_[1] - (-rotatedBottomLeft[1])) * this.ratio_[1]]);
 
-    // set box size calculated from map extent size and overview map resolution
+    var box = this.boxOverlay_.getElement();
     if (box) {
-        box.style.width = Math.abs((bottomLeft[0] - topRight[0]) / ovresolution) + 'px';
-        box.style.height = Math.abs((topRight[1] - bottomLeft[1]) / ovresolution) + 'px';
+        box.style.width = Math.abs((bottomLeft[0] - topRight[0]) * this.ratio_[0]) + 'px';
+        box.style.height = Math.abs((topRight[1] - bottomLeft[1]) * this.ratio_[1]) + 'px';
     }
 };
 
@@ -290,11 +340,13 @@ ome.ol3.controls.BirdsEye.prototype.handleToggle_ = function() {
 
         if (!this.collapsed_) {
             if (!this.birds_eye_.isRendered()) this.birds_eye_.updateSize();
-            else {
-                ol.events.listenOnce(
-                    this.birds_eye_, ol.MapEventType.POSTRENDER,
-                    ome.ol3.controls.BirdsEye.render, this);
-            }
+            ol.events.listenOnce(
+                this.birds_eye_, ol.MapEventType.POSTRENDER,
+                function() {
+                    try {
+                        this.updateBox_();
+                    } catch(ignored) {}
+                }, this);
         }
 };
 
@@ -315,4 +367,49 @@ ome.ol3.controls.BirdsEye.prototype.setCollapsed = function(collapsed) {
  */
 ome.ol3.controls.BirdsEye.prototype.getCollapsed = function() {
     return this.collapsed_;
+};
+
+/**
+ * Gets the width and height of the box in the birds eye view
+ *
+ * @return {Array<number>} the dimension of the box
+ * @private
+ */
+ome.ol3.controls.BirdsEye.prototype.getBoxDims = function() {
+    var el = this.boxOverlay_.getElement();
+    var tmp = [
+        ol.dom.outerWidth(el),
+        ol.dom.outerHeight(el)
+    ];
+
+    // in IE we get a NaN because the method calls parseInt on margin left
+    // which is 'auto'
+    if (isNaN(tmp[0]) || isNaN(tmp[1])) tmp = [el.offsetWidth, el.offsetHeight];
+    return tmp;
+}
+
+/**
+ * Checks if a given x/y coordinate is within the box of the birds eye view
+ *
+ * @param {Array.<number>} coords a pair of coordinates
+ * @return {boolean} true if the given coordinates fall into the box
+ */
+ome.ol3.controls.BirdsEye.prototype.clickedIntoBox = function(coords) {
+    var offset =
+        this.birds_eye_.getPixelFromCoordinate(this.boxOverlay_.getPosition());
+    var boxDims = this.getBoxDims();
+    var extent =
+        [offset[0], offset[1] - boxDims[1], offset[0] + boxDims[0], offset[1]];
+    return ol.extent.containsCoordinate(extent, coords);
+}
+
+/**
+ * sort of destructor
+ */
+ome.ol3.controls.BirdsEye.prototype.disposeInternal = function() {
+    if (typeof(this.onUpEvent) !== 'undefined' && this.onUpEvent)
+        ol.events.unlistenByKey(this.onUpEvent);
+
+    goog.base(this, 'disposeInternal');
+    if (this.birds_eye_) this.birds_eye_.dispose();
 };
