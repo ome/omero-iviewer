@@ -24,6 +24,16 @@ import Misc from './utils/misc';
 import {URI_PREFIX, PLUGIN_NAME, WINDOWS_1252} from './utils/constants';
 import * as Bluebird from 'bluebird';
 
+// #if process.env.NODE_ENV
+require('../node_modules/bootstrap/dist/css/bootstrap.min.css');
+require('../node_modules/jquery-ui/themes/base/theme.css');
+require('../node_modules/jquery-ui/themes/base/spinner.css');
+require('../node_modules/jquery-ui/themes/base/slider.css');
+require('../node_modules/spectrum-colorpicker/spectrum.css');
+require('../css/ol3-viewer.css');
+require('../css/app.css');
+// #endif
+
 // global scope settings
 Bluebird.config({ warnings: { wForgottenReturn: false } });
 window['encoding-indexes'] = {"windows-1252": WINDOWS_1252};
@@ -33,20 +43,15 @@ window['encoding-indexes'] = {"windows-1252": WINDOWS_1252};
  * has to happen before the bootstrap!
  */
 let req = window.INITIAL_REQUEST_PARAMS || {};
-let is_dev_server = typeof req["DEV_SERVER"] === 'boolean' && req["DEV_SERVER"];
+let is_dev_server = false;
+// #if process.env.NODE_ENV === 'dev-server'
+is_dev_server = true;
+// #endif
 if (!is_dev_server) {
     let prefix =
         typeof req[URI_PREFIX] === 'string' ?
             Misc.prepareURI(req[URI_PREFIX]) : "";
     __webpack_public_path__ = prefix + '/static/' + PLUGIN_NAME + '/';
-} else {
-    require('../node_modules/bootstrap/dist/css/bootstrap.min.css');
-    require('../node_modules/jquery-ui/themes/base/theme.css');
-    require('../node_modules/jquery-ui/themes/base/spinner.css');
-    require('../node_modules/jquery-ui/themes/base/slider.css');
-    require('../node_modules/spectrum-colorpicker/spectrum.css');
-    require('../css/ol3-viewer.css');
-    require('../css/app.css');
 }
 
 /**
