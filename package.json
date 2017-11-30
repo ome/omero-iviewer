@@ -2,7 +2,7 @@
   "version": "0.0.0",
   "description": "OMERO.iviewer",
   "scripts": {
-    "dev": "./ol3_viewer_prepare.sh DEV && ant prepare-css && webpack-dev-server --config webpack.dev.config.js --hot --inline --progress --devtool eval",
+    "dev": "./ol3_viewer_prepare.sh DEV && webpack-dev-server --config webpack.dev.config.js --hot --inline --progress --devtool eval-source-map",
     "debug": "./ol3_viewer_prepare.sh DEV && ./prepare_build.sh DEV && webpack --config webpack.prod.config.js --progress --devtool source-map && ./deploy_build.sh",
     "prod": "./ol3_viewer_prepare.sh && ./prepare_build.sh && webpack -p --config webpack.prod.config.js --progress && ./deploy_build.sh",
     "docs": "./generate_docs.sh"
@@ -48,7 +48,7 @@
     "style-loader": "0.18.2",
     "url-loader": "0.5.9",
     "webpack": "3.6.0",
-    "webpack-dev-server": "2.8.0",
+    "webpack-dev-server": "2.9.5",
     "html-webpack-plugin": "2.29.0"
   }
 }

@@ -405,16 +405,6 @@ export default class Context {
     }
 
     /**
-     * Adjustments that are necessary if we are running under the
-     * webpack dev server
-     * @memberof Context
-     */
-    tweakForDevServer() {
-        this.is_dev_server = true;
-        this.prefixed_uris.set(IVIEWER, "");
-    }
-
-    /**
      * Creates an app wide key down listener
      * that will listen for key presses registered via addKeyListener
      *
@@ -501,7 +491,7 @@ export default class Context {
         let parent_id = null;
         let selConf = this.getSelectedImageConfig();
         if (selConf === null) return;
-        
+
         let parentType =
             this.initial_type === INITIAL_TYPES.IMAGES ?
                 selConf.image_info.parent_type : this.initial_type;

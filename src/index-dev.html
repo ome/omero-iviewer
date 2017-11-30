@@ -19,23 +19,48 @@
 <!DOCTYPE html>
 <html>
   <head>
-      <link rel="stylesheet" type="text/css" href="build/css/all.min.css" />
+      <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" />
+      <link rel="stylesheet" type="text/css" href="css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="css/spinner.css" />
+      <link rel="stylesheet" type="text/css" href="css/slider.css" />
+      <link rel="stylesheet" type="text/css" href="css/spectrum.css" />
+      <link rel="stylesheet" type="text/css" href="css/ol3-viewer.css" />
+      <link rel="stylesheet" type="text/css" href="css/app.css" />
 
       <script type="text/javascript">
         // modify according to your needs
-        window.INITIAL_REQUEST_PARAMS =
-            {
+        // in particular: choose an existing id !
+        window.INITIAL_REQUEST_PARAMS = {
                 'DEV_SERVER': true,
-                //'SERVER': "https://cowfish.openmicroscopy.org/webtrial",
-                //'IMAGE_ID': 20901,
-                'SERVER': "https://demo.openmicroscopy.org",
-                'IMAGE_ID': 208443,
-            };
+                'VERSION': "DEV_SERVER",
+                'WEB_API_BASE': 'api/v0/',
+                //'IMAGES': "1",
+                'DATASET': "1",
+                //'WELL': "1"
+        };
+        // check if we need to log in
+        // regular redirect logic of server
+        // fails with different origin (proxy)
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                if (xhttp.responseText !== 'OK') {
+                    window.location.replace(
+                        'http://localhost:8080/webclient/login?url=http://localhost:8080/');
+                }
+                return;
+            } else if (this.readyState == 4) {
+                alert('Check if your OMERO server is running');
+            }
+        };
+        xhttp.open("GET", "webclient/keepalive_ping", true);
+        xhttp.send();
       </script>
 
       <title>iViewer</title>
   </head>
 
-  <body class="container-fluid"></body>
+  <body class="container-fluid">
+  </body>
 
 </html>

@@ -50,6 +50,10 @@ export default class Misc {
      * @return {boolean} true if we regard the server string remote
      */
     static useJsonp(server="") {
+        // THIS IS INTENTIONAL !!!
+        // jsonp was only used for the dev server
+        return false;
+
         if (typeof server !== 'string') return false;
 
         let host = window.location.host.toLowerCase();

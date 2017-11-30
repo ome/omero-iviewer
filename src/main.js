@@ -39,6 +39,14 @@ if (!is_dev_server) {
         typeof req[URI_PREFIX] === 'string' ?
             Misc.prepareURI(req[URI_PREFIX]) : "";
     __webpack_public_path__ = prefix + '/static/' + PLUGIN_NAME + '/';
+} else {
+    require('../node_modules/bootstrap/dist/css/bootstrap.min.css');
+    require('../node_modules/jquery-ui/themes/base/theme.css');
+    require('../node_modules/jquery-ui/themes/base/spinner.css');
+    require('../node_modules/jquery-ui/themes/base/slider.css');
+    require('../node_modules/spectrum-colorpicker/spectrum.css');
+    require('../css/ol3-viewer.css');
+    require('../css/app.css');
 }
 
 /**
@@ -49,7 +57,7 @@ if (!is_dev_server) {
 bootstrap(function(aurelia) {
     aurelia.use.basicConfiguration();
     let ctx = new Context(aurelia.container.get(EventAggregator), req);
-    if (is_dev_server) ctx.tweakForDevServer();
+    if (is_dev_server) ctx.is_dev_server = true;
     aurelia.container.registerInstance(Context,ctx);
 
     aurelia.start().then(

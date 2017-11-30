@@ -18,7 +18,10 @@ module.exports = {
     filename: 'bundle.js'
   },
   plugins: [
-    new AureliaPlugin({aureliaApp: undefined}),
+    new AureliaPlugin({
+      aureliaApp: undefined,
+      aureliaConfig: "basic",
+      features: {svg: false}}),
     new ProvidePlugin({
         Promise: 'bluebird',
         $: 'jquery',
@@ -49,7 +52,27 @@ module.exports = {
       { test: require.resolve('jquery'), loader: 'expose-loader?$!expose-loader?jQuery' },
       { test: /\.(png|gif|jpg|jpeg)$/, loader: 'file-loader?name=css/images/[name].[ext]' },
       { test: /\.(woff|woff2)$/, loader: 'file-loader?name=css/fonts/[name].[ext]' },
+      { test: /\.css?$/, loader: 'file-loader?name=css/[name].[ext]' },
       { test: /\.html$/, loader: 'html-loader' }
     ]
+  },
+  devServer: {
+    proxy: {
+        '/iviewer/**': {
+            target: 'http://localhost'
+        },
+        '/api/**': {
+            target: 'http://localhost'
+        },
+        '/webgateway/**': {
+            target: 'http://localhost'
+        },
+        '/webclient/**': {
+            target: 'http://localhost'
+        },
+        '/static/**': {
+            target: 'http://localhost'
+        }
+    }
   }
 };
