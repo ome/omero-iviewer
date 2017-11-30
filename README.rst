@@ -43,13 +43,27 @@ please read the section *ol3-viewer* below!
 Development
 ===========
 
-Run:
+Building the uncompressed version of iviewer as described above the application
+can be deployed locally or to a test server, to then be debugged.
+It is also possible to run/debug it with webpack dev-server:
 
 ::
- 
+
     $ npm run dev
 
-To be able to run the ``webpack-dev`` server locally at: ``localhost:3000``
+will build the bundle and start the webpack dev-server (localhost:8080)
+
+Either development setup expects the following:
+- an OMERO server installation
+- an iviewer 'deploy' to that OMERO server:
+
+::
+    $ export PYTHONPATH=$PYTHONPATH:/path/to/iviewer-project-root/plugin
+    $ bin/omero config append omero.web.apps '"omero_iviewer"'
+
+**Note**:
+
+The webpack dev-server config expects a local OMERO server (http://localhost)!
 
 Documentation
 =============
@@ -59,7 +73,7 @@ To build the html in build/docs, run:
 ::
 
     $ npm run docs
- 
+
 
 ol3-viewer
 ==========
@@ -84,4 +98,3 @@ More detailed resources on how to create a web app and development setup can be 
 
 1. `CreateApp <https://www.openmicroscopy.org/site/support/omero5/developers/Web/CreateApp.html>`_
 2. `Deployment <https://www.openmicroscopy.org/site/support/omero5/developers/Web/Deployment.html>`_
-
