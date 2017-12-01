@@ -18,7 +18,7 @@
 
 // dependencies
 import Context from '../app/context';
-import {inject, customElement, BindingEngine} from 'aurelia-framework';
+import {inject, customElement, BindingEngine, bindable} from 'aurelia-framework';
 import {IMAGE_VIEWPORT_CAPTURE} from '../events/events';
 import Ui from '../utils/ui';
 import Misc from '../utils/misc';
@@ -34,14 +34,21 @@ import {
  */
 
 @customElement('viewer-context-menu')
-@inject(Context, BindingEngine)
+@inject(Context, Element, BindingEngine)
 export default class ViewerContextMenu {
+    /**
+     * the image config reference to work with (bound via template)
+     * @memberof Ol3Viewer
+     * @type {ImageConfig}
+     */
+    @bindable image_config = null;
+
     /**
      * the selector for the context menu
      * @memberof ViewerContextMenu
      * @type {string}
      */
-    SELECTOR = "#viewer-context-menu";
+    SELECTOR = ".viewer-context-menu";
 
     /**
      * expose PROJECTION constant to template
@@ -51,26 +58,12 @@ export default class ViewerContextMenu {
     PROJECTION = PROJECTION;
 
     /**
-     * a prefix for the full screen api methods
-     * @memberof ViewerContextMenu
-     * @type {string}
-     */
-    full_screen_api_prefix = null;
-
-    /**
      * the location of the context menu click
      * in ol-viewport 'coordinates' (offsets)
      * @memberof ViewerContextMenu
      * @type {Array.<number>}
      */
     viewport_location = null;
-
-    /**
-     * the image config observer
-     * @memberof ViewerContextMenu
-     * @type {Object}
-     */
-    image_config_observer = null;
 
     /**
      * the other property observers
@@ -96,70 +89,43 @@ export default class ViewerContextMenu {
     /**
      * @constructor
      * @param {Context} context the application context (injected)
+     * @param {Element} element the associated dom element (injected)
      * @param {BindingEngine} bindingEngine the BindingEngine (injected)
      */
-    constructor(context, bindingEngine) {
+    constructor(context, element, bindingEngine) {
         this.context = context;
+        this.element = element;
         this.bindingEngine = bindingEngine;
-        // set initial image config
-        this.image_config = this.context.getSelectedImageConfig();
     }
 
     /**
      * Overridden aurelia lifecycle method:
-     * called whenever the view is bound within aurelia
-     * in other words an 'init' hook that happens before 'attached'
+     * fired when PAL (dom abstraction) is ready for use
      *
-     * @memberof ViewerContextMenu
+     * @memberof Ol3Viewer
      */
-    bind() {
-        // Watches image config changes to establish new context menu
-        // listeneres for the selected image (once ready)
-        let registerReadyObserver = () => {
-            // hide context menu
-            this.hideContextMenu();
-            // get selected image config
-            this.image_config = this.context.getSelectedImageConfig();
-            if (this.image_config === null) return;
-
-            // clean up old observers
-            this.unregisterObservers(true);
-            // we establish the new context menu once the viewer's ready
-            this.observers.push(
-                this.bindingEngine.propertyObserver(
-                    this.image_config.image_info, 'ready').subscribe(
-                        (newValue, oldValue) => this.enableContextMenu()
-                    ));
-            // we initalialize the regions context menu options once the data is ready
-            this.observers.push(
-                this.bindingEngine.propertyObserver(
-                    this.image_config.regions_info, 'ready').subscribe(
-                        (newValue, oldValue) => this.initRegionsContextOptions()
-                    ));
-        };
-        // listen for image changes
-        this.image_config_observer =
+    attached() {
+        // we establish the new context menu once the viewer's ready
+        this.observers.push(
             this.bindingEngine.propertyObserver(
+                this.image_config.image_info, 'ready').subscribe(
+                    (newValue, oldValue) => this.enableContextMenu()
+                ));
+        // we initalialize the regions context menu options once the data is ready
+        this.observers.push(
+            this.bindingEngine.propertyObserver(
+                this.image_config.regions_info, 'ready').subscribe(
+                    (newValue, oldValue) => this.initRegionsContextOptions()
+                ));
+        // notifies us of an image selection change
+        this.observers.push(
+             this.bindingEngine.propertyObserver(
                 this.context, 'selected_config')
-                    .subscribe((newValue, oldValue) => registerReadyObserver());
-        // initial call
-        registerReadyObserver();
-    }
-
-    /**
-     * Unregisters the the observers (property and regions info ready)
-     *
-     * @param {boolean} property_only true if only property observers are cleaned up
-     * @memberof ViewerContextMenu
-     */
-    unregisterObservers(property_only = false) {
-        this.observers.map((o) => {if (o) o.dispose();});
-        this.observers = [];
-        if (property_only) return;
-        if (this.image_config_observer) {
-            this.image_config_observer.dispose();
-            this.image_config_observer = null;
-        }
+                    .subscribe((newValue, oldValue) => {
+                        if (newValue !== this.image_config) {
+                            this.hideContextMenu();
+                        }
+                }));
     }
 
     /**
@@ -170,40 +136,8 @@ export default class ViewerContextMenu {
      * @memberof ViewerContextMenu
      */
     unbind() {
-        this.unregisterObservers();
-    }
-
-    /**
-     * Overridden aurelia lifecycle method:
-     * fired when PAL (dom abstraction) is ready for use
-     *
-     * @memberof ViewerContextMenu
-     */
-    attached() {
-        // register the fullscreenchange handler
-        this.full_screen_api_prefix = Ui.getFullScreenApiPrefix();
-        if (this.full_screen_api_prefix)
-            document['on' + this.full_screen_api_prefix + 'fullscreenchange'] =
-                () => this.onFullScreenChange();
-    }
-
-    /**
-     * Depending ob the fullscreen change the context menu is included
-     * or excluded from the ol3-viewer viewport
-     *
-     * @memberof ViewerContextMenu
-     */
-    onFullScreenChange() {
-        this.hideContextMenu();
-        let isInFullScreen =
-            document[this.full_screen_api_prefix + 'isFullScreen'] ||
-            document[this.full_screen_api_prefix + 'FullScreen'] ||
-            document[this.full_screen_api_prefix + 'FullscreenElement'];
-
-        let contextMenu = this.getElement();
-        if (isInFullScreen)
-            $('#' + this.image_config.id).append(contextMenu)
-        else contextMenu.insertBefore(".center");
+        this.observers.map((o) => {if (o) o.dispose();});
+        this.observers = [];
     }
 
     /**
@@ -212,7 +146,7 @@ export default class ViewerContextMenu {
      * @memberof ViewerContextMenu
      */
     getElement() {
-        return $(this.SELECTOR);
+        return $('#' + this.image_config.id + " " + this.SELECTOR);
     }
 
     /**
@@ -230,41 +164,39 @@ export default class ViewerContextMenu {
      * @memberof ViewerContextMenu
      */
     enableContextMenu() {
-        this.image_config = this.context.getSelectedImageConfig();
         let viewerTarget =
             $('#' + VIEWER_ELEMENT_PREFIX + this.image_config.id);
         if (viewerTarget.length === 0) return;
 
-       // hide context menu on regular clicks
-      viewerTarget.click((event) => this.hideContextMenu());
-       // register context menu listener
-      viewerTarget.contextmenu(
-           (event) => {
-               // prevent browser default context menu
-               // and click from bubbling up
-               event.stopPropagation();
-               event.preventDefault();
+        // hide context menu on regular clicks
+        viewerTarget.click((event) => this.hideContextMenu());
+        // register context menu listener
+        viewerTarget.contextmenu((event) => {
+            // prevent browser default context menu
+            // and click from bubbling up
+            event.stopPropagation();
+            event.preventDefault();
 
-               // we don't allow right clicking on ol3-controls
-               // i.e. the parent has to have class ol-viewport
-               if (!$(event.target).parent().hasClass('ol-viewport')) return false;
-               this.viewport_location = [event.offsetX, event.offsetY];
+            // we don't allow right clicking on ol3-controls
+            // i.e. the parent has to have class ol-viewport
+            if (!$(event.target).parent().hasClass('ol-viewport')) return false;
+            this.viewport_location = [event.offsetX, event.offsetY];
 
-               // show context menu
-               this.getElement().offset(
-                   {left: event.clientX, top: event.clientY});
-               this.getElement().show();
+            // show context menu
+            this.getElement().show();
+            this.getElement().offset(
+               {left: event.clientX, top: event.clientY});
 
-               // prevent browser default context menu
-               return false;
-           });
-           // we don't allow browser context menu on the context menu itself...
-           this.getElement().off();
-           this.getElement().contextmenu((event) => {
-               event.stopPropagation();
-               event.preventDefault();
-               return false;
-           });
+            // prevent browser default context menu
+            return false;
+        });
+        // we don't allow browser context menu on the context menu itself...
+        this.getElement().off();
+        this.getElement().contextmenu((event) => {
+            event.stopPropagation();
+            event.preventDefault();
+            return false;
+        });
     }
 
     /**
@@ -395,7 +327,7 @@ export default class ViewerContextMenu {
      * @memberof ViewerContextMenu
      */
     captureViewport() {
-        this.context.eventbus.publish(
+        this.context.publish(
             IMAGE_VIEWPORT_CAPTURE, {"config_id": this.image_config.id});
         // hide context menu
         this.hideContextMenu();
@@ -503,18 +435,4 @@ export default class ViewerContextMenu {
         else console.error(
                 encErr ? "Error encoding csv" : "Blob not supported");
     }
-
-    /**
-     * Overridden aurelia lifecycle method:
-     * called whenever the view is unbound within aurelia
-     * in other words a 'destruction' hook that happens after 'detached'
-     *
-     * @memberof ViewerContextMenu
-     */
-    unbind() {
-        if (this.full_screen_api_prefix !== null &&
-            document['on' + fullScreenApiPrefix + 'fullscreenchange'])
-                document['on' + fullScreenApiPrefix + 'fullscreenchange'] = null;
-    }
-
 }

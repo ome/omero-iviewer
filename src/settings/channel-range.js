@@ -18,7 +18,9 @@
 
 import Context from '../app/context';
 import Misc from '../utils/misc';
-import {CHANNEL_SETTINGS_MODE,URI_PREFIX} from '../utils/constants';
+import {
+    CHANNEL_SETTINGS_MODE, FLOATING_POINT_PRECISION, URI_PREFIX
+} from '../utils/constants';
 import {HISTOGRAM_RANGE_UPDATE} from '../events/events';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {spinner} from 'jquery-ui/ui/widgets/spinner';
@@ -32,13 +34,6 @@ import {spectrum} from 'spectrum-colorpicker';
 @customElement('channel-range')
 @inject(Context, Element, BindingEngine)
 export default class ChannelRange  {
-    /**
-     * the floating point precision used
-     * @memberof ChannelRange
-     * @type {number}
-     */
-    FLOATING_POINT_PRECISION = 3;
-
     /**
      * channel informetion (bound in template)
      * @memberof ChannelRange
@@ -127,6 +122,31 @@ export default class ChannelRange  {
     }
 
     /**
+     * Updates the range values
+     *
+     * @param {ImageInfo} imgInf the image info
+     * @memberof ChannelRange
+     */
+    updateRanges(imgInf) {
+        this.full_range_min_max =
+            imgInf.getChannelMinMaxValues(
+                CHANNEL_SETTINGS_MODE.FULL_RANGE, this.index,
+                    FLOATING_POINT_PRECISION);
+        this.min_max_range =
+            imgInf.getChannelMinMaxValues(this.mode, this.index,
+                FLOATING_POINT_PRECISION);
+        // round if we are floating point
+        if (this.min_max_range.step_size !== 1) {
+            this.channel.window.start =
+                Misc.roundAtDecimal(
+                    this.channel.window.start, FLOATING_POINT_PRECISION);
+            this.channel.window.end =
+                Misc.roundAtDecimal(
+                    this.channel.window.end, FLOATING_POINT_PRECISION);
+        }
+    }
+
+    /**
      * Updates the UI elements (jquery)
      *
      * @memberof ChannelRange
@@ -137,22 +157,7 @@ export default class ChannelRange  {
 
         let imgConf = this.context.getSelectedImageConfig();
         let imgInf = imgConf.image_info;
-        this.full_range_min_max =
-            imgInf.getChannelMinMaxValues(
-                CHANNEL_SETTINGS_MODE.FULL_RANGE, this.index,
-                    this.FLOATING_POINT_PRECISION);
-        this.min_max_range =
-            imgInf.getChannelMinMaxValues(this.mode, this.index,
-                this.FLOATING_POINT_PRECISION);
-        // round if we are floating point
-        if (this.min_max_range.step_size !== 1) {
-            this.channel.window.start =
-                Misc.roundAtDecimal(
-                    this.channel.window.start, this.FLOATING_POINT_PRECISION);
-            this.channel.window.end =
-                Misc.roundAtDecimal(
-                    this.channel.window.end, this.FLOATING_POINT_PRECISION);
-        }
+        this.updateRanges(imgInf);
 
         // channel start
         let channelStart = $(this.element).find(".channel-start");
@@ -252,16 +257,11 @@ export default class ChannelRange  {
         let channelEndArrows =
             $(channelEnd).parent().find('a.ui-spinner-button');
         channelEndArrows.css('display','none');
-        channelEnd.on("blur",
-            (event) => {
-                channelEndArrows.css('display','none');
-                this.onRangeChange(event.target.value, false, true);
-            });
         channelEnd.on("focus",
             (event) => channelEndArrows.css('display','block'));
         channelEnd.on("blur",
             (event) => {
-                $(channelEnd).find('a.ui-spinner-button').css('display','none');
+                channelEndArrows.css('display','none');
                 this.onRangeChange(event.target.value, false, true);
             });
         channelEnd.on("spinstop",
@@ -405,10 +405,8 @@ export default class ChannelRange  {
         if (!ui_triggered || !Misc.isArray(values)) return;
 
         if (this.min_max_range.step_size !== 1) {
-            values[0] = Misc.roundAtDecimal(
-                values[0],this.FLOATING_POINT_PRECISION);
-            values[1] = Misc.roundAtDecimal(
-                values[1],this.FLOATING_POINT_PRECISION);
+            values[0] = Misc.roundAtDecimal(values[0],FLOATING_POINT_PRECISION);
+            values[1] = Misc.roundAtDecimal(values[1],FLOATING_POINT_PRECISION);
         }
 
         let startManipulated = ui.value === ui.values[0];
@@ -458,8 +456,7 @@ export default class ChannelRange  {
                 return;
             }
             if (this.min_max_range.step_size !== 1)
-                value = Misc.roundAtDecimal(
-                    value,this.FLOATING_POINT_PRECISION);
+                value = Misc.roundAtDecimal(value,FLOATING_POINT_PRECISION);
         }
 
         // set appropriate min/max for start/end
@@ -511,13 +508,15 @@ export default class ChannelRange  {
                     $(this.element).find(".channel-slider").slider(
                         "option", "max",value > sliderMax ? value : sliderMax);
                 }
+                let conf = this.context.getSelectedImageConfig();
                 // add history record
-                this.context.getSelectedImageConfig().addHistory({
+                conf.addHistory({
                     prop:
                     ['image_info', 'channels', '' + this.index,
                     'window', is_start ? 'start' : 'end'],
                     old_val : oldValue, new_val: value, type : "number"
                 });
+                this.updateRanges(conf.image_info);
             } catch (ignored) {}
         } else $(this.element).find(clazz).parent().css(
             "border-color", "rgb(255,0,0)");

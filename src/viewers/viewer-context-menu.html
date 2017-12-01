@@ -17,8 +17,7 @@
 -->
 
 <template>
-
-    <ul id="viewer-context-menu" class="dropdown-menu" role="menu">
+    <ul class="viewer-context-menu dropdown-menu" role="menu"">
         <li class="${image_config.regions_info.ready &&
                      image_config.regions_info.selected_shapes.length > 0 ?
                      '' : 'disabled-color'}">
@@ -57,5 +56,4 @@
                tabindex="-1" href="#">Capture Viewport (as png)</a>
         </li>
     </ul>
-
 </template>

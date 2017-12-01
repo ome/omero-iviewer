@@ -361,14 +361,18 @@ ome.ol3.utils.Misc.parseProjectionParameter = function(projection_info) {
  */
 ome.ol3.utils.Misc.sendEventNotification = function(viewer, type, content, delay) {
     if (!(viewer instanceof ome.ol3.Viewer) ||
+        !(viewer.viewer_ instanceof ol.Map) ||
+        viewer.prevent_event_notification_ ||
         typeof type !== 'string' ||
         type.length === 0) return;
 
-    var config_id = viewer.getTargetId();
+    var config_id =
+        ome.ol3.utils.Misc.getTargetId(viewer.viewer_.getTargetElement());
     var eventbus = viewer.eventbus_;
     if (config_id && eventbus) { // publish
         if (typeof content !== 'object' || content === null) content = {};
         content['config_id'] = config_id;
+        content['sync_group'] = viewer.sync_group_;
         var triggerEvent = function() {
             eventbus.publish(type, content);
         };
@@ -385,7 +389,9 @@ ome.ol3.utils.Misc.sendEventNotification = function(viewer, type, content, delay
  *
  * @static
  * @param {Element|string} target the viewer's target element
- * @return {number|string} the id as a number/string (latter: for ol3 alone)
+ * @return {number|string|null} the target element's id as a number/string
+ *                              (latter: for ol3 alone) or null
+ *                              (no element id or parse error)
  */
 ome.ol3.utils.Misc.getTargetId = function(target) {
     try {
@@ -394,16 +400,16 @@ ome.ol3.utils.Misc.getTargetId = function(target) {
                 typeof target === 'object' &&
                     target !== null && typeof target.id === 'string' ?
                         target.id : null;
+        if (elemId === null) return null;
 
-        var _pos = -1;
-        if (elemId === null ||
-            ((_pos = elemId.lastIndexOf("_")) === -1)) return null;
+        var pos = elemId.lastIndexOf("_");
+        if (pos === -1) return elemId;
 
-        var id = parseInt(elemId.substring(_pos+1));
-        if (isNaN(id)) return elemId;
+        var id = parseInt(elemId.substring(pos+1));
+        if (isNaN(id)) return null;
 
         return id;
     } catch(no_care) {
-        return elemId;
+        return null;
     }
 }
