@@ -138,12 +138,19 @@ ome.ol3.Viewer = function(id, options) {
      */
      this.tried_regions_ = false;
 
-     /**
-      * any handed in regions data when we tried the regions (see tried_regions_)
-      * @type {Array.<Object>}
-      * @private
-      */
-      this.tried_regions_data_ = false;
+    /**
+     * any handed in regions data when we tried the regions (see tried_regions_)
+     * @type {Array.<Object>}
+     * @private
+     */
+     this.tried_regions_data_ = false;
+
+    /**
+     * the viewer's sync group
+     * @type {string|null}
+     * @private
+     */
+     this.sync_group_ = null;
 
     /**
      * a flag that's only relevant if the server is not same orgin.
@@ -165,7 +172,7 @@ ome.ol3.Viewer = function(id, options) {
      * @type {string}
      * @private
      */
-    this.container_ = "ome_viewer";
+    this.container_ = "ome-viewer";
     if (typeof(opts['container']) === 'string')
         this.container_ = opts['container'];
 
@@ -221,6 +228,14 @@ ome.ol3.Viewer = function(id, options) {
         typeof opts['eventbus'] === 'object' &&
         typeof  opts['eventbus']['publish'] === 'function' ?
         opts['eventbus'] : null;
+
+    /**
+     * a flag to indicate the no events should be sent
+     *
+     * @type {boolean}
+     * @private
+     */
+    this.prevent_event_notification_ = false;
 
     /**
      * The initialization function performs the following steps:
@@ -437,8 +452,8 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
            "start" : oldC['window']['start'],
            "end" : oldC['window']['end']
        };
-       if (typeof oldC['reverseIntensity'] === 'boolean')
-           newC['reverse'] = oldC['reverseIntensity'];
+       if (typeof oldC['inverted'] === 'boolean')
+           newC['inverted'] = oldC['inverted'];
        channels.push(newC);
     }
 
@@ -550,14 +565,30 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
     // enable intensity control
     this.toggleIntensityControl(true);
 
+    // helper to broadcast a viewer interaction (zoom and drag)
+    var notifyAboutViewerInteraction = function(viewer) {
+        ome.ol3.utils.Misc.sendEventNotification(
+            viewer, "IMAGE_VIEWER_INTERACTION", viewer.getViewParameters());
+    };
+
     // listens to resolution changes
     this.onViewResolutionListener =
        ol.events.listen( // register a resolution handler for zoom display
            this.viewer_.getView(), "change:resolution",
            function(event) {
                this.displayResolutionInPercent();
+               if (this.eventbus_) notifyAboutViewerInteraction(this);
            }, this);
     this.displayResolutionInPercent();
+    // listen to rotation changes
+    this.onViewRotationListener =
+        ol.events.listen(
+            this.viewer_.getView(), "change:rotation",
+            function(event) {
+                var regions = this.getRegions();
+                if (regions) regions.changed();
+                if (this.eventbus_) notifyAboutViewerInteraction(this);
+            }, this);
 
     // this is for work that needs to be done after,
     // e.g we have just switched images
@@ -574,14 +605,7 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
            ol.events.listen(
                this.viewer_, ol.MapEventType.MOVEEND,
                function(event) {
-                   ome.ol3.utils.Misc.sendEventNotification(
-                       this.viewer_, "IMAGE_INTERACTION",
-                       {
-                           "z": this.getDimensionIndex('z'),
-                           "t": this.getDimensionIndex('t'),
-                           "c": this.getDimensionIndex('c'),
-                           "center": this.viewer_.getView().getCenter()
-                       });
+                   notifyAboutViewerInteraction(this);
                }, this);
     }
 }
@@ -772,14 +796,6 @@ ome.ol3.Viewer.prototype.addRegions = function(data) {
             [ome.ol3.REGIONS_MODE['SELECT'],
              ome.ol3.REGIONS_MODE['MODIFY'],
              ome.ol3.REGIONS_MODE['TRANSLATE']]);
-
-        this.onViewRotationListener =
-            ol.events.listen( // register a rerender action on rotation
-                this.viewer_.getView(), "change:rotation",
-                function(event) {
-                    var regions = this.getRegions();
-                    if (regions) regions.changed();
-                }, this);
     }
 }
 
@@ -937,11 +953,6 @@ ome.ol3.Viewer.prototype.removeRegions = function(masks_only) {
         this.regions_.dispose();
         this.regions_ = null;
     }
-
-    // remove any onViewRotationListener
-    if (typeof(this.onViewRotationListener) !== 'undefined' &&
-        this.onViewRotationListener)
-            ol.events.unlistenByKey(this.onViewRotationListener);
 
     var regionsLayer = this.getRegionsLayer();
     if (regionsLayer) {
@@ -1137,10 +1148,11 @@ ome.ol3.Viewer.prototype.removeInteractionOrControl = function(key, descend) {
  * @param {Array.<number>} values the value(s)
  */
 ome.ol3.Viewer.prototype.setDimensionIndex = function(key, values) {
-    if (typeof(key) !== 'string' || key.length === 0) // dimension key checks
-        return;
-    var lowerCaseKey = key.substr(0,1).toLowerCase();
+    // dimension key and values check
+    if (typeof(key) !== 'string' || key.length === 0 ||
+        !ome.ol3.utils.Misc.isArray(values)) return;
 
+    var lowerCaseKey = key.substr(0,1).toLowerCase();
     var omeroImage = this.getImage();
     var dimLookup =
         typeof ome.ol3.DIMENSION_LOOKUP[lowerCaseKey] === 'object' ?
@@ -1662,12 +1674,9 @@ ome.ol3.Viewer.prototype.storeRegions =
                         }
                     }
                     if (this.eventbus_) {
-                        this.eventbus_.publish(
-                            "REGIONS_STORED_SHAPES", {
-                                'config_id': this.getTargetId(),
-                                'shapes': ids,
-                                'is_delete': isDeleteRequest
-                            });
+                        ome.ol3.utils.Misc.sendEventNotification(
+                            this, "REGIONS_STORED_SHAPES", {
+                                'shapes': ids, 'is_delete': isDeleteRequest});
                     }
             }
             return false;
@@ -1761,6 +1770,10 @@ ome.ol3.Viewer.prototype.dispose = function(rememberEnabled) {
         if (typeof(this.onViewResolutionListener) !== 'undefined' &&
             this.onViewResolutionListener)
                 ol.events.unlistenByKey(this.onViewResolutionListener);
+        if (typeof(this.onViewRotationListener) !== 'undefined' &&
+            this.onViewRotationListener)
+                ol.events.unlistenByKey(this.onViewRotationListener);
+
         this.viewer_.dispose();
     }
 
@@ -1978,8 +1991,10 @@ ome.ol3.Viewer.prototype.getShapeDefinition = function(shape_id) {
  * Displays resolution as a percentage
  */
 ome.ol3.Viewer.prototype.displayResolutionInPercent = function() {
+    var targetId = this.getTargetId();
     var zoomDisplay =
-        document.getElementsByClassName('ol-zoom-display');
+        document.getElementById('' + targetId).querySelectorAll(
+            '.ol-zoom-display')
     if (typeof zoomDisplay !== 'object' ||
         typeof zoomDisplay.length !== 'number' ||
         zoomDisplay.length === 0) return;
@@ -2045,12 +2060,8 @@ ome.ol3.Viewer.prototype.sendCanvasContent = function(full_extent) {
     var that = this;
     var publishEvent = function(data) {
         if (that.eventbus_ === null) return;
-        that.eventbus_.publish(
-            "IMAGE_CANVAS_DATA",
-            {"config_id": that.getTargetId(),
-             "supported": supported,
-             "data": data
-             });
+        ome.ol3.utils.Misc.sendEventNotification(
+            that, "IMAGE_CANVAS_DATA", {"supported": supported, "data": data});
     };
     var omeroImage = this.getImage();
     if (omeroImage === null || !supported) {
@@ -2134,6 +2145,44 @@ ome.ol3.Viewer.prototype.getLengthAndAreaForShapes = function(ids, recalculate) 
 }
 
 /**
+ * Sets view parameters (center, resolution, rotation)
+ *
+ * @param {Array.<number>=} center the new center as an array: [x,y]
+ * @param {number=} resolution the new resolution
+ * @param {number=} rotation the new rotation
+ */
+ome.ol3.Viewer.prototype.setViewParameters = function(center, resolution, rotation) {
+    this.prevent_event_notification_ = true;
+    try {
+        //resolution first (if given)
+        if (typeof resolution === 'number' && !isNaN(resolution)) {
+            var constrainedResolution =
+                this.viewer_.getView().constrainResolution(resolution);
+            if (typeof constrainedResolution === 'number' &&
+                constrainedResolution !== this.viewer_.getView().getResolution())
+                    this.viewer_.getView().setResolution(constrainedResolution);
+        }
+
+        // center next (if given)
+        var presentCenter = this.viewer_.getView().getCenter();
+        if (ome.ol3.utils.Misc.isArray(center) && center.length === 2 &&
+            typeof center[0] === 'number' && typeof center[1] === 'number' &&
+            presentCenter[0] !== center[0] && presentCenter[1] !== center[1]) {
+            this.viewer_.getView().setCenter(center);
+        }
+
+        // rotation (if given)
+        if (typeof rotation === 'number' && !isNaN(rotation) &&
+            rotation !== this.viewer_.getView().getRotation()) {
+                this.viewer_.getView().setRotation(rotation);
+        }
+
+        this.viewer_.renderSync();
+    } catch(just_in_case) {}
+    this.prevent_event_notification_ = false;
+}
+
+/**
  * Turns on/off intensity querying
  * @param {boolean} flag  if on we turn on intensity querying, otherwise off
  */
@@ -2172,6 +2221,98 @@ ome.ol3.Viewer.prototype.affectImageRender = function(clearCache) {
         imageSource.changed();
     } catch(canHappen) {}
 }
+
+/*
+ * Sets the sync group
+ * @param {string|null} group the sync group or null
+ */
+ome.ol3.Viewer.prototype.setSyncGroup = function(group) {
+    if (group !== null &&
+        (typeof group !== 'string' || group.length === 0)) return;
+    this.sync_group_ = group
+}
+
+/**
+ * Gets the 'view parameters'
+ * @return {Object|null} the view parameters or null
+ */
+ome.ol3.Viewer.prototype.getViewParameters = function() {
+    if (this.viewer_ === null || this.getImage() === null) return null;
+    return {
+        "z": this.getDimensionIndex('z'),
+        "t": this.getDimensionIndex('t'),
+        "c": this.getDimensionIndex('c'),
+        "w": this.getImage().getWidth(),
+        "h": this.getImage().getHeight(),
+        "center": this.viewer_.getView().getCenter().slice(),
+        "resolution": this.viewer_.getView().getResolution(),
+        "rotation": this.viewer_.getView().getRotation()
+    };
+}
+
+/**
+ * Returns all rois
+ *
+ * @return {Array.<Object>} an array of rois (incl. shapes)
+ */
+ome.ol3.Viewer.prototype.getRois = function() {
+    if (!(this.regions_ instanceof ome.ol3.source.Regions)) return [];
+
+    var rois = {};
+    var feats = this.regions_.getFeatures();
+
+    for (var i=0;i<feats.length;i++) {
+        var feature = feats[i];
+
+        if (!(feature instanceof ol.Feature) ||
+            feature.getGeometry() === null ||
+            (typeof feature['state'] === 'number' &&
+             feature['state'] !== ome.ol3.REGIONS_STATE.DEFAULT)) continue;
+
+        var roiId = -1;
+        var shapeId = -1;
+        try {
+            var id = feature.getId();
+            var colon = id.indexOf(":");
+            roiId = parseInt(id.substring(0,colon));
+            shapeId = parseInt(id.substring(colon+1));
+            if (isNaN(roiId) || isNaN(shapeId)) continue;
+        } catch(parseError) {
+            continue;
+        }
+
+        var roiContainer = null;
+        if (typeof rois[roiId] === 'object') roiContainer = rois[roiId];
+        else {
+            rois[roiId] = {
+                "@id" : roiId,
+                "@type" : 'http://www.openmicroscopy.org/Schemas/OME/2016-06#ROI',
+                "shapes" : []
+            };
+            roiContainer = rois[roiId];
+        }
+
+        var type = feature['type'];
+        try {
+            var jsonObject =
+                ome.ol3.utils.Conversion.LOOKUP[type].call(
+                    null, feature.getGeometry(), shapeId);
+            ome.ol3.utils.Conversion.integrateStyleIntoJsonObject(feature, jsonObject);
+            ome.ol3.utils.Conversion.integrateMiscInfoIntoJsonObject(feature, jsonObject);
+            jsonObject['omero:details'] = {'permissions': feature['permissions']};
+            roiContainer['shapes'].push(jsonObject);
+        } catch(conversion_error) {
+            console.error("Failed to turn feature " + type +
+                "(" + feature.getId() + ") into json => " + conversion_error);
+        }
+    };
+
+    ret = [];
+    for (var r in rois)
+        if (rois[r]['shapes'].length > 0) ret.push(rois[r]);
+    return ret;
+};
+
 
 /*
  * This section determines which methods are exposed and usable after compilation
@@ -2378,5 +2519,25 @@ goog.exportProperty(
 
 goog.exportProperty(
     ome.ol3.Viewer.prototype,
+    'setViewParameters',
+    ome.ol3.Viewer.prototype.setViewParameters);
+
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
     'toggleIntensityQuerying',
     ome.ol3.Viewer.prototype.toggleIntensityQuerying);
+
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
+    'setSyncGroup',
+ome.ol3.Viewer.prototype.setSyncGroup);
+
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
+    'getViewParameters',
+ome.ol3.Viewer.prototype.getViewParameters);
+
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
+    'getRois',
+ome.ol3.Viewer.prototype.getRois);

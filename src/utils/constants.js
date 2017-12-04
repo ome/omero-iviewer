@@ -83,6 +83,12 @@ export const PLUGIN_PREFIX = "PLUGIN_PREFIX";
 export const VIEWER_ELEMENT_PREFIX = "ol3_viewer_";
 
 /**
+ * the floating point precision used for channel settings
+ * @type {number}
+ */
+export const FLOATING_POINT_PRECISION = 3;
+
+/**
  * win 1252 charset encoding table
  * @type {Array.<number>}
  */
@@ -264,3 +270,24 @@ export const PROJECTION = {
  * @type {string}
  */
 export const CSV_LINE_BREAK = '\u000D\u000A';
+
+/**
+ * lock option for syncing
+ * @type {Object}
+ */
+export const SYNC_LOCK = {
+    ZT: { CHAR: 'zt', LABEL: 'Z/T'},
+    Z: { CHAR: 'z', LABEL: 'Z'},
+    T: { CHAR: 't', LABEL: 'T'},
+    VIEW: { CHAR: 'v', LABEL: 'View'},
+    CHANNELS: { CHAR: 'c', LABEL: 'Channels'}
+}
+
+/**
+ * enum for reload types
+ * @type {Object}
+ */
+export const IMAGE_CONFIG_RELOAD = {
+    IMAGE: 0,
+    REGIONS: 1
+}

@@ -195,6 +195,7 @@ a.ui-button:active,
     padding-left: 110px;
     margin-right: -355px;
     padding-right: 365px;
+    z-index: 0;
 }
 
 .center {
@@ -203,7 +204,13 @@ a.ui-button:active,
 }
 
 .center-row1 {
+    background-color: rgba(255,255,255,1);
     height: 100%;
+    padding: 0px;
+}
+.center-row1-mdi {
+    background-color: rgba(255,255,255,1);
+    height: calc(100% - 40px);
     padding: 0px;
 }
 
@@ -215,6 +222,8 @@ a.ui-button:active,
     height: 35px;
     margin-top: -35px;
     position: relative;
+    background-color: rgba(255,255,255,1);
+    margin-right: 10px;
 }
 .center-row2-hidden {
     display: none;
@@ -223,7 +232,6 @@ a.ui-button:active,
 .slider-value {
     position: relative;
     background-color: #FFFFFF;
-    z-index: 10;
     display: none;
     white-space: pre;
 }
@@ -238,6 +246,7 @@ a.ui-button:active,
     bottom: 115px;
     top: 45px;
     width: 35px;
+    z-index: 3;
 }
 .show-tSlider .plane-slider {
     bottom: 150px;
@@ -246,6 +255,7 @@ a.ui-button:active,
 .time-slider {
     left: 90px;
     right: 55px;
+    z-index: 3;
 }
 .show-zSlider .time-slider {
     left: 125px;
@@ -309,6 +319,7 @@ a.ui-button:active,
 }
 
 .plane-slider .dim-projection {
+    cursor: pointer;
     background-image: url('images/projection.png');
     background-repeat: no-repeat;
     background-position: center;
@@ -330,7 +341,6 @@ a.ui-button:active,
     height: 100%;
     width: 9px;
     margin-left: 9px;
-    z-index: 3;
 }
 .time-slider .ui-slider {
     width: 100%;
@@ -382,6 +392,7 @@ a.ui-button:active,
 
 
 .dim-arrows {
+    cursor: pointer;
     position: absolute;
 }
 .dim-arrow-up {
@@ -424,7 +435,7 @@ a.ui-button:active,
     float:left;
     height:100%;
     position: relative;
-    z-index: 5;
+    z-index: 1;
     background-color: #f8f8f8;
     overflow-x: hidden;
 }
@@ -436,7 +447,7 @@ a.ui-button:active,
     float: left;
     width: 5px;
     cursor: ew-resize;
-    z-index: 10;
+    z-index: 1;
 }
 
 .left-split img {
@@ -458,6 +469,16 @@ a.ui-button:active,
 .viewer {
     height: 100%;
     width: 100%;
+    z-index: 0;
+}
+
+.viewer-mdi {
+    min-width: 400px;
+    min-height: 250px;
+    background-color: rgba(255,255,255,1);
+    border: solid 2px rgba(31,106,170,0.6);
+    border-radius: 5px;
+    z-index: 0;
 }
 
 .show-zSlider .viewer {
@@ -1058,7 +1079,7 @@ thumbnail-slider img {
 }
 .modal-content {
     width: 300px;
-    max-height: 200px;
+    max-height: 250px;
 }
 .modal-message .ok {
     width: 50px;
@@ -1074,11 +1095,12 @@ thumbnail-slider img {
    font-weight: 700;
  }
 
-#viewer-context-menu {
+.viewer-context-menu {
     position: absolute;
     top: 0px;
     left: 0px;
     display: none;
+    z-index: 5;
 }
 
 .gradient-png {
@@ -1095,14 +1117,14 @@ thumbnail-slider img {
     top: 10px;
     right: 5px;
     cursor: pointer;
-    z-index: 10;
+    z-index: 1;
 }
 
 .columns-dropdown {
     position: absolute;
     right: 0px;
     top: 0px;
-    z-index: 1000;
+    z-index: 1;
 }
 .columns-dropdown .dropdown-menu {
     right: 0px;
@@ -1116,4 +1138,68 @@ thumbnail-slider img {
 .columns-dropdown .dropdown-menu a {
     display: inline-block;
     padding-left: 0px;
+}
+
+.viewer-handle {
+    color: rgba(255,255,255,1);
+    width: 100%;
+    height: 25px;
+    background-color: rgba(31,106,170,0.6);
+}
+.viewer-handle .close {
+    font-family: Arial;
+    line-height: 25px;
+    float: right;
+    margin-right: 2px;
+    color: white;
+    opacity: 1;
+    font-size: 30px;
+}
+.viewer-handle .cog {
+    cursor: pointer;
+    line-height: 25px;
+    float: right;
+    color: white;
+    margin-right: 10px;
+    font-size: 15px;
+}
+.viewer-handle-selected {
+    background-color: rgba(31,106,170,1);
+}
+.viewer-mdi .ui-resizable-se {
+    cursor: se-resize;
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+}
+.mdi-selected {
+    border: solid 2px rgba(31,106,170,1);
+    z-index: 1;
+}
+
+.mdi-icon {
+    width: 32px;
+    height: 30px;
+    float: left;
+    margin-left: 5px;
+    cursor: pointer;
+}
+
+.dropdown-image-config {
+    float: left;
+}
+.dropdown-image-config button {
+    padding: 1px 10px;
+    margin: 1px;
+}
+
+.config-linking {
+    position: absolute;
+}
+.config-linking .sync-locks {
+    float: right;
+    color: rgba(255,255,255,1);
+}
+.sync-locks label {
+    margin-left: 10px;
 }

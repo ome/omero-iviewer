@@ -18,9 +18,10 @@
 
 // dependencies
 import Context from '../app/context';
-import {inject, customElement, BindingEngine} from 'aurelia-framework';
+import {inject, customElement, BindingEngine, bindable} from 'aurelia-framework';
 import {IMAGE_VIEWPORT_CAPTURE} from '../events/events';
 import Ui from '../utils/ui';
+import Misc from '../utils/misc';
 import * as FileSaver from '../../node_modules/file-saver';
 import * as TextEncoding from "../../node_modules/text-encoding";
 import {
@@ -33,14 +34,21 @@ import {
  */
 
 @customElement('viewer-context-menu')
-@inject(Context, BindingEngine)
+@inject(Context, Element, BindingEngine)
 export default class ViewerContextMenu {
+    /**
+     * the image config reference to work with (bound via template)
+     * @memberof Ol3Viewer
+     * @type {ImageConfig}
+     */
+    @bindable image_config = null;
+
     /**
      * the selector for the context menu
      * @memberof ViewerContextMenu
      * @type {string}
      */
-    SELECTOR = "#viewer-context-menu";
+    SELECTOR = ".viewer-context-menu";
 
     /**
      * expose PROJECTION constant to template
@@ -50,26 +58,12 @@ export default class ViewerContextMenu {
     PROJECTION = PROJECTION;
 
     /**
-     * a prefix for the full screen api methods
-     * @memberof ViewerContextMenu
-     * @type {string}
-     */
-    full_screen_api_prefix = null;
-
-    /**
      * the location of the context menu click
      * in ol-viewport 'coordinates' (offsets)
      * @memberof ViewerContextMenu
      * @type {Array.<number>}
      */
     viewport_location = null;
-
-    /**
-     * the image config observer
-     * @memberof ViewerContextMenu
-     * @type {Object}
-     */
-    image_config_observer = null;
 
     /**
      * the other property observers
@@ -95,70 +89,43 @@ export default class ViewerContextMenu {
     /**
      * @constructor
      * @param {Context} context the application context (injected)
+     * @param {Element} element the associated dom element (injected)
      * @param {BindingEngine} bindingEngine the BindingEngine (injected)
      */
-    constructor(context, bindingEngine) {
+    constructor(context, element, bindingEngine) {
         this.context = context;
+        this.element = element;
         this.bindingEngine = bindingEngine;
-        // set initial image config
-        this.image_config = this.context.getSelectedImageConfig();
     }
 
     /**
      * Overridden aurelia lifecycle method:
-     * called whenever the view is bound within aurelia
-     * in other words an 'init' hook that happens before 'attached'
+     * fired when PAL (dom abstraction) is ready for use
      *
-     * @memberof ViewerContextMenu
+     * @memberof Ol3Viewer
      */
-    bind() {
-        // Watches image config changes to establish new context menu
-        // listeneres for the selected image (once ready)
-        let registerReadyObserver = () => {
-            // hide context menu
-            this.hideContextMenu();
-            // get selected image config
-            this.image_config = this.context.getSelectedImageConfig();
-            if (this.image_config === null) return;
-
-            // clean up old observers
-            this.unregisterObservers(true);
-            // we establish the new context menu once the viewer's ready
-            this.observers.push(
-                this.bindingEngine.propertyObserver(
-                    this.image_config.image_info, 'ready').subscribe(
-                        (newValue, oldValue) => this.enableContextMenu()
-                    ));
-            // we initalialize the regions context menu options once the data is ready
-            this.observers.push(
-                this.bindingEngine.propertyObserver(
-                    this.image_config.regions_info, 'ready').subscribe(
-                        (newValue, oldValue) => this.initRegionsContextOptions()
-                    ));
-        };
-        // listen for image changes
-        this.image_config_observer =
+    attached() {
+        // we establish the new context menu once the viewer's ready
+        this.observers.push(
             this.bindingEngine.propertyObserver(
+                this.image_config.image_info, 'ready').subscribe(
+                    (newValue, oldValue) => this.enableContextMenu()
+                ));
+        // we initalialize the regions context menu options once the data is ready
+        this.observers.push(
+            this.bindingEngine.propertyObserver(
+                this.image_config.regions_info, 'ready').subscribe(
+                    (newValue, oldValue) => this.initRegionsContextOptions()
+                ));
+        // notifies us of an image selection change
+        this.observers.push(
+             this.bindingEngine.propertyObserver(
                 this.context, 'selected_config')
-                    .subscribe((newValue, oldValue) => registerReadyObserver());
-        // initial call
-        registerReadyObserver();
-    }
-
-    /**
-     * Unregisters the the observers (property and regions info ready)
-     *
-     * @param {boolean} property_only true if only property observers are cleaned up
-     * @memberof ViewerContextMenu
-     */
-    unregisterObservers(property_only = false) {
-        this.observers.map((o) => {if (o) o.dispose();});
-        this.observers = [];
-        if (property_only) return;
-        if (this.image_config_observer) {
-            this.image_config_observer.dispose();
-            this.image_config_observer = null;
-        }
+                    .subscribe((newValue, oldValue) => {
+                        if (newValue !== this.image_config) {
+                            this.hideContextMenu();
+                        }
+                }));
     }
 
     /**
@@ -169,40 +136,8 @@ export default class ViewerContextMenu {
      * @memberof ViewerContextMenu
      */
     unbind() {
-        this.unregisterObservers();
-    }
-
-    /**
-     * Overridden aurelia lifecycle method:
-     * fired when PAL (dom abstraction) is ready for use
-     *
-     * @memberof ViewerContextMenu
-     */
-    attached() {
-        // register the fullscreenchange handler
-        this.full_screen_api_prefix = Ui.getFullScreenApiPrefix();
-        if (this.full_screen_api_prefix)
-            document['on' + this.full_screen_api_prefix + 'fullscreenchange'] =
-                () => this.onFullScreenChange();
-    }
-
-    /**
-     * Depending ob the fullscreen change the context menu is included
-     * or excluded from the ol3-viewer viewport
-     *
-     * @memberof ViewerContextMenu
-     */
-    onFullScreenChange() {
-        this.hideContextMenu();
-        let isInFullScreen =
-            document[this.full_screen_api_prefix + 'isFullScreen'] ||
-            document[this.full_screen_api_prefix + 'FullScreen'] ||
-            document[this.full_screen_api_prefix + 'FullscreenElement'];
-
-        let contextMenu = this.getElement();
-        if (isInFullScreen)
-            $('#' + this.image_config.id).append(contextMenu)
-        else contextMenu.insertBefore(".center");
+        this.observers.map((o) => {if (o) o.dispose();});
+        this.observers = [];
     }
 
     /**
@@ -211,7 +146,7 @@ export default class ViewerContextMenu {
      * @memberof ViewerContextMenu
      */
     getElement() {
-        return $(this.SELECTOR);
+        return $('#' + this.image_config.id + " " + this.SELECTOR);
     }
 
     /**
@@ -229,41 +164,39 @@ export default class ViewerContextMenu {
      * @memberof ViewerContextMenu
      */
     enableContextMenu() {
-        this.image_config = this.context.getSelectedImageConfig();
         let viewerTarget =
             $('#' + VIEWER_ELEMENT_PREFIX + this.image_config.id);
         if (viewerTarget.length === 0) return;
 
-       // hide context menu on regular clicks
-      viewerTarget.click((event) => this.hideContextMenu());
-       // register context menu listener
-      viewerTarget.contextmenu(
-           (event) => {
-               // prevent browser default context menu
-               // and click from bubbling up
-               event.stopPropagation();
-               event.preventDefault();
+        // hide context menu on regular clicks
+        viewerTarget.click((event) => this.hideContextMenu());
+        // register context menu listener
+        viewerTarget.contextmenu((event) => {
+            // prevent browser default context menu
+            // and click from bubbling up
+            event.stopPropagation();
+            event.preventDefault();
 
-               // we don't allow right clicking on ol3-controls
-               // i.e. the parent has to have class ol-viewport
-               if (!$(event.target).parent().hasClass('ol-viewport')) return false;
-               this.viewport_location = [event.offsetX, event.offsetY];
+            // we don't allow right clicking on ol3-controls
+            // i.e. the parent has to have class ol-viewport
+            if (!$(event.target).parent().hasClass('ol-viewport')) return false;
+            this.viewport_location = [event.offsetX, event.offsetY];
 
-               // show context menu
-               this.getElement().offset(
-                   {left: event.clientX, top: event.clientY});
-               this.getElement().show();
+            // show context menu
+            this.getElement().show();
+            this.getElement().offset(
+               {left: event.clientX, top: event.clientY});
 
-               // prevent browser default context menu
-               return false;
-           });
-           // we don't allow browser context menu on the context menu itself...
-           this.getElement().off();
-           this.getElement().contextmenu((event) => {
-               event.stopPropagation();
-               event.preventDefault();
-               return false;
-           });
+            // prevent browser default context menu
+            return false;
+        });
+        // we don't allow browser context menu on the context menu itself...
+        this.getElement().off();
+        this.getElement().contextmenu((event) => {
+            event.stopPropagation();
+            event.preventDefault();
+            return false;
+        });
     }
 
     /**
@@ -364,10 +297,10 @@ export default class ViewerContextMenu {
                             "/?show=image-" + resp.id;
                         let linkIviewer = this.context.server +
                             this.context.getPrefixedURI(IVIEWER) +
-                            "/" + resp.id;
+                            "/?images=" + resp.id;
                         if (this.context.initial_type !== INITIAL_TYPES.WELL &&
                             typeof imgInf.parent_id === 'number')
-                                linkIviewer += "/?dataset=" + imgInf.parent_id;
+                                linkIviewer += "&dataset=" + imgInf.parent_id;
                     msg =
                         "<a href='" + linkWebclient + "' target='_blank'>" +
                         "Navigate to Image in Webclient</a><br>" +
@@ -394,7 +327,7 @@ export default class ViewerContextMenu {
      * @memberof ViewerContextMenu
      */
     captureViewport() {
-        this.context.eventbus.publish(
+        this.context.publish(
             IMAGE_VIEWPORT_CAPTURE, {"config_id": this.image_config.id});
         // hide context menu
         this.hideContextMenu();
@@ -411,22 +344,76 @@ export default class ViewerContextMenu {
         let regInf = this.image_config.regions_info;
         if (regInf.selected_shapes.length === 0) return;
 
+        // we cannot query unssaved shapes
+        let ids_for_stats =
+            regInf.selected_shapes.filter((s) => s.indexOf("-") == -1);
+        // if we have no saved shapes or no active channels ...
+        // forget about it
+        if (ids_for_stats.length === 0 ||
+            regInf.image_info.getActiveChannels().length === 0) {
+            this.writeCsv(regInf.selected_shapes);
+        } else {
+            regInf.requestStats(
+                ids_for_stats, () => this.writeCsv(regInf.selected_shapes));
+        }
+
+        this.hideContextMenu();
+        // prevent link click behavior
+        return false;
+    }
+
+    /**
+     * Generates a csv file for shapes (incl. stats) whose ids are given
+     *
+     * @param {Array.<string>} ids the shape ids ('roi_id:shape_id')
+     * @memberof ViewerContextMenu
+     */
+    writeCsv(ids) {
+        if (!Misc.isArray(ids) || ids.length === 0) return;
+
+        let regInf = this.image_config.regions_info;
+        let active = regInf.image_info.getActiveChannels();
         let units = regInf.image_info.image_pixels_size.symbol_x || 'px';
         let img_id = regInf.image_info.image_id;
         let img_name = regInf.image_info.short_image_name;
+
         let csv =
-            "image_id,image_name,roi_id,shape_id,type,z,t,\"area (" + units +
-            "\u00b2)\",\"length (" + units + ")\"" + CSV_LINE_BREAK;
-        for (let i in regInf.selected_shapes) {
-            let id = regInf.selected_shapes[i];
+            "image_id,image_name,roi_id,shape_id,type,z,t,channel," +
+            "\"area (" + units + "\u00b2)\",\"length (" + units + ")\"," +
+            "points,min,max,sum,mean,std_dev" + CSV_LINE_BREAK;
+
+        for (let i in ids) {
+            let id = ids[i];
             let shape = regInf.getShape(id);
             if (shape === null) continue;
             let roi_id = id.substring(0, id.indexOf(':'));
-            csv += img_id + ",\"" + img_name + "\"," +
-                    roi_id + "," + shape['@id'] + "," + shape.type + "," +
-                    (shape.TheZ+1) + "," + (shape.TheT+1) + "," +
-                    (shape.Area < 0 ? '' : shape.Area) + "," +
-                    (shape.Length < 0 ? '' : shape.Length) + CSV_LINE_BREAK;
+            let is_new = id.indexOf('-') !== -1;
+
+            let channel = '', points = '', min = '', max = '';
+            let sum = '', mean = '', stddev = '';
+            let csvCommonInfo =
+                img_id + ",\"" + img_name + "\"," +
+                (is_new ? "-" : roi_id) + "," +
+                (is_new ? "-" : shape['@id']) + "," + shape.type + "," +
+                (shape.TheZ+1) + "," + (shape.TheT+1) + ",";
+            let csvMeasure =
+                "," + (shape.Area < 0 ? '' : shape.Area) + "," +
+                (shape.Length < 0 ? '' : shape.Length) + ",";
+
+            if (typeof shape.stats === 'object' &&
+                shape.stats !== null &&
+                active.length !== 0) {
+                    for (let s in shape.stats) {
+                        let stat = shape.stats[s];
+                        if (active.indexOf(stat.index) !== -1) {
+                            csv += csvCommonInfo + stat.index + csvMeasure +
+                                    stat.points + "," + stat.min + "," +
+                                    stat.max + "," + stat.sum + "," +
+                                    stat.mean + "," + stat.std_dev +
+                                    CSV_LINE_BREAK;
+                        }
+                    }
+            } else csv += csvCommonInfo + csvMeasure + ",,,,," + CSV_LINE_BREAK;
         }
 
         let data = null;
@@ -440,29 +427,12 @@ export default class ViewerContextMenu {
             encErr = false;
             data = new Blob([ansiEncoder.encode(csv)], {type: type});
         } catch(not_supported) {}
+
         if (data instanceof Blob)
             FileSaver.saveAs(
                 data,
                 regInf.image_info.short_image_name + "_roi_measurements.csv");
         else console.error(
                 encErr ? "Error encoding csv" : "Blob not supported");
-
-        this.hideContextMenu();
-        // prevent link click behavior
-        return false;
     }
-
-    /**
-     * Overridden aurelia lifecycle method:
-     * called whenever the view is unbound within aurelia
-     * in other words a 'destruction' hook that happens after 'detached'
-     *
-     * @memberof ViewerContextMenu
-     */
-    unbind() {
-        if (this.full_screen_api_prefix !== null &&
-            document['on' + fullScreenApiPrefix + 'fullscreenchange'])
-                document['on' + fullScreenApiPrefix + 'fullscreenchange'] = null;
-    }
-
 }

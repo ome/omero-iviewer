@@ -399,7 +399,6 @@ ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
                         }
                     }.bind(this),
                     "error" : function(err) {
-                        el.innerHTML = x.toFixed(0) + "," + y.toFixed(0);
                         this.updateTooltip();
                         console.error(err);
                     }.bind(this)

@@ -23,8 +23,7 @@ import views
 urlpatterns = patterns(
 
     'django.views.generic.simple',
-
-    # index 'home page' of the iviewer app
+    # general entry point for iviewer app
     url(r'^/?$', views.index, name='omero_iviewer_index'),
     url(r'^persist_rois/?$', views.persist_rois,
         name='omero_iviewer_persist_rois'),
@@ -35,4 +34,6 @@ urlpatterns = patterns(
     url(r'^well_images/?$', views.well_images,
         name='omero_iviewer_well_images'),
     url(r'^get_intensity/?$', views.get_intensity,
-        name='omero_iviewer_get_intensity'))
+        name='omero_iviewer_get_intensity'),
+    url(r'^shape_stats/?$', views.shape_stats,
+        name='omero_iviewer_shape_stats'))

@@ -303,7 +303,11 @@ export default class ThumbnailSlider extends EventSubscriber {
                 if (typeof response !== 'object' || response === null ||
                     !Misc.isArray(response.paths) ||
                     response.paths.length === 0) {
-                        this.hideMe();
+                        if (typeof this.image_config.image_info.parent_id === 'number' &&
+                            !isNaN(this.image_config.image_info.parent_id) &&
+                            this.image_config.image_info.parent_id > 0) {
+                                this.requestMoreThumbnails(true, true, true);
+                        } else this.hideMe();
                         return;
                 }
 
@@ -542,7 +546,7 @@ export default class ThumbnailSlider extends EventSubscriber {
         // pop up dialog to ask whether user wants to store rois changes
         // if we have a regions history, we have modifications
         // and are not cross domain
-        if (this.image_config &&
+        if (!this.context.useMDI && this.image_config &&
             this.image_config.regions_info &&
             this.image_config.regions_info.hasBeenModified() &&
             !Misc.useJsonp(this.context.server) &&

@@ -237,13 +237,13 @@ ome.ol3.utils.Misc.getCookie = function(name) {
  * Takes a string with channel information in the form:
  * -1|111:343$808080,2|0:255$FF0000 and parses it into an object that contains
  * the respective channel information/properties
- * Likewise it will take map information in json format and add the reverse
- * intensity to the channels
+ * Likewise it will take map information in json format
+ * and add the inverted flag to the channels
  *
  * @static
  * @function
  * @param {string} channel_info a string containing encoded channel info
- * @param {string} maps_info a string in json format containing reverse intensity
+ * @param {string} maps_info a string in json format containing inverted flag
  * @return {Array|null} an array of channel objects or null
  */
 ome.ol3.utils.Misc.parseChannelParameters = function(channel_info, maps_info) {
@@ -293,7 +293,7 @@ ome.ol3.utils.Misc.parseChannelParameters = function(channel_info, maps_info) {
         ret.push(tmp);
     }
 
-    // integrate maps info for reverse intensity
+    // integrate maps info for inverted flag
     if (typeof maps_info !== 'string' || maps_info.length === 0)
         return ret;
     try {
@@ -304,10 +304,10 @@ ome.ol3.utils.Misc.parseChannelParameters = function(channel_info, maps_info) {
         for (var i=0;i<len && i<maps.length;i++) {
             var m = maps[i];
             if (typeof m !== 'object' || m === null) continue;
-            ret[i]['reverse'] =
-                typeof m['reverse'] === 'object' && m['reverse'] &&
-                typeof m['reverse']['enabled'] === 'boolean' &&
-                m['reverse']['enabled'];
+            ret[i]['inverted'] =
+                typeof m['inverted'] === 'object' && m['inverted'] &&
+                typeof m['inverted']['enabled'] === 'boolean' &&
+                m['inverted']['enabled'];
         }
     } catch(malformedJson) {}
 
@@ -361,14 +361,18 @@ ome.ol3.utils.Misc.parseProjectionParameter = function(projection_info) {
  */
 ome.ol3.utils.Misc.sendEventNotification = function(viewer, type, content, delay) {
     if (!(viewer instanceof ome.ol3.Viewer) ||
+        !(viewer.viewer_ instanceof ol.PluggableMap) ||
+        viewer.prevent_event_notification_ ||
         typeof type !== 'string' ||
         type.length === 0) return;
 
-    var config_id = viewer.getTargetId();
+    var config_id =
+        ome.ol3.utils.Misc.getTargetId(viewer.viewer_.getTargetElement());
     var eventbus = viewer.eventbus_;
     if (config_id && eventbus) { // publish
         if (typeof content !== 'object' || content === null) content = {};
         content['config_id'] = config_id;
+        content['sync_group'] = viewer.sync_group_;
         var triggerEvent = function() {
             eventbus.publish(type, content);
         };
@@ -385,7 +389,9 @@ ome.ol3.utils.Misc.sendEventNotification = function(viewer, type, content, delay
  *
  * @static
  * @param {Element|string} target the viewer's target element
- * @return {number|string} the id as a number/string (latter: for ol3 alone)
+ * @return {number|string|null} the target element's id as a number/string
+ *                              (latter: for ol3 alone) or null
+ *                              (no element id or parse error)
  */
 ome.ol3.utils.Misc.getTargetId = function(target) {
     try {
@@ -394,16 +400,16 @@ ome.ol3.utils.Misc.getTargetId = function(target) {
                 typeof target === 'object' &&
                     target !== null && typeof target.id === 'string' ?
                         target.id : null;
+        if (elemId === null) return null;
 
-        var _pos = -1;
-        if (elemId === null ||
-            ((_pos = elemId.lastIndexOf("_")) === -1)) return null;
+        var pos = elemId.lastIndexOf("_");
+        if (pos === -1) return elemId;
 
-        var id = parseInt(elemId.substring(_pos+1));
-        if (isNaN(id)) return elemId;
+        var id = parseInt(elemId.substring(pos+1));
+        if (isNaN(id)) return null;
 
         return id;
     } catch(no_care) {
-        return elemId;
+        return null;
     }
 }
