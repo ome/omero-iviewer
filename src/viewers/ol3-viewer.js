@@ -23,21 +23,24 @@ import {Converters} from '../utils/converters';
 import Ui from '../utils/ui';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {ol3} from '../../libs/ol3-viewer.js';
+import Ol3ViewerLinkedEvents from './ol3-viewer-linked-events';
 import * as FileSaver from '../../node_modules/file-saver';
+import {draggable} from 'jquery-ui/ui/widgets/draggable';
+import {resizable} from 'jquery-ui/ui/widgets/resizable';
 import {
-    IVIEWER, PLUGIN_PREFIX, PROJECTION, REGIONS_DRAWING_MODE, RENDER_STATUS,
-    VIEWER_ELEMENT_PREFIX, WEBCLIENT
+    IMAGE_CONFIG_RELOAD, IVIEWER, PLUGIN_PREFIX, PROJECTION,
+    REGIONS_DRAWING_MODE, RENDER_STATUS, VIEWER_ELEMENT_PREFIX, WEBCLIENT
 } from '../utils/constants';
 import {
     IMAGE_CANVAS_DATA, IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY,
-    IMAGE_SETTINGS_CHANGE, IMAGE_VIEWER_RESIZE, IMAGE_VIEWER_SPLIT_VIEW,
-    IMAGE_VIEWPORT_CAPTURE,
+    IMAGE_INTENSITY_QUERYING, IMAGE_SETTINGS_CHANGE,
+    IMAGE_VIEWER_CONTROLS_VISIBILITY, IMAGE_VIEWER_INTERACTION,
+    IMAGE_VIEWER_RESIZE, IMAGE_VIEWPORT_CAPTURE,
     REGIONS_CHANGE_MODES, REGIONS_COPY_SHAPES, REGIONS_DRAW_SHAPE,
     REGIONS_GENERATE_SHAPES, REGIONS_HISTORY_ACTION, REGIONS_HISTORY_ENTRY,
     REGIONS_MODIFY_SHAPES, REGIONS_PROPERTY_CHANGED, REGIONS_SET_PROPERTY,
     REGIONS_SHOW_COMMENTS, REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES,
-    VIEWER_IMAGE_SETTINGS,
-    EventSubscriber
+    VIEWER_IMAGE_SETTINGS, VIEWER_SET_SYNC_GROUP, EventSubscriber
 } from '../events/events';
 
 
@@ -45,10 +48,16 @@ import {
  * The openlayers 3 viewer wrapped for better aurelia integration
  * @extends {EventSubscriber}
  */
-
 @customElement('ol3-viewer')
 @inject(Context, Element, BindingEngine)
 export default class Ol3Viewer extends EventSubscriber {
+    /**
+     * handles mdi group syncing
+     * @memberof Ol3Viewer
+     * @type {Ol3ViewerLinkedEvents}
+     */
+     linked_events = new Ol3ViewerLinkedEvents(this);
+
     /**
      * the image config reference to work with (bound via template)
      * @memberof Ol3Viewer
@@ -62,6 +71,13 @@ export default class Ol3Viewer extends EventSubscriber {
      * @type {Object}
      */
     image_info_ready_observer = null;
+
+    /**
+     * watches for selection changes
+     * @memberof Ol3Viewer
+     * @type {Object}
+     */
+    image_config_selection_observer = null;
 
     /**
      * the internal instance of the ol3.Viewer
@@ -83,6 +99,10 @@ export default class Ol3Viewer extends EventSubscriber {
      * @type {Array.<string,function>}
      */
     sub_list = [
+        [IMAGE_VIEWER_INTERACTION,
+            (params={}) => this.syncView(params)],
+        [IMAGE_VIEWER_CONTROLS_VISIBILITY,
+            (params={}) => this.toggleControlsVisibility(params)],
         [IMAGE_VIEWER_RESIZE,
             (params={}) => this.resizeViewer(params)],
         [IMAGE_DIMENSION_CHANGE,
@@ -97,8 +117,6 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.setRegionsProperty(params)],
         [VIEWER_IMAGE_SETTINGS,
             (params={}) => this.getImageSettings(params)],
-        [IMAGE_VIEWER_SPLIT_VIEW,
-            (params={}) => this.toggleSplitChannels(params)],
         [REGIONS_CHANGE_MODES,
             (params={}) => this.changeRegionsModes(params)],
         [REGIONS_DRAW_SHAPE,
@@ -122,7 +140,9 @@ export default class Ol3Viewer extends EventSubscriber {
         [IMAGE_VIEWPORT_CAPTURE,
             (params={}) => this.captureViewport(params)],
         [IMAGE_CANVAS_DATA,
-            (params={}) => this.saveCanvasData(params)]];
+            (params={}) => this.saveCanvasData(params)],
+        [VIEWER_SET_SYNC_GROUP,
+            (params={}) => this.setSyncGroup(params)]];
 
     /**
      * @constructor
@@ -138,13 +158,87 @@ export default class Ol3Viewer extends EventSubscriber {
     }
 
     /**
+     * Returns the viewer's container element
+     *
+     * @return {Object} the viewer's html container(jquery)
+     * @memberof Ol3Viewer
+     */
+    getContainer() {
+        return $(this.element).parent();
+    }
+
+    /**
      * Overridden aurelia lifecycle method:
      * fired when PAL (dom abstraction) is ready for use
      *
      * @memberof Ol3Viewer
      */
     attached() {
+        let container = this.getContainer();
+        // additions that are necessary for mdi
+        // we need the viewers to be draggable, resizable
+        // also place the viewer within the frame boundaries
+        let frame = $('.frame');
+        let minX = frame.position().left+10;
+        let maxX =
+            frame.position().left+frame.width()-
+                parseInt(this.image_config.size.width);
+        let minY = frame.position().top+10;
+        let maxY =
+            frame.position().top+frame.height()-
+                parseInt(this.image_config.size.height);
+        this.image_config.position.top =
+            Misc.getRandomInteger(minY,maxY) + 'px';
+        this.image_config.position.left =
+            Misc.getRandomInteger(minX,maxX) + 'px';
+        container.draggable({
+            handle: '.viewer-handle',
+            stop: (event, ui) => {
+                this.image_config.position.top = ui.position.top + 'px';
+                this.image_config.position.left = ui.position.left + 'px';
+            }
+        });
+        container.resizable({
+            containment: "parent", handles: 'se',
+            stop: (e, ui) => {
+                this.image_config.size.width = ui.size.width + 'px';
+                this.image_config.size.height = ui.size.height + 'px';
+                this.resizeViewer();
+            }
+        });
+        this.createObservers();
+    }
+
+    /**
+     * Creates Observers (used internally)
+     *
+     * @private
+     * @memberof Ol3Viewer
+     */
+    createObservers() {
         let imageDataReady = () => {
+            // refresh image settings only
+            if (this.image_config.image_info.refresh) {
+                this.viewer.changeImageModel(
+                    this.image_config.image_info.model);
+                let channels = this.image_config.image_info.channels;
+                let updates = [];
+                for (let i=0;i<channels.length;i++) {
+                    let chan = channels[i];
+                    let chanUpdate = {
+                        index: i,
+                        active: chan.active,
+                        start: chan.window.start,
+                        end: chan.window.end,
+                        color: chan.color,
+                        inverted: chan.inverted
+                    };
+                    updates.push(chanUpdate);
+                };
+                this.viewer.changeChannelRange(updates);
+                return;
+            }
+
             // create viewer instance, register event subscriptions
             this.initViewer();
             this.subscribe();
@@ -152,15 +246,52 @@ export default class Ol3Viewer extends EventSubscriber {
             this.regions_info_ready_observer =
                 this.bindingEngine.propertyObserver(
                     this.image_config.regions_info, 'ready').subscribe(
-                        (newValue, oldValue) => this.initRegions());
+                        (newValue, oldValue) => {
+                            if (this.viewer === null) return;
+                            this.viewer.removeRegions();
+                            if (newValue) this.initRegions();
+                    });
+            // mdi needs to switch image config when using controls
+            this.getContainer().find('.ol-control').on(
+                'mousedown',
+                () => this.context.selectConfig(this.image_config.id))
         };
-        // if the data is ready we initalize the viewer now,
-        // otherwise we listen via the observer
-        if (this.image_config.image_info.ready) imageDataReady();
-        else this.image_info_ready_observer =
-                this.bindingEngine.propertyObserver(
-                    this.image_config.image_info, 'ready').subscribe(
-                        (newValue, oldValue) => imageDataReady());
+        // listen via the observer for image ready changes
+        this.image_info_ready_observer =
+            this.bindingEngine.propertyObserver(
+                this.image_config.image_info, 'ready').subscribe(
+                    (newValue, oldValue) => {
+                        if (!oldValue && newValue) imageDataReady();
+                    });
+        // listens to image config changes for mdi
+        this.image_config_selection_observer =
+            this.bindingEngine.propertyObserver(
+                this.context, 'selected_config').subscribe(
+                    (newValue, oldValue) => {
+                        if (!this.context.useMDI ||
+                            oldValue !== this.image_config.id ||
+                            !this.image_config.regions_info.hasBeenModified()) {
+                                return;
+                            }
+
+                        let sameImageConfs =
+                            this.context.getImageConfigsForGivenImage(
+                                this.image_config.image_info.image_id,
+                                this.image_config.id);
+                        if (sameImageConfs.length === 0) return;
+
+                        // we have another image config for the same image
+                        // let's prompt the user with a warning about rois
+                        Ui.showConfirmationDialog(
+                            'Save ROIS?',
+                            'You have changed ROI(S) on an image ' +
+                            'that\'s been opened multiple times.<br>' +
+                            'Do you want to save now to avoid ' +
+                            'inconsistence (and a potential loss ' +
+                            'of some of your changes)?' ,
+                            () => this.storeShapes(
+                                {"config_id": this.image_config.id}));
+                });
     }
 
     /**
@@ -184,6 +315,12 @@ export default class Ol3Viewer extends EventSubscriber {
      * @memberof Ol3Viewer
      */
     detached() {
+        if (this.context.useMDI) {
+            let container = this.getContainer();
+            container.find('.ol-control').off('mousedown');
+            try {container.draggable("destroy")} catch(ignored) {}
+            try {container.resizable("destroy")} catch(ignored) {}
+        }
         if (this.viewer) {
             this.viewer.destroyViewer();
             this.viewer = null;
@@ -198,6 +335,10 @@ export default class Ol3Viewer extends EventSubscriber {
      * @memberof Ol3Viewer
      */
     unbind() {
+        if (this.image_config_selection_observer) {
+            this.image_config_selection_observer.dispose();
+            this.image_config_selection_observer = null;
+        }
         if (this.image_info_ready_observer) {
             this.image_info_ready_observer.dispose();
             this.image_info_ready_observer = null;
@@ -233,10 +374,17 @@ export default class Ol3Viewer extends EventSubscriber {
                  });
         delete this.image_config.image_info.tmp_data;
 
+        // hide controls for mdi when more than 1 image configs
+        if (this.context.useMDI && this.context.image_configs.size > 1)
+            this.toggleControlsVisibility({
+                config_id: this.image_config.id, flag: false
+            });
         // only the first request should be affected
         this.context.resetInitParams();
         // use existing interpolation setting
         this.viewer.enableSmoothing(this.context.interpolate);
+        // initialize regions if rois tab active
+        if (this.context.isRoisTabActive()) this.initRegions();
         this.resizeViewer({window_resize: true, delay: 100});
     }
 
@@ -249,12 +397,14 @@ export default class Ol3Viewer extends EventSubscriber {
     changeDimension(params = {}) {
         // we ignore notifications that don't concern us
         // and need a dim identifier as well an array value
-        if (params.config_id !== this.image_config.id ||
-            this.viewer === null ||
+        if (this.viewer === null ||
             typeof params.dim !== 'string' ||
-            !Misc.isArray(params.value)) return;
+            !Misc.isArray(params.value) ||
+            params.value.length === 0) return;
 
-        this.viewer.setDimensionIndex(params.dim, params.value);
+        if (params.config_id === this.image_config.id)
+            this.viewer.setDimensionIndex(params.dim, params.value);
+        else this.linked_events.syncAction(params, "setDimensionIndex");
     }
 
     /**
@@ -271,15 +421,17 @@ export default class Ol3Viewer extends EventSubscriber {
         if (this.viewer === null) return;
 
         let isSameConfig = params.config_id === this.image_config.id;
-        if (isSameConfig && typeof params.model === 'string')
-            this.viewer.changeImageModel(params.model);
-        else if (isSameConfig && typeof params.projection === 'string')
+        if (typeof params.model === 'string') {
+            if (isSameConfig) this.viewer.changeImageModel(params.model);
+            else this.linked_events.syncAction(params, "changeImageSettings");
+        } else if (isSameConfig && typeof params.projection === 'string')
             this.viewer.changeImageProjection(
                 params.projection,
                 this.image_config.image_info.projection_opts);
-        else if (isSameConfig && Misc.isArray(params.ranges))
-            this.viewer.changeChannelRange(params.ranges);
-        else if (typeof params.interpolate === 'boolean')
+        else if (Misc.isArray(params.ranges) && params.ranges.length > 0) {
+            if (isSameConfig) this.viewer.changeChannelRange(params.ranges);
+            else this.linked_events.syncAction(params, "changeImageSettings");
+        } else if (typeof params.interpolate === 'boolean')
             this.viewer.enableSmoothing(params.interpolate);
     }
 
@@ -318,11 +470,16 @@ export default class Ol3Viewer extends EventSubscriber {
          // or at least not undefined in which case one property/value respectively
          // belongs to multiple shapes
          if (typeof params !== 'object' ||
-            !Misc.isArray(params.shapes) || params.shapes.length === 0 ||
-            (!Misc.isArray(params.properties) && typeof params.properties !== 'string') ||
-            (Misc.isArray(params.properties) && params.properties.length !== params.shapes.length) ||
-            (!Misc.isArray(params.values) && typeof params.values === 'undefined') ||
-            (Misc.isArray(params.values) && params.values.length !== params.shapes.length)) return;
+             params.config_id !== this.image_config.id ||
+             !Misc.isArray(params.shapes) || params.shapes.length === 0 ||
+             (!Misc.isArray(params.properties) &&
+                typeof params.properties !== 'string') ||
+             (Misc.isArray(params.properties) &&
+                params.properties.length !== params.shapes.length) ||
+             (!Misc.isArray(params.values) &&
+                typeof params.values === 'undefined') ||
+             (Misc.isArray(params.values) &&
+                params.values.length !== params.shapes.length)) return;
 
             // loop over all shapes, trying to set the property
             for (let i in params.shapes) {
@@ -370,7 +527,8 @@ export default class Ol3Viewer extends EventSubscriber {
          // at a minimum we need a viewer and params with a property
          if (this.viewer === null ||
              typeof params !== 'object' ||
-             typeof params.property !== 'string') return
+             typeof params.property !== 'string'||
+             params.config_id !== this.image_config.id) return
 
         // delegate to individual handler
         let prop = params.property.toLowerCase();
@@ -544,12 +702,18 @@ export default class Ol3Viewer extends EventSubscriber {
      * @memberof Ol3Viewer
      */
     initRegions() {
-        if (this.viewer === null) return;
+        if (this.viewer === null ||
+            this.image_config === null ||
+            this.image_config.regions_info === null ||
+            !this.image_config.regions_info.ready ||
+            !Misc.isArray(this.image_config.regions_info.tmp_data)) return;
 
         this.viewer.addRegions(this.image_config.regions_info.tmp_data);
         delete this.image_config.regions_info.tmp_data;
         this.changeRegionsModes(
             { modes: this.image_config.regions_info.regions_modes});
+        this.viewer.showShapeComments(
+            this.image_config.regions_info.show_comments);
 
         let updateMeasurements = () => {
             if (this.viewer === null) return;
@@ -672,7 +836,7 @@ export default class Ol3Viewer extends EventSubscriber {
 
             if (requestMade) Ui.showModalMessage("Saving Regions. Please wait...");
             else if (params.omit_client_update)
-                this.context.eventbus.publish(
+                this.context.publish(
                     REGIONS_STORED_SHAPES, { omit_client_update: true});
         };
 
@@ -683,7 +847,7 @@ export default class Ol3Viewer extends EventSubscriber {
                 numberOfdeletedShapes + ' ROIs. Do you want to continue?',
                 storeRois, () => {
                     if (params.omit_client_update)
-                        this.context.eventbus.publish(
+                        this.context.publish(
                             REGIONS_STORED_SHAPES, { omit_client_update: false});
                 });
         } else storeRois();
@@ -727,8 +891,18 @@ export default class Ol3Viewer extends EventSubscriber {
     afterShapeStorage(params = {}) {
         Ui.hideModalMessage();
         // the event doesn't concern us
-        if (params.config_id !== this.image_config.id ||
-                typeof params.shapes !== 'object' ||
+        if (params.config_id !== this.image_config.id) return;
+
+        // reload other configs with the same image id (in mdi)
+        if (this.context.useMDI)
+            this.context.reloadImageConfigForGivenImage(
+                this.image_config.image_info.image_id,
+                IMAGE_CONFIG_RELOAD.REGIONS,
+                this.image_config.id,
+                this.viewer.getRois());
+
+        // more checks
+        if (typeof params.shapes !== 'object' ||
                 params.shapes === null ||
                 params.omit_client_update) return;
 
@@ -1011,7 +1185,7 @@ export default class Ol3Viewer extends EventSubscriber {
      * @param {Object} params the event notification parameters
      * @return
      */
-    captureViewport(params) {
+    captureViewport(params={}) {
         if (this.viewer === null ||
             params.config_id !== this.image_config.id) return;
         this.viewer.sendCanvasContent();
@@ -1024,15 +1198,77 @@ export default class Ol3Viewer extends EventSubscriber {
      * @param {Object} params the event notification parameters
      * @return
      */
-    saveCanvasData(params) {
+    saveCanvasData(params={}) {
         if (this.image_config === null || // sanity check
-            this.image_config.id !== params.config_id || // not for us
-            !params.supported) { // blob not supported
+            this.image_config.id !== params.config_id) return; // not for us
+        if (!params.supported) { // blob not supported
                 console.error("Capturing Viewport as Blob not supported");
                 return;
         }
 
         FileSaver.saveAs(
             params.data, this.image_config.image_info.image_name + ".png");
+    }
+
+    /**
+     * Propagates image interaction such as zoom/drag
+     * to image configs in the same sync group
+     *
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     */
+     syncView(params={}) {
+         // not intended for same image configs
+         if (this.viewer === null ||
+             params.config_id === this.image_config.id) return;
+         this.linked_events.syncAction(params, "syncView");
+     }
+
+     /**
+      * Sets the sync group for the viewer
+      *
+      * @memberof Ol3Viewer
+      * @param {Object} params the event notification parameters
+      */
+      setSyncGroup(params={}) {
+          if (this.viewer === null ||
+              params.config_id !== this.image_config.id) return;
+          this.viewer.setSyncGroup(params.sync_group);
+      }
+
+    /**
+     * Turns on/off intensity querying
+     *
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     */
+    toggleIntensityQuerying(params = {}) {
+        if (this.viewer === null || this.image_config === null || // sanity checks
+            this.image_config.id !== params.config_id) {// not for us
+                return;
+        }
+        this.image_config.image_info.query_intensity =
+            this.viewer.toggleIntensityQuerying(params.flag);
+    }
+
+    /**
+     * Shows/hides viewer controls
+     *
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     */
+    toggleControlsVisibility(params = {}) {
+        // sanity checks
+        if (this.viewer === null || this.image_config === null ||
+            this.image_config.id !== params.config_id ||
+            typeof params.flag !== 'boolean') return;
+
+        if (params.flag) {
+            $("#" + this.image_config.id + " .ol-control").show();
+            this.image_config.show_controls = true;
+        } else {
+            $("#" + this.image_config.id + " .ol-control").hide();
+            this.image_config.show_controls = false;
+        }
     }
 }

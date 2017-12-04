@@ -366,6 +366,18 @@ export default class Misc {
     }
 
     /**
+     * Returns a random integer within a given range
+     *
+     * @static
+     * @param {number} min the start of the interval
+     * @param {number} max the end of the interval
+     * @return {number}  a random integer
+     */
+    static getRandomInteger(min=0, max=100) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    /**
      * Returns the rounded float
      *
      * @param {string} value the numeric value to round

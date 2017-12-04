@@ -19,8 +19,16 @@
 <template>
     <nav class="navbar navbar-default navbar-fixed-top fixed-header">
         <div class="fixed-header-text">
+           <span class="mdi-icon glyphicon glyphicon-duplicate
+                        ${context.useMDI ? '' : 'disabled-color'}"
+                 title="${context.useMDI ?
+                    'Click to use single image viewing mode' :
+                     'Click to use multiple image viewing mode'}"
+                 click.delegate="toggleMDI()">
+           </span>
            <span>${image_info.ready && !image_info.error ?
-                    image_info.short_image_name : ''}</span>
+                    image_info.short_image_name : ''}
+           </span>
            <span class="app-version">${context.getVersion()}</span>
        </div>
     </nav>

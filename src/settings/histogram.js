@@ -300,6 +300,7 @@ export default class Histogram extends EventSubscriber {
 
     /**
      * Toggles Visibility
+     * @return {boolean} new visibility flag
      * @memberof Histogram
      */
     toggleHistogramVisibilty(visible = false) {
@@ -317,6 +318,7 @@ export default class Histogram extends EventSubscriber {
             $(this.selector).hide();
             this.visible = false;
         }
+        return this.visible;
     }
 
     /**

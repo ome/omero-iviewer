@@ -86,7 +86,7 @@
             <input type="checkbox"
                 disabled.bind="!(image_config.image_info.ready &&
                                 !image_config.image_info.tiled)"
-                checked.one-way="histogram && histogram.visible"
+                checked.bind="image_config.show_histogram"
                 change.delegate="toggleHistogram($event)" />
             Histogram
             </label>

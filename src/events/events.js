@@ -18,10 +18,14 @@
 
 /** whenever the image canvas data was retrieved */
 export const IMAGE_CANVAS_DATA = "IMAGE_CANVAS_DATA";
+/** whenever pixel intensity querying should be turned on/off */
+export const IMAGE_INTENSITY_QUERYING = "IMAGE_INTENSITY_QUERYING";
+/** whenever the image viewer's controls need to be shown/hidden */
+export const IMAGE_VIEWER_CONTROLS_VISIBILITY = "IMAGE_VIEWER_CONTROLS_VISIBILITY";
 /** whenever the image viewer needs to be resized */
 export const IMAGE_VIEWER_RESIZE = "IMAGE_VIEWER_RESIZE";
-/** whenever the image viewer split view is turned on/off */
-export const IMAGE_VIEWER_SPLIT_VIEW = "IMAGE_VIEWER_SPLIT_VIEW";
+/** whenever an image viewer interaction (zoom/drag) ocurrs */
+export const IMAGE_VIEWER_INTERACTION = "IMAGE_VIEWER_INTERACTION";
 /** whenever the image rendering settings change: channel, model, projection*/
 export const IMAGE_SETTINGS_CHANGE = "IMAGE_SETTINGS_CHANGE";
 /** whenever an image dimension (c,t,z) changes */
@@ -52,6 +56,8 @@ export const REGIONS_STORED_SHAPES = "REGIONS_STORED_SHAPES";
 export const REGIONS_MODIFY_SHAPES = "REGIONS_MODIFY_SHAPES";
 /** Retrieves the viewer image settings */
 export const VIEWER_IMAGE_SETTINGS = "VIEWER_IMAGE_SETTINGS";
+/** Sets the viewer's sync group */
+export const VIEWER_SET_SYNC_GROUP = "VIEWER_SET_SYNC_GROUP";
 /** whenever the ol3 viewer has made a history entry */
 export const REGIONS_HISTORY_ENTRY = "REGIONS_HISTORY_ENTRY";
 /** whenever we want to affect an ol3 viewer history undo/redo */

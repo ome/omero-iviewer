@@ -21,7 +21,9 @@ import Context from '../app/context';
 import Misc from '../utils/misc';
 import Histogram from './histogram';
 import Ui from '../utils/ui';
-import {CHANNEL_SETTINGS_MODE, TABS, WEBGATEWAY} from '../utils/constants';
+import {
+    CHANNEL_SETTINGS_MODE, IMAGE_CONFIG_RELOAD, TABS, WEBGATEWAY
+} from '../utils/constants';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 
 import {
@@ -143,6 +145,8 @@ export default class Settings extends EventSubscriber {
             // instantiate histogram
             if (this.histogram) this.histogram.destroyHistogram();
             this.histogram = new Histogram(this.image_config.image_info);
+            if (this.image_config.show_histogram)
+                this.histogram.toggleHistogramVisibilty(true);
         };
 
         // tear down old observers/subscription
@@ -233,7 +237,8 @@ export default class Settings extends EventSubscriber {
         event.preventDefault();
 
         if (this.histogram) {
-            this.histogram.toggleHistogramVisibilty(event.target.checked);
+            this.image_config.show_histogram =
+                this.histogram.toggleHistogramVisibilty(event.target.checked);
         }
         return false;
     }
@@ -317,10 +322,17 @@ export default class Settings extends EventSubscriber {
                 // reissue get rendering requests, then
                 // force thumbnail update
                 let action =
-                    (() => this.context.publish(
+                    (() => {
+                        this.context.publish(
                             THUMBNAILS_UPDATE,
                             { config_id : this.image_config.id,
-                              ids: [image_info.image_id]}));
+                              ids: [image_info.image_id]});
+                        if (this.context.useMDI)
+                            this.context.reloadImageConfigForGivenImage(
+                                image_info.image_id,
+                                IMAGE_CONFIG_RELOAD.IMAGE,
+                                this.image_config.id);
+                });
                 this.requestAllRenderingDefs(action);
             },
             error : (error) => {}
@@ -405,7 +417,7 @@ export default class Settings extends EventSubscriber {
         if (toAll) {
             params.data={
                 dataType: 'json',
-                toids: imgInf.dataset_id,
+                toids: imgInf.parent_id,
                 to_type: 'dataset',
                 imageId: imgInf.image_id
             };
@@ -418,9 +430,16 @@ export default class Settings extends EventSubscriber {
                     // reissue get rendering requests, then
                     // force thumbnail update
                     let action =
-                        (() => this.context.publish(
+                        (() => {
+                            this.context.publish(
                                 THUMBNAILS_UPDATE,
-                                { config_id : imgInf.config_id, ids: thumbIds}));
+                                { config_id : imgInf.config_id, ids: thumbIds});
+                            if (this.context.useMDI)
+                                this.context.reloadImageConfigsGivenParent(
+                                    imgInf.parent_id,
+                                    imgInf.parent_type,
+                                    imgInf.config_id);
+                    });
                     this.requestAllRenderingDefs(action);
                 }
         } else params.success =
@@ -571,6 +590,7 @@ export default class Settings extends EventSubscriber {
                             this.context.publish(
                                 IMAGE_SETTINGS_CHANGE,
                                 { config_id: this.image_config.id,
+                                  sync_group: this.image_config.sync_group,
                                   model: newValue}));
     }
 
@@ -587,6 +607,25 @@ export default class Settings extends EventSubscriber {
         this.context.interpolate = event.target.checked;
         this.context.publish(
             IMAGE_SETTINGS_CHANGE, {interpolate: this.context.interpolate});
+
+        return false;
+    }
+
+    /**
+     * Toggles intensity querying for image
+     *
+     * @param {Object} event the event object
+     * @memberof Settings
+     */
+    togglePixelIntensity(event) {
+        if (this.image_config === null) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        this.context.publish(
+            IMAGE_INTENSITY_QUERYING,
+            {config_id: this.image_config.id, flag: event.target.checked});
 
         return false;
     }
