@@ -286,9 +286,9 @@ export default class Ui {
          handlers.map((h) => {
              dialog.find(h).off();
              dialog.find(h).on('click', () => {
+                 dialog.modal("hide");
                  if (h === '.yes' && yes) yes();
                  if (h === '.no' && no) no();
-                dialog.modal("hide");
              });
          });
 

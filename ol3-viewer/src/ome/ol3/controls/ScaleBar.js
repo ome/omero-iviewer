@@ -48,6 +48,8 @@ ome.ol3.controls.ScaleBar = function(opt_options) {
 
     // give element a tooltip
     this.element_.title = "Click and drag to move scalebar";
+    // append ol-control
+    this.element_.className += " ol-control";
 
     // register 'drag' listener
     ol.events.listen(

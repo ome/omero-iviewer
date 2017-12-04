@@ -468,20 +468,6 @@ ome.ol3.utils.Regions.createFeaturesFromRegionsResponse =
                             actualFeature.getId());
                         continue;
                 }
-                // append owner info
-                var o =
-                    typeof shape['omero:details']['owner'] === 'object' ?
-                        shape['omero:details']['owner'] : null;
-                var owner = "";
-                if (o !== null) {
-                    if (typeof o['FirstName'] === 'string' &&
-                        o['FirstName'].length > 0) owner = o['FirstName'] + " ";
-                    if (typeof o['LastName'] === 'string' &&
-                        o['LastName'].length > 0) owner += o['LastName'];
-                    if (owner === '' && typeof o['UserName'] === 'string' &&
-                        o['UserName'].length > 0) owner = o['UserName'];
-                }
-                actualFeature['owner'] = owner;
                 actualFeature['permissions'] =
                     shape['omero:details']['permissions'];
                 // calculate area/length

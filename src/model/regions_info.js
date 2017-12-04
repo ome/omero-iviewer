@@ -123,6 +123,13 @@ export default class RegionsInfo  {
     ];
 
     /**
+     * show comments flag
+     * @memberof Regions
+     * @type {RegionsInfo}
+     */
+    show_comments = false;
+
+    /**
      * the type of shape that is to be drawn,
      * i.e. a draw interaction is active if non null.
      * @memberof RegionsInfo
@@ -166,15 +173,8 @@ export default class RegionsInfo  {
         this.image_info = image_info;
         // we want history
         this.history = new RegionsHistory(this);
-
-        // try to restore localstorage copied shapes
-        try {
-            this.copied_shapes = JSON.parse(
-                window.localStorage.getItem(IVIEWER + ".copy_shape_defs"));
-            if (!Misc.isArray(this.copied_shapes)) this.copied_shapes = [];
-            this.copied_image_dims = JSON.parse(
-                window.localStorage.getItem(IVIEWER + ".copy_image_dims"));
-        } catch(ignored) {}
+        // sync copied shapes with localStorage
+        this.syncCopiedShapesWithLocalStorage();
         // init default shape colors
         this.resetShapeDefaults();
     }
@@ -188,6 +188,22 @@ export default class RegionsInfo  {
     unbind() {
         this.resetRegionsInfo();
         this.history = null;
+    }
+
+    /**
+     * Updates the copied shapes list with what's presently in localStorage
+     *
+     * @memberof RegionsInfo
+     */
+    syncCopiedShapesWithLocalStorage() {
+        // try to restore localstorage copied shapes
+        try {
+            this.copied_shapes = JSON.parse(
+                window.localStorage.getItem(IVIEWER + ".copy_shape_defs"));
+            if (!Misc.isArray(this.copied_shapes)) this.copied_shapes = [];
+            this.copied_image_dims = JSON.parse(
+                window.localStorage.getItem(IVIEWER + ".copy_image_dims"));
+        } catch(ignored) {}
     }
 
     /**
@@ -252,6 +268,7 @@ export default class RegionsInfo  {
     requestData(forceUpdate = false) {
         if (this.is_pending || (this.ready && !forceUpdate)) return;
         // reset regions info data and history
+        this.ready = false;
         this.resetRegionsInfo();
         this.is_pending = true;
 
@@ -262,57 +279,74 @@ export default class RegionsInfo  {
                   REGIONS_REQUEST_URL + '/?image=' + this.image_info.image_id +
                   '&limit=' + this.REQUEST_LIMIT,
             success : (response) => {
-                this.is_pending = false;
-                try {
-                    let count = 0;
-                    response.data.map((roi) => {
-                        let shapes = new Map();
-                        if (Misc.isArray(roi.shapes) && roi.shapes.length > 0) {
-                            // set shape properties and store the object
-                            let roiId = roi['@id'];
-                            roi.shapes.sort(function(s1, s2) {
-                                var z1 = parseInt(s1['TheZ']);
-                                var z2 = parseInt(s2['TheZ']);
-                                var t1 = parseInt(s1['TheT']);
-                                var t2 = parseInt(s2['TheT']);
-                                if (z1 === z2) {
-                                    return (t1 < t2) ? -1 : (t1 > t2) ? 1: 0;
-                                }
-                                return (z1 < z2) ? -1: 1;
-                            });
-                            roi.shapes.map((shape) => {
-                                let newShape =
-                                Converters.amendShapeDefinition(
-                                    Object.assign({}, shape));
-                                let shapeId = newShape['@id']
-                                newShape.shape_id = "" + roiId + ":" + shapeId;
-                                // we add some flags we are going to need
-                                newShape.visible = true;
-                                newShape.selected = false;
-                                newShape.deleted = false;
-                                newShape.modified = false;
-                                shapes.set(shapeId, newShape);
-                                count++;
-                            });
-                            this.data.set(roiId, {
-                                shapes: shapes,
-                                show: false,
-                                deleted: 0
-                            });
-                        }
-                    });
-                    this.number_of_shapes = count;
-                    this.image_info.roi_count = this.data.size;
-                    this.tmp_data = response.data;
-                    this.ready = true;
-                } catch(err) {
-                    console.error("Failed to load Rois: " + err);
-                }
+                if (this.is_pending) this.setData(response.data)
             }, error : (error) => {
                 this.is_pending = false;
                 console.error("Failed to load Rois: " + error)
             }
         });
+    }
+
+    /**
+     * Uses given data to populate the regions map
+     *
+     * @memberof RegionsInfo
+     * @param {Array.<Object>} data an array of rois (incl. shapes)
+     */
+    setData(data = null) {
+        this.is_pending = false;
+        if (!Misc.isArray(data)) return;
+
+        // reset regions info data and history
+        this.resetRegionsInfo();
+
+        try {
+            let count = 0;
+            for (let r in data) {
+                let shapes = new Map();
+                let roi = data[r];
+                // add shapes
+                if (Misc.isArray(roi.shapes) && roi.shapes.length > 0) {
+                    let roiId = roi['@id'];
+                    roi.shapes.sort(function(s1, s2) {
+                        var z1 = parseInt(s1['TheZ']);
+                        var z2 = parseInt(s2['TheZ']);
+                        var t1 = parseInt(s1['TheT']);
+                        var t2 = parseInt(s2['TheT']);
+                        if (z1 === z2) {
+                            return (t1 < t2) ? -1 : (t1 > t2) ? 1: 0;
+                        }
+                        return (z1 < z2) ? -1: 1;
+                    });
+                    for (let s in roi.shapes) {
+                        let shape = roi.shapes[s];
+                        let newShape =
+                            Converters.amendShapeDefinition(
+                                Object.assign({}, shape));
+                        let shapeId = newShape['@id']
+                        newShape.shape_id = "" + roiId + ":" + shapeId;
+                        // we add some flags we are going to need
+                        newShape.visible = true;
+                        newShape.selected = false;
+                        newShape.deleted = false;
+                        newShape.modified = false;
+                        shapes.set(shapeId, newShape);
+                        count++;
+                    }
+                    this.data.set(roiId, {
+                        shapes: shapes,
+                        show: false,
+                        deleted: 0
+                    });
+                }
+            }
+            this.number_of_shapes = count;
+            this.image_info.roi_count = this.data.size;
+            this.tmp_data = data;
+        } catch(err) {
+            console.error("Failed to sync Rois: " + err);
+        }
+        this.ready = true;
     }
 
     /**
@@ -495,7 +529,7 @@ export default class RegionsInfo  {
      *
      * @param {Object} shape the shape object
      * @param {string} permission the permission to check for
-     * @param {boolean} true if permission is on given shape, false otherwise
+     * @return {boolean} true if permission is on given shape, false otherwise
      * @memberof RegionsInfo
      */
     checkShapeForPermission(shape, permission) {
@@ -546,6 +580,7 @@ export default class RegionsInfo  {
             !this.image_info.can_annotate ||
             this.copied_shapes.length === 0) return;
 
+        this.syncCopiedShapesWithLocalStorage();
         let params = {
             config_id: this.image_info.config_id,
             number: 1, paste: true,

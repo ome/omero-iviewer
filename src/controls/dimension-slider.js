@@ -22,8 +22,7 @@ import Misc from '../utils/misc';
 import {slider} from 'jquery-ui/ui/widgets/slider';
 import {PROJECTION} from '../utils/constants';
 import {
-    IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY, IMAGE_SETTINGS_CHANGE,
-    EventSubscriber
+    IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY, IMAGE_SETTINGS_CHANGE
 } from '../events/events';
 
 /**
@@ -159,16 +158,17 @@ export default class DimensionSlider {
      */
     attached() {
         let imageDataReady = () => {
+            if (this.image_config.image_info.refresh) return;
             this.registerObservers();
             this.initSlider();
         };
-        // if the data is ready we initalize the viewer now,
-        // otherwise we listen via the observer
-        if (this.image_config.image_info.ready) imageDataReady();
-        else this.image_info_ready_observer =
-                this.bindingEngine.propertyObserver(
-                    this.image_config.image_info, 'ready').subscribe(
-                        (newValue, oldValue) => imageDataReady());
+        // listen via the observer for image ready changes
+        this.image_info_ready_observer =
+            this.bindingEngine.propertyObserver(
+                this.image_config.image_info, 'ready').subscribe(
+                    (newValue, oldValue) => {
+                        if (!oldValue && newValue) imageDataReady();
+            });
     }
 
     /**
@@ -216,6 +216,7 @@ export default class DimensionSlider {
                             this.context.publish(
                                 IMAGE_DIMENSION_CHANGE,
                                     {config_id: this.image_config.id,
+                                     sync_group: this.image_config.sync_group,
                                      dim: this.dim,
                                      value: [newValue]});
                         }));
@@ -223,10 +224,7 @@ export default class DimensionSlider {
             this.bindingEngine.propertyObserver(
                 this.image_config.image_info, 'projection')
                     .subscribe(
-                        (newValue, oldValue) => {
-                            this.detached();
-                            this.initSlider(true);
-                        }));
+                        (newValue, oldValue) => this.initSlider(true)));
         this.observers.push(
             this.bindingEngine.propertyObserver(
                 this.image_config.image_info, 'projection_opts')
@@ -269,6 +267,7 @@ export default class DimensionSlider {
      * @memberof DimensionSlider
      */
     initSlider(toggle=false) {
+        this.detached();
         let imgInf = this.image_config.image_info;
         // no slider for a 0 length dimension
         if (imgInf.dimensions['max_' + this.dim] <= 1) return;

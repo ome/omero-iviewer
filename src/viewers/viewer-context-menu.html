@@ -17,8 +17,7 @@
 -->
 
 <template>
-
-    <ul id="viewer-context-menu" class="dropdown-menu" role="menu">
+    <ul class="viewer-context-menu dropdown-menu" role="menu"">
         <li class="${image_config.regions_info.ready &&
                      image_config.image_info.can_annotate &&
                      image_config.regions_info.copied_shapes.length > 0 ?
@@ -27,5 +26,4 @@
                tabindex="-1" href="#">Paste here</a>
         </li>
     </ul>
-
 </template>
