@@ -73,9 +73,11 @@ export class RightHandPanel {
         this.observer =
             this.bindingEngine.propertyObserver(
                 this.context, 'selected_config').subscribe(
-                    (newValue, oldValue) =>
+                    (newValue, oldValue) => {
                         this.image_config =
-                            this.context.getSelectedImageConfig());
+                            this.context.getSelectedImageConfig();
+                        this.makeInitialRoisRequestIfRoisTabIsActive();
+                });
     }
 
     /**
@@ -104,19 +106,26 @@ export class RightHandPanel {
             e.preventDefault();
 
             this.context.selected_tab = e.currentTarget.hash.substring(1);
-
-            // we don't allow an active regions tab if we are in spit view
-            if (this.context.isRoisTabActive()) {
-                if (this.image_config === null ||
-                    this.image_config.regions_info === null ||
-                    this.image_config.image_info.projection === PROJECTION.SPLIT)
-                        return;
-
-                if (!this.image_config.regions_info.ready)
-                    this.image_config.regions_info.requestData(true);
-            };
+            this.makeInitialRoisRequestIfRoisTabIsActive();
             $(e.currentTarget).tab('show');
         });
+    }
+
+    /**
+     * Requests rois if tab is active and rois have not yet been requested
+     *
+     * @memberof RightHandPanel
+     */
+    makeInitialRoisRequestIfRoisTabIsActive() {
+        // we don't allow an active regions tab if we are in spit view
+        if (this.context.isRoisTabActive()) {
+            if (this.image_config === null ||
+                this.image_config.regions_info === null ||
+                this.image_config.image_info.projection === PROJECTION.SPLIT)
+                    return;
+
+            this.image_config.regions_info.requestData();
+        };
     }
 
     /**

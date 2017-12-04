@@ -67,6 +67,13 @@ export default class ImageInfo {
     ready = false;
 
     /**
+     * a flag whether we want to refresh the image settings only
+     * @memberof ImageInfo
+     * @type {boolean}
+     */
+    refresh = false;
+
+    /**
      * a flag to mark that the backend request failed
      * @memberof ImageInfo
      * @type {boolean}
@@ -120,7 +127,14 @@ export default class ImageInfo {
      * @memberof ImageInfo
      * @type {string}
      */
-    image_timestamp = null;
+    acquisition_date = null;
+
+    /**
+     * the import date in the json response
+     * @memberof ImageInfo
+     * @type {string}
+     */
+    import_date = null;
 
     /**
      * the pixels type in the json response
@@ -274,16 +288,20 @@ export default class ImageInfo {
     /**
      * Retrieves the data via ajax
      *
+     * @param {boolean} refresh if true we don't run a full initialization
      * @memberof ImageInfo
      */
-    requestData() {
+    requestData(refresh) {
+        if (typeof refresh !== 'boolean') refresh = false;
+        this.ready = false;
+
         $.ajax({
             url :
                 this.context.server + this.context.getPrefixedURI(IVIEWER) +
                 "/image_data/" + this.image_id + '/',
             success : (response) => {
                 // read initial request params
-                this.initializeImageInfo(response);
+                this.initializeImageInfo(response, refresh);
 
                 // check for a parent id (if not well)
                 if (this.context.initial_type !== INITIAL_TYPES.WELL &&
@@ -296,9 +314,9 @@ export default class ImageInfo {
                 // fetch copied img RDef
                 this.requestImgRDef();
                 // request regions data if rois tab showing
+                let conf = this.context.getImageConfig(this.config_id);
                 if (this.context.isRoisTabActive())
-                    this.context.getSelectedImageConfig().
-                        regions_info.requestData(true);
+                    conf.regions_info.requestData();
             },
             error : (error) => {
                 this.ready = false;
@@ -323,11 +341,12 @@ export default class ImageInfo {
      *
      * @private
      * @param {Object} response the response object
+     * @param {boolean} refresh if true we don't run a full initialization
      * @memberof ImageInfo
      */
-    initializeImageInfo(response) {
+    initializeImageInfo(response, refresh = false) {
         // integrate initial settings with respone values
-        this.integrateInitialSettings(response);
+        this.integrateInitialSettings(response, refresh);
 
         // assign rest of response to class members
         this.range = response.pixel_range;
@@ -348,7 +367,9 @@ export default class ImageInfo {
         }
         if (typeof response.meta.pixelsType === 'string')
             this.image_pixels_type = response.meta.pixelsType;
-        this.image_timestamp = response.meta.imageTimestamp;
+        this.import_date = response.import_date;
+        if (typeof response.acquisition_date === 'string')
+            this.acquisition_date = response.acquisition_date;
         this.setFormattedDeltaT(response);
         this.roi_count = response.roi_count;
         if (typeof response.meta.datasetName === 'string')
@@ -364,9 +385,10 @@ export default class ImageInfo {
      *
      * @private
      * @param {Object} response the response object
+     * @param {boolean} refresh  if true we don't run a full initialization
      * @memberof ImageInfo
      */
-    integrateInitialSettings(response) {
+    integrateInitialSettings(response, refresh = false) {
         let initialDatasetId =
             parseInt(
                 this.context.getInitialRequestParam(REQUEST_PARAMS.DATASET_ID));
@@ -375,26 +397,39 @@ export default class ImageInfo {
             this.parent_id = initialDatasetId;
             this.parent_type = INITIAL_TYPES.DATASET;
         }
+
+        if (typeof response.tiles === 'boolean') this.tiled = response.tiles;
+        let initialModel =
+            this.context.getInitialRequestParam(REQUEST_PARAMS.MODEL);
+        this.model = initialModel !== null ?
+            initialModel.toLowerCase() : response.rdefs.model;
+
+        // short circuit for refresh
+        if (refresh) {
+            this.channels =
+                this.initAndMixChannelsWithInitialSettings(
+                    response.channels, []);
+            return;
+        }
+
+        // initialize channels (incl. initial params)
         let initialTime =
             this.context.getInitialRequestParam(REQUEST_PARAMS.TIME);
         let initialPlane =
             this.context.getInitialRequestParam(REQUEST_PARAMS.PLANE);
         let initialProjection =
             this.context.getInitialRequestParam(REQUEST_PARAMS.PROJECTION);
-        let initialModel =
-            this.context.getInitialRequestParam(REQUEST_PARAMS.MODEL);
         let initialChannels =
             this.context.getInitialRequestParam(REQUEST_PARAMS.CHANNELS);
         let initialMaps =
             this.context.getInitialRequestParam(REQUEST_PARAMS.MAPS);
         initialChannels =
             Misc.parseChannelParameters(initialChannels, initialMaps);
-
-        // store channels and dimensions
-        if (typeof response.tiles === 'boolean') this.tiled = response.tiles;
         this.channels =
             this.initAndMixChannelsWithInitialSettings(
                 response.channels, initialChannels);
+
+        // initialize dimensions (incl. initial params)
         this.dimensions = {
             t: initialTime !== null ?
                 (parseInt(initialTime)-1) : response.rdefs.defaultT,
@@ -440,8 +475,6 @@ export default class ImageInfo {
         if (this.dimensions.max_z > 1 &&
             this.projection_opts.start >= this.projection_opts.end)
                 this.projection_opts.start = this.projection_opts.end - 1;
-        this.model = initialModel !== null ?
-            initialModel.toLowerCase() : response.rdefs.model;
 
         this.sanityCheckInitialValues();
     }

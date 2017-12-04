@@ -18,7 +18,6 @@
 
 <template>
     <require from="../viewers/ol3-viewer"></require>
-    <require from="../viewers/viewer-context-menu"></require>
     <require from="./header"></require>
     <require from="./thumbnail-slider"></require>
     <require from="./right-hand-panel"></require>
@@ -57,8 +56,6 @@
         </div>
     </div>
 
-    <viewer-context-menu></viewer-context-menu>
-
     <div class="row center">
         <thumbnail-slider
             class="thumbnail-panel sidebar">
@@ -69,7 +66,75 @@
         </div>
 
         <div class="frame col-xs-12">
-            <div class="viewer" repeat.for="[id, conf] of context.image_configs">
+            <div class="${context.useMDI &&
+                            context.image_configs.size > 1 ?
+                                'viewer-mdi' : 'viewer'}
+                        ${context.useMDI && context.selected_config === id  &&
+                            context.image_configs.size > 1 ?
+                                'mdi-selected' : ''}"
+                 repeat.for="[id, conf] of context.image_configs"
+                 css="${context.useMDI && context.image_configs.size > 1 ?
+                        ';position: absolute;top:' + conf.position.top +
+                        ';left:' + conf.position.left +
+                        ';width:' + conf.size.width +
+                        ';height:' + conf.size.height : ''}"
+                 mousedown.delegate="context.selectConfig(id)">
+                 <div class="config-linking"
+                      show.bind="context.useMDI && context.image_configs.size > 1">
+                     <div class="dropdown dropdown-image-config"
+                          title="Link Image Settings">
+                         <button type="button"
+                             class="btn btn-default btn-sm dropdown-toggle"
+                             data-toggle="dropdown">
+                                ${conf.sync_group === null ?
+                                'no sync' : conf.sync_group}
+                         </button>
+                         <ul class="dropdown-menu">
+                             <li click.delegate="toggleSyncGroup(id, null)">
+                                 <a href="#">no sync</a>
+                             </li>
+                             <li repeat.for="[name, group] of context.sync_groups"
+                                 click.delegate="toggleSyncGroup(id, name)"
+                                 mouseover.delegate="highlightSyncGroup(group.members, true)"
+                                 mouseout.delegate="highlightSyncGroup(group.members)">
+                                 <a href="#">${name}</a>
+                             </li>
+                         </ul>
+                     </div>
+                     <div class="sync-locks"
+                          show.bind="context.useMDI && conf.sync_group !== null">
+                         <label repeat.for="lock of sync_locks"
+                                show.bind="conf.image_info.ready &&
+                                           (lock.CHAR === 'c' || lock.CHAR === 'v' ||
+                                            (lock.CHAR === 'z' &&
+                                             conf.image_info.dimensions.max_z > 1) ||
+                                            (lock.CHAR === 't' &&
+                                             conf.image_info.dimensions.max_t > 1) ||
+                                             (lock.CHAR === 'zt' &&
+                                              conf.image_info.dimensions.max_z > 1 || 
+                                              conf.image_info.dimensions.max_t > 1))"
+                                title="Lock ${lock.LABEL}}">
+                             <input type="checkbox"
+                                 checked.bind="conf.sync_locks[lock.CHAR]"
+                                 change.delegate="
+                                     toggleSyncLock(id, lock.CHAR, $event.target.checked)"/>
+                             &nbsp;${lock.LABEL}
+                         </label>
+                    </div>
+                </div>
+                <div show.bind="context.useMDI && context.image_configs.size > 1"
+                     class="viewer-handle
+                            ${context.useMDI && context.selected_config === id ?
+                                'viewer-handle-selected' : ''}">
+                    <span click.delegate="closeViewerInMDI(id)"
+                          class="close">&times;</span>
+                    <span click.delegate="toggleViewerControlsInMDI(id)"
+                          title="${conf.show_controls ?
+                                    'Hide Viewer Controls' :
+                                    'Show Viewer Controls'}"
+                          css="${conf.show_controls ? '' : 'opacity: 0.6'}"
+                          class="glyphicon glyphicon-cog cog"></span>
+                </div>
                 <ol3-viewer image_config.bind="conf">
                 </ol3-viewer>
             </div>

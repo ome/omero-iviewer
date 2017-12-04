@@ -157,7 +157,8 @@ export class Converters {
           shape['omero:details'] !== null &&
           typeof shape['omero:details']['permissions'] === 'object' &&
           shape['omero:details']['permissions'] !== null) {
-              shape.permissions = shape['omero:details']['permissions'];
+              shape.permissions =
+                    Object.assign({}, shape['omero:details']['permissions']);
               delete shape['omero:details'];
       }
 
