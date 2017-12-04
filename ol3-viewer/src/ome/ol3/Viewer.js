@@ -2286,6 +2286,23 @@ ome.ol3.Viewer.prototype.getRois = function() {
     return ret;
 };
 
+/**
+ * Refreshes the bird's eye view
+ *
+ * @param {number=} delay an (optional delay) in millis
+ */
+ome.ol3.Viewer.prototype.refreshBirdsEye = function(delay) {
+    if (!(this.viewer_ instanceof ol.Map) ||
+        typeof this.viewerState_['birdseye'] !== 'object') return;
+    if (typeof delay !== 'number' || isNaN(delay) || delay < 0) delay = 0;
+
+    var refresh = function() {
+        this.viewerState_["birdseye"]["ref"].initOrUpdate();
+    }.bind(this);
+
+    if (delay === 0) refresh();
+    else setTimeout(refresh, delay);
+}
 
 /*
  * This section determines which methods are exposed and usable after compilation
@@ -2514,3 +2531,8 @@ goog.exportProperty(
     ome.ol3.Viewer.prototype,
     'getRois',
 ome.ol3.Viewer.prototype.getRois);
+
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
+    'refreshBirdsEye',
+ome.ol3.Viewer.prototype.refreshBirdsEye);

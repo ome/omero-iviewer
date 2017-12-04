@@ -27,8 +27,8 @@ import {
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 
 import {
-    IMAGE_INTENSITY_QUERYING, IMAGE_SETTINGS_CHANGE, THUMBNAILS_UPDATE,
-    EventSubscriber
+    BIRDSEYE_REFRESH, IMAGE_INTENSITY_QUERYING, IMAGE_SETTINGS_CHANGE,
+    THUMBNAILS_UPDATE, EventSubscriber
 } from '../events/events';
 
 /**
@@ -324,10 +324,7 @@ export default class Settings extends EventSubscriber {
                 // force thumbnail update
                 let action =
                     (() => {
-                        this.context.publish(
-                            THUMBNAILS_UPDATE,
-                            { config_id : this.image_config.id,
-                              ids: [image_info.image_id]});
+                        this.triggerUpdates([image_info.image_id]);
                         if (this.context.useMDI)
                             this.context.reloadImageConfigForGivenImage(
                                 image_info.image_id,
@@ -432,9 +429,7 @@ export default class Settings extends EventSubscriber {
                     // force thumbnail update
                     let action =
                         (() => {
-                            this.context.publish(
-                                THUMBNAILS_UPDATE,
-                                { config_id : imgInf.config_id, ids: thumbIds});
+                            this.triggerUpdates(thumbIds);
                             if (this.context.useMDI)
                                 this.context.reloadImageConfigsGivenParent(
                                     imgInf.parent_id,
@@ -447,6 +442,20 @@ export default class Settings extends EventSubscriber {
             (response) => imgInf.requestImgRDef();
         $.ajax(params);
     }
+
+    /**
+     * Triggers thumbnail/bird's eye update
+     *
+     * @param {Array.<number>} ids image id(s) to update
+     * @memberof Settings
+     */
+     triggerUpdates(ids) {
+         this.context.publish(
+             THUMBNAILS_UPDATE,
+             { "config_id" : this.image_config.id, "ids": ids});
+         this.context.publish(
+             BIRDSEYE_REFRESH, { config_id : this.image_config.id});
+     }
 
     /**
      * Applies the rendering settings, keeping a history of the old settings

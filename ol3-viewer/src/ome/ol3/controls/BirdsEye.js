@@ -70,6 +70,12 @@ ome.ol3.controls.BirdsEye = function(options) {
     this.thumbnail_url_ = options['url'];
 
     /**
+    * @type {number}
+    * @private
+    */
+    this.thumbnail_revision_ = 0;
+
+    /**
     * @type {Array.<number>}
     * @private
     */
@@ -106,7 +112,7 @@ ome.ol3.controls.BirdsEye = function(options) {
     * @type {ol.Map}
     * @private
     */
-    this.birds_eye_ = this.init();
+    this.birds_eye_ = this.initOrUpdate();
 
     var box = document.createElement('DIV');
     box.className = 'ol-overviewmap-box';
@@ -233,10 +239,12 @@ ome.ol3.controls.BirdsEye.prototype.setMap = function(map) {
 };
 
 /**
- * Creates the ol.Map that represents the bird's eye view
+ * Creates/Initializes the ol.Map that represents the bird's eye view
+ * or merely updates it if one exists already
  * @return {ol.Map} the bird's eye view
  */
-ome.ol3.controls.BirdsEye.prototype.init = function() {
+ome.ol3.controls.BirdsEye.prototype.initOrUpdate = function() {
+    if (typeof update_only !== 'boolean') update_only = false;
     // determine thumbnail size
     var ext = [0, -this.thumbnail_size_[1], this.thumbnail_size_[0], 0];
     var proj = new ol.proj.Projection({
@@ -244,6 +252,20 @@ ome.ol3.controls.BirdsEye.prototype.init = function() {
         units: 'pixels',
         extent: ext.slice()
     });
+
+    // replace layer if we have one already,
+    // effectively updating the static image source
+    if (this.birds_eye_ instanceof ol.Map &&
+        this.birds_eye_.getLayers().getLength() >0) {
+        this.thumbnail_revision_++;
+        this.birds_eye_.getLayers().item(0).setSource(
+            new ol.source.ImageStatic({
+            url: this.getThumbnailUrlWithVersion(),
+            projection: proj,
+            imageExtent: ext}));
+        return this.birds_eye_;
+    }
+
     var view = new ol.View({
        projection: proj,
        center: ol.extent.getCenter(ext),
@@ -252,10 +274,11 @@ ome.ol3.controls.BirdsEye.prototype.init = function() {
     });
     var imageLayer = new ol.layer.Image({
         source: new ol.source.ImageStatic({
-        url: this.thumbnail_url_,
+        url: this.getThumbnailUrlWithVersion(),
         projection: proj,
         imageExtent: ext})
     });
+
     return new ol.Map({
         controls: new ol.Collection(),
         interactions: new ol.Collection(),
@@ -264,6 +287,19 @@ ome.ol3.controls.BirdsEye.prototype.init = function() {
         view: view,
         target: this.controlDiv_
     });
+}
+
+/**
+ * Gets the thumbnail url for requesting
+ * @return {string} the thumbnail url including config id and version
+ */
+ome.ol3.controls.BirdsEye.prototype.getThumbnailUrlWithVersion = function() {
+    var map = this.getMap();
+    var conf =
+        map ? ome.ol3.utils.Misc.getTargetId(map.getTargetElement()) : "";
+
+    return this.thumbnail_url_ + "/?rev=" +
+        conf + "-" + this.thumbnail_revision_;
 }
 
 /**
