@@ -19,6 +19,7 @@
 // dependencies
 import Context from '../app/context';
 import {inject, customElement, BindingEngine, bindable} from 'aurelia-framework';
+import {IMAGE_VIEWPORT_CAPTURE} from '../events/events';
 import { VIEWER_ELEMENT_PREFIX } from '../utils/constants';
 
 /**
@@ -182,4 +183,15 @@ export default class ViewerContextMenu {
         // prevent link click behavior
         return false;
     }
+
+    /**
+     * Sends event to captures viewport as png
+     *
+     * @memberof ViewerContextMenu
+     */
+    captureViewport() {
+        this.context.eventbus.publish(
+            IMAGE_VIEWPORT_CAPTURE, {"config_id": this.image_config.id});
+    }
+
 }

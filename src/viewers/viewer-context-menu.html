@@ -18,12 +18,16 @@
 
 <template>
     <ul class="viewer-context-menu dropdown-menu" role="menu"">
-        <li class="${image_config.regions_info.ready &&
-                     image_config.image_info.can_annotate &&
+        <li show.bind="image_config.regions_info.ready"
+            class="${image_config.image_info.can_annotate &&
                      image_config.regions_info.copied_shapes.length > 0 ?
                         '' : 'disabled-color'}">
             <a click.delegate="pasteShapes()"
-               tabindex="-1" href="#">Paste here</a>
+               tabindex="-1" href="#">Paste ROI here</a>
+        </li>
+        <li class="${image_config.image_info.ready ? '' : 'disabled-color'}">
+            <a click.delegate="captureViewport()"
+               tabindex="-1" href="#">Save Viewport as PNG</a>
         </li>
     </ul>
 </template>
