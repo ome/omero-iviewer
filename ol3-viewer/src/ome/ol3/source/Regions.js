@@ -595,27 +595,31 @@ ome.ol3.source.Regions.prototype.storeRegions =
                 data = JSON.parse(data);
 
                 // synchronize ids and states
-                if (!omit_client_update) {
-                    for (var id in data['ids']) {
-                        var f = capturedRegionsReference.idIndex_[id];
-                        if (f['state'] === ome.ol3.REGIONS_STATE.REMOVED)
-                            capturedRegionsReference.removeFeature(f);
-                        else {
-                            f['state'] = ome.ol3.REGIONS_STATE.DEFAULT;
-                            f.setId(data['ids'][id]);
+                for (var id in data['ids']) {
+                    var f = capturedRegionsReference.idIndex_[id];
+                    if (f['state'] === ome.ol3.REGIONS_STATE.REMOVED)
+                        capturedRegionsReference.removeFeature(f);
+                    else {
+                        f['state'] = ome.ol3.REGIONS_STATE.DEFAULT;
+                        f.setId(data['ids'][id]);
+                        if (typeof f['permissions'] !== 'object') {
+                            f['permissions'] = {
+                                'canAnnotate': true,
+                                'canEdit': true,
+                                'canDelete': true,
+                            }
                         }
                     }
-                    // tag on the newly but immediately deleted shapes
-                    for (var i in roisAsJsonObject['new_and_deleted']) {
-                        var id = roisAsJsonObject['new_and_deleted'][i];
-                        if (typeof capturedRegionsReference.idIndex_[id] === 'object') {
-                            capturedRegionsReference.removeFeature(
-                                capturedRegionsReference.idIndex_[id]);
-                                data['ids'][id] = id;
-                            }
-                    };
                 }
-
+                // tag on the newly but immediately deleted shapes
+                for (var i in roisAsJsonObject['new_and_deleted']) {
+                    var id = roisAsJsonObject['new_and_deleted'][i];
+                    if (typeof capturedRegionsReference.idIndex_[id] === 'object') {
+                        capturedRegionsReference.removeFeature(
+                            capturedRegionsReference.idIndex_[id]);
+                            data['ids'][id] = id;
+                        }
+                };
                 if (typeof data['error'] === 'string') error = data['error'];
             } catch(err) {
                 error = err;

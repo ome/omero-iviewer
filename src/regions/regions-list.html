@@ -44,7 +44,7 @@
                 <div class="regions-table-col roi-toggle">
                     <input id="shapes_visibility_toggler"
                            title="Show/Hide all rois"
-                           checked
+                           checked.one-way="regions_info.visibility_toggles === 0"
                            show.bind="regions_info.number_of_shapes > 0"
                            change.delegate="toggleAllShapesVisibility($event)"
                            type="checkbox" />

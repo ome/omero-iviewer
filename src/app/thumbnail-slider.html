@@ -36,6 +36,7 @@
                  'border: 2px solid rgba(0,60,136,0.5)' : 'border: none'}"
              src.bind="thumb.url + '?version=' + thumb.revision"
              title="${thumb.title}"
+             alt="Not Found"
              click.delegate="onClick(thumb.id)"/>
     </div>
     <div show.bind="thumbnails_end_index < thumbnails_count"

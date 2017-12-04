@@ -38,16 +38,6 @@ export default class Regions {
      * @type {RegionsInfo}
      */
     @bindable regions_info = null;
-    regions_infoChanged(newVal, oldVal) {
-        this.show_comments = false;
-    }
-
-    /**
-     * show comments flag
-     * @memberof Regions
-     * @type {RegionsInfo}
-     */
-    show_comments = false;
 
     /**
      * a list of keys we want to listen for
@@ -119,11 +109,11 @@ export default class Regions {
 
         if (!this.regions_info.ready) return false;
 
-        this.show_comments = event.target.checked;
+        this.regions_info.show_comments = event.target.checked;
         this.context.publish(
             REGIONS_SHOW_COMMENTS,
             {config_id : this.regions_info.image_info.config_id,
-             value: this.show_comments});
+             value: this.regions_info.show_comments});
         return false;
     }
 

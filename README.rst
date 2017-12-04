@@ -6,7 +6,7 @@ An OMERO.web app for visualizing images in OMERO.
 Requirements
 ============
 
-* OMERO 5.3.3 or newer.
+* OMERO 5.4.0 or newer.
 
 Build
 =====

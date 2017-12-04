@@ -34,7 +34,7 @@
     left: 8px;
     position: absolute;
     cursor: pointer;
-    z-index: 4;
+    z-index: 2;
 }
 .ol-scale-line-inner {
     border-bottom: 6px solid #000;
@@ -324,7 +324,7 @@
     border: 1px solid #ccc;
     border-radius: 3px;
     padding: 2px;
-    z-index: 4;
+    z-index: 3;
     min-width: 135px;
     text-align: center;
 }
