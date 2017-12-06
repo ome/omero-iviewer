@@ -97,7 +97,7 @@ ome.ol3.controls.BirdsEye = function(options) {
             parseInt(this.thumbnail_size_[0] * factor),
             this.thumbnail_size_[1]
         ];
-    }
+    } else this.thumbnail_size_ = tmp.slice();
 
     /**
     * @type {Array.<number>}
@@ -299,7 +299,8 @@ ome.ol3.controls.BirdsEye.prototype.getThumbnailUrlWithVersion = function() {
     var conf =
         map ? ome.ol3.utils.Misc.getTargetId(map.getTargetElement()) : "";
 
-    return this.thumbnail_url_ + "/?rev=" +
+    return this.thumbnail_url_ + "/" + this.thumbnail_size_[0] +
+        "/" + this.thumbnail_size_[1] + "/?rev=" +
         conf + "-" + this.thumbnail_revision_;
 }
 
