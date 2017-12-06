@@ -23,3 +23,5 @@
 function publish() {};
 function toBlob() {};
 function msToBlob() {};
+function handles() {};
+function create() {};
