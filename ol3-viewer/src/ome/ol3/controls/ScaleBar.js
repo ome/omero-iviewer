@@ -55,7 +55,7 @@ ome.ol3.controls.ScaleBar = function(opt_options) {
     ol.events.listen(
         this.element_, "mousedown",
         function(start) {
-            if (!(this.map_ instanceof ol.Map)) return;
+            if (!(this.map_ instanceof ol.PluggableMap)) return;
             if (this.drag_listener_ !== null) {
                 ol.events.unlistenByKey(this.drag_listener_);
                 this.drag_listener_ = null;

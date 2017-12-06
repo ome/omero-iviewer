@@ -109,7 +109,7 @@ ome.ol3.controls.BirdsEye = function(options) {
     ];
 
     /**
-    * @type {ol.Map}
+    * @type {ol.PluggableMap}
     * @private
     */
     this.birds_eye_ = this.initOrUpdate();
@@ -228,7 +228,8 @@ ome.ol3.controls.BirdsEye.prototype.convertBirdsEyeCoords = function(coords) {
 }
 
 /**
- * Listens to map changes
+ * Sets map and rerenders/updates bird's eye view
+ * @param {ol.PluggableMap} map
  */
 ome.ol3.controls.BirdsEye.prototype.setMap = function(map) {
     if (map) {
@@ -239,9 +240,9 @@ ome.ol3.controls.BirdsEye.prototype.setMap = function(map) {
 };
 
 /**
- * Creates/Initializes the ol.Map that represents the bird's eye view
+ * Creates/Initializes a ol.PluggableMap that represents the bird's eye view
  * or merely updates it if one exists already
- * @return {ol.Map} the bird's eye view
+ * @return {ol.PluggableMap} the bird's eye view
  */
 ome.ol3.controls.BirdsEye.prototype.initOrUpdate = function() {
     if (typeof update_only !== 'boolean') update_only = false;
@@ -255,7 +256,7 @@ ome.ol3.controls.BirdsEye.prototype.initOrUpdate = function() {
 
     // replace layer if we have one already,
     // effectively updating the static image source
-    if (this.birds_eye_ instanceof ol.Map &&
+    if (this.birds_eye_ instanceof ol.PluggableMap &&
         this.birds_eye_.getLayers().getLength() >0) {
         this.thumbnail_revision_++;
         this.birds_eye_.getLayers().item(0).setSource(
@@ -279,7 +280,7 @@ ome.ol3.controls.BirdsEye.prototype.initOrUpdate = function() {
         imageExtent: ext})
     });
 
-    return new ol.Map({
+    return new ol.PluggableMap({
         controls: new ol.Collection(),
         interactions: new ol.Collection(),
         renderer: ol.renderer.Type.CANVAS,

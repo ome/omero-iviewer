@@ -340,7 +340,9 @@ ome.ol3.interaction.Draw.prototype.setDefaultDrawingStyle = function(shape) {
         if (geom instanceof ome.ol3.geom.Label) {
             var text =
                 new ol.style.Text(
-                    { text: "TEXT",
+                    {
+                      exceedLength: true,
+                      text: "TEXT",
                       font: "normal " + geom.getHeight() + "px sans-serif",
                       fill: new ol.style.Fill(
                           {color: this.default_style_.getStroke().getColor()})
