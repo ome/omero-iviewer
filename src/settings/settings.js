@@ -541,6 +541,26 @@ export default class Settings extends EventSubscriber {
                     actChannel.inverted =
                         copiedChannel.inverted;
                 }
+                if (typeof copiedChannel.family === 'string' &&
+                    copiedChannel.family !== "" &&
+                    actChannel.family !== copiedChannel.family) {
+                        history.push({
+                            prop: ['image_info', 'channels', '' + i, 'family'],
+                            old_val : actChannel.family,
+                            new_val: copiedChannel.family,
+                            type: 'string'});
+                         actChannel.family = copiedChannel.family;
+                }
+                if (typeof copiedChannel.coefficient === 'number' &&
+                    !isNaN(copiedChannel.coefficient) &&
+                    actChannel.coefficient !== copiedChannel.coefficient) {
+                        history.push({
+                            prop: ['image_info', 'channels', '' + i, 'coefficient'],
+                            old_val : actChannel.coefficient,
+                            new_val: copiedChannel.coefficient,
+                            type: 'string'});
+                         actChannel.coefficient = copiedChannel.coefficient;
+                }
             };
         if (history.length > 0) {
             history.splice(0, 0,

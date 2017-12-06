@@ -308,6 +308,12 @@ ome.ol3.utils.Misc.parseChannelParameters = function(channel_info, maps_info) {
                 typeof m['inverted'] === 'object' && m['inverted'] &&
                 typeof m['inverted']['enabled'] === 'boolean' &&
                 m['inverted']['enabled'];
+            ret[i]['family'] =
+                typeof m['family'] === 'string' && m['family'] !== '' ?
+                    m['family'] : 'linear';
+            ret[i]['coefficient'] =
+                typeof m['coefficient'] === 'number' && !isNaN(m['coefficient']) ?
+                    m['coefficient'] : '1.0';
         }
     } catch(malformedJson) {}
 

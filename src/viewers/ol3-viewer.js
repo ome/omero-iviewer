@@ -235,7 +235,9 @@ export default class Ol3Viewer extends EventSubscriber {
                         start: chan.window.start,
                         end: chan.window.end,
                         color: chan.color,
-                        inverted: chan.inverted
+                        inverted: chan.inverted,
+                        family: chan.family,
+                        coefficient: chan.coefficient
                     };
                     updates.push(chanUpdate);
                 };

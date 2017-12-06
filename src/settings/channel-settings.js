@@ -297,6 +297,23 @@ export default class ChannelSettings {
                    type: 'boolean'});
                 chan.inverted = impImgData.c[index].inverted;
              }
+             // remember quantization info
+             if (chan.family !== impImgData.c[index].family) {
+                 history.push({
+                    prop: ['image_info', 'channels', '' + index, 'family'],
+                    old_val : chan.family,
+                    new_val: impImgData.c[index].family,
+                    type: 'string'});
+                 chan.family = impImgData.c[index].family;
+              }
+              if (chan.coefficient !== impImgData.c[index].coefficient) {
+                  history.push({
+                     prop: ['image_info', 'channels', '' + index, 'coefficient'],
+                     old_val : chan.coefficient,
+                     new_val: impImgData.c[index].coefficient,
+                     type: 'number'});
+                  chan.coefficient = impImgData.c[index].coefficient;
+               }
              // remember active
              if (chan.active !== impImgData.c[index].active) {
                  history.push({

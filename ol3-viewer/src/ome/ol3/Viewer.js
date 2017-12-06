@@ -454,6 +454,10 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
        };
        if (typeof oldC['inverted'] === 'boolean')
            newC['inverted'] = oldC['inverted'];
+       if (typeof oldC['family'] !== 'string' ||
+           oldC['family'] === '') newC['family'] = 'linear';
+       if (typeof oldC['coefficient'] !== 'number' ||
+           isNaN(oldC['coefficient'])) newC['coefficient'] = 1.0;
        channels.push(newC);
     }
 

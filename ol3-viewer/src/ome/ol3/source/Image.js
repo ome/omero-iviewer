@@ -278,7 +278,10 @@ ome.ol3.source.Image = function(options) {
                 maps.push(
                     {"inverted" : { "enabled" :
                         typeof channelInfo['inverted'] === 'boolean' &&
-                        channelInfo['inverted']}
+                        channelInfo['inverted']},
+                     "quantization": {
+                        "family": channelInfo['family'],
+                        "coefficient": channelInfo['coefficient']}
                     });
             }
             url += "&maps=" + JSON.stringify(maps);
@@ -511,14 +514,18 @@ ome.ol3.source.Image.prototype.changeChannelRange = function(ranges, rerender) {
         this.channels_info_[channel_index]['start'] = range['start'];
         this.channels_info_[channel_index]['end'] = range['end'];
 
-        // second sanity check for optional color and inverted setting
-        // cannot do much more to accomodate lookup table strings
+        // second sanity check for optional color, inverted setting
+        // and quantization info
         if (typeof range['color'] === 'string' && range['color'].length !== 0)
             this.channels_info_[channel_index]['color'] = range['color'];
         if (typeof range['inverted'] === 'boolean')
             this.channels_info_[channel_index]['inverted'] = range['inverted'];
+        if (typeof range['family'] === 'string' && range['family'] !== '')
+            this.channels_info_[channel_index]['family'] =  range['family'];
+        if (typeof range['coefficient'] === 'number' && !isNaN(range['coefficient']))
+            this.channels_info_[channel_index]['coefficient'] =  range['coefficient'];
 
-        // third sanity check for optional act setting
+        // third sanity check for optional active setting
         if (typeof range['active'] === 'boolean')
         this.channels_info_[channel_index]['active'] = range['active'];
     }
@@ -555,7 +562,9 @@ ome.ol3.source.Image.prototype.captureImageSettings = function() {
                 "max" : chan['max'],
                 "start" : chan['start'],
                 "end" : chan['end']
-            }
+            },
+            "family": chan['family'],
+            "coefficient": chan['coefficient']
         };
         if (typeof chan['inverted'] === 'boolean')
             chanSnap['inverted'] = chan['inverted'];
