@@ -18,9 +18,8 @@ Depending on your setup you might also have to add this directory to your web se
 
 More detailed resources on how to create a web app and development setup can be found here:
 
-1. `CreateApp <https://www.openmicroscopy.org/site/support/omero5/developers/Web/CreateApp.html>`_
-2. `Deployment <https://www.openmicroscopy.org/site/support/omero5/developers/Web/Deployment.html>`_
-
+1. `CreateApp <https://docs.openmicroscopy.org/latest/omero/developers/Web/CreateApp.html>`_
+2. `Deployment <https://docs.openmicroscopy.org/latest/omero/developers/Web/Deployment.html>`_
 
 IMPORTANT: In order to have the javascript files built and deployed you can choose to run either:
 
@@ -38,7 +37,7 @@ Django directories:
 Choose one out of the two as a first parameter. This way of compiling is shorter and easier for development
 
 
-To keep the files up-to-date during development, don't forget to call 
+To keep the files up-to-date during development, don't forget to call
 
 ::
 

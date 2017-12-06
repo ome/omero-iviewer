@@ -118,7 +118,7 @@ export default class ChannelSettings {
     waitForImageInfoReady() {
         if (this.image_config === null ||
             this.image_config.image_info === null) return;
-            
+
         let onceReady = () => {
             // register observer
             this.registerObservers();
@@ -381,6 +381,7 @@ export default class ChannelSettings {
 
        let params = {
            config_id: this.image_config.id,
+           sync_group: this.image_config.sync_group,
            prop: prop,
            ranges:[
                {index: index, start: c.window.start, end: c.window.end,

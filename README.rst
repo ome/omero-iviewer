@@ -35,7 +35,7 @@ which can then be used like any Django plugin.
 Intructions on how to add the OMERO.iviewer app to your installed OMERO.web apps
 can be found in the `OMERO.iviewer README <plugin/omero_iviewer/README.rst>`_.
 
-**Note**: 
+**Note**:
 
 Should you like or need to rebuild OMERO.iviewer's internal ol3 viewer,
 please read the section *ol3-viewer* below!
@@ -96,5 +96,5 @@ For further options type ``ant -p``.
 
 More detailed resources on how to create a web app and development setup can be found at:
 
-1. `CreateApp <https://www.openmicroscopy.org/site/support/omero5/developers/Web/CreateApp.html>`_
-2. `Deployment <https://www.openmicroscopy.org/site/support/omero5/developers/Web/Deployment.html>`_
+1. `CreateApp <https://docs.openmicroscopy.org/latest/omero/developers/Web/CreateApp.html>`_
+2. `Deployment <https://docs.openmicroscopy.org/latest/omero/developers/Web/Deployment.html>`_

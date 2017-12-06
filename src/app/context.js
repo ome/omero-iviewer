@@ -19,10 +19,15 @@ import {noView} from 'aurelia-framework';
 import {EventAggregator} from 'aurelia-event-aggregator';
 import Misc from '../utils/misc';
 import ImageConfig from '../model/image_config';
+import ImageInfo from '../model/image_info';
+import RegionsInfo from '../model/regions_info';
 import {
-    APP_NAME, IVIEWER, INITIAL_TYPES, LUTS_NAMES, LUTS_PNG_URL, PLUGIN_NAME,
-    PLUGIN_PREFIX, REQUEST_PARAMS, TABS, URI_PREFIX, WEB_API_BASE, WEBCLIENT,
-    WEBGATEWAY
+    IMAGE_VIEWER_CONTROLS_VISIBILITY, IMAGE_VIEWER_RESIZE
+} from '../events/events';
+import {
+    APP_NAME, IMAGE_CONFIG_RELOAD, IVIEWER, INITIAL_TYPES, LUTS_NAMES,
+    LUTS_PNG_URL, PLUGIN_NAME, PLUGIN_PREFIX, REQUEST_PARAMS, SYNC_LOCK,
+    TABS, URI_PREFIX, WEB_API_BASE, WEBCLIENT, WEBGATEWAY
 } from '../utils/constants';
 
 /**
@@ -55,6 +60,23 @@ export default class Context {
      * @type {EventAggregator}
      */
     eventbus = null;
+
+
+    /**
+     * The groups for syncing/linking actions
+     *
+     * @memberof Context
+     * @type {Map}
+     */
+    sync_groups = new Map();
+
+    /**
+     * Flag to disable event notification
+     *
+     * @memberof Context
+     * @type {boolean}
+     */
+    prevent_event_notification = false;
 
     /**
      * server information (if not localhost)
@@ -169,6 +191,14 @@ export default class Context {
 
         this.eventbus = eventbus;
         this.initParams = params;
+
+        // add sync groups & locks
+        let locks = {};
+        locks[SYNC_LOCK.ZT.CHAR] = true;
+        locks[SYNC_LOCK.VIEW.CHAR] = true;
+        locks[SYNC_LOCK.CHANNELS.CHAR] = false;
+        [1,2,3].map((i) => this.sync_groups.set(
+            "group" + i, {sync_locks: Object.assign({}, locks), members: []}));
 
         // process inital request params and assign members
         this.processInitialParameters();
@@ -321,7 +351,7 @@ export default class Context {
      * Queries whether a lut by the given name is in our map
      *
      * @param {string} name the lut name
-     * @param {boolean} true if the lut was found, false otherwise
+     * @return {boolean} true if the lut was found, false otherwise
      * @memberof Context
      */
     hasLookupTableEntry(name) {
@@ -484,8 +514,15 @@ export default class Context {
         }
     }
 
+    /**
+     * Makes a browser history entry for back/forth navigation
+     *
+     * @memberof Context
+     * @param {number} image_id the image id
+     */
     rememberImageConfigChange(image_id) {
-        if (!this.hasHTML5HistoryFeatures()) return;
+        if (!this.hasHTML5HistoryFeatures() || this.useMDI ||
+            this.getSelectedImageConfig() === null) return;
 
         let newPath = window.location.pathname;
         let parent_id = null;
@@ -545,24 +582,26 @@ export default class Context {
      * Creates and adds an ImageConfig instance by handing it an id of an image
      * stored on the server, as well as making it the selected/active image config.
      *
-     * The returned ImageConfig object will have an id set on it by which it
-     * can be uniquely identified and retrieved which makes it possible for
-     * the same image to be used in multiple ImageConfigs.
-     *
-     * @memberof Context
      * @param {number} image_id the image id
      * @param {number} parent_id an optional parent id
      * @param {number} parent_type an optional parent type  (e.g. dataset or well)
-     * @return {ImageConfig} an ImageConfig object
      */
     addImageConfig(image_id, parent_id, parent_type) {
-        if (typeof image_id !== 'number' || image_id < 0)
-            return null;
+        if (typeof image_id !== 'number' || image_id < 0) return;
 
         // we do not keep the other configs around unless we are in MDI mode.
         if (!this.useMDI)
             for (let [id, conf] of this.image_configs)
                 this.removeImageConfig(id,conf)
+        else {
+            for (let [id, conf] of this.image_configs) {
+                if (conf.show_controls)
+                    this.publish(
+                        IMAGE_VIEWER_CONTROLS_VISIBILITY,
+                        {config_id: this.selected_config, flag: false});
+            };
+            this.publish(IMAGE_VIEWER_RESIZE, {config_id: -1, delay: 100});
+        }
 
         let image_config =
             new ImageConfig(this, image_id, parent_id, parent_type);
@@ -570,8 +609,6 @@ export default class Context {
         this.image_configs.set(image_config.id, image_config);
         this.selectConfig(image_config.id);
         image_config.bind();
-
-        return image_config;
     }
 
     /**
@@ -596,8 +633,24 @@ export default class Context {
 
         // deselect if we were selected
         let selId = this.getSelectedImageConfig();
-        if (selId && selId === conf.id)
-            this.selected_config = null;
+        if (selId && selId === conf.id) this.selected_config = null;
+        // if in mdi, select another open config
+        let confSize = this.image_configs.size;
+        if (this.useMDI) {
+            // remove from sync group
+            conf.toggleSyncGroup(null);
+            // choose next selected image config
+            if (confSize > 0) {
+                this.selected_config = this.image_configs.keys().next().value;
+                if (confSize === 1) {
+                    this.publish(
+                        IMAGE_VIEWER_CONTROLS_VISIBILITY,
+                        {config_id: this.selected_config, flag: true});
+                    this.publish(
+                        IMAGE_VIEWER_RESIZE, {config_id: -1, delay: 100});
+                }
+            }
+        }
 
         // call unbind and wipe reference
         conf.unbind();
@@ -612,8 +665,8 @@ export default class Context {
      */
     selectConfig(id=null) {
         if (typeof id !== 'number' || id < 0 ||
-            !(this.image_configs.get(id) instanceof ImageConfig))
-            return null;
+            !(this.image_configs.get(id) instanceof ImageConfig) ||
+            this.selected_config === id) return;
 
         this.selected_config = id;
     }
@@ -663,6 +716,7 @@ export default class Context {
      * @memberof Context
      */
     publish() {
+        if (this.prevent_event_notification) return;
         this.eventbus.publish.apply(this.eventbus, arguments);
     }
 
@@ -714,5 +768,104 @@ export default class Context {
      */
     getVersion() {
         return 'v' + this.getInitialRequestParam(REQUEST_PARAMS.VERSION);
+    }
+
+    /**
+     * Returns a list of the image configs that contain the same image
+     *
+     * @param {number} image_id the image id
+     * @param {number} exclude_config this config will be excluded
+     * @return {Array.<ImageConfig>} the image configs that refer to the same image
+     * @memberof Context
+     */
+    getImageConfigsForGivenImage(image_id, exclude_config = -1) {
+        if (typeof image_id !== 'number' || isNaN(image_id)) return [];
+        if (typeof exclude_config !== 'number' || isNaN(exclude_config))
+            exclude_config = -1;
+
+        let ret = [];
+        for (let [id, conf] of this.image_configs) {
+            if (id === exclude_config ||
+                !(conf.image_info instanceof ImageInfo) ||
+                conf.image_info.image_id !== image_id) continue;
+            ret.push(conf);
+        }
+        return ret;
+    }
+
+    /**
+     * Reload image info for all image configs that have the same parent
+     *
+     * @param {number} parent_id the parent id
+     * @param {number} parent_type the parent type, e.g. INITIAL_TYPES.DATASET
+     * @param {number} exclude_config if given this config will be excluded
+     * @memberof Context
+     */
+    reloadImageConfigsGivenParent(parent_id, parent_type, exclude_config = -1) {
+        if (typeof exclude_config !== 'number' || isNaN(exclude_config))
+            exclude_config = -1;
+
+        for (let [id, conf] of this.image_configs) {
+            if (id === exclude_config ||
+                !(conf.image_info instanceof ImageInfo) ||
+                conf.image_info.parent_type !== parent_type ||
+                conf.image_info.parent_id !== parent_id) continue;
+
+            this.reloadImageConfig(conf, IMAGE_CONFIG_RELOAD.IMAGE);
+        }
+    }
+
+    /**
+     * Reload image/regions for a given image id
+     *
+     * @param {number} image_id the image id
+     * @param {number} what the number designating what should be reloaded
+     * @param {number} exclude_config if given this config will be excluded
+     * @param {Array|Object} data data that should be used for reload
+     * @memberof Context
+     */
+    reloadImageConfigForGivenImage(image_id, what, exclude_config = -1, data = null) {
+        let sameImageConfs =
+            this.getImageConfigsForGivenImage(image_id, exclude_config);
+        for (let c in sameImageConfs)
+            this.reloadImageConfig(sameImageConfs[c], what, data);
+    }
+
+    /**
+     * Reload image/regions for given image config
+     *
+     * @param {ImageConfig|number} image_config the image config or its id
+     * @param {number} what the number designating what should be reloaded
+     * @param {Array|Object} data data that should be used for reload/sync
+     * @memberof Context
+     * @private
+     */
+    reloadImageConfig(image_config, what, data=null) {
+        if (typeof image_config === 'undefined' || image_config === null ||
+            typeof what !== 'number' || isNaN(what) ||
+            (what !== IMAGE_CONFIG_RELOAD.IMAGE &&
+             what !== IMAGE_CONFIG_RELOAD.REGIONS)) return;
+
+        let conf = null;
+        if (image_config instanceof ImageConfig)
+            conf = image_config;
+        else if (typeof image_config === 'number')
+            conf = this.getImageConfig(image_config);
+        if (conf === null || !(conf.image_info instanceof ImageInfo) ||
+            (what === IMAGE_CONFIG_RELOAD.REGIONS &&
+                (!(conf.regions_info instanceof RegionsInfo) ||
+                 !conf.regions_info.ready))) return;
+
+        switch (what) {
+            case IMAGE_CONFIG_RELOAD.IMAGE:
+                conf.image_info.refresh = true;
+                conf.resetHistory();
+                conf.image_info.requestData(true);
+                break;
+            case IMAGE_CONFIG_RELOAD.REGIONS:
+                if (Misc.isArray(data)) conf.regions_info.setData(data);
+                else conf.regions_info.requestData(true);
+                break;
+        }
     }
 }
