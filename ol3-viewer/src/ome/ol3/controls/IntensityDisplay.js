@@ -135,7 +135,7 @@ ol.inherits(ome.ol3.controls.IntensityDisplay, ol.control.Control);
 
 /**
  * Overide setMap to avoid listener keys being null when removing the control
- * @param {ol.Map} map Map.
+ * @param {ol.PluggableMap} map Map.
  */
 ome.ol3.controls.IntensityDisplay.prototype.setMap = function(map) {
     if (this.map_) {
