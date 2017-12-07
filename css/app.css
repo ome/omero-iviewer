@@ -198,6 +198,22 @@ a.ui-button:active,
 	margin-left: 0px;
 	margin-right: 0px;
 }
+.fixed-header .btn-default,
+.fixed-header .btn-default:hover,
+.fixed-header .btn-default:active,
+.fixed-header .btn-default:focus,
+.fixed-header .open>.dropdown-toggle.btn-default,
+.fixed-header .open>.dropdown-toggle.btn-default:hover,
+.fixed-header .open>.dropdown-toggle.btn-default:active,
+.fixed-header .open>.dropdown-toggle.btn-default:focus {
+    background-color: transparent;
+    border-color: transparent;
+    font-size: 16px;
+    color: white;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    outline: none;
+    box-shadow:none;
+}
 
 .frame {
     margin-left: -105px;
@@ -1202,8 +1218,8 @@ thumbnail-slider img {
     float: left;
     margin-left: 10px;
     cursor: pointer;
-    top: 5px;
-    font-size: 30px;
+    top: 8px;
+    font-size: 22px;
 }
 
 .dropdown-image-config {
@@ -1223,5 +1239,4 @@ thumbnail-slider img {
 }
 .sync-locks label {
     margin-left: 10px;
->>>>>>> master
 }
