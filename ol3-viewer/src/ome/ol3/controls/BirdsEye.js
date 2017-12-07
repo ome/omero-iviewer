@@ -70,12 +70,6 @@ ome.ol3.controls.BirdsEye = function(options) {
     this.thumbnail_url_ = options['url'];
 
     /**
-    * @type {number}
-    * @private
-    */
-    this.thumbnail_revision_ = 0;
-
-    /**
     * @type {Array.<number>}
     * @private
     */
@@ -245,7 +239,6 @@ ome.ol3.controls.BirdsEye.prototype.setMap = function(map) {
  * @return {ol.PluggableMap} the bird's eye view
  */
 ome.ol3.controls.BirdsEye.prototype.initOrUpdate = function() {
-    if (typeof update_only !== 'boolean') update_only = false;
     // determine thumbnail size
     var ext = [0, -this.thumbnail_size_[1], this.thumbnail_size_[0], 0];
     var proj = new ol.proj.Projection({
@@ -258,7 +251,6 @@ ome.ol3.controls.BirdsEye.prototype.initOrUpdate = function() {
     // effectively updating the static image source
     if (this.birds_eye_ instanceof ol.PluggableMap &&
         this.birds_eye_.getLayers().getLength() >0) {
-        this.thumbnail_revision_++;
         this.birds_eye_.getLayers().item(0).setSource(
             new ol.source.ImageStatic({
             url: this.getThumbnailUrlWithVersion(),
@@ -296,12 +288,11 @@ ome.ol3.controls.BirdsEye.prototype.initOrUpdate = function() {
  */
 ome.ol3.controls.BirdsEye.prototype.getThumbnailUrlWithVersion = function() {
     var map = this.getMap();
-    var conf =
-        map ? ome.ol3.utils.Misc.getTargetId(map.getTargetElement()) : "";
+    var rev = new Date().getTime();
+    if (map) rev += "-" + ome.ol3.utils.Misc.getTargetId(map.getTargetElement());
 
     return this.thumbnail_url_ + "/" + this.thumbnail_size_[0] +
-        "/" + this.thumbnail_size_[1] + "/?rev=" +
-        conf + "-" + this.thumbnail_revision_;
+        "/" + this.thumbnail_size_[1] + "/?rev=" + rev;
 }
 
 /**
