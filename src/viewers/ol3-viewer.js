@@ -235,10 +235,14 @@ export default class Ol3Viewer extends EventSubscriber {
                         start: chan.window.start,
                         end: chan.window.end,
                         color: chan.color,
-                        inverted: chan.inverted,
-                        family: chan.family,
-                        coefficient: chan.coefficient
+                        inverted: chan.inverted
                     };
+                    if (typeof chan.family === 'string' && chan.family !== "" &&
+                        typeof chan.coefficient === 'number' &&
+                        !isNaN(chan.coefficient)) {
+                            chanUpdate.family = chan.family;
+                            chanUpdate.coefficient = chan.coefficient;
+                    }
                     updates.push(chanUpdate);
                 };
                 this.viewer.changeChannelRange(updates);

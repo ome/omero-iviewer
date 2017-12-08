@@ -659,10 +659,6 @@ export default class ImageInfo {
                 c.color = c.lut;
             if (typeof c.inverted !== 'boolean')
                 c.inverted = null;
-            if (typeof c.family !== 'string' ||
-                c.family === '') c.family = 'linear';
-            if (typeof c.coefficient !== 'number' || isNaN(c.coefficient))
-                c.coefficient = 1.0;
         });
 
         // mix in initial channel settings if exist

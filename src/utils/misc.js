@@ -259,15 +259,12 @@ export default class Misc {
                 typeof m['inverted']['enabled'] === 'boolean' &&
                 m['inverted']['enabled'];
             if (typeof m['quantization'] !== 'object' ||
-                m['quantization'] === null) continue;
-            channels[i]['family'] =
-                typeof m['quantization']['family'] === 'string' &&
-                m['quantization']['family'] !== '' ?
-                    m['quantization']['family'] : 'linear';
-            channels[i]['coefficient'] =
-                typeof m['quantization']['coefficient'] === 'number' &&
-                !isNaN(m['quantization']['coefficient']) ?
-                    m['quantization']['coefficient'] : '1.0';
+                m['quantization'] === null ||
+                !(typeof m['family'] === 'string' && m['family'] !== "" &&
+                    typeof m['coefficient'] === 'number' &&
+                    !isNaN(m['coefficient']))) continue;
+            channels[i]['family'] = m['quantization']['family'];
+            channels[i]['coefficient'] = m['quantization']['coefficient'];
         }
 
         return channels;
@@ -296,12 +293,15 @@ export default class Misc {
             (c) => {
                 url+= (i !== 0 ? ',' : '') + (!c.active ? '-' : '') + (++i) +
                  "|" + c.window.start + ":" + c.window.end + "$" + c.color;
-                 maps.push(
-                     {"inverted": { "enabled" :
-                         typeof c.inverted === 'boolean' && c.inverted},
-                      "quantization": {
-                          "family": c.family, "coefficient": c.coefficient}
-                     });
+                let m = {
+                    "inverted": { "enabled" :
+                        typeof c.inverted === 'boolean' && c.inverted}};
+                if (typeof c.family === 'string' && c.family !== "" &&
+                    typeof c.coefficient === 'number' && !isNaN(c.coefficient)) {
+                        m.quantization = {
+                            "family": c.family, "coefficient": c.coefficient};
+                }
+                maps.push(m);
              });
         return url + "&maps=" + JSON.stringify(maps);
     }

@@ -275,14 +275,21 @@ ome.ol3.source.Image = function(options) {
                 url += (!channelInfo['active'] ? "-" : "") + (c + 1);
                 url += "|" + channelInfo['start'] + ":" + channelInfo['end'];
                 url += "$" + channelInfo['color']; // color info
-                maps.push(
-                    {"inverted" : { "enabled" :
+                var m = {
+                    "inverted" : { "enabled" :
                         typeof channelInfo['inverted'] === 'boolean' &&
-                        channelInfo['inverted']},
-                     "quantization": {
-                        "family": channelInfo['family'],
-                        "coefficient": channelInfo['coefficient']}
-                    });
+                            channelInfo['inverted']}
+                };
+                if (typeof channelInfo['family'] === 'string' &&
+                    channelInfo['family'] !== "" &&
+                    typeof channelInfo['coefficient'] === 'number' &&
+                    !isNaN(channelInfo['coefficient'])) {
+                        m["quantization"] = {
+                            "family": channelInfo['family'],
+                            "coefficient": channelInfo['coefficient']
+                        };
+                };
+                maps.push(m);
             }
             url += "&maps=" + JSON.stringify(maps);
             url += '&m=' + this.image_model_;
@@ -562,12 +569,17 @@ ome.ol3.source.Image.prototype.captureImageSettings = function() {
                 "max" : chan['max'],
                 "start" : chan['start'],
                 "end" : chan['end']
-            },
-            "family": chan['family'],
-            "coefficient": chan['coefficient']
+            }
         };
         if (typeof chan['inverted'] === 'boolean')
             chanSnap['inverted'] = chan['inverted'];
+        if (typeof chan['family'] === 'string' && chan['family'] !== "" &&
+            typeof chan['coefficient'] === 'number' &&
+            !isNaN(chan['coefficient'])) {
+                chanSnap["family"] = chan['family'];
+                chanSnap["coefficient"] = chan['coefficient'];
+        };
+
         ret['channels'].push(chanSnap);
     }
 
