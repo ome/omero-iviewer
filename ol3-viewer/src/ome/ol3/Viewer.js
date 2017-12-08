@@ -223,6 +223,37 @@ ome.ol3.Viewer = function(id, options) {
     this.prevent_event_notification_ = false;
 
     /**
+     * Checks whether a given omero server version is supported.
+     * It is if the given server version is equal or greater to the
+     * presently used omero server.
+     * The given version is accepted in 2 notations:
+     * - a three digit number (omitting the dots)
+     * - a string (including dots or not)
+     *
+     * @function
+     * @param {string|number} version the minimal version to check against
+     * @return {boolean} true if the given version is suppored, false otherwise
+     */
+    this.supportsOmeroServerVersion = function(version) {
+        if (typeof version === 'number') {
+            version = '' + version;
+        } else if (typeof version !== 'string') return false;
+
+        // strip off dots and check length
+        version = parseInt(version.replace(/[.]/g, ""));
+        if (isNaN(version) || ('' + version).length !== 3) return false;
+
+        // check against actual version
+        actual_version =
+            this.getInitialRequestParam(ome.ol3.REQUEST_PARAMS.OMERO_VERSION);
+        if (typeof actual_version !== 'string') return false;
+        actual_version = parseInt(actual_version.replace(/[.]/g, ""));
+        if (isNaN(actual_version)) return false;
+
+        return version >= actual_version;
+    }
+
+    /**
      * The initialization function performs the following steps:
      * 1. Request image data as json (if not handed in)
      * 2. Store the image data internally (if not handed in)
@@ -438,7 +469,11 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
        img_proj:  parsedInitialProjection,
        img_model:  initialModel,
        tiled: typeof this.image_info_['tiles'] === 'boolean' &&
-              this.image_info_['tiles']
+            this.image_info_['tiles'],
+       tile_size: this.supportsOmeroServerVersion("5.4.2") ?
+            ome.ol3.DEFAULT_TILE_DIMS :
+                this.image_info_['tile_size'] ?
+                    this.image_info_['tile_size'] : null
     });
     source.changeChannelRange(initialChannels, false);
 

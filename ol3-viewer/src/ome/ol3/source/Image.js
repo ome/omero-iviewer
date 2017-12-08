@@ -62,13 +62,6 @@ ome.ol3.source.Image = function(options) {
     var opts = options || {};
 
     /**
-     * the default tile size that will be used
-     * @type {number}
-     * @private
-     */
-    this.DEFAULT_TILE_SIZE = 512;
-
-    /**
      * the image id used for viewing
      * @type {number}
      * @private
@@ -187,8 +180,8 @@ ome.ol3.source.Image = function(options) {
      * @type {Object}
      * @private
      */
-    this.tile_size_ = this.use_tiled_retrieval_ ?
-        {width: this.DEFAULT_TILE_SIZE, height: this.DEFAULT_TILE_SIZE} :
+    this.tile_size_ =
+        this.use_tiled_retrieval_ ? opts.tile_size :
             {width: this.width_, height: this.height_};
 
     /**

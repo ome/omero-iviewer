@@ -36,7 +36,7 @@ from omero_sys_ParametersI import ParametersI
 import omero.util.pixelstypetopython as pixelstypetopython
 
 from version import __version__
-
+from omero_version import omero_version
 
 WEB_API_VERSION = 0
 
@@ -54,6 +54,7 @@ QUERY_DISTANCE = 25
 def index(request, iid=None, conn=None, **kwargs):
     # set params
     params = {'VERSION': __version__}
+    params = {'OMERO_VERSION': omero_version}
 
     # check for image_id (default viewer setup)
     if iid is not None:
