@@ -210,7 +210,7 @@ a.ui-button:active,
 }
 .center-row1-mdi {
     background-color: rgba(255,255,255,1);
-    height: calc(100% - 40px);
+    height: calc(100% - 25px);
     padding: 0px;
 }
 
@@ -223,7 +223,7 @@ a.ui-button:active,
     margin-top: -35px;
     position: relative;
     background-color: rgba(255,255,255,1);
-    margin-right: 10px;
+    margin-right: 20px;
 }
 .center-row2-hidden {
     display: none;
