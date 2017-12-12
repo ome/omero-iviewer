@@ -42,6 +42,19 @@ export class ImageModelValueConverter {
   }
 }
 
+/**
+ * A converter class that extracts the sync group number
+ */
+@noView
+export class SyncGroupValueConverter {
+
+  toView(syncGroup) {
+    let len = "group".length;
+    if (typeof syncGroup !== 'string' || syncGroup.length < len) return "";
+    return syncGroup.substring(len);
+  }
+}
+
 import Misc from './misc';
 
 /*
