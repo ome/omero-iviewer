@@ -175,7 +175,9 @@ a.ui-button:active,
     background-color: #1F6AAA;
     border-width: 0;
 }
-
+.fixed-header .dropdown-menu {
+    min-width: 100px;
+}
 .fixed-header div {
     margin-left: 20px;
     margin-right: 20px;
@@ -1173,7 +1175,7 @@ thumbnail-slider img {
     top: 45%;
     left: 40%;
 }
-.modal-about div, .fixed-header li {
+.modal-about div {
     text-align: center;
 }
 
