@@ -1215,10 +1215,9 @@ thumbnail-slider img {
 }
 
 .mdi-icon {
-    float: left;
     margin-left: 10px;
     cursor: pointer;
-    top: 8px;
+    top: 5px;
     font-size: 22px;
 }
 
