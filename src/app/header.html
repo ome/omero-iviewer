@@ -105,13 +105,13 @@
                     </li>
                 </ul>
             </div>
-            <span class="mdi-icon glyphicon glyphicon-duplicate
-                      ${context.useMDI ? '' : 'disabled-color'}"
+            <button class="btn multi-view-btn"
                title="${context.useMDI ?
                   'Click to use single image viewing mode' :
                    'Click to use multiple image viewing mode'}"
                click.delegate="toggleMDI()">
-            </span>
+               ${context.useMDI ? 'Single View' : 'Multi View'}
+           </button>
         </div>
         <div class="fixed-header-text">
            <span>${image_config.image_info.ready &&

@@ -220,6 +220,13 @@ a.ui-button:active,
     outline: none;
     box-shadow:none;
 }
+.fixed-header .multi-view-btn {
+    border-color: #ccc;
+    background-color: #fff;
+    color: #333;
+    font-size: 15px;
+    padding: 2px 5px;
+}
 
 .frame {
     margin-left: -105px;
@@ -1218,13 +1225,6 @@ thumbnail-slider img {
 .mdi-selected {
     border: solid 2px rgba(31,106,170,1);
     z-index: 1;
-}
-
-.mdi-icon {
-    margin-left: 10px;
-    cursor: pointer;
-    top: 5px;
-    font-size: 22px;
 }
 
 .dropdown-image-config {
