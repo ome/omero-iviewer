@@ -58,14 +58,16 @@
                                  image_config.regions_info.selected_shapes.length > 0 ?
                                  '' : 'disabled-color'}">
                         <a click.delegate="image_config.regions_info.copyShapes()"
-                           href="#">Copy &#x2318;C</a>
+                           href="#">Copy<span>${getKeyboardShortCutPrefix()}C</span>
+                        </a>
                     </li>
                     <li class="${image_config.regions_info.ready &&
                                image_config.image_info.can_annotate &&
                                image_config.regions_info.copied_shapes.length > 0 ?
                                  '' : 'disabled-color'}">
                         <a click.delegate="image_config.regions_info.pasteShapes()"
-                           href="#">Paste &#x2318;V</a>
+                           href="#">Paste<span>${getKeyboardShortCutPrefix()}V</span>
+                        </a>
                     </li>
                     <li class="${image_config.regions_info.ready &&
                                  image_config.image_info.can_annotate &&

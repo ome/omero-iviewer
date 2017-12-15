@@ -176,7 +176,7 @@ a.ui-button:active,
     border-width: 0;
 }
 .fixed-header .dropdown-menu {
-    min-width: 100px;
+    min-width: 160px;
 }
 .fixed-header div {
     margin-left: 20px;
@@ -199,6 +199,10 @@ a.ui-button:active,
 .fixed-header .dropdown {
 	margin-left: 0px;
 	margin-right: 0px;
+}
+.fixed-header .dropdown a span {
+    position: absolute;
+    right: 20px;
 }
 .fixed-header .btn-default,
 .fixed-header .btn-default:hover,

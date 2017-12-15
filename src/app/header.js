@@ -326,6 +326,18 @@ export class Header {
      }
 
      /**
+      * Returns the keyboard command prefix based on navigator.platform
+      * i.e. '&#x2318;' for apple, 'ctrl+' otherwise
+      *
+      * @return {string}
+      * @memberof Header
+      */
+     getKeyboardShortCutPrefix() {
+         if (Misc.isApple()) return '\u2318';
+         return 'Ctrl+'
+     }
+
+     /**
       * Unregisters the the observers (property and regions info ready)
       *
       * @param {boolean} property_only true if only property observers are cleaned up
