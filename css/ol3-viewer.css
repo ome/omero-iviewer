@@ -333,16 +333,16 @@
     background-color:  #adadad;
 }
 .intensity-display {
+    display: none;
     width: 90px;
     height: 28px;
-    line-height: 28px;
-    padding: 2px;
-    font-size: 10px;
-    filter:alpha(opacity=55);
+    line-height: 30px;
+    font-size: 12px;
+    font-weight: bold;
     -webkit-box-shadow:none;
     box-shadow:none;
-    opacity:.55;
     float: left;
+    text-align: center;
 }
 .ol-intensity-popup {
     background-color: #fff;
@@ -350,10 +350,26 @@
     border-radius: 3px;
     padding: 2px;
     z-index: 3;
-    min-width: 135px;
+}
+.ol-intensity-popup .intensity-header {
+    display: table-cell;
+    font-weight: bold;
+    text-decoration: underline;
+    padding-left: 5px;
+    padding-right: 5px;
     text-align: center;
 }
-.ol-intensity-popup div span {
-    font-weight: bold;
+.ol-intensity-popup .intensity-label {
+    display: table-cell;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 50px;
+    max-width: 150px;
+    overflow-x: hidden;
     white-space: pre;
+}
+.ol-intensity-popup .intensity-value {
+    display: table-cell;
+    padding-left: 5px;
+    padding-right: 5px;
 }

@@ -250,16 +250,23 @@ ome.ol3.controls.IntensityDisplay.prototype.updateTooltip =
         tooltip.style.visibility = 'hidden';
         tooltip.innerHTML = "";
         if (hasData) {
+            var intensity_html =
+                '<div style="display:table-row">' +
+                    '<div class="intensity-header">Channel</div>' +
+                    '<div class="intensity-header">Intensity</div>' +
+                '</div>';
             for (var x in data) {
                 if (!this.image_.channels_info_[x]['active']) continue;
                 var val = data[x];
                 var label = this.image_.channels_info_[x]['label'];
-                var r = document.createElement('div');
-                r.innerHTML =
-                    '<span>' + label + ':</span>' + '&nbsp;' +
-                    (val % 1 === 0 ? val : val.toFixed(3));
-                tooltip.appendChild(r);
+                intensity_html +=
+                    '<div style="display:table-row">' +
+                        '<div class="intensity-label">' + label + '</div>' +
+                        '<div class="intensity-value">' +
+                        (val % 1 === 0 ? val : val.toFixed(3)) + '</div>' +
+                    '</div>';
             }
+            tooltip.innerHTML = intensity_html;
         } else if (is_querying) {
             tooltip.innerHTML = "Querying Intensity...";
         }
@@ -352,10 +359,12 @@ ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
     var x = e.coordinate[0], y = -e.coordinate[1];
     if (x < 0 || x >= this.image_.getWidth() ||
         y < 0 || y >= this.image_.getHeight()) {
+            el.style.display = 'none';
             el.innerHTML = "";
             return;
         }
-    el.innerHTML = "X:" + x.toFixed(0) + ",Y:" + y.toFixed(0);
+    el.style.display = 'block';
+    el.innerHTML = "" + x.toFixed(0) + "," + y.toFixed(0);
 
     if (this.query_intensity_) {
         var activeChannels = this.image_.getChannels();
@@ -366,7 +375,7 @@ ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
         var z = this.image_.getPlane();
         var t = this.image_.getTime();
         var displayIntensity = function(results) {
-            el.innerHTML = "X:" + x.toFixed(0) + ",Y:" + y.toFixed(0);
+            el.innerHTML = "" + x.toFixed(0) + "," + y.toFixed(0);
             this.updateTooltip(e, results);
         }.bind(this);
 
