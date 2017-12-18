@@ -365,14 +365,15 @@ export default class Ui {
                             Misc.isApple() ? 'metaKey' : 'ctrlKey';
                             if ((group !== 'global' &&
                                 context.selected_tab !== group) ||
-                                !event[command]) return true;
+                                ((typeof action.ctrl !== 'boolean' ||
+                                  action.ctrl) && !event[command])) return true;
                             try {
                                 action.func.apply(scope, action.args);
                             } catch(err) {
                                 console.error("Key Handler failed: " + err);
                             }
                             return false;
-                }, group));
+                }, group, action.ctrl));
     }
 
     /**
