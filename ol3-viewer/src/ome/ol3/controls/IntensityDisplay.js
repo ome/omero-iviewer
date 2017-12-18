@@ -364,7 +364,7 @@ ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
             return;
         }
     el.style.display = 'block';
-    el.innerHTML = "" + x.toFixed(0) + "," + y.toFixed(0);
+    el.innerHTML = "X: " + x.toFixed(0) + " Y: " + y.toFixed(0);
 
     if (this.query_intensity_) {
         var activeChannels = this.image_.getChannels();
@@ -375,7 +375,7 @@ ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
         var z = this.image_.getPlane();
         var t = this.image_.getTime();
         var displayIntensity = function(results) {
-            el.innerHTML = "" + x.toFixed(0) + "," + y.toFixed(0);
+            el.innerHTML = "X: " + x.toFixed(0) + " Y: " + y.toFixed(0);
             this.updateTooltip(e, results);
         }.bind(this);
 

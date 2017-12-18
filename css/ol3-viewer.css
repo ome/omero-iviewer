@@ -334,7 +334,7 @@
 }
 .intensity-display {
     display: none;
-    width: 90px;
+    width: 110px;
     height: 28px;
     line-height: 30px;
     font-size: 12px;
@@ -343,6 +343,7 @@
     box-shadow:none;
     float: left;
     text-align: center;
+    white-space: pre;
 }
 .ol-intensity-popup {
     background-color: #fff;
