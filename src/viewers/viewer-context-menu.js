@@ -400,12 +400,18 @@ export default class ViewerContextMenu {
                 "," + (shape.Area < 0 ? '' : shape.Area) + "," +
                 (shape.Length < 0 ? '' : shape.Length) + ",";
 
+            let emptyStatsRow =
+                csvCommonInfo + csvMeasure + ",,,,," + CSV_LINE_BREAK;
             if (typeof shape.stats === 'object' &&
                 shape.stats !== null &&
                 active.length !== 0) {
                     for (let s in shape.stats) {
                         let stat = shape.stats[s];
                         if (active.indexOf(stat.index) !== -1) {
+                            if (stat.points === 0) {
+                                csv += emptyStatsRow;
+                                break;
+                            }
                             csv += csvCommonInfo + stat.index + csvMeasure +
                                     stat.points + "," + stat.min + "," +
                                     stat.max + "," + stat.sum + "," +
@@ -413,7 +419,7 @@ export default class ViewerContextMenu {
                                     CSV_LINE_BREAK;
                         }
                     }
-            } else csv += csvCommonInfo + csvMeasure + ",,,,," + CSV_LINE_BREAK;
+            } else csv += emptyStatsRow;
         }
 
         let data = null;
