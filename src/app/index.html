@@ -66,21 +66,18 @@
         </div>
 
         <div class="frame col-xs-12">
-            <div class="${context.useMDI &&
-                            context.image_configs.size > 1 ?
-                                'viewer-mdi' : 'viewer'}
-                        ${context.useMDI && context.selected_config === id  &&
-                            context.image_configs.size > 1 ?
+            <div class="${context.useMDI ? 'viewer-mdi' : 'viewer'}
+                        ${context.useMDI && context.selected_config === id ?
                                 'mdi-selected' : ''}"
                  repeat.for="[id, conf] of context.image_configs"
-                 css="${context.useMDI && context.image_configs.size > 1 ?
+                 css="${context.useMDI ?
                         ';position: absolute;top:' + conf.position.top +
                         ';left:' + conf.position.left +
                         ';width:' + conf.size.width +
                         ';height:' + conf.size.height : ''}"
                  mousedown.delegate="context.selectConfig(id)">
                  <div class="config-linking"
-                      show.bind="context.useMDI && context.image_configs.size > 1">
+                      show.bind="context.useMDI">
                      <div class="dropdown dropdown-image-config"
                           title="Link Image Settings">
                          <button type="button"
@@ -111,7 +108,7 @@
                                             (lock.CHAR === 't' &&
                                              conf.image_info.dimensions.max_t > 1) ||
                                              (lock.CHAR === 'zt' &&
-                                              conf.image_info.dimensions.max_z > 1 || 
+                                              conf.image_info.dimensions.max_z > 1 ||
                                               conf.image_info.dimensions.max_t > 1))"
                                 title="Lock ${lock.LABEL}}">
                              <input type="checkbox"
@@ -122,7 +119,7 @@
                          </label>
                     </div>
                 </div>
-                <div show.bind="context.useMDI && context.image_configs.size > 1"
+                <div show.bind="context.useMDI"
                      class="viewer-handle
                             ${context.useMDI && context.selected_config === id ?
                                 'viewer-handle-selected' : ''}">

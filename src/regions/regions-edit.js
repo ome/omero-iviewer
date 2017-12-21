@@ -133,6 +133,7 @@ export default class RegionsEdit extends EventSubscriber {
         if (this.regions_info === null) return;
 
         let onceReady = () => {
+            if (this.regions_info === null) return;
             // register observer
             this.registerObservers();
             // subscribe

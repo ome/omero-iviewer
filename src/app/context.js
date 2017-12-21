@@ -21,9 +21,7 @@ import Misc from '../utils/misc';
 import ImageConfig from '../model/image_config';
 import ImageInfo from '../model/image_info';
 import RegionsInfo from '../model/regions_info';
-import {
-    IMAGE_VIEWER_CONTROLS_VISIBILITY, IMAGE_VIEWER_RESIZE
-} from '../events/events';
+import { IMAGE_VIEWER_CONTROLS_VISIBILITY } from '../events/events';
 import {
     APP_NAME, IMAGE_CONFIG_RELOAD, IVIEWER, INITIAL_TYPES, LUTS_NAMES,
     LUTS_PNG_URL, PLUGIN_NAME, PLUGIN_PREFIX, REQUEST_PARAMS, SYNC_LOCK,
@@ -620,7 +618,6 @@ export default class Context {
                         IMAGE_VIEWER_CONTROLS_VISIBILITY,
                         {config_id: this.selected_config, flag: false});
             };
-            this.publish(IMAGE_VIEWER_RESIZE, {config_id: -1, delay: 100});
         }
 
         let image_config =
@@ -653,7 +650,8 @@ export default class Context {
 
         // deselect if we were selected
         let selId = this.getSelectedImageConfig();
-        if (selId && selId === conf.id) this.selected_config = null;
+        if ((selId && selId === conf.id) ||
+            selId === null) this.selected_config = null;
         // if in mdi, select another open config
         let confSize = this.image_configs.size;
         if (this.useMDI) {
@@ -666,8 +664,6 @@ export default class Context {
                     this.publish(
                         IMAGE_VIEWER_CONTROLS_VISIBILITY,
                         {config_id: this.selected_config, flag: true});
-                    this.publish(
-                        IMAGE_VIEWER_RESIZE, {config_id: -1, delay: 100});
                 }
             }
         }

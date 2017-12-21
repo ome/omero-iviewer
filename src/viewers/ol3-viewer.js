@@ -272,6 +272,7 @@ export default class Ol3Viewer extends EventSubscriber {
             this.bindingEngine.propertyObserver(
                 this.context, 'selected_config').subscribe(
                     (newValue, oldValue) => {
+                        this.resizeViewer({config_id: newValue, delay: 200});
                         if (!this.context.useMDI ||
                             oldValue !== this.image_config.id ||
                             !this.image_config.regions_info.hasBeenModified()) {
@@ -447,7 +448,10 @@ export default class Ol3Viewer extends EventSubscriber {
      * @param {Object} params the event notification parameters
      */
     resizeViewer(params={}) {
-        if (this.viewer === null) return;
+        if (this.viewer === null ||
+            (typeof params.config === 'number' &&
+                !isNaN(params.config_id) && params.config !== -1 &&
+                params.config_id !== this.image_config.id)) return;
 
         // while dragging does not concern us
         if (typeof params.is_dragging !== 'boolean') params.is_dragging = false;

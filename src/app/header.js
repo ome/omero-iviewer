@@ -24,8 +24,9 @@ import Misc from '../utils/misc';
 import Ui from '../utils/ui';
 import {IMAGE_VIEWPORT_CAPTURE} from '../events/events';
 import {
-    CSV_LINE_BREAK, IVIEWER, INITIAL_TYPES, PROJECTION, WEBCLIENT
+    CSV_LINE_BREAK, INITIAL_TYPES, IVIEWER, PROJECTION, WEBCLIENT
 } from '../utils/constants';
+import { IMAGE_VIEWER_RESIZE } from '../events/events';
 
 /**
  * @classdesc
@@ -111,12 +112,13 @@ export class Header {
      * @memberof Header
      */
      onImageConfigChange() {
-         let imgConf = this.context.getSelectedImageConfig();
-         if (imgConf === null) return;
          this.image_config = this.context.getSelectedImageConfig();
 
         // clean up old observers
         this.unregisterObservers(true);
+
+        if (this.image_config === null) return;
+
         // listen for region ready to start region selection observer
         this.observers.push(
             this.bindingEngine.propertyObserver(
@@ -162,47 +164,77 @@ export class Header {
       * @memberof Header
       */
      saveProjectedImage() {
+         if (this.image_config === null ||
+             this.image_config.image_info.projection === PROJECTION.NORMAL) return;
+
          let imgInf = this.image_config.image_info;
+         let url =
+             this.context.server + this.context.getPrefixedURI(IVIEWER) +
+             '/save_projection/?image=' + imgInf.image_id +
+             "&projection=" + imgInf.projection +
+             "&start=" + imgInf.projection_opts.start +
+             "&end=" + imgInf.projection_opts.end;
+         if (this.context.initial_type !== INITIAL_TYPES.WELL &&
+             typeof imgInf.parent_id === 'number')
+                 url += "&dataset=" + imgInf.parent_id;
 
-         if (typeof imgInf.projection !== PROJECTION.NORMAL) {
-             let url =
-                 this.context.server + this.context.getPrefixedURI(IVIEWER) +
-                 '/save_projection/?image=' + imgInf.image_id +
-                 "&projection=" + imgInf.projection +
-                 "&start=" + imgInf.projection_opts.start +
-                 "&end=" + imgInf.projection_opts.end;
-             if (this.context.initial_type !== INITIAL_TYPES.WELL &&
-                 typeof imgInf.parent_id === 'number')
-                     url += "&dataset=" + imgInf.parent_id;
-
-             $.ajax({
-                 url: url,
-                 success: (resp) => {
-                     let msg = "";
-                     if (typeof resp.id === 'number') {
-                         let linkWebclient = this.context.server +
-                             this.context.getPrefixedURI(WEBCLIENT) +
-                             "/?show=image-" + resp.id;
-                         let linkIviewer = this.context.server +
-                             this.context.getPrefixedURI(IVIEWER) +
-                             "/?images=" + resp.id;
-                         if (this.context.initial_type !== INITIAL_TYPES.WELL &&
-                             typeof imgInf.parent_id === 'number')
-                                 linkIviewer += "&dataset=" + imgInf.parent_id;
-                     msg =
-                         "<a href='" + linkWebclient + "' target='_blank'>" +
-                         "Navigate to Image in Webclient</a><br>" +
-                         "<br><a href='" + linkIviewer + "' target='_blank'>" +
-                         "Open Image in iviewer</a>";
-                     } else {
-                         msg = "Failed to create projected image";
-                         if (typeof resp.error === 'string')
-                             console.error(resp.error);
-                     }
-                     Ui.showModalMessage(msg, 'Close');
+         $.ajax({
+             url: url,
+             success: (resp) => {
+                 let msg = "";
+                 if (typeof resp.id === 'number') {
+                     let linkWebclient = this.context.server +
+                         this.context.getPrefixedURI(WEBCLIENT) +
+                         "/?show=image-" + resp.id;
+                     let linkIviewer = this.context.server +
+                         this.context.getPrefixedURI(IVIEWER) +
+                         "/?images=" + resp.id;
+                     if (this.context.initial_type !== INITIAL_TYPES.WELL &&
+                         typeof imgInf.parent_id === 'number')
+                             linkIviewer += "&dataset=" + imgInf.parent_id;
+                 msg =
+                     "<a href='" + linkWebclient + "' target='_blank'>" +
+                     "Navigate to Image in Webclient</a><br>" +
+                     "<br><a href='" + linkIviewer + "' target='_blank'>" +
+                     "Open Image in iviewer</a>";
+                 } else {
+                     msg = "Failed to create projected image";
+                     if (typeof resp.error === 'string')
+                         console.error(resp.error);
                  }
-             });
-         }
+                 Ui.showModalMessage(msg, 'Close');
+             }
+         });
+     }
+
+     /**
+      * Delegates copyShapes
+      *
+      * @memberof Header
+      */
+     copyShapes() {
+         if (this.image_config === null) return;
+         this.image_config.regions_info.copyShapes();
+     }
+
+     /**
+      * Delegates pasteShapes
+      *
+      * @memberof Header
+      */
+     pasteShapes() {
+         if (this.image_config === null) return;
+         this.image_config.regions_info.pasteShapes();
+     }
+
+     /**
+      * Delegates deleteShapes
+      *
+      * @memberof Header
+      */
+     deleteShapes() {
+         if (this.image_config === null) return;
+         this.image_config.regions_info.deleteShapes();
      }
 
      /**
@@ -211,9 +243,10 @@ export class Header {
       * @memberof Header
       */
      saveRoiMeasurements() {
-         let regInf = this.image_config.regions_info;
-         if (regInf.selected_shapes.length === 0) return;
+         if (this.image_config === null ||
+             this.image_config.regions_info.selected_shapes.length === 0) return;
 
+         let regInf = this.image_config.regions_info;
          // we cannot query unssaved shapes
          let ids_for_stats =
              regInf.selected_shapes.filter((s) => s.indexOf("-") == -1);
@@ -308,6 +341,7 @@ export class Header {
       * @memberof Header
       */
      captureViewport() {
+         if (this.image_config === null) return;
          this.context.eventbus.publish(
              IMAGE_VIEWPORT_CAPTURE, {"config_id": this.image_config.id});
      }
@@ -323,6 +357,10 @@ export class Header {
                  if (id !== this.context.selected_config)
                       this.context.removeImageConfig(id,conf)
          this.context.useMDI = !this.context.useMDI;
+         this.context.publish(
+             IMAGE_VIEWER_RESIZE, {
+                 config_id: this.selected_config, delay: 200
+         });
      }
 
      /**

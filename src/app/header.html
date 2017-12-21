@@ -34,12 +34,14 @@
                         <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu">
-                    <li show.bind="image_config.image_info.ready">
+                    <li class="${image_config.image_info.ready ?
+                                 '' : 'disabled-color'}">
                         <a click.delegate="captureViewport()"
                            href="#">Save Viewport as PNG</a>
                     </li>
-                    <li show.bind="image_config.image_info.ready &&
-                        image_config.image_info.projection !== PROJECTION.NORMAL">
+                    <li class="${image_config.image_info.ready  &&
+                                 image_config.image_info.projection !== PROJECTION.NORMAL?
+                                 '' : 'disabled-color'}">
                         <a click.delegate="saveProjectedImage()"
                            href="#">Save Projection as new Image</a>
                     </li>
@@ -57,7 +59,7 @@
                     <li class="${image_config.regions_info.ready &&
                                  image_config.regions_info.selected_shapes.length > 0 ?
                                  '' : 'disabled-color'}">
-                        <a click.delegate="image_config.regions_info.copyShapes()"
+                        <a click.delegate="copyShapes()"
                            href="#">Copy<span>${getKeyboardShortCutPrefix()}C</span>
                         </a>
                     </li>
@@ -65,7 +67,7 @@
                                image_config.image_info.can_annotate &&
                                image_config.regions_info.copied_shapes.length > 0 ?
                                  '' : 'disabled-color'}">
-                        <a click.delegate="image_config.regions_info.pasteShapes()"
+                        <a click.delegate="pasteShapes()"
                            href="#">Paste<span>${getKeyboardShortCutPrefix()}V</span>
                         </a>
                     </li>
@@ -73,7 +75,7 @@
                                  image_config.image_info.can_annotate &&
                                  image_config.regions_info.selected_shapes.length > 0 &&
                                     selected_can_delete ? '' : 'disabled-color'}">
-                        <a click.delegate="image_config.regions_info.deleteShapes()"
+                        <a click.delegate="deleteShapes()"
                            href="#">Delete</a>
                     </li>
                     <li class="${image_config.regions_info.ready &&
