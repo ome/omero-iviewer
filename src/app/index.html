@@ -17,6 +17,7 @@
 -->
 
 <template>
+    <require from="../utils/converters"></require>
     <require from="../viewers/ol3-viewer"></require>
     <require from="./header"></require>
     <require from="./thumbnail-slider"></require>
@@ -84,20 +85,28 @@
                      <div class="dropdown dropdown-image-config"
                           title="Link Image Settings">
                          <button type="button"
-                             class="btn btn-default btn-sm dropdown-toggle"
+                             class="${conf.sync_group === null ?
+                                 'dim_unlocked' : 'dim_locked'}
+                                 btn btn-default btn-sm dropdown-toggle"
                              data-toggle="dropdown">
-                                ${conf.sync_group === null ?
-                                'no sync' : conf.sync_group}
+                                <sup style="margin-left: 10px;">
+                                    ${conf.sync_group | syncGroup}
+                                </sup>
                          </button>
                          <ul class="dropdown-menu">
-                             <li click.delegate="toggleSyncGroup(id, null)">
-                                 <a href="#">no sync</a>
+                             <li click.delegate="toggleSyncGroup(id, null)"
+                                 show.bind="conf.sync_group !== null">
+                                 <a class="dim_unlocked" href="#">&nbsp;</a>
                              </li>
                              <li repeat.for="[name, group] of context.sync_groups"
                                  click.delegate="toggleSyncGroup(id, name)"
+                                 show.bind="conf.sync_group !== name"
                                  mouseover.delegate="highlightSyncGroup(group.members, true)"
-                                 mouseout.delegate="highlightSyncGroup(group.members)">
-                                 <a href="#">${name}</a>
+                                 mouseout.delegate="highlightSyncGroup(group.members)"
+                                 title="Group ${name | syncGroup}">
+                                 <a class="dim_locked" href="#">
+                                     <sup>${name | syncGroup}</sup>
+                                 </a>
                              </li>
                          </ul>
                      </div>
@@ -111,7 +120,7 @@
                                             (lock.CHAR === 't' &&
                                              conf.image_info.dimensions.max_t > 1) ||
                                              (lock.CHAR === 'zt' &&
-                                              conf.image_info.dimensions.max_z > 1 || 
+                                              conf.image_info.dimensions.max_z > 1 ||
                                               conf.image_info.dimensions.max_t > 1))"
                                 title="Lock ${lock.LABEL}}">
                              <input type="checkbox"

@@ -210,7 +210,7 @@ a.ui-button:active,
 }
 .center-row1-mdi {
     background-color: rgba(255,255,255,1);
-    height: calc(100% - 40px);
+    height: calc(100% - 25px);
     padding: 0px;
 }
 
@@ -223,7 +223,7 @@ a.ui-button:active,
     margin-top: -35px;
     position: relative;
     background-color: rgba(255,255,255,1);
-    margin-right: 10px;
+    margin-right: 20px;
 }
 .center-row2-hidden {
     display: none;
@@ -1191,6 +1191,9 @@ thumbnail-slider img {
 .dropdown-image-config button {
     padding: 1px 10px;
     margin: 1px;
+    background-size: 20px 20px;
+    width: 40px;
+    height: 22px;
 }
 
 .config-linking {
@@ -1202,4 +1205,22 @@ thumbnail-slider img {
 }
 .sync-locks label {
     margin-left: 10px;
+}
+.dropdown-toggle.btn-default.dim_locked {
+    background-image: url('images/dim_locked.png');
+}
+.dropdown-toggle.btn-default.dim_unlocked {
+    background-image: url('images/dim_unlocked.png');
+}
+.config-linking .dim_locked, .config-linking .dim_unlocked {
+    background-repeat: no-repeat;
+    background-position-x: 8px;
+}
+.config-linking .dim_locked sup {
+    font-weight: bold;
+    margin-left: 4px;
+}
+.config-linking .dropdown-menu {
+    min-width: 45px;
+    max-width: 45px;
 }

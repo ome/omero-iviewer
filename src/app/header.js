@@ -18,6 +18,7 @@
 // js
 import {inject,customElement, BindingEngine} from 'aurelia-framework';
 import Context from './context';
+import { IMAGE_VIEWER_RESIZE } from '../events/events'
 
 /**
  * @classdesc
@@ -91,6 +92,10 @@ export class Header {
                  if (id !== this.context.selected_config)
                       this.context.removeImageConfig(id,conf)
          this.context.useMDI = !this.context.useMDI;
+         this.context.publish(
+             IMAGE_VIEWER_RESIZE, {
+                 config_id: this.selected_config, delay: 200
+         });
      }
 
      /**
