@@ -473,7 +473,7 @@ a.ui-button:active,
 }
 
 .viewer-mdi {
-    min-width: 400px;
+    min-width: 435px;
     min-height: 250px;
     background-color: rgba(255,255,255,1);
     border: solid 2px rgba(31,106,170,0.6);

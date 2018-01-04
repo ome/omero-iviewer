@@ -27,8 +27,7 @@ import {
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 
 import {
-    IMAGE_INTENSITY_QUERYING, IMAGE_SETTINGS_CHANGE, THUMBNAILS_UPDATE,
-    EventSubscriber
+    IMAGE_SETTINGS_CHANGE, THUMBNAILS_UPDATE, EventSubscriber
 } from '../events/events';
 
 /**

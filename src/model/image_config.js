@@ -92,7 +92,7 @@ export default class ImageConfig extends History {
      * @memberof ImageConfig
      * @type {Object}
      */
-    size = {width: '400px', height: '400px'};
+    size = {width: '435px', height: '435px'};
 
     /**
      * show histogram flag
