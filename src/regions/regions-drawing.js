@@ -131,7 +131,8 @@ export default class RegionsDrawing extends EventSubscriber {
             this.bindingEngine.propertyObserver(
                 this.context, 'selected_tab').subscribe(
                     (newValue, oldValue) => {
-                        if (this.regions_info.shape_to_be_drawn !== null &&
+                        if (this.regions_info &&
+                            this.regions_info.shape_to_be_drawn !== null &&
                             !this.context.isRoisTabActive())
                                 this.onModeChange(
                                     { config_id:
@@ -339,6 +340,7 @@ export default class RegionsDrawing extends EventSubscriber {
          if (this.regions_info === null) return;
 
          let onceReady = () => {
+             if (this.regions_info === null) return;
              // register observer
              this.registerObservers();
              // subscribe
