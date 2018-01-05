@@ -298,9 +298,7 @@ export class Header {
             let csvMeasure =
                 "," + (shape.Area < 0 ? '' : shape.Area) + "," +
                 (shape.Length < 0 ? '' : shape.Length) + ",";
-
-            let emptyStatsRow =
-                csvCommonInfo + csvMeasure + ",,,,," + CSV_LINE_BREAK;
+            let emptyRow = ",,,,," + CSV_LINE_BREAK;
             if (typeof shape.stats === 'object' &&
                 shape.stats !== null &&
                 active.length !== 0) {
@@ -308,7 +306,7 @@ export class Header {
                         let stat = shape.stats[s];
                         if (active.indexOf(stat.index) !== -1) {
                             if (stat.points === 0) {
-                                csv += emptyStatsRow;
+                                csv += csvCommonInfo + "," + emptyRow;
                                 break;
                             }
                             csv += csvCommonInfo + stat.index + csvMeasure +
@@ -318,7 +316,7 @@ export class Header {
                                     CSV_LINE_BREAK;
                          }
                      }
-            } else csv += emptyStatsRow;
+            } else csv += csvCommonInfo + csvMeasure + emptyRow;
         }
 
         let data = null;
