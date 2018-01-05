@@ -35,7 +35,7 @@ import {
     BIRDSEYE_REFRESH, IMAGE_CANVAS_DATA, IMAGE_DIMENSION_CHANGE,
     IMAGE_DIMENSION_PLAY, IMAGE_INTENSITY_QUERYING, IMAGE_SETTINGS_CHANGE,
     IMAGE_VIEWER_CONTROLS_VISIBILITY, IMAGE_VIEWER_INTERACTION,
-    IMAGE_VIEWER_RESIZE, IMAGE_VIEWER_SPLIT_VIEW, IMAGE_VIEWPORT_CAPTURE,
+    IMAGE_VIEWER_RESIZE, IMAGE_VIEWPORT_CAPTURE,
     REGIONS_CHANGE_MODES, REGIONS_COPY_SHAPES, REGIONS_DRAW_SHAPE,
     REGIONS_GENERATE_SHAPES, REGIONS_HISTORY_ACTION, REGIONS_HISTORY_ENTRY,
     REGIONS_MODIFY_SHAPES, REGIONS_PROPERTY_CHANGED, REGIONS_SET_PROPERTY,
@@ -115,12 +115,8 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.getRegionsPropertyChange(params)],
         [REGIONS_SET_PROPERTY,
             (params={}) => this.setRegionsProperty(params)],
-        [IMAGE_INTENSITY_QUERYING,
-            (params={}) => this.toggleIntensityQuerying(params)],
         [VIEWER_IMAGE_SETTINGS,
             (params={}) => this.getImageSettings(params)],
-        [IMAGE_VIEWER_SPLIT_VIEW,
-            (params={}) => this.toggleSplitChannels(params)],
         [REGIONS_CHANGE_MODES,
             (params={}) => this.changeRegionsModes(params)],
         [REGIONS_DRAW_SHAPE,
@@ -274,6 +270,7 @@ export default class Ol3Viewer extends EventSubscriber {
             this.bindingEngine.propertyObserver(
                 this.context, 'selected_config').subscribe(
                     (newValue, oldValue) => {
+                        this.resizeViewer({config_id: newValue, delay: 200});
                         if (!this.context.useMDI ||
                             oldValue !== this.image_config.id ||
                             !this.image_config.regions_info.hasBeenModified()) {
@@ -449,7 +446,10 @@ export default class Ol3Viewer extends EventSubscriber {
      * @param {Object} params the event notification parameters
      */
     resizeViewer(params={}) {
-        if (this.viewer === null) return;
+        if (this.viewer === null ||
+            (typeof params.config === 'number' &&
+                !isNaN(params.config_id) && params.config !== -1 &&
+                params.config_id !== this.image_config.id)) return;
 
         // while dragging does not concern us
         if (typeof params.is_dragging !== 'boolean') params.is_dragging = false;

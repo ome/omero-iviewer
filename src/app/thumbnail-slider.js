@@ -181,7 +181,8 @@ export default class ThumbnailSlider extends EventSubscriber {
         // swap out selected image config
         this.image_config = this.context.getSelectedImageConfig();
 
-        if (this.image_config !== null && this.initialized) {
+        if (this.initialized) {
+            if (this.image_config === null) return;
             // scroll to image thumb
             UI.scrollContainer(
                 'img-thumb-' + this.image_config.image_info.image_id,
@@ -533,6 +534,7 @@ export default class ThumbnailSlider extends EventSubscriber {
                     this.context.initial_ids[0] :
                         this.context.initial_type === INITIAL_TYPES.IMAGES &&
                         this.context.initial_ids.length === 1 &&
+                        this.image_config !== null &&
                         typeof this.image_config.image_info.parent_id === 'number' ?
                             this.image_config.image_info.parent_id : null;
             let parent_type =
@@ -625,7 +627,8 @@ export default class ThumbnailSlider extends EventSubscriber {
      */
     refreshThumbnails() {
         // we are already requesting
-        if (this.requesting_thumbnail_data) return;
+        if (this.requesting_thumbnail_data ||
+            this.context.selected_config === null) return;
 
         // reset
         this.initialized = false;

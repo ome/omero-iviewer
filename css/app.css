@@ -169,25 +169,63 @@ a.ui-button:active,
 .fixed-header {
     position: fixed;
     margin: 0px;
-    overflow: hidden;
+    white-space: nowrap;
     min-height: 40px;
     max-height: 40px;
     background-color: #1F6AAA;
     border-width: 0;
 }
-
-/** Text displayed in the header */
+.fixed-header .dropdown-menu {
+    min-width: 160px;
+}
+.fixed-header div {
+    margin-left: 20px;
+    margin-right: 20px;
+    display: inline;
+    line-height: 40px;
+}
 .fixed-header-text {
     text-align:center;
     font-size: 22px;
     color: white;
     margin-top: 5px;
 }
-.fixed-header-text .app-version {
-    float: right;
-    margin-right: 5px;
-    margin-top: 4px;
-    font-size: 18px;
+.fixed-header-webclient a {
+	color: white;
+}
+.fixed-header-webclient a:hover {
+	color: rgba(255,255,255,0.7)
+}
+.fixed-header .dropdown {
+	margin-left: 0px;
+	margin-right: 0px;
+}
+.fixed-header .dropdown a span {
+    position: absolute;
+    right: 20px;
+}
+.fixed-header .btn-default,
+.fixed-header .btn-default:hover,
+.fixed-header .btn-default:active,
+.fixed-header .btn-default:focus,
+.fixed-header .open>.dropdown-toggle.btn-default,
+.fixed-header .open>.dropdown-toggle.btn-default:hover,
+.fixed-header .open>.dropdown-toggle.btn-default:active,
+.fixed-header .open>.dropdown-toggle.btn-default:focus {
+    background-color: transparent;
+    border-color: transparent;
+    font-size: 16px;
+    color: white;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    outline: none;
+    box-shadow:none;
+}
+.fixed-header .multi-view-btn {
+    border-color: #ccc;
+    background-color: #fff;
+    color: #333;
+    font-size: 15px;
+    padding: 2px 5px;
 }
 
 .frame {
@@ -473,7 +511,7 @@ a.ui-button:active,
 }
 
 .viewer-mdi {
-    min-width: 400px;
+    min-width: 435px;
     min-height: 250px;
     background-color: rgba(255,255,255,1);
     border: solid 2px rgba(31,106,170,0.6);
@@ -1140,6 +1178,18 @@ thumbnail-slider img {
     padding-left: 0px;
 }
 
+.modal-about .modal-content {
+    width: 550px;
+    max-height: 220px;
+}
+.modal-about .modal-dialog {
+    top: 45%;
+    left: 40%;
+}
+.modal-about div {
+    text-align: center;
+}
+
 .viewer-handle {
     color: rgba(255,255,255,1);
     width: 100%;
@@ -1175,14 +1225,6 @@ thumbnail-slider img {
 .mdi-selected {
     border: solid 2px rgba(31,106,170,1);
     z-index: 1;
-}
-
-.mdi-icon {
-    width: 32px;
-    height: 30px;
-    float: left;
-    margin-left: 5px;
-    cursor: pointer;
 }
 
 .dropdown-image-config {

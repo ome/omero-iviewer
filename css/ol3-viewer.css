@@ -314,13 +314,39 @@
 }
 
 .ol-intensity {
+    border: 1px solid #ccc;
+    border-radius: 3px;
     top: 0.5em;
     right: 5.9em;
 }
-.ol-intensity button {
-    width: 70px;
-    height: 30px;
-    font-size: 10px;
+.intensity-toggler {
+    background-image: url('images/crosshair.png');
+    background-repeat: no-repeat;
+    height: 28px;
+    width: 20px;
+    display: inline-block;
+    background-position: 3px 5px;
+    background-color: rgba(70,70,70, 0.2);
+    float: right;
+}
+.intensity-on {
+    background-color: rgba(255,0,0, 0.2);
+}
+.intensity-toggler:hover {
+    background-color:  #adadad;
+}
+.intensity-display {
+    display: none;
+    width: 110px;
+    height: 28px;
+    line-height: 30px;
+    font-size: 12px;
+    font-weight: bold;
+    -webkit-box-shadow:none;
+    box-shadow:none;
+    float: left;
+    text-align: center;
+    white-space: pre;
 }
 .ol-intensity-popup {
     background-color: #fff;
@@ -328,10 +354,26 @@
     border-radius: 3px;
     padding: 2px;
     z-index: 3;
-    min-width: 135px;
+}
+.ol-intensity-popup .intensity-header {
+    display: table-cell;
+    font-weight: bold;
+    text-decoration: underline;
+    padding-left: 5px;
+    padding-right: 5px;
     text-align: center;
 }
-.ol-intensity-popup div span {
-    font-weight: bold;
+.ol-intensity-popup .intensity-label {
+    display: table-cell;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 50px;
+    max-width: 150px;
+    overflow-x: hidden;
     white-space: pre;
+}
+.ol-intensity-popup .intensity-value {
+    display: table-cell;
+    padding-left: 5px;
+    padding-right: 5px;
 }

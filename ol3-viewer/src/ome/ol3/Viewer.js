@@ -514,9 +514,9 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
        projection: proj,
        center: imgCenter,
        extent: [0, -dims['height'], dims['width'], 0],
-       resolutions :
-           ome.ol3.utils.Misc.prepareResolutions(zoomLevelScaling),
-       resolution : actualZoom
+       resolutions : possibleResolutions,
+       resolution : actualZoom,
+       maxZoom: possibleResolutions.length-1
     });
 
     // we have a need to keep a list & reference of the controls

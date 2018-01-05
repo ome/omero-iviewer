@@ -91,20 +91,6 @@
             Histogram
             </label>
         </div>
-        <div>
-            <label class="${image_config &&
-                            image_config.image_info &&
-                            image_config.image_info.ready ?
-                                '' : 'disabled-color'}">
-            <input type="checkbox"
-                disabled.bind="!(image_config &&
-                                 image_config.image_info &&
-                                 image_config.image_info.ready)"
-                checked.one-way="image_config.image_info.query_intensity"
-                change.delegate="togglePixelIntensity($event)" />
-            Pixel Intensity
-            </label>
-        </div>
     </div>
 
     <div show.bind="image_config.image_info.ready &&

@@ -89,20 +89,6 @@ export default class ImageInfo {
     tiled = false;
 
     /**
-     * a flag that signals whether we a pixe_size and hence a scalebar
-     * @memberof ImageInfo
-     * @type {boolean}
-     */
-    has_scalebar = false;
-
-    /**
-     * a flag that signals whether we query the intensity on move move
-     * @memberof ImageInfo
-     * @type {boolean}
-     */
-    query_intensity = false;
-
-    /**
      * the imageAuthor in the json response
      * @memberof ImageInfo
      * @type {string}
