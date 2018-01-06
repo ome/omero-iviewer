@@ -111,8 +111,8 @@ export class Header {
      *
      * @memberof Header
      */
-     onImageConfigChange() {
-         this.image_config = this.context.getSelectedImageConfig();
+    onImageConfigChange() {
+        this.image_config = this.context.getSelectedImageConfig();
 
         // clean up old observers
         this.unregisterObservers(true);
@@ -124,272 +124,275 @@ export class Header {
             this.bindingEngine.propertyObserver(
                 this.image_config.regions_info, 'ready').subscribe(
                     (newValue, oldValue) => this.listenToRegionsSelections()));
+    }
+
+    /**
+     * Listens to regions selection changes
+     *
+     * @memberof Header
+     */
+    listenToRegionsSelections() {
+        this.observers.push(
+            this.bindingEngine.collectionObserver(
+                this.image_config.regions_info.selected_shapes).subscribe(
+                    (newValue, oldValue) => {
+                        let numberOfshapesSelected =
+                            this.image_config.regions_info.selected_shapes.length;
+                        if (numberOfshapesSelected === 0) return;
+                        let lastSelected =
+                            this.image_config.regions_info.getLastSelectedShape("canDelete");
+                        this.selected_can_delete =
+                            this.image_config.regions_info.checkShapeForPermission(
+                                lastSelected, "canDelete");
+                }));
      }
 
-     /**
-      * Listens to regions selection changes
-      *
-      * @memberof Header
-      */
-     listenToRegionsSelections() {
-         this.observers.push(
-             this.bindingEngine.collectionObserver(
-                 this.image_config.regions_info.selected_shapes).subscribe(
-                     (newValue, oldValue) => {
-                         let numberOfshapesSelected =
-                             this.image_config.regions_info.selected_shapes.length;
-                         if (numberOfshapesSelected === 0) return;
-                         let lastSelected =
-                             this.image_config.regions_info.getLastSelectedShape("canDelete");
-                         this.selected_can_delete =
-                             this.image_config.regions_info.checkShapeForPermission(
-                                 lastSelected, "canDelete");
-                  }));
-     }
+    /**
+     * Shows about modal with version info
+     *
+     * @memberof Header
+     */
+    showAbout() {
+        let modal = $('.modal-about');
+        if (modal.length === 0) return;
+        modal.modal();
+    }
 
-     /**
-      * Shows about modal with version info
-      *
-      * @memberof Header
-      */
-     showAbout() {
-         let modal = $('.modal-about');
-         if (modal.length === 0) return;
-         modal.modal();
-     }
+    /**
+     * Creates new image on server using projection settings
+     *
+     * @memberof Header
+     */
+    saveProjectedImage() {
+        if (this.image_config === null ||
+            this.image_config.image_info.projection === PROJECTION.NORMAL) return;
 
-     /**
-      * Creates new image on server using projection settings
-      *
-      * @memberof Header
-      */
-     saveProjectedImage() {
-         if (this.image_config === null ||
-             this.image_config.image_info.projection === PROJECTION.NORMAL) return;
-
-         let imgInf = this.image_config.image_info;
-         let url =
-             this.context.server + this.context.getPrefixedURI(IVIEWER) +
-             '/save_projection/?image=' + imgInf.image_id +
-             "&projection=" + imgInf.projection +
-             "&start=" + imgInf.projection_opts.start +
-             "&end=" + imgInf.projection_opts.end;
-         if (this.context.initial_type !== INITIAL_TYPES.WELL &&
+        let imgInf = this.image_config.image_info;
+        let url =
+            this.context.server + this.context.getPrefixedURI(IVIEWER) +
+            '/save_projection/?image=' + imgInf.image_id +
+            "&projection=" + imgInf.projection +
+            "&start=" + imgInf.projection_opts.start +
+            "&end=" + imgInf.projection_opts.end;
+        if (this.context.initial_type !== INITIAL_TYPES.WELL &&
              typeof imgInf.parent_id === 'number')
                  url += "&dataset=" + imgInf.parent_id;
 
-         $.ajax({
-             url: url,
-             success: (resp) => {
-                 let msg = "";
-                 if (typeof resp.id === 'number') {
-                     let linkWebclient = this.context.server +
-                         this.context.getPrefixedURI(WEBCLIENT) +
-                         "/?show=image-" + resp.id;
-                     let linkIviewer = this.context.server +
-                         this.context.getPrefixedURI(IVIEWER) +
-                         "/?images=" + resp.id;
-                     if (this.context.initial_type !== INITIAL_TYPES.WELL &&
-                         typeof imgInf.parent_id === 'number')
-                             linkIviewer += "&dataset=" + imgInf.parent_id;
-                 msg =
-                     "<a href='" + linkWebclient + "' target='_blank'>" +
-                     "Navigate to Image in Webclient</a><br>" +
-                     "<br><a href='" + linkIviewer + "' target='_blank'>" +
-                     "Open Image in iviewer</a>";
-                 } else {
-                     msg = "Failed to create projected image";
-                     if (typeof resp.error === 'string')
-                         console.error(resp.error);
-                 }
-                 Ui.showModalMessage(msg, 'Close');
-             }
-         });
+        $.ajax({
+            url: url,
+            success: (resp) => {
+                let msg = "";
+                if (typeof resp.id === 'number') {
+                    let linkWebclient = this.context.server +
+                        this.context.getPrefixedURI(WEBCLIENT) +
+                        "/?show=image-" + resp.id;
+                    let linkIviewer = this.context.server +
+                        this.context.getPrefixedURI(IVIEWER) +
+                        "/?images=" + resp.id;
+                    if (this.context.initial_type !== INITIAL_TYPES.WELL &&
+                        typeof imgInf.parent_id === 'number')
+                            linkIviewer += "&dataset=" + imgInf.parent_id;
+                msg =
+                    "<a href='" + linkWebclient + "' target='_blank'>" +
+                    "Navigate to Image in Webclient</a><br>" +
+                    "<br><a href='" + linkIviewer + "' target='_blank'>" +
+                    "Open Image in iviewer</a>";
+                } else {
+                    msg = "Failed to create projected image";
+                    if (typeof resp.error === 'string')
+                        console.error(resp.error);
+                }
+                Ui.showModalMessage(msg, 'Close');
+            }
+        });
+    }
+
+    /**
+     * Delegates copyShapes
+     *
+     * @memberof Header
+     */
+    copyShapes() {
+        if (this.image_config === null) return;
+        this.image_config.regions_info.copyShapes();
      }
 
-     /**
-      * Delegates copyShapes
-      *
-      * @memberof Header
-      */
-     copyShapes() {
-         if (this.image_config === null) return;
-         this.image_config.regions_info.copyShapes();
-     }
+    /**
+     * Delegates pasteShapes
+     *
+     * @memberof Header
+     */
+    pasteShapes() {
+        if (this.image_config === null) return;
+        this.image_config.regions_info.pasteShapes();
+    }
 
-     /**
-      * Delegates pasteShapes
-      *
-      * @memberof Header
-      */
-     pasteShapes() {
-         if (this.image_config === null) return;
-         this.image_config.regions_info.pasteShapes();
-     }
+    /**
+     * Delegates deleteShapes
+     *
+     * @memberof Header
+     */
+    deleteShapes() {
+        if (this.image_config === null) return;
+        this.image_config.regions_info.deleteShapes();
+    }
 
-     /**
-      * Delegates deleteShapes
-      *
-      * @memberof Header
-      */
-     deleteShapes() {
-         if (this.image_config === null) return;
-         this.image_config.regions_info.deleteShapes();
-     }
+    /**
+     * Creates csv file that contains area and length for selected shapes
+     *
+     * @memberof Header
+     */
+    saveRoiMeasurements() {
+        if (this.image_config === null ||
+            this.image_config.regions_info.selected_shapes.length === 0) return;
 
-     /**
-      * Creates csv file that contains area and length for selected shapes
-      *
-      * @memberof Header
-      */
-     saveRoiMeasurements() {
-         if (this.image_config === null ||
-             this.image_config.regions_info.selected_shapes.length === 0) return;
+        let regInf = this.image_config.regions_info;
+        // we cannot query unssaved shapes
+        let ids_for_stats =
+            regInf.selected_shapes.filter((s) => s.indexOf("-") == -1);
+        // if we have no saved shapes or no active channels ...
+        // forget about it
+        if (ids_for_stats.length === 0 ||
+            regInf.image_info.getActiveChannels().length === 0) {
+            this.writeCsv(regInf.selected_shapes);
+        } else {
+            regInf.requestStats(
+                ids_for_stats, () => this.writeCsv(regInf.selected_shapes));
+        }
+    }
 
-         let regInf = this.image_config.regions_info;
-         // we cannot query unssaved shapes
-         let ids_for_stats =
-             regInf.selected_shapes.filter((s) => s.indexOf("-") == -1);
-         // if we have no saved shapes or no active channels ...
-         // forget about it
-         if (ids_for_stats.length === 0 ||
-             regInf.image_info.getActiveChannels().length === 0) {
-             this.writeCsv(regInf.selected_shapes);
-         } else {
-             regInf.requestStats(
-                 ids_for_stats, () => this.writeCsv(regInf.selected_shapes));
-         }
-     }
+    /**
+     * Generates a csv file for shapes (incl. stats) whose ids are given
+     *
+     * @param {Array.<string>} ids the shape ids ('roi_id:shape_id')
+     * @memberof Header
+     */
+    writeCsv(ids) {
+        if (!Misc.isArray(ids) || ids.length === 0) return;
 
-     /**
-      * Generates a csv file for shapes (incl. stats) whose ids are given
-      *
-      * @param {Array.<string>} ids the shape ids ('roi_id:shape_id')
-      * @memberof Header
-      */
-     writeCsv(ids) {
-         if (!Misc.isArray(ids) || ids.length === 0) return;
+        let regInf = this.image_config.regions_info;
+        let active = regInf.image_info.getActiveChannels();
+        let units = regInf.image_info.image_pixels_size.symbol_x || 'px';
+        let img_id = regInf.image_info.image_id;
+        let img_name = regInf.image_info.short_image_name;
 
-         let regInf = this.image_config.regions_info;
-         let active = regInf.image_info.getActiveChannels();
-         let units = regInf.image_info.image_pixels_size.symbol_x || 'px';
-         let img_id = regInf.image_info.image_id;
-         let img_name = regInf.image_info.short_image_name;
+        let csv =
+            "image_id,image_name,roi_id,shape_id,type,z,t,channel," +
+            "\"area (" + units + "\u00b2)\",\"length (" + units + ")\"," +
+            "points,min,max,sum,mean,std_dev" + CSV_LINE_BREAK;
 
-         let csv =
-             "image_id,image_name,roi_id,shape_id,type,z,t,channel," +
-             "\"area (" + units + "\u00b2)\",\"length (" + units + ")\"," +
-             "points,min,max,sum,mean,std_dev" + CSV_LINE_BREAK;
+        for (let i in ids) {
+            let id = ids[i];
+            let shape = regInf.getShape(id);
+            if (shape === null) continue;
+            let roi_id = id.substring(0, id.indexOf(':'));
+            let is_new = id.indexOf('-') !== -1;
 
-         for (let i in ids) {
-             let id = ids[i];
-             let shape = regInf.getShape(id);
-             if (shape === null) continue;
-             let roi_id = id.substring(0, id.indexOf(':'));
-             let is_new = id.indexOf('-') !== -1;
-
-             let channel = '', points = '', min = '', max = '';
-             let sum = '', mean = '', stddev = '';
-             let csvCommonInfo =
-                 img_id + ",\"" + img_name + "\"," +
-                 (is_new ? "-" : roi_id) + "," +
-                 (is_new ? "-" : shape['@id']) + "," + shape.type + "," +
-                 (shape.TheZ+1) + "," + (shape.TheT+1) + ",";
-             let csvMeasure =
-                 "," + (shape.Area < 0 ? '' : shape.Area) + "," +
-                 (shape.Length < 0 ? '' : shape.Length) + ",";
-
-             if (typeof shape.stats === 'object' &&
-                 shape.stats !== null &&
-                 active.length !== 0) {
-                     for (let s in shape.stats) {
-                         let stat = shape.stats[s];
-                         if (active.indexOf(stat.index) !== -1) {
-                             csv += csvCommonInfo + stat.index + csvMeasure +
-                                     stat.points + "," + stat.min + "," +
-                                     stat.max + "," + stat.sum + "," +
-                                     stat.mean + "," + stat.std_dev +
-                                     CSV_LINE_BREAK;
+            let channel = '', points = '', min = '', max = '';
+            let sum = '', mean = '', stddev = '';
+            let csvCommonInfo =
+                img_id + ",\"" + img_name + "\"," +
+                (is_new ? "-" : roi_id) + "," +
+                (is_new ? "-" : shape['@id']) + "," + shape.type + "," +
+                (shape.TheZ+1) + "," + (shape.TheT+1) + ",";
+            let csvMeasure =
+                "," + (shape.Area < 0 ? '' : shape.Area) + "," +
+                (shape.Length < 0 ? '' : shape.Length) + ",";
+            let emptyRow = ",,,,," + CSV_LINE_BREAK;
+            if (typeof shape.stats === 'object' &&
+                shape.stats !== null &&
+                active.length !== 0) {
+                    for (let s in shape.stats) {
+                        let stat = shape.stats[s];
+                        if (active.indexOf(stat.index) !== -1) {
+                            if (stat.points === 0) {
+                                csv += csvCommonInfo + "," + emptyRow;
+                                break;
+                            }
+                            csv += csvCommonInfo + stat.index + csvMeasure +
+                                    stat.points + "," + stat.min + "," +
+                                    stat.max + "," + stat.sum + "," +
+                                    stat.mean + "," + stat.std_dev +
+                                    CSV_LINE_BREAK;
                          }
                      }
-             } else csv += csvCommonInfo + csvMeasure + ",,,,," + CSV_LINE_BREAK;
-         }
+            } else csv += csvCommonInfo + csvMeasure + emptyRow;
+        }
 
-         let data = null;
-         let encErr = true;
-         try {
-             // use windows-1252 character set to satisfy excel
-             let type = 'text/csv; charset=windows-1252';
-             let ansiEncoder =
-                 new TextEncoding.TextEncoder(
-                     'windows-1252', {NONSTANDARD_allowLegacyEncoding: true});
-             encErr = false;
-             data = new Blob([ansiEncoder.encode(csv)], {type: type});
-         } catch(not_supported) {}
+        let data = null;
+        let encErr = true;
+        try {
+            // use windows-1252 character set to satisfy excel
+            let type = 'text/csv; charset=windows-1252';
+            let ansiEncoder =
+                new TextEncoding.TextEncoder(
+                    'windows-1252', {NONSTANDARD_allowLegacyEncoding: true});
+            encErr = false;
+            data = new Blob([ansiEncoder.encode(csv)], {type: type});
+        } catch(not_supported) {}
 
-         if (data instanceof Blob)
-             FileSaver.saveAs(
-                 data,
-                 regInf.image_info.short_image_name + "_roi_measurements.csv");
-         else console.error(
-                 encErr ? "Error encoding csv" : "Blob not supported");
+        if (data instanceof Blob)
+            FileSaver.saveAs(
+                data,
+                regInf.image_info.short_image_name + "_roi_measurements.csv");
+        else console.error(
+                encErr ? "Error encoding csv" : "Blob not supported");
      }
 
-     /**
-      * Sends event to captures viewport as png
-      *
-      * @memberof Header
-      */
-     captureViewport() {
-         if (this.image_config === null) return;
-         this.context.eventbus.publish(
-             IMAGE_VIEWPORT_CAPTURE, {"config_id": this.image_config.id});
+    /**
+     * Sends event to captures viewport as png
+     *
+     * @memberof Header
+     */
+    captureViewport() {
+        if (this.image_config === null) return;
+        this.context.eventbus.publish(
+            IMAGE_VIEWPORT_CAPTURE, {"config_id": this.image_config.id});
+    }
+
+    /**
+     * Toggles MDI/single image viewing mode
+     *
+     * @memberof Header
+     */
+    toggleMDI() {
+        if (this.context.useMDI)
+            for (let [id, conf] of this.context.image_configs)
+                if (id !== this.context.selected_config)
+                    this.context.removeImageConfig(id,conf)
+        this.context.useMDI = !this.context.useMDI;
+        this.context.publish(
+            IMAGE_VIEWER_RESIZE, {
+                config_id: this.selected_config, delay: 200});
      }
 
-     /**
-      * Toggles MDI/single image viewing mode
-      *
-      * @memberof Header
-      */
-     toggleMDI() {
-         if (this.context.useMDI)
-             for (let [id, conf] of this.context.image_configs)
-                 if (id !== this.context.selected_config)
-                      this.context.removeImageConfig(id,conf)
-         this.context.useMDI = !this.context.useMDI;
-         this.context.publish(
-             IMAGE_VIEWER_RESIZE, {
-                 config_id: this.selected_config, delay: 200
-         });
-     }
+    /**
+     * Returns the keyboard command prefix based on navigator.platform
+     * i.e. '&#x2318;' for apple, 'ctrl+' otherwise
+     *
+     * @return {string}
+     * @memberof Header
+     */
+    getKeyboardShortCutPrefix() {
+        if (Misc.isApple()) return '\u2318';
+        return 'Ctrl+'
+    }
 
-     /**
-      * Returns the keyboard command prefix based on navigator.platform
-      * i.e. '&#x2318;' for apple, 'ctrl+' otherwise
-      *
-      * @return {string}
-      * @memberof Header
-      */
-     getKeyboardShortCutPrefix() {
-         if (Misc.isApple()) return '\u2318';
-         return 'Ctrl+'
-     }
-
-     /**
-      * Unregisters the the observers (property and regions info ready)
-      *
-      * @param {boolean} property_only true if only property observers are cleaned up
-      * @memberof Header
-      */
-     unregisterObservers(property_only = false) {
-         this.observers.map((o) => {if (o) o.dispose();});
-         this.observers = [];
-         if (property_only) return;
-         if (this.image_config_observer) {
-             this.image_config_observer.dispose();
-             this.image_config_observer = null;
-         }
-     }
+    /**
+     * Unregisters the the observers (property and regions info ready)
+     *
+     * @param {boolean} property_only true if only property observers are cleaned up
+     * @memberof Header
+     */
+    unregisterObservers(property_only = false) {
+        this.observers.map((o) => {if (o) o.dispose();});
+        this.observers = [];
+        if (property_only) return;
+        if (this.image_config_observer) {
+            this.image_config_observer.dispose();
+            this.image_config_observer = null;
+        }
+    }
 
     /**
      * Overridden aurelia lifecycle method:
