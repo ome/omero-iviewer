@@ -309,7 +309,7 @@ export class Header {
                                 csv += csvCommonInfo + "," + emptyRow;
                                 break;
                             }
-                            let value = channels[stat.index].label;
+                            let value = format_value(channels[stat.index].label);
                             csv += csvCommonInfo + value + csvMeasure +
                                     stat.points + "," + stat.min + "," +
                                     stat.max + "," + stat.sum + "," +
@@ -319,7 +319,10 @@ export class Header {
                      }
             } else csv += csvCommonInfo + csvMeasure + emptyRow;
         }
-
+        // replace comma by dot
+        function format_value(value) {
+            return value.replace(/,/g, '.');
+        }
         let data = null;
         let encErr = true;
         try {
