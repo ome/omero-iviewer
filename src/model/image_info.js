@@ -22,7 +22,8 @@ import Ui from '../utils/ui';
 import {
     CHANNEL_SETTINGS_MODE, INITIAL_TYPES, IVIEWER,
     PROJECTION, REQUEST_PARAMS, WEBGATEWAY
-} from '../utils/constants'
+} from '../utils/constants';
+import { BIRDSEYE_REFRESH } from '../events/events';
 
 /**
  * Holds basic image information required for viewing:
@@ -364,6 +365,11 @@ export default class ImageInfo {
         // signal that we are ready
         this.ready = true;
         this.tmp_data = response;
+
+        if (refresh) {
+            this.context.publish(
+                BIRDSEYE_REFRESH, { config_id : this.config_id});
+        }
     }
 
     /**

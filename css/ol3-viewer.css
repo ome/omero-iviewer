@@ -237,7 +237,6 @@
     left: 0;
     border-radius: 0 4px 0 0;
 }
-.ol-overviewmap .ol-overviewmap-map,
 .ol-overviewmap button {
     display: inline-block;
 }
@@ -257,13 +256,17 @@
     position: absolute;
     left: auto;
     left: initial;
+    min-width: 20px;
+    min-height: 20px;
+    width: 20px;
+    height: 20px;
 }
 .ol-overviewmap.ol-collapsed .ol-overviewmap-map,
 .ol-overviewmap.ol-uncollapsible button {
     display: none;
 }
 .ol-overviewmap-box {
-    border: 2px dotted rgba(255,0,0,1);
+    border: 2px solid rgba(255,0,0,1);
 }
 
 .ol-zoom {

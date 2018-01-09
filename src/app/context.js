@@ -608,10 +608,10 @@ export default class Context {
         if (typeof image_id !== 'number' || image_id < 0) return;
 
         // we do not keep the other configs around unless we are in MDI mode.
-        if (!this.useMDI)
+        if (!this.useMDI) {
             for (let [id, conf] of this.image_configs)
                 this.removeImageConfig(id,conf)
-        else {
+        } else {
             for (let [id, conf] of this.image_configs) {
                 if (conf.show_controls)
                     this.publish(
