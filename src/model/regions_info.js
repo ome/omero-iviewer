@@ -374,6 +374,30 @@ export default class RegionsInfo  {
     }
 
     /**
+     * Returns all shape ids, optionally excluding new but deleted shapes
+     *
+     * @memberof RegionsInfo
+     * @param {boolean} exclNewButDeleted flag whether new but deleted shapes are omitted
+     * @return {Array.<string>} an array of ids
+     */
+    getAllShapeIds(exclNewButDeleted=true) {
+        if (!exclNewButDeleted) return this.unsophisticatedShapeFilter();
+
+        let ret = [];
+        this.data.forEach(
+            (value) =>
+                value.shapes.forEach(
+                    (value) => {
+                        let isNew =
+                            typeof value.is_new === 'boolean' && value.is_new;
+                        if (!isNew || (isNew && !value.deleted))
+                            ret.push(value.shape_id);
+                    })
+        );
+        return ret;
+    }
+
+    /**
      * A very simple filtering based on properties and their
      * supposed, corresponding values using an implicit logical AND to chain them
      * If a pre-selected id list is supplied
@@ -539,7 +563,7 @@ export default class RegionsInfo  {
      * @memberof RegionsInfo
      */
     copyShapes() {
-        if (!this.ready) return;
+        if (!this.ready || this.selected_shapes.length === 0) return;
 
         this.image_info.context.publish(
             REGIONS_COPY_SHAPES, {config_id : this.image_info.config_id});
@@ -552,12 +576,9 @@ export default class RegionsInfo  {
      * @memberof RegionsInfo
      */
     pasteShapes(pixel=null) {
-        if (!this.ready) return;
-
-        if (!this.image_info.can_annotate) {
-                Ui.showModalMessage("You don't have permission to paste", 'OK');
-                return;
-        }
+        if (!this.ready ||
+            !this.image_info.can_annotate ||
+            this.copied_shapes.length === 0) return;
 
         this.syncCopiedShapesWithLocalStorage();
         let params = {

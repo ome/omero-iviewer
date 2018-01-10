@@ -363,7 +363,8 @@ export default class Ui {
                     (event) => {
                         let command =
                             Misc.isApple() ? 'metaKey' : 'ctrlKey';
-                            if ((group !== 'global' &&
+                            if (context.selected_config === null ||
+                                (group !== 'global' &&
                                 context.selected_tab !== group) ||
                                 !event[command]) return true;
                             try {

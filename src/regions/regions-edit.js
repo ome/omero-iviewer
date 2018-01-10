@@ -133,6 +133,7 @@ export default class RegionsEdit extends EventSubscriber {
         if (this.regions_info === null) return;
 
         let onceReady = () => {
+            if (this.regions_info === null) return;
             // register observer
             this.registerObservers();
             // subscribe
@@ -456,7 +457,7 @@ export default class RegionsEdit extends EventSubscriber {
     selectAllShapes() {
         if (!this.regions_info.ready) return;
 
-        let ids = this.regions_info.unsophisticatedShapeFilter();
+        let ids = this.regions_info.getAllShapeIds();
         this.context.publish(
            REGIONS_SET_PROPERTY, {
                config_id: this.regions_info.image_info.config_id,

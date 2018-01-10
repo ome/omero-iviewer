@@ -32,8 +32,8 @@ import {
     REGIONS_DRAWING_MODE, RENDER_STATUS, VIEWER_ELEMENT_PREFIX, WEBCLIENT
 } from '../utils/constants';
 import {
-    IMAGE_CANVAS_DATA, IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY,
-    IMAGE_INTENSITY_QUERYING, IMAGE_SETTINGS_CHANGE,
+    BIRDSEYE_REFRESH, IMAGE_CANVAS_DATA, IMAGE_DIMENSION_CHANGE,
+    IMAGE_DIMENSION_PLAY, IMAGE_INTENSITY_QUERYING, IMAGE_SETTINGS_CHANGE,
     IMAGE_VIEWER_CONTROLS_VISIBILITY, IMAGE_VIEWER_INTERACTION,
     IMAGE_VIEWER_RESIZE, IMAGE_VIEWPORT_CAPTURE,
     REGIONS_CHANGE_MODES, REGIONS_COPY_SHAPES, REGIONS_DRAW_SHAPE,
@@ -115,8 +115,6 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.getRegionsPropertyChange(params)],
         [REGIONS_SET_PROPERTY,
             (params={}) => this.setRegionsProperty(params)],
-        [IMAGE_INTENSITY_QUERYING,
-            (params={}) => this.toggleIntensityQuerying(params)],
         [VIEWER_IMAGE_SETTINGS,
             (params={}) => this.getImageSettings(params)],
         [REGIONS_CHANGE_MODES,
@@ -144,7 +142,9 @@ export default class Ol3Viewer extends EventSubscriber {
         [IMAGE_CANVAS_DATA,
             (params={}) => this.saveCanvasData(params)],
         [VIEWER_SET_SYNC_GROUP,
-            (params={}) => this.setSyncGroup(params)]];
+            (params={}) => this.setSyncGroup(params)],
+        [BIRDSEYE_REFRESH,
+            (params={}) => this.refreshBirdsEye(params)]];
 
     /**
      * @constructor
@@ -270,6 +270,7 @@ export default class Ol3Viewer extends EventSubscriber {
             this.bindingEngine.propertyObserver(
                 this.context, 'selected_config').subscribe(
                     (newValue, oldValue) => {
+                        this.resizeViewer({config_id: newValue, delay: 200});
                         if (!this.context.useMDI ||
                             oldValue !== this.image_config.id ||
                             !this.image_config.regions_info.hasBeenModified()) {
@@ -445,7 +446,10 @@ export default class Ol3Viewer extends EventSubscriber {
      * @param {Object} params the event notification parameters
      */
     resizeViewer(params={}) {
-        if (this.viewer === null) return;
+        if (this.viewer === null ||
+            (typeof params.config === 'number' &&
+                !isNaN(params.config_id) && params.config !== -1 &&
+                params.config_id !== this.image_config.id)) return;
 
         // while dragging does not concern us
         if (typeof params.is_dragging !== 'boolean') params.is_dragging = false;
@@ -1257,5 +1261,19 @@ export default class Ol3Viewer extends EventSubscriber {
             $("#" + this.image_config.id + " .ol-control").hide();
             this.image_config.show_controls = false;
         }
+    }
+
+    /**
+     * Requests update of bird's eye view
+     *
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     */
+    refreshBirdsEye(params = {}) {
+        // sanity checks
+        if (this.viewer === null || this.image_config === null ||
+            this.image_config.id !== params.config_id) return;
+
+        this.viewer.refreshBirdsEye(500);
     }
 }
