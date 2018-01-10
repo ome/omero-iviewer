@@ -5,7 +5,7 @@ node_js:
 # This (sudo: false) is needed to "run on container-based infrastructure" on
 # which cache: is available
 # http://docs.travis-ci.com/user/workers/container-based-infrastructure/
-sudo: false
+sudo: true
 
 before_install:
   - pip install --user restructuredtext_lint
