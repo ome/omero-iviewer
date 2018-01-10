@@ -545,9 +545,14 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
        view: view
     });
 
-    // expand bird's eye view if we have tiled sources
-    if (source.use_tiled_retrieval_)
-        this.viewerState_["birdseye"]['ref'].setCollapsed(false);
+    // enable bird's eye view
+    var birdsEyeOptions = {
+        'url': this.getPrefixedURI(ome.ol3.WEBGATEWAY) +
+                    '/render_thumbnail/' + this.id_,
+        'size': [dims['width'], dims['height']],
+        'collapsed': !source.use_tiled_retrieval_
+    };
+    this.addControl('birdseye', birdsEyeOptions);
     // tweak source element for fullscreen to include dim sliders (iviewer only)
     var targetId = this.getTargetId();
     var viewerFrame = targetId ? document.getElementById(targetId) : null;
@@ -728,7 +733,7 @@ ome.ol3.Viewer.prototype.changeToImage =
                 var type = prevComp['type'];
                 var key = prevComp['key'];
 
-                this.addInteractionOrControl(key, type);
+                this.addInteractionOrControl(key, type, true);
             }
         }
 
@@ -996,7 +1001,7 @@ ome.ol3.Viewer.prototype.setTextBehaviorForRegions = function(scaleText, rotateT
 ome.ol3.Viewer.prototype.addInteraction = function(key, interaction) {
     // if we have no interaction given as the second argument => delegate to the factory
     if (typeof interaction !== 'object' || interaction === null) {
-        this.addInteractionOrControl(key, 'interaction');
+        this.addInteractionOrControl(key, 'interaction', true);
         return;
     }
 
@@ -1032,10 +1037,11 @@ ome.ol3.Viewer.prototype.addInteraction = function(key, interaction) {
  * Use the key listed here: {@link ome.ol3.AVAILABLE_VIEWER_CONTROLS}
  *
  * @param {string} key the unique control key
+ * @param {Object=} options (optional) options for control
  */
-ome.ol3.Viewer.prototype.addControl = function(key) {
+ome.ol3.Viewer.prototype.addControl = function(key, options) {
     // delegate
-    this.addInteractionOrControl(key, "control");
+    this.addInteractionOrControl(key, "control", true, options);
 }
 
 /**
@@ -1048,8 +1054,9 @@ ome.ol3.Viewer.prototype.addControl = function(key) {
  * @param {string} type whether it's an interaction or a control
  * @param {string} key the unique interaction or control key
  * @param {boolean} descend a flag whether we should follow linked interactions/controls
+ * @param {Object=} options (optional) options for control
  */
-ome.ol3.Viewer.prototype.addInteractionOrControl = function(key, type, descend) {
+ome.ol3.Viewer.prototype.addInteractionOrControl = function(key, type, descend, options) {
     if (!(this.viewer_ instanceof ol.PluggableMap) || // could be the viewer was not initialized
         (typeof(key) !== 'string') || // key not a string
         (typeof(type) !== 'string')) return; // type is not a string
@@ -1071,6 +1078,13 @@ ome.ol3.Viewer.prototype.addInteractionOrControl = function(key, type, descend) 
         return;
 
     var Constructor = componentFound['clazz'];
+    // add in additional options
+    if (typeof options === 'object' &&
+        !ome.ol3.utils.Misc.isArray(options)) {
+        for (var o in options) {
+            componentFound['options'][o] = options[o];
+        }
+    }
     var newComponent = new Constructor(componentFound['options']);
 
     if (type === 'control')
@@ -1902,10 +1916,6 @@ ome.ol3.Viewer.prototype.redraw = function(delay) {
             function() {
                 if (this.viewer_) {
                     this.viewer_.updateSize();
-                    if (this.viewerState_["birdseye"] &&
-                        this.viewerState_["birdseye"]['ref']
-                           instanceof ome.ol3.controls.BirdsEye)
-                                this.viewerState_["birdseye"]['ref'].ovmap_.updateSize();
                 }
             }.bind(this);
 
@@ -2313,6 +2323,23 @@ ome.ol3.Viewer.prototype.getRois = function() {
     return ret;
 };
 
+/**
+ * Refreshes the bird's eye view
+ *
+ * @param {number=} delay an (optional delay) in millis
+ */
+ome.ol3.Viewer.prototype.refreshBirdsEye = function(delay) {
+    if (!(this.viewer_ instanceof ol.PluggableMap) ||
+        typeof this.viewerState_['birdseye'] !== 'object') return;
+    if (typeof delay !== 'number' || isNaN(delay) || delay < 0) delay = 0;
+
+    var refresh = function() {
+        this.viewerState_["birdseye"]["ref"].initOrUpdate();
+    }.bind(this);
+
+    if (delay === 0) refresh();
+    else setTimeout(refresh, delay);
+}
 
 /*
  * This section determines which methods are exposed and usable after compilation
@@ -2541,3 +2568,8 @@ goog.exportProperty(
     ome.ol3.Viewer.prototype,
     'getRois',
 ome.ol3.Viewer.prototype.getRois);
+
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
+    'refreshBirdsEye',
+ome.ol3.Viewer.prototype.refreshBirdsEye);
