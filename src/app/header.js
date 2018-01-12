@@ -275,7 +275,7 @@ export class Header {
         let units = regInf.image_info.image_pixels_size.symbol_x || 'px';
         let img_id = regInf.image_info.image_id;
         let img_name = regInf.image_info.short_image_name;
-
+        let channels = regInf.image_info.channels;
         let csv =
             "image_id,image_name,roi_id,shape_id,type,z,t,channel," +
             "\"area (" + units + "\u00b2)\",\"length (" + units + ")\"," +
@@ -309,7 +309,8 @@ export class Header {
                                 csv += csvCommonInfo + "," + emptyRow;
                                 break;
                             }
-                            csv += csvCommonInfo + stat.index + csvMeasure +
+                            let value = format_value(channels[stat.index].label);
+                            csv += csvCommonInfo + value + csvMeasure +
                                     stat.points + "," + stat.min + "," +
                                     stat.max + "," + stat.sum + "," +
                                     stat.mean + "," + stat.std_dev +
@@ -318,7 +319,10 @@ export class Header {
                      }
             } else csv += csvCommonInfo + csvMeasure + emptyRow;
         }
-
+        // replace comma by dot
+        function format_value(value) {
+            return value.replace(/,/g, '.');
+        }
         let data = null;
         let encErr = true;
         try {
