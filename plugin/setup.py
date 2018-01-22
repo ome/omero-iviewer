@@ -73,10 +73,12 @@ class Install(setuptools.command.install.install):
             self.run_command('run_prod')
         setuptools.command.install.install.run(self)
 
+
 class Test(setuptools.command.install.install):
 
     def run(self):
         self.spawn(['ant', 'unit-tests-only'])
+
 
 cmdclass['install'] = Install
 
