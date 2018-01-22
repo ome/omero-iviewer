@@ -12,4 +12,4 @@ before_install:
   - git clone --depth=50 --branch=web-apps git://github.com/jburel/omero-test-infra .omero
 
 script:
-  -  EXCLUDE=closure .omero/app-docker
+  -  EXCLUDE=closure DIR=plugin .omero/app-docker
