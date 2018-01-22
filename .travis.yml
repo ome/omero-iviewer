@@ -1,22 +1,15 @@
-language: node_js
-node_js:
-  - "6"
+sudo: required
 
-# This (sudo: false) is needed to "run on container-based infrastructure" on
-# which cache: is available
-# http://docs.travis-ci.com/user/workers/container-based-infrastructure/
-sudo: true
+language: python
+
+python:
+  - "2.7"
+
+services:
+  - docker
 
 before_install:
-  - pip install --user restructuredtext_lint
-  - pip install --user flake8 pycodestyle pep8-naming
-  - flake8 --exclude closure -v .
-  - rst-lint plugin/omero_iviewer/README.rst
+  - git clone --depth=50 --branch=web-apps git://github.com/jburel/omero-test-infra .omero
 
 script:
-  - cd plugin
-  - python setup.py sdist install --user || exit 1
-  - if [ ! -d "omero_iviewer/static" ]; then exit 1 ;fi
-  - if [ ! -d "omero_iviewer/templates" ]; then exit 1 ;fi
-  - cd ..
-  - ant unit-tests-only
+  - .omero/app-docker
