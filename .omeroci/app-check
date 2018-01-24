@@ -6,10 +6,7 @@ set -x
 
 printf "travis_fold:start:py-check\n"
 
-TARGET=${TARGET:-..}
-
-cd $TARGET
-flake8 --exclude closure -v .
-rst-lint README.rst
+flake8 --exclude closure -v /omero-iviewer
+rst-lint /omero-iviewer/plugin/omero_iviewer/README.rst
 
 printf "travis_fold:end:py-check\n"
