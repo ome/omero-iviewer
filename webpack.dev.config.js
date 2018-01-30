@@ -4,10 +4,6 @@ const {AureliaPlugin} = require('aurelia-webpack-plugin');
 const ProvidePlugin = require('webpack/lib/ProvidePlugin');
 
 module.exports = {
-  devServer: {
-    host: 'localhost',
-    port: 3000
-  },
   entry: {
     main: [
       './src/main'
@@ -57,6 +53,7 @@ module.exports = {
     ]
   },
   devServer: {
+    port: 8080,
     proxy: {
         '/iviewer/**': {
             target: 'http://localhost'
