@@ -20,7 +20,7 @@ import {noView} from 'aurelia-framework';
 import Misc from '../utils/misc';
 import Ui from '../utils/ui';
 import {
-    CHANNEL_SETTINGS_MODE, INITIAL_TYPES, IVIEWER,
+    APP_TITLE, CHANNEL_SETTINGS_MODE, INITIAL_TYPES, IVIEWER,
     PROJECTION, REQUEST_PARAMS, WEBGATEWAY
 } from '../utils/constants';
 import { BIRDSEYE_REFRESH } from '../events/events';
@@ -361,6 +361,10 @@ export default class ImageInfo {
         this.roi_count = response.roi_count;
         if (typeof response.meta.datasetName === 'string')
             this.dataset_name = response.meta.datasetName;
+        // set title
+        document.title =
+            (this.short_image_name !== '' ?
+                this.short_image_name : APP_TITLE);
 
         // signal that we are ready
         this.ready = true;

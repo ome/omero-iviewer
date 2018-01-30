@@ -24,7 +24,7 @@ import Misc from '../utils/misc';
 import Ui from '../utils/ui';
 import {IMAGE_VIEWPORT_CAPTURE} from '../events/events';
 import {
-    CSV_LINE_BREAK, INITIAL_TYPES, IVIEWER, PROJECTION, WEBCLIENT
+    APP_TITLE, CSV_LINE_BREAK, INITIAL_TYPES, IVIEWER, PROJECTION, WEBCLIENT
 } from '../utils/constants';
 import { IMAGE_VIEWER_RESIZE } from '../events/events';
 
@@ -117,7 +117,16 @@ export class Header {
         // clean up old observers
         this.unregisterObservers(true);
 
-        if (this.image_config === null) return;
+        if (this.image_config === null) {
+            document.title = APP_TITLE;
+            return;
+        }
+
+        // adjust tab title
+        let title = APP_TITLE;
+        if (this.image_config.image_info.short_image_name !== '')
+            title = this.image_config.image_info.short_image_name;
+        document.title = title;
 
         // listen for region ready to start region selection observer
         this.observers.push(

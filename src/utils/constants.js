@@ -23,6 +23,11 @@ import {noView} from 'aurelia-framework';
 export const APP_NAME = 'iviewer';
 
 /**
+ * @type {string}
+ */
+export const APP_TITLE = 'OMERO.' + APP_NAME;
+
+/**
  * the plugin name
  * @type {string}
  */
