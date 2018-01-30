@@ -58,12 +58,37 @@ Either development setup expects the following:
 - an iviewer 'deploy' to that OMERO server:
 
 ::
+
     $ export PYTHONPATH=$PYTHONPATH:/path/to/iviewer-project-root/plugin
     $ bin/omero config append omero.web.apps '"omero_iviewer"'
 
-**Note**:
+**Notes**:
 
-The webpack dev-server config expects a local OMERO server (http://localhost)!
+The webpack dev-server config expects a local OMERO server at http://localhost.
+Should the server instance use a different port you will need to modify all
+proxy target entries in `webpack.dev.config.js <webpack.dev.config.js>`_:
+
+.. code-block::
+
+    devServer: {
+        proxy: {
+            '/iviewer/**': {
+                target: 'http://localhost:your_port'
+            },
+            '/api/**': {
+                target: 'http://localhost:your_port'
+            }, ...
+        }
+    }
+
+If you want to bind the webpack dev server to a port other than 8080
+you will need to change its port property in `webpack.dev.config.js <webpack.dev.config.js>`_:
+
+.. code-block::
+
+    devServer: {
+        port: your_port
+    }
 
 Documentation
 =============
