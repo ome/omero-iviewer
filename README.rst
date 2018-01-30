@@ -64,7 +64,7 @@ Either development setup expects the following:
 
 **Notes**:
 
-The webpack dev-server config expects a local OMERO server at http://localhost.
+The webpack dev-server config expects a local OMERO server at http://localhost (default port 80).
 Should the server instance use a different port you will need to modify all
 proxy target entries in `webpack.dev.config.js <webpack.dev.config.js>`_:
 
@@ -89,6 +89,29 @@ you will need to change its port property in `webpack.dev.config.js <webpack.dev
     devServer: {
         port: your_port
     }
+
+
+The initial data type (e.g. image, dataset, well) and its respective ID can be set/changed
+in `index-dev.html <src/index-dev.html>`_:
+
+.. code-block:: html
+
+    <html>
+        <head>
+            <link rel="stylesheet" type="text/css" href="build/css/all.min.css" />
+
+            <script type="text/javascript">
+                // modify according to your needs
+                // in particular: choose an existing id !
+                window.INITIAL_REQUEST_PARAMS = {
+                        'VERSION': "DEV_SERVER",
+                        'WEB_API_BASE': 'api/v0/',
+                        //'IMAGES': "1",
+                        'DATASET': "1",
+                        //'WELL': "1"
+                };
+            </script>
+    ...
 
 Documentation
 =============
