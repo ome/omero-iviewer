@@ -3,7 +3,7 @@ OMERO.iviewer
 
 An OMERO.web app for visualizing images in OMERO.
 
-Also see `SUPPORT.md <./SUPPORT.md>`_
+Also see `SUPPORT.md <https://github.com/ome/omero-iviewer/blob/master/SUPPORT.md>`_
 
 Requirements
 ============
