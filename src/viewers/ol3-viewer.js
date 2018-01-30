@@ -945,6 +945,12 @@ export default class Ol3Viewer extends EventSubscriber {
                     newShape['@id'] = newRoiAndShapeId.shape_id;
                     newRoi.shapes.set(newRoiAndShapeId.shape_id, newShape);
                     shape.deleted = true; // take out old entry
+                    // update newly created and saved shapes (if selected)
+                    let selShapes =
+                        this.image_config.regions_info.selected_shapes;
+                    let selShapesIdx = selShapes.indexOf(shape.shape_id);
+                    if (selShapesIdx !== -1)
+                        selShapes[selShapesIdx] = newShape.shape_id;
                 }
                 // we remove shapes flagged deleted=true
                 if (shape.deleted) {
