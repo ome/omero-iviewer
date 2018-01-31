@@ -54,6 +54,7 @@ It is also possible to run/debug it with webpack dev-server:
 will build the bundle and start the webpack dev-server (localhost:8080)
 
 Either development setup expects the following:
+
 - an OMERO server installation
 - an iviewer 'deploy' to that OMERO server:
 
