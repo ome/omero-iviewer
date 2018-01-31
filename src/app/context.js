@@ -153,7 +153,7 @@ export default class Context {
       * application wide keyhandlers.
       * see addKeyListener/removeKeyListener
       * entries in the map are of the following format
-      * e.g.: key: 65, value: {func: this.selectAllShapes, args: [true]}
+      * e.g.: key: 'A', value: {func: this.selectAllShapes, args: [true]}
       *
       * @memberof Context
       * @type {Map}
@@ -455,7 +455,8 @@ export default class Context {
         if (window.onkeydown === null)
             window.onkeydown = (event) => {
                 let command = Misc.isApple() ? 'metaKey' : 'ctrlKey';
-                let keyHandlers = this.key_listeners.get(event.keyCode);
+                let keyHandlers =
+                    this.key_listeners.get(event.key.toUpperCase());
                 if (typeof keyHandlers === 'undefined' ||
                     event.target.nodeName.toUpperCase() === 'INPUT') return;
 
@@ -484,7 +485,7 @@ export default class Context {
      * that a respective group be used for distinguishing
      *
      * @memberof Context
-     * @param {number} key the numeric key code to listen for
+     * @param {string} key the key value to listen for
      * @param {function} action a function
      * @param {string} group a grouping, default: 'global'
      * @param {boolean} ctrl is a command/ctrl combination
@@ -492,10 +493,11 @@ export default class Context {
     addKeyListener(key, action, group = 'global', ctrl = true) {
         // some basic checks as to validity of key and key_handler_def
         // we need a numeric key and a function at a minimum
-        if (typeof key !== 'number' || typeof action !== 'function') return;
+        if (typeof key !== 'string' || typeof action !== 'function') return;
 
         // we allow multiple actions for same key but different groups,
         // i.e. undo/redo, copy/paste, save for settings/rois
+        key = key.toUpperCase();
         let keyActions = this.key_listeners.get(key);
         let new_key_action = {
             'ctrl': ctrl,
@@ -512,12 +514,13 @@ export default class Context {
     /**
      * Unregisters a keydown handler for a particular key (with group)
      *
-     * @param {number} key the key code associated with the listener
+     * @param {string} key the key value associated with the listener
      * @param {string} group a grouping, default: 'global'
      * @memberof Context
      */
     removeKeyListener(key, group='global') {
-        if (typeof key !== 'number') return;
+        if (typeof key !== 'string') return;
+        key = key.toUpperCase();
         let keyActions = this.key_listeners.get(key);
         if (keyActions) {
             delete keyActions[group];
@@ -545,7 +548,7 @@ export default class Context {
         let parent_id = null;
         let selConf = this.getSelectedImageConfig();
         if (selConf === null) return;
-        
+
         let parentType =
             this.initial_type === INITIAL_TYPES.IMAGES ?
                 selConf.image_info.parent_type : this.initial_type;

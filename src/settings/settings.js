@@ -55,11 +55,11 @@ export default class Settings extends EventSubscriber {
      * @type {Object}
      */
     key_actions = [
-        { key: 83, func: this.saveImageSettings},            // ctrl - s
-        { key: 89, func: this.redo},                         // ctrl - y
-        { key: 90, func: this.undo},                         // ctrl - z
-        { key: 67, func: this.copy},                         // ctrl - v
-        { key: 86, func: this.paste}                         // ctrl - y
+        { key: 'S', func: this.saveImageSettings},            // ctrl - s
+        { key: 'Y', func: this.redo},                         // ctrl - y
+        { key: 'Z', func: this.undo},                         // ctrl - z
+        { key: 'C', func: this.copy},                         // ctrl - c
+        { key: 'V', func: this.paste}                         // ctrl - v
     ];
 
     /**
