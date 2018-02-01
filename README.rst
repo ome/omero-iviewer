@@ -37,7 +37,7 @@ which can then be used like any Django plugin.
 Intructions on how to add the OMERO.iviewer app to your installed OMERO.web apps
 can be found in the `OMERO.iviewer README <plugin/omero_iviewer/README.rst>`_.
 
-**Note**: 
+**Note**:
 
 Should you like or need to rebuild OMERO.iviewer's internal ol3 viewer,
 please read the section *ol3-viewer* below!
@@ -45,13 +45,76 @@ please read the section *ol3-viewer* below!
 Development
 ===========
 
-Run:
+Building the uncompressed version of iviewer as described above the application
+can be deployed locally or to a test server, to then be debugged.
+It is also possible to run/debug it with webpack dev-server:
 
 ::
- 
+
     $ npm run dev
 
-To be able to run the ``webpack-dev`` server locally at: ``localhost:3000``
+will build the bundle and start the webpack dev-server (localhost:8080)
+
+Either development setup expects the following:
+
+- an OMERO server installation
+- an iviewer 'deploy' to that OMERO server:
+
+::
+
+    $ export PYTHONPATH=$PYTHONPATH:/path/to/iviewer-project-root/plugin
+    $ bin/omero config append omero.web.apps '"omero_iviewer"'
+
+**Notes**:
+
+The webpack dev-server config expects a local OMERO server at http://localhost (default port 80).
+Should the server instance use a different port you will need to modify all
+proxy target entries in `webpack.dev.config.js <webpack.dev.config.js>`_:
+
+.. code-block::
+
+    devServer: {
+        proxy: {
+            '/iviewer/**': {
+                target: 'http://localhost:your_port'
+            },
+            '/api/**': {
+                target: 'http://localhost:your_port'
+            }, ...
+        }
+    }
+
+If you want to bind the webpack dev server to a port other than 8080
+you will need to change its port property in `webpack.dev.config.js <webpack.dev.config.js>`_:
+
+.. code-block::
+
+    devServer: {
+        port: your_port
+    }
+
+
+The initial data type (e.g. image, dataset, well) and its respective ID can be set/changed
+in `index-dev.html <src/index-dev.html>`_:
+
+.. code-block:: html
+
+    <html>
+        <head>
+            <link rel="stylesheet" type="text/css" href="build/css/all.min.css" />
+
+            <script type="text/javascript">
+                // modify according to your needs
+                // in particular: choose an existing id !
+                window.INITIAL_REQUEST_PARAMS = {
+                        'VERSION': "DEV_SERVER",
+                        'WEB_API_BASE': 'api/v0/',
+                        //'IMAGES': "1",
+                        'DATASET': "1",
+                        //'WELL': "1"
+                };
+            </script>
+    ...
 
 Documentation
 =============
@@ -61,7 +124,7 @@ To build the html in build/docs, run:
 ::
 
     $ npm run docs
- 
+
 
 ol3-viewer
 ==========
@@ -86,4 +149,3 @@ More detailed resources on how to create a web app and development setup can be 
 
 1. `CreateApp <https://docs.openmicroscopy.org/latest/omero/developers/Web/CreateApp.html>`_
 2. `Deployment <https://docs.openmicroscopy.org/latest/omero/developers/Web/Deployment.html>`_
-
