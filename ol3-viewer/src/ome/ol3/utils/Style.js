@@ -123,7 +123,7 @@ ome.ol3.utils.Style.createFeatureStyle = function(shape_info, is_label, fill_in_
             text['count']++;
     }
     if (text['count'] > 0) {
-        text['exceedLength'] = true;
+        text['overflow'] = true;
         style['text'] = new ol.style.Text(text);
 
         // we do not wish for defaults (ol creates default fill color)
@@ -238,7 +238,7 @@ ome.ol3.utils.Style.updateStyleFunction =
             }
 
             if (textStyle instanceof ol.style.Text) {
-                textStyle.setExceedLength(true);
+                textStyle.setOverflow(true);
                 // seems we want to adjust text to resolution level
                 if (scale_text) {
                     var newScale = 1/actual_resolution;
@@ -412,7 +412,7 @@ ome.ol3.utils.Style.cloneStyle = function(style) {
         // for our purposes and for now we are not going to set some things which
         // have sensible defaults anyhow
         newText = new ol.style.Text({
-            "exceedLength" : true,
+            "overflow" : true,
             "font" : font,
             "text" : text,
             "stroke" : stroke,
@@ -591,7 +591,7 @@ ome.ol3.utils.Style.modifyStyles =
                         newTextStyle.setTextBaseline(newStyle.getText().getTextBaseline());
                 }
                 if (newTextStyle instanceof ol.style.Text) {
-                    newTextStyle.exceedLength_ = true;
+                    newTextStyle.setOverflow(true);
                     if (typeof newTextStyle.text_ !== 'string') newTextStyle.text_ = "";
                     if (newTextStyle.fill_ === null)
                         newTextStyle.fill_ =

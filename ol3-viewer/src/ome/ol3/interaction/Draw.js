@@ -341,7 +341,7 @@ ome.ol3.interaction.Draw.prototype.setDefaultDrawingStyle = function(shape) {
             var text =
                 new ol.style.Text(
                     {
-                      exceedLength: true,
+                      overflow: true,
                       text: "TEXT",
                       font: "normal " + geom.getHeight() + "px sans-serif",
                       fill: new ol.style.Fill(
