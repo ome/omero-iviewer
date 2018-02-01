@@ -810,6 +810,26 @@ export default class Context {
     }
 
     /**
+     * Returns all configs that relate to the given image id
+     * and have modified regions data
+     *
+     * @param {number} image_id the image id
+     * @return {Array.<number>} a list of config ids or an empty one
+     * @memberof Context
+     */
+    findConfigsWithModifiedRegionsForGivenImage(image_id) {
+        let ret = [];
+        let sameImageConfs = this.getImageConfigsForGivenImage(image_id);
+        for (let c in sameImageConfs) {
+            let conf = sameImageConfs[c];
+            if (conf.regions_info && conf.regions_info.hasBeenModified()) {
+                ret.push(conf.id);
+            }
+        }
+        return ret;
+    }
+
+    /**
      * Reload image info for all image configs that have the same parent
      *
      * @param {number} parent_id the parent id
