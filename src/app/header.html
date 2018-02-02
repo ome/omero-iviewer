@@ -81,8 +81,14 @@
                     <li class="${image_config.regions_info.ready &&
                                  image_config.regions_info.selected_shapes.length > 0 ?
                                     '' : 'disabled-color'}">
-                        <a click.delegate="saveRoiMeasurements()"
-                           href="#">Export</a>
+                        <a click.delegate="saveRoiMeasurements(false)"
+                           href="#">Export (Excel)</a>
+                    </li>
+                    <li class="${image_config.regions_info.ready &&
+                                 image_config.regions_info.selected_shapes.length > 0 ?
+                                    '' : 'disabled-color'}">
+                        <a click.delegate="saveRoiMeasurements(true)"
+                           href="#">Export (CSV)</a>
                     </li>
                 </ul>
             </div>
