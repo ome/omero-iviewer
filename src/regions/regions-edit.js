@@ -60,7 +60,8 @@ export default class RegionsEdit extends EventSubscriber {
         { key: 'C', func: this.copyShapes },                      // ctrl - c
         { key: 'V', func: this.pasteShapes },                     // ctrl - v
         { key: 'Delete', func: this.deleteShapes, ctrl: false},   // DELETE
-        { key: 'Del', func: this.deleteShapes, ctrl: false}       // DEL IE
+        { key: 'Del', func: this.deleteShapes, ctrl: false},      // DEL IE
+        { key: 'Backspace', func: this.deleteShapes, ctrl: false} // DEL MAC
     ];
 
     /**
