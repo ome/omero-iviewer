@@ -674,7 +674,10 @@ export default class RegionsInfo  {
             if (id.indexOf("-") !== -1) continue;
             let shape = this.getShape(ids[i]);
             if (shape === null) continue;
-            if (shape) addToRequest(shape);
+            if (shape) {
+                if (shape.TheT === -1 || shape.TheZ === -1) continue;
+                addToRequest(shape);
+            }
         }
 
         // we need no request
