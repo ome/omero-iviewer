@@ -31,12 +31,11 @@ export default class OpenWith {
      * @static
      */
     static initOpenWith() {
-        window.OME = {}
-        window.OME.OPEN_WITH = [];
+        window.OME = window.OME || {};  // In case this ns exists already
 
         window.OME.setOpenWithEnabledHandler = function(label, fn) {
             // look for label in OPEN_WITH
-            window.OME.OPEN_WITH.forEach(function(ow){
+            OpenWith.OPEN_WITH.forEach(function(ow){
                 if (ow.label === label) {
                     ow.isEnabled = function() {
                         // wrap fn with try/catch, since error here will break jsTree menu
@@ -56,7 +55,7 @@ export default class OpenWith {
 
         window.OME.setOpenWithUrlProvider = function(id, fn) {
             // look for label in OPEN_WITH
-            window.OME.OPEN_WITH.forEach(function(ow){
+            OpenWith.OPEN_WITH.forEach(function(ow){
                 if (ow.id === id) {
                     ow.getUrl = fn;
                 }
@@ -65,23 +64,22 @@ export default class OpenWith {
     }
 
     /**
-     * Fetches the open with scripts and stores them in window.OME.OPEN_WITH
+     * Fetches the open with scripts and stores them in OpenWith.OPEN_WITH
      *
      * @static
      * @param {string} prefixed_server_uri the server prefix
      */
     static fetchOpenWithScripts(server_prefix) {
-        window.OME = {};
-        window.OME.OPEN_WITH = [];
+        OpenWith.OPEN_WITH = [];
         $.ajax(
             {url : server_prefix + "/open_with/",
             success : (response) => {
                 if (typeof response !== 'object' || response === null ||
                     !Misc.isArray(response.open_with_options)) return;
 
-                window.OME.OPEN_WITH = response.open_with_options;
+                OpenWith.OPEN_WITH = response.open_with_options;
                 // Try to load scripts if specified:
-                window.OME.OPEN_WITH.forEach(ow => {
+                OpenWith.OPEN_WITH.forEach(ow => {
                     if (ow.script_url) {
                         $.getScript(ow.script_url);
                     }
@@ -102,8 +100,7 @@ export default class OpenWith {
     static getOpenWithLinkParams(image_id, image_name, iviewer_url) {
         let ret = [];
 
-        for (let i in window.OME.OPEN_WITH) {
-            let v = window.OME.OPEN_WITH[i];
+        return OpenWith.OPEN_WITH.map(v => {
             var selectedObjs = [{id: image_id,
                                  type: 'image',
                                  name: image_name}];
@@ -116,10 +113,10 @@ export default class OpenWith {
                     return prev || supported === 'images' || supported === 'image';
                 }, false);
             }
-            if (!enabled) continue;
+            if (!enabled) return;
 
             // Ignore open_with -> iviewer!
-            if (v.url.indexOf(iviewer_url) === 0) continue;
+            if (v.url.indexOf(iviewer_url) === 0) return;
 
             var label = v.label || v.id;
 
@@ -131,9 +128,7 @@ export default class OpenWith {
             catch(err){}
             var url = the_url || v.url + '?image=' + image_id;
 
-            ret.push({text: label, url: url});
-        }
-
-        return ret;
+            return ({text: label, url: url});
+        }).filter(l => l);
     }
 }
