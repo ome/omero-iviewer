@@ -98,7 +98,6 @@ export default class OpenWith {
      * @return {Array.<Object>} a list of link parameters or empty list
      */
     static getOpenWithLinkParams(image_id, image_name, iviewer_url) {
-        let ret = [];
 
         return OpenWith.OPEN_WITH.map(v => {
             var selectedObjs = [{id: image_id,
