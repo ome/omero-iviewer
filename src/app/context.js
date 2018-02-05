@@ -18,6 +18,7 @@
 import {noView} from 'aurelia-framework';
 import {EventAggregator} from 'aurelia-event-aggregator';
 import Misc from '../utils/misc';
+import OpenWith from '../utils/openwith';
 import ImageConfig from '../model/image_config';
 import ImageInfo from '../model/image_info';
 import RegionsInfo from '../model/regions_info';
@@ -226,8 +227,8 @@ export default class Context {
         // set up luts
         this.setUpLuts();
 
-        // set up Open_with
-        this.setUpOpenWith();
+        // initialize Open_with
+        OpenWith.initOpenWith();
 
         // open what we received as inital parameter
         this.openWithInitialParams();
@@ -298,33 +299,6 @@ export default class Context {
                         if (isInList) i++;
                     });
                 for (let [id, conf] of this.image_configs) conf.changed();
-            }
-        });
-    }
-
-    /**
-     * Sets up 'Open With' by via AJAX call then loading scripts
-     *
-     * @memberof Context
-     */
-    setUpOpenWith() {
-
-        // now query the luts list
-        let server = this.server;
-        let uri_prefix =  this.getPrefixedURI(WEBGATEWAY);
-        $.ajax(
-            {url : server + uri_prefix + "/open_with/",
-            success : (response) => {
-                if (typeof response !== 'object' || response === null ||
-                    !Misc.isArray(response.open_with_options)) return;
-
-                window.OME.OPEN_WITH = response.open_with_options;
-                // Try to load scripts if specified:
-                window.OME.OPEN_WITH.forEach(ow => {
-                    if (ow.script_url) {
-                        $.getScript(ow.script_url);
-                    }
-                });
             }
         });
     }

@@ -18,6 +18,7 @@
 
 // js
 import Context from '../app/context';
+import OpenWith from '../utils/openwith';
 
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {INITIAL_TYPES, WEBCLIENT, IVIEWER} from '../utils/constants';
@@ -32,6 +33,13 @@ export class Info {
      * @type {ImageInfo}
      */
     @bindable image_info = null;
+
+    /**
+     * the open with links
+     * @memberof Info
+     * @type {Array.<>}
+     */
+    open_with_links = [];
 
     /**
      * the associated dataset info
@@ -219,42 +227,21 @@ export class Info {
             }
         } else this.parent_info = null;
 
-        let image_id = this.image_info.image_id;
-        let image_name = this.image_info.image_name;
-
-        let iviewer_url = this.image_info.context.getPrefixedURI(IVIEWER);
-
-        this.open_with_links = window.OME.OPEN_WITH.map(v => {
-            var selectedObjs = [{id: image_id,
-                                 type: 'image',
-                                 name: image_name}];
-            var enabled = false;
-            if (typeof v.isEnabled === "function") {
-                enabled = v.isEnabled(selectedObjs);
-            } else if (typeof v.supported_objects === "object" && v.supported_objects.length > 0) {
-                enabled = v.supported_objects.reduce(function(prev, supported){
-                    // enabled if plugin supports 'images' or 'image'
-                    return prev || supported === 'images' || supported === 'image';
-                }, false);
-            }
-            if (!enabled) return;
-
-            // Ignore open_with -> iviewer!
-            if (v.url.indexOf(iviewer_url) === 0) return;
-
-            var label = v.label || v.id;
-
-            // Get the link via url provider...
-            var the_url;
-            try {
-                the_url = v.getUrl(selectedObjs, v.url);
-            }
-            catch(err){}
-            var url = the_url || v.url + '?image=' + image_id;
-
-            return {text: label, url: url};
-        });
-
-        this.open_with_links = this.open_with_links.filter(l => l)
+        this.updateOpenWithLinks();
     }
+
+    /**
+     * Updates open with links
+     *
+     * @memberof Header
+     */
+     updateOpenWithLinks() {
+         let image_id = this.image_info.image_id;
+         let image_name = this.image_info.image_name;
+         let iviewer_url = this.image_info.context.getPrefixedURI(IVIEWER);
+
+         this.open_with_links.splice(
+             0, this.open_with_links.length,
+             ...OpenWith.getOpenWithLinkParams(image_id, image_name, iviewer_url));
+     }
 }
