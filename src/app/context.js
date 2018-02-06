@@ -160,7 +160,7 @@ export default class Context {
       * application wide keyhandlers.
       * see addKeyListener/removeKeyListener
       * entries in the map are of the following format
-      * e.g.: key: 65, value: {func: this.selectAllShapes, args: [true]}
+      * e.g.: key: 'A', value: {func: this.selectAllShapes, args: [true]}
       *
       * @memberof Context
       * @type {Map}
@@ -453,27 +453,26 @@ export default class Context {
         if (window.onkeydown === null)
             window.onkeydown = (event) => {
                 let command = Misc.isApple() ? 'metaKey' : 'ctrlKey';
-                // only process command key combinations
-                // and if target is an input field,
-                // we do not wish to override either
-                if (!event[command] ||
+                let keyHandlers =
+                    this.key_listeners.get(event.key.toUpperCase());
+                if (typeof keyHandlers === 'undefined' ||
                     event.target.nodeName.toUpperCase() === 'INPUT') return;
 
-                let keyHandlers = this.key_listeners.get(event.keyCode);
-                if (keyHandlers) {
-                    // we allow the browser's default action and event
-                    // bubbling unless one handler returns false
-                    let allowDefaultAndPropagation = true;
-                    try {
-                        for (let action in keyHandlers)
-                            if (!((keyHandlers[action])(event)))
-                                allowDefaultAndPropagation = false;
-                    } catch(ignored) {}
-                    if (!allowDefaultAndPropagation) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        return false;
+                // we allow the browser's default action and event
+                // bubbling unless one handler returns false
+                let allowDefaultAndPropagation = true;
+                try {
+                    for (let a in keyHandlers) {
+                        let action = keyHandlers[a];
+                        if (action['ctrl'] && !event[command]) continue;
+                        if (!((action['action'])(event)))
+                            allowDefaultAndPropagation = false;
                     }
+                } catch(ignored) {}
+                if (!allowDefaultAndPropagation) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    return false;
                 }
             };
     }
@@ -484,37 +483,48 @@ export default class Context {
      * that a respective group be used for distinguishing
      *
      * @memberof Context
-     * @param {number} key the numeric key code to listen for
+     * @param {string} key the key value to listen for
      * @param {function} action a function
      * @param {string} group a grouping, default: 'global'
+     * @param {boolean} ctrl is a command/ctrl combination
      */
-    addKeyListener(key, action, group = 'global') {
+    addKeyListener(key, action, group = 'global', ctrl = true) {
         // some basic checks as to validity of key and key_handler_def
         // we need a numeric key and a function at a minimum
-        if (typeof key !== 'number' || typeof action !== 'function') return;
+        if (typeof key !== 'string' || typeof action !== 'function') return;
 
         // we allow multiple actions for same key but different groups,
         // i.e. undo/redo, copy/paste, save for settings/rois
+        key = key.toUpperCase();
         let keyActions = this.key_listeners.get(key);
-        if (keyActions) keyActions[group] = action
-        else this.key_listeners.set(key, {group: action});
+        let new_key_action = {
+            'ctrl': ctrl,
+            'action': action
+        };
+        if (keyActions) keyActions[group] = new_key_action;
+        else {
+            let new_list = {};
+            new_list[group] = new_key_action;
+            this.key_listeners.set(key, new_list)
+        };
     }
 
     /**
      * Unregisters a keydown handler for a particular key (with group)
      *
-     * @param {number} key the key code associated with the listener
+     * @param {string} key the key value associated with the listener
      * @param {string} group a grouping, default: 'global'
      * @memberof Context
      */
     removeKeyListener(key, group='global') {
-        if (typeof key !== 'number') return;
+        if (typeof key !== 'string') return;
+        key = key.toUpperCase();
         let keyActions = this.key_listeners.get(key);
         if (keyActions) {
             delete keyActions[group];
             let noHandlersLeft = true;
             for(let k in keyActions)
-                if (typeof keyActions[k] === 'function') {
+                if (typeof keyActions[k]['action'] === 'function') {
                     noHandlersLeft = false;
                     break;
                 }
