@@ -101,12 +101,23 @@
                     </div>
                     <div if.bind="!(shape.deleted && shape.is_new) &&
                                    !(roi.shapes.size > 1 && !roi.show)"
-                        title="ROI: ${roi_id} - Shape: ${shape_id}"
+                        title="${'ROI: ' + roi_id + ' - Shape: ' + shape_id +
+                                 (!shape.permissions ||
+                                    (shape.permissions &&
+                                     shape.permissions.canAnnotate &&
+                                     shape.permissions.canEdit &&
+                                     shape.permissions.canDelete) ? '' :
+                                        '\n(restricted permissions)')}"
                         id="${'roi-' + shape.shape_id}"
                         class="regions-table-row"
                         css="${shape.selected ? 'background-color: #d0d0ff;' : ''}
                              ${shape.deleted ? 'color: red;' :
-                                (shape.modified ? 'color: blue;' : '')}"
+                                (shape.modified ? 'color: blue;' : '')}
+                             ${!shape.permissions ||
+                               (shape.permissions &&
+                                shape.permissions.canAnnotate &&
+                                shape.permissions.canEdit &&
+                                shape.permissions.canDelete) ? '' : 'opacity: 0.5'}"
                         click.delegate="selectShape(shape.shape_id, shape.selected, $event)">
                         <div class="regions-table-col roi-toggle"></div>
                         <div class="regions-table-col shape-show">
