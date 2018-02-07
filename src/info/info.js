@@ -21,7 +21,7 @@ import Context from '../app/context';
 import OpenWith from '../utils/openwith';
 
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
-import {INITIAL_TYPES, WEBCLIENT, IVIEWER} from '../utils/constants';
+import {INITIAL_TYPES, WEBCLIENT, IVIEWER, WEBGATEWAY} from '../utils/constants';
 
 @customElement('info')
 @inject(Context, BindingEngine)
@@ -239,9 +239,10 @@ export class Info {
          let image_id = this.image_info.image_id;
          let image_name = this.image_info.image_name;
          let iviewer_url = this.image_info.context.getPrefixedURI(IVIEWER);
+         let webgateway_url = this.image_info.context.getPrefixedURI(WEBGATEWAY);
 
          this.open_with_links.splice(
              0, this.open_with_links.length,
-             ...OpenWith.getOpenWithLinkParams(image_id, image_name, iviewer_url));
+             ...OpenWith.getOpenWithLinkParams(image_id, image_name, iviewer_url, webgateway_url));
      }
 }

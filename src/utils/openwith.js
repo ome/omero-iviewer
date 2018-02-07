@@ -97,7 +97,7 @@ export default class OpenWith {
      * @param {string} iviewer_url the prefixed iviewer url
      * @return {Array.<Object>} a list of link parameters or empty list
      */
-    static getOpenWithLinkParams(image_id, image_name, iviewer_url) {
+    static getOpenWithLinkParams(image_id, image_name, iviewer_url, webgateway_url) {
 
         return OpenWith.OPEN_WITH.map(v => {
             var selectedObjs = [{id: image_id,
@@ -114,8 +114,9 @@ export default class OpenWith {
             }
             if (!enabled) return;
 
-            // Ignore open_with -> iviewer!
-            if (v.url.indexOf(iviewer_url) === 0) return;
+            // Ignore open_with -> iviewer or webgateway viewer
+            if (v.url.indexOf(iviewer_url) === 0 ||
+                v.url.indexOf(webgateway_url) == 0) return;
 
             var label = v.label || v.id;
 
