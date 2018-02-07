@@ -107,7 +107,7 @@
                                      shape.permissions.canAnnotate &&
                                      shape.permissions.canEdit &&
                                      shape.permissions.canDelete) ? '' :
-                                        '\n(restricted permissions)')}"
+                                        '\nOwner: ' + shape.owner)}"
                         id="${'roi-' + shape.shape_id}"
                         class="regions-table-row"
                         css="${shape.selected ? 'background-color: #d0d0ff;' : ''}
