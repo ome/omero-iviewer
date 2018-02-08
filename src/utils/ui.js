@@ -64,7 +64,7 @@ export default class Ui {
                       if (leftSplit)
                           $('.frame').css(
                               {"margin-left": '' + (-x-5) + 'px',
-                               "padding-left": '' + (x+10) + 'px'});
+                               "padding-left": '' + (x+5) + 'px'});
                       else
                           $('.frame').css(
                               {"margin-right": '' + (-x-5) + 'px',

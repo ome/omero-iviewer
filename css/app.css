@@ -228,7 +228,7 @@ a.ui-button:active,
 }
 
 .frame {
-    margin-left: -105px;
+    margin-left: -110px;
     padding-left: 110px;
     margin-right: -355px;
     padding-right: 355px;
@@ -306,7 +306,7 @@ a.ui-button:active,
 
 .plane-slider span {
     left: 0;
-    width: 27px;
+    width: 35px;
     text-align: center;
 }
 .time-slider span {
@@ -314,7 +314,7 @@ a.ui-button:active,
 }
 
 .plane-slider .glyphicon {
-    left: 7px;
+    left: 10px;
 }
 .time-slider .glyphicon {
     top: 11px;
@@ -359,7 +359,7 @@ a.ui-button:active,
     background-position: center;
     width: 20px;
     height: 20px;
-    left: 4px;
+    left: 7px;
     bottom: -65px;
 }
 
@@ -374,7 +374,7 @@ a.ui-button:active,
 .plane-slider .ui-slider {
     height: 100%;
     width: 9px;
-    margin-left: 9px;
+    margin-left: 12px;
 }
 .time-slider .ui-slider {
     width: 100%;
