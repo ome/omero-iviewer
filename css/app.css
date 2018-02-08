@@ -241,7 +241,6 @@ a.ui-button:active,
 }
 
 .center-row1 {
-    background-color: rgba(255,255,255,1);
     height: 100%;
     padding: 0px;
 }
@@ -259,8 +258,6 @@ a.ui-button:active,
     height: 35px;
     margin-top: -35px;
     position: relative;
-    background-color: rgba(255,255,255,1);
-    margin-right: 10px;
 }
 .center-row2-hidden {
     display: none;
@@ -370,7 +367,7 @@ a.ui-button:active,
    but still thick-enough to click easily */
 .time-slider .ui-slider, .plane-slider .ui-slider {
     cursor: pointer;
-    border: 3px solid white;
+    border: 3px solid #f8f8f8;
     background: #c5c5c5;
 }
 
@@ -473,7 +470,6 @@ a.ui-button:active,
     height:100%;
     position: relative;
     z-index: 1;
-    background-color: #f8f8f8;
     overflow-x: hidden;
 }
 
@@ -507,6 +503,7 @@ a.ui-button:active,
     height: 100%;
     width: 100%;
     z-index: 0;
+    background-color: #F8F8F8;
 }
 
 .viewer-mdi {
@@ -525,7 +522,6 @@ a.ui-button:active,
 .viewer-container {
     width: 100%;
     height: 100%;
-    background: #FFFFFF;
 }
 
 .thumbnail-panel {
@@ -565,20 +561,25 @@ thumbnail-slider img {
     margin-bottom: 5px;
 }
 
+#info {
+    padding: 15px;
+}
+
 #info .table>tbody>tr>th, #info .table>tbody>tr>td {
     border-top-width: 0;
-    padding: 3px 8px;
+    padding: 3px 0;
 }
 
 #info .table .text-weight-bold {
     font-weight: 500
 }
 
-.panel-heading {
+.well {
     padding: 6px 8px;
+    margin-bottom: 8px;
 }
 
-.panel-heading button {
+.well button {
     background-color: transparent;
     padding: 0;
     width: 100%;
@@ -595,16 +596,12 @@ thumbnail-slider img {
     padding: 10px;
 }
 
-.nav-tabs>li.active>a, .nav-tabs>li.active>a:focus, .nav-tabs>li.active>a:hover {
-    background-color: #F8F8F8;
-}
-
 .nav-tabs {
-    background-color: #fff;
+    background-color: #f8f8f8;
 }
 
 .right-hand-panel .row {
-    min-width: 350px;
+    min-width: 330px;
     margin-bottom: 2px;
     margin-left: 0px;
     margin-right: 0px;
@@ -775,7 +772,6 @@ thumbnail-slider img {
 
 .regions-header {
     position: fixed;
-    background-color: #f8f8f8;
     height: 40px;
     line-height: 36px;
     font-weight: bold;

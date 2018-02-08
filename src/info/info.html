@@ -32,44 +32,42 @@
         </span>
     </div>
 
-    <div class="panel panel-default">
-        <div class="panel-heading">
-            <button type="button" class="btn">
-                <span class="glyphicon glyphicon-menu-down" aria-hidden="true"></span> Image Info
-            </button>
-        </div>
+    <div class="well well-sm">
+        <button type="button" class="btn">
+            <span class="glyphicon glyphicon-menu-down" aria-hidden="true"></span> Image Info
+        </button>
+    </div>
 
-        <table show.bind="image_info.ready" class="table table-condensed">
-            <tr>
-                <td class="col-sm-6 text-weight-bold">Image ID:</td>
-                <td class="col-sm-6">${image_info.image_id}</td>
-            </tr>
-            <tr show.bind="parent_info !== null">
-                <td class="col-sm-6 text-weight-bold">${parent_info.title}:</td>
-                <td class="col-sm-6">
-                    <a href="${parent_info.url}"
-                       title="Show ${parent_info.title} in webclient"
-                       target="_blank">${parent_info.name}
-                    </a>
-                </td>
-            </tr>
-            <tr repeat.for="column of columns">
-                <td class="col-sm-6 text-weight-bold">${column.label}</td>
-                <td class="col-sm-6">${column.value}</td>
-            </tr>
-            <tr>
-                <td class="col-sm-6 text-weight-bold">Channels:</td>
-                <td class="col-sm-6">
-                    <span repeat.for="channel of image_info.channels">
-                        ${channel.label}${!$last ? ', ' : ''}
-                    </span>
-                </td>
-            </tr>
-        </table>
+    <table show.bind="image_info.ready" class="table table-condensed">
+        <tr>
+            <td class="col-sm-6 text-weight-bold">Image ID:</td>
+            <td class="col-sm-6">${image_info.image_id}</td>
+        </tr>
+        <tr show.bind="parent_info !== null">
+            <td class="col-sm-6 text-weight-bold">${parent_info.title}:</td>
+            <td class="col-sm-6">
+                <a href="${parent_info.url}"
+                   title="Show ${parent_info.title} in webclient"
+                   target="_blank">${parent_info.name}
+                </a>
+            </td>
+        </tr>
+        <tr repeat.for="column of columns">
+            <td class="col-sm-6 text-weight-bold">${column.label}</td>
+            <td class="col-sm-6">${column.value}</td>
+        </tr>
+        <tr>
+            <td class="col-sm-6 text-weight-bold">Channels:</td>
+            <td class="col-sm-6">
+                <span repeat.for="channel of image_info.channels">
+                    ${channel.label}${!$last ? ', ' : ''}
+                </span>
+            </td>
+        </tr>
+    </table>
 
-        <div class="disabled-color loading-text" show.bind="!image_info.ready">
-            Loading Image Data ...
-         </div>
+    <div class="disabled-color loading-text" show.bind="!image_info.ready">
+        Loading Image Data ...
      </div>
 
 </template>
