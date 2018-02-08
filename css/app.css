@@ -561,9 +561,13 @@ thumbnail-slider img {
     bottom: 0px;
 }
 
+.openwith {
+    margin-bottom: 5px;
+}
+
 #info .table>tbody>tr>th, #info .table>tbody>tr>td {
     border-top-width: 0;
-    padding: 2px;
+    padding: 3px 8px;
 }
 
 .right-hand-panel {
