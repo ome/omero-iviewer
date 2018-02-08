@@ -574,7 +574,15 @@ thumbnail-slider img {
 }
 
 .tab-pane {
-    padding: 5px;
+    padding: 10px;
+}
+
+.nav-tabs>li.active>a, .nav-tabs>li.active>a:focus, .nav-tabs>li.active>a:hover {
+    background-color: #F8F8F8;
+}
+
+.nav-tabs {
+    background-color: #fff;
 }
 
 .right-hand-panel .row {
