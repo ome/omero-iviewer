@@ -570,6 +570,21 @@ thumbnail-slider img {
     padding: 3px 8px;
 }
 
+#info .table .text-weight-bold {
+    font-weight: 500
+}
+
+.panel-heading {
+    padding: 6px 8px;
+}
+
+.panel-heading button {
+    background-color: transparent;
+    padding: 0;
+    width: 100%;
+    text-align: left;
+}
+
 .right-hand-panel {
     width: 350px;
     max-width: 1000px;
