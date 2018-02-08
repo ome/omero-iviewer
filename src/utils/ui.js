@@ -68,7 +68,7 @@ export default class Ui {
                       else
                           $('.frame').css(
                               {"margin-right": '' + (-x-5) + 'px',
-                               "padding-right": '' + (x+15) + 'px'});
+                               "padding-right": '' + (x+5) + 'px'});
                 }
                 eventbus.publish(IMAGE_VIEWER_RESIZE,
                     {config_id: -1, is_dragging: true});
