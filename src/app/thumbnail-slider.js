@@ -43,6 +43,13 @@ export default class ThumbnailSlider extends EventSubscriber {
      */
      initialized = false;
 
+     /**
+      * click set timeout handle
+      * @memberof ThumbnailSlider
+      * @type {number}
+      */
+      click_handle = null;
+
     /**
      * a reference to the selected image config
      * @memberof ThumbnailSlider
@@ -520,12 +527,12 @@ export default class ThumbnailSlider extends EventSubscriber {
     }
 
     /**
-     * A click handler: sets the image id in the main view
+     * Single Click Handler: sets the image id in the main view
      *
      * @memberof ThumbnailSlider
      * @param {number} image_id the image id for the clicked thumbnail
      */
-    onClick(image_id) {
+    singleClick(image_id) {
         let navigateToNewImage = () => {
             this.context.rememberImageConfigChange(image_id);
             let parent_id =
@@ -575,6 +582,40 @@ export default class ThumbnailSlider extends EventSubscriber {
                 saveHandler, () => navigateToNewImage());
             return;
         } else navigateToNewImage();
+    }
+
+    /**
+     * hacky solution to allow double - single click distinction
+     *
+     * @memberof ThumbnailSlider
+     * @param {number} image_id the image id for the clicked thumbnail
+     */
+    onClick(image_id) {
+        if (this.click_handle) {
+            clearTimeout(this.click_handle);
+            this.click_handle = null;
+        }
+        this.click_handle = setTimeout(() => this.singleClick(image_id), 200);
+    }
+
+    /**
+     * Double click handler. Triggers mdi if not already in mdi
+     *
+     * @memberof ThumbnailSlider
+     * @param {number} image_id the image id for the clicked thumbnail
+     * @param {Object} event the mouse click event
+     */
+    onDoubleClick(image_id, event) {
+        event.stopPropagation();
+
+        if (this.click_handle) {
+            clearTimeout(this.click_handle);
+            this.click_handle = null;
+        }
+        this.context.useMDI = true;
+        this.singleClick(image_id);
+
+        return false;
     }
 
     /**

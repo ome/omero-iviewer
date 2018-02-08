@@ -20,7 +20,8 @@
     <require from="../controls/dimension-slider"></require>
     <require from="./viewer-context-menu"></require>
 
-    <div class="${context.useMDI ? 'center-row1-mdi' : 'center-row1'}
+    <div class="${context.useMDI && context.image_configs.size > 1 ?
+                    'center-row1-mdi' : 'center-row1'}
                 ${image_config.image_info.dimensions.max_t > 1 ? 'show-tSlider' : ''}
                 ${image_config.image_info.dimensions.max_z > 1 ? 'show-zSlider' : ''}">
         <dimension-slider
@@ -29,7 +30,7 @@
             dim="z"
             player_info.bind="player_info"
             class="plane-slider"
-            css="${context.useMDI ?
+            css="${context.useMDI && context.image_configs.size > 1 ?
                     'margin-top: 25px;margin-bottom: 10px' : ''}">
         </dimension-slider>
 

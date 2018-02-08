@@ -66,18 +66,20 @@
         </div>
 
         <div class="frame col-xs-12">
-            <div class="${context.useMDI ? 'viewer-mdi' : 'viewer'}
-                        ${context.useMDI && context.selected_config === id ?
+            <div class="${context.useMDI && context.image_configs.size > 1 ?
+                            'viewer-mdi' : 'viewer'}
+                        ${context.useMDI && context.selected_config === id &&
+                            context.image_configs.size > 1 ?
                                 'mdi-selected' : ''}"
                  repeat.for="[id, conf] of context.image_configs"
-                 css="${context.useMDI ?
+                 css="${context.useMDI && context.image_configs.size > 1 ?
                         ';position: absolute;top:' + conf.position.top +
                         ';left:' + conf.position.left +
                         ';width:' + conf.size.width +
                         ';height:' + conf.size.height : ''}"
                  mousedown.delegate="context.selectConfig(id)">
                  <div class="config-linking"
-                      show.bind="context.useMDI">
+                      show.bind="context.useMDI && context.image_configs.size > 1">
                      <div class="dropdown dropdown-image-config"
                           title="Link Image Settings">
                          <button type="button"
@@ -99,7 +101,8 @@
                          </ul>
                      </div>
                      <div class="sync-locks"
-                          show.bind="context.useMDI && conf.sync_group !== null">
+                          show.bind="context.useMDI && context.image_configs.size > 1 &&
+                                        conf.sync_group !== null">
                          <label repeat.for="lock of sync_locks"
                                 show.bind="conf.image_info.ready &&
                                            (lock.CHAR === 'c' || lock.CHAR === 'v' ||
@@ -119,10 +122,11 @@
                          </label>
                     </div>
                 </div>
-                <div show.bind="context.useMDI"
+                <div show.bind="context.useMDI && context.image_configs.size > 1"
                      class="viewer-handle
-                            ${context.useMDI && context.selected_config === id ?
-                                'viewer-handle-selected' : ''}">
+                            ${context.useMDI && context.image_configs.size > 1 &&
+                                 context.selected_config === id ?
+                                    'viewer-handle-selected' : ''}">
                     <span click.delegate="closeViewerInMDI(id)"
                           class="close">&times;</span>
                     <span click.delegate="toggleViewerControlsInMDI(id)"

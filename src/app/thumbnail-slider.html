@@ -37,7 +37,8 @@
              src.bind="thumb.url + '?version=' + thumb.revision"
              title="${thumb.title}"
              alt="Not Found"
-             click.delegate="onClick(thumb.id)"/>
+             click.delegate="onClick(thumb.id)"
+             dblclick.delegate="onDoubleClick(thumb.id, $event)"/>
     </div>
     <div show.bind="thumbnails_end_index < thumbnails_count"
          click.delegate="requestMoreThumbnails(false, true)"

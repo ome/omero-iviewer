@@ -239,7 +239,27 @@ export default class Context {
                     window.history.go(0);
                     return;
                 }
-                this.addImageConfig(e.state.image_id, e.state.parent_id);
+                let openImageConfig = true;
+                if (this.useMDI) {
+                    let imageConfigsForImage =
+                        this.getImageConfigsForGivenImage(e.state.image_id);
+                    if (imageConfigsForImage.length === 0) openImageConfig = true;
+                    else {
+                        let hasConfId = false;
+                        for (let i in imageConfigsForImage) {
+                            if (imageConfigsForImage[i].id === e.state.config_id) {
+                                hasConfId = true;
+                                break;
+                            }
+                        }
+                        openImageConfig = false;
+                        this.selectConfig(
+                            hasConfId ?
+                                e.state.config_id : imageConfigsForImage[0].id);
+                    }
+                }
+                if (openImageConfig)
+                    this.addImageConfig(e.state.image_id, e.state.parent_id);
             };
         }
     }
@@ -539,7 +559,7 @@ export default class Context {
      * @param {number} image_id the image id
      */
     rememberImageConfigChange(image_id) {
-        if (!this.hasHTML5HistoryFeatures() || this.useMDI ||
+        if (!this.hasHTML5HistoryFeatures() ||
             this.getSelectedImageConfig() === null) return;
 
         let newPath = window.location.pathname;
@@ -592,7 +612,8 @@ export default class Context {
         window.history.pushState(
             {image_id: image_id,
              parent_id: parent_id,
-             parent_type: parentTypeString
+             parent_type: parentTypeString,
+             config_id: selConf.id
             }, "", newPath);
     }
 
@@ -664,6 +685,7 @@ export default class Context {
                     this.publish(
                         IMAGE_VIEWER_CONTROLS_VISIBILITY,
                         {config_id: this.selected_config, flag: true});
+                    this.useMDI = false;
                 }
             }
         }

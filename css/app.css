@@ -220,13 +220,6 @@ a.ui-button:active,
     outline: none;
     box-shadow:none;
 }
-.fixed-header .multi-view-btn {
-    border-color: #ccc;
-    background-color: #fff;
-    color: #333;
-    font-size: 15px;
-    padding: 2px 5px;
-}
 
 .frame {
     margin-left: -105px;
