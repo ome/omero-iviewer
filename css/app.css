@@ -245,7 +245,6 @@ a.ui-button:active,
     padding: 0px;
 }
 .center-row1-mdi {
-    background-color: rgba(255,255,255,1);
     height: calc(100% - 40px);
     padding: 0px;
 }
@@ -503,13 +502,13 @@ a.ui-button:active,
     height: 100%;
     width: 100%;
     z-index: 0;
-    background-color: #F8F8F8;
+    background-color: #f8f8f8;
 }
 
 .viewer-mdi {
     min-width: 435px;
     min-height: 250px;
-    background-color: rgba(255,255,255,1);
+    background-color: #f8f8f8;
     border: solid 2px rgba(31,106,170,0.6);
     border-radius: 5px;
     z-index: 0;
@@ -542,6 +541,7 @@ a.ui-button:active,
 thumbnail-slider img {
     margin-top: 10px;
     cursor: pointer;
+    max-width: 75px;
 }
 .thumbnail-panel .thumbnail-collapse {
     height: 28px;
