@@ -28,8 +28,9 @@ require('../../node_modules/jquery-ui/themes/base/images/ui-icons_444444_256x240
 import {inject} from 'aurelia-framework';
 import Context from './context';
 import Misc from '../utils/misc';
+import OpenWith from '../utils/openwith';
 import Ui from '../utils/ui';
-import {PLUGIN_PREFIX, SYNC_LOCK} from '../utils/constants';
+import {PLUGIN_PREFIX, SYNC_LOCK, WEBGATEWAY} from '../utils/constants';
 import {IMAGE_VIEWER_RESIZE, IMAGE_VIEWER_CONTROLS_VISIBILITY,
         REGIONS_STORE_SHAPES, REGIONS_STORED_SHAPES} from '../events/events';
 
@@ -127,6 +128,10 @@ export class Index  {
                 document['on' +
                     this.full_screen_api_prefix + 'fullscreenchange'] =
                         () => this.onFullScreenChange();
+
+        // fetch open with scripts
+        OpenWith.fetchOpenWithScripts(
+            this.context.server + this.context.getPrefixedURI(WEBGATEWAY));
     }
 
     /**
