@@ -72,7 +72,7 @@ a.ui-button:active,
     float: left;
 }
 .ui-spinner input {
-    padding-left: 2px;
+    padding-left: 5px;
     height: 100%;
     margin: 0px;
     width: 40px;
@@ -230,8 +230,8 @@ a.ui-button:active,
 .frame {
     margin-left: -110px;
     padding-left: 110px;
-    margin-right: -355px;
-    padding-right: 355px;
+    margin-right: -350px;
+    padding-right: 350px;
     z-index: 0;
 }
 
@@ -645,9 +645,11 @@ thumbnail-slider img {
 .channel-range {
     width: 100%;
     height: 100%;
+    display: flex;
+    flex-direction: row;
 }
 .channel-range .ui-spinner {
-    margin: 0px 2px;
+    margin-left: 5px;
     height: 30px;
 }
 .channel-range .ui-spinner-input {
@@ -657,9 +659,8 @@ thumbnail-slider img {
 .channel-slider {
     margin-top: 10px;
     height: 10px;
-    float: left;
-    width: 40%;
-    margin-left: 7px;
+    flex-grow: 1;
+    margin-left: 12px;
     margin-right: 1px;
 }
 .channel-slider .ui-slider-range, .pixelated {
@@ -723,12 +724,14 @@ thumbnail-slider img {
     min-width: 0px;
 }
 .channel-mode {
-    margin-top: 2px;
-    margin-top: 4px;
-    width: 95%;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    width: 100%;
+    flex-direction: row;
+    display: flex;
 }
 .channel-mode button {
-    width: 33%;
+    flex-grow: 1;
 }
 
 .comment-checkbox {
@@ -736,23 +739,20 @@ thumbnail-slider img {
 }
 
 .user-settings {
-    padding-right: 10px;
     width: 100%;
-    float: left;
 }
 
 .user-setting {
     cursor: pointer;
     float: left;
-    border: 1px solid blue;
-    padding: 2px;
-    margin: 2px 4px;
+    border: 0;
+    padding: 0;
+    margin: 5px 5px 5px 0;
 }
 
 .user-settings div {
     text-align: center;
     word-wrap: break-word;
-    color: blue;
 }
 
 .regions-tabs, .regions-tabs .tab-pane, .regions-container {
