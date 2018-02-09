@@ -228,16 +228,16 @@ a.ui-button:active,
 }
 
 .frame {
-    margin-left: -110px;
-    padding-left: 110px;
-    margin-right: -350px;
-    padding-right: 350px;
     z-index: 0;
+    flex-grow: 1
 }
 
 .center {
     margin: 0px;
     padding-top: 40px;
+    display: flex;
+    flex-direction: row;
+    background-color: #f8f8f8;
 }
 
 .center-row1 {
@@ -594,6 +594,7 @@ thumbnail-slider img {
 
 .tab-pane {
     padding: 10px;
+    background-color: #fff;
 }
 
 .nav-tabs {

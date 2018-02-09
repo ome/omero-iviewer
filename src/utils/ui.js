@@ -60,15 +60,7 @@ export default class Ui {
                     ($(window).width() - frameWidth) : $(window).width();
 
                 if (x > minWidth && x < maxWidth && e.pageX < rightBound) {
-                      el.width(x);
-                      if (leftSplit)
-                          $('.frame').css(
-                              {"margin-left": '' + (-x-5) + 'px',
-                               "padding-left": '' + (x+5) + 'px'});
-                      else
-                          $('.frame').css(
-                              {"margin-right": '' + (-x) + 'px',
-                               "padding-right": '' + (x) + 'px'});
+                    el.width(x);
                 }
                 eventbus.publish(IMAGE_VIEWER_RESIZE,
                     {config_id: -1, is_dragging: true});
@@ -152,14 +144,6 @@ export default class Ui {
                 $(e.currentTarget).parent().css("cursor", "default");
             else
                 $(e.currentTarget).parent().css("cursor", "ew-resize");
-            if (leftSplit)
-                $('.frame').css(
-                    {"margin-left": '' + (-newWidth-5) + 'px',
-                     "padding-left": '' + (newWidth+10) + 'px'});
-            else
-                $('.frame').css(
-                    {"margin-right": '' + (-newWidth-5) + 'px',
-                     "padding-right": '' + (newWidth+15) + 'px'});
             eventbus.publish(IMAGE_VIEWER_RESIZE, {config_id: -1});
         });
     }
