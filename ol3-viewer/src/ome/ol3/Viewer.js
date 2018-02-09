@@ -1499,11 +1499,11 @@ ome.ol3.Viewer.prototype.generateShapes = function(shape_info, options) {
     if (this.eventbus_) {
         var newRegionsObject =
             ome.ol3.utils.Conversion.toJsonObject(
-                new ol.Collection(generatedShapes), true, true);
+                new ol.Collection(generatedShapes), true);
         if (typeof newRegionsObject !== 'object' ||
-            !ome.ol3.utils.Misc.isArray(newRegionsObject['rois']) ||
-            newRegionsObject['rois'].length === 0) return;
-        var params = {"shapes": newRegionsObject['rois']};
+            !ome.ol3.utils.Misc.isArray(newRegionsObject['new']) ||
+            newRegionsObject['new'].length === 0) return;
+        var params = {"shapes": newRegionsObject['new']};
         if (typeof options['hist_id'] === 'number')
             params['hist_id'] = options['hist_id'];
         if (typeof options['add_history'] === 'boolean')
@@ -1671,8 +1671,8 @@ ome.ol3.Viewer.prototype.storeRegions =
                     new ol.Collection(this.regions_.getFeatures());
 
         var roisAsJsonObject =
-        ome.ol3.utils.Conversion.toJsonObject(
-            collectionOfFeatures, useSeparateRoiForEachNewShape);
+            ome.ol3.utils.Conversion.toJsonObject(
+                collectionOfFeatures, useSeparateRoiForEachNewShape);
         // check if we have nothing to persist, i.e. to send to the back-end
         if (roisAsJsonObject['count'] === 0) {
             // we may still want to clean up new but deleted shapes

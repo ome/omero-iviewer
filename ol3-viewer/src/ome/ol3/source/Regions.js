@@ -554,26 +554,9 @@ ome.ol3.source.Regions.prototype.storeRegions =
     if (typeof omit_client_update !== 'boolean') omit_client_update = false;
 
     try {
-        // loop over given given shapes, wrapping them
-        var rois = {};
-        for (var r in roisAsJsonObject['rois']) {
-            for (var s in roisAsJsonObject['rois'][r]['shapes']) {
-                // else add roi/shape
-                if (typeof(rois[r]) !== 'object') {
-                    var newRois = {
-                        "@type" : "http://www.openmicroscopy.org/Schemas/OME/2016-06#ROI",
-                        "shapes" : []
-                    };
-                    var roisId = parseInt(r);
-                    if (roisId >= 0) newRois['@id'] = roisId;
-                    rois[r] = newRois;
-                }
-                rois[r]['shapes'].push(roisAsJsonObject['rois'][r]['shapes'][s]);
-            }
-        };
         var postContent = {
             "imageId": this.viewer_.id_,
-            "rois": rois
+            "rois": roisAsJsonObject
         };
 
         // set properties for ajax request
