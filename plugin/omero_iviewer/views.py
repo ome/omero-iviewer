@@ -114,39 +114,80 @@ def persist_rois(request, conn=None, **kwargs):
     conn.SERVICE_OPTS['omero.group'] = image.getDetails().getGroup().getId()
 
     # for id sync
-    ret_ids = []
+    ret = {
+        'ids': {},
+        'deleted_rois': [],
+    }
 
+    # keep track of errors
+    errors = []
+
+    # insert new ones
     try:
-        # delete first
-        deleted = rois.get('deleted', None)
-
-        # modify next
-        modified = rois.get('modified', [])
-
-        # insert last
         new = rois.get('new', [])
-        decoded_rois = []
-        for n in new:
-            new_roi = {
-                "@type":
-                "http://www.openmicroscopy.org/Schemas/OME/2016-06#ROI",
-                "shapes": [n]
-            }
-            decoder = omero_marshal.get_decoder(new_roi.get("@type"))
-            decoded_roi = decoder.decode(new_roi)
-            decoded_roi.setImage(image._obj)
-            decoded_rois.append(decoded_roi)
-        if len(decoded_rois) > 0:
-            decoded_rois
-            ret_ids = update_service.saveAndReturnIds(decoded_rois)
-        return JsonResponse({'ids': ret_ids})
+        new_count = len(new)
+        if new_count > 0:
+            decoded_rois = []
+            for n in new:
+                new_roi = {
+                    "@type":
+                    "http://www.openmicroscopy.org/Schemas/OME/2016-06#ROI",
+                    "shapes": [n]
+                }
+                decoder = omero_marshal.get_decoder(new_roi.get("@type"))
+                decoded_roi = decoder.decode(new_roi)
+                decoded_roi.setImage(image._obj)
+                decoded_rois.append(decoded_roi)
+            decoded_rois = update_service.saveAndReturnArray(decoded_rois)
+            # sync ids
+            for r in range(new_count):
+                ret['ids'][new[r]['oldId']] = \
+                    str(decoded_rois[r].getId().getValue()) + ':' + \
+                    str(decoded_rois[r].getShape(0).getId().getValue())
     except Exception as marshalOrPersistenceException:
-        # we return all successfully stored rois up to the error
-        # as well as the error message
-        return JsonResponse({'ids': ret_ids,
-                            'error': repr(marshalOrPersistenceException)})
+        errors.append('Error persisting new rois: ' +
+                      repr(marshalOrPersistenceException))
 
-    return JsonResponse({"ids": ret_ids})
+    # modifying existing ones
+    try:
+        modified = rois.get('modified', [])
+        modified_count = len(modified)
+        if modified_count > 0:
+            decoded_shapes = []
+            for m in modified:
+                decoder = omero_marshal.get_decoder(m.get("@type"))
+                decoded_shapes.append(decoder.decode(m))
+            update_service.saveArray(decoded_shapes)
+        # set ids after successful modification
+        for r in range(modified_count):
+            ret['ids'][modified[r]['oldId']] = modified[r]['oldId']
+    except Exception as marshalOrPersistenceException:
+        errors.append('Error modifying rois: ' +
+                      repr(marshalOrPersistenceException))
+
+    # deleting existing ones
+    try:
+        deleted = rois.get('deleted', None)
+        deleted_count = len(deleted)
+        if deleted_count > 0:
+            shape_ids = []
+            roi_ids = []
+            for d in deleted:
+                del_ids = d.split(':')
+                roi_ids.append(long(del_ids[0]))
+                shape_ids.append(long(del_ids[1]))
+            conn.deleteObjects("Shape", shape_ids, wait=True)
+            # set ids after successful deletion,
+            for r in range(deleted_count):
+                ret['ids'][deleted[r]] = deleted[r]
+                ret['deleted_rois'] = roi_ids
+    except Exception as deletionException:
+        errors.append('Error deleting rois: ' + repr(deletionException))
+
+    if len(errors) > 0:
+        ret['errors'] = errors
+
+    return JsonResponse(ret)
 
 
 @login_required()

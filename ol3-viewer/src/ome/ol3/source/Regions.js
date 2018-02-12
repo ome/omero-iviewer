@@ -574,7 +574,7 @@ ome.ol3.source.Regions.prototype.storeRegions =
 
         // the success handler for the POST
         properties["success"] = function(data) {
-            var error = null;
+            var errors = null;
             try {
                 data = JSON.parse(data);
 
@@ -601,12 +601,12 @@ ome.ol3.source.Regions.prototype.storeRegions =
                     if (typeof capturedRegionsReference.idIndex_[id] === 'object') {
                         capturedRegionsReference.removeFeature(
                             capturedRegionsReference.idIndex_[id]);
-                            data['ids'][id] = id;
-                        }
+                        data['ids'][id] = id;
+                    }
                 };
-                if (typeof data['error'] === 'string') error = data['error'];
+                if (typeof data['error'] === 'string') errors = data['errors'];
             } catch(err) {
-                error = err;
+                errors = [err];
             }
 
             var params = {
@@ -615,7 +615,7 @@ ome.ol3.source.Regions.prototype.storeRegions =
                     typeof data['ids'] === 'object' ? data['ids'] : null,
                 "omit_client_update" : omit_client_update
             };
-            if (error) params['error'] = error;
+            if (errors) params['errors'] = errors;
 
             ome.ol3.utils.Misc.sendEventNotification(
                 capturedRegionsReference.viewer_, "REGIONS_STORED_SHAPES", params);

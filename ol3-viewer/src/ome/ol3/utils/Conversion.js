@@ -667,9 +667,6 @@ ome.ol3.utils.Conversion.integrateMiscInfoIntoJsonObject  = function(feature, js
         }
     });
 
-    if (feature['state'] === ome.ol3.REGIONS_STATE.REMOVED)
-        jsonObject['markedForDeletion'] = true;
-
     if (typeof feature['Area'] === 'number')
         jsonObject['Area'] = feature['Area'];
     if (typeof feature['Length'] === 'number')
