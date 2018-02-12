@@ -608,7 +608,6 @@ thumbnail-slider img {
     height:calc(100% - 45px);
 }
 .right-hand-panel .row {
-    min-width: 330px;
     margin-bottom: 2px;
     margin-left: 0px;
     margin-right: 0px;
@@ -637,7 +636,6 @@ thumbnail-slider img {
     margin-left: 10px;
     margin-top: 8px;
     margin-bottom: 0px;
-    min-width: 350px;
 }
 .checkbox-settings div {
     float: left;
