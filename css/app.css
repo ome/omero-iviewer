@@ -764,6 +764,11 @@ thumbnail-slider img {
     word-wrap: break-word;
 }
 
+.user-setting img {
+    max-width: 100px;
+    max-height: 100px;
+}
+
 .regions-tabs, .regions-tabs .tab-pane, .regions-container {
     height: 100%;
 }
@@ -786,6 +791,7 @@ thumbnail-slider img {
     line-height: 36px;
     font-weight: bold;
     font-size: 13px;
+    border-bottom: solid #ddd 1px;
 }
 
 .regions-table {
