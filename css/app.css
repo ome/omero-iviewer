@@ -779,6 +779,7 @@ thumbnail-slider img {
 
 .regions-header {
     position: fixed;
+    background-color: #fff;
     height: 40px;
     line-height: 36px;
     font-weight: bold;
@@ -887,7 +888,7 @@ thumbnail-slider img {
     height:100%;
     float:left;
     width: 25px;
-    margin: 2px 4px 2px 6px;
+    margin: 2px 0 2px 9px;
 }
 
 .draw-active {
