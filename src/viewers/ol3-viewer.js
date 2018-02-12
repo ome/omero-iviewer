@@ -251,7 +251,10 @@ export default class Ol3Viewer extends EventSubscriber {
                         (newValue, oldValue) => {
                             if (this.viewer === null) return;
                             this.viewer.removeRegions();
-                            if (newValue) this.initRegions();
+                            if (newValue) {
+                                this.initRegions();
+                                delete this.image_config.regions_info.tmp_data;
+                            }
                     });
             // mdi needs to switch image config when using controls
             this.getContainer().find('.ol-control').on(
@@ -715,7 +718,6 @@ export default class Ol3Viewer extends EventSubscriber {
             !Misc.isArray(this.image_config.regions_info.tmp_data)) return;
 
         this.viewer.addRegions(this.image_config.regions_info.tmp_data);
-        delete this.image_config.regions_info.tmp_data;
         this.changeRegionsModes(
             { modes: this.image_config.regions_info.regions_modes});
         this.viewer.showShapeComments(
