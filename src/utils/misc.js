@@ -392,4 +392,19 @@ export default class Misc {
     static roundAtDecimal(value, digits) {
         return Number(Math.round(value +'e' + digits) + 'e-' + digits);
     }
+
+    /**
+     * 'Normalizes' a csv cell value to work with most readers.
+     * Values are quoted to allow for , as content
+     * Quotes are 'escaped' with a quote themselves
+     *
+     * @param {string|number} value a number or string
+     * @return {string} the quoted cell value
+     * @static
+     */
+    static quoteCsvCellValue(value) {
+        if (typeof value === 'number') value = "" + value;
+        if (typeof value !== 'string') return value;
+        return '"' + value.replace(/"/g, '""') + '"';
+    }
 }

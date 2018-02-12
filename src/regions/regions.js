@@ -52,9 +52,9 @@ export default class Regions {
      * @type {Object}
      */
     key_actions = [
-        { key: 83, func: this.saveShapes},                          // ctrl - s
-        { key: 89, func: this.redoHistory},                         // ctrl - y
-        { key: 90, func: this.undoHistory}                          // ctrl - z
+        { key: 'S', func: this.saveShapes},                          // ctrl - s
+        { key: 'Y', func: this.redoHistory},                         // ctrl - y
+        { key: 'Z', func: this.undoHistory}                          // ctrl - z
     ];
 
     /**

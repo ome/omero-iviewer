@@ -602,7 +602,11 @@ thumbnail-slider img {
 .nav-tabs {
     background-color: #f8f8f8;
 }
-
+#settings {
+    overflow-y: auto;
+    overflow-x: hidden;
+    height:calc(100% - 45px);
+}
 .right-hand-panel .row {
     min-width: 330px;
     margin-bottom: 2px;
@@ -620,7 +624,7 @@ thumbnail-slider img {
     min-width: 125px;
 }
 .history {
-    min-width: 200px;
+    min-width: 190px;
 }
 .save-settings .btn-sm, .history .btn-sm {
     padding: 5px 9px;

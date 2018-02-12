@@ -249,9 +249,10 @@ export class Header {
     /**
      * Creates csv file that contains area and length for selected shapes
      *
+     * @param {boolean} utf if false we use excel's char set, otherwise utf
      * @memberof Header
      */
-    saveRoiMeasurements() {
+    saveRoiMeasurements(utf=false) {
         if (this.image_config === null ||
             this.image_config.regions_info.selected_shapes.length === 0) return;
 
@@ -263,10 +264,10 @@ export class Header {
         // forget about it
         if (ids_for_stats.length === 0 ||
             regInf.image_info.getActiveChannels().length === 0) {
-            this.writeCsv(regInf.selected_shapes);
+            this.writeCsv(regInf.selected_shapes, utf);
         } else {
             regInf.requestStats(
-                ids_for_stats, () => this.writeCsv(regInf.selected_shapes));
+                ids_for_stats, () => this.writeCsv(regInf.selected_shapes, utf));
         }
     }
 
@@ -274,9 +275,10 @@ export class Header {
      * Generates a csv file for shapes (incl. stats) whose ids are given
      *
      * @param {Array.<string>} ids the shape ids ('roi_id:shape_id')
+     * @param {boolean} utf if false we use excel's char set, otherwise utf
      * @memberof Header
      */
-    writeCsv(ids) {
+    writeCsv(ids, utf=false) {
         if (!Misc.isArray(ids) || ids.length === 0) return;
 
         let regInf = this.image_config.regions_info;
@@ -285,10 +287,18 @@ export class Header {
         let img_id = regInf.image_info.image_id;
         let img_name = regInf.image_info.short_image_name;
         let channels = regInf.image_info.channels;
-        let csv =
-            "image_id,image_name,roi_id,shape_id,type,z,t,channel," +
-            "\"area (" + units + "\u00b2)\",\"length (" + units + ")\"," +
-            "points,min,max,sum,mean,std_dev" + CSV_LINE_BREAK;
+        let header = [
+            'image_id', 'image_name', 'roi_id', 'shape_id', 'type','z', 't',
+            'channel', 'area (' + units + '\u00b2)', 'length (' + units + ')',
+            'points', 'min', 'max', 'sum', 'mean', 'std_dev'
+        ]
+
+        let csv = "";
+        for (let i=0;i<header.length;i++) {
+            if (i !== 0) csv += ',';
+            csv += Misc.quoteCsvCellValue(header[i]);
+        }
+        csv += CSV_LINE_BREAK;
 
         for (let i in ids) {
             let id = ids[i];
@@ -297,15 +307,15 @@ export class Header {
             let roi_id = id.substring(0, id.indexOf(':'));
             let is_new = id.indexOf('-') !== -1;
 
-            let channel = '', points = '', min = '', max = '';
-            let sum = '', mean = '', stddev = '';
-            let csvCommonInfo =
-                img_id + ",\"" + img_name + "\"," +
+            let csvCommonInfo = img_id + "," +
+                Misc.quoteCsvCellValue(img_name) + "," +
                 (is_new ? "-" : roi_id) + "," +
-                (is_new ? "-" : shape['@id']) + "," + shape.type + "," +
-                (shape.TheZ+1) + "," + (shape.TheT+1) + ",";
-            let csvMeasure =
-                "," + (shape.Area < 0 ? '' : shape.Area) + "," +
+                (is_new ? "-" : shape['@id']) + "," +
+                Misc.quoteCsvCellValue(shape.type) + "," +
+                (shape.TheZ === -1 ? "" : (shape.TheZ+1)) + "," +
+                (shape.TheT === -1 ? "" : (shape.TheT+1)) + ",";
+            let csvMeasure = "," +
+                (shape.Area < 0 ? '' : shape.Area) + "," +
                 (shape.Length < 0 ? '' : shape.Length) + ",";
             let emptyRow = ",,,,," + CSV_LINE_BREAK;
             if (typeof shape.stats === 'object' &&
@@ -318,28 +328,26 @@ export class Header {
                                 csv += csvCommonInfo + "," + emptyRow;
                                 break;
                             }
-                            let value = format_value(channels[stat.index].label);
-                            csv += csvCommonInfo + value + csvMeasure +
-                                    stat.points + "," + stat.min + "," +
-                                    stat.max + "," + stat.sum + "," +
-                                    stat.mean + "," + stat.std_dev +
-                                    CSV_LINE_BREAK;
+                            csv += csvCommonInfo +
+                                Misc.quoteCsvCellValue(channels[stat.index].label) +
+                                csvMeasure +
+                                stat.points + "," + stat.min + "," +
+                                stat.max + "," + stat.sum + "," +
+                                stat.mean + "," + stat.std_dev +
+                                CSV_LINE_BREAK;
                          }
                      }
             } else csv += csvCommonInfo + csvMeasure + emptyRow;
         }
-        // replace comma by dot
-        function format_value(value) {
-            return value.replace(/,/g, '.');
-        }
         let data = null;
         let encErr = true;
         try {
-            // use windows-1252 character set to satisfy excel
-            let type = 'text/csv; charset=windows-1252';
+            // use windows-1252 character set to satisfy excel (if not UTF)
+            let charSet = utf ? 'utf-8' : 'windows-1252';
+            let type = 'text/csv; charset=' + charSet;
             let ansiEncoder =
                 new TextEncoding.TextEncoder(
-                    'windows-1252', {NONSTANDARD_allowLegacyEncoding: true});
+                    charSet, {NONSTANDARD_allowLegacyEncoding: !utf});
             encErr = false;
             data = new Blob([ansiEncoder.encode(csv)], {type: type});
         } catch(not_supported) {}
@@ -347,7 +355,8 @@ export class Header {
         if (data instanceof Blob)
             FileSaver.saveAs(
                 data,
-                regInf.image_info.short_image_name + "_roi_measurements.csv");
+                regInf.image_info.short_image_name + "_roi_measurements.csv",
+                true);
         else console.error(
                 encErr ? "Error encoding csv" : "Blob not supported");
      }

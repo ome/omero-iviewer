@@ -9,3 +9,4 @@ templates
 dist
 omero_iviewer.egg-info
 libs
+.omero
