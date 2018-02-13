@@ -681,23 +681,26 @@ ome.ol3.utils.Conversion.integrateMiscInfoIntoJsonObject  = function(feature, js
  * @function
  * @param {ol.Collection} features a collection of ol.Feature
  * @param {boolean} storeNewShapesInSeparateRois new shapes are stored in a new roi EACH. default: false
+ * @param {Object} empty_rois deleted shapes within an empty rois will not be added to the deleted list
  * @return {Object|null} returns an assocative array of rois with contained shapes or null if something went wrong badly
  */
-ome.ol3.utils.Conversion.toJsonObject = function(features, storeNewShapesInSeparateRois) {
+ome.ol3.utils.Conversion.toJsonObject =
+    function(features, storeNewShapesInSeparateRois, empty_rois) {
     if (!(features instanceof ol.Collection) || features.getLength() === 0)
         return null;
 
     var newRoisForEachNewShape =
         typeof(storeNewShapesInSeparateRois) === 'boolean' ?
             storeNewShapesInSeparateRois : false;
-
     if (typeof returnFlattenedArray !== 'boolean') returnFlattenedArray = false;
+    empty_rois = empty_rois || {};
 
     var currentNewId = -1;
-    var roisToBeStored = {
+    var categorizedRois = {
         "count": 0,
+        "empty_rois": {},
         "new_and_deleted": [],
-        "deleted" : [],
+        "deleted" : {},
         "new" : [],
         "modified" : []
     };
@@ -740,11 +743,22 @@ ome.ol3.utils.Conversion.toJsonObject = function(features, storeNewShapesInSepar
                  feature['permissions'] !== null &&
                  typeof feature['permissions']['canDelete'] === 'boolean' &&
                  !feature['permissions']['canDelete'])) {
-                     roisToBeStored['new_and_deleted'].push(feature.getId());
+                     categorizedRois['new_and_deleted'].push(feature.getId());
                      continue;
                  }
-            roisToBeStored['deleted'].push(feature.getId());
-            roisToBeStored['count']++;
+            // if rois is empty we don't list them individually
+            if (typeof empty_rois[roiId] === 'undefined' ) {
+                if (!ome.ol3.utils.Misc.isArray(
+                        categorizedRois['deleted'][roiId]))
+                            categorizedRois['deleted'][roiId] = [];
+                categorizedRois['deleted'][roiId].push(feature.getId());
+            } else {
+                if (!ome.ol3.utils.Misc.isArray(
+                        categorizedRois['empty_rois'][roiId]))
+                            categorizedRois['empty_rois'][roiId] = [];
+                categorizedRois['empty_rois'][roiId].push(feature.getId());
+            }
+            categorizedRois['count']++;
             continue;
         } else if (feature['state'] === ome.ol3.REGIONS_STATE.MODIFIED) {
             if (typeof feature['permissions'] === 'object' &&
@@ -758,8 +772,8 @@ ome.ol3.utils.Conversion.toJsonObject = function(features, storeNewShapesInSepar
                     ome.ol3.utils.Conversion.featureToJsonObject(
                         feature, shapeId, roiIdToBeUsed);
                 modifiedShape['oldId'] = feature.getId();
-                roisToBeStored['modified'].push(modifiedShape);
-                roisToBeStored['count']++;
+                categorizedRois['modified'].push(modifiedShape);
+                categorizedRois['count']++;
                 continue;
             }
         } else if (feature['state'] === ome.ol3.REGIONS_STATE.ADDED &&
@@ -784,9 +798,10 @@ ome.ol3.utils.Conversion.toJsonObject = function(features, storeNewShapesInSepar
         // we like to keep the old id for later synchronization
         jsonObject['oldId'] = feature.getId();
         roiContainer['shapes'].push(jsonObject);
-        roisToBeStored['count']++;
+        categorizedRois['count']++;
     };
 
+    // flatten out shapes in rois
     var flattenedArray = [];
     for (var r in rois) {
         if (!ome.ol3.utils.Misc.isArray(
@@ -795,9 +810,9 @@ ome.ol3.utils.Conversion.toJsonObject = function(features, storeNewShapesInSepar
         for (var s in shap)
             flattenedArray.push(shap[s]);
     }
-    roisToBeStored['new'] =  flattenedArray;
+    categorizedRois['new'] =  flattenedArray;
 
-    return roisToBeStored;
+    return categorizedRois;
 };
 
 /**

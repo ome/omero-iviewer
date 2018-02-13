@@ -834,9 +834,13 @@ export default class Ol3Viewer extends EventSubscriber {
 
         let numberOfdeletedShapes =
             this.image_config.regions_info.getNumberOfDeletedShapes();
+        let empty_rois =
+            numberOfdeletedShapes > 0 ?
+                this.image_config.regions_info.getEmptyRois() : {};
         let storeRois = () => {
             let requestMade =
-                this.viewer.storeRegions([], false, params.omit_client_update);
+                this.viewer.storeRegions(
+                    empty_rois, false, params.omit_client_update);
 
             if (requestMade) Ui.showModalMessage("Saving Regions. Please wait...");
             else if (params.omit_client_update)

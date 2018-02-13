@@ -1639,7 +1639,7 @@ ome.ol3.Viewer.prototype.getSmallestViewExtent = function() {
  * Persists modified/added/deleted shapes
  * see: {@link ome.ol3.source.Regions.storeRegions}
  *
- * @param {Array.<number>} rois_to_be_deleted an array of roi ids for deletion
+ * @param {Object} rois_to_be_deleted an associative array of roi ids for deletion
  * @param {boolean} useSeparateRoiForEachNewShape if false all new shapes are combined within one roi
  * @param {boolean} omit_client_update an optional flag that's handed back to the client
  *                  to indicate that a client side update to the response is not needed
@@ -1661,7 +1661,8 @@ ome.ol3.Viewer.prototype.storeRegions =
             new ol.Collection(this.regions_.getFeatures());
         var roisAsJsonObject =
             ome.ol3.utils.Conversion.toJsonObject(
-                collectionOfFeatures, useSeparateRoiForEachNewShape);
+                collectionOfFeatures, useSeparateRoiForEachNewShape,
+                rois_to_be_deleted);
 
         // check if we have nothing to persist, i.e. to send to the back-end
         if (roisAsJsonObject['count'] === 0) {

@@ -113,11 +113,8 @@ def persist_rois(request, conn=None, **kwargs):
     # when persisting we use the specific group context
     conn.SERVICE_OPTS['omero.group'] = image.getDetails().getGroup().getId()
 
-    # for id sync
-    ret = {
-        'ids': {},
-        'deleted_rois': [],
-    }
+    # for id syncing
+    ids_to_sync = {}
 
     # keep track of errors
     errors = []
@@ -138,17 +135,18 @@ def persist_rois(request, conn=None, **kwargs):
                 decoded_roi = decoder.decode(new_roi)
                 decoded_roi.setImage(image._obj)
                 decoded_rois.append(decoded_roi)
-            decoded_rois = update_service.saveAndReturnArray(decoded_rois)
+            decoded_rois = update_service.saveAndReturnArray(
+                decoded_rois, conn.SERVICE_OPTS)
             # sync ids
             for r in range(new_count):
-                ret['ids'][new[r]['oldId']] = \
+                ids_to_sync[new[r]['oldId']] = \
                     str(decoded_rois[r].getId().getValue()) + ':' + \
                     str(decoded_rois[r].getShape(0).getId().getValue())
     except Exception as marshalOrPersistenceException:
         errors.append('Error persisting new rois: ' +
                       repr(marshalOrPersistenceException))
 
-    # modifying existing ones
+    # modify existing ones
     try:
         modified = rois.get('modified', [])
         modified_count = len(modified)
@@ -157,37 +155,55 @@ def persist_rois(request, conn=None, **kwargs):
             for m in modified:
                 decoder = omero_marshal.get_decoder(m.get("@type"))
                 decoded_shapes.append(decoder.decode(m))
-            update_service.saveArray(decoded_shapes)
+            update_service.saveArray(decoded_shapes, conn.SERVICE_OPTS)
         # set ids after successful modification
         for r in range(modified_count):
-            ret['ids'][modified[r]['oldId']] = modified[r]['oldId']
+            ids_to_sync[modified[r]['oldId']] = modified[r]['oldId']
     except Exception as marshalOrPersistenceException:
         errors.append('Error modifying rois: ' +
                       repr(marshalOrPersistenceException))
 
-    # deleting existing ones
+    # delete entire (empty) rois
     try:
-        deleted = rois.get('deleted', None)
-        deleted_count = len(deleted)
-        if deleted_count > 0:
-            shape_ids = []
-            roi_ids = []
-            for d in deleted:
-                del_ids = d.split(':')
-                roi_ids.append(long(del_ids[0]))
-                shape_ids.append(long(del_ids[1]))
-            conn.deleteObjects("Shape", shape_ids, wait=True)
-            # set ids after successful deletion,
-            for r in range(deleted_count):
-                ret['ids'][deleted[r]] = deleted[r]
-                ret['deleted_rois'] = roi_ids
+        empty_rois = rois.get('empty_rois', {})
+        empty_rois_ids = [long(k) for k in list(empty_rois.keys())]
+        if (len(empty_rois_ids) > 0):
+            conn.deleteObjects("Roi", empty_rois_ids, wait=True)
+        # set ids after successful deletion,
+        for e in empty_rois:
+            for s in empty_rois[e]:
+                ids_to_sync[s] = s
     except Exception as deletionException:
-        errors.append('Error deleting rois: ' + repr(deletionException))
+        errors.append('Error deleting empty rois: ' +
+                      repr(deletionException))
+
+    # remove individual shapes (so as to not punch holes into shape index)
+    try:
+        deleted = rois.get('deleted', {})
+        deleted_rois_ids = deleted.keys()
+        if len(deleted_rois_ids) > 0:
+            rois_service = conn.getRoiService()
+            rois_to_be_updated = []
+            for d in deleted_rois_ids:
+                r = rois_service.findByRoi(
+                    long(d), None, conn.SERVICE_OPTS).rois[0]
+                for s in r.copyShapes():
+                    roi_shape_id = str(d) + ':' + str(s.getId().getValue())
+                    if roi_shape_id in deleted[d]:
+                        r.removeShape(s)
+                rois_to_be_updated.append(r)
+            update_service.saveArray(rois_to_be_updated, conn.SERVICE_OPTS)
+            # set ids after successful deletion,
+            for d in deleted:
+                for s in deleted[d]:
+                    ids_to_sync[s] = s
+    except Exception as deletionException:
+        errors.append('Error deleting shapes: ' + repr(deletionException))
 
     if len(errors) > 0:
-        ret['errors'] = errors
+        ids_to_sync['errors'] = errors
 
-    return JsonResponse(ret)
+    return JsonResponse({'ids': ids_to_sync})
 
 
 @login_required()
