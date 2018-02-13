@@ -833,12 +833,10 @@ export default class Ol3Viewer extends EventSubscriber {
             params.config_id !== this.image_config.id) return;
 
         let numberOfdeletedShapes =
-            this.image_config.regions_info.getNumberOfDeletedShapes(true);
+            this.image_config.regions_info.getNumberOfDeletedShapes();
         let storeRois = () => {
             let requestMade =
-                this.viewer.storeRegions(
-                    Misc.isArray(params.deleted) ? params.deleted : [],
-                    false, params.omit_client_update);
+                this.viewer.storeRegions([], false, params.omit_client_update);
 
             if (requestMade) Ui.showModalMessage("Saving Regions. Please wait...");
             else if (params.omit_client_update)
@@ -978,12 +976,8 @@ export default class Ol3Viewer extends EventSubscriber {
         this.image_config.image_info.roi_count =
             this.image_config.regions_info.data.size;
 
-        // if we stored as part of a delete request we need to clean up
-        // the history for the deleted shapes,
-        // otherwise we wipe the history altogether
-        if (params.is_delete)
-            this.image_config.regions_info.history.removeEntries(ids);
-        else this.image_config.regions_info.history.resetHistory();
+        // clear history
+        this.image_config.regions_info.history.resetHistory();
 
         // error handling
         if (Misc.isArray(params.errors)) {

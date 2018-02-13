@@ -1639,14 +1639,14 @@ ome.ol3.Viewer.prototype.getSmallestViewExtent = function() {
  * Persists modified/added/deleted shapes
  * see: {@link ome.ol3.source.Regions.storeRegions}
  *
- * @param {Array.<string>} deleted an array of ids for deletion (of the form: roi_id:shape_id)
+ * @param {Array.<number>} rois_to_be_deleted an array of roi ids for deletion
  * @param {boolean} useSeparateRoiForEachNewShape if false all new shapes are combined within one roi
  * @param {boolean} omit_client_update an optional flag that's handed back to the client
  *                  to indicate that a client side update to the response is not needed
  * @return {boolean} true if a storage request was made, false otherwise
  */
 ome.ol3.Viewer.prototype.storeRegions =
-    function(deleted, useSeparateRoiForEachNewShape, omit_client_update) {
+    function(rois_to_be_deleted, useSeparateRoiForEachNewShape, omit_client_update) {
 
         if (!(this.regions_ instanceof ome.ol3.source.Regions))
             return false; // no regions, nothing to persist...
@@ -1657,22 +1657,12 @@ ome.ol3.Viewer.prototype.storeRegions =
             typeof(useSeparateRoiForEachNewShape) === 'boolean' ?
                 useSeparateRoiForEachNewShape : true;
 
-        var isDeleteRequest =
-            ome.ol3.utils.Misc.isArray(deleted) && deleted.length > 0;
-        var collectionOfFeatures = null;
-        if (isDeleteRequest) {
-            collectionOfFeatures = new ol.Collection();
-            for (var i=0;i<deleted.length;i++) {
-                var id = deleted[i];
-                if (typeof this.regions_.idIndex_[id] === 'object')
-                    collectionOfFeatures.push(this.regions_.idIndex_[id]);
-            };
-        } else collectionOfFeatures =
-                    new ol.Collection(this.regions_.getFeatures());
-
+        var collectionOfFeatures =
+            new ol.Collection(this.regions_.getFeatures());
         var roisAsJsonObject =
             ome.ol3.utils.Conversion.toJsonObject(
                 collectionOfFeatures, useSeparateRoiForEachNewShape);
+
         // check if we have nothing to persist, i.e. to send to the back-end
         if (roisAsJsonObject['count'] === 0) {
             // we may still want to clean up new but deleted shapes
@@ -1689,15 +1679,12 @@ ome.ol3.Viewer.prototype.storeRegions =
                     }
                     if (this.eventbus_) {
                         ome.ol3.utils.Misc.sendEventNotification(
-                            this, "REGIONS_STORED_SHAPES", {
-                                'shapes': ids, 'is_delete': isDeleteRequest});
+                            this, "REGIONS_STORED_SHAPES", {'shapes': ids});
                     }
             }
             return false;
         }
 
-        // remember deleted ids for history removal
-        roisAsJsonObject['is_delete'] = isDeleteRequest;
         return this.regions_.storeRegions(roisAsJsonObject, omit_client_update);
 }
 
