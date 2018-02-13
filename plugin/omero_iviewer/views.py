@@ -85,37 +85,36 @@ def index(request, iid=None, conn=None, **kwargs):
 @login_required()
 def persist_rois(request, conn=None, **kwargs):
     if not request.method == 'POST':
-        return JsonResponse({"error": "Use HTTP POST to send data!"})
+        return JsonResponse({"errors": ["Use HTTP POST to send data!"]})
 
     try:
         rois_dict = json.loads(request.body)
     except Exception as e:
-        return JsonResponse({"error": "Failed to load json: " + e})
+        return JsonResponse({"errors": ["Failed to load json: " + repr(e)]})
 
     # some preliminary checks are following...
     image_id = rois_dict.get('imageId', None)
     if image_id is None:
-        return JsonResponse({"error": "No image id provided!"})
+        return JsonResponse({"errors": ["No image id provided!"]})
     rois = rois_dict.get('rois', None)
     if rois is None:
-        return JsonResponse({"error": "Could not find rois object!"})
+        return JsonResponse({"errors": ["Could not find rois object!"]})
 
     # get the associated image and an instance of the update service
     image = conn.getObject("Image", image_id, opts=conn.SERVICE_OPTS)
     if image is None:
-        return JsonResponse({"error": "Could not find associated image!"})
+        return JsonResponse({"errors": ["Could not find associated image!"]})
 
     # prepare services
     update_service = conn.getUpdateService()
     if update_service is None:
-        return JsonResponse({"error": "Could not get update service!"})
+        return JsonResponse({"errors": ["Could not get update service!"]})
 
     # when persisting we use the specific group context
     conn.SERVICE_OPTS['omero.group'] = image.getDetails().getGroup().getId()
 
     # for id syncing
     ids_to_sync = {}
-
     # keep track of errors
     errors = []
 
@@ -200,10 +199,12 @@ def persist_rois(request, conn=None, **kwargs):
     except Exception as deletionException:
         errors.append('Error deleting shapes: ' + repr(deletionException))
 
+    # prepare response
+    ret = {'ids': ids_to_sync}
     if len(errors) > 0:
-        ids_to_sync['errors'] = errors
+        ret['errors'] = errors
 
-    return JsonResponse({'ids': ids_to_sync})
+    return JsonResponse(ret)
 
 
 @login_required()

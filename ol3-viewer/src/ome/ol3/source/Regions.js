@@ -574,18 +574,31 @@ ome.ol3.source.Regions.prototype.storeRegions =
 
         // the success handler for the POST
         properties["success"] = function(data) {
-            var errors = null;
+            var params = {
+                "shapes": {},
+                "omit_client_update" : omit_client_update
+            };
+
+            var errors = [];
             try {
                 data = JSON.parse(data);
+                if (data && typeof data['ids'] === 'object')
+                    params['shapes'] = data['ids'];
+                if (data && ome.ol3.utils.Misc.isArray(data['errors']))
+                    errors = data['errors'];
+            } catch(parseError) {
+                errors.push("Failed to parse JSON response");
+            }
 
+            try {
                 // synchronize ids and states
-                for (var id in data['ids']) {
+                for (var id in params['shapes']) {
                     var f = capturedRegionsReference.idIndex_[id];
                     if (f['state'] === ome.ol3.REGIONS_STATE.REMOVED)
                         capturedRegionsReference.removeFeature(f);
                     else {
                         f['state'] = ome.ol3.REGIONS_STATE.DEFAULT;
-                        f.setId(data['ids'][id]);
+                        f.setId(params['shapes'][id]);
                         if (typeof f['permissions'] !== 'object') {
                             f['permissions'] = {
                                 'canAnnotate': true,
@@ -601,22 +614,14 @@ ome.ol3.source.Regions.prototype.storeRegions =
                     if (typeof capturedRegionsReference.idIndex_[id] === 'object') {
                         capturedRegionsReference.removeFeature(
                             capturedRegionsReference.idIndex_[id]);
-                        data['ids'][id] = id;
+                        params['shapes'][id] = id;
                     }
                 };
-                if (typeof data['error'] === 'string') errors = data['errors'];
             } catch(err) {
-                errors = [err];
+                errors.push('Failed to sync rois' + err);
             }
 
-            var params = {
-                "shapes":
-                    typeof data === 'object' &&
-                    typeof data['ids'] === 'object' ? data['ids'] : null,
-                "omit_client_update" : omit_client_update
-            };
-            if (errors) params['errors'] = errors;
-
+            if (errors.length > 0) params['errors'] = errors;
             ome.ol3.utils.Misc.sendEventNotification(
                 capturedRegionsReference.viewer_, "REGIONS_STORED_SHAPES", params);
         };
@@ -625,7 +630,7 @@ ome.ol3.source.Regions.prototype.storeRegions =
         properties["error"] = function(error) {
             var params = {
                 "shapes": [],
-                "error" : error
+                "errors" : [error]
             };
             ome.ol3.utils.Misc.sendEventNotification(
                 capturedRegionsReference.viewer_, "REGIONS_STORED_SHAPES", params);
