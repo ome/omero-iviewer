@@ -23,11 +23,10 @@
         ${image_info.short_image_name}
     </h4>
 
-    <hr>
-
     <div show.bind="image_info.ready" class="openwith">
-        Open With:
         <span repeat.for="ow of open_with_links">
+            <hr if.bind="$first" />
+            <span if.bind="$first">Open With:</span>
             <a target="_blank" href="${ow.url}">${ow.text}</a> ${!$last ? ' | ' : ''}
         </span>
     </div>
