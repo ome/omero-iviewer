@@ -50,6 +50,7 @@ class RunProd(Command):
     def run(self):
         if not os.path.isdir('omero_iviewer/static'):
             self.spawn(['npm', 'run', 'prod'])
+            self.spawn(['rm', '-rf', '../node_modules'])
 
 
 cmdclass['run_prod'] = RunProd
