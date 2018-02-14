@@ -18,9 +18,10 @@
 
 // js
 import Context from '../app/context';
+import OpenWith from '../utils/openwith';
 
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
-import {INITIAL_TYPES, WEBCLIENT} from '../utils/constants';
+import {INITIAL_TYPES, WEBCLIENT, IVIEWER, WEBGATEWAY} from '../utils/constants';
 
 @customElement('info')
 @inject(Context, BindingEngine)
@@ -32,6 +33,13 @@ export class Info {
      * @type {ImageInfo}
      */
     @bindable image_info = null;
+
+    /**
+     * the open with links
+     * @memberof Info
+     * @type {Array.<>}
+     */
+    open_with_links = [];
 
     /**
      * the associated dataset info
@@ -218,5 +226,23 @@ export class Info {
                             this.image_info.dataset_name
             }
         } else this.parent_info = null;
+
+        this.updateOpenWithLinks();
     }
+
+    /**
+     * Updates open with links
+     *
+     * @memberof Header
+     */
+     updateOpenWithLinks() {
+         let image_id = this.image_info.image_id;
+         let image_name = this.image_info.image_name;
+         let iviewer_url = this.image_info.context.getPrefixedURI(IVIEWER);
+         let webgateway_url = this.image_info.context.getPrefixedURI(WEBGATEWAY);
+
+         this.open_with_links.splice(
+             0, this.open_with_links.length,
+             ...OpenWith.getOpenWithLinkParams(image_id, image_name, iviewer_url, webgateway_url));
+     }
 }
