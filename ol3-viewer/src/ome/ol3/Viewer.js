@@ -1820,8 +1820,7 @@ ome.ol3.Viewer.prototype.changeChannelRange = function(ranges) {
     var omeroImage = this.getImage();
     if (omeroImage === null) return;
 
-    omeroImage.changeChannelRange(ranges);
-    this.affectImageRender();
+    if (omeroImage.changeChannelRange(ranges)) this.affectImageRender();
 }
 
 /**
