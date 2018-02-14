@@ -50,6 +50,7 @@ class RunProd(Command):
     def run(self):
         if not os.path.isdir('omero_iviewer/static'):
             self.spawn(['npm', 'run', 'prod'])
+            self.spawn(['rm', '-rf', '../node_modules'])
 
 
 cmdclass['run_prod'] = RunProd
@@ -74,7 +75,15 @@ class Install(setuptools.command.install.install):
         setuptools.command.install.install.run(self)
 
 
+class Test(setuptools.command.install.install):
+
+    def run(self):
+        self.spawn(['ant', 'unit-tests-only'])
+
+
 cmdclass['install'] = Install
+
+cmdclass['test'] = Test
 
 version = get_version()
 

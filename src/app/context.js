@@ -18,6 +18,7 @@
 import {noView} from 'aurelia-framework';
 import {EventAggregator} from 'aurelia-event-aggregator';
 import Misc from '../utils/misc';
+import OpenWith from '../utils/openwith';
 import ImageConfig from '../model/image_config';
 import ImageInfo from '../model/image_info';
 import RegionsInfo from '../model/regions_info';
@@ -225,6 +226,9 @@ export default class Context {
 
         // set up luts
         this.setUpLuts();
+
+        // initialize Open_with
+        OpenWith.initOpenWith();
 
         // open what we received as inital parameter
         this.openWithInitialParams();
