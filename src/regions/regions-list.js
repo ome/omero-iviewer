@@ -359,6 +359,23 @@ export default class RegionsList extends EventSubscriber {
     }
 
     /**
+     * Evaluates whether permission(s) are missing for a given shape
+     * (Helper method for template only!)
+     *
+     * @private
+     * @param {Object} shape a shape
+     * @return {boolean} if true user has full permissions, otherwise not
+     * @memberof RegionsList
+     */
+    hasPermissions(shape) {
+        return !shape.permissions ||
+           (shape.permissions &&
+            shape.permissions.canAnnotate &&
+            shape.permissions.canEdit &&
+            shape.permissions.canDelete);
+    }
+
+    /**
      * Overridden aurelia lifecycle method:
      * called whenever the view is unbound within aurelia
      * in other words a 'destruction' hook that happens after 'detached'
