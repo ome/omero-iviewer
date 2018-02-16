@@ -781,6 +781,10 @@ thumbnail-slider img {
 }
 .regions-table-row * {
     height: 100%;
+    user-select: none;
+    -ms-user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
 }
 
 .regions-table-col {

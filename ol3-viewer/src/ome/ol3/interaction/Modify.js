@@ -147,10 +147,8 @@ ome.ol3.interaction.Modify.prototype.handlePointerAtPixel_ = function(pixel, map
 
         var disallowModification =
             node.geometry instanceof ome.ol3.geom.Label ||
-            node.geometry instanceof ol.geom.Circle;
-            // ||
-            //(ome.ol3.utils.Misc.isArray(node.geometry.transform_) &&
-            //        !(node.geometry instanceof ome.ol3.geom.Ellipse));
+            node.geometry instanceof ol.geom.Circle ||
+            !this.regions_.renderFeature(node.feature);
         if (!disallowModification) {
             var closestSegment = node.segment;
             var vertex =
