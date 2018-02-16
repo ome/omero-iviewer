@@ -167,11 +167,26 @@ export class Converters {
 
       // use permissions
       if (typeof shape['omero:details'] === 'object' &&
-          shape['omero:details'] !== null &&
-          typeof shape['omero:details']['permissions'] === 'object' &&
-          shape['omero:details']['permissions'] !== null) {
-              shape.permissions =
-                    Object.assign({}, shape['omero:details']['permissions']);
+          shape['omero:details'] !== null) {
+              if (typeof shape['omero:details']['permissions'] === 'object' &&
+              shape['omero:details']['permissions'] !== null) {
+                  shape.permissions =
+                        Object.assign({}, shape['omero:details']['permissions']);
+              }
+              if (typeof shape['omero:details']['owner'] === 'object' &&
+                  shape['omero:details']['owner'] !== null) {
+                      let firstName =
+                          typeof shape['omero:details']['owner']['FirstName'] === 'string' ?
+                              shape['omero:details']['owner']['FirstName'] : '';
+                      let lastName =
+                          typeof shape['omero:details']['owner']['LastName'] === 'string' ?
+                              shape['omero:details']['owner']['LastName'] : '';
+                      let user =
+                          typeof shape['omero:details']['owner']['UserName'] === 'string' ?
+                              shape['omero:details']['owner']['UserName'] : '';
+                      shape.owner = (firstName === '' && lastName === '') ?
+                          user : firstName + " " + lastName;
+              }
               delete shape['omero:details'];
       }
 
