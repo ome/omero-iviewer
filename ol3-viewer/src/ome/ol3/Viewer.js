@@ -1821,6 +1821,9 @@ ome.ol3.Viewer.prototype.changeChannelRange = function(ranges) {
 
     omeroImage.changeChannelRange(ranges);
     this.affectImageRender();
+
+    // update regions (if necessary)
+    if (this.getRegionsLayer()) this.getRegions().changed();
 }
 
 /**
