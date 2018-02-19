@@ -470,7 +470,7 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
        img_model:  initialModel,
        tiled: typeof this.image_info_['tiles'] === 'boolean' &&
             this.image_info_['tiles'],
-       tile_size: this.supportsOmeroServerVersion("5.4.2") ?
+       tile_size: this.supportsOmeroServerVersion("5.4.4") ?
             ome.ol3.DEFAULT_TILE_DIMS :
                 this.image_info_['tile_size'] ?
                     this.image_info_['tile_size'] : null
