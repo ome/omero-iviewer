@@ -33,7 +33,7 @@
         show.bind="!requesting_thumbnail_data">
         <img id="${'img-thumb-' + thumb.id}" repeat.for="thumb of thumbnails"
              css="${image_config.image_info.image_id === thumb.id ?
-                 'border: 2px solid rgba(0,60,136,0.5)' : 'border: none'}"
+                 'border: 5px solid rgba(0,60,136,0.5)' : 'border: none'}"
              src.bind="thumb.url + '?version=' + thumb.revision"
              title="${thumb.title}"
              alt="Not Found"

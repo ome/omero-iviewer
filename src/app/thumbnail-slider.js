@@ -581,7 +581,26 @@ export default class ThumbnailSlider extends EventSubscriber {
                 'Do you want to save your changes?',
                 saveHandler, () => navigateToNewImage());
             return;
-        } else navigateToNewImage();
+        } else {
+            navigateToNewImage();
+            let modifiedConfs =
+                this.context.findConfigsWithModifiedRegionsForGivenImage(image_id);
+            if (modifiedConfs.length > 0) {
+                UI.showConfirmationDialog(
+                    'Save ROIS?',
+                    'You have changed ROI(S) on an image ' +
+                    'that\'s been opened multiple times.<br>' +
+                    'Do you want to save now to avoid ' +
+                    'inconsistence (and a potential loss ' +
+                    'of some of your changes)?' ,
+                    () => {
+                        this.context.publish(
+                            REGIONS_STORE_SHAPES,
+                            {config_id : modifiedConfs[0],
+                             omit_client_update: false});
+                    });
+            }
+        }
     }
 
     /**

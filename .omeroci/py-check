@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -e
+set -u
+set -x
+
+flake8 --exclude closure -v /omero-iviewer
+rst-lint /omero-iviewer/plugin/omero_iviewer/README.rst

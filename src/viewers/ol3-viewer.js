@@ -251,7 +251,10 @@ export default class Ol3Viewer extends EventSubscriber {
                         (newValue, oldValue) => {
                             if (this.viewer === null) return;
                             this.viewer.removeRegions();
-                            if (newValue) this.initRegions();
+                            if (newValue) {
+                                this.initRegions();
+                                delete this.image_config.regions_info.tmp_data;
+                            }
                     });
             // mdi needs to switch image config when using controls
             this.getContainer().find('.ol-control').on(
@@ -427,11 +430,11 @@ export default class Ol3Viewer extends EventSubscriber {
         if (typeof params.model === 'string') {
             if (isSameConfig) this.viewer.changeImageModel(params.model);
             else this.linked_events.syncAction(params, "changeImageSettings");
-        } else if (isSameConfig && typeof params.projection === 'string')
+        } else if (isSameConfig && typeof params.projection === 'string') {
             this.viewer.changeImageProjection(
                 params.projection,
                 this.image_config.image_info.projection_opts);
-        else if (Misc.isArray(params.ranges) && params.ranges.length > 0) {
+        } else if (Misc.isArray(params.ranges) && params.ranges.length > 0) {
             if (isSameConfig) this.viewer.changeChannelRange(params.ranges);
             else this.linked_events.syncAction(params, "changeImageSettings");
         } else if (typeof params.interpolate === 'boolean')
@@ -640,13 +643,33 @@ export default class Ol3Viewer extends EventSubscriber {
               !Misc.isArray(params.shapes) ||
               params.shapes.length === 0) return;
 
+
+        // switch to plane/time/channel that shape to be selected is on
+        // for deselect the last selected shape is chosen (if exists)
+        let shapeSelection = params.shapes[params.shapes.length-1];
+        if (!params.value) {
+            let numberOfSelectedShapes =
+                this.image_config.regions_info.selected_shapes.length;
+            if (numberOfSelectedShapes > 0) {
+                let lastSelected =
+                    this.image_config.regions_info.selected_shapes[
+                        numberOfSelectedShapes-1];
+                if (lastSelected !== shapeSelection) {
+                    shapeSelection = lastSelected;
+                } else if (numberOfSelectedShapes > 1) {
+                    shapeSelection =
+                        this.image_config.regions_info.selected_shapes[
+                            numberOfSelectedShapes-2];
+                } else shapeSelection = null;
+            } else shapeSelection = null;
+        }
         let delay = 0;
-        if (params.clear) {
-            // switch to plane/time where the shape is
+        if (shapeSelection) {
             let viewerT = this.viewer.getDimensionIndex('t');
             let viewerZ = this.viewer.getDimensionIndex('z');
+            let viewerC = this.viewer.getDimensionIndex('c');
             let shape =
-                this.image_config.regions_info.getShape(params.shapes[0]);
+                this.image_config.regions_info.getShape(shapeSelection);
             let shapeT = typeof shape.TheT === 'number' ? shape.TheT : -1;
             if (shapeT !== -1 && shapeT !== viewerT) {
                 this.image_config.image_info.dimensions.t = shapeT;
@@ -657,13 +680,18 @@ export default class Ol3Viewer extends EventSubscriber {
                 this.image_config.image_info.dimensions.z = shapeZ;
                 delay += 25;
             }
+            let shapeC = typeof shape.TheC === 'number' ? shape.TheC : -1;
+            if (shapeC !== -1 && viewerC.indexOf(shapeC) === -1) {
+                this.image_config.image_info.channels[shapeC].active = true;
+                delay += 25;
+            }
         }
 
         setTimeout(() => {
             this.abortDrawing();
             this.viewer.selectShapes(
-                params.shapes, params.value,
-                params.clear, params.center);
+                params.shapes, params.value, params.clear,
+                params.center ? shapeSelection : null);
         }, delay);
       }
 
@@ -715,7 +743,6 @@ export default class Ol3Viewer extends EventSubscriber {
             !Misc.isArray(this.image_config.regions_info.tmp_data)) return;
 
         this.viewer.addRegions(this.image_config.regions_info.tmp_data);
-        delete this.image_config.regions_info.tmp_data;
         this.changeRegionsModes(
             { modes: this.image_config.regions_info.regions_modes});
         this.viewer.showShapeComments(

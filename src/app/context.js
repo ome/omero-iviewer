@@ -18,6 +18,7 @@
 import {noView} from 'aurelia-framework';
 import {EventAggregator} from 'aurelia-event-aggregator';
 import Misc from '../utils/misc';
+import OpenWith from '../utils/openwith';
 import ImageConfig from '../model/image_config';
 import ImageInfo from '../model/image_info';
 import RegionsInfo from '../model/regions_info';
@@ -225,6 +226,9 @@ export default class Context {
 
         // set up luts
         this.setUpLuts();
+
+        // initialize Open_with
+        OpenWith.initOpenWith();
 
         // open what we received as inital parameter
         this.openWithInitialParams();
@@ -827,6 +831,26 @@ export default class Context {
                 !(conf.image_info instanceof ImageInfo) ||
                 conf.image_info.image_id !== image_id) continue;
             ret.push(conf);
+        }
+        return ret;
+    }
+
+    /**
+     * Returns all configs that relate to the given image id
+     * and have modified regions data
+     *
+     * @param {number} image_id the image id
+     * @return {Array.<number>} a list of config ids or an empty one
+     * @memberof Context
+     */
+    findConfigsWithModifiedRegionsForGivenImage(image_id) {
+        let ret = [];
+        let sameImageConfs = this.getImageConfigsForGivenImage(image_id);
+        for (let c in sameImageConfs) {
+            let conf = sameImageConfs[c];
+            if (conf.regions_info && conf.regions_info.hasBeenModified()) {
+                ret.push(conf.id);
+            }
         }
         return ret;
     }

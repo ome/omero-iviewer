@@ -110,7 +110,7 @@
             <div repeat.for="rdef of rdefs"
                 class="user-setting"
                 click.delegate="applyUserSetting($index)">
-                <img src.bind="getRdefThumbUrl() + '/?rdefId=' + rdef.id + '&' + revision" />
+                <img src.bind="getRdefThumbUrl() + '/?rdefId=' + rdef.id + '&' + revision" class="img-thumbnail">
                 <div>${rdef.owner.firstName + ' ' + rdef.owner.lastName}</div>
             </div>
         </div>
