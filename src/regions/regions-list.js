@@ -50,6 +50,13 @@ export default class RegionsList extends EventSubscriber {
      */
      active_column = 'comments';
 
+     /**
+      * selected row (id) for multi-selection with shift
+      * @memberof RegionsList
+      * @type {string}
+      */
+      selected_row = '';
+
     /**
      * the list of property observers
      * @memberof RegionsList
@@ -238,20 +245,97 @@ export default class RegionsList extends EventSubscriber {
      * @param {number} id the shape id
      * @param {boolean} selected the selected state
      * @param {Event} event the browser's event object
+     * @param {boolean} is_rois_row is a roi containing shapes
      * @memberof RegionsList
      */
-    selectShape(id, selected, event) {
-        if (event.target.tagName.toUpperCase() === 'INPUT') return true;
+    selectShape(id, selected, event, is_rois_row=false) {
+        if (event.target.tagName.toUpperCase() === 'INPUT' ||
+            (is_rois_row &&
+                (event.target.className.indexOf("roi_id") !== -1 ||
+                event.target.parentNode.className.indexOf("roi_id") !== -1)))
+                    return true;
 
-        let multipleSelection =
-            typeof event.ctrlKey === 'boolean' && event.ctrlKey;
+        // see if cmd/ctrl or shift was used (for multiselection)
+        let cmdKey = Misc.isApple() ? 'metaKey' : 'ctrlKey';
+        let ctrl = typeof event[cmdKey] === 'boolean' && event[cmdKey];
+        let shift = event.shiftKey;
+
+        // initialize selection params
+        id += '';
+        let ids = [id];
+        let multipleSelection = ctrl;
         let deselect = multipleSelection && selected;
+
+        // rois rows
+        let roi_shapes = [];
+        let all_shapes_selected = false;
+        if (is_rois_row) {
+            let roi = this.regions_info.data.get(parseInt(id));
+            if (typeof roi === 'object' && roi.shapes instanceof Map) {
+                let selectableShapes = 0;
+                let selectedShapes = 0;
+                roi.shapes.forEach((s) => {
+                    if (!(s.is_new && s.deleted)) {
+                        selectableShapes++;
+                        if (s.selected) selectedShapes++;
+                        roi_shapes.push(s.shape_id);
+                    }
+                });
+                all_shapes_selected = (selectedShapes >= selectableShapes);
+            }
+            if (multipleSelection && all_shapes_selected) deselect = true;
+            else deselect = false;
+            ids = roi_shapes;
+        }
+
+        if (!is_rois_row && this.selected_row.indexOf(':') !== -1 &&
+            this.regions_info.selected_shapes.indexOf(
+                this.selected_row) === -1) this.selected_row = '';
+        if (shift && this.selected_row !== '' &&
+            this.selected_row !== id) {
+            deselect = false;
+            // gather ids by means of row search
+            let start = false;
+            ids = [];
+            let addRoiShapes = (el) => {
+                let subId = el.id.substring("roi-".length);
+                if (subId.indexOf(":") === -1) {
+                    let roi = this.regions_info.data.get(parseInt(subId));
+                    if (typeof roi === 'object' && roi.shapes instanceof Map) {
+                        roi.shapes.forEach((s) => {
+                            if (!(s.is_new && s.deleted)) ids.push(s.shape_id);
+                        });
+                    }
+                } else ids.push(subId);
+            }
+            $('.regions-table-row').each((idx, el) => {
+                if (el && typeof el.id === 'string' &&
+                    el.id.indexOf('roi-') === 0) {
+                    if ((el.id === 'roi-' + id) ||
+                        (el.id === 'roi-' + this.selected_row)) {
+                        addRoiShapes(el);
+                        if (!start) start = true
+                        else return false;
+                    } else if (start) addRoiShapes(el);
+                }
+            });
+        } else {
+            let selLen = this.regions_info.selected_shapes.length;
+            if (!deselect) this.selected_row = id;
+            else if (deselect && this.selected_row === id && selLen > 0) {
+                    this.selected_row =
+                        this.regions_info.selected_shapes[selLen-1];
+                    if (this.selected_row === id && selLen > 1)
+                        this.selected_row =
+                            this.regions_info.selected_shapes[selLen-2];
+            }
+        }
 
         this.context.publish(
            REGIONS_SET_PROPERTY, {
                config_id: this.regions_info.image_info.config_id,
                property: 'selected',
-               shapes : [id], clear: !multipleSelection,
+               shapes : ids, clear: !multipleSelection,
                value : !deselect, center : !multipleSelection});
     }
 
@@ -356,6 +440,23 @@ export default class RegionsList extends EventSubscriber {
         if (typeof which !== 'string' || which.length === 0 ||
             which === this.active_column) return;
         this.active_column = which;
+    }
+
+    /**
+     * Evaluates whether permission(s) are missing for a given shape
+     * (Helper method for template only!)
+     *
+     * @private
+     * @param {Object} shape a shape
+     * @return {boolean} if true user has full permissions, otherwise not
+     * @memberof RegionsList
+     */
+    hasPermissions(shape) {
+        return !shape.permissions ||
+           (shape.permissions &&
+            shape.permissions.canAnnotate &&
+            shape.permissions.canEdit &&
+            shape.permissions.canDelete);
     }
 
     /**

@@ -842,13 +842,13 @@ ome.ol3.Viewer.prototype.showShapeComments = function(flag) {
 }
 
 /**
- * Marks given shapes as selected. The center flag is only considered if we
- * have a single shape only
+ * Marks given shapes as selected, clearing any previously selected if clear flag
+ * is set. Optionally the view centers on a given shape.
  *
  * @param {Array<string>} roi_shape_ids list in roi_id:shape_id notation
  * @param {boolean} selected flag whether we should (de)select the rois
  * @param {boolean} clear flag whether we should clear existing selection beforehand
- * @param {boolean=} center centers map on the shape coordinates
+ * @param {string|null} center the id of the shape to center on or null
  */
 ome.ol3.Viewer.prototype.selectShapes = function(
     roi_shape_ids, selected, clear, center) {
@@ -859,10 +859,9 @@ ome.ol3.Viewer.prototype.selectShapes = function(
     if (typeof clear === 'boolean' && clear) regions.select_.clearSelection();
     regions.setProperty(roi_shape_ids, "selected", selected);
 
-    if (roi_shape_ids.length === 1 && typeof center === 'boolean' && center &&
-        typeof regions.idIndex_[roi_shape_ids[0]] === 'object')
-            this.centerOnGeometry(
-                regions.idIndex_[roi_shape_ids[0]].getGeometry());
+    if (typeof center === 'string' &&
+        typeof regions.idIndex_[center] === 'object')
+            this.centerOnGeometry(regions.idIndex_[center].getGeometry());
 }
 
 /**
@@ -1820,7 +1819,11 @@ ome.ol3.Viewer.prototype.changeChannelRange = function(ranges) {
     var omeroImage = this.getImage();
     if (omeroImage === null) return;
 
+    // rerender image (if necessary)
     if (omeroImage.changeChannelRange(ranges)) this.affectImageRender();
+
+    // update regions (if active)
+    if (this.getRegionsLayer()) this.getRegions().changed();
 }
 
 /**
