@@ -61,6 +61,7 @@ export default class Ui {
 
                 if (x > minWidth && x < maxWidth && e.pageX < rightBound) {
                     el.width(x);
+                    el.css('flex', '0 0 ' + x + 'px');
                 }
                 eventbus.publish(IMAGE_VIEWER_RESIZE,
                     {config_id: -1, is_dragging: true});
@@ -140,6 +141,7 @@ export default class Ui {
                 (leftSplit && newWidth === 0 ||
                     !leftSplit && newWidth !== 0 ? "right" : "left") + ".png");
             el.width(newWidth);
+            el.css('flex', '0 0 ' + newWidth + 'px');
             if (newWidth === 0)
                 $(e.currentTarget).parent().css("cursor", "default");
             else
