@@ -533,6 +533,7 @@ a.ui-button:active,
     text-align: center;
     overflow-x: hidden;
     overflow-y: hidden;
+    background-color: #ffffff;
 }
 .thumbnail-panel .thumbnail-scroll-panel {
     padding-bottom: 30px;
