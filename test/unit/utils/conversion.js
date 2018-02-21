@@ -314,38 +314,30 @@ describe("Conversion", function() {
         pointFeature['type'] = 'point';
         pointFeature.setId("-1:2");
         features.push(pointFeature);
+        ellipseFeature['state'] = ome.ol3.REGIONS_STATE.REMOVED;
+        ellipseFeature.setId("2:2");
+        features.push(ellipseFeature);
+        lineFeature['state'] = ome.ol3.REGIONS_STATE.REMOVED;
+        lineFeature.setId("-2:-2");
+        features.push(lineFeature);
+        polylineFeature['state'] = ome.ol3.REGIONS_STATE.REMOVED;
+        polylineFeature.setId("10:10");
+        features.push(polylineFeature);
 
-        var jsonObject = ome.ol3.utils.Conversion.toJsonObject(features);
+        var empty_rois = {'10': null};
+        var jsonObject =
+            ome.ol3.utils.Conversion.toJsonObject(features, true, empty_rois);
 
-        assert.equal(jsonObject['count'],3);
-        assert.equal(jsonObject['rois']['1']['@type'],
-            "http://www.openmicroscopy.org/Schemas/OME/2016-06#ROI");
-        assert.equal(jsonObject['rois']['1']['shapes'][0]['@id'],1);
-        assert.equal(jsonObject['rois']['1']['shapes'][0]['@type'],
+        assert.equal(jsonObject['count'], 5);
+        assert.equal(jsonObject['modified'][0]['@id'], 1);
+        assert.equal(jsonObject['modified'][0]['@type'],
             "http://www.openmicroscopy.org/Schemas/OME/2016-06#Label");
-        assert.equal(jsonObject['rois']['-1']['@type'],
-            "http://www.openmicroscopy.org/Schemas/OME/2016-06#ROI");
-        assert.equal(jsonObject['rois']['-1']['shapes'][0]['@type'],
+        assert.equal(jsonObject['new'][0]['@type'],
             "http://www.openmicroscopy.org/Schemas/OME/2016-06#Rectangle");
-        assert.equal(jsonObject['rois']['-1']['shapes'][1]['@type'],
+        assert.equal(jsonObject['new'][1]['@type'],
             "http://www.openmicroscopy.org/Schemas/OME/2016-06#Point");
-
-        // test variation: each shape gets its own roi
-        var jsonObject = ome.ol3.utils.Conversion.toJsonObject(features, true);
-
-        assert.equal(jsonObject['count'], 3);
-        assert.equal(jsonObject['rois']['1']['@type'],
-            "http://www.openmicroscopy.org/Schemas/OME/2016-06#ROI");
-        assert.equal(jsonObject['rois']['1']['shapes'][0]['@id'],1);
-        assert.equal(jsonObject['rois']['1']['shapes'][0]['@type'],
-            "http://www.openmicroscopy.org/Schemas/OME/2016-06#Label");
-        assert.equal(jsonObject['rois']['-1']['@type'],
-            "http://www.openmicroscopy.org/Schemas/OME/2016-06#ROI");
-        assert.equal(jsonObject['rois']['-1']['shapes'][0]['@type'],
-            "http://www.openmicroscopy.org/Schemas/OME/2016-06#Rectangle");
-        assert.equal(jsonObject['rois']['-2']['@type'],
-            "http://www.openmicroscopy.org/Schemas/OME/2016-06#ROI");
-        assert.equal(jsonObject['rois']['-2']['shapes'][0]['@type'],
-            "http://www.openmicroscopy.org/Schemas/OME/2016-06#Point");
+        assert.equal(jsonObject['deleted']['2'][0], '2:2');
+        assert.equal(jsonObject['new_and_deleted'][0], ['-2:-2']);
+        assert.equal(jsonObject['empty_rois']['10'][0], '10:10');
     });
 });
