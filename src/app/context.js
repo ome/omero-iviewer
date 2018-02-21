@@ -659,8 +659,9 @@ export default class Context {
      *
      * @memberof Context
      * @param {ImageConfig|number} image_config_or_id id or ImageConfig
+     * @param {boolean} stay_in_mdi if true we stay in mdi regardless
      */
-    removeImageConfig(image_config_or_id) {
+    removeImageConfig(image_config_or_id, stay_in_mdi = false) {
         let conf = null;
         if (image_config_or_id instanceof ImageConfig)
             conf = image_config_or_id;
@@ -685,7 +686,7 @@ export default class Context {
             // choose next selected image config
             if (confSize > 0) {
                 this.selected_config = this.image_configs.keys().next().value;
-                if (confSize === 1) {
+                if (!stay_in_mdi && confSize === 1) {
                     this.publish(
                         IMAGE_VIEWER_CONTROLS_VISIBILITY,
                         {config_id: this.selected_config, flag: true});

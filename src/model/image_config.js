@@ -85,7 +85,7 @@ export default class ImageConfig extends History {
      * @memberof ImageConfig
      * @type {Object}
      */
-    position = {top: '50px', left: '120px'};
+    position = null;
 
     /**
      * ui size
