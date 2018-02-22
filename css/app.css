@@ -589,7 +589,7 @@ thumbnail-slider img {
 }
 
 .right-hand-panel {
-    width: 350px;
+    width: 380px;
     max-width: 1000px;
     overflow-y: hidden;
 }
@@ -840,18 +840,22 @@ thumbnail-slider img {
     max-width: 5%;
 }
 .shape-z, .shape-t {
-    min-width: 10%;
-    max-width: 10%;
+    min-width: 9%;
+    max-width: 9%;
+}
+.shape-c {
+    min-width: 5%;
+    max-width: 5%;
 }
 .shape-type {
-    min-width: 10%;
-    max-width: 10%;
+    min-width: 9%;
+    max-width: 9%;
     background-repeat: no-repeat;
     background-position: center;
 }
 .shape-comment {
-    min-width: 50%;
-    max-width: 50%;
+    min-width: 48%;
+    max-width: 48%;
 }
 .shape-area {
     min-width: 20%;
