@@ -56,6 +56,7 @@
                 <div class="regions-table-col shape-type">&nbsp;</div>
                 <div class="regions-table-col shape-z">Z</div>
                 <div class="regions-table-col shape-t">T</div>
+                <div class="regions-table-col shape-c">C</div>
                 <div class="regions-table-col shape-comment"
                      show.bind="active_column === 'comments'">Comment
                  </div>
@@ -94,6 +95,7 @@
                          </div>
                         <div class="regions-table-col shape-z"></div>
                         <div class="regions-table-col shape-t"></div>
+                        <div class="regions-table-col shape-c"></div>
                         <div class="regions-table-col shape-comment"
                              style="display: none">
                         </div>
@@ -124,6 +126,9 @@
                         </div>
                         <div class="regions-table-col shape-t">
                             ${shape.TheT !== -1 ? (shape.TheT + 1) : ""}
+                        </div>
+                        <div class="regions-table-col shape-c">
+                            ${shape.TheC !== -1 ? (shape.TheC + 1) : ""}
                         </div>
                         <div class="regions-table-col shape-comment"
                              show.bind="active_column === 'comments'">
