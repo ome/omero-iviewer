@@ -842,13 +842,9 @@ thumbnail-slider img {
     min-width: 5%;
     max-width: 5%;
 }
-.shape-z, .shape-t {
-    min-width: 9%;
-    max-width: 9%;
-}
-.shape-c {
-    min-width: 5%;
-    max-width: 5%;
+.shape-z, .shape-t, .shape-c {
+    min-width: 8%;
+    max-width: 8%;
 }
 .shape-type {
     min-width: 9%;
@@ -857,8 +853,8 @@ thumbnail-slider img {
     background-position: center;
 }
 .shape-comment {
-    min-width: 48%;
-    max-width: 48%;
+    min-width: 47%;
+    max-width: 47%;
 }
 .shape-area {
     min-width: 20%;
