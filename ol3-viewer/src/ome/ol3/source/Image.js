@@ -493,9 +493,17 @@ ome.ol3.source.Image.prototype.setImageModel = function(value) {
  * given an index for the  channel in question
  *
  * @param {Array.<Object>} ranges an array of objects with above mentioned props
+ * @return {boolean} if true this indicates a rerender is needed, false otherwise
  */
 ome.ol3.source.Image.prototype.changeChannelRange = function(ranges) {
-    if (!ome.ol3.utils.Misc.isArray(ranges)) return;
+    if (!ome.ol3.utils.Misc.isArray(ranges)) return false;
+
+    // we don't rerender if there haven't been changes
+    // or changes don't necessitate rerenders such as:
+    // - any change on a disabled channel
+    // - only color change in grayscale mode
+    var needsRerender = false;
+    var isGrayscale = this.image_model_.toLowerCase() === 'g';
 
     for (var r in ranges) {
         var range = ranges[r];
@@ -509,20 +517,38 @@ ome.ol3.source.Image.prototype.changeChannelRange = function(ranges) {
             typeof range['end'] !== 'number') continue;
 
         var channel_index = range['index'];
-        this.channels_info_[channel_index]['start'] = range['start'];
-        this.channels_info_[channel_index]['end'] = range['end'];
 
-        // second sanity check for optional color and inverted setting
-        // cannot do much more to accomodate lookup table strings
-        if (typeof range['color'] === 'string' && range['color'].length !== 0)
+        // active flag changes
+        if (typeof range['active'] === 'boolean' &&
+            this.channels_info_[channel_index]['active'] !== range['active']) {
+                this.channels_info_[channel_index]['active'] = range['active'];
+                needsRerender = true;
+        }
+        var active = this.channels_info_[channel_index]['active'];
+
+        // channel start/end changes
+        if (this.channels_info_[channel_index]['start'] !== range['start'] ||
+            this.channels_info_[channel_index]['end'] !== range['end']) {
+                this.channels_info_[channel_index]['start'] = range['start'];
+                this.channels_info_[channel_index]['end'] = range['end'];
+                if (active) needsRerender = true;
+        }
+
+        // color changes
+        if (typeof range['color'] === 'string' && range['color'].length !== 0 &&
+            this.channels_info_[channel_index]['color'] !== range['color']) {
             this.channels_info_[channel_index]['color'] = range['color'];
-        if (typeof range['inverted'] === 'boolean')
-            this.channels_info_[channel_index]['inverted'] = range['inverted'];
-
-        // third sanity check for optional act setting
-        if (typeof range['active'] === 'boolean')
-        this.channels_info_[channel_index]['active'] = range['active'];
+            if (active && !isGrayscale) needsRerender = true;
+        }
+        // inverted change
+        if (typeof range['inverted'] === 'boolean' &&
+            this.channels_info_[channel_index]['inverted'] !== range['inverted']) {
+                this.channels_info_[channel_index]['inverted'] = range['inverted'];
+                if (active) needsRerender = true;
+        }
     }
+
+    return needsRerender;
 }
 
 /**
