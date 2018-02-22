@@ -195,10 +195,16 @@ export default class Ol3Viewer extends EventSubscriber {
             Misc.getRandomInteger(minX,maxX) + 'px';
         container.draggable({
             handle: '.viewer-handle',
-            drag: function( event, ui ) {
+            start: () => {
+                maxX = frame.position().left + frame.width() - parseInt(this.image_config.size.width) + 200;
+                maxY = frame.position().top + frame.height() - parseInt(this.image_config.size.height);
+            },
+            drag: (event, ui) => {
                 // Help keep header within draggable area
                 ui.position.top = Math.max(40, ui.position.top);
+                ui.position.top = Math.min(maxY, ui.position.top);
                 ui.position.left = Math.max(-100, ui.position.left);
+                ui.position.left = Math.min(maxX, ui.position.left);
             },
             stop: (event, ui) => {
                 this.image_config.position.top = ui.position.top + 'px';
