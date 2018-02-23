@@ -229,8 +229,10 @@ a.ui-button:active,
 
 .frame {
     z-index: 0;
-    -ms-flex: 1;              /* IE 10 */
-    flex-grow: 1;
+    float: left;
+    /* 100px .thumbnail-panel + 2 * 5px .col-splitter + 350px .right-hand-panel */
+    /* Updated in ui.js */
+    width: calc(100% - 460px);
 }
 
 .center {
@@ -528,7 +530,6 @@ a.ui-button:active,
 .thumbnail-panel {
     padding-top: 30px;
     width: 100px;
-    flex: 0 0 100px;
     max-width: 100px;
     text-align: center;
     overflow-x: hidden;
@@ -592,7 +593,6 @@ thumbnail-slider img {
 
 .right-hand-panel {
     width: 350px;
-    flex: 0 0 350px;
     max-width: 1000px;
     overflow-y: hidden;
 }
