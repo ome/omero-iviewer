@@ -44,40 +44,24 @@ export default class Ui {
                 e.preventDefault();
 
                 let el = leftSplit ? $('.thumbnail-panel') : $('.right-hand-panel');
-                let windowWidth = $(window).width();
-                let thumbsWidth = $('.thumbnail-panel').width();
-                let frameWidth = $(".frame").width();
-                let rightPanelWidth = $('.right-hand-panel').width();
-
                 if (el.width() === 0) return false;
 
-                // defaults for right panel resize
-                let minWidth = 50;
+                let x = leftSplit ? e.pageX - el.offset().left :
+                    $(window).width() - e.pageX;
+                let frameWidth = $(".frame").width();
+                let minWidth = leftSplit ? 25 : 50;
                 let maxWidth = parseInt(el.css("max-width"));
-                let tolerance = windowWidth - thumbsWidth - 200;
-                let x = windowWidth - e.pageX;
-                let rightBound = windowWidth;
-
-                // if we're resizing left panel...
-                if (leftSplit) {
-                    minWidth = 25;
-                    tolerance =  windowWidth - rightPanelWidth - 200;
-                    x = e.pageX - el.offset().left;
-                    rightBound = windowWidth - frameWidth;
-                    thumbsWidth = x;
-                } else {
-                    rightPanelWidth = x
-                }
-                // .col-splits are 2 * 5px
-                let sidebarWidths = 10 + thumbsWidth + rightPanelWidth;
-                console.log("sidebarWidths", sidebarWidths, 'thumbsWidth, rightPanelWidth', thumbsWidth, rightPanelWidth);
-
+                let tolerance =  $(window).width() -
+                        (leftSplit ? $('.right-hand-panel').width() :
+                            $('.thumbnail-panel').width())-200;
                 if (maxWidth > tolerance)
                     maxWidth = tolerance;
+                let rightBound = leftSplit ?
+                    ($(window).width() - frameWidth) : $(window).width();
 
                 if (x > minWidth && x < maxWidth && e.pageX < rightBound) {
                     el.width(x);
-                    $(".frame").css('width', 'calc(100% - ' + sidebarWidths + 'px');
+                    el.css('flex', '0 0 ' + x + 'px');
                 }
                 eventbus.publish(IMAGE_VIEWER_RESIZE,
                     {config_id: -1, is_dragging: true});
