@@ -177,14 +177,21 @@ ome.ol3.utils.Regions.featureFactory = function(shape_info) {
     var lookedUpTypeFunction =
         ome.ol3.utils.Regions.lookupFeatureFunction(shape_info['type']);
 
-    if (typeof(lookedUpTypeFunction) !== 'function') return null;
+    if (typeof(lookedUpTypeFunction) !== 'function') {
+        console.error("Failed to find factory method for shape: " + shape_info);
+        return null;
+    }
 
     // check if, at a minimum, we received style information to render the shapes
     ome.ol3.utils.Style.remedyStyleIfNecessary(shape_info);
 
     // instantiate the feature and create its associated style
     var actualFeature = lookedUpTypeFunction(shape_info);
-    if (!(actualFeature instanceof ol.Feature)) return null; // something went wrong
+    if (!(actualFeature instanceof ol.Feature)) {
+        // something went wrong parsing the shape information
+        console.error("Failed to parse shape: " + shape_info);
+        return null;
+    }
 
     return actualFeature;
 };
