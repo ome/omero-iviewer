@@ -527,7 +527,6 @@ a.ui-button:active,
 .thumbnail-panel {
     padding-top: 30px;
     width: 100px;
-    flex: 0 0 100px;
     max-width: 100px;
     text-align: center;
     overflow-x: hidden;
@@ -591,7 +590,6 @@ thumbnail-slider img {
 
 .right-hand-panel {
     width: 350px;
-    flex: 0 0 350px;
     max-width: 1000px;
     overflow-y: hidden;
 }
