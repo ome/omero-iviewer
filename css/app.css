@@ -228,17 +228,16 @@ a.ui-button:active,
 }
 
 .frame {
+    margin-left: -105px;
+    padding-left: 105px;
+    margin-right: -355px;
+    padding-right: 355px;
     z-index: 0;
-    -ms-flex: 1;              /* IE 10 */
-    flex-grow: 1;
 }
 
 .center {
     margin: 0px;
     padding-top: 40px;
-    display: -ms-flexbox;      /* TWEENER - IE 10 */
-    display: flex;
-    flex-direction: row;
     background-color: #f8f8f8;
 }
 
