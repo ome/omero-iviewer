@@ -187,11 +187,7 @@ ome.ol3.utils.Regions.featureFactory = function(shape_info) {
 
     // instantiate the feature and create its associated style
     var actualFeature = lookedUpTypeFunction(shape_info);
-    if (!(actualFeature instanceof ol.Feature)) {
-        // something went wrong parsing the shape information
-        console.error("Failed to parse shape: " + shape_info);
-        return null;
-    }
+    if (!(actualFeature instanceof ol.Feature)) return null;
 
     return actualFeature;
 };
@@ -416,6 +412,7 @@ ome.ol3.utils.Regions.createFeaturesFromRegionsResponse =
                 var hash = shapeType.lastIndexOf("#");
                 shape['type'] = (hash !== -1) ?
                     shapeType.substring(hash+1).toLowerCase() : null;
+                var combinedId = '' + roiId + ":" + shape['@id']
                 var shapeTindex =
                     typeof shape['TheT'] === 'number' ? shape['TheT'] : -1;
                 var shapeZindex =
@@ -425,13 +422,18 @@ ome.ol3.utils.Regions.createFeaturesFromRegionsResponse =
                 // set state
                 shape['state'] = ome.ol3.REGIONS_STATE.DEFAULT;
 
-                // create the feature via the factory
-                var nestedError = null;
-                var actualFeature = null;
                 try {
-                    actualFeature = ome.ol3.utils.Regions.featureFactory(shape);
                     if (shape['type'] === 'mask') {
                         ome.ol3.utils.Regions.addMask(regions, shape);
+                        continue;
+                    }
+                    // create the feature via the factory
+                    var actualFeature =
+                        ome.ol3.utils.Regions.featureFactory(shape);
+                    if (!(actualFeature instanceof ol.Feature)) {
+                        console.error(
+                            "Failed to create " + shapeType +
+                            "(" + combinedId + ") from json!");
                         continue;
                     }
 
@@ -445,42 +447,37 @@ ome.ol3.utils.Regions.createFeaturesFromRegionsResponse =
                         rot !== 0 && !regions.rotate_text_)
                             actualFeature.getGeometry().rotate(-rot);
                     ome.ol3.utils.Style.updateStyleFunction(actualFeature, regions, true);
-                } catch(some_error) {
-                    nestedError = some_error;
-                }
 
-                var combinedId = '' + roiId + ":" + shape['@id'];
-                if (!(actualFeature instanceof ol.Feature)) {
-                    console.error("Failed to construct " +
-                    shapeType + "(" + combinedId + ") from shape info!");
-                    if (nestedError != null) console.error(nestedError);
+                    // we set the id for the feature using the format:
+                    // 'rois_id:shape_id', e.g.: '1:4'
+                    actualFeature.setId(combinedId);
+                    actualFeature['TheT'] = shapeTindex;
+                    actualFeature['TheZ'] = shapeZindex;
+                    actualFeature['TheC'] = shapeCindex;
+                    actualFeature['state'] = ome.ol3.REGIONS_STATE.DEFAULT;
+                    // append permissions
+                    if (typeof shape['omero:details'] !== 'object' ||
+                        shape['omero:details'] === null ||
+                        typeof shape['omero:details']['permissions'] !== 'object' ||
+                        shape['omero:details']['permissions'] === null) {
+                            // permissions are mandatory
+                            // otherwise we don't add the shape
+                            console.error("Missing persmissons for shape " +
+                                actualFeature.getId());
+                            continue;
+                    }
+                    actualFeature['permissions'] =
+                        shape['omero:details']['permissions'];
+                    // calculate area/length
+                    regions.getLengthAndAreaForShape(actualFeature, true);
+                    // add us to the return array
+                    ret.push(actualFeature);
+                } catch(some_error) {
+                    console.error(
+                        "Failed to create ol3 feature for: " + combinedId);
+                    console.error(some_error);
                     continue;
                 }
-
-                // we set the id for the feature using the format:
-                // 'rois_id:shape_id', e.g.: '1:4'
-                actualFeature.setId(combinedId);
-                actualFeature['TheT'] = shapeTindex;
-                actualFeature['TheZ'] = shapeZindex;
-                actualFeature['TheC'] = shapeCindex;
-                actualFeature['state'] = ome.ol3.REGIONS_STATE.DEFAULT;
-                // append permissions
-                if (typeof shape['omero:details'] !== 'object' ||
-                    shape['omero:details'] === null ||
-                    typeof shape['omero:details']['permissions'] !== 'object' ||
-                    shape['omero:details']['permissions'] === null) {
-                        // permissions are mandatory
-                        // otherwise we don't add the shape
-                        console.error("Missing persmissons for shape " +
-                            actualFeature.getId());
-                        continue;
-                }
-                actualFeature['permissions'] =
-                    shape['omero:details']['permissions'];
-                // calculate area/length
-                regions.getLengthAndAreaForShape(actualFeature, true);
-                // add us to the return array
-                ret.push(actualFeature);
             }
         }
 
@@ -516,17 +513,12 @@ ome.ol3.utils.Regions.createFeaturesFromRegionsResponse =
  */
 ome.ol3.utils.Regions.addMask = function(regions, shape_info) {
     // some preliminary checks
-    if (!(regions instanceof ome.ol3.source.Regions) ||
-        typeof(shape_info) !== 'object' ||
-        typeof(shape_info['type']) !== 'string') return;
-    if (shape_info['type'].toLowerCase() !== 'mask') return;
-
-    if (typeof shape_info['id'] !== 'number' ||
-        shape_info['id'] <= 0 || typeof shape_info['x'] !== 'number' ||
-        typeof shape_info['y'] !== 'number' ||
-        typeof shape_info['width'] !== 'number' ||
-        typeof shape_info['height'] !== 'number' ||
-        shape_info['width'] <= 0 || shape_info['height'] <= 0)
+    if (typeof shape_info['@id'] !== 'number' ||
+        shape_info['@id'] <= 0 || typeof shape_info['X'] !== 'number' ||
+        typeof shape_info['Y'] !== 'number' ||
+        typeof shape_info['Width'] !== 'number' ||
+        typeof shape_info['Height'] !== 'number' ||
+        shape_info['Width'] <= 0 || shape_info['Height'] <= 0)
             console.error("At least one Mask parameters is invalid!");
 
     // we place it before the regions layer
@@ -538,12 +530,11 @@ ome.ol3.utils.Regions.addMask = function(regions, shape_info) {
                 attributions: null,
                 url: regions.viewer_.getServer()['full'] +
                         regions.viewer_.getPrefixedURI(ome.ol3.WEBGATEWAY) +
-                        '/render_shape_mask/' +  shape_info['id'],
-                    projection:
-                    regions.viewer_.viewer_.getView().getProjection(),
+                        '/render_shape_mask/' +  shape_info['@id'],
+                projection: regions.viewer_.viewer_.getView().getProjection(),
                 imageExtent: [
-                    shape_info['x'],-shape_info['y'] - shape_info['height'],
-                    shape_info['x'] + shape_info['width'], -shape_info['y']
+                    shape_info['X'],-shape_info['Y'] - shape_info['Height'],
+                    shape_info['X'] + shape_info['Width'], -shape_info['Y']
                 ]
         })}));
 }
