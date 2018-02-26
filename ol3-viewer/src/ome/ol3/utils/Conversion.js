@@ -308,7 +308,7 @@ ome.ol3.utils.Conversion.convertColorToSignedInteger = function(color, alpha) {
 }
 
 /**
- * Turns a shape of type point (ol.geom.Circle) into a json object
+ * Turns a shape of type point into a json object
  *
  * @static
  * @function
@@ -318,7 +318,7 @@ ome.ol3.utils.Conversion.convertColorToSignedInteger = function(color, alpha) {
  */
 ome.ol3.utils.Conversion.pointToJsonObject = function(geometry, shape_id) {
     if (!(geometry instanceof ome.ol3.geom.Point))
-        throw "shape type point must be of instance ome.ol3.geom.Point!";
+        throw "type point must be an instance of ome.ol3.geom.Point!";
 
     var ret = {};
     if (typeof shape_id === 'number') ret['@id'] = shape_id;
@@ -337,7 +337,7 @@ ome.ol3.utils.Conversion.pointToJsonObject = function(geometry, shape_id) {
 }
 
 /**
- * Turns a shape of type ellipse (ome.ol3.geom.Ellipse) into a json object
+ * Turns a shape of type ellipse into a json object
  *
  * @static
  * @function
@@ -347,7 +347,7 @@ ome.ol3.utils.Conversion.pointToJsonObject = function(geometry, shape_id) {
  */
 ome.ol3.utils.Conversion.ellipseToJsonObject = function(geometry, shape_id) {
     if (!(geometry instanceof ome.ol3.geom.Ellipse))
-        throw "shape type ellipse must be of instance ome.ol3.geom.Ellipse!";
+        throw "type ellipse must be an instance of ome.ol3.geom.Ellipse!";
 
     var ret = {};
     if (typeof shape_id === 'number') ret['@id'] = shape_id;
@@ -369,7 +369,7 @@ ome.ol3.utils.Conversion.ellipseToJsonObject = function(geometry, shape_id) {
 }
 
 /**
- * Turns a shape of type rectangle (ome.ol3.geom.Rectangle) into a json object
+ * Turns a shape of type rectangle into a json object
  *
  * @static
  * @function
@@ -379,7 +379,7 @@ ome.ol3.utils.Conversion.ellipseToJsonObject = function(geometry, shape_id) {
  */
 ome.ol3.utils.Conversion.rectangleToJsonObject = function(geometry, shape_id) {
     if (!(geometry instanceof ome.ol3.geom.Rectangle))
-        throw "shape type rectangle must be of instance ome.ol3.geom.Rectangle!";
+        throw "type rectangle must be an instance of ome.ol3.geom.Rectangle!";
 
     var ret = {};
     if (typeof shape_id === 'number') ret['@id'] = shape_id;
@@ -401,7 +401,7 @@ ome.ol3.utils.Conversion.rectangleToJsonObject = function(geometry, shape_id) {
 }
 
 /**
- * Turns a shape of type line (ome.ol3.geom.Line) into a json object
+ * Turns a shape of type line into a json object
  *
  * @static
  * @function
@@ -411,7 +411,7 @@ ome.ol3.utils.Conversion.rectangleToJsonObject = function(geometry, shape_id) {
  */
 ome.ol3.utils.Conversion.lineToJsonObject = function(geometry, shape_id) {
     if (!(geometry instanceof ome.ol3.geom.Line))
-        throw "shape type line must be of instance ome.ol3.geom.Line!";
+        throw "type line must be an instance of ome.ol3.geom.Line!";
 
     var ret = {};
     if (typeof shape_id === 'number') ret['@id'] = shape_id;
@@ -441,7 +441,7 @@ ome.ol3.utils.Conversion.lineToJsonObject = function(geometry, shape_id) {
 }
 
 /**
- * Turns a shape of type polyline (ome.ol3.geom.Line) into a json object
+ * Turns a shape of type polyline into a json object
  *
  * @static
  * @function
@@ -451,7 +451,7 @@ ome.ol3.utils.Conversion.lineToJsonObject = function(geometry, shape_id) {
  */
 ome.ol3.utils.Conversion.polylineToJsonObject = function(geometry, shape_id) {
     if (!(geometry instanceof ome.ol3.geom.Line))
-        throw "shape type polyline must be of instance ome.ol3.geom.Line!";
+        throw "type polyline must be an instance of ome.ol3.geom.Line!";
 
     var ret = {};
     if (typeof shape_id === 'number') ret['@id'] = shape_id;
@@ -483,7 +483,7 @@ ome.ol3.utils.Conversion.polylineToJsonObject = function(geometry, shape_id) {
 
 
 /**
- * Turns a shape of type label (ome.ol3.geom.Label) into json
+ * Turns a shape of type label into json
  *
  * @static
  * @function
@@ -493,7 +493,7 @@ ome.ol3.utils.Conversion.polylineToJsonObject = function(geometry, shape_id) {
  */
 ome.ol3.utils.Conversion.labelToJsonObject = function(geometry, shape_id) {
     if (!(geometry instanceof ome.ol3.geom.Label))
-        throw "shape type label must be of instance ome.ol3.geom.Label!";
+        throw "type label must be an instance of ome.ol3.geom.Label!";
 
     var ret = {};
     if (typeof shape_id === 'number') ret['@id'] = shape_id;
@@ -506,17 +506,17 @@ ome.ol3.utils.Conversion.labelToJsonObject = function(geometry, shape_id) {
 }
 
 /**
- * Turns a shape of type polygon (ol.geom.Polygon) into a json object
+ * Turns a shape of type polygon into a json object
  *
  * @static
  * @function
- * @param {ol.geom.Polygon} geometry the polygon instance
+ * @param {ome.ol3.geom.Polygon} geometry the polygon instance
  * @param {number=} shape_id the optional shape id
  * @return {Object} returns an object ready to be turned into json
  */
 ome.ol3.utils.Conversion.polygonToJsonObject = function(geometry, shape_id) {
     if (!(geometry instanceof ome.ol3.geom.Polygon))
-        throw "shape type polygon must be of instance ome.ol3.geom.Polygon!";
+        throw "type polygon must be an instance of ome.ol3.geom.Polygon!";
 
     var ret = {};
     if (typeof shape_id === 'number') ret['@id'] = shape_id;
@@ -528,6 +528,39 @@ ome.ol3.utils.Conversion.polygonToJsonObject = function(geometry, shape_id) {
         if (i !== 0 && i % 2 === 0) ret['Points'] += " ";
         ret['Points'] += flatCoords[i] + "," + (-flatCoords[i+1]);
     }
+
+    var trans = geometry.getTransform();
+    if (typeof trans === 'object' && trans !== null) {
+        trans['@type'] =
+            "http://www.openmicroscopy.org/Schemas/OME/2016-06#AffineTransform";
+        ret['Transform'] = trans;
+    }
+
+    return ret;
+}
+
+/**
+ * Turns a mask into a json object
+ *
+ * @static
+ * @function
+ * @param {ol.geom.Polygon} geometry the polygon instance
+ * @param {number=} shape_id the optional shape id
+ * @return {Object} returns an object ready to be turned into json
+ */
+ome.ol3.utils.Conversion.maskToJsonObject = function(geometry, shape_id) {
+    if (!(geometry instanceof ome.ol3.geom.Mask))
+        throw "type mask must be an instance of ome.ol3.geom.Mask!";
+
+    var ret = {};
+    if (typeof shape_id === 'number') ret['@id'] = shape_id;
+    ret['@type'] = "http://www.openmicroscopy.org/Schemas/OME/2016-06#Mask";
+    var flatCoords = geometry.getPointCoordinates();
+
+    ret['X'] = flatCoords[0];
+    ret['Y'] = -flatCoords[1];
+    ret['Width'] = geometry.size_[0];
+    ret['Height'] = geometry.size_[1];
 
     var trans = geometry.getTransform();
     if (typeof trans === 'object' && trans !== null) {
@@ -552,7 +585,8 @@ ome.ol3.utils.Conversion.LOOKUP = {
     "line" : ome.ol3.utils.Conversion.lineToJsonObject,
     "polyline" : ome.ol3.utils.Conversion.polylineToJsonObject,
     "label" : ome.ol3.utils.Conversion.labelToJsonObject,
-    "polygon" : ome.ol3.utils.Conversion.polygonToJsonObject
+    "polygon" : ome.ol3.utils.Conversion.polygonToJsonObject,
+    "mask" : ome.ol3.utils.Conversion.maskToJsonObject
 };
 
 /**

@@ -1096,16 +1096,18 @@ export default class Ol3Viewer extends EventSubscriber {
                 let deepCopy =
                     Object.assign({},
                     this.image_config.regions_info.getShape(id));
-                // if we have been modified we get an up-to-date def
-                // from the viewer
-                if (deepCopy.modified) {
-                  let upToDateDef =
-                    this.viewer.getShapeDefinition(deepCopy.shape_id);
-                  if (upToDateDef)
-                    deepCopy =
-                        Converters.amendShapeDefinition(upToDateDef);
+                if (deepCopy.type !== 'mask') {
+                    // if we have been modified we get an up-to-date def
+                    if (deepCopy.modified) {
+                      let upToDateDef =
+                        this.viewer.getShapeDefinition(deepCopy.shape_id);
+                      if (upToDateDef)
+                        deepCopy =
+                            Converters.amendShapeDefinition(upToDateDef);
+                    }
+                    this.image_config.regions_info.copied_shapes.push(deepCopy);
                 }
-                this.image_config.regions_info.copied_shapes.push(deepCopy)});
+            });
 
         // put them in local storage
         try {

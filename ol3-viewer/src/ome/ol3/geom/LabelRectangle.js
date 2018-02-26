@@ -225,6 +225,15 @@ ome.ol3.geom.Rectangle.prototype.clone = function() {
         this.getTransform());
 };
 
+/**
+ * Returns the length of the rectangle
+ *
+ * @return {number} the length of the rectangle
+ */
+ome.ol3.geom.Rectangle.prototype.getLength = function() {
+    return ome.ol3.utils.Regions.getLength(this);
+}
+
 
 goog.provide('ome.ol3.geom.Label');
 

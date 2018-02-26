@@ -1566,6 +1566,7 @@ ome.ol3.Viewer.prototype.getSmallestViewExtent = function() {
         try {
             var f = this.regions_.idIndex_[ids[id]];
             if (f['state'] === ome.ol3.REGIONS_STATE.REMOVED ||
+                f.getGeometry() instanceof ome.ol3.geom.Mask ||
                 (typeof f['permissions'] === 'object' &&
                     f['permissions'] !== null &&
                     typeof f['permissions']['canEdit'] === 'boolean' &&
@@ -2238,6 +2239,7 @@ ome.ol3.Viewer.prototype.setSyncGroup = function(group) {
  */
 ome.ol3.Viewer.prototype.getViewParameters = function() {
     if (this.viewer_ === null || this.getImage() === null) return null;
+    console.info(this.viewer_.getLayers());
     return {
         "z": this.getDimensionIndex('z'),
         "t": this.getDimensionIndex('t'),

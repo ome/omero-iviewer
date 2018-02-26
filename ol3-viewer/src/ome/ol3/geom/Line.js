@@ -189,7 +189,7 @@ ome.ol3.geom.Line.prototype.getInvertedCoordinates = function() {
         invCoords[i] =
             ome.ol3.utils.Transform.applyInverseTransform(
                 this.transform_, coords[i]);
-                
+
     return invCoords;
 }
 
@@ -203,3 +203,12 @@ ome.ol3.geom.Line.prototype.clone = function() {
       this.getInvertedCoordinates().slice(),
         this.has_start_arrow_, this.has_end_arrow_, this.getTransform());
 };
+
+/**
+ * Returns the length of the line
+ *
+ * @return {number} the length of the line
+ */
+ome.ol3.geom.Line.prototype.getLength = function() {
+    return ome.ol3.utils.Regions.getLength(this);
+}

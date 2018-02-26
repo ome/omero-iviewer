@@ -22,6 +22,7 @@
 goog.provide('ome.ol3.utils.Style');
 
 goog.require('ol.style.Style');
+goog.require('ol.style.Icon');
 goog.require('ol.style.Fill');
 goog.require('ol.style.Stroke');
 goog.require('ol.style.Text');
@@ -147,6 +148,7 @@ ome.ol3.utils.Style.createFeatureStyle = function(shape_info, is_label, fill_in_
     return new ol.style.Style(style);
 }
 
+
 /**
  * Used internally to replace the style/style function of a feature.
  * In specific, this is called if setScaleText or setRotateText members are called
@@ -204,6 +206,21 @@ ome.ol3.utils.Style.updateStyleFunction =
                 feature['oldRotationFlag'] = regions_reference.rotate_text_;
             if (typeof(feature['oldScaleFlag']) === 'undefined')
                 feature['oldScaleFlag'] = regions_reference.scale_text_;
+        }
+
+        // 3. set masks (via style)
+        if (feature.getGeometry() instanceof ome.ol3.geom.Mask) {
+            var maskId = feature.getId();
+            var url = regions_reference.viewer_.getServer()['full'] +
+                regions_reference.viewer_.getPrefixedURI(ome.ol3.WEBGATEWAY) +
+                '/render_shape_mask/' +
+                maskId.substring(maskId.indexOf(":")+1) + '/';
+            oldStyle.setImage(new ol.style.Icon({
+                anchorOrigin: 'top-left',
+                anchor: [0,0],
+                rotateWithView: true,
+                src: url
+            }));
         }
 
         // replace style function
@@ -325,6 +342,10 @@ ome.ol3.utils.Style.updateStyleFunction =
                     ret.push(arrowStyle);
                 };
             }
+
+            // adjust scale for masks
+            if (geom instanceof ome.ol3.geom.Mask)
+                oldStyle.getImage().setScale(1/actual_resolution);
 
             return ret;
     });

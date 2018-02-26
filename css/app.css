@@ -894,6 +894,10 @@ thumbnail-slider img {
     background-image: url('images/point.png');
 }
 
+.mask-icon {
+    background-image: url('images/mask.png');
+}
+
 .draw-icons {
     height:100%;
     float:left;

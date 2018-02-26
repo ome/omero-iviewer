@@ -139,6 +139,17 @@ ome.ol3.utils.Regions.FEATURE_FACTORY_LOOKUP_TABLE = {
         feat['type'] = "polygon";
         feat.setStyle(ome.ol3.utils.Style.createFeatureStyle(shape));
         return feat;
+    },
+    "mask" : function(shape) {
+        var feat =
+            new ol.Feature({
+                "geometry" : new ome.ol3.geom.Mask(
+                    shape['X'], -shape['Y'], shape['Width'], shape['Height'],
+                    typeof shape['Transform'] === 'object' ?
+                        shape['Transform'] : null)});
+        feat['type'] = "mask";
+        feat.setStyle(ome.ol3.utils.Style.createFeatureStyle(shape, true));
+        return feat;
     }
 };
 
@@ -404,6 +415,7 @@ ome.ol3.utils.Regions.createFeaturesFromRegionsResponse =
                 // id, TheT and TheZ have to be present
                 if (typeof(shape['@id']) !== 'number') continue;
 
+                var combinedId = '' + roiId + ":" + shape['@id'];
                 var shapeType = shape['@type'];
                 // we want the type only
                 var hash = shapeType.lastIndexOf("#");
@@ -423,10 +435,7 @@ ome.ol3.utils.Regions.createFeaturesFromRegionsResponse =
                 var actualFeature = null;
                 try {
                     actualFeature = ome.ol3.utils.Regions.featureFactory(shape);
-                    if (shape['type'] === 'mask') {
-                        ome.ol3.utils.Regions.addMask(regions, shape);
-                        continue;
-                    }
+                    actualFeature.setId(combinedId);
 
                     /*
                      * To adjust the text style to custom rotation and scale schanges
@@ -442,7 +451,6 @@ ome.ol3.utils.Regions.createFeaturesFromRegionsResponse =
                     nestedError = some_error;
                 }
 
-                var combinedId = '' + roiId + ":" + shape['@id'];
                 if (!(actualFeature instanceof ol.Feature)) {
                     console.error("Failed to construct " +
                     shapeType + "(" + combinedId + ") from shape info!");
@@ -452,7 +460,6 @@ ome.ol3.utils.Regions.createFeaturesFromRegionsResponse =
 
                 // we set the id for the feature using the format:
                 // 'rois_id:shape_id', e.g.: '1:4'
-                actualFeature.setId(combinedId);
                 actualFeature['TheT'] = shapeTindex;
                 actualFeature['TheZ'] = shapeZindex;
                 actualFeature['TheC'] = shapeCindex;
@@ -496,49 +503,6 @@ ome.ol3.utils.Regions.createFeaturesFromRegionsResponse =
             }
 
         return ret;
-}
-
-/**
- * Adds a mask layer for each mask on top of the original image
- * and prior to the rois.
- *
- * @private
- * @static
- * @param {ome.ol3.source.Regions} regions an instance of the OmeroRegions
- * @param {Object} shape_info the shape info object (from json)
- */
-ome.ol3.utils.Regions.addMask = function(regions, shape_info) {
-    // some preliminary checks
-    if (!(regions instanceof ome.ol3.source.Regions) ||
-        typeof(shape_info) !== 'object' ||
-        typeof(shape_info['type']) !== 'string') return;
-    if (shape_info['type'].toLowerCase() !== 'mask') return;
-
-    if (typeof shape_info['id'] !== 'number' ||
-        shape_info['id'] <= 0 || typeof shape_info['x'] !== 'number' ||
-        typeof shape_info['y'] !== 'number' ||
-        typeof shape_info['width'] !== 'number' ||
-        typeof shape_info['height'] !== 'number' ||
-        shape_info['width'] <= 0 || shape_info['height'] <= 0)
-            console.error("At least one Mask parameters is invalid!");
-
-    // we place it before the regions layer
-    var position = regions.viewer_.viewer_.getLayers().getLength() - 1;
-    regions.viewer_.viewer_.getLayers().insertAt(
-        position,
-        new ol.layer.Image({
-            source: new ol.source.ImageStatic({
-                attributions: null,
-                url: regions.viewer_.getServer()['full'] +
-                        regions.viewer_.getPrefixedURI(ome.ol3.WEBGATEWAY) +
-                        '/render_shape_mask/' +  shape_info['id'],
-                    projection:
-                    regions.viewer_.viewer_.getView().getProjection(),
-                imageExtent: [
-                    shape_info['x'],-shape_info['y'] - shape_info['height'],
-                    shape_info['x'] + shape_info['width'], -shape_info['y']
-                ]
-        })}));
 }
 
 /**
@@ -591,15 +555,25 @@ ome.ol3.utils.Regions.calculateLengthAndArea =
                     geom.getArea() * (pixel_size * pixel_size)) : -1;
         if (typeof feature['Length'] !== 'number' || recalculate)
             feature['Length'] = hasLength ?
-                roundAfterThreeDecimals(
-                    ol.geom.flat.length.lineString(
-                        geom.flatCoordinates, 0,
-                        geom.flatCoordinates.length, geom.stride)
-                            * pixel_size) : -1;
+                roundAfterThreeDecimals(geom.getLength() * pixel_size) : -1;
 
         return {
             'id' : feature.getId(),
             'Area': feature['Area'],
             'Length': feature['Length']
         };
+}
+
+/**
+ * Uses the respective ol3 code to get the length and area of a geometry
+ *
+ * @static
+ * @param {ol.geom.Geometry} geom the geometry
+ * @return {number} the length of the geometry or 0 (if no geometry)
+ */
+ome.ol3.utils.Regions.getLength = function(geom) {
+    if (!(geom instanceof ol.geom.Geometry)) return 0;
+    return ol.geom.flat.length.lineString(
+        geom.flatCoordinates, 0,
+        geom.flatCoordinates.length, geom.stride);
 }

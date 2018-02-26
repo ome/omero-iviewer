@@ -212,6 +212,15 @@ ome.ol3.geom.Ellipse.prototype.scale = function(factor) {
 };
 
 /**
+ * Returns the length of the ellipse
+ *
+ * @return {number} the length of the ellipse
+ */
+ome.ol3.geom.Ellipse.prototype.getLength = function() {
+    return ome.ol3.utils.Regions.getLength(this);
+}
+
+/**
  * Make a complete copy of the geometry.
  * @return {ome.ol3.geom.Ellipse} Clone.
  */
