@@ -880,9 +880,16 @@ ome.ol3.utils.Conversion.convertPointStringIntoCoords = function(points) {
 
     var ret = [];
     for (var t in tokens) {
-        var c = tokens[t].split(",");
+        var tok = tokens[t].trim();
+        // empty tokens are ignored
+        if (tok === '') continue;
+        var c = tok.split(",");
         if (c.length < 2) return null;
-        ret.push([parseInt(c[0]), -parseInt(c[1])]);
+        var x = parseInt(c[0]);
+        var y = parseInt(c[1]);
+        // NaNs are not acceptable
+        if (isNaN(x) || isNaN(y)) return null;
+        ret.push([x, -y]);
     }
 
     return ret;
