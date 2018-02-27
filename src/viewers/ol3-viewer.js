@@ -201,7 +201,6 @@ export default class Ol3Viewer extends EventSubscriber {
                 // Width is smaller when thumbs expanded. Fix by adding pos.left
                 maxX = frame.width() + frame.position().left - 100;
                 maxY = frame.height() - 100;
-                console.log(frame.position().left, this.image_config.size.width, 'minX', minX, 'maxX', maxX);
             },
             drag: (event, ui) => {
                 // Help keep header within draggable area
