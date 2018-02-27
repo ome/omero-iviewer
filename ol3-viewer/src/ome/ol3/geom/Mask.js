@@ -137,3 +137,33 @@ ome.ol3.geom.Mask.prototype.getArea = function() {
 ome.ol3.geom.Mask.prototype.getLength = function() {
     return 2 * (this.size_[0] + this.size_[1]);
 }
+
+/**
+ * Overrides getExtent of point geometry
+ *
+ * @return {Array.<number>} the extent of the mask
+ */
+ome.ol3.geom.Mask.prototype.getExtent = function() {
+    var pointCoords = this.getPointCoordinates();
+    return [
+        pointCoords[0], pointCoords[1] - this.size_[1],
+        pointCoords[0] + this.size_[0], pointCoords[1],
+    ];
+}
+
+/**
+ * Overrides intersectsExtent of point geometry
+ *
+ * @param {Array.<number>} extent the extent to test against
+ * @return {boolean} true if the given extent intersects with the mask
+ */
+ome.ol3.geom.Mask.prototype.intersectsExtent = function(extent) {
+    var point = this.getPointCoordinates();
+    var extRect = [
+        point[0], point[1], point[0] + this.size_[0], point[1],
+        point[0] + this.size_[0], point[1] - this.size_[1],
+        point[0], point[1] - this.size_[1], point[0], point[1]
+    ];
+    return ol.geom.flat.intersectsextent.linearRings(
+        extRect, 0, [extRect.length], 2, extent);
+}
