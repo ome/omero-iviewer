@@ -605,7 +605,7 @@ thumbnail-slider img {
 #settings {
     overflow-y: auto;
     overflow-x: hidden;
-    height:calc(100% - 45px);
+    height:calc(100% - 42px);
 }
 .right-hand-panel .row {
     margin-bottom: 2px;
