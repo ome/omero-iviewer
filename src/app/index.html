@@ -66,12 +66,11 @@
             <img src="../../css/images/collapse-left.png"/>
         </div>
 
-        <div class="frame">
+        <div class="frame col-xs-12">
             <div class="${context.useMDI && context.image_configs.size > 1 ?
                             'viewer-mdi' : 'viewer'}
-                        ${context.useMDI && context.selected_config === id &&
-                            context.image_configs.size > 1 ?
-                                'mdi-selected' : ''}"
+                        ${context.useMDI && context.selected_config === id && 
+                            context.image_configs.size > 1 ? 'mdi-selected' : ''}"
                  repeat.for="[id, conf] of context.image_configs"
                  css="${context.useMDI && context.image_configs.size > 1 ?
                         ';position: absolute;top:' + conf.position.top +

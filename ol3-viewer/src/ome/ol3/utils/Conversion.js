@@ -667,9 +667,6 @@ ome.ol3.utils.Conversion.integrateMiscInfoIntoJsonObject  = function(feature, js
         }
     });
 
-    if (feature['state'] === ome.ol3.REGIONS_STATE.REMOVED)
-        jsonObject['markedForDeletion'] = true;
-
     if (typeof feature['Area'] === 'number')
         jsonObject['Area'] = feature['Area'];
     if (typeof feature['Length'] === 'number')
@@ -684,22 +681,29 @@ ome.ol3.utils.Conversion.integrateMiscInfoIntoJsonObject  = function(feature, js
  * @function
  * @param {ol.Collection} features a collection of ol.Feature
  * @param {boolean} storeNewShapesInSeparateRois new shapes are stored in a new roi EACH. default: false
- * @param {boolean=} returnFlattenedArray, returns shape objects with id roi:shape, default: false
+ * @param {Object} empty_rois deleted shapes within an empty rois will not be added to the deleted list
  * @return {Object|null} returns an assocative array of rois with contained shapes or null if something went wrong badly
  */
-ome.ol3.utils.Conversion.toJsonObject = function(
-    features, storeNewShapesInSeparateRois,returnFlattenedArray) {
+ome.ol3.utils.Conversion.toJsonObject =
+    function(features, storeNewShapesInSeparateRois, empty_rois) {
     if (!(features instanceof ol.Collection) || features.getLength() === 0)
         return null;
 
     var newRoisForEachNewShape =
         typeof(storeNewShapesInSeparateRois) === 'boolean' ?
             storeNewShapesInSeparateRois : false;
-
     if (typeof returnFlattenedArray !== 'boolean') returnFlattenedArray = false;
+    empty_rois = empty_rois || {};
 
     var currentNewId = -1;
-    var roisToBeStored = {"count": 0, "new_and_deleted": []};
+    var categorizedRois = {
+        "count": 0,
+        "empty_rois": {},
+        "new_and_deleted": [],
+        "deleted" : {},
+        "new" : [],
+        "modified" : []
+    };
     var rois = {};
 
     var feats = features.getArray();
@@ -728,24 +732,52 @@ ome.ol3.utils.Conversion.toJsonObject = function(
         }
 
         var roiIdToBeUsed = roiId;
-        // check for respective permissions
+        // categorize shapes into the following (incl. permission checks):
+        // - new and deleted
+        // - existing ones that have been deleted
+        // - existing ones that have been modified
+        // - new ones
         if (feature['state'] === ome.ol3.REGIONS_STATE.REMOVED) {
-            // we don't want newly added but immediately deleted shapes either
             if ((roiId < 0 || shapeId < 0) ||
                 (typeof feature['permissions'] === 'object' &&
                  feature['permissions'] !== null &&
                  typeof feature['permissions']['canDelete'] === 'boolean' &&
                  !feature['permissions']['canDelete'])) {
-                     roisToBeStored['new_and_deleted'].push(feature.getId());
+                     categorizedRois['new_and_deleted'].push(feature.getId());
                      continue;
                  }
-        } else if (feature['state'] === ome.ol3.REGIONS_STATE.REMOVED &&
-                   typeof feature['permissions'] === 'object' &&
-                   feature['permissions'] !== null &&
-                   typeof feature['permissions']['canEdit'] === 'boolean' &&
-                   !feature['permissions']['canEdit']) continue;
-        else if (feature['state'] === ome.ol3.REGIONS_STATE.ADDED &&
-            newRoisForEachNewShape) roiIdToBeUsed = currentNewId--;
+            // if rois is empty we don't list them individually
+            if (typeof empty_rois[roiId] === 'undefined' ) {
+                if (!ome.ol3.utils.Misc.isArray(
+                        categorizedRois['deleted'][roiId]))
+                            categorizedRois['deleted'][roiId] = [];
+                categorizedRois['deleted'][roiId].push(feature.getId());
+            } else {
+                if (!ome.ol3.utils.Misc.isArray(
+                        categorizedRois['empty_rois'][roiId]))
+                            categorizedRois['empty_rois'][roiId] = [];
+                categorizedRois['empty_rois'][roiId].push(feature.getId());
+            }
+            categorizedRois['count']++;
+            continue;
+        } else if (feature['state'] === ome.ol3.REGIONS_STATE.MODIFIED) {
+            if (typeof feature['permissions'] === 'object' &&
+                feature['permissions'] !== null &&
+                typeof feature['permissions']['canEdit'] === 'boolean' &&
+                !feature['permissions']['canEdit']) continue;
+            if ((roiId < 0 || shapeId < 0) && newRoisForEachNewShape)
+                roiIdToBeUsed = currentNewId--;
+            else if (roiId > 0 && shapeId > 0) {
+                var modifiedShape =
+                    ome.ol3.utils.Conversion.featureToJsonObject(
+                        feature, shapeId, roiIdToBeUsed);
+                modifiedShape['oldId'] = feature.getId();
+                categorizedRois['modified'].push(modifiedShape);
+                categorizedRois['count']++;
+                continue;
+            }
+        } else if (feature['state'] === ome.ol3.REGIONS_STATE.ADDED &&
+             newRoisForEachNewShape) roiIdToBeUsed = currentNewId--;
 
         var roiContainer = null;
         if (typeof(rois[roiIdToBeUsed]) === 'object')
@@ -766,21 +798,21 @@ ome.ol3.utils.Conversion.toJsonObject = function(
         // we like to keep the old id for later synchronization
         jsonObject['oldId'] = feature.getId();
         roiContainer['shapes'].push(jsonObject);
-        roisToBeStored['count']++;
+        categorizedRois['count']++;
     };
 
-    if (returnFlattenedArray) {
-        var flattenedArray = [];
-        for (var r in rois) {
-            if (!ome.ol3.utils.Misc.isArray(rois[r]['shapes'])) continue;
-            var shap = rois[r]['shapes'];
-            for (var s in shap)
-                flattenedArray.push(shap[s]);
-        }
-        roisToBeStored['rois'] =  flattenedArray;
-    } else roisToBeStored['rois'] = rois;
+    // flatten out shapes in rois
+    var flattenedArray = [];
+    for (var r in rois) {
+        if (!ome.ol3.utils.Misc.isArray(
+                rois[r]['shapes'])) continue;
+        var shap = rois[r]['shapes'];
+        for (var s in shap)
+            flattenedArray.push(shap[s]);
+    }
+    categorizedRois['new'] =  flattenedArray;
 
-    return roisToBeStored;
+    return categorizedRois;
 };
 
 /**
@@ -848,9 +880,16 @@ ome.ol3.utils.Conversion.convertPointStringIntoCoords = function(points) {
 
     var ret = [];
     for (var t in tokens) {
-        var c = tokens[t].split(",");
+        var tok = tokens[t].trim();
+        // empty tokens are ignored
+        if (tok === '') continue;
+        var c = tok.split(",");
         if (c.length < 2) return null;
-        ret.push([parseInt(c[0]), -parseInt(c[1])]);
+        var x = parseInt(c[0]);
+        var y = parseInt(c[1]);
+        // NaNs are not acceptable
+        if (isNaN(x) || isNaN(y)) return null;
+        ret.push([x, -y]);
     }
 
     return ret;

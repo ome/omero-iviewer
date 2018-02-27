@@ -221,17 +221,16 @@ a.ui-button:active,
 }
 
 .frame {
+    margin-left: -105px;
+    padding-left: 105px;
+    margin-right: -355px;
+    padding-right: 355px;
     z-index: 0;
-    -ms-flex: 1;              /* IE 10 */
-    flex-grow: 1;
 }
 
 .center {
     margin: 0px;
     padding-top: 40px;
-    display: -ms-flexbox;      /* TWEENER - IE 10 */
-    display: flex;
-    flex-direction: row;
     background-color: #f8f8f8;
 }
 
@@ -525,6 +524,7 @@ a.ui-button:active,
     text-align: center;
     overflow-x: hidden;
     overflow-y: hidden;
+    background-color: #ffffff;
 }
 .thumbnail-panel .thumbnail-scroll-panel {
     padding-bottom: 30px;
@@ -598,7 +598,7 @@ thumbnail-slider img {
 #settings {
     overflow-y: auto;
     overflow-x: hidden;
-    height:calc(100% - 45px);
+    height:calc(100% - 42px);
 }
 .right-hand-panel .row {
     margin-bottom: 2px;
@@ -616,17 +616,10 @@ thumbnail-slider img {
     padding: 5px 8px;
 }
 
-.checkbox-settings {
-    float: left;
-    width: 100%;
-    height: 30px;
-    margin-left: 10px;
-    margin-top: 8px;
-    margin-bottom: 0px;
-}
 .checkbox-settings div {
     float: left;
     margin-right: 10px;
+    height: 30px;
 }
 
 #panel-tabs li a {
@@ -832,19 +825,19 @@ thumbnail-slider img {
     min-width: 5%;
     max-width: 5%;
 }
-.shape-z, .shape-t {
-    min-width: 10%;
-    max-width: 10%;
+.shape-z, .shape-t, .shape-c {
+    min-width: 8%;
+    max-width: 8%;
 }
 .shape-type {
-    min-width: 10%;
-    max-width: 10%;
+    min-width: 9%;
+    max-width: 9%;
     background-repeat: no-repeat;
     background-position: center;
 }
 .shape-comment {
-    min-width: 50%;
-    max-width: 50%;
+    min-width: 47%;
+    max-width: 47%;
 }
 .shape-area {
     min-width: 20%;

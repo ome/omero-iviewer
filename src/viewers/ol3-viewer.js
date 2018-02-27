@@ -176,17 +176,18 @@ export default class Ol3Viewer extends EventSubscriber {
      * @memberof Ol3Viewer
      */
     attached() {
-        // additions that are necessary for mdi
-        // we need the viewers to be draggable, resizable
-        // also place the viewer within the frame boundaries
+        let frame = $('.frame');
+        let minX = 0, maxX = 0, minY = 0, maxY = 0;;
+        let container = this.getContainer();
+
+        // set previous position for mdi 'replacement'
         if (this.image_config.position === null) {
-            let frame = $('.frame');
-            let minX = frame.position().left+10;
-            let maxX =
+            minX = frame.position().left+10;
+            maxX =
                 frame.position().left+frame.width()-
                     parseInt(this.image_config.size.width);
-            let minY = frame.position().top+10;
-            let maxY =
+            minY = frame.position().top+10;
+            maxY =
                 frame.position().top+frame.height()-
                     parseInt(this.image_config.size.height);
             this.image_config.position = {
@@ -194,9 +195,24 @@ export default class Ol3Viewer extends EventSubscriber {
                 left: Misc.getRandomInteger(minX,maxX) + 'px'
             };
         }
-        let container = this.getContainer();
+        
+        // make viewer windows draggable/resizable within boundaries
         container.draggable({
             handle: '.viewer-handle',
+            start: () => {
+                minX = frame.position().left + 100 - parseInt(this.image_config.size.width, 10);
+                minY = 0;
+                // Width is smaller when thumbs expanded. Fix by adding pos.left
+                maxX = frame.width() + frame.position().left - 100;
+                maxY = frame.height() - 100;
+            },
+            drag: (event, ui) => {
+                // Help keep header within draggable area
+                ui.position.top = Math.max(minY, ui.position.top);
+                ui.position.top = Math.min(maxY, ui.position.top);
+                ui.position.left = Math.max(minX, ui.position.left);
+                ui.position.left = Math.min(maxX, ui.position.left);
+            },
             stop: (event, ui) => {
                 this.image_config.position.top = ui.position.top + 'px';
                 this.image_config.position.left = ui.position.left + 'px';
@@ -863,12 +879,14 @@ export default class Ol3Viewer extends EventSubscriber {
             params.config_id !== this.image_config.id) return;
 
         let numberOfdeletedShapes =
-            this.image_config.regions_info.getNumberOfDeletedShapes(true);
+            this.image_config.regions_info.getNumberOfDeletedShapes();
+        let empty_rois =
+            numberOfdeletedShapes > 0 ?
+                this.image_config.regions_info.getEmptyRois() : {};
         let storeRois = () => {
             let requestMade =
                 this.viewer.storeRegions(
-                    Misc.isArray(params.deleted) ? params.deleted : [],
-                    false, params.omit_client_update);
+                    empty_rois, false, params.omit_client_update);
 
             if (requestMade) Ui.showModalMessage("Saving Regions. Please wait...");
             else if (params.omit_client_update)
@@ -1008,20 +1026,15 @@ export default class Ol3Viewer extends EventSubscriber {
         this.image_config.image_info.roi_count =
             this.image_config.regions_info.data.size;
 
-        // if we stored as part of a delete request we need to clean up
-        // the history for the deleted shapes,
-        // otherwise we wipe the history altogether
-        if (params.is_delete)
-            this.image_config.regions_info.history.removeEntries(ids);
-        else this.image_config.regions_info.history.resetHistory();
+        // clear history
+        this.image_config.regions_info.history.resetHistory();
 
-        // error handling: will probably be adjusted
-        if (typeof params.error === 'string') {
+        // error handling
+        if (Misc.isArray(params.errors)) {
             let msg = "Saving of Rois/Shapes failed.";
-            if (params.error.indexOf("SecurityViolation") !== -1)
-                msg = "Insufficient Permissions to save some Rois/Shapes.";
+            for (let e in params.errors)
+                console.error(params.errors[e]);
             Ui.showModalMessage(msg, 'OK');
-            console.error(params.error);
             return;
         }
     }
