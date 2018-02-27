@@ -2239,7 +2239,6 @@ ome.ol3.Viewer.prototype.setSyncGroup = function(group) {
  */
 ome.ol3.Viewer.prototype.getViewParameters = function() {
     if (this.viewer_ === null || this.getImage() === null) return null;
-    console.info(this.viewer_.getLayers());
     return {
         "z": this.getDimensionIndex('z'),
         "t": this.getDimensionIndex('t'),
