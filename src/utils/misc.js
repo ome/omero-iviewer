@@ -50,6 +50,10 @@ export default class Misc {
      * @return {boolean} true if we regard the server string remote
      */
     static useJsonp(server="") {
+        // THIS IS INTENTIONAL !!!
+        // jsonp was only used for the dev server
+        return false;
+
         if (typeof server !== 'string') return false;
 
         let host = window.location.host.toLowerCase();
@@ -399,5 +403,20 @@ export default class Misc {
      */
     static roundAtDecimal(value, digits) {
         return Number(Math.round(value +'e' + digits) + 'e-' + digits);
+    }
+
+    /**
+     * 'Normalizes' a csv cell value to work with most readers.
+     * Values are quoted to allow for , as content
+     * Quotes are 'escaped' with a quote themselves
+     *
+     * @param {string|number} value a number or string
+     * @return {string} the quoted cell value
+     * @static
+     */
+    static quoteCsvCellValue(value) {
+        if (typeof value === 'number') value = "" + value;
+        if (typeof value !== 'string') return value;
+        return '"' + value.replace(/"/g, '""') + '"';
     }
 }

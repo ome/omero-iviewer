@@ -24,7 +24,7 @@ goog.require('ol.Collection');
 goog.require('ol.proj.Projection');
 goog.require('ol.layer.Tile');
 goog.require('ol.View');
-goog.require('ol.Map');
+goog.require('ol.PluggableMap');
 
 /**
  * @classdesc
@@ -211,9 +211,9 @@ ome.ol3.Viewer = function(id, options) {
     this.viewerState_ = {};
 
     /**
-     * the viewer (ol.Map) instance
+     * the viewer instance
      *
-     * @type {ol.Map}
+     * @type {ol.PluggableMap}
      * @private
      */
     this.viewer_ = null;
@@ -520,9 +520,9 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
        projection: proj,
        center: imgCenter,
        extent: [0, -dims['height'], dims['width'], 0],
-       resolutions :
-           ome.ol3.utils.Misc.prepareResolutions(zoomLevelScaling),
-       resolution : actualZoom
+       resolutions : possibleResolutions,
+       resolution : actualZoom,
+       maxZoom: possibleResolutions.length-1
     });
 
     // we have a need to keep a list & reference of the controls
@@ -542,19 +542,23 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
     }
 
     // finally construct the open layers map object
-    this.viewer_ = new ol.Map({
+    this.viewer_ = new ol.PluggableMap({
        logo: false,
        controls: controls,
        interactions:  interactions,
-       renderer: ol.renderer.Type.CANVAS,
        layers: [new ol.layer.Tile({source: source})],
        target: this.container_,
        view: view
     });
 
-    // expand bird's eye view if we have tiled sources
-    if (source.use_tiled_retrieval_)
-        this.viewerState_["birdseye"]['ref'].setCollapsed(false);
+    // enable bird's eye view
+    var birdsEyeOptions = {
+        'url': this.getPrefixedURI(ome.ol3.WEBGATEWAY) +
+                    '/render_thumbnail/' + this.id_,
+        'size': [dims['width'], dims['height']],
+        'collapsed': !source.use_tiled_retrieval_
+    };
+    this.addControl('birdseye', birdsEyeOptions);
     // tweak source element for fullscreen to include dim sliders (iviewer only)
     var targetId = this.getTargetId();
     var viewerFrame = targetId ? document.getElementById(targetId) : null;
@@ -735,7 +739,7 @@ ome.ol3.Viewer.prototype.changeToImage =
                 var type = prevComp['type'];
                 var key = prevComp['key'];
 
-                this.addInteractionOrControl(key, type);
+                this.addInteractionOrControl(key, type, true);
             }
         }
 
@@ -780,7 +784,7 @@ ome.ol3.Viewer.prototype.changeToImage =
  */
 ome.ol3.Viewer.prototype.addRegions = function(data) {
     // without a map, no need for a regions overlay...
-    if (!(this.viewer_ instanceof ol.Map)) {
+    if (!(this.viewer_ instanceof ol.PluggableMap)) {
         this.tried_regions_ = true;
         if (ome.ol3.utils.Misc.isArray(data))
             this.tried_regions_data_ = data;
@@ -844,13 +848,13 @@ ome.ol3.Viewer.prototype.showShapeComments = function(flag) {
 }
 
 /**
- * Marks given shapes as selected. The center flag is only considered if we
- * have a single shape only
+ * Marks given shapes as selected, clearing any previously selected if clear flag
+ * is set. Optionally the view centers on a given shape.
  *
  * @param {Array<string>} roi_shape_ids list in roi_id:shape_id notation
  * @param {boolean} selected flag whether we should (de)select the rois
  * @param {boolean} clear flag whether we should clear existing selection beforehand
- * @param {boolean=} center centers map on the shape coordinates
+ * @param {string|null} center the id of the shape to center on or null
  */
 ome.ol3.Viewer.prototype.selectShapes = function(
     roi_shape_ids, selected, clear, center) {
@@ -861,10 +865,9 @@ ome.ol3.Viewer.prototype.selectShapes = function(
     if (typeof clear === 'boolean' && clear) regions.select_.clearSelection();
     regions.setProperty(roi_shape_ids, "selected", selected);
 
-    if (roi_shape_ids.length === 1 && typeof center === 'boolean' && center &&
-        typeof regions.idIndex_[roi_shape_ids[0]] === 'object')
-            this.centerOnGeometry(
-                regions.idIndex_[roi_shape_ids[0]].getGeometry());
+    if (typeof center === 'string' &&
+        typeof regions.idIndex_[center] === 'object')
+            this.centerOnGeometry(regions.idIndex_[center].getGeometry());
 }
 
 /**
@@ -1003,7 +1006,7 @@ ome.ol3.Viewer.prototype.setTextBehaviorForRegions = function(scaleText, rotateT
 ome.ol3.Viewer.prototype.addInteraction = function(key, interaction) {
     // if we have no interaction given as the second argument => delegate to the factory
     if (typeof interaction !== 'object' || interaction === null) {
-        this.addInteractionOrControl(key, 'interaction');
+        this.addInteractionOrControl(key, 'interaction', true);
         return;
     }
 
@@ -1017,7 +1020,7 @@ ome.ol3.Viewer.prototype.addInteraction = function(key, interaction) {
          return;
 
     // if we don't have an instance in our viewer state, we return
-    if (!(this.viewer_ instanceof ol.Map) || // could be the viewer was not initialized
+    if (!(this.viewer_ instanceof ol.PluggableMap) || // could be the viewer was not initialized
                 (typeof(key) !== 'string')) // key not a string
                     return;
 
@@ -1039,10 +1042,11 @@ ome.ol3.Viewer.prototype.addInteraction = function(key, interaction) {
  * Use the key listed here: {@link ome.ol3.AVAILABLE_VIEWER_CONTROLS}
  *
  * @param {string} key the unique control key
+ * @param {Object=} options (optional) options for control
  */
-ome.ol3.Viewer.prototype.addControl = function(key) {
+ome.ol3.Viewer.prototype.addControl = function(key, options) {
     // delegate
-    this.addInteractionOrControl(key, "control");
+    this.addInteractionOrControl(key, "control", true, options);
 }
 
 /**
@@ -1055,9 +1059,10 @@ ome.ol3.Viewer.prototype.addControl = function(key) {
  * @param {string} type whether it's an interaction or a control
  * @param {string} key the unique interaction or control key
  * @param {boolean} descend a flag whether we should follow linked interactions/controls
+ * @param {Object=} options (optional) options for control
  */
-ome.ol3.Viewer.prototype.addInteractionOrControl = function(key, type, descend) {
-    if (!(this.viewer_ instanceof ol.Map) || // could be the viewer was not initialized
+ome.ol3.Viewer.prototype.addInteractionOrControl = function(key, type, descend, options) {
+    if (!(this.viewer_ instanceof ol.PluggableMap) || // could be the viewer was not initialized
         (typeof(key) !== 'string') || // key not a string
         (typeof(type) !== 'string')) return; // type is not a string
 
@@ -1078,6 +1083,13 @@ ome.ol3.Viewer.prototype.addInteractionOrControl = function(key, type, descend) 
         return;
 
     var Constructor = componentFound['clazz'];
+    // add in additional options
+    if (typeof options === 'object' &&
+        !ome.ol3.utils.Misc.isArray(options)) {
+        for (var o in options) {
+            componentFound['options'][o] = options[o];
+        }
+    }
     var newComponent = new Constructor(componentFound['options']);
 
     if (type === 'control')
@@ -1109,7 +1121,7 @@ ome.ol3.Viewer.prototype.addInteractionOrControl = function(key, type, descend) 
  * @param {boolean} descend a flag whether we should follow linked interactions/controls
  */
 ome.ol3.Viewer.prototype.removeInteractionOrControl = function(key, descend) {
-    if (!(this.viewer_ instanceof ol.Map) || // could be the viewer was not initialized
+    if (!(this.viewer_ instanceof ol.PluggableMap) || // could be the viewer was not initialized
         (typeof(key) !== 'string')) return; // key is not a string
 
     if (typeof this.viewerState_[key] !== 'object')
@@ -1195,7 +1207,7 @@ ome.ol3.Viewer.prototype.setDimensionIndex = function(key, values) {
 
     // we want to affect a rerender,
     // only clearing the cache for tiled sources and channel changes
-    omeroImage.forceRender(omeroImage.use_tiled_retrieval_ && key === 'c');
+    this.affectImageRender(omeroImage.use_tiled_retrieval_ && key === 'c');
 
     // update regions (if necessary)
     if (this.getRegionsLayer()) this.getRegions().changed();
@@ -1247,7 +1259,10 @@ ome.ol3.Viewer.prototype.getDimensionIndex = function(key) {
  */
 ome.ol3.Viewer.prototype.addPostTileLoadHook = function(func) {
     var omeroImage = this.getImage();
-    if (omeroImage) omeroImage.setPostTileLoadFunction(func);
+    if (omeroImage) {
+        omeroImage.setPostTileLoadFunction(func);
+        this.affectImageRender();
+    }
 }
 
 /**
@@ -1256,7 +1271,10 @@ ome.ol3.Viewer.prototype.addPostTileLoadHook = function(func) {
  */
 ome.ol3.Viewer.prototype.removePostTileLoadHook = function() {
     var omeroImage = this.getImage();
-    if (omeroImage) omeroImage.clearPostTileLoadFunction();
+    if (omeroImage) {
+        omeroImage.clearPostTileLoadFunction();
+        this.affectImageRender();
+    }
 }
 
 /**
@@ -1266,7 +1284,7 @@ ome.ol3.Viewer.prototype.removePostTileLoadHook = function() {
  * @return {ol.layer.Tile|null} the open layers tile layer being our image or null
  */
 ome.ol3.Viewer.prototype.getImageLayer = function() {
-    if (!(this.viewer_ instanceof ol.Map) || // mandatory viewer presence check
+    if (!(this.viewer_ instanceof ol.PluggableMap) || // mandatory viewer presence check
         this.viewer_.getLayers().getLength() == 0) // unfathomable event of layer missing...
         return null;
 
@@ -1280,7 +1298,7 @@ ome.ol3.Viewer.prototype.getImageLayer = function() {
  * @return { ol.layer.Vector|null} the open layers vector layer being our regions or null
  */
 ome.ol3.Viewer.prototype.getRegionsLayer = function() {
-    if (!(this.viewer_ instanceof ol.Map) || // mandatory viewer presence check
+    if (!(this.viewer_ instanceof ol.PluggableMap) || // mandatory viewer presence check
         this.viewer_.getLayers().getLength() < 2) // unfathomable event of layer missing...
         return null;
 
@@ -1486,11 +1504,11 @@ ome.ol3.Viewer.prototype.generateShapes = function(shape_info, options) {
     if (this.eventbus_) {
         var newRegionsObject =
             ome.ol3.utils.Conversion.toJsonObject(
-                new ol.Collection(generatedShapes), true, true);
+                new ol.Collection(generatedShapes), true);
         if (typeof newRegionsObject !== 'object' ||
-            !ome.ol3.utils.Misc.isArray(newRegionsObject['rois']) ||
-            newRegionsObject['rois'].length === 0) return;
-        var params = {"shapes": newRegionsObject['rois']};
+            !ome.ol3.utils.Misc.isArray(newRegionsObject['new']) ||
+            newRegionsObject['new'].length === 0) return;
+        var params = {"shapes": newRegionsObject['new']};
         if (typeof options['hist_id'] === 'number')
             params['hist_id'] = options['hist_id'];
         if (typeof options['add_history'] === 'boolean')
@@ -1509,7 +1527,7 @@ ome.ol3.Viewer.prototype.generateShapes = function(shape_info, options) {
  * @return {ol.Extent|null} an array like this: [minX, minY, maxX, maxY] or null (if no viewer)
  */
 ome.ol3.Viewer.prototype.getViewExtent = function() {
-    if (!(this.viewer_ instanceof ol.Map ||
+    if (!(this.viewer_ instanceof ol.PluggableMap ||
             this.viewer_.getView() === null)) return null;
 
     return this.viewer_.getView().calculateExtent(this.viewer_.getSize());
@@ -1626,14 +1644,14 @@ ome.ol3.Viewer.prototype.getSmallestViewExtent = function() {
  * Persists modified/added/deleted shapes
  * see: {@link ome.ol3.source.Regions.storeRegions}
  *
- * @param {Array.<string>} deleted an array of ids for deletion (of the form: roi_id:shape_id)
+ * @param {Object} rois_to_be_deleted an associative array of roi ids for deletion
  * @param {boolean} useSeparateRoiForEachNewShape if false all new shapes are combined within one roi
  * @param {boolean} omit_client_update an optional flag that's handed back to the client
  *                  to indicate that a client side update to the response is not needed
  * @return {boolean} true if a storage request was made, false otherwise
  */
 ome.ol3.Viewer.prototype.storeRegions =
-    function(deleted, useSeparateRoiForEachNewShape, omit_client_update) {
+    function(rois_to_be_deleted, useSeparateRoiForEachNewShape, omit_client_update) {
 
         if (!(this.regions_ instanceof ome.ol3.source.Regions))
             return false; // no regions, nothing to persist...
@@ -1644,22 +1662,13 @@ ome.ol3.Viewer.prototype.storeRegions =
             typeof(useSeparateRoiForEachNewShape) === 'boolean' ?
                 useSeparateRoiForEachNewShape : true;
 
-        var isDeleteRequest =
-            ome.ol3.utils.Misc.isArray(deleted) && deleted.length > 0;
-        var collectionOfFeatures = null;
-        if (isDeleteRequest) {
-            collectionOfFeatures = new ol.Collection();
-            for (var i=0;i<deleted.length;i++) {
-                var id = deleted[i];
-                if (typeof this.regions_.idIndex_[id] === 'object')
-                    collectionOfFeatures.push(this.regions_.idIndex_[id]);
-            };
-        } else collectionOfFeatures =
-                    new ol.Collection(this.regions_.getFeatures());
-
+        var collectionOfFeatures =
+            new ol.Collection(this.regions_.getFeatures());
         var roisAsJsonObject =
-        ome.ol3.utils.Conversion.toJsonObject(
-            collectionOfFeatures, useSeparateRoiForEachNewShape);
+            ome.ol3.utils.Conversion.toJsonObject(
+                collectionOfFeatures, useSeparateRoiForEachNewShape,
+                rois_to_be_deleted);
+
         // check if we have nothing to persist, i.e. to send to the back-end
         if (roisAsJsonObject['count'] === 0) {
             // we may still want to clean up new but deleted shapes
@@ -1676,15 +1685,12 @@ ome.ol3.Viewer.prototype.storeRegions =
                     }
                     if (this.eventbus_) {
                         ome.ol3.utils.Misc.sendEventNotification(
-                            this, "REGIONS_STORED_SHAPES", {
-                                'shapes': ids, 'is_delete': isDeleteRequest});
+                            this, "REGIONS_STORED_SHAPES", {'shapes': ids});
                     }
             }
             return false;
         }
 
-        // remember deleted ids for history removal
-        roisAsJsonObject['is_delete'] = isDeleteRequest;
         return this.regions_.storeRegions(roisAsJsonObject, omit_client_update);
 }
 
@@ -1742,7 +1748,7 @@ ome.ol3.Viewer.prototype.dispose = function(rememberEnabled) {
     var componentsRegistered = rememberEnabled ? [] : null;
 
     // tidy up viewer incl. layers, controls and interactions
-    if (this.viewer_ instanceof ol.Map) {
+    if (this.viewer_ instanceof ol.PluggableMap) {
         if (rememberEnabled && this.viewerState_) {
             // delete them from the list as well as the viewer
             for (var K in this.viewerState_) {
@@ -1804,9 +1810,14 @@ ome.ol3.Viewer.prototype.destroyViewer = function() {
  * @param {Array.<Object>} ranges an array of objects with channel props
  */
 ome.ol3.Viewer.prototype.changeChannelRange = function(ranges) {
-    if (this.getImage() === null) return;
+    var omeroImage = this.getImage();
+    if (omeroImage === null) return;
 
-    this.getImage().changeChannelRange(ranges);
+    // rerender image (if necessary)
+    if (omeroImage.changeChannelRange(ranges)) this.affectImageRender();
+
+    // update regions (if active)
+    if (this.getRegionsLayer()) this.getRegions().changed();
 }
 
 /**
@@ -1820,6 +1831,7 @@ ome.ol3.Viewer.prototype.changeImageProjection = function(value, opts) {
     if (this.getImage() === null) return;
 
     this.getImage().setImageProjection(value, opts);
+    this.affectImageRender();
 
     // update regions (if necessary)
     if (this.getRegionsLayer()) this.getRegions().changed();
@@ -1835,6 +1847,7 @@ ome.ol3.Viewer.prototype.changeImageModel = function(value) {
     if (this.getImage() === null) return;
 
     this.getImage().setImageModel(value);
+    this.affectImageRender();
 }
 
 /**
@@ -1899,10 +1912,6 @@ ome.ol3.Viewer.prototype.redraw = function(delay) {
             function() {
                 if (this.viewer_) {
                     this.viewer_.updateSize();
-                    if (this.viewerState_["birdseye"] &&
-                        this.viewerState_["birdseye"]['ref']
-                           instanceof ome.ol3.controls.BirdsEye)
-                                this.viewerState_["birdseye"]['ref'].ovmap_.updateSize();
                 }
             }.bind(this);
 
@@ -2192,6 +2201,34 @@ ome.ol3.Viewer.prototype.toggleIntensityQuerying = function(flag) {
 }
 
 /**
+ * Triggers an explicit rerendering of the image (tile) layer
+ *
+ * @param {boolean} clearCache empties the tile cache if true
+ */
+ome.ol3.Viewer.prototype.affectImageRender = function(clearCache) {
+    var imageLayer = this.getImageLayer();
+    if (imageLayer === null) return;
+    var imageSource = imageLayer.getSource();
+
+    try {
+        // if we didn't get a flag we clear the cache for tiled sources only
+        if (typeof clearCache !== 'boolean')
+            clearCache = imageSource.use_tiled_retrieval_;
+
+        if (clearCache) {
+            var renderer = this.viewer_.getRenderer(imageLayer);
+            var imageCanvas = renderer.getLayerRenderer(imageLayer).getImage();
+            imageCanvas.getContext('2d').clearRect(
+                0, 0, imageCanvas.width, imageCanvas.height);
+            imageSource.tileCache.clear();
+        } else {
+            imageSource.cache_version_++;
+        }
+        imageSource.changed();
+    } catch(canHappen) {}
+}
+
+/*
  * Sets the sync group
  * @param {string|null} group the sync group or null
  */
@@ -2282,6 +2319,23 @@ ome.ol3.Viewer.prototype.getRois = function() {
     return ret;
 };
 
+/**
+ * Refreshes the bird's eye view
+ *
+ * @param {number=} delay an (optional delay) in millis
+ */
+ome.ol3.Viewer.prototype.refreshBirdsEye = function(delay) {
+    if (!(this.viewer_ instanceof ol.PluggableMap) ||
+        typeof this.viewerState_['birdseye'] !== 'object') return;
+    if (typeof delay !== 'number' || isNaN(delay) || delay < 0) delay = 0;
+
+    var refresh = function() {
+        this.viewerState_["birdseye"]["ref"].initOrUpdate();
+    }.bind(this);
+
+    if (delay === 0) refresh();
+    else setTimeout(refresh, delay);
+}
 
 /*
  * This section determines which methods are exposed and usable after compilation
@@ -2510,3 +2564,8 @@ goog.exportProperty(
     ome.ol3.Viewer.prototype,
     'getRois',
 ome.ol3.Viewer.prototype.getRois);
+
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
+    'refreshBirdsEye',
+ome.ol3.Viewer.prototype.refreshBirdsEye);

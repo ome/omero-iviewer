@@ -56,6 +56,7 @@
                 <div class="regions-table-col shape-type">&nbsp;</div>
                 <div class="regions-table-col shape-z">Z</div>
                 <div class="regions-table-col shape-t">T</div>
+                <div class="regions-table-col shape-c">C</div>
                 <div class="regions-table-col shape-comment"
                      show.bind="active_column === 'comments'">Comment
                  </div>
@@ -77,9 +78,10 @@
                 <template repeat.for="[shape_id, shape] of roi.shapes">
                     <div if.bind="(roi.shapes.size - roi.deleted) > 1 &&
                                    roi.shapes.size > 1 && $first"
+                        id="${'roi-' + roi_id}"
                         title="ROI: ${roi_id} - Shape: ${shape_id}"
                         class="regions-table-row"
-                        click.delegate="selectShapes(roi_id, $event)">
+                        click.delegate="selectShape(roi_id, true, $event, true)">
                         <div class="regions-table-col roi-toggle">
                             <div title="Click to show/hide shapes"
                                  style="cursor: pointer"
@@ -93,6 +95,7 @@
                          </div>
                         <div class="regions-table-col shape-z"></div>
                         <div class="regions-table-col shape-t"></div>
+                        <div class="regions-table-col shape-c"></div>
                         <div class="regions-table-col shape-comment"
                              style="display: none">
                         </div>
@@ -101,12 +104,15 @@
                     </div>
                     <div if.bind="!(shape.deleted && shape.is_new) &&
                                    !(roi.shapes.size > 1 && !roi.show)"
-                        title="ROI: ${roi_id} - Shape: ${shape_id}"
+                        title="${'ROI: ' + roi_id + ' - Shape: ' + shape_id +
+                                    (hasPermissions(shape) ? '' :
+                                        '\nOwner: ' + shape.owner)}"
                         id="${'roi-' + shape.shape_id}"
                         class="regions-table-row"
                         css="${shape.selected ? 'background-color: #d0d0ff;' : ''}
                              ${shape.deleted ? 'color: red;' :
-                                (shape.modified ? 'color: blue;' : '')}"
+                                (shape.modified ? 'color: blue;' : '')}
+                             ${hasPermissions(shape) ? '' : 'opacity: 0.5'}"
                         click.delegate="selectShape(shape.shape_id, shape.selected, $event)">
                         <div class="regions-table-col roi-toggle"></div>
                         <div class="regions-table-col shape-show">
@@ -120,6 +126,9 @@
                         </div>
                         <div class="regions-table-col shape-t">
                             ${shape.TheT !== -1 ? (shape.TheT + 1) : ""}
+                        </div>
+                        <div class="regions-table-col shape-c">
+                            ${shape.TheC !== -1 ? (shape.TheC + 1) : ""}
                         </div>
                         <div class="regions-table-col shape-comment"
                              show.bind="active_column === 'comments'">

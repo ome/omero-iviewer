@@ -80,15 +80,6 @@ ome.ol3.controls.IntensityDisplay = function() {
     this.prefix_ = "";
 
     /**
-     * the look of the intensity display
-     * @type {string}
-     * @private
-     */
-    this.style_ =
-        "filter:alpha(opacity=55);-webkit-box-shadow:none;" +
-        "box-shadow:none;opacity:.55;";
-
-    /**
      * flag that controls whether we query the intensity or not
      * @type {boolean}
      * @private
@@ -118,13 +109,26 @@ ome.ol3.controls.IntensityDisplay = function() {
     var container = document.createElement('div');
     container.className = cssClasses;
 
-    var button = document.createElement('button');
-    button.className ="btn btn-default intensity-display-toggler";
-    button.setAttribute('type', 'button');
-    button.appendChild(document.createTextNode(""));
-    button.style = this.style_;
+    var coords = document.createElement('div');
+    coords.className = "intensity-display";
+    coords.appendChild(document.createTextNode(""));
+    var crosshair = document.createElement('span');
+    crosshair.className = "intensity-toggler";
+    crosshair.title = "Turn on intensity querying";
+    ol.events.listen(crosshair, ol.events.EventType.CLICK,
+        function() {
+            this.toggleIntensityQuerying(!this.query_intensity_);
+            if (this.query_intensity_) {
+                crosshair.title = "Turn off intensity querying";
+                crosshair.className = "intensity-toggler intensity-on";
+            } else {
+                crosshair.title = "Turn on intensity querying";
+                crosshair.className = "intensity-toggler";
+            }
+        }, this);
 
-    container.appendChild(button);
+    container.appendChild(coords);
+    container.appendChild(crosshair);
 
     // call super
     ol.control.Control.call(this, {
@@ -135,7 +139,7 @@ ol.inherits(ome.ol3.controls.IntensityDisplay, ol.control.Control);
 
 /**
  * Overide setMap to avoid listener keys being null when removing the control
- * @param {ol.Map} map Map.
+ * @param {ol.PluggableMap} map Map.
  */
 ome.ol3.controls.IntensityDisplay.prototype.setMap = function(map) {
     if (this.map_) {
@@ -197,7 +201,7 @@ ome.ol3.controls.IntensityDisplay.prototype.disable = function() {
         this.getMap().getTargetElement().onmouseleave = null;
     this.resetMoveTracking_();
 
-    var el = this.getIntensityTogglerElement();
+    var el = this.getIntensityDisplayElement();
     if (el) el.innerHTML = "";
     this.image_ = null;
 }
@@ -246,16 +250,23 @@ ome.ol3.controls.IntensityDisplay.prototype.updateTooltip =
         tooltip.style.visibility = 'hidden';
         tooltip.innerHTML = "";
         if (hasData) {
+            var intensity_html =
+                '<div style="display:table-row">' +
+                    '<div class="intensity-header">Channel</div>' +
+                    '<div class="intensity-header">Intensity</div>' +
+                '</div>';
             for (var x in data) {
                 if (!this.image_.channels_info_[x]['active']) continue;
                 var val = data[x];
                 var label = this.image_.channels_info_[x]['label'];
-                var r = document.createElement('div');
-                r.innerHTML =
-                    '<span>' + label + ':</span>' + '&nbsp;' +
-                    (val % 1 === 0 ? val : val.toFixed(3));
-                tooltip.appendChild(r);
+                intensity_html +=
+                    '<div style="display:table-row">' +
+                        '<div class="intensity-label">' + label + '</div>' +
+                        '<div class="intensity-value">' +
+                        (val % 1 === 0 ? val : val.toFixed(3)) + '</div>' +
+                    '</div>';
             }
+            tooltip.innerHTML = intensity_html;
         } else if (is_querying) {
             tooltip.innerHTML = "Querying Intensity...";
         }
@@ -307,13 +318,13 @@ ome.ol3.controls.IntensityDisplay.prototype.resetMoveTracking_ = function(pixel)
 }
 
 /**
- * Returns the intensity toggler element
- * @return {Element|null} the intensity toggler element
+ * Returns the intensity display element
+ * @return {Element|null} the intensity display element
  */
-ome.ol3.controls.IntensityDisplay.prototype.getIntensityTogglerElement = function() {
+ome.ol3.controls.IntensityDisplay.prototype.getIntensityDisplayElement = function() {
     if (this.element === null) return;
 
-    var els = this.element.querySelectorAll('.intensity-display-toggler');
+    var els = this.element.querySelectorAll('.intensity-display');
     if (els && els.length > 0) return els[0];
 
     return null;
@@ -344,14 +355,16 @@ ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
     // we ignore dragging actions and mouse over controls
     if (!isMainCanvas || e.dragging) return;
 
-    var el = this.getIntensityTogglerElement();
+    var el = this.getIntensityDisplayElement();
     var x = e.coordinate[0], y = -e.coordinate[1];
     if (x < 0 || x >= this.image_.getWidth() ||
         y < 0 || y >= this.image_.getHeight()) {
+            el.style.display = 'none';
             el.innerHTML = "";
             return;
         }
-    el.innerHTML = x.toFixed(0) + "," + y.toFixed(0);
+    el.style.display = 'block';
+    el.innerHTML = "X: " + x.toFixed(0) + " Y: " + y.toFixed(0);
 
     if (this.query_intensity_) {
         var activeChannels = this.image_.getChannels();
@@ -362,7 +375,7 @@ ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
         var z = this.image_.getPlane();
         var t = this.image_.getTime();
         var displayIntensity = function(results) {
-            el.innerHTML = x.toFixed(0) + "," + y.toFixed(0);
+            el.innerHTML = "X: " + x.toFixed(0) + " Y: " + y.toFixed(0);
             this.updateTooltip(e, results);
         }.bind(this);
 

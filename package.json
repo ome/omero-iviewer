@@ -2,7 +2,7 @@
   "version": "0.0.0",
   "description": "OMERO.iviewer",
   "scripts": {
-    "dev": "./ol3_viewer_prepare.sh DEV && ant prepare-css && webpack-dev-server --config webpack.dev.config.js --hot --inline --progress --devtool eval",
+    "dev": "./ol3_viewer_prepare.sh DEV && webpack-dev-server --config webpack.dev.config.js --hot --inline --progress --devtool eval-source-map",
     "debug": "./ol3_viewer_prepare.sh DEV && ./prepare_build.sh DEV && webpack --config webpack.prod.config.js --progress --devtool source-map && ./deploy_build.sh",
     "prod": "./ol3_viewer_prepare.sh && ./prepare_build.sh && webpack -p --config webpack.prod.config.js --progress && ./deploy_build.sh",
     "docs": "./generate_docs.sh"
@@ -24,7 +24,7 @@
     "aurelia-templating-router": "1.1.0",
     "bluebird": "3.5.0",
     "bootstrap": "3.3.7",
-    "jquery": "2.2.4",
+    "jquery": "3.3.1",
     "jquery-ui" : "1.12.1",
     "spectrum-colorpicker": "1.8.0",
     "d3" : "4.2.7",
@@ -45,10 +45,11 @@
     "expose-loader": "0.7.3",
     "file-loader": "0.11.2",
     "html-loader": "0.4.5",
+    "html-webpack-plugin": "2.29.0",
     "style-loader": "0.18.2",
     "url-loader": "0.5.9",
     "webpack": "3.6.0",
-    "webpack-dev-server": "2.8.0",
-    "html-webpack-plugin": "2.29.0"
+    "webpack-dev-server": "2.9.5",
+    "webpack-conditional-loader": "1.0.11"
   }
 }

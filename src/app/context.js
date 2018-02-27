@@ -18,12 +18,11 @@
 import {noView} from 'aurelia-framework';
 import {EventAggregator} from 'aurelia-event-aggregator';
 import Misc from '../utils/misc';
+import OpenWith from '../utils/openwith';
 import ImageConfig from '../model/image_config';
 import ImageInfo from '../model/image_info';
 import RegionsInfo from '../model/regions_info';
-import {
-    IMAGE_VIEWER_CONTROLS_VISIBILITY, IMAGE_VIEWER_RESIZE
-} from '../events/events';
+import { IMAGE_VIEWER_CONTROLS_VISIBILITY } from '../events/events';
 import {
     APP_NAME, IMAGE_CONFIG_RELOAD, IVIEWER, INITIAL_TYPES, LUTS_NAMES,
     LUTS_PNG_URL, PLUGIN_NAME, PLUGIN_PREFIX, REQUEST_PARAMS, SYNC_LOCK,
@@ -45,6 +44,15 @@ import {
  */
 @noView
 export default class Context {
+    /**
+     * the version number
+     * (set via initial params)
+     *
+     * @memberof Context
+     * @type {string}
+     */
+    version = "0.0.0";
+
     /**
      * are we running within the wepback dev server
      *
@@ -153,7 +161,7 @@ export default class Context {
       * application wide keyhandlers.
       * see addKeyListener/removeKeyListener
       * entries in the map are of the following format
-      * e.g.: key: 65, value: {func: this.selectAllShapes, args: [true]}
+      * e.g.: key: 'A', value: {func: this.selectAllShapes, args: [true]}
       *
       * @memberof Context
       * @type {Map}
@@ -218,6 +226,9 @@ export default class Context {
 
         // set up luts
         this.setUpLuts();
+
+        // initialize Open_with
+        OpenWith.initOpenWith();
 
         // open what we received as inital parameter
         this.openWithInitialParams();
@@ -389,6 +400,7 @@ export default class Context {
             typeof this.initParams[REQUEST_PARAMS.INTERPOLATE] === 'string' ?
                 this.initParams[REQUEST_PARAMS.INTERPOLATE].toLowerCase() : 'true';
         this.interpolate = (interpolate === 'true');
+        this.version = this.getInitialRequestParam(REQUEST_PARAMS.VERSION);
     }
 
     /**
@@ -435,16 +447,6 @@ export default class Context {
     }
 
     /**
-     * Adjustments that are necessary if we are running under the
-     * webpack dev server
-     * @memberof Context
-     */
-    tweakForDevServer() {
-        this.is_dev_server = true;
-        this.prefixed_uris.set(IVIEWER, "");
-    }
-
-    /**
      * Creates an app wide key down listener
      * that will listen for key presses registered via addKeyListener
      *
@@ -455,27 +457,26 @@ export default class Context {
         if (window.onkeydown === null)
             window.onkeydown = (event) => {
                 let command = Misc.isApple() ? 'metaKey' : 'ctrlKey';
-                // only process command key combinations
-                // and if target is an input field,
-                // we do not wish to override either
-                if (!event[command] ||
+                let keyHandlers =
+                    this.key_listeners.get(event.key.toUpperCase());
+                if (typeof keyHandlers === 'undefined' ||
                     event.target.nodeName.toUpperCase() === 'INPUT') return;
 
-                let keyHandlers = this.key_listeners.get(event.keyCode);
-                if (keyHandlers) {
-                    // we allow the browser's default action and event
-                    // bubbling unless one handler returns false
-                    let allowDefaultAndPropagation = true;
-                    try {
-                        for (let action in keyHandlers)
-                            if (!((keyHandlers[action])(event)))
-                                allowDefaultAndPropagation = false;
-                    } catch(ignored) {}
-                    if (!allowDefaultAndPropagation) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        return false;
+                // we allow the browser's default action and event
+                // bubbling unless one handler returns false
+                let allowDefaultAndPropagation = true;
+                try {
+                    for (let a in keyHandlers) {
+                        let action = keyHandlers[a];
+                        if (action['ctrl'] && !event[command]) continue;
+                        if (!((action['action'])(event)))
+                            allowDefaultAndPropagation = false;
                     }
+                } catch(ignored) {}
+                if (!allowDefaultAndPropagation) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    return false;
                 }
             };
     }
@@ -486,37 +487,48 @@ export default class Context {
      * that a respective group be used for distinguishing
      *
      * @memberof Context
-     * @param {number} key the numeric key code to listen for
+     * @param {string} key the key value to listen for
      * @param {function} action a function
      * @param {string} group a grouping, default: 'global'
+     * @param {boolean} ctrl is a command/ctrl combination
      */
-    addKeyListener(key, action, group = 'global') {
+    addKeyListener(key, action, group = 'global', ctrl = true) {
         // some basic checks as to validity of key and key_handler_def
         // we need a numeric key and a function at a minimum
-        if (typeof key !== 'number' || typeof action !== 'function') return;
+        if (typeof key !== 'string' || typeof action !== 'function') return;
 
         // we allow multiple actions for same key but different groups,
         // i.e. undo/redo, copy/paste, save for settings/rois
+        key = key.toUpperCase();
         let keyActions = this.key_listeners.get(key);
-        if (keyActions) keyActions[group] = action
-        else this.key_listeners.set(key, {group: action});
+        let new_key_action = {
+            'ctrl': ctrl,
+            'action': action
+        };
+        if (keyActions) keyActions[group] = new_key_action;
+        else {
+            let new_list = {};
+            new_list[group] = new_key_action;
+            this.key_listeners.set(key, new_list)
+        };
     }
 
     /**
      * Unregisters a keydown handler for a particular key (with group)
      *
-     * @param {number} key the key code associated with the listener
+     * @param {string} key the key value associated with the listener
      * @param {string} group a grouping, default: 'global'
      * @memberof Context
      */
     removeKeyListener(key, group='global') {
-        if (typeof key !== 'number') return;
+        if (typeof key !== 'string') return;
+        key = key.toUpperCase();
         let keyActions = this.key_listeners.get(key);
         if (keyActions) {
             delete keyActions[group];
             let noHandlersLeft = true;
             for(let k in keyActions)
-                if (typeof keyActions[k] === 'function') {
+                if (typeof keyActions[k]['action'] === 'function') {
                     noHandlersLeft = false;
                     break;
                 }
@@ -538,7 +550,7 @@ export default class Context {
         let parent_id = null;
         let selConf = this.getSelectedImageConfig();
         if (selConf === null) return;
-        
+
         let parentType =
             this.initial_type === INITIAL_TYPES.IMAGES ?
                 selConf.image_info.parent_type : this.initial_type;
@@ -600,17 +612,16 @@ export default class Context {
         if (typeof image_id !== 'number' || image_id < 0) return;
 
         // we do not keep the other configs around unless we are in MDI mode.
-        if (!this.useMDI)
+        if (!this.useMDI) {
             for (let [id, conf] of this.image_configs)
                 this.removeImageConfig(id,conf)
-        else {
+        } else {
             for (let [id, conf] of this.image_configs) {
                 if (conf.show_controls)
                     this.publish(
                         IMAGE_VIEWER_CONTROLS_VISIBILITY,
                         {config_id: this.selected_config, flag: false});
             };
-            this.publish(IMAGE_VIEWER_RESIZE, {config_id: -1, delay: 100});
         }
 
         let image_config =
@@ -643,7 +654,8 @@ export default class Context {
 
         // deselect if we were selected
         let selId = this.getSelectedImageConfig();
-        if (selId && selId === conf.id) this.selected_config = null;
+        if ((selId && selId === conf.id) ||
+            selId === null) this.selected_config = null;
         // if in mdi, select another open config
         let confSize = this.image_configs.size;
         if (this.useMDI) {
@@ -656,8 +668,6 @@ export default class Context {
                     this.publish(
                         IMAGE_VIEWER_CONTROLS_VISIBILITY,
                         {config_id: this.selected_config, flag: true});
-                    this.publish(
-                        IMAGE_VIEWER_RESIZE, {config_id: -1, delay: 100});
                 }
             }
         }
@@ -799,6 +809,26 @@ export default class Context {
                 !(conf.image_info instanceof ImageInfo) ||
                 conf.image_info.image_id !== image_id) continue;
             ret.push(conf);
+        }
+        return ret;
+    }
+
+    /**
+     * Returns all configs that relate to the given image id
+     * and have modified regions data
+     *
+     * @param {number} image_id the image id
+     * @return {Array.<number>} a list of config ids or an empty one
+     * @memberof Context
+     */
+    findConfigsWithModifiedRegionsForGivenImage(image_id) {
+        let ret = [];
+        let sameImageConfs = this.getImageConfigsForGivenImage(image_id);
+        for (let c in sameImageConfs) {
+            let conf = sameImageConfs[c];
+            if (conf.regions_info && conf.regions_info.hasBeenModified()) {
+                ret.push(conf.id);
+            }
         }
         return ret;
     }

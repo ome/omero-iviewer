@@ -19,17 +19,143 @@
 <template>
     <nav class="navbar navbar-default navbar-fixed-top fixed-header">
         <div class="fixed-header-text">
-           <span class="mdi-icon glyphicon glyphicon-duplicate
-                        ${context.useMDI ? '' : 'disabled-color'}"
-                 title="${context.useMDI ?
-                    'Click to use single image viewing mode' :
-                     'Click to use multiple image viewing mode'}"
-                 click.delegate="toggleMDI()">
+            <!-- OMERO -->
+            <div class="fixed-header-webclient"
+                 show.bind="webclient_link !== null"
+                 title="Back to OMERO.webclient">
+                <a href="${webclient_link}">OMERO</a>
+            </div>
+
+            <!-- FILE -->
+            <div class="dropdown">
+                <button type="button"
+                        class="btn btn-default btn-sm dropdown-toggle"
+                        data-toggle="dropdown">File
+                        <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li class="${image_config.image_info.ready ?
+                                 '' : 'disabled-color'}">
+                        <a click.delegate="captureViewport()"
+                           href="#">Save Viewport as PNG</a>
+                    </li>
+                    <li class="${image_config.image_info.ready  &&
+                                 image_config.image_info.projection !== PROJECTION.NORMAL?
+                                 '' : 'disabled-color'}">
+                        <a click.delegate="saveProjectedImage()"
+                           href="#">Save Projection as new Image</a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- ROIS -->
+            <div class="dropdown">
+                <button type="button"
+                        class="btn btn-default btn-sm dropdown-toggle"
+                        data-toggle="dropdown">ROIs
+                        <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li class="${image_config.regions_info.ready &&
+                                 image_config.regions_info.selected_shapes.length > 0 ?
+                                 '' : 'disabled-color'}">
+                        <a click.delegate="copyShapes()"
+                           href="#">Copy<span>${getKeyboardShortCutPrefix()}C</span>
+                        </a>
+                    </li>
+                    <li class="${image_config.regions_info.ready &&
+                               image_config.image_info.can_annotate &&
+                               image_config.regions_info.copied_shapes.length > 0 ?
+                                 '' : 'disabled-color'}">
+                        <a click.delegate="pasteShapes()"
+                           href="#">Paste<span>${getKeyboardShortCutPrefix()}V</span>
+                        </a>
+                    </li>
+                    <li class="${image_config.regions_info.ready &&
+                                 image_config.image_info.can_annotate &&
+                                 image_config.regions_info.selected_shapes.length > 0 &&
+                                    selected_can_delete ? '' : 'disabled-color'}">
+                        <a click.delegate="deleteShapes()"
+                           href="#">Delete</a>
+                    </li>
+                    <li class="${image_config.regions_info.ready &&
+                                 image_config.regions_info.selected_shapes.length > 0 ?
+                                    '' : 'disabled-color'}">
+                        <a click.delegate="saveRoiMeasurements(false)"
+                           href="#">Export (Excel)</a>
+                    </li>
+                    <li class="${image_config.regions_info.ready &&
+                                 image_config.regions_info.selected_shapes.length > 0 ?
+                                    '' : 'disabled-color'}">
+                        <a click.delegate="saveRoiMeasurements(true)"
+                           href="#">Export (CSV)</a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- HELP -->
+            <div class="dropdown">
+                <button type="button"
+                        class="btn btn-default btn-sm dropdown-toggle"
+                        data-toggle="dropdown">Help
+                        <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li click.delegate="showAbout()">
+                        <a href="#">About OMERO.iviewer</a>
+                    </li>
+                    <li>
+                        <a  target="_blank"
+                            href="https://github.com/ome/omero-iviewer">
+                            OMERO.iviewer on Github
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <button class="btn multi-view-btn"
+               title="${context.useMDI ?
+                  'Click to use single image viewing mode' :
+                   'Click to use multiple image viewing mode'}"
+               click.delegate="toggleMDI()">
+               ${context.useMDI ? 'Single View' : 'Multi View'}
+           </button>
+        </div>
+        <div class="fixed-header-text">
+           <span>${image_config.image_info.ready &&
+                   !image_config.image_info.error ?
+                        image_config.image_info.short_image_name : ''}
            </span>
-           <span>${image_info.ready && !image_info.error ?
-                    image_info.short_image_name : ''}
-           </span>
-           <span class="app-version">${context.getVersion()}</span>
        </div>
     </nav>
+    <div class="modal-about modal" role="dialog"
+        data-backdrop="true" data-keyboard="true">
+        <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close"
+                            data-dismiss="modal"
+                            aria-hidden="true">×
+                    </button>
+                    <h4 class="modal-title">About OMERO.iviewer</h4>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        <span style="font-weight: bold;">Version<span>:
+                            ${context.version}
+                    </p>
+                    <p>
+                        &copy; 2017 University of Dundee &amp; Open Microscopy Environment<br>
+                        OMERO and OMERO.iviewer are distributed under the terms of the GNU GPL.<br>
+                        See: <a target="new" href="http://www.openmicroscopy.org">openmicroscopy.org</a>
+                    </p>
+                </h4>
+                <div class="modal-footer">
+                <button type="button"
+                        class="ok center-block btn btn-default"
+                        data-dismiss="modal">Close
+                </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </template>

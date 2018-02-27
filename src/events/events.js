@@ -16,6 +16,8 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+/** whenever the bird's eye should be updated */
+export const BIRDSEYE_REFRESH = "BIRDSEYE_REFRESH";
 /** whenever the image canvas data was retrieved */
 export const IMAGE_CANVAS_DATA = "IMAGE_CANVAS_DATA";
 /** whenever pixel intensity querying should be turned on/off */
@@ -26,8 +28,6 @@ export const IMAGE_VIEWER_CONTROLS_VISIBILITY = "IMAGE_VIEWER_CONTROLS_VISIBILIT
 export const IMAGE_VIEWER_RESIZE = "IMAGE_VIEWER_RESIZE";
 /** whenever an image viewer interaction (zoom/drag) ocurrs */
 export const IMAGE_VIEWER_INTERACTION = "IMAGE_VIEWER_INTERACTION";
-/** whenever the image viewer split view is turned on/off */
-export const IMAGE_VIEWER_SPLIT_VIEW = "IMAGE_VIEWER_SPLIT_VIEW";
 /** whenever the image rendering settings change: channel, model, projection*/
 export const IMAGE_SETTINGS_CHANGE = "IMAGE_SETTINGS_CHANGE";
 /** whenever an image dimension (c,t,z) changes */

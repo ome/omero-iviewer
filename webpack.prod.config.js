@@ -39,8 +39,9 @@ module.exports = {
   module: {
     noParse: [/libs\/ol3-viewer.js$/],
     rules: [
-        { test: /\.js$/, loader: 'babel-loader', exclude: /node_modules/,
-          query: { compact: false,
+        { test: /\.js$/, exclude: /node_modules/, use: [{
+            loader: 'babel-loader',
+            query: { compact: false,
                    presets: [[ 'env', {
                        "loose": true,
                        "uglify": process.env.NODE_ENV === 'production',
@@ -48,6 +49,7 @@ module.exports = {
                        "useBuiltIns": true } ]],
                    plugins: ['transform-decorators-legacy',
                              'transform-class-properties'] } },
+            {loader: 'webpack-conditional-loader'}]},
         { test: /[\/\\]node_modules[\/\\]bluebird[\/\\].+\.js$/, loader: 'expose-loader?Promise' },
         { test: require.resolve('jquery'), loader: 'expose-loader?$!expose-loader?jQuery' },
         { test: /\.(png|gif|jpg|jpeg)$/, loader: 'file-loader?name=css/images/[name].[ext]' },

@@ -250,12 +250,12 @@ export default class RegionsInfo  {
                     this.number_of_shapes--;
                     if (!shape.visible) this.visibility_toggles++;
             } else if (property === 'visible') this.visibility_toggles--;
-        } else if (property === 'deleted' && !value) {
-            roi.deleted--;
-            if (typeof shape.is_new === 'boolean' && shape.is_new) {
-                    this.number_of_shapes++;
-                    if (!shape.visible) this.visibility_toggles--;
-                }
+        } else if (property === 'deleted' &&
+                    typeof shape.is_new === 'boolean' && shape.is_new &&
+                    !value) {
+                        roi.deleted--;
+                        this.number_of_shapes++;
+                        if (!shape.visible) this.visibility_toggles--;
         }
     }
 
@@ -371,6 +371,30 @@ export default class RegionsInfo  {
      */
     getNewRegionsId() {
         return --this.roi_id;
+    }
+
+    /**
+     * Returns all shape ids, optionally excluding new but deleted shapes
+     *
+     * @memberof RegionsInfo
+     * @param {boolean} exclNewButDeleted flag whether new but deleted shapes are omitted
+     * @return {Array.<string>} an array of ids
+     */
+    getAllShapeIds(exclNewButDeleted=true) {
+        if (!exclNewButDeleted) return this.unsophisticatedShapeFilter();
+
+        let ret = [];
+        this.data.forEach(
+            (value) =>
+                value.shapes.forEach(
+                    (value) => {
+                        let isNew =
+                            typeof value.is_new === 'boolean' && value.is_new;
+                        if (!isNew || (isNew && !value.deleted))
+                            ret.push(value.shape_id);
+                    })
+        );
+        return ret;
     }
 
     /**
@@ -534,12 +558,34 @@ export default class RegionsInfo  {
     }
 
     /**
+     * Returns an associative array of empty rois
+     *
+     * @return {Object} an associative array of empty rois
+     * @memberof RegionsInfo
+     */
+    getEmptyRois() {
+        let ret = {};
+        this.data.forEach(
+            (roi, key) => {
+                let total = roi.shapes.size - roi.deleted;
+                if (key > -1 && roi.shapes instanceof Map && total > 0) {
+                    let count = 0;
+                    roi.shapes.forEach((shape) => {
+                        if (shape.deleted) count++;
+                    });
+                    if (count === total) ret[key] = null;
+                }
+        });
+        return ret;
+    }
+
+    /**
      * Copies shapes
      *
      * @memberof RegionsInfo
      */
     copyShapes() {
-        if (!this.ready) return;
+        if (!this.ready || this.selected_shapes.length === 0) return;
 
         this.image_info.context.publish(
             REGIONS_COPY_SHAPES, {config_id : this.image_info.config_id});
@@ -552,12 +598,9 @@ export default class RegionsInfo  {
      * @memberof RegionsInfo
      */
     pasteShapes(pixel=null) {
-        if (!this.ready) return;
-
-        if (!this.image_info.can_annotate) {
-                Ui.showModalMessage("You don't have permission to paste", 'OK');
-                return;
-        }
+        if (!this.ready ||
+            !this.image_info.can_annotate ||
+            this.copied_shapes.length === 0) return;
 
         this.syncCopiedShapesWithLocalStorage();
         let params = {
@@ -653,7 +696,10 @@ export default class RegionsInfo  {
             if (id.indexOf("-") !== -1) continue;
             let shape = this.getShape(ids[i]);
             if (shape === null) continue;
-            if (shape) addToRequest(shape);
+            if (shape) {
+                if (shape.TheT === -1 || shape.TheZ === -1) continue;
+                addToRequest(shape);
+            }
         }
 
         // we need no request

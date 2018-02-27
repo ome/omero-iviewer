@@ -23,6 +23,20 @@
         ${image_info.short_image_name}
     </h4>
 
+    <div show.bind="image_info.ready" class="openwith">
+        <span repeat.for="ow of open_with_links">
+            <hr if.bind="$first" />
+            <span if.bind="$first">Open With:</span>
+            <a target="_blank" href="${ow.url}">${ow.text}</a> ${!$last ? ' | ' : ''}
+        </span>
+    </div>
+
+    <div class="well well-sm">
+        <button type="button" class="btn">
+            Image Info
+        </button>
+    </div>
+
     <table show.bind="image_info.ready" class="table table-condensed">
         <tr>
             <td class="col-sm-6 text-weight-bold">Image ID:</td>

@@ -56,9 +56,12 @@ export default class RegionsEdit extends EventSubscriber {
      * @type {Object}
      */
     key_actions = [
-        { key: 65, func: this.selectAllShapes},        // ctrl - a
-        { key: 67, func: this.copyShapes},             // ctrl - c
-        { key: 86, func: this.pasteShapes}             // ctrl - v
+        { key: 'A', func: this.selectAllShapes },                 // ctrl - a
+        { key: 'C', func: this.copyShapes },                      // ctrl - c
+        { key: 'V', func: this.pasteShapes },                     // ctrl - v
+        { key: 'Delete', func: this.deleteShapes, ctrl: false},   // DELETE
+        { key: 'Del', func: this.deleteShapes, ctrl: false},      // DEL IE
+        { key: 'Backspace', func: this.deleteShapes, ctrl: false} // DEL MAC
     ];
 
     /**
@@ -133,6 +136,7 @@ export default class RegionsEdit extends EventSubscriber {
         if (this.regions_info === null) return;
 
         let onceReady = () => {
+            if (this.regions_info === null) return;
             // register observer
             this.registerObservers();
             // subscribe
@@ -456,7 +460,7 @@ export default class RegionsEdit extends EventSubscriber {
     selectAllShapes() {
         if (!this.regions_info.ready) return;
 
-        let ids = this.regions_info.unsophisticatedShapeFilter();
+        let ids = this.regions_info.getAllShapeIds();
         this.context.publish(
            REGIONS_SET_PROPERTY, {
                config_id: this.regions_info.image_info.config_id,

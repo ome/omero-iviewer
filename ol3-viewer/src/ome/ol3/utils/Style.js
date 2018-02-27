@@ -123,6 +123,7 @@ ome.ol3.utils.Style.createFeatureStyle = function(shape_info, is_label, fill_in_
             text['count']++;
     }
     if (text['count'] > 0) {
+        text['overflow'] = true;
         style['text'] = new ol.style.Text(text);
 
         // we do not wish for defaults (ol creates default fill color)
@@ -237,6 +238,7 @@ ome.ol3.utils.Style.updateStyleFunction =
             }
 
             if (textStyle instanceof ol.style.Text) {
+                textStyle.setOverflow(true);
                 // seems we want to adjust text to resolution level
                 if (scale_text) {
                     var newScale = 1/actual_resolution;
@@ -410,6 +412,7 @@ ome.ol3.utils.Style.cloneStyle = function(style) {
         // for our purposes and for now we are not going to set some things which
         // have sensible defaults anyhow
         newText = new ol.style.Text({
+            "overflow" : true,
             "font" : font,
             "text" : text,
             "stroke" : stroke,
@@ -587,12 +590,13 @@ ome.ol3.utils.Style.modifyStyles =
                     if (newStyle.getText().getTextBaseline())
                         newTextStyle.setTextBaseline(newStyle.getText().getTextBaseline());
                 }
-                if (newTextStyle instanceof ol.style.Text &&
-                    typeof newTextStyle.text_ !== 'string') newTextStyle.text_ = "";
-                if (newTextStyle instanceof ol.style.Text &&
-                    newTextStyle.fill_ === null)
+                if (newTextStyle instanceof ol.style.Text) {
+                    newTextStyle.setOverflow(true);
+                    if (typeof newTextStyle.text_ !== 'string') newTextStyle.text_ = "";
+                    if (newTextStyle.fill_ === null)
                         newTextStyle.fill_ =
                             new ol.style.Fill({color: newStrokeStyle.getColor()});
+                }
 
                 var newMixedStyle = new ol.style.Style({
                     "fill" : newFillStyle,
@@ -696,8 +700,16 @@ ome.ol3.utils.Style.remedyStyleIfNecessary = function(shape_info) {
     var defaultStrokeWidth = 1;
 
     // at a minumum we'd like to see the outline if no style has been handed in
-    if (typeof(shape_info['FillColor']) !== 'number' &&
-        typeof(shape_info['StrokeColor']) !== 'number') {
+    var isLineGeometry =
+        typeof shape_info['type'] === 'string' && shape_info['type'].indexOf(
+            'line') !== -1;
+    var hasStroke =
+        typeof(shape_info['StrokeColor']) === 'number' &&
+        !isNaN(shape_info['StrokeColor']);
+    var hasFill =
+        typeof(shape_info['FillColor']) === 'number' &&
+        !isNaN(shape_info['FillColor']);
+    if ((!hasFill && !hasStroke) || (isLineGeometry && !hasStroke)) {
             shape_info['StrokeColor'] = defaultStrokeColor;
             if (typeof shape_info['StrokeWidth'] !== 'object' ||
                 shape_info['StrokeWidth'] === null ||

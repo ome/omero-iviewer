@@ -33,7 +33,6 @@ hr {
     margin-bottom: 3px;
     width: 100%;
     float: left;
-    min-width: 350px;
 }
 
 .container-fluid {
@@ -73,7 +72,7 @@ a.ui-button:active,
     float: left;
 }
 .ui-spinner input {
-    padding-left: 2px;
+    padding-left: 5px;
     height: 100%;
     margin: 0px;
     width: 40px;
@@ -169,48 +168,86 @@ a.ui-button:active,
 .fixed-header {
     position: fixed;
     margin: 0px;
-    overflow: hidden;
+    white-space: nowrap;
     min-height: 40px;
     max-height: 40px;
     background-color: #1F6AAA;
     border-width: 0;
 }
-
-/** Text displayed in the header */
+.fixed-header .dropdown-menu {
+    min-width: 160px;
+}
+.fixed-header div {
+    margin-left: 20px;
+    margin-right: 20px;
+    display: inline;
+    line-height: 40px;
+}
 .fixed-header-text {
     text-align:center;
     font-size: 22px;
     color: white;
     margin-top: 5px;
 }
-.fixed-header-text .app-version {
-    float: right;
-    margin-right: 5px;
-    margin-top: 4px;
-    font-size: 18px;
+.fixed-header-webclient a {
+	color: white;
+}
+.fixed-header-webclient a:hover {
+	color: rgba(255,255,255,0.7)
+}
+.fixed-header .dropdown {
+	margin-left: 0px;
+	margin-right: 0px;
+}
+.fixed-header .dropdown a span {
+    position: absolute;
+    right: 20px;
+}
+.fixed-header .btn-default,
+.fixed-header .btn-default:hover,
+.fixed-header .btn-default:active,
+.fixed-header .btn-default:focus,
+.fixed-header .open>.dropdown-toggle.btn-default,
+.fixed-header .open>.dropdown-toggle.btn-default:hover,
+.fixed-header .open>.dropdown-toggle.btn-default:active,
+.fixed-header .open>.dropdown-toggle.btn-default:focus {
+    background-color: transparent;
+    border-color: transparent;
+    font-size: 16px;
+    color: white;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    outline: none;
+    box-shadow:none;
+}
+.fixed-header .multi-view-btn {
+    border-color: #ccc;
+    background-color: #fff;
+    color: #333;
+    font-size: 15px;
+    padding: 2px 5px;
 }
 
 .frame {
-    margin-left: -105px;
-    padding-left: 110px;
-    margin-right: -355px;
-    padding-right: 365px;
     z-index: 0;
+    -ms-flex: 1;              /* IE 10 */
+    flex-grow: 1;
 }
 
 .center {
     margin: 0px;
     padding-top: 40px;
+    display: -ms-flexbox;      /* TWEENER - IE 10 */
+    display: flex;
+    flex-direction: row;
+    background-color: #f8f8f8;
 }
 
 .center-row1 {
-    background-color: rgba(255,255,255,1);
     height: 100%;
     padding: 0px;
 }
 .center-row1-mdi {
-    background-color: rgba(255,255,255,1);
-    height: calc(100% - 40px);
+    height: calc(100% - 25px);
     padding: 0px;
 }
 
@@ -222,8 +259,6 @@ a.ui-button:active,
     height: 35px;
     margin-top: -35px;
     position: relative;
-    background-color: rgba(255,255,255,1);
-    margin-right: 10px;
 }
 .center-row2-hidden {
     display: none;
@@ -272,7 +307,7 @@ a.ui-button:active,
 
 .plane-slider span {
     left: 0;
-    width: 27px;
+    width: 35px;
     text-align: center;
 }
 .time-slider span {
@@ -280,7 +315,7 @@ a.ui-button:active,
 }
 
 .plane-slider .glyphicon {
-    left: 7px;
+    left: 10px;
 }
 .time-slider .glyphicon {
     top: 11px;
@@ -325,7 +360,7 @@ a.ui-button:active,
     background-position: center;
     width: 20px;
     height: 20px;
-    left: 4px;
+    left: 7px;
     bottom: -65px;
 }
 
@@ -333,14 +368,14 @@ a.ui-button:active,
    but still thick-enough to click easily */
 .time-slider .ui-slider, .plane-slider .ui-slider {
     cursor: pointer;
-    border: 3px solid white;
+    border: 3px solid #f8f8f8;
     background: #c5c5c5;
 }
 
 .plane-slider .ui-slider {
     height: 100%;
     width: 9px;
-    margin-left: 9px;
+    margin-left: 12px;
 }
 .time-slider .ui-slider {
     width: 100%;
@@ -436,7 +471,6 @@ a.ui-button:active,
     height:100%;
     position: relative;
     z-index: 1;
-    background-color: #f8f8f8;
     overflow-x: hidden;
 }
 
@@ -470,12 +504,13 @@ a.ui-button:active,
     height: 100%;
     width: 100%;
     z-index: 0;
+    background-color: #f8f8f8;
 }
 
 .viewer-mdi {
-    min-width: 400px;
+    min-width: 435px;
     min-height: 250px;
-    background-color: rgba(255,255,255,1);
+    background-color: #f8f8f8;
     border: solid 2px rgba(31,106,170,0.6);
     border-radius: 5px;
     z-index: 0;
@@ -488,7 +523,6 @@ a.ui-button:active,
 .viewer-container {
     width: 100%;
     height: 100%;
-    background: #FFFFFF;
 }
 
 .thumbnail-panel {
@@ -509,6 +543,7 @@ a.ui-button:active,
 thumbnail-slider img {
     margin-top: 10px;
     cursor: pointer;
+    max-width: 75px;
 }
 .thumbnail-panel .thumbnail-collapse {
     height: 28px;
@@ -524,23 +559,55 @@ thumbnail-slider img {
     bottom: 0px;
 }
 
+.openwith {
+    margin-bottom: 5px;
+}
+
+#info {
+    padding: 15px;
+}
+
 #info .table>tbody>tr>th, #info .table>tbody>tr>td {
     border-top-width: 0;
-    padding: 2px;
+    padding: 3px 0;
+}
+
+#info .table .text-weight-bold {
+    font-weight: 500
+}
+
+.well {
+    padding: 6px 8px;
+    margin-bottom: 8px;
+}
+
+.well button {
+    background-color: transparent;
+    padding: 0;
+    width: 100%;
+    text-align: left;
 }
 
 .right-hand-panel {
-    width: 350px;
+    width: 380px;
     max-width: 1000px;
     overflow-y: hidden;
 }
 
 .tab-pane {
-    padding: 5px;
+    padding: 10px;
+    background-color: #fff;
 }
 
+.nav-tabs {
+    background-color: #f8f8f8;
+}
+#settings {
+    overflow-y: auto;
+    overflow-x: hidden;
+    height:calc(100% - 45px);
+}
 .right-hand-panel .row {
-    min-width: 350px;
     margin-bottom: 2px;
     margin-left: 0px;
     margin-right: 0px;
@@ -552,14 +619,8 @@ thumbnail-slider img {
     padding-left: 5px;
 }
 
-.save-settings {
-    min-width: 125px;
-}
-.history {
-    min-width: 200px;
-}
 .save-settings .btn-sm, .history .btn-sm {
-    padding: 5px 9px;
+    padding: 5px 8px;
 }
 
 .checkbox-settings {
@@ -569,7 +630,6 @@ thumbnail-slider img {
     margin-left: 10px;
     margin-top: 8px;
     margin-bottom: 0px;
-    min-width: 350px;
 }
 .checkbox-settings div {
     float: left;
@@ -584,9 +644,12 @@ thumbnail-slider img {
 .channel-range {
     width: 100%;
     height: 100%;
+    display: -ms-flexbox;      /* TWEENER - IE 10 */
+    display: flex;
+    flex-direction: row;
 }
 .channel-range .ui-spinner {
-    margin: 0px 2px;
+    margin-left: 5px;
     height: 30px;
 }
 .channel-range .ui-spinner-input {
@@ -596,9 +659,9 @@ thumbnail-slider img {
 .channel-slider {
     margin-top: 10px;
     height: 10px;
-    float: left;
-    width: 40%;
-    margin-left: 7px;
+    -ms-flex: 1;              /* IE 10 */
+    flex-grow: 1;
+    margin-left: 12px;
     margin-right: 1px;
 }
 .channel-slider .ui-slider-range, .pixelated {
@@ -662,12 +725,16 @@ thumbnail-slider img {
     min-width: 0px;
 }
 .channel-mode {
-    margin-top: 2px;
-    margin-top: 4px;
-    width: 95%;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    width: 100%;
+    flex-direction: row;
+    display: -ms-flexbox;      /* TWEENER - IE 10 */
+    display: flex;
 }
 .channel-mode button {
-    width: 33%;
+    -ms-flex: 1;              /* IE 10 */
+    flex-grow: 1;
 }
 
 .comment-checkbox {
@@ -675,23 +742,25 @@ thumbnail-slider img {
 }
 
 .user-settings {
-    padding-right: 10px;
     width: 100%;
-    float: left;
 }
 
 .user-setting {
     cursor: pointer;
     float: left;
-    border: 1px solid blue;
-    padding: 2px;
-    margin: 2px 4px;
+    border: 0;
+    padding: 0;
+    margin: 5px 5px 5px 0;
 }
 
 .user-settings div {
     text-align: center;
     word-wrap: break-word;
-    color: blue;
+}
+
+.user-setting img {
+    max-width: 100px;
+    max-height: 100px;
 }
 
 .regions-tabs, .regions-tabs .tab-pane, .regions-container {
@@ -711,11 +780,12 @@ thumbnail-slider img {
 
 .regions-header {
     position: fixed;
-    background-color: #f8f8f8;
+    background-color: #fff;
     height: 40px;
     line-height: 36px;
     font-weight: bold;
     font-size: 13px;
+    border-bottom: solid #ddd 1px;
 }
 
 .regions-table {
@@ -739,6 +809,10 @@ thumbnail-slider img {
 }
 .regions-table-row * {
     height: 100%;
+    user-select: none;
+    -ms-user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
 }
 
 .regions-table-col {
@@ -766,18 +840,22 @@ thumbnail-slider img {
     max-width: 5%;
 }
 .shape-z, .shape-t {
-    min-width: 10%;
-    max-width: 10%;
+    min-width: 9%;
+    max-width: 9%;
+}
+.shape-c {
+    min-width: 5%;
+    max-width: 5%;
 }
 .shape-type {
-    min-width: 10%;
-    max-width: 10%;
+    min-width: 9%;
+    max-width: 9%;
     background-repeat: no-repeat;
     background-position: center;
 }
 .shape-comment {
-    min-width: 50%;
-    max-width: 50%;
+    min-width: 48%;
+    max-width: 48%;
 }
 .shape-area {
     min-width: 20%;
@@ -820,7 +898,7 @@ thumbnail-slider img {
     height:100%;
     float:left;
     width: 25px;
-    margin: 2px 4px 2px 6px;
+    margin: 2px 0 2px 9px;
 }
 
 .draw-active {
@@ -1140,6 +1218,18 @@ thumbnail-slider img {
     padding-left: 0px;
 }
 
+.modal-about .modal-content {
+    width: 550px;
+    max-height: 220px;
+}
+.modal-about .modal-dialog {
+    top: 45%;
+    left: 40%;
+}
+.modal-about div {
+    text-align: center;
+}
+
 .viewer-handle {
     color: rgba(255,255,255,1);
     width: 100%;
@@ -1177,20 +1267,15 @@ thumbnail-slider img {
     z-index: 1;
 }
 
-.mdi-icon {
-    width: 32px;
-    height: 30px;
-    float: left;
-    margin-left: 5px;
-    cursor: pointer;
-}
-
 .dropdown-image-config {
     float: left;
 }
 .dropdown-image-config button {
     padding: 1px 10px;
     margin: 1px;
+    background-size: 20px 20px;
+    width: 40px;
+    height: 22px;
 }
 
 .config-linking {
@@ -1202,4 +1287,22 @@ thumbnail-slider img {
 }
 .sync-locks label {
     margin-left: 10px;
+}
+.dropdown-toggle.btn-default.dim_locked {
+    background-image: url('images/dim_locked.png');
+}
+.dropdown-toggle.btn-default.dim_unlocked {
+    background-image: url('images/dim_unlocked.png');
+}
+.config-linking .dim_locked, .config-linking .dim_unlocked {
+    background-repeat: no-repeat;
+    background-position-x: 8px;
+}
+.config-linking .dim_locked sup {
+    font-weight: bold;
+    margin-left: 4px;
+}
+.config-linking .dropdown-menu {
+    min-width: 45px;
+    max-width: 45px;
 }

@@ -32,10 +32,10 @@ import {
     REGIONS_DRAWING_MODE, RENDER_STATUS, VIEWER_ELEMENT_PREFIX, WEBCLIENT
 } from '../utils/constants';
 import {
-    IMAGE_CANVAS_DATA, IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY,
-    IMAGE_INTENSITY_QUERYING, IMAGE_SETTINGS_CHANGE,
+    BIRDSEYE_REFRESH, IMAGE_CANVAS_DATA, IMAGE_DIMENSION_CHANGE,
+    IMAGE_DIMENSION_PLAY, IMAGE_INTENSITY_QUERYING, IMAGE_SETTINGS_CHANGE,
     IMAGE_VIEWER_CONTROLS_VISIBILITY, IMAGE_VIEWER_INTERACTION,
-    IMAGE_VIEWER_RESIZE, IMAGE_VIEWER_SPLIT_VIEW, IMAGE_VIEWPORT_CAPTURE,
+    IMAGE_VIEWER_RESIZE, IMAGE_VIEWPORT_CAPTURE,
     REGIONS_CHANGE_MODES, REGIONS_COPY_SHAPES, REGIONS_DRAW_SHAPE,
     REGIONS_GENERATE_SHAPES, REGIONS_HISTORY_ACTION, REGIONS_HISTORY_ENTRY,
     REGIONS_MODIFY_SHAPES, REGIONS_PROPERTY_CHANGED, REGIONS_SET_PROPERTY,
@@ -115,12 +115,8 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.getRegionsPropertyChange(params)],
         [REGIONS_SET_PROPERTY,
             (params={}) => this.setRegionsProperty(params)],
-        [IMAGE_INTENSITY_QUERYING,
-            (params={}) => this.toggleIntensityQuerying(params)],
         [VIEWER_IMAGE_SETTINGS,
             (params={}) => this.getImageSettings(params)],
-        [IMAGE_VIEWER_SPLIT_VIEW,
-            (params={}) => this.toggleSplitChannels(params)],
         [REGIONS_CHANGE_MODES,
             (params={}) => this.changeRegionsModes(params)],
         [REGIONS_DRAW_SHAPE,
@@ -146,7 +142,9 @@ export default class Ol3Viewer extends EventSubscriber {
         [IMAGE_CANVAS_DATA,
             (params={}) => this.saveCanvasData(params)],
         [VIEWER_SET_SYNC_GROUP,
-            (params={}) => this.setSyncGroup(params)]];
+            (params={}) => this.setSyncGroup(params)],
+        [BIRDSEYE_REFRESH,
+            (params={}) => this.refreshBirdsEye(params)]];
 
     /**
      * @constructor
@@ -259,7 +257,10 @@ export default class Ol3Viewer extends EventSubscriber {
                         (newValue, oldValue) => {
                             if (this.viewer === null) return;
                             this.viewer.removeRegions();
-                            if (newValue) this.initRegions();
+                            if (newValue) {
+                                this.initRegions();
+                                delete this.image_config.regions_info.tmp_data;
+                            }
                     });
             // mdi needs to switch image config when using controls
             this.getContainer().find('.ol-control').on(
@@ -278,6 +279,7 @@ export default class Ol3Viewer extends EventSubscriber {
             this.bindingEngine.propertyObserver(
                 this.context, 'selected_config').subscribe(
                     (newValue, oldValue) => {
+                        this.resizeViewer({config_id: newValue, delay: 200});
                         if (!this.context.useMDI ||
                             oldValue !== this.image_config.id ||
                             !this.image_config.regions_info.hasBeenModified()) {
@@ -434,11 +436,11 @@ export default class Ol3Viewer extends EventSubscriber {
         if (typeof params.model === 'string') {
             if (isSameConfig) this.viewer.changeImageModel(params.model);
             else this.linked_events.syncAction(params, "changeImageSettings");
-        } else if (isSameConfig && typeof params.projection === 'string')
+        } else if (isSameConfig && typeof params.projection === 'string') {
             this.viewer.changeImageProjection(
                 params.projection,
                 this.image_config.image_info.projection_opts);
-        else if (Misc.isArray(params.ranges) && params.ranges.length > 0) {
+        } else if (Misc.isArray(params.ranges) && params.ranges.length > 0) {
             if (isSameConfig) this.viewer.changeChannelRange(params.ranges);
             else this.linked_events.syncAction(params, "changeImageSettings");
         } else if (typeof params.interpolate === 'boolean')
@@ -453,7 +455,10 @@ export default class Ol3Viewer extends EventSubscriber {
      * @param {Object} params the event notification parameters
      */
     resizeViewer(params={}) {
-        if (this.viewer === null) return;
+        if (this.viewer === null ||
+            (typeof params.config === 'number' &&
+                !isNaN(params.config_id) && params.config !== -1 &&
+                params.config_id !== this.image_config.id)) return;
 
         // while dragging does not concern us
         if (typeof params.is_dragging !== 'boolean') params.is_dragging = false;
@@ -644,13 +649,33 @@ export default class Ol3Viewer extends EventSubscriber {
               !Misc.isArray(params.shapes) ||
               params.shapes.length === 0) return;
 
+
+        // switch to plane/time/channel that shape to be selected is on
+        // for deselect the last selected shape is chosen (if exists)
+        let shapeSelection = params.shapes[params.shapes.length-1];
+        if (!params.value) {
+            let numberOfSelectedShapes =
+                this.image_config.regions_info.selected_shapes.length;
+            if (numberOfSelectedShapes > 0) {
+                let lastSelected =
+                    this.image_config.regions_info.selected_shapes[
+                        numberOfSelectedShapes-1];
+                if (lastSelected !== shapeSelection) {
+                    shapeSelection = lastSelected;
+                } else if (numberOfSelectedShapes > 1) {
+                    shapeSelection =
+                        this.image_config.regions_info.selected_shapes[
+                            numberOfSelectedShapes-2];
+                } else shapeSelection = null;
+            } else shapeSelection = null;
+        }
         let delay = 0;
-        if (params.clear) {
-            // switch to plane/time where the shape is
+        if (shapeSelection) {
             let viewerT = this.viewer.getDimensionIndex('t');
             let viewerZ = this.viewer.getDimensionIndex('z');
+            let viewerC = this.viewer.getDimensionIndex('c');
             let shape =
-                this.image_config.regions_info.getShape(params.shapes[0]);
+                this.image_config.regions_info.getShape(shapeSelection);
             let shapeT = typeof shape.TheT === 'number' ? shape.TheT : -1;
             if (shapeT !== -1 && shapeT !== viewerT) {
                 this.image_config.image_info.dimensions.t = shapeT;
@@ -661,13 +686,18 @@ export default class Ol3Viewer extends EventSubscriber {
                 this.image_config.image_info.dimensions.z = shapeZ;
                 delay += 25;
             }
+            let shapeC = typeof shape.TheC === 'number' ? shape.TheC : -1;
+            if (shapeC !== -1 && viewerC.indexOf(shapeC) === -1) {
+                this.image_config.image_info.channels[shapeC].active = true;
+                delay += 25;
+            }
         }
 
         setTimeout(() => {
             this.abortDrawing();
             this.viewer.selectShapes(
-                params.shapes, params.value,
-                params.clear, params.center);
+                params.shapes, params.value, params.clear,
+                params.center ? shapeSelection : null);
         }, delay);
       }
 
@@ -719,7 +749,6 @@ export default class Ol3Viewer extends EventSubscriber {
             !Misc.isArray(this.image_config.regions_info.tmp_data)) return;
 
         this.viewer.addRegions(this.image_config.regions_info.tmp_data);
-        delete this.image_config.regions_info.tmp_data;
         this.changeRegionsModes(
             { modes: this.image_config.regions_info.regions_modes});
         this.viewer.showShapeComments(
@@ -837,12 +866,14 @@ export default class Ol3Viewer extends EventSubscriber {
             params.config_id !== this.image_config.id) return;
 
         let numberOfdeletedShapes =
-            this.image_config.regions_info.getNumberOfDeletedShapes(true);
+            this.image_config.regions_info.getNumberOfDeletedShapes();
+        let empty_rois =
+            numberOfdeletedShapes > 0 ?
+                this.image_config.regions_info.getEmptyRois() : {};
         let storeRois = () => {
             let requestMade =
                 this.viewer.storeRegions(
-                    Misc.isArray(params.deleted) ? params.deleted : [],
-                    false, params.omit_client_update);
+                    empty_rois, false, params.omit_client_update);
 
             if (requestMade) Ui.showModalMessage("Saving Regions. Please wait...");
             else if (params.omit_client_update)
@@ -949,6 +980,12 @@ export default class Ol3Viewer extends EventSubscriber {
                     newShape['@id'] = newRoiAndShapeId.shape_id;
                     newRoi.shapes.set(newRoiAndShapeId.shape_id, newShape);
                     shape.deleted = true; // take out old entry
+                    // update newly created and saved shapes (if selected)
+                    let selShapes =
+                        this.image_config.regions_info.selected_shapes;
+                    let selShapesIdx = selShapes.indexOf(shape.shape_id);
+                    if (selShapesIdx !== -1)
+                        selShapes[selShapesIdx] = newShape.shape_id;
                 }
                 // we remove shapes flagged deleted=true
                 if (shape.deleted) {
@@ -976,20 +1013,15 @@ export default class Ol3Viewer extends EventSubscriber {
         this.image_config.image_info.roi_count =
             this.image_config.regions_info.data.size;
 
-        // if we stored as part of a delete request we need to clean up
-        // the history for the deleted shapes,
-        // otherwise we wipe the history altogether
-        if (params.is_delete)
-            this.image_config.regions_info.history.removeEntries(ids);
-        else this.image_config.regions_info.history.resetHistory();
+        // clear history
+        this.image_config.regions_info.history.resetHistory();
 
-        // error handling: will probably be adjusted
-        if (typeof params.error === 'string') {
+        // error handling
+        if (Misc.isArray(params.errors)) {
             let msg = "Saving of Rois/Shapes failed.";
-            if (params.error.indexOf("SecurityViolation") !== -1)
-                msg = "Insufficient Permissions to save some Rois/Shapes.";
+            for (let e in params.errors)
+                console.error(params.errors[e]);
             Ui.showModalMessage(msg, 'OK');
-            console.error(params.error);
             return;
         }
     }
@@ -1280,5 +1312,19 @@ export default class Ol3Viewer extends EventSubscriber {
             $("#" + this.image_config.id + " .ol-control").hide();
             this.image_config.show_controls = false;
         }
+    }
+
+    /**
+     * Requests update of bird's eye view
+     *
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     */
+    refreshBirdsEye(params = {}) {
+        // sanity checks
+        if (this.viewer === null || this.image_config === null ||
+            this.image_config.id !== params.config_id) return;
+
+        this.viewer.refreshBirdsEye(500);
     }
 }

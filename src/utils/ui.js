@@ -60,15 +60,7 @@ export default class Ui {
                     ($(window).width() - frameWidth) : $(window).width();
 
                 if (x > minWidth && x < maxWidth && e.pageX < rightBound) {
-                      el.width(x);
-                      if (leftSplit)
-                          $('.frame').css(
-                              {"margin-left": '' + (-x-5) + 'px',
-                               "padding-left": '' + (x+10) + 'px'});
-                      else
-                          $('.frame').css(
-                              {"margin-right": '' + (-x-5) + 'px',
-                               "padding-right": '' + (x+15) + 'px'});
+                    el.width(x);
                 }
                 eventbus.publish(IMAGE_VIEWER_RESIZE,
                     {config_id: -1, is_dragging: true});
@@ -152,14 +144,6 @@ export default class Ui {
                 $(e.currentTarget).parent().css("cursor", "default");
             else
                 $(e.currentTarget).parent().css("cursor", "ew-resize");
-            if (leftSplit)
-                $('.frame').css(
-                    {"margin-left": '' + (-newWidth-5) + 'px',
-                     "padding-left": '' + (newWidth+10) + 'px'});
-            else
-                $('.frame').css(
-                    {"margin-right": '' + (-newWidth-5) + 'px',
-                     "padding-right": '' + (newWidth+15) + 'px'});
             eventbus.publish(IMAGE_VIEWER_RESIZE, {config_id: -1});
         });
     }
@@ -363,16 +347,18 @@ export default class Ui {
                     (event) => {
                         let command =
                             Misc.isApple() ? 'metaKey' : 'ctrlKey';
-                            if ((group !== 'global' &&
+                            if (context.selected_config === null ||
+                                (group !== 'global' &&
                                 context.selected_tab !== group) ||
-                                !event[command]) return true;
+                                ((typeof action.ctrl !== 'boolean' ||
+                                  action.ctrl) && !event[command])) return true;
                             try {
                                 action.func.apply(scope, action.args);
                             } catch(err) {
                                 console.error("Key Handler failed: " + err);
                             }
                             return false;
-                }, group));
+                }, group, action.ctrl));
     }
 
     /**

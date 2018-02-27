@@ -16,6 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+goog.require('ol.Kinetic');
 goog.require('ol.control.Attribution');
 goog.require('ol.control.Rotate');
 goog.require('ol.control.FullScreen');
@@ -30,6 +31,22 @@ goog.require('ol.interaction.DoubleClickZoom');
 goog.require('ol.interaction.PinchRotate');
 goog.require('ol.interaction.DragBox');
 goog.require('ol.events.condition');
+
+goog.require('ol.plugins');
+goog.require('ol.PluginType');
+goog.require('ol.renderer.canvas.ImageLayer');
+goog.require('ol.renderer.canvas.Map');
+goog.require('ol.renderer.canvas.TileLayer');
+goog.require('ol.renderer.canvas.VectorLayer');
+goog.require('ol.renderer.canvas.VectorTileLayer');
+
+ol.plugins.register(ol.PluginType.MAP_RENDERER, ol.renderer.canvas.Map);
+ol.plugins.registerMultiple(ol.PluginType.LAYER_RENDERER, [
+  ol.renderer.canvas.ImageLayer,
+  ol.renderer.canvas.TileLayer,
+  ol.renderer.canvas.VectorLayer,
+  ol.renderer.canvas.VectorTileLayer
+]);
 
 /**
  * a simple string lookup constant for WEB_API_BASE
@@ -266,9 +283,9 @@ ome.ol3.AVAILABLE_VIEWER_CONTROLS = {
          "links" : []},
     "birdseye" :
         {"clazz" : ome.ol3.controls.BirdsEye,
-        "options": {collapsed : true, collapseLabel : "»", label: "«"},
+        "options": {collapsed : true},
         "defaults": true,
-        "enabled": true,
+        "enabled": false,
         "links" : []},
     "scalebar" :
         {"clazz" : ome.ol3.controls.ScaleBar,
