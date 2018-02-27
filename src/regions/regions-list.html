@@ -107,7 +107,7 @@
                         title="${'ROI: ' + roi_id + ' - Shape: ' + shape_id +
                                     (hasPermissions(shape) ?
                                         (shape.type === 'mask' ?
-                                            '\nMasks are read-only' : '') :
+                                            '\nMasks cannot be edited' : '') :
                                         '\nOwner: ' + shape.owner)}"
                         id="${'roi-' + shape.shape_id}"
                         class="regions-table-row"
