@@ -700,8 +700,16 @@ ome.ol3.utils.Style.remedyStyleIfNecessary = function(shape_info) {
     var defaultStrokeWidth = 1;
 
     // at a minumum we'd like to see the outline if no style has been handed in
-    if (typeof(shape_info['FillColor']) !== 'number' &&
-        typeof(shape_info['StrokeColor']) !== 'number') {
+    var isLineGeometry =
+        typeof shape_info['type'] === 'string' && shape_info['type'].indexOf(
+            'line') !== -1;
+    var hasStroke =
+        typeof(shape_info['StrokeColor']) === 'number' &&
+        !isNaN(shape_info['StrokeColor']);
+    var hasFill =
+        typeof(shape_info['FillColor']) === 'number' &&
+        !isNaN(shape_info['FillColor']);
+    if ((!hasFill && !hasStroke) || (isLineGeometry && !hasStroke)) {
             shape_info['StrokeColor'] = defaultStrokeColor;
             if (typeof shape_info['StrokeWidth'] !== 'object' ||
                 shape_info['StrokeWidth'] === null ||

@@ -161,12 +161,12 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                     if (this.roi_id_ < 0) event.feature['roi_id'] = this.roi_id_;
                     var newRegionsObject =
                         ome.ol3.utils.Conversion.toJsonObject(
-                            new ol.Collection([event.feature]), false, true);
+                            new ol.Collection([event.feature]), false);
                     if (typeof newRegionsObject !== 'object' ||
-                        !ome.ol3.utils.Misc.isArray(newRegionsObject['rois']) ||
-                        newRegionsObject['rois'].length === 0) return;
+                        !ome.ol3.utils.Misc.isArray(newRegionsObject['new']) ||
+                        newRegionsObject['new'].length === 0) return;
                     var opts = {
-                        "shapes": newRegionsObject['rois'],
+                        "shapes": newRegionsObject['new'],
                         "drawn" : true, "add": add
                     };
                     if (typeof hist_id === 'number') opts['hist_id'] = hist_id;

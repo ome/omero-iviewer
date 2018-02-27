@@ -19,19 +19,6 @@
     <require from="../utils/converters"></require>
     <require from="./channel-settings"></require>
 
-    <div class="checkbox checkbox-settings">
-        <div>
-            <label>
-                <input type="checkbox"
-                    checked.one-way="context.interpolate"
-                    disabled.bind="!(image_config && image_config.image_info &&
-                                     image_config.image_info.ready)"
-                    change.delegate="toggleInterpolation($event)" />
-               Interpolate
-           </label>
-        </div>
-    </div>
-
     <div class="btn-group save-settings">
         <button type="button"
             disabled.bind="!(image_config.image_info.ready &&
@@ -90,6 +77,17 @@
                 change.delegate="toggleHistogram($event)" />
             Histogram
             </label>
+        </div>
+
+        <div>
+            <label>
+                <input type="checkbox"
+                    checked.one-way="context.interpolate"
+                    disabled.bind="!(image_config && image_config.image_info &&
+                                     image_config.image_info.ready)"
+                    change.delegate="toggleInterpolation($event)" />
+               Interpolate
+           </label>
         </div>
     </div>
 

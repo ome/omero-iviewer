@@ -250,12 +250,12 @@ export default class RegionsInfo  {
                     this.number_of_shapes--;
                     if (!shape.visible) this.visibility_toggles++;
             } else if (property === 'visible') this.visibility_toggles--;
-        } else if (property === 'deleted' && !value) {
-            roi.deleted--;
-            if (typeof shape.is_new === 'boolean' && shape.is_new) {
-                    this.number_of_shapes++;
-                    if (!shape.visible) this.visibility_toggles--;
-                }
+        } else if (property === 'deleted' &&
+                    typeof shape.is_new === 'boolean' && shape.is_new &&
+                    !value) {
+                        roi.deleted--;
+                        this.number_of_shapes++;
+                        if (!shape.visible) this.visibility_toggles--;
         }
     }
 
@@ -555,6 +555,28 @@ export default class RegionsInfo  {
     getNumberOfDeletedShapes() {
         return this.unsophisticatedShapeFilter(
             ["deleted"], [true], ['canDelete']).length;
+    }
+
+    /**
+     * Returns an associative array of empty rois
+     *
+     * @return {Object} an associative array of empty rois
+     * @memberof RegionsInfo
+     */
+    getEmptyRois() {
+        let ret = {};
+        this.data.forEach(
+            (roi, key) => {
+                let total = roi.shapes.size - roi.deleted;
+                if (key > -1 && roi.shapes instanceof Map && total > 0) {
+                    let count = 0;
+                    roi.shapes.forEach((shape) => {
+                        if (shape.deleted) count++;
+                    });
+                    if (count === total) ret[key] = null;
+                }
+        });
+        return ret;
     }
 
     /**
