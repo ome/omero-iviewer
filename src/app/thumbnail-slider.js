@@ -535,7 +535,6 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @param {boolean} is_double_click true if triggered by a double click
      */
     onClicks(image_id, is_double_click = false) {
-        if (this.click_handle !== null) return;
         let navigateToNewImage = () => {
             this.context.rememberImageConfigChange(image_id);
             let parent_id =
@@ -629,11 +628,7 @@ export default class ThumbnailSlider extends EventSubscriber {
             clearTimeout(this.click_handle);
             this.click_handle = null;
         }
-        this.click_handle = setTimeout(
-            () => {
-                this.click_handle = null;
-                this.onClicks(image_id);
-            }, 200);
+        this.click_handle = setTimeout(() => this.onClicks(image_id), 250);
     }
 
     /**
