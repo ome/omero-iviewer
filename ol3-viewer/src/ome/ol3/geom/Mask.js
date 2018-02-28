@@ -158,12 +158,18 @@ ome.ol3.geom.Mask.prototype.getExtent = function() {
  * @return {boolean} true if the given extent intersects with the mask
  */
 ome.ol3.geom.Mask.prototype.intersectsExtent = function(extent) {
-    var point = this.getPointCoordinates();
-    var extRect = [
-        point[0], point[1], point[0] + this.size_[0], point[1],
-        point[0] + this.size_[0], point[1] - this.size_[1],
-        point[0], point[1] - this.size_[1], point[0], point[1]
-    ];
+    var extRect = this.getOutline().getRectangleCoordinates();
     return ol.geom.flat.intersectsextent.linearRings(
         extRect, 0, [extRect.length], 2, extent);
+}
+
+/**
+ * Returns a rectangle outline surrounding the mask
+ *
+ * @return {Array.<number>} the rectangle outline
+ */
+ome.ol3.geom.Mask.prototype.getOutline = function() {
+    var point = this.getPointCoordinates();
+    return new ome.ol3.geom.Rectangle(
+        point[0], point[1], this.size_[0], this.size_[1]);
 }

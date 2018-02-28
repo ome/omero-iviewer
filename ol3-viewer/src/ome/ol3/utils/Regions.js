@@ -356,7 +356,7 @@ ome.ol3.utils.Regions.generateRegions =
         }
 
         return ret;
-};
+}
 
 
 /**
@@ -511,46 +511,6 @@ ome.ol3.utils.Regions.createFeaturesFromRegionsResponse =
 }
 
 /**
-<<<<<<< HEAD
-=======
- * Adds a mask layer for each mask on top of the original image
- * and prior to the rois.
- *
- * @private
- * @static
- * @param {ome.ol3.source.Regions} regions an instance of the OmeroRegions
- * @param {Object} shape_info the shape info object (from json)
- */
-ome.ol3.utils.Regions.addMask = function(regions, shape_info) {
-    // some preliminary checks
-    if (typeof shape_info['@id'] !== 'number' ||
-        shape_info['@id'] <= 0 || typeof shape_info['X'] !== 'number' ||
-        typeof shape_info['Y'] !== 'number' ||
-        typeof shape_info['Width'] !== 'number' ||
-        typeof shape_info['Height'] !== 'number' ||
-        shape_info['Width'] <= 0 || shape_info['Height'] <= 0)
-            console.error("At least one Mask parameters is invalid!");
-
-    // we place it before the regions layer
-    var position = regions.viewer_.viewer_.getLayers().getLength() - 1;
-    regions.viewer_.viewer_.getLayers().insertAt(
-        position,
-        new ol.layer.Image({
-            source: new ol.source.ImageStatic({
-                attributions: null,
-                url: regions.viewer_.getServer()['full'] +
-                        regions.viewer_.getPrefixedURI(ome.ol3.WEBGATEWAY) +
-                        '/render_shape_mask/' +  shape_info['@id'],
-                projection: regions.viewer_.viewer_.getView().getProjection(),
-                imageExtent: [
-                    shape_info['X'],-shape_info['Y'] - shape_info['Height'],
-                    shape_info['X'] + shape_info['Width'], -shape_info['Y']
-                ]
-        })}));
-}
-
-/**
->>>>>>> master
  * Uses the respective ol3 code to get the length and area of a geometry
  *
  * @static
@@ -610,7 +570,7 @@ ome.ol3.utils.Regions.calculateLengthAndArea =
 }
 
 /**
- * Uses the respective ol3 code to get the length and area of a geometry
+ * Returns the length of a given geometry
  *
  * @static
  * @param {ol.geom.Geometry} geom the geometry

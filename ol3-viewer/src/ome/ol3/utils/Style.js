@@ -296,11 +296,11 @@ ome.ol3.utils.Style.updateStyleFunction =
             var selected =
                 typeof(feature['selected'] === 'boolean') ?
                     feature['selected'] : false;
+            var selectionStyle = selStyle = new ol.style.Stroke();
+            selStyle.setColor('rgba(0,153,255,1)');
+            selStyle.setWidth(3);
             if (selected) {
-                var selStyle = new ol.style.Stroke();
-                selStyle.setColor('rgba(0,153,255,1)');
-                selStyle.setWidth(3);
-                oldStyle.stroke_ = selStyle;
+                oldStyle.stroke_ = selectionStyle;
             } else if (feature['oldStrokeStyle']) {
                 // restore old style
                 var w = feature['oldStrokeStyle']['width'];
@@ -343,9 +343,17 @@ ome.ol3.utils.Style.updateStyleFunction =
                 };
             }
 
-            // adjust scale for masks
-            if (geom instanceof ome.ol3.geom.Mask)
+            // make adjustments for masks
+            if (geom instanceof ome.ol3.geom.Mask) {
+                oldStyle.setZIndex(0);
                 oldStyle.getImage().setScale(1/actual_resolution);
+                if (selected)
+                    ret.push(new ol.style.Style({
+                        geometry: geom.getOutline(),
+                        stroke: selectionStyle,
+                        zIndex: 1
+                    }));
+            } else oldStyle.setZIndex(1);
 
             return ret;
     });
