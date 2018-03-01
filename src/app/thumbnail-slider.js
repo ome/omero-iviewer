@@ -43,6 +43,13 @@ export default class ThumbnailSlider extends EventSubscriber {
      */
      initialized = false;
 
+     /**
+      * click set timeout handle
+      * @memberof ThumbnailSlider
+      * @type {number}
+      */
+      click_handle = null;
+
     /**
      * a reference to the selected image config
      * @memberof ThumbnailSlider
@@ -520,12 +527,14 @@ export default class ThumbnailSlider extends EventSubscriber {
     }
 
     /**
-     * A click handler: sets the image id in the main view
+     * Click Handler for single/double clicks to converge on:
+     * Opens images in single and multi viewer mode
      *
      * @memberof ThumbnailSlider
      * @param {number} image_id the image id for the clicked thumbnail
+     * @param {boolean} is_double_click true if triggered by a double click
      */
-    onClick(image_id) {
+    onClicks(image_id, is_double_click = false) {
         let navigateToNewImage = () => {
             this.context.rememberImageConfigChange(image_id);
             let parent_id =
@@ -542,58 +551,104 @@ export default class ThumbnailSlider extends EventSubscriber {
                     this.context.initial_type === INITIAL_TYPES.IMAGES ?
                         this.image_config.image_info.parent_type :
                         this.context.initial_type;
-            this.context.addImageConfig(image_id, parent_id, parent_type);
+            // single click in mdi will need to 'replace' image config
+            if (this.context.useMDI && !is_double_click) {
+                    let oldPosition = Object.assign({}, this.image_config.position);
+                    let oldSize = Object.assign({}, this.image_config.size);
+                    this.context.removeImageConfig(this.image_config, true);
+                    this.context.addImageConfig(image_id, parent_id, parent_type);
+                    let selImgConf = this.context.getSelectedImageConfig();
+                    if (selImgConf !== null) {
+                        selImgConf.position = oldPosition;
+                        selImgConf.size = oldSize;
+                    }
+            } else this.context.addImageConfig(image_id, parent_id, parent_type);
         };
 
-        // pop up dialog to ask whether user wants to store rois changes
-        // if we have a regions history, we have modifications
-        // and are not cross domain
-        if (!this.context.useMDI && this.image_config &&
+        let modifiedConfs = this.context.useMDI ?
+            this.context.findConfigsWithModifiedRegionsForGivenImage(
+                image_id) : [];
+        // show dialogues for modified rois
+        if (this.image_config &&
             this.image_config.regions_info &&
-            this.image_config.regions_info.hasBeenModified() &&
+            (this.image_config.regions_info.hasBeenModified() ||
+             modifiedConfs.length > 0) &&
             !Misc.useJsonp(this.context.server) &&
             this.image_config.regions_info.image_info.can_annotate) {
-            let saveHandler = () => {
-                let tmpSub =
-                    this.context.eventbus.subscribe(
-                        REGIONS_STORED_SHAPES,
-                        (params={}) => {
-                            tmpSub.dispose();
-                            if (params.omit_client_update) navigateToNewImage();
-                    });
-                setTimeout(()=>
-                    this.context.publish(
-                        REGIONS_STORE_SHAPES,
-                        {config_id : this.image_config.id,
-                         omit_client_update: true}), 20);
-            };
-
-            UI.showConfirmationDialog(
-                'Save ROIS?',
-                'You have new/deleted/modified ROI(S).<br>' +
-                'Do you want to save your changes?',
-                saveHandler, () => navigateToNewImage());
-            return;
-        } else {
-            navigateToNewImage();
-            let modifiedConfs =
-                this.context.findConfigsWithModifiedRegionsForGivenImage(image_id);
-            if (modifiedConfs.length > 0) {
+                let modalText =
+                    !this.context.useMDI ||
+                    this.image_config.regions_info.hasBeenModified() ?
+                        'You have new/deleted/modified ROI(S).<br>' +
+                        'Do you want to save your changes?' :
+                        'You have changed ROI(S) on an image ' +
+                        'that\'s been opened multiple times.<br>' +
+                        'Do you want to save now to avoid ' +
+                        'inconsistence (and a potential loss ' +
+                        'of some of your changes)?';
+                let saveHandler =
+                    !this.context.useMDI || !is_double_click ?
+                        () => {
+                            let tmpSub =
+                                this.context.eventbus.subscribe(
+                                    REGIONS_STORED_SHAPES,
+                                    (params={}) => {
+                                        tmpSub.dispose();
+                                        if (params.omit_client_update)
+                                            navigateToNewImage();
+                                });
+                            setTimeout(()=>
+                                this.context.publish(
+                                    REGIONS_STORE_SHAPES,
+                                    {config_id : this.image_config.id,
+                                     omit_client_update: true}), 20);
+                        } :
+                        () => {
+                            this.context.publish(
+                                REGIONS_STORE_SHAPES,
+                                {config_id :
+                                    this.image_config.regions_info.hasBeenModified() ?
+                                    this.image_config.id : modifiedConfs[0],
+                                 omit_client_update: false});
+                            navigateToNewImage();
+                        };
                 UI.showConfirmationDialog(
-                    'Save ROIS?',
-                    'You have changed ROI(S) on an image ' +
-                    'that\'s been opened multiple times.<br>' +
-                    'Do you want to save now to avoid ' +
-                    'inconsistence (and a potential loss ' +
-                    'of some of your changes)?' ,
-                    () => {
-                        this.context.publish(
-                            REGIONS_STORE_SHAPES,
-                            {config_id : modifiedConfs[0],
-                             omit_client_update: false});
-                    });
-            }
+                    'Save ROIS?', modalText,
+                    saveHandler, () => navigateToNewImage());
+        } else navigateToNewImage();
+    }
+
+    /**
+     * hacky solution to allow double - single click distinction
+     *
+     * @memberof ThumbnailSlider
+     * @param {number} image_id the image id for the clicked thumbnail
+     */
+    onClick(image_id) {
+        if (this.click_handle) {
+            clearTimeout(this.click_handle);
+            this.click_handle = null;
         }
+        this.click_handle = setTimeout(() => this.onClicks(image_id), 250);
+    }
+
+    /**
+     * Double click handler. Triggers mdi if not already in mdi
+     *
+     * @memberof ThumbnailSlider
+     * @param {number} image_id the image id for the clicked thumbnail
+     * @param {Object} event the mouse click event
+     */
+    onDoubleClick(image_id, event) {
+        event.stopPropagation();
+
+        if (this.click_handle) {
+            clearTimeout(this.click_handle);
+            this.click_handle = null;
+        }
+        this.context.useMDI = true;
+        this.onClicks(image_id, true);
+
+        return false;
     }
 
     /**

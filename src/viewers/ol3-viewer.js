@@ -176,23 +176,27 @@ export default class Ol3Viewer extends EventSubscriber {
      * @memberof Ol3Viewer
      */
     attached() {
-        let container = this.getContainer();
-        // additions that are necessary for mdi
-        // we need the viewers to be draggable, resizable
-        // also place the viewer within the frame boundaries
         let frame = $('.frame');
-        let minX = frame.position().left+10;
-        let maxX =
-            frame.position().left+frame.width()-
-                parseInt(this.image_config.size.width);
-        let minY = frame.position().top+10;
-        let maxY =
-            frame.position().top+frame.height()-
-                parseInt(this.image_config.size.height);
-        this.image_config.position.top =
-            Misc.getRandomInteger(minY,maxY) + 'px';
-        this.image_config.position.left =
-            Misc.getRandomInteger(minX,maxX) + 'px';
+        let minX = 0, maxX = 0, minY = 0, maxY = 0;;
+        let container = this.getContainer();
+
+        // set previous position for mdi 'replacement'
+        if (this.image_config.position === null) {
+            minX = frame.position().left+10;
+            maxX =
+                frame.position().left+frame.width()-
+                    parseInt(this.image_config.size.width);
+            minY = frame.position().top+10;
+            maxY =
+                frame.position().top+frame.height()-
+                    parseInt(this.image_config.size.height);
+            this.image_config.position = {
+                top: Misc.getRandomInteger(minY,maxY) + 'px',
+                left: Misc.getRandomInteger(minX,maxX) + 'px'
+            };
+        }
+        
+        // make viewer windows draggable/resizable within boundaries
         container.draggable({
             handle: '.viewer-handle',
             start: () => {
@@ -290,6 +294,7 @@ export default class Ol3Viewer extends EventSubscriber {
                         this.resizeViewer({config_id: newValue, delay: 200});
                         if (!this.context.useMDI ||
                             oldValue !== this.image_config.id ||
+                            newValue === null ||
                             !this.image_config.regions_info.hasBeenModified()) {
                                 return;
                             }

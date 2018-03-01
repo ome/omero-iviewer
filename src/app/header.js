@@ -373,22 +373,6 @@ export class Header {
     }
 
     /**
-     * Toggles MDI/single image viewing mode
-     *
-     * @memberof Header
-     */
-    toggleMDI() {
-        if (this.context.useMDI)
-            for (let [id, conf] of this.context.image_configs)
-                if (id !== this.context.selected_config)
-                    this.context.removeImageConfig(id,conf)
-        this.context.useMDI = !this.context.useMDI;
-        this.context.publish(
-            IMAGE_VIEWER_RESIZE, {
-                config_id: this.selected_config, delay: 200});
-     }
-
-    /**
      * Returns the keyboard command prefix based on navigator.platform
      * i.e. '&#x2318;' for apple, 'ctrl+' otherwise
      *

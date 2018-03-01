@@ -243,7 +243,27 @@ export default class Context {
                     window.history.go(0);
                     return;
                 }
-                this.addImageConfig(e.state.image_id, e.state.parent_id);
+                let openImageConfig = true;
+                if (this.useMDI) {
+                    let imageConfigsForImage =
+                        this.getImageConfigsForGivenImage(e.state.image_id);
+                    if (imageConfigsForImage.length === 0) openImageConfig = true;
+                    else {
+                        let hasConfId = false;
+                        for (let i in imageConfigsForImage) {
+                            if (imageConfigsForImage[i].id === e.state.config_id) {
+                                hasConfId = true;
+                                break;
+                            }
+                        }
+                        openImageConfig = false;
+                        this.selectConfig(
+                            hasConfId ?
+                                e.state.config_id : imageConfigsForImage[0].id);
+                    }
+                }
+                if (openImageConfig)
+                    this.addImageConfig(e.state.image_id, e.state.parent_id);
             };
         }
     }
@@ -543,7 +563,7 @@ export default class Context {
      * @param {number} image_id the image id
      */
     rememberImageConfigChange(image_id) {
-        if (!this.hasHTML5HistoryFeatures() || this.useMDI ||
+        if (!this.hasHTML5HistoryFeatures() ||
             this.getSelectedImageConfig() === null) return;
 
         let newPath = window.location.pathname;
@@ -596,7 +616,8 @@ export default class Context {
         window.history.pushState(
             {image_id: image_id,
              parent_id: parent_id,
-             parent_type: parentTypeString
+             parent_type: parentTypeString,
+             config_id: selConf.id
             }, "", newPath);
     }
 
@@ -638,8 +659,9 @@ export default class Context {
      *
      * @memberof Context
      * @param {ImageConfig|number} image_config_or_id id or ImageConfig
+     * @param {boolean} stay_in_mdi if true we stay in mdi regardless
      */
-    removeImageConfig(image_config_or_id) {
+    removeImageConfig(image_config_or_id, stay_in_mdi = false) {
         let conf = null;
         if (image_config_or_id instanceof ImageConfig)
             conf = image_config_or_id;
@@ -664,10 +686,11 @@ export default class Context {
             // choose next selected image config
             if (confSize > 0) {
                 this.selected_config = this.image_configs.keys().next().value;
-                if (confSize === 1) {
+                if (!stay_in_mdi && confSize === 1) {
                     this.publish(
                         IMAGE_VIEWER_CONTROLS_VISIBILITY,
                         {config_id: this.selected_config, flag: true});
+                    this.useMDI = false;
                 }
             }
         }

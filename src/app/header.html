@@ -112,13 +112,6 @@
                     </li>
                 </ul>
             </div>
-            <button class="btn multi-view-btn"
-               title="${context.useMDI ?
-                  'Click to use single image viewing mode' :
-                   'Click to use multiple image viewing mode'}"
-               click.delegate="toggleMDI()">
-               ${context.useMDI ? 'Single View' : 'Multi View'}
-           </button>
         </div>
         <div class="fixed-header-text">
            <span>${image_config.image_info.ready &&
