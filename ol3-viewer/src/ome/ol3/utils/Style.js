@@ -314,6 +314,8 @@ ome.ol3.utils.Style.updateStyleFunction =
             }
 
             var ret = [oldStyle];
+            var zIndex = selected ? 2 : 1;
+
             // arrow heads/tails for lines
             if (geom instanceof ome.ol3.geom.Line &&
                     (geom.has_start_arrow_ || geom.has_end_arrow_)) {
@@ -338,22 +340,26 @@ ome.ol3.utils.Style.updateStyleFunction =
                             geometry: arrow,
                             fill: new ol.style.Fill(
                                     {color: lineStroke.getColor()}),
-                            stroke: lineStroke});
+                            stroke: lineStroke,
+                            zIndex: zIndex
+                    });
                     ret.push(arrowStyle);
                 };
             }
 
             // make adjustments for masks
             if (geom instanceof ome.ol3.geom.Mask) {
-                oldStyle.setZIndex(0);
                 oldStyle.getImage().setScale(1/actual_resolution);
-                if (selected)
+                if (selected) {
                     ret.push(new ol.style.Style({
                         geometry: geom.getOutline(),
                         stroke: selectionStyle,
-                        zIndex: 1
+                        zIndex: zIndex+1
                     }));
-            } else oldStyle.setZIndex(1);
+                } else zIndex--;
+            }
+
+            oldStyle.setZIndex(zIndex);
 
             return ret;
     });

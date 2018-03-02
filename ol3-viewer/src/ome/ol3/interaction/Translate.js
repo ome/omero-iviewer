@@ -244,9 +244,8 @@ ome.ol3.interaction.Translate.handleDragEvent_ = function(event) {
  * @private
  */
 ome.ol3.interaction.Translate.prototype.featuresAtCoords_ = function(coord) {
-    var hit = this.regions_.select_.featuresAtCoords_(coord, 5);
+    var hit = this.regions_.select_.featuresAtCoords_(coord, 5, true);
     if (hit === null || !(this.features_ instanceof ol.Collection) ||
-        !ol.array.includes(this.features_.getArray(), hit) ||
         hit.getGeometry() instanceof ome.ol3.geom.Mask ||
             (typeof hit['permissions'] === 'object' &&
             hit['permissions'] !== null &&
