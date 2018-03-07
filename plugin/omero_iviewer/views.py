@@ -477,6 +477,7 @@ def get_intensity(request, conn=None, **kwargs):
         return JsonResponse(
             {"error": "Please supply a valid list of channels"})
 
+    raw_pixel_store = None
     try:
         raw_pixel_store = conn.createRawPixelsStore()
         raw_pixel_store.setPixelsId(img.getPixelsId(), True)
@@ -524,6 +525,9 @@ def get_intensity(request, conn=None, **kwargs):
         return JsonResponse(results)
     except Exception as pixel_service_exception:
         return JsonResponse({"error": repr(pixel_service_exception)})
+    finally:
+        if raw_pixel_store is not None:
+            raw_pixel_store.close()
 
 
 @login_required()
