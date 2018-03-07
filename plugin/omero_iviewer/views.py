@@ -443,7 +443,7 @@ def get_intensity(request, conn=None, **kwargs):
     if image_id is None or x is None or y is None or cs is None \
             or z is None or t is None:
                 return JsonResponse(
-                    {"error": "Mandatory params are: image,x,y,c, z and t"})
+                    {"error": "Mandatory params are: image, x, y, c, z and t"})
 
     # retrieve image object
     img = conn.getObject("Image", image_id, opts=conn.SERVICE_OPTS)
@@ -457,7 +457,7 @@ def get_intensity(request, conn=None, **kwargs):
     if (x < 0 or x >= size_x or y < 0 or y >= size_y or
             z < 0 or z >= size_z or t < 0 or t >= size_t):
         return JsonResponse(
-            {"error": "Either one or more x,y,z.t are out of bounds"})
+            {"error": "Either one or more x, y, z, t are out of bounds"})
 
     # check given channels
     channels = []
