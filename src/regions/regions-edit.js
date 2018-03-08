@@ -822,10 +822,8 @@ export default class RegionsEdit extends EventSubscriber {
             this.regions_info.checkShapeForPermission(
                 this.last_selected, "canDelete");
         let showEditDisabled =
-            !this.regions_info.image_info.can_annotate ||
                 (this.regions_info.selected_shapes.length >= 1 && !canEdit);
         let showDeleteDisabled =
-            !this.regions_info.image_info.can_annotate ||
                 (this.regions_info.selected_shapes.length >= 1 && !canDelete);
 
         // break up adjustment into individual sections
