@@ -76,10 +76,11 @@ ome.ol3.interaction.Translate = function(regions_reference) {
             var features = event.features.array_;
             for (var x=0;x<features.length;x++) {
                 var f = features[x];
-                if (typeof f['permissions'] === 'object' &&
+                if (f.getGeometry() instanceof ome.ol3.geom.Mask ||
+                    (typeof f['permissions'] === 'object' &&
                     f['permissions'] !== null &&
                     typeof f['permissions']['canEdit'] === 'boolean' &&
-                    !f['permissions']['canEdit']) continue;
+                    !f['permissions']['canEdit'])) continue;
                 this.translatedFeatures_.push(f);
             }
         }, this);
@@ -120,10 +121,11 @@ ome.ol3.interaction.Translate.prototype.handleTranslateEnd = function(event) {
     var ids = [];
     for (var x=0;x<featuresTranslated.length;x++) {
         var f = featuresTranslated[x];
-        if (typeof f['permissions'] === 'object' &&
+        if (f.getGeometry() instanceof ome.ol3.geom.Mask ||
+            (typeof f['permissions'] === 'object' &&
             f['permissions'] !== null &&
             typeof f['permissions']['canEdit'] === 'boolean' &&
-            !f['permissions']['canEdit']) continue;
+            !f['permissions']['canEdit'])) continue;
         if (f.getGeometry() instanceof ome.ol3.geom.Label)
             f.getGeometry().modifyOriginalCoordinates(
                 event.target.getMap().getView().getRotation(),
@@ -214,10 +216,11 @@ ome.ol3.interaction.Translate.handleDragEvent_ = function(event) {
     var featuresArray = features.getArray();
     for (var x=0;x<featuresArray.length;x++) {
         var feature = featuresArray[x];
-        if (typeof feature['permissions'] === 'object' &&
+        if (feature.getGeometry() instanceof ome.ol3.geom.Mask ||
+            (typeof feature['permissions'] === 'object' &&
             feature['permissions'] !== null &&
             typeof feature['permissions']['canEdit'] === 'boolean' &&
-            !feature['permissions']['canEdit']) continue;
+            !feature['permissions']['canEdit'])) continue;
         var geom = feature.getGeometry();
         geom.translate(deltaX, deltaY);
         feature.setGeometry(geom);
@@ -241,9 +244,9 @@ ome.ol3.interaction.Translate.handleDragEvent_ = function(event) {
  * @private
  */
 ome.ol3.interaction.Translate.prototype.featuresAtCoords_ = function(coord) {
-    var hit = this.regions_.select_.featuresAtCoords_(coord, 5);
+    var hit = this.regions_.select_.featuresAtCoords_(coord, 5, true);
     if (hit === null || !(this.features_ instanceof ol.Collection) ||
-        !ol.array.includes(this.features_.getArray(), hit) ||
+        hit.getGeometry() instanceof ome.ol3.geom.Mask ||
             (typeof hit['permissions'] === 'object' &&
             hit['permissions'] !== null &&
             typeof hit['permissions']['canEdit'] === 'boolean' &&

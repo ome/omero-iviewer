@@ -427,7 +427,7 @@ ome.ol3.source.Regions.prototype.updateRegions= function(request_info) {
 
     if (this.select_)
     this.select_.clearSelection();
-    this.viewer_.removeRegions(true); // removes masks only
+    this.viewer_.removeRegions();
 
     // remember any features we added
     var allFeatures = this.featuresRtree_.getAll();

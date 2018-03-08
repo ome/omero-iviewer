@@ -101,6 +101,7 @@ ome.ol3.interaction.Modify.prototype.handleFeatureAdd_ = function(evt) {
 
     var renderFeature = this.regions_.renderFeature(feature);
     if (!renderFeature ||
+        feature.getGeometry() instanceof ome.ol3.geom.Mask ||
          (typeof feature['permissions'] === 'object' &&
             feature['permissions'] !== null &&
             typeof feature['permissions']['canEdit'] === 'boolean' &&
@@ -147,6 +148,7 @@ ome.ol3.interaction.Modify.prototype.handlePointerAtPixel_ = function(pixel, map
 
         var disallowModification =
             node.geometry instanceof ome.ol3.geom.Label ||
+            node.geometry instanceof ome.ol3.geom.Mask ||
             node.geometry instanceof ol.geom.Circle ||
             !this.regions_.renderFeature(node.feature);
         if (!disallowModification) {

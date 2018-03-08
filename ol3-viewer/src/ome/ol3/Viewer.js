@@ -944,13 +944,9 @@ ome.ol3.Viewer.prototype.centerOnGeometry = function(geometry, resolution) {
  * layer's vector layer
  *
  */
-ome.ol3.Viewer.prototype.removeRegions = function(masks_only) {
-    var removeMasksOnly = false;
-    if (typeof(masks_only) === 'boolean')
-        removeMasksOnly = masks_only;
-
+ome.ol3.Viewer.prototype.removeRegions = function() {
     // without an existing instance no need to destroy it...
-    if (!removeMasksOnly && this.regions_ instanceof ome.ol3.source.Regions) {
+    if (this.regions_ instanceof ome.ol3.source.Regions) {
         // reset mode which will automatically deregister interactions
         this.regions_.setModes([ome.ol3.REGIONS_MODE['DEFAULT']]);
         // dispose of the internal OmeroRegions instance
@@ -962,7 +958,6 @@ ome.ol3.Viewer.prototype.removeRegions = function(masks_only) {
     if (regionsLayer) {
         //remove everything down to the image layer
         var len = this.viewer_.getLayers().getLength();
-        if (removeMasksOnly) --len;
         for (var i=len-1; i > 0;i--) {
             var l = this.viewer_.getLayers().item(i);
             l.setSource(null);
@@ -1566,6 +1561,7 @@ ome.ol3.Viewer.prototype.getSmallestViewExtent = function() {
         try {
             var f = this.regions_.idIndex_[ids[id]];
             if (f['state'] === ome.ol3.REGIONS_STATE.REMOVED ||
+                f.getGeometry() instanceof ome.ol3.geom.Mask ||
                 (typeof f['permissions'] === 'object' &&
                     f['permissions'] !== null &&
                     typeof f['permissions']['canEdit'] === 'boolean' &&

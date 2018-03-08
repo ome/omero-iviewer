@@ -124,3 +124,12 @@ ome.ol3.geom.Polygon.prototype.clone = function() {
     return new ome.ol3.geom.Polygon(
             this.getInvertedCoordinates(), this.getTransform());
 };
+
+/**
+ * Returns the length of the polygon
+ *
+ * @return {number} the length of the polygon
+ */
+ome.ol3.geom.Polygon.prototype.getLength = function() {
+    return ome.ol3.utils.Regions.getLength(this);
+}

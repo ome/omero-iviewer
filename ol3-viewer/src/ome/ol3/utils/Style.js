@@ -22,6 +22,7 @@
 goog.provide('ome.ol3.utils.Style');
 
 goog.require('ol.style.Style');
+goog.require('ol.style.Icon');
 goog.require('ol.style.Fill');
 goog.require('ol.style.Stroke');
 goog.require('ol.style.Text');
@@ -147,6 +148,7 @@ ome.ol3.utils.Style.createFeatureStyle = function(shape_info, is_label, fill_in_
     return new ol.style.Style(style);
 }
 
+
 /**
  * Used internally to replace the style/style function of a feature.
  * In specific, this is called if setScaleText or setRotateText members are called
@@ -204,6 +206,21 @@ ome.ol3.utils.Style.updateStyleFunction =
                 feature['oldRotationFlag'] = regions_reference.rotate_text_;
             if (typeof(feature['oldScaleFlag']) === 'undefined')
                 feature['oldScaleFlag'] = regions_reference.scale_text_;
+        }
+
+        // 3. set masks (via style)
+        if (feature.getGeometry() instanceof ome.ol3.geom.Mask) {
+            var maskId = feature.getId();
+            var url = regions_reference.viewer_.getServer()['full'] +
+                regions_reference.viewer_.getPrefixedURI(ome.ol3.WEBGATEWAY) +
+                '/render_shape_mask/' +
+                maskId.substring(maskId.indexOf(":")+1) + '/';
+            oldStyle.setImage(new ol.style.Icon({
+                anchorOrigin: 'top-left',
+                anchor: [0,0],
+                rotateWithView: true,
+                src: url
+            }));
         }
 
         // replace style function
@@ -279,11 +296,11 @@ ome.ol3.utils.Style.updateStyleFunction =
             var selected =
                 typeof(feature['selected'] === 'boolean') ?
                     feature['selected'] : false;
+            var selectionStyle = selStyle = new ol.style.Stroke();
+            selStyle.setColor('rgba(0,153,255,1)');
+            selStyle.setWidth(3);
             if (selected) {
-                var selStyle = new ol.style.Stroke();
-                selStyle.setColor('rgba(0,153,255,1)');
-                selStyle.setWidth(3);
-                oldStyle.stroke_ = selStyle;
+                oldStyle.stroke_ = selectionStyle;
             } else if (feature['oldStrokeStyle']) {
                 // restore old style
                 var w = feature['oldStrokeStyle']['width'];
@@ -297,6 +314,8 @@ ome.ol3.utils.Style.updateStyleFunction =
             }
 
             var ret = [oldStyle];
+            var zIndex = selected ? 2 : 1;
+
             // arrow heads/tails for lines
             if (geom instanceof ome.ol3.geom.Line &&
                     (geom.has_start_arrow_ || geom.has_end_arrow_)) {
@@ -321,10 +340,26 @@ ome.ol3.utils.Style.updateStyleFunction =
                             geometry: arrow,
                             fill: new ol.style.Fill(
                                     {color: lineStroke.getColor()}),
-                            stroke: lineStroke});
+                            stroke: lineStroke,
+                            zIndex: zIndex
+                    });
                     ret.push(arrowStyle);
                 };
             }
+
+            // make adjustments for masks
+            if (geom instanceof ome.ol3.geom.Mask) {
+                oldStyle.getImage().setScale(1/actual_resolution);
+                if (selected) {
+                    ret.push(new ol.style.Style({
+                        geometry: geom.getOutline(),
+                        stroke: selectionStyle,
+                        zIndex: zIndex+1
+                    }));
+                } else zIndex--;
+            }
+
+            oldStyle.setZIndex(zIndex);
 
             return ret;
     });

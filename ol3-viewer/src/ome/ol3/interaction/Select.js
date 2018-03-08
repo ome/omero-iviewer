@@ -125,15 +125,17 @@ ome.ol3.interaction.Select.handleEvent = function(mapBrowserEvent) {
 /**
  * Tests to see if the given coordinates intersects any of our features.
  * @param {Array.<number>} pixel pixel coordinate to test for intersection.
+ * @param {number} tolerance a pixel tolerance/buffer
+ * @param {boolean} use_already_selected will only consider already selected
  * @return {ol.Feature} Returns the feature found at the specified pixel
- * coordinates.
- * @private
+ *                      coordinates.
  */
 ome.ol3.interaction.Select.prototype.featuresAtCoords_ =
-    function(pixel, tolerance) {
+    function(pixel, tolerance, use_already_selected) {
     if (!ome.ol3.utils.Misc.isArray(pixel) || pixel.length !== 2) return;
 
     if (typeof tolerance !== 'number') tolerance = 5; // 5 pixel buffer
+    if (typeof use_already_selected !== 'boolean') use_already_selected = false;
     var v = this.regions_.viewer_.viewer_;
     var min = v.getCoordinateFromPixel(
                 [pixel[0]-tolerance, pixel[1]+tolerance]);
@@ -142,10 +144,15 @@ ome.ol3.interaction.Select.prototype.featuresAtCoords_ =
     var extent = [min[0], min[1], max[0], max[1]];
     var hits = [];
 
+    var alreadySelected = this.features_.getArray();
     this.regions_.forEachFeatureInExtent(
         extent, function(feat) {
-            if (feat.getGeometry().intersectsExtent(extent))
-                hits.push(feat);});
+            if (feat.getGeometry().intersectsExtent(extent)) {
+                if (!use_already_selected ||
+                    (use_already_selected &&
+                        ol.array.includes(alreadySelected, feat))) hits.push(feat);
+            }
+        });
 
     return ome.ol3.utils.Misc.featuresAtCoords(hits);
 };
