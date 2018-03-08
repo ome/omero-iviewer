@@ -864,8 +864,20 @@ thumbnail-slider img {
     background-image: url('images/polygon.png');
 }
 
-.line-icon, .polyline-icon {
+.line-icon {
     background-image: url('images/line.png');
+}
+
+/* These will override .line-icon for lines with arrow heads */
+.marker-arrow {
+    background-image: url('images/arrow.png');
+}
+.marker-arrowarrow {
+    background-image: url('images/arrow_arrow.png');
+}
+
+.polyline-icon {
+    background-image: url('images/polyline.png');
 }
 
 .label-icon {

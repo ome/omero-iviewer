@@ -123,7 +123,9 @@
                                 title="Show/Hide shape" checked.one-way="shape.visible"
                                 change.delegate="toggleShapeVisibility(shape.shape_id, $event)"/>
                         </div>
-                        <div class="regions-table-col shape-type ${shape.type.toLowerCase()}-icon"></div>
+                        <div class="regions-table-col shape-type ${shape.type.toLowerCase()}-icon
+                            marker-${shape.MarkerStart.toLowerCase()}${shape.MarkerEnd.toLowerCase()}">
+                        </div>
                         <div class="regions-table-col shape-z">
                             ${shape.TheZ !== -1 ? (shape.TheZ + 1) : ""}
                         </div>
