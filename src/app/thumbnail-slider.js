@@ -568,11 +568,15 @@ export default class ThumbnailSlider extends EventSubscriber {
         let modifiedConfs = this.context.useMDI ?
             this.context.findConfigsWithModifiedRegionsForGivenImage(
                 image_id) : [];
+        let selImgConf = this.context.getSelectedImageConfig();
+        let hasSameImageSelected =
+            selImgConf && selImgConf.image_info.image_id === image_id;
         // show dialogues for modified rois
         if (this.image_config &&
             this.image_config.regions_info &&
             (this.image_config.regions_info.hasBeenModified() ||
              modifiedConfs.length > 0) &&
+             (!is_double_click || (is_double_click && !hasSameImageSelected)) &&
             !Misc.useJsonp(this.context.server) &&
             this.image_config.regions_info.image_info.can_annotate) {
                 let modalText =
@@ -586,7 +590,9 @@ export default class ThumbnailSlider extends EventSubscriber {
                         'inconsistence (and a potential loss ' +
                         'of some of your changes)?';
                 let saveHandler =
-                    !this.context.useMDI || !is_double_click ?
+                    !this.context.useMDI ||
+                    (!is_double_click && 
+                     this.image_config.regions_info.hasBeenModified()) ?
                         () => {
                             let tmpSub =
                                 this.context.eventbus.subscribe(
