@@ -582,16 +582,16 @@ export default class ThumbnailSlider extends EventSubscriber {
                 let modalText =
                     !this.context.useMDI ||
                     this.image_config.regions_info.hasBeenModified() ?
-                        'You have new/deleted/modified ROI(S).<br>' +
+                        'You have new/deleted/modified ROI(s).<br>' +
                         'Do you want to save your changes?' :
-                        'You have changed ROI(S) on an image ' +
+                        'You have changed ROI(s) on an image ' +
                         'that\'s been opened multiple times.<br>' +
                         'Do you want to save now to avoid ' +
                         'inconsistence (and a potential loss ' +
                         'of some of your changes)?';
                 let saveHandler =
                     !this.context.useMDI ||
-                    (!is_double_click && 
+                    (!is_double_click &&
                      this.image_config.regions_info.hasBeenModified()) ?
                         () => {
                             let tmpSub =
