@@ -308,8 +308,8 @@ export default class Ol3Viewer extends EventSubscriber {
                         // we have another image config for the same image
                         // let's prompt the user with a warning about rois
                         Ui.showConfirmationDialog(
-                            'Save ROIS?',
-                            'You have changed ROI(S) on an image ' +
+                            'Save ROIs?',
+                            'You have changed ROI(s) on an image ' +
                             'that\'s been opened multiple times.<br>' +
                             'Do you want to save now to avoid ' +
                             'inconsistence (and a potential loss ' +

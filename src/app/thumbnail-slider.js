@@ -618,7 +618,7 @@ export default class ThumbnailSlider extends EventSubscriber {
                             navigateToNewImage();
                         };
                 UI.showConfirmationDialog(
-                    'Save ROIS?', modalText,
+                    'Save ROIs?', modalText,
                     saveHandler, () => navigateToNewImage());
         } else navigateToNewImage();
     }

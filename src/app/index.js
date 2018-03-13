@@ -110,7 +110,7 @@ export class Index  {
                 }
             }
             if (hasBeenModified)
-                return "You have new/deleted/modified ROI(S).\n" +
+                return "You have new/deleted/modified ROI(s).\n" +
                         "If you leave you'll lose your changes.";
             return null;
         };
@@ -167,8 +167,8 @@ export class Index  {
                          omit_client_update: true}), 20);
             };
             Ui.showConfirmationDialog(
-                'Save ROIS?',
-                'You have new/deleted/modified ROI(S).<br>' +
+                'Save ROIs?',
+                'You have new/deleted/modified ROI(s).<br>' +
                 'Do you want to save your changes?',
                 saveHandler, () => this.context.removeImageConfig(id));
     }
