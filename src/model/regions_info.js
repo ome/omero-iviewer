@@ -539,8 +539,7 @@ export default class RegionsInfo  {
                 permission !== 'canEdit' &&
                 permission !== 'canDelete')) return false;
 
-        return this.image_info.can_annotate &&
-                !(typeof shape['permissions'] === 'object' &&
+        return !(typeof shape['permissions'] === 'object' &&
                 shape['permissions'] !== null &&
                 typeof shape['permissions'][permission] === 'boolean' &&
                 !shape['permissions'][permission]);
