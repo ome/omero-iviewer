@@ -326,7 +326,6 @@
     width: 20px;
     display: inline-block;
     background-position: 2px 5px;
-    border-left: 1px solid #ccc;
     float: right;
 }
 .intensity-toggler:hover {
@@ -350,6 +349,7 @@
     float: left;
     text-align: center;
     white-space: pre;
+    border-right: 1px solid #ccc;
 }
 .ol-intensity-popup {
     background-color: #fff;
