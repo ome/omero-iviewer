@@ -262,7 +262,7 @@ export class Header {
             regInf.selected_shapes.filter((s) => s.indexOf("-") == -1);
         // if we have no saved shapes or no active channels ...
         // forget about it
-        if (ids_for_stats.length === 0 ||
+        if (this.image_config.image_info.tiled || ids_for_stats.length === 0 ||
             regInf.image_info.getActiveChannels().length === 0) {
             this.writeCsv(regInf.selected_shapes, utf);
         } else {
