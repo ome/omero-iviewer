@@ -325,15 +325,18 @@
     height: 28px;
     width: 20px;
     display: inline-block;
-    background-position: 3px 5px;
-    background-color: rgba(70,70,70, 0.2);
+    background-position: 2px 5px;
+    border-left: 1px solid #ccc;
     float: right;
-}
-.intensity-on {
-    background-color: rgba(255,0,0, 0.2);
 }
 .intensity-toggler:hover {
     background-color:  #adadad;
+}
+.intensity-toggler:focus {
+    background-color:  #adadad;
+}
+.intensity-on {
+    background-image: url('images/crosshair_filled.png');
 }
 .intensity-display {
     display: none;
