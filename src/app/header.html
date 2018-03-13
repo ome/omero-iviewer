@@ -78,17 +78,19 @@
                         <a click.delegate="deleteShapes()"
                            href="#">Delete</a>
                     </li>
-                    <li class="${image_config.regions_info.ready &&
-                                 image_config.regions_info.selected_shapes.length > 0 ?
+                    <li class="${image_config.regions_info.ready ?
                                     '' : 'disabled-color'}">
                         <a click.delegate="saveRoiMeasurements(false)"
-                           href="#">Export (Excel)</a>
+                           href="#">Export
+                            ${image_config.regions_info.selected_shapes.length > 0 ?
+                                'selected' : 'all'} ROIs (Excel)</a>
                     </li>
-                    <li class="${image_config.regions_info.ready &&
-                                 image_config.regions_info.selected_shapes.length > 0 ?
+                    <li class="${image_config.regions_info.ready ?
                                     '' : 'disabled-color'}">
                         <a click.delegate="saveRoiMeasurements(true)"
-                           href="#">Export (CSV)</a>
+                           href="#">Export
+                                ${image_config.regions_info.selected_shapes.length > 0 ?
+                                    'selected' : 'all'} ROIs (CSV)</a>
                     </li>
                 </ul>
             </div>

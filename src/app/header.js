@@ -253,21 +253,22 @@ export class Header {
      * @memberof Header
      */
     saveRoiMeasurements(utf=false) {
-        if (this.image_config === null ||
-            this.image_config.regions_info.selected_shapes.length === 0) return;
+        if (this.image_config === null) return;
 
         let regInf = this.image_config.regions_info;
-        // we cannot query unssaved shapes
-        let ids_for_stats =
-            regInf.selected_shapes.filter((s) => s.indexOf("-") == -1);
-        // if we have no saved shapes or no active channels ...
-        // forget about it
-        if (ids_for_stats.length === 0 ||
+        let exportAll = regInf.selected_shapes.length === 0;
+        // we cannot query unsaved shapes
+        let idsUsed = exportAll ?
+            regInf.unsophisticatedShapeFilter() : regInf.selected_shapes.slice();
+        let ids_for_stats = idsUsed.filter((s) => s.indexOf("-") == -1);
+        // don't request if we have only new shapes, zero channels are active
+        // or we have a big image (unsupported)
+        if (this.image_config.image_info.tiled || ids_for_stats.length === 0 ||
             regInf.image_info.getActiveChannels().length === 0) {
-            this.writeCsv(regInf.selected_shapes, utf);
+            this.writeCsv(idsUsed, utf);
         } else {
             regInf.requestStats(
-                ids_for_stats, () => this.writeCsv(regInf.selected_shapes, utf));
+                ids_for_stats, () => this.writeCsv(idsUsed, utf));
         }
     }
 
