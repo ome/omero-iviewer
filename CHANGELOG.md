@@ -1,3 +1,31 @@
+1.0.0 (March 2018)
+------------------
+
+This version includes:
+
+
+- handled correctly data access depending on permissions level
+- added new icon for polyline
+- added minimal support for masks
+- improved UI
+- handled images with large number of channels
+- added support to open the image in other applications installed e.g. OMERO.figure
+- added menus in header
+- improved rois creation and manipulation and persistence
+- improved testing infrastructure
+- added option to export ROIs statictics in CSV file or Excel file
+- improved ROIs statistics export
+- updated documentation
+- improved loading and display of bird eye view
+- displayed pixels intensity when mousing over image
+- enabled the viewing of multiple images in the same browser window by double-clicking
+- reviewed build system to reduce the bundled size
+- improved build system for development
+- upgraded Webpack to 3.6.0
+- upgraded Openlayers to version 4.6.3
+- upgraded JQuery to version 3.3.1
+
+
 0.4.1 (November 2017)
 ---------------------
 
