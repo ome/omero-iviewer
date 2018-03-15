@@ -568,25 +568,31 @@ export default class ThumbnailSlider extends EventSubscriber {
         let modifiedConfs = this.context.useMDI ?
             this.context.findConfigsWithModifiedRegionsForGivenImage(
                 image_id) : [];
+        let selImgConf = this.context.getSelectedImageConfig();
+        let hasSameImageSelected =
+            selImgConf && selImgConf.image_info.image_id === image_id;
         // show dialogues for modified rois
         if (this.image_config &&
             this.image_config.regions_info &&
             (this.image_config.regions_info.hasBeenModified() ||
              modifiedConfs.length > 0) &&
+             (!is_double_click || (is_double_click && !hasSameImageSelected)) &&
             !Misc.useJsonp(this.context.server) &&
             this.image_config.regions_info.image_info.can_annotate) {
                 let modalText =
                     !this.context.useMDI ||
                     this.image_config.regions_info.hasBeenModified() ?
-                        'You have new/deleted/modified ROI(S).<br>' +
+                        'You have new/deleted/modified ROI(s).<br>' +
                         'Do you want to save your changes?' :
-                        'You have changed ROI(S) on an image ' +
+                        'You have changed ROI(s) on an image ' +
                         'that\'s been opened multiple times.<br>' +
                         'Do you want to save now to avoid ' +
                         'inconsistence (and a potential loss ' +
                         'of some of your changes)?';
                 let saveHandler =
-                    !this.context.useMDI || !is_double_click ?
+                    !this.context.useMDI ||
+                    (!is_double_click &&
+                     this.image_config.regions_info.hasBeenModified()) ?
                         () => {
                             let tmpSub =
                                 this.context.eventbus.subscribe(
@@ -612,7 +618,7 @@ export default class ThumbnailSlider extends EventSubscriber {
                             navigateToNewImage();
                         };
                 UI.showConfirmationDialog(
-                    'Save ROIS?', modalText,
+                    'Save ROIs?', modalText,
                     saveHandler, () => navigateToNewImage());
         } else navigateToNewImage();
     }
