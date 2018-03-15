@@ -4,11 +4,11 @@
 This version includes:
 
 
-- displayed pixels intensity when mousing over image
+- added option to display pixels intensity when mousing over image
 - enabled viewing of multiple images in the same browser window by double-clicking
 - added support for opening the image in other installed applications e.g. OMERO.figure
 - added option to export ROIs statistics in CSV file or Excel file
-- improved ROIs creation and manipulation and persistence
+- improved ROIs creation, manipulation and persistence
 - added new icon for polyline
 - improved ROIs statistics export
 - handled images with large number of channels
