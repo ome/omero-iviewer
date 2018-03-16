@@ -195,7 +195,7 @@ export default class Ol3Viewer extends EventSubscriber {
                 left: Misc.getRandomInteger(minX,maxX) + 'px'
             };
         }
-        
+
         // make viewer windows draggable/resizable within boundaries
         container.draggable({
             handle: '.viewer-handle',
@@ -610,11 +610,10 @@ export default class Ol3Viewer extends EventSubscriber {
                       let opts = {
                           'number': params.number,
                           'position': params.position,
+                          'is_compatible': params.is_compatible,
                           'extent': this.viewer.getSmallestViewExtent(),
                           'theDims': theDims
                       };
-                      if (typeof params.scale_factor === 'number')
-                          opts['scale_factor'] = params.scale_factor;
                       if (typeof params.add_history === 'boolean')
                           opts['add_history'] = params.add_history;
                       if (typeof params.hist_id === 'number')
@@ -1135,7 +1134,7 @@ export default class Ol3Viewer extends EventSubscriber {
                 IVIEWER + ".copy_image_dims",
                 JSON.stringify({
                     width: this.image_config.image_info.dimensions.max_x,
-                    height: this.image_config.image_info.dimensions.max_x
+                    height: this.image_config.image_info.dimensions.max_y
             }));
             // remember shape definitions for generating copies
             window.localStorage.setItem(

@@ -602,10 +602,14 @@ export default class RegionsInfo  {
             this.copied_shapes.length === 0) return;
 
         this.syncCopiedShapesWithLocalStorage();
+        let isCompatibleTargetImage =
+            this.copied_image_dims.width <= this.image_info.dimensions.max_x &&
+            this.copied_image_dims.height <= this.image_info.dimensions.max_y;
         let params = {
             config_id: this.image_info.config_id,
             number: 1, paste: true,
             shapes: this.copied_shapes,
+            is_compatible: isCompatibleTargetImage,
             hist_id: this.history.getHistoryId(),
             position: pixel
         };

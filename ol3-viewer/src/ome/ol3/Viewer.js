@@ -1412,7 +1412,7 @@ ome.ol3.Viewer.prototype.setRegionsModes = function(modes) {
  * - position => the position to place the shape(s) or null (random placement)
  * - extent => a bounding box for generation, default: the entire viewport
  * - theDims => a list of dims to attach to
- * - scale_factor => a scale factor to apply because of image dimension differences
+ * - is_compatible => the image size of the originating image was smaller or equal
  * - add_history => determines whether we should add the generation to the history
  * - hist_id => the history id to pass through
  */
@@ -1457,7 +1457,9 @@ ome.ol3.Viewer.prototype.generateShapes = function(shape_info, options) {
     // delegate
     var generatedShapes =
         ome.ol3.utils.Regions.generateRegions(
-            shape_info, number, extent, position, options['scale_factor']);
+            shape_info, number, extent, position,
+            typeof options['is_compatible'] === 'boolean' && 
+                options['is_compatible']);
     // another brief sanity check in case not all shapes were created
     if (generatedShapes === null ||
             (!oneToManyRelationShip &&
