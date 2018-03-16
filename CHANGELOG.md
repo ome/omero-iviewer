@@ -14,6 +14,7 @@ This version includes:
 - handled images with large number of channels
 - added menus in header
 - improved loading and display of bird's eye view
+- improved loading of tiles
 - correctly handled data access depending on permissions level
 - improved UI
 - added minimal support for masks
