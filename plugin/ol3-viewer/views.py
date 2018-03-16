@@ -20,6 +20,7 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from omeroweb.decorators import login_required
 
+from omero_version import omero_version
 
 WEB_API_VERSION = 0
 
@@ -33,7 +34,7 @@ def index(request, iid=None, conn=None, **kwargs):
 def plugin(request, iid=None, conn=None, debug=False, **kwargs):
     if iid is None:
         return HttpResponse("Viewer needs an image id!")
-    params = {}
+    params = {'OMERO_VERSION': omero_version}
     for key in request.GET:
         if request.GET[key]:
             params[str(key).upper()] = str(request.GET[key])

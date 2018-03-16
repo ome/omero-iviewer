@@ -789,21 +789,6 @@ export default class Ol3Viewer extends EventSubscriber {
     }
 
     /**
-     * Handles view changes between split and normal view (event notification)
-     *
-     * @memberof Ol3Viewer
-     * @param {Object} params the event notification parameters
-     */
-    toggleSplitChannels(params = {}) {
-        // check if we have a viewer instance and the event concerns us
-        if (params.config_id !== this.image_config.id ||
-            this.viewer === null ||
-            typeof params.split !== 'boolean') return;
-
-        this.viewer.toggleSplitView(params.split);
-    }
-
-    /**
      * Handles drawing of shapes via event notification as well as cancellation
      * of a chosen drawing interaction
      *

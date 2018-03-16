@@ -343,8 +343,7 @@ ome.ol3.utils.Misc.parseProjectionParameter = function(projection_info) {
 
     // last sanity check before returning
     if (ret.projection !== ome.ol3.PROJECTION['NORMAL'] &&
-       ret.projection !== ome.ol3.PROJECTION['INTMAX'] &&
-       ret.projection !== ome.ol3.PROJECTION['SPLIT'])
+        ret.projection !== ome.ol3.PROJECTION['INTMAX'])
             ret.projection = ome.ol3.PROJECTION['NORMAL'];
 
     return ret;

@@ -102,6 +102,13 @@ ome.ol3.PREFIXED_URIS = [
 ome.ol3.UNTILED_RETRIEVAL_LIMIT = 4000000;
 
 /**
+ * the default tile dimensions
+ * @const
+ * @type {Object}
+ */
+ome.ol3.DEFAULT_TILE_DIMS = {"width": 512, "height": 512};
+
+/**
  * Enum for RequestParams.
  * @static
  * @enum {string}
@@ -113,6 +120,7 @@ ome.ol3.REQUEST_PARAMS = {
     IMAGE_ID : 'IMAGE_ID',
     MAPS: 'MAPS',
     MODEL: 'M',
+    OMERO_VERSION: 'OMERO_VERSION',
     PLANE: 'Z',
     PROJECTION: 'P',
     SERVER: 'SERVER',
@@ -193,9 +201,7 @@ ome.ol3.PROJECTION = {
     /** normal **/
     "NORMAL" : 'normal',
     /** intmax **/
-    "INTMAX" : 'intmax',
-    /** split  **/
-    "SPLIT" : 'split'
+    "INTMAX" : 'intmax'
 };
 
 /**

@@ -46,7 +46,7 @@ goog.require('ol.events.EventType');
  * <li>time (the time aka t index), default: 0</li>
  * <li>channels (the channels aka c indices) as an array, default: []</li>
  * <li>resolutions (the resolutions for tiled images), default: [1]</li>
- * <li>tile_size (the tile size {width: 256, height: 256}), default: ol.DEFAULT_TILE_SIZE (256)</li>
+ * <li>tile_size (the tile size {width: 256, height: 256}), default: 512^2</li>
  * </ul>
  *
  * Note: Properties plane, time and channels have setters as well
@@ -124,13 +124,6 @@ ome.ol3.source.Image = function(options) {
             opts.channels) ? [].concat(opts.channels) : [];
 
     /**
-     * should split view be used
-     * @type {boolean}
-     * @private
-     */
-    this.split_ = typeof opts.split === 'boolean' ? opts.split : false;
-
-    /**
      * the omero image projection - optional params, e.g. start/end
      * @type {Object}
      * @private
@@ -174,17 +167,22 @@ ome.ol3.source.Image = function(options) {
     /**
      * should we use tiled retrieval methods?
      * for now use them only for truly tiled/pyramidal sources
-     * and images that exceed a size of 1000x1000 pixels
-     * split view is excempted as well
+     * and images that exceed {@link ome.ol3.UNTILED_RETRIEVAL_LIMIT}
      * @type {boolean}
      * @private
      */
-    this.use_tiled_retrieval_ =
-        !this.split_ &&
-            (this.tiled_ ||
-                (this.width_* this.height_) > ome.ol3.UNTILED_RETRIEVAL_LIMIT);
-    if (!this.use_tiled_retrieval_) // 1 tile with image dimensions
-        opts.tile_size = { width: this.width_, height: this.height_};
+    this.use_tiled_retrieval_ = this.tiled_ ||
+        this.width_* this.height_ > ome.ol3.UNTILED_RETRIEVAL_LIMIT;
+
+    /**
+     * for untiled retrieval the tile size equals the entire image extent
+     * for tiled we use the default tile size
+     * @type {Object}
+     * @private
+     */
+    this.tile_size_ =
+        this.use_tiled_retrieval_ ? opts.tile_size :
+            {width: this.width_, height: this.height_};
 
     /**
      * the omero server information
@@ -200,9 +198,8 @@ ome.ol3.source.Image = function(options) {
      * @type {string}
      * @private
      */
-    this.uri_ = ome.ol3.utils.Net.checkAndSanitizeUri(
-        opts.uri + '/' + (this.split_ ? 'render_split_channel' :
-        this.use_tiled_retrieval_ ? 'render_image_region' : 'render_image'));
+    this.uri_ = ome.ol3.utils.Net.checkAndSanitizeUri(opts.uri + '/' +
+        (this.use_tiled_retrieval_ ? 'render_image_region' : 'render_image'));
 
     /**
      * the a function that can be called as a post tile load hook
@@ -227,34 +224,27 @@ ome.ol3.source.Image = function(options) {
 
     /**
      * our custom tile url function
-     * @type {number}
+     * @type {function}
      * @private
      */
     this.tileUrlFunction_  =
         function tileUrlFunction(tileCoord, pixelRatio, projection) {
             if (!tileCoord) return undefined;
 
-            var zoom = this.tileGrid.resolutions_.length - tileCoord[0] - 1;
-
             var url =
-            this.server_['full'] + "/" + this.uri_['full'] + '/' +
-            this.id_ + '/' + this.plane_ + '/' + this.time_ + '/?';
+                this.server_['full'] + "/" + this.uri_['full'] + '/' +
+                this.id_ + '/' + this.plane_ + '/' + this.time_ + '/?';
 
-            //non split view and tiled retrieval
-            if (!this.split_ && (this.tiled_ || this.use_tiled_retrieval_)) {
-                if (this.tiled_) // for tiles we use &tile
-                    url += 'tile=' + zoom + ',' + tileCoord[1] + ',' +
-                            (-tileCoord[2]-1);
-                else if (this.use_tiled_retrieval_) // use &region to support 'tiled' behavior
-                    url += 'region=' +
-                            (tileCoord[1] * this.tileGrid.tileSize_[0]) + ',' +
-                            ((-tileCoord[2]-1) * this.tileGrid.tileSize_[1]);
-                url += ',' + this.tileGrid.tileSize_[0] + ',' +
-                        this.tileGrid.tileSize_[1] + '&';
+            if (this.tiled_ || this.use_tiled_retrieval_) {
+                var zoom = this.tiled_ ?
+                    this.tileGrid.resolutions_.length - tileCoord[0] - 1 : 0;
+                url += 'tile=' + zoom  + ',' + tileCoord[1] + ',' +
+                    (-tileCoord[2]-1) + ',' + this.tileGrid.tileSize_[0] +
+                    ',' + this.tileGrid.tileSize_[1] + '&';
             }
+
             // maps parameter (incl. inverted)
             var maps = [];
-
             // add channel param
             url += 'c=';
             var channelsLength = this.channels_info_.length;
@@ -274,10 +264,7 @@ ome.ol3.source.Image = function(options) {
             }
             url += "&maps=" + JSON.stringify(maps);
             url += '&m=' + this.image_model_;
-            url += '&p=' +
-                        (this.split_ ?
-                            ome.ol3.PROJECTION['SPLIT'] :
-                            this.image_projection_);
+            url += '&p=' + this.image_projection_;
             if (this.image_projection_ === ome.ol3.PROJECTION['INTMAX'] &&
                 typeof this.projection_opts_ === 'object' &&
                 this.projection_opts_ !== null) {
@@ -290,12 +277,9 @@ ome.ol3.source.Image = function(options) {
     };
 
     // get rest of parameters and instantiate a tile grid
-    var tileSize =
-        opts.tile_size ||
-            { width: ol.DEFAULT_TILE_SIZE, height: ol.DEFAULT_TILE_SIZE };
     var extent = [0, -this.height_, this.width_, 0];
     var tileGrid = new ol.tilegrid.TileGrid({
-        tileSize: [tileSize.width, tileSize.height],
+        tileSize: [this.tile_size_.width, this.tile_size_.height],
         extent: extent,
         origin: ol.extent.getTopLeft(extent),
         resolutions: this.resolutions_

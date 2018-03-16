@@ -506,7 +506,6 @@ ome.ol3.source.Regions.prototype.forEachFeatureInExtent =
  */
 ome.ol3.source.Regions.prototype.renderFeature = function(feature) {
     var projection =  this.viewer_.getImage().image_projection_;
-    if (projection === ome.ol3.PROJECTION['SPLIT']) return false;
 
     var visible =
         typeof(feature['visible']) !== 'boolean' || feature['visible'];
