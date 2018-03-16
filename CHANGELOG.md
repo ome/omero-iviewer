@@ -10,7 +10,7 @@ This version includes:
 - added option to export ROIs statistics in CSV file or Excel file
 - improved ROIs creation, manipulation and persistence
 - added new icon for polyline
-- improved ROIs statistics export
+- improved handling of statistical values
 - handled images with large number of channels
 - added menus in header
 - improved loading and display of bird's eye view
