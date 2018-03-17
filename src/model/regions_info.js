@@ -201,9 +201,15 @@ export default class RegionsInfo  {
             this.copied_shapes = JSON.parse(
                 window.localStorage.getItem(IVIEWER + ".copy_shape_defs"));
             if (!Misc.isArray(this.copied_shapes)) this.copied_shapes = [];
+        } catch(ignored) {
+            this.copied_shapes = [];
+        }
+        try {
             this.copied_image_dims = JSON.parse(
                 window.localStorage.getItem(IVIEWER + ".copy_image_dims"));
-        } catch(ignored) {}
+        } catch(ignored) {
+            this.copied_image_dims = null;
+        }
     }
 
     /**
@@ -603,6 +609,7 @@ export default class RegionsInfo  {
 
         this.syncCopiedShapesWithLocalStorage();
         let isCompatibleTargetImage =
+            this.copied_image_dims &&
             this.copied_image_dims.width <= this.image_info.dimensions.max_x &&
             this.copied_image_dims.height <= this.image_info.dimensions.max_y;
         let params = {
