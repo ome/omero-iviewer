@@ -250,7 +250,7 @@ ome.ol3.Viewer = function(id, options) {
         actual_version = parseInt(actual_version.replace(/[.]/g, ""));
         if (isNaN(actual_version)) return false;
 
-        return version >= actual_version;
+        return actual_version >= version;
     }
 
     /**
