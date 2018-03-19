@@ -238,18 +238,18 @@ ome.ol3.source.Image = function(options) {
             if (this.tiled_ || this.use_tiled_retrieval_) {
                 var zoom = this.tiled_ ?
                     this.tileGrid.resolutions_.length - tileCoord[0] - 1 : 0;
-                if (this.tile_size_) {
+                if (this.tiled_) {
                     url += 'tile=' + zoom  + ',' +
-                        tileCoord[1] + ',' + (-tileCoord[2]-1) + ',';
+                        tileCoord[1] + ',' + (-tileCoord[2]-1);
                 } else {
-                    // for non pyramid images that are retrieved tiled 
+                    // for non pyramid images that are retrieved tiled
                     // force tile size with 'region' to be compatible
                     // with older versions of omero server
                     url += 'region=' +
                         (tileCoord[1] * this.tileGrid.tileSize_[0]) + ',' +
-                        ((-tileCoord[2]-1) * this.tileGrid.tileSize_[1]) + ',';
+                        ((-tileCoord[2]-1) * this.tileGrid.tileSize_[1]);
                 }
-                url += this.tileGrid.tileSize_[0] + ',' +
+                url += ',' + this.tileGrid.tileSize_[0] + ',' +
                     this.tileGrid.tileSize_[1] + '&';
             }
 

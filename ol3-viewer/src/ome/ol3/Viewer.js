@@ -455,7 +455,10 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
        channels.push(newC);
     }
 
-    // create an OmeroImage source (tiled)
+    var isTiled =
+        typeof this.image_info_['tiles'] === 'boolean' &&
+            this.image_info_['tiles'];
+    // create an OmeroImage source
     var source = new ome.ol3.source.Image({
        server : this.getServer(),
        uri : this.getPrefixedURI(ome.ol3.WEBGATEWAY),
@@ -468,9 +471,8 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
        resolutions: zoom > 1 ? zoomLevelScaling : [1],
        img_proj:  parsedInitialProjection,
        img_model:  initialModel,
-       tiled: typeof this.image_info_['tiles'] === 'boolean' &&
-            this.image_info_['tiles'],
-       tile_size: this.supportsOmeroServerVersion("5.4.4") ?
+       tiled: isTiled,
+       tile_size: isTiled && this.supportsOmeroServerVersion("5.4.4") ?
             ome.ol3.DEFAULT_TILE_DIMS :
                 this.image_info_['tile_size'] ?
                     this.image_info_['tile_size'] : null
