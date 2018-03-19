@@ -172,7 +172,7 @@ ome.ol3.source.Image = function(options) {
      * @private
      */
     this.use_tiled_retrieval_ = this.tiled_ ||
-        this.width_* this.height_ > ome.ol3.UNTILED_RETRIEVAL_LIMIT;
+        this.width_ * this.height_ > ome.ol3.UNTILED_RETRIEVAL_LIMIT;
 
     /**
      * for untiled retrieval the tile size equals the entire image extent
@@ -238,9 +238,19 @@ ome.ol3.source.Image = function(options) {
             if (this.tiled_ || this.use_tiled_retrieval_) {
                 var zoom = this.tiled_ ?
                     this.tileGrid.resolutions_.length - tileCoord[0] - 1 : 0;
-                url += 'tile=' + zoom  + ',' + tileCoord[1] + ',' +
-                    (-tileCoord[2]-1) + ',' + this.tileGrid.tileSize_[0] +
-                    ',' + this.tileGrid.tileSize_[1] + '&';
+                if (this.tile_size_) {
+                    url += 'tile=' + zoom  + ',' +
+                        tileCoord[1] + ',' + (-tileCoord[2]-1) + ',';
+                } else {
+                    // for non pyramid images that are retrieved tiled 
+                    // force tile size with 'region' to be compatible
+                    // with older versions of omero server
+                    url += 'region=' +
+                        (tileCoord[1] * this.tileGrid.tileSize_[0]) + ',' +
+                        ((-tileCoord[2]-1) * this.tileGrid.tileSize_[1]) + ',';
+                }
+                url += this.tileGrid.tileSize_[0] + ',' +
+                    this.tileGrid.tileSize_[1] + '&';
             }
 
             // maps parameter (incl. inverted)
@@ -279,7 +289,9 @@ ome.ol3.source.Image = function(options) {
     // get rest of parameters and instantiate a tile grid
     var extent = [0, -this.height_, this.width_, 0];
     var tileGrid = new ol.tilegrid.TileGrid({
-        tileSize: [this.tile_size_.width, this.tile_size_.height],
+        tileSize: this.tile_size_ ?
+            [this.tile_size_.width, this.tile_size_.height] :
+            [ome.ol3.DEFAULT_TILE_DIMS.width, ome.ol3.DEFAULT_TILE_DIMS.height],
         extent: extent,
         origin: ol.extent.getTopLeft(extent),
         resolutions: this.resolutions_
