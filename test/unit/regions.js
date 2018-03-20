@@ -119,7 +119,7 @@ describe("Regions", function() {
         expect(feature.getGeometry().getRadius()).to.eql([25, 55]);
     });
 
-    it('generateRegions', function() {
+    it('generateRegionsRandom', function() {
         var features =
             ome.ol3.utils.Regions.generateRegions(
                 polygon_info, 10, [0,-1000,1000,0]);
@@ -130,6 +130,37 @@ describe("Regions", function() {
             var geom = features[f].getGeometry();
             assert.instanceOf(geom, ome.ol3.geom.Polygon);
             assert(ol.extent.containsExtent([0,-1000,1000,0], geom.getExtent()));
+        }
+    });
+
+    it('generateRegionsPosition', function() {
+        var features =
+            ome.ol3.utils.Regions.generateRegions(
+                polygon_info, 1, [0,-1000,1000,0], [0,0]);
+
+        assert.instanceOf(features, Array);
+        for (var f in features) {
+            assert.instanceOf(features[f], ol.Feature);
+            var geom = features[f].getGeometry();
+            assert.instanceOf(geom, ome.ol3.geom.Polygon);
+            expect(ol.extent.getTopLeft(geom.getExtent())).to.deep.equal([0,0]);
+        }
+    });
+
+    it('generateRegionsSamePlace', function() {
+        var features =
+            ome.ol3.utils.Regions.generateRegions(
+                polygon_info, 1, [0,-1000,1000,0], null, true);
+        var expGeom =
+            ome.ol3.utils.Regions.featureFactory(polygon_info).getGeometry();
+            
+        assert.instanceOf(features, Array);
+        for (var f in features) {
+            assert.instanceOf(features[f], ol.Feature);
+            var geom = features[f].getGeometry();
+            assert.instanceOf(geom, ome.ol3.geom.Polygon);
+            expect(geom.getPolygonCoordinates()).to.deep.equal(
+                expGeom.getPolygonCoordinates());
         }
     });
 
