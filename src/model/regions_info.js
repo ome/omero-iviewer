@@ -559,7 +559,8 @@ export default class RegionsInfo  {
      */
     getNumberOfDeletedShapes() {
         return this.unsophisticatedShapeFilter(
-            ["deleted"], [true], ['canDelete']).length;
+            ["deleted", "is_new"], [true, "false"],
+            ['canDelete', 'canDelete']).length;
     }
 
     /**
