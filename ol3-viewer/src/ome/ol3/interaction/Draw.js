@@ -190,6 +190,11 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
         this.ol_draw_ = new ol.interaction.Draw({
             style: this.default_style_function_,
             type: ol_shape,
+            condition: function(e) {
+                // ignore right clicks (from context)
+                return ol.events.condition.noModifierKeys(e) &&
+                    ol.events.condition.primaryAction(e);
+            },
             geometryFunction:
                 typeof(geometryFunction) === 'function' ?
                     geometryFunction : null
