@@ -81,7 +81,9 @@ ome.ol3.interaction.Translate = function(regions_reference) {
                     f['permissions'] !== null &&
                     typeof f['permissions']['canEdit'] === 'boolean' &&
                     !f['permissions']['canEdit'])) continue;
-                this.translatedFeatures_.push(f);
+                var clonedF = f.clone();
+                clonedF.setId(f.getId());
+                this.translatedFeatures_.push(clonedF);
             }
         }, this);
 
