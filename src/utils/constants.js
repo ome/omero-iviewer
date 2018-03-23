@@ -121,6 +121,7 @@ export const REQUEST_PARAMS = {
     IMAGES: 'IMAGES',
     MAPS: 'MAPS',
     MODEL: 'M',
+    OMERO_VERSION: 'OMERO_VERSION',
     PLANE: 'Z',
     PROJECTION: 'P',
     SERVER: 'SERVER',

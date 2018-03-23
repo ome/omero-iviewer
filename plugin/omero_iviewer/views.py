@@ -52,9 +52,8 @@ QUERY_DISTANCE = 25
 
 @login_required()
 def index(request, iid=None, conn=None, **kwargs):
-    # set params
-    params = {'VERSION': __version__}
-    params = {'OMERO_VERSION': omero_version}
+    # create params (incl. versions)
+    params = {'VERSION': __version__, 'OMERO_VERSION': omero_version}
 
     # check for image_id (default viewer setup)
     if iid is not None:

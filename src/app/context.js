@@ -797,8 +797,12 @@ export default class Context {
      * @memberof Context
      */
     resetInitParams() {
+        let omeroServerVersion =
+            this.getInitialRequestParam(REQUEST_PARAMS.OMERO_VERSION);
         // empty all handed in params
         this.initParams = {};
+        // keep omero server information
+        this.initParams[REQUEST_PARAMS.OMERO_VERSION] = omeroServerVersion;
         // we do need our uri prefixes again
         this.prefixed_uris.forEach((value, key) => this.initParams[key] = value);
     }
