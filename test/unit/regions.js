@@ -153,7 +153,7 @@ describe("Regions", function() {
                 polygon_info, 1, [0,-1000,1000,0], null, true);
         var expGeom =
             ome.ol3.utils.Regions.featureFactory(polygon_info).getGeometry();
-            
+
         assert.instanceOf(features, Array);
         for (var f in features) {
             assert.instanceOf(features[f], ol.Feature);
@@ -171,7 +171,7 @@ describe("Regions", function() {
 
         assert.instanceOf(measurement, Object);
         expect(measurement.Area).to.eql(180);
-        expect(measurement.Length).to.eql(54);
+        expect(measurement.Length).to.eql(-1);
 
         feature = ome.ol3.utils.Regions.featureFactory(line_info);
         measurement =
@@ -180,6 +180,13 @@ describe("Regions", function() {
         assert.instanceOf(measurement, Object);
         expect(measurement.Area).to.eql(-1);
         expect(measurement.Length).to.eql(81.394);
+
+        feature = ome.ol3.utils.Regions.featureFactory(polyline_info);
+        measurement =
+            ome.ol3.utils.Regions.calculateLengthAndArea(feature);
+        assert.instanceOf(measurement, Object);
+        expect(measurement.Area).to.eql(-1);
+        expect(measurement.Length).to.eql(164.239);
 
         feature = ome.ol3.utils.Regions.featureFactory(point_info);
         measurement =
