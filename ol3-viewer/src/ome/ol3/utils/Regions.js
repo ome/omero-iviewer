@@ -514,9 +514,9 @@ ome.ol3.utils.Regions.calculateLengthAndArea =
             !(geom instanceof ol.geom.Circle) &&
             !(geom instanceof ome.ol3.geom.Line) &&
             !(geom instanceof ome.ol3.geom.Label);
-        var hasLength =
-            !(geom instanceof ol.geom.Circle) &&
-            !(geom instanceof ome.ol3.geom.Label);
+        // for now we only calculate length for line geometries
+        // TODO: adjust if perimeter for closed geometries is needed as well
+        var hasLength = geom instanceof ome.ol3.geom.Line;
 
         // if we are not micron we convert
         if (typeof pixel_symbol !== 'string' ||
