@@ -452,7 +452,7 @@ export default class RegionsList extends EventSubscriber {
      * @memberof RegionsList
      */
     hasPermissions(shape) {
-        return !shape.permissions ||
+        return !(shape && shape.permissions) ||
            (shape.permissions &&
             shape.permissions.canAnnotate &&
             shape.permissions.canEdit &&

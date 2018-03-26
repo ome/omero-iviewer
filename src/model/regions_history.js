@@ -65,6 +65,13 @@ export default class RegionsHistory {
     historyPointer = -1;
 
     /**
+     * @see checkIfHistoryHasOnlyNewlyDeleted
+     * @memberof History
+     * @type {boolean}
+     */
+    hasOnlyNewlyDeleted = true;
+
+    /**
      * a reference to RegionsInfo
      * @memberof History
      * @type {RegionsInfo}
@@ -161,23 +168,23 @@ export default class RegionsHistory {
                 this.history.length-this.historyPointer, opts);
             this.historyPointer++;
         }
+
+        this.checkIfHistoryHasOnlyNewlyDeleted();
      }
 
     /**
      * Undoes the last action
-     * @param {boolean} remove delete history entry after action (default: false)
      * @memberof History
      */
-    undoHistory(remove=false) {
+    undoHistory() {
         if (!this.canUndo()) return;
 
         let entry = this.history[this.historyPointer];
         // converge
         this.doHistory(entry, true);
-        if (typeof remove === 'boolean' && remove)
-            this.history.splice(this.historyPointer, 1);
         //adjust pointer
         this.historyPointer--;
+        this.checkIfHistoryHasOnlyNewlyDeleted();
     }
 
     /**
@@ -192,6 +199,7 @@ export default class RegionsHistory {
         this.doHistory(entry, false);
         //adjust pointer
         this.historyPointer++;
+        this.checkIfHistoryHasOnlyNewlyDeleted();
     }
 
     /**
@@ -277,35 +285,89 @@ export default class RegionsHistory {
     }
 
     /**
-    * @return {boolean} true if we are not at the end of the history
-    * @memberof History
-    */
+     * Sets the hasOnlyNewlyDeleted flag if we are at the beginning
+     * of the history or the history contains deletes of new shapes only
+     * @memberof History
+     */
+    checkIfHistoryHasOnlyNewlyDeleted() {
+        this.hasOnlyNewlyDeleted = true;
+        if (this.historyPointer < 0) return;
+        let new_shapes = new Map();
+        for (let i=0;i<=this.historyPointer;i++) {
+            let entry = this.history[i];
+            if (!Misc.isArray(entry.records)) continue;
+            for (let r in entry.records) {
+                let rec = entry.records[r];
+                switch(entry.action) {
+                    // ol3 actions constitute change unless for new shapes
+                    case this.action.OL_ACTION:
+                        for (let s in rec.shape_ids)
+                            if (new_shapes.get(rec.shape_ids[s]) !== null) {
+                                this.hasOnlyNewlyDeleted = false;
+                                return;
+                            }
+                        break;
+                    // property actions constitute change unless for new shapes
+                    case this.action.PROPERTIES:
+                        if (new_shapes.get(rec.shape_id) !== null) {
+                            this.hasOnlyNewlyDeleted = false;
+                            return;
+                        }
+                        break;
+                    default:
+                        if (!Misc.isArray(rec.diffs)) break;
+                        // deletes are changes unless for new shapes
+                        for (let d in rec.diffs) {
+                            let shape_id = rec.diffs[d].shape_id;
+                            let is_new = typeof rec.diffs[d]['is_new'] === 'boolean';
+                            if (!rec.new_vals) {
+                                if (is_new) new_shapes.delete(shape_id);
+                                else {
+                                    this.hasOnlyNewlyDeleted = false;
+                                    return;
+                                }
+                            } else if (is_new) new_shapes.set(shape_id, null);
+                        }
+                }
+            }
+        }
+        // if we have come that far, there were no changes
+        // other than to newly created shapes
+        // should they all have been deleted we set the flag accordingly
+        this.hasOnlyNewlyDeleted = new_shapes.size === 0;
+    }
+
+    /**
+     * @return {boolean} true if we are not at the end of the history
+     * @memberof History
+     */
     canRedo() {
        return this.hasHistory() && this.historyPointer < this.history.length-1;
     }
 
     /**
-    * @return {boolean} true if we are not at the beginning of the history
-    * @memberof History
-    */
+     * @return {boolean} true if we are not at the beginning of the history
+     * @memberof History
+     */
     canUndo() {
         return this.hasHistory() && this.historyPointer >= 0;
     }
 
     /**
-    * @return {boolean} true if we have at least one record, false otherwise
-    * @memberof History
-    */
+     * @return {boolean} true if we have at least one record, false otherwise
+     * @memberof History
+     */
     hasHistory() {
        return this.history.length > 0;
     }
 
     /**
-    * Resets history
-    * @memberof History
-    */
+     * Resets history
+     * @memberof History
+     */
     resetHistory() {
        this.history = [];
+       this.hasOnlyNewlyDeleted = true;
        this.historyPointer = -1;
     }
 }

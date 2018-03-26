@@ -489,7 +489,9 @@ export default class RegionsInfo  {
      * @return {boolean} true if shapes have been modified, otherwise false
      */
     hasBeenModified() {
-        return this.history instanceof RegionsHistory && this.history.canUndo();
+        return this.history instanceof RegionsHistory &&
+            this.history.historyPointer >= 0 &&
+            !this.history.hasOnlyNewlyDeleted;
     }
 
     /**
@@ -559,7 +561,8 @@ export default class RegionsInfo  {
      */
     getNumberOfDeletedShapes() {
         return this.unsophisticatedShapeFilter(
-            ["deleted"], [true], ['canDelete']).length;
+            ["deleted", "is_new"], [true, "false"],
+            ['canDelete', 'canDelete']).length;
     }
 
     /**
