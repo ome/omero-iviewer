@@ -489,7 +489,9 @@ export default class RegionsInfo  {
      * @return {boolean} true if shapes have been modified, otherwise false
      */
     hasBeenModified() {
-        return this.history instanceof RegionsHistory && this.history.canUndo();
+        return this.history instanceof RegionsHistory &&
+            this.history.historyPointer >= 0 &&
+            !this.history.hasOnlyNewlyDeleted;
     }
 
     /**
