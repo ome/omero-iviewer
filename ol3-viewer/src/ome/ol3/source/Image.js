@@ -555,7 +555,7 @@ ome.ol3.source.Image.prototype.changeChannelRange = function(ranges) {
                 if (active) needsRerender = true;
         }
         // quantization maps
-        if (typeof range['family'] === 'boolean' && range['family'] !== '' &&
+        if (typeof range['family'] === 'string' && range['family'] !== '' &&
             this.channels_info_[channel_index]['family'] !== range['family']) {
                 this.channels_info_[channel_index]['family'] = range['family'];
                 if (active) needsRerender = true;

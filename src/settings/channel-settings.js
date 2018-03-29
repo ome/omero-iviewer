@@ -85,6 +85,8 @@ export default class ChannelSettings {
         {obj: null, prop: 'active'},
         {obj: null, prop: 'color'},
         {obj: null, prop: 'inverted'},
+        {obj: null, prop: 'family'},
+        {obj: null, prop: 'coefficient'},
         {obj: 'window', prop: 'start'},
         {obj: 'window', prop: 'end'}
     ];
