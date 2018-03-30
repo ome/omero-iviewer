@@ -17,6 +17,8 @@
 //
 
 import Context from '../app/context';
+import Misc from '../utils/misc';
+import {Converters} from '../utils/converters';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {spinner} from 'jquery-ui/ui/widgets/spinner';
 import {slider} from 'jquery-ui/ui/widgets/slider';
@@ -50,7 +52,7 @@ export default class ChannelRangeAdvanced  {
 
     /**
      * the revision count (used for history)
-     * @memberof ChannelRange
+     * @memberof ChannelRangeAdvanced
      * @type {number}
      */
     @bindable revision = 0;
@@ -60,6 +62,13 @@ export default class ChannelRangeAdvanced  {
         imgInf.initial_values = true;
         this.updateUI();
     }
+
+    /**
+     * property observers
+     * @memberof ChannelRangeAdvanced
+     * @type {Array.<Object>}
+     */
+    observers = [];
 
     /**
      * the slider min/max for gamma values
@@ -99,6 +108,26 @@ export default class ChannelRangeAdvanced  {
      */
     bind() {
         this.updateUI();
+        this.observers.push(
+            this.bindingEngine.propertyObserver(
+                this.channel, 'show_advanced_settings')
+                .subscribe((newValue, oldValue) => this.updatePreview()));
+        this.observers.push(
+            this.bindingEngine.propertyObserver(
+                this.channel, 'color')
+                .subscribe((newValue, oldValue) => this.updatePreview()));
+    }
+
+    /**
+     * Overridden aurelia lifecycle method:
+     * called whenever the view is unbound within aurelia
+     * in other words a 'destruction' hook that happens after 'detached'
+     *
+     * @memberof ChannelRangeAdvanced
+     */
+    unbind() {
+        this.observers.map((o) => {if (o) o.dispose();});
+        this.observers = [];
     }
 
     /**
@@ -162,6 +191,8 @@ export default class ChannelRangeAdvanced  {
                 channelGammaInput.spinner("value", ui.value);
             }
         });
+
+        this.updatePreview();
     }
 
     /**
@@ -246,4 +277,58 @@ export default class ChannelRangeAdvanced  {
 
         }
     }
+
+    /**
+     * Hides advanced settings
+     *
+     * @memberof ChannelRangeAdvanced
+     */
+    hideAdvancedSettings() {
+        this.channel.show_advanced_settings = false;
+    }
+
+    /**
+     * Updates the preview
+     *
+     * @memberof ChannelRangeAdvanced
+     */
+     updatePreview() {
+         if (!this.channel.show_advanced_settings) return;
+
+         let preview = $(this.element).find(".settings-preview");
+         let canvas = null;
+         if (preview && typeof preview.length === 'number' &&
+            preview.length > 0) canvas = preview.get(0);
+
+         if (canvas instanceof HTMLCanvasElement &&
+            this.context.luts_png.image instanceof Image) {
+                let ctx = canvas.getContext("2d");
+                let isLut =
+                    this.context.hasLookupTableEntry(this.channel.color);
+                let offset = this.context.luts_png.height - 10;
+                if (isLut) {
+                    let lut = this.context.luts.get(this.channel.color);
+                    if (lut) offset = lut.index * 10;
+                } else {
+                    let colors =
+                        Converters.convertHexColorToRGB(this.channel.color);
+                    let imageData =
+                            ctx.getImageData(0,0,canvas.width,canvas.height);
+                    let i=0;1
+                    let grad = 0;
+                    while (i<imageData.data.length) {
+                        imageData.data[i] = colors[0];
+                        imageData.data[i+1] = colors[1];
+                        imageData.data[i+2] = colors[2];
+                        imageData.data[i+3] = 255;
+                        i += 4;
+                    }
+                    ctx.putImageData(imageData, 0, 0);
+                }
+                ctx.drawImage(
+                    this.context.luts_png.image,
+                    0, offset+1, 256, 8,
+                    0, 0, canvas.width, canvas.height);
+         }
+     }
 }

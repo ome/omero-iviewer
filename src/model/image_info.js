@@ -649,8 +649,10 @@ export default class ImageInfo {
     initAndMixChannelsWithInitialSettings(channels, initialChannels) {
         if (!Misc.isArray(channels)) return channels;
 
-        // apply lut if exists
+        // set flag for showing advanced settings,
+        // inverted flag and luts (if exists)
         channels.map((c) => {
+            c.show_advanced_settings = false;
             if (typeof c.lut  === 'string' && c.lut.length > 0)
                 c.color = c.lut;
             if (typeof c.inverted !== 'boolean')

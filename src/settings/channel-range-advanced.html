@@ -15,7 +15,7 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
-<template>
+<template show.bind="channel.show_advanced_settings">
     <div class="channel-range-advanced">Map:&nbsp;
         <div class="dropdown quantization-dropdown">
             <button type="button"
@@ -29,10 +29,13 @@
                 </li>
             </ul>
         </div>
+        <span class="glyphicon glyphicon-remove"
+                click.delegate="hideAdvancedSettings()"></span>
     </div>
     <div class="channel-range-advanced">
         Gamma:&nbsp;
         <div class="gamma-slider"></div>
         <input class="gamma-input"/>
     </div>
+    <canvas class="channel-range-advanced settings-preview"></canvas>
 </template>
