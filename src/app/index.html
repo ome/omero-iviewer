@@ -69,7 +69,7 @@
         <div class="frame col-xs-12">
             <div class="${context.useMDI && context.image_configs.size > 1 ?
                             'viewer-mdi' : 'viewer'}
-                        ${context.useMDI && context.selected_config === id && 
+                        ${context.useMDI && context.selected_config === id &&
                             context.image_configs.size > 1 ? 'mdi-selected' : ''}"
                  repeat.for="[id, conf] of context.image_configs"
                  css="${context.useMDI && context.image_configs.size > 1 ?
@@ -121,7 +121,7 @@
                                              (lock.CHAR === 'zt' &&
                                               conf.image_info.dimensions.max_z > 1 ||
                                               conf.image_info.dimensions.max_t > 1))"
-                                title="Lock ${lock.LABEL}}">
+                                title="Lock ${lock.LABEL}">
                              <input type="checkbox"
                                  checked.bind="conf.sync_locks[lock.CHAR]"
                                  change.delegate="

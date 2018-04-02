@@ -33,9 +33,9 @@ import {
 } from '../utils/constants';
 import {
     BIRDSEYE_REFRESH, IMAGE_CANVAS_DATA, IMAGE_DIMENSION_CHANGE,
-    IMAGE_DIMENSION_PLAY, IMAGE_INTENSITY_QUERYING, IMAGE_SETTINGS_CHANGE,
-    IMAGE_VIEWER_CONTROLS_VISIBILITY, IMAGE_VIEWER_INTERACTION,
-    IMAGE_VIEWER_RESIZE, IMAGE_VIEWPORT_CAPTURE,
+    IMAGE_DIMENSION_PLAY, IMAGE_INTENSITY_QUERYING, VIEWER_PROJECTIONS_SYNC,
+    IMAGE_SETTINGS_CHANGE, IMAGE_VIEWER_CONTROLS_VISIBILITY,
+    IMAGE_VIEWER_INTERACTION, IMAGE_VIEWER_RESIZE, IMAGE_VIEWPORT_CAPTURE,
     REGIONS_CHANGE_MODES, REGIONS_COPY_SHAPES, REGIONS_DRAW_SHAPE,
     REGIONS_GENERATE_SHAPES, REGIONS_HISTORY_ACTION, REGIONS_HISTORY_ENTRY,
     REGIONS_MODIFY_SHAPES, REGIONS_PROPERTY_CHANGED, REGIONS_SET_PROPERTY,
@@ -117,6 +117,8 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.setRegionsProperty(params)],
         [VIEWER_IMAGE_SETTINGS,
             (params={}) => this.getImageSettings(params)],
+        [VIEWER_PROJECTIONS_SYNC,
+            (params={}) => this.syncImageSettingsProjections(params)],
         [REGIONS_CHANGE_MODES,
             (params={}) => this.changeRegionsModes(params)],
         [REGIONS_DRAW_SHAPE,
@@ -452,12 +454,25 @@ export default class Ol3Viewer extends EventSubscriber {
         } else if (isSameConfig && typeof params.projection === 'string') {
             this.viewer.changeImageProjection(
                 params.projection,
-                this.image_config.image_info.projection_opts);
+                Object.assign({}, params.projection_opts));
+            this.context.publish(VIEWER_PROJECTIONS_SYNC, params);
         } else if (Misc.isArray(params.ranges) && params.ranges.length > 0) {
             if (isSameConfig) this.viewer.changeChannelRange(params.ranges);
             else this.linked_events.syncAction(params, "changeImageSettings");
         } else if (typeof params.interpolate === 'boolean')
             this.viewer.enableSmoothing(params.interpolate);
+    }
+
+    /**
+     * Syncs projection (toggle, settings)
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     */
+    syncImageSettingsProjections(params = {}) {
+        // we are syncing only with configs other than the originating
+        if (typeof params.config_id !== 'number' ||
+            params.config_id === this.image_config.id) return;
+        this.linked_events.syncAction(params, "changeImageSettings");
     }
 
     /**
