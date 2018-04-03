@@ -1341,7 +1341,7 @@ ome.ol3.Viewer.prototype.generateShapes = function(shape_info, options) {
     var generatedShapes =
         ome.ol3.utils.Regions.generateRegions(
             shape_info, number, extent, position,
-            typeof options['is_compatible'] === 'boolean' && 
+            typeof options['is_compatible'] === 'boolean' &&
                 options['is_compatible']);
     // another brief sanity check in case not all shapes were created
     if (generatedShapes === null ||
@@ -1926,12 +1926,18 @@ ome.ol3.Viewer.prototype.enableSmoothing = function(smoothing) {
  * Captures the canvas content, sending the data via event notification
  * (which is necessary since the loading is async and has to complete)
  *
- * @param {boolean} full_extent if true the image is scaled to show at a 100%
- *                              (default: false)
+ * @param {Object} params the event notification parameters
  */
-ome.ol3.Viewer.prototype.sendCanvasContent = function(full_extent) {
-    if (this.viewer_ === null || this.eventbus_ === null) return;
+ome.ol3.Viewer.prototype.sendCanvasContent = function(params) {
+    params = params || {};
+    var allConfigs =
+        typeof params['all_configs'] === 'boolean' && params['all_configs'];
+    if (this.viewer_ === null || this.eventbus_ === null) {
+        if (allConfigs) params['count']--;
+        return;
+    }
 
+    var zipEntry = params['zip_entry'];
     var supported = false;
     try {
         var MyBlob = new Blob(['test text'], {type : 'text/plain'});
@@ -1940,9 +1946,23 @@ ome.ol3.Viewer.prototype.sendCanvasContent = function(full_extent) {
 
     var that = this;
     var publishEvent = function(data) {
+        if (allConfigs) params['count']--;
         if (that.eventbus_ === null) return;
+        params["supported"] = supported;
+        if (supported && allConfigs) {
+            var zipEntryName = zipEntry + '.png';
+            if (typeof  params['zip']['files'][zipEntryName] === 'object') {
+                var sameCounter = 1;
+                zipEntryName = zipEntry + '-' + sameCounter + '.png';
+                while (typeof  params['zip']['files'][zipEntryName] === 'object') {
+                    ++sameCounter;
+                    zipEntryName = zipEntry + '-' + sameCounter + '.png';
+                }
+            }
+            params['zip'].file(zipEntryName, data);
+        } else params['data'] = data;
         ome.ol3.utils.Misc.sendEventNotification(
-            that, "IMAGE_CANVAS_DATA", {"supported": supported, "data": data});
+            that, "IMAGE_CANVAS_DATA", params);
     };
     var omeroImage = this.getImage();
     if (omeroImage === null || !supported) {
@@ -1990,12 +2010,13 @@ ome.ol3.Viewer.prototype.sendCanvasContent = function(full_extent) {
      }, 50);
    });
 
-   if (this.viewer_ && typeof full_extent === 'boolean' && full_extent) {
-       var view = this.viewer_ ? this.viewer_.getView() : null;
-       if (view === null) return;
+   if (this.viewer_ && typeof params['full_extent'] === 'boolean' &&
+       params['full_extent']) {
+           var view = this.viewer_ ? this.viewer_.getView() : null;
+           if (view === null) return;
 
-       var ext = view.getProjection().getExtent();
-       view.fit([ext[0], -ext[3], ext[2], ext[1]]);
+           var ext = view.getProjection().getExtent();
+           view.fit([ext[0], -ext[3], ext[2], ext[1]]);
    }
    this.viewer_.renderSync();
 }

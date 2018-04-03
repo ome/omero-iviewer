@@ -37,7 +37,10 @@
                     <li class="${image_config.image_info.ready ?
                                  '' : 'disabled-color'}">
                         <a click.delegate="captureViewport()"
-                           href="#">Save Viewport as PNG</a>
+                           href="#">Save ${context.image_configs.size > 1 ?
+                                            'All Viewports as PNGs (zipped)' :
+                                            'Viewport as PNG'}
+                        </a>
                     </li>
                     <li class="${image_config.image_info.ready  &&
                                  image_config.image_info.projection !== PROJECTION.NORMAL?

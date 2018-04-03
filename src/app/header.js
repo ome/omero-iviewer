@@ -19,6 +19,7 @@
 import {inject,customElement, BindingEngine} from 'aurelia-framework';
 import Context from './context';
 import * as FileSaver from '../../node_modules/file-saver';
+import JSZip from '../../node_modules/jszip/dist/jszip';
 import * as TextEncoding from "../../node_modules/text-encoding";
 import Misc from '../utils/misc';
 import Ui from '../utils/ui';
@@ -368,8 +369,14 @@ export class Header {
      */
     captureViewport() {
         if (this.image_config === null) return;
-        this.context.eventbus.publish(
-            IMAGE_VIEWPORT_CAPTURE, {"config_id": this.image_config.id});
+        let params = {}
+        let configCount = this.context.image_configs.size;
+        if (configCount > 1) {
+            params.all_configs = true;
+            params.count = configCount;
+            params.zip = new JSZip();
+        } else params.config_id = this.image_config.id;
+        this.context.eventbus.publish(IMAGE_VIEWPORT_CAPTURE, params);
     }
 
     /**

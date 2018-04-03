@@ -1227,9 +1227,16 @@ export default class Ol3Viewer extends EventSubscriber {
      * @return
      */
     captureViewport(params={}) {
-        if (this.viewer === null ||
-            params.config_id !== this.image_config.id) return;
-        this.viewer.sendCanvasContent();
+        let allConfigs =
+            typeof params.all_configs === 'boolean' && params.all_configs;
+        if (this.viewer === null) {
+            if (allConfigs) params.count--;
+            return;
+        }
+        if (!allConfigs && params.config_id !== this.image_config.id) return;
+        if (allConfigs)
+            params.zip_entry = this.image_config.image_info.image_name;
+        this.viewer.sendCanvasContent(params);
     }
 
     /**
@@ -1240,15 +1247,33 @@ export default class Ol3Viewer extends EventSubscriber {
      * @return
      */
     saveCanvasData(params={}) {
-        if (this.image_config === null || // sanity check
-            this.image_config.id !== params.config_id) return; // not for us
         if (!params.supported) { // blob not supported
                 console.error("Capturing Viewport as Blob not supported");
                 return;
         }
 
-        FileSaver.saveAs(
-            params.data, this.image_config.image_info.image_name + ".png");
+        let allConfigs =
+            typeof params.all_configs === 'boolean' && params.all_configs;
+        let saveAs = () => {
+            if (allConfigs) {
+                if (params.count > 0) return;
+                // we are finished and like to write the zip now
+                if (!params.zip) console.error("no jszip instance!");
+                else {
+                    params.zip.generateAsync({type:"blob"}).then(
+                        (content) => FileSaver.saveAs(content, "images.zip"));
+                }
+            } else  {
+                if (this.image_config === null) return;
+                FileSaver.saveAs(
+                    params.data,
+                    this.image_config.image_info.image_name + ".png");
+            }
+        };
+
+        // not for us
+        if (!allConfigs && this.image_config.id !== params.config_id) return;
+        saveAs();
     }
 
     /**
