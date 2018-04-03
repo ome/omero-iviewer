@@ -472,7 +472,7 @@ export default class Ol3Viewer extends EventSubscriber {
         // we are syncing only with configs other than the originating
         if (typeof params.config_id !== 'number' ||
             params.config_id === this.image_config.id) return;
-        this.linked_events.syncAction(params, "changeImageSettings");
+        this.linked_events.syncAction(params, "setProjection");
     }
 
     /**
