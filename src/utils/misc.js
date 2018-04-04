@@ -264,9 +264,10 @@ export default class Misc {
                 m['inverted']['enabled'];
             if (typeof m['quantization'] !== 'object' ||
                 m['quantization'] === null ||
-                !(typeof m['family'] === 'string' && m['family'] !== "" &&
-                    typeof m['coefficient'] === 'number' &&
-                    !isNaN(m['coefficient']))) continue;
+                !(typeof m['quantization']['family'] === 'string' &&
+                    m['quantization']['family'] !== "" &&
+                    typeof m['quantization']['coefficient'] === 'number' &&
+                    !isNaN(m['quantization']['coefficient']))) continue;
             channels[i]['family'] = m['quantization']['family'];
             channels[i]['coefficient'] = m['quantization']['coefficient'];
         }
