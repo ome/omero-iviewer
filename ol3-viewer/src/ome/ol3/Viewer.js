@@ -1341,7 +1341,7 @@ ome.ol3.Viewer.prototype.generateShapes = function(shape_info, options) {
     var generatedShapes =
         ome.ol3.utils.Regions.generateRegions(
             shape_info, number, extent, position,
-            typeof options['is_compatible'] === 'boolean' && 
+            typeof options['is_compatible'] === 'boolean' &&
                 options['is_compatible']);
     // another brief sanity check in case not all shapes were created
     if (generatedShapes === null ||
@@ -1990,13 +1990,7 @@ ome.ol3.Viewer.prototype.sendCanvasContent = function(full_extent) {
      }, 50);
    });
 
-   if (this.viewer_ && typeof full_extent === 'boolean' && full_extent) {
-       var view = this.viewer_ ? this.viewer_.getView() : null;
-       if (view === null) return;
-
-       var ext = view.getProjection().getExtent();
-       view.fit([ext[0], -ext[3], ext[2], ext[1]]);
-   }
+   if (typeof full_extent === 'boolean' && full_extent) this.zoomToFit();
    this.viewer_.renderSync();
 }
 
@@ -2210,6 +2204,18 @@ ome.ol3.Viewer.prototype.refreshBirdsEye = function(delay) {
 
     if (delay === 0) refresh();
     else setTimeout(refresh, delay);
+}
+
+/**
+ * Zooms to level that makes image fit into the available canvas
+ */
+ome.ol3.Viewer.prototype.zoomToFit = function() {
+    if (!(this.viewer_ instanceof ol.PluggableMap)) return;
+    var view = this.viewer_.getView();
+    if (view) {
+        var ext = view.getProjection().getExtent();
+        view.fit([ext[0], -ext[3], ext[2], ext[1]]);
+    }
 }
 
 /*
@@ -2434,3 +2440,8 @@ goog.exportProperty(
     ome.ol3.Viewer.prototype,
     'refreshBirdsEye',
 ome.ol3.Viewer.prototype.refreshBirdsEye);
+
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
+    'zoomToFit',
+ome.ol3.Viewer.prototype.zoomToFit);
