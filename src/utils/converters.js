@@ -210,7 +210,7 @@ export class Converters {
     }
 
     /**
-     * Takes a css color string in hex notation and returns the RGB int  values
+     * Takes a css color string in hex notation and returns the RGB int values
      * (or null if malformed)
      * @static
      * @param {string} color a css color string (hex)
