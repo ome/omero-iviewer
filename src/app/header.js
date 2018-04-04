@@ -52,6 +52,14 @@ export class Header {
     image_config = null;
 
     /**
+     * flag that indicates whether we have any modified image settings
+     * @see {@link checkIfAnyImageSettingsHasBeenModified} to set flag
+     * @memberof Header
+     * @type {boolean}
+     */
+    hasModifiedImageSettings = false;
+
+    /**
      * observer watching for changes in the selected image
      * @memberof Header
      * @type {Object}
@@ -78,6 +86,28 @@ export class Header {
      * @type {boolean}
      */
     selected_can_delete = true;
+
+    /**
+     * Overridden aurelia lifecycle method:
+     * fired when PAL (dom abstraction) is ready for use
+     *
+     * @memberof Header
+     */
+    attached() {
+        $('.fixed-header .dropdown').on(
+            'show.bs.dropdown', () =>
+                this.checkIfAnyImageSettingsHasBeenModified());
+    }
+
+    /**
+     * Overridden aurelia lifecycle method:
+     * fired when PAL (dom abstraction) is unmounted
+     *
+     * @memberof Header
+     */
+    detached() {
+        $('.fixed-header .dropdown').off();
+    }
 
     /**
      * Overridden aurelia lifecycle method:
@@ -416,5 +446,40 @@ export class Header {
      */
     unbind() {
         this.unregisterObserver();
+    }
+
+    /**
+     * Runs over open image configs to check if they have been modified
+     *
+     * @memberof Header
+     */
+    checkIfAnyImageSettingsHasBeenModified() {
+        for (let [id, conf] of this.context.image_configs) {
+            if (conf.image_info.can_annotate && conf.canUndo()) {
+                this.hasModifiedImageSettings = true;
+                return;
+            }
+        }
+        this.hasModifiedImageSettings = false;
+    }
+
+    /**
+     * Attempts to save the image settings for all open image configs.
+     * If we have edited an image twice but separately display a warning
+     *
+     * @return {Array.<string>} a list of images that couldn't be saved
+     * @memberof Context
+     */
+    saveAllImageSettings() {
+        let conflictingImageChanged = this.context.saveAllImageSettings();
+        let len = conflictingImageChanged.length;
+        if (len > 0) {
+            let msg = "Couldn't save image" + (len > 1 ? "s" : "") +
+                ":<br><br>";
+            for (let i in conflictingImageChanged)
+                msg += conflictingImageChanged[i] + '<br>';
+
+            Ui.showModalMessage(msg, 'Close');
+        }
     }
 }

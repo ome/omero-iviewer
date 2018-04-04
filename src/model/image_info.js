@@ -23,7 +23,7 @@ import {
     APP_TITLE, CHANNEL_SETTINGS_MODE, INITIAL_TYPES, IVIEWER,
     PROJECTION, REQUEST_PARAMS, WEBGATEWAY
 } from '../utils/constants';
-import { BIRDSEYE_REFRESH } from '../events/events';
+import { IMAGE_SETTINGS_REFRESH } from '../events/events';
 
 /**
  * Holds basic image information required for viewing:
@@ -58,14 +58,6 @@ export default class ImageInfo {
      * @type {string}
      */
     dataset_name = null;
-
-    /**
-     * a flag that signals whether we have successfully
-     * received all backend info or not
-     * @memberof ImageInfo
-     * @type {boolean}
-     */
-    ready = false;
 
     /**
      * a flag whether we want to refresh the image settings only
@@ -372,7 +364,7 @@ export default class ImageInfo {
 
         if (refresh) {
             this.context.publish(
-                BIRDSEYE_REFRESH, { config_id : this.config_id});
+                IMAGE_SETTINGS_REFRESH, { config_id : this.config_id});
         }
     }
 

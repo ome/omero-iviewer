@@ -16,8 +16,8 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-/** whenever the bird's eye should be updated */
-export const BIRDSEYE_REFRESH = "BIRDSEYE_REFRESH";
+/** whenever the image settings have been refreshed */
+export const IMAGE_SETTINGS_REFRESH = "IMAGE_SETTINGS_REFRESH";
 /** whenever the image canvas data was retrieved */
 export const IMAGE_CANVAS_DATA = "IMAGE_CANVAS_DATA";
 /** whenever pixel intensity querying should be turned on/off */
@@ -70,6 +70,8 @@ export const REGIONS_COPY_SHAPES = "REGIONS_COPY_SHAPES";
 export const HISTOGRAM_RANGE_UPDATE = "HISTOGRAM_RANGE_UPDATE";
 /** whenever thumbnails are supposed to be updated */
 export const THUMBNAILS_UPDATE = "THUMBNAILS_UPDATE";
+/** whenever the presently active image settings should be saved */
+export const SAVE_ACTIVE_IMAGE_SETTINGS = "SAVE_ACTIVE_IMAGE_SETTINGS";
 
 /**
  * Facilitates recurring event subscription

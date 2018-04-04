@@ -22,7 +22,10 @@ import OpenWith from '../utils/openwith';
 import ImageConfig from '../model/image_config';
 import ImageInfo from '../model/image_info';
 import RegionsInfo from '../model/regions_info';
-import { IMAGE_VIEWER_CONTROLS_VISIBILITY } from '../events/events';
+import {
+    IMAGE_SETTINGS_REFRESH, IMAGE_VIEWER_CONTROLS_VISIBILITY,
+    SAVE_ACTIVE_IMAGE_SETTINGS, THUMBNAILS_UPDATE
+} from '../events/events';
 import {
     APP_NAME, IMAGE_CONFIG_RELOAD, IVIEWER, INITIAL_TYPES, LUTS_NAMES,
     LUTS_PNG_URL, PLUGIN_NAME, PLUGIN_PREFIX, REQUEST_PARAMS, SYNC_LOCK,
@@ -849,12 +852,43 @@ export default class Context {
      * @memberof Context
      */
     findConfigsWithModifiedRegionsForGivenImage(image_id) {
+        return this.findModifiedImageConfigsForGivenImage(image_id, true);
+    }
+
+    /**
+     * Returns all configs that relate to the given image id
+     * and have modified image settings
+     *
+     * @param {number} image_id the image id
+     * @return {Array.<number>} a list of config ids or an empty one
+     * @memberof Context
+     */
+    findConfigsWithModifiedImageSettingsForGivenImage(image_id) {
+        return this.findModifiedImageConfigsForGivenImage(image_id);
+    }
+
+    /**
+     * Returns all configs that relate to the given image id
+     * and have modified image settings
+     *
+     * @param {number} image_id the image id
+     * @param {boolean} has_modified_regions
+     *                  true if we are checking for modified regions.
+     *                  if false we are checking for modified image settings
+     * @return {Array.<number>} a list of config ids or an empty one
+     * @private
+     * @memberof Context
+     */
+    findModifiedImageConfigsForGivenImage(image_id, has_modified_regions=false) {
         let ret = [];
         let sameImageConfs = this.getImageConfigsForGivenImage(image_id);
         for (let c in sameImageConfs) {
             let conf = sameImageConfs[c];
-            if (conf.regions_info && conf.regions_info.hasBeenModified()) {
-                ret.push(conf.id);
+            if ((has_modified_regions &&
+                conf.regions_info && conf.regions_info.hasBeenModified()) ||
+                (!has_modified_regions && conf.image_info.can_annotate &&
+                    conf.canUndo())) {
+                        ret.push(conf.id);
             }
         }
         return ret;
@@ -934,5 +968,49 @@ export default class Context {
                 else conf.regions_info.requestData(true);
                 break;
         }
+    }
+
+    /**
+     * Saves all image settings that can and need to be saved.
+     * If there are any image settings that could not be saved
+     * because they have been edited in multiple windows a corresponding
+     * list is returned.
+     *
+     * @return {Array.<string>} a list of images that couldn't be saved
+     * @memberof Context
+     */
+    saveAllImageSettings() {
+        let multipleEdits = [];
+        let thumbNailsToUpdate = [];
+        let counter = 0;
+
+        for (let [id, conf] of this.image_configs) {
+            // preliminary checks
+            if (!conf.image_info.ready || !conf.image_info.can_annotate ||
+                !conf.canUndo()) continue;
+            let imgId = conf.image_info.image_id;
+            let sameImageModified =
+                this.findConfigsWithModifiedImageSettingsForGivenImage(imgId);
+            // check if same image was edited in more than one config
+            if (sameImageModified.length > 1) {
+                if (multipleEdits.indexOf(conf.image_info.image_name) === -1)
+                    multipleEdits.push(conf.image_info.image_name);
+                continue;
+            }
+            thumbNailsToUpdate.push(imgId);
+            conf.saveImageSettings(() => {
+                counter++;
+                conf.resetHistory();
+                this.publish(IMAGE_SETTINGS_REFRESH, {config_id : conf.id});
+                if (this.useMDI) {
+                    this.reloadImageConfigForGivenImage(
+                        imgId, IMAGE_CONFIG_RELOAD.IMAGE, conf.id);
+                }
+                if (thumbNailsToUpdate.length === counter)
+                    this.publish(THUMBNAILS_UPDATE, {ids: thumbNailsToUpdate});
+            });
+        }
+
+        return multipleEdits;
     }
 }

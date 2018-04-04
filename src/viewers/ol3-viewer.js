@@ -32,8 +32,8 @@ import {
     REGIONS_DRAWING_MODE, RENDER_STATUS, VIEWER_ELEMENT_PREFIX, WEBCLIENT
 } from '../utils/constants';
 import {
-    BIRDSEYE_REFRESH, IMAGE_CANVAS_DATA, IMAGE_DIMENSION_CHANGE,
-    IMAGE_DIMENSION_PLAY, IMAGE_INTENSITY_QUERYING, IMAGE_SETTINGS_CHANGE,
+    IMAGE_CANVAS_DATA, IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY,
+    IMAGE_INTENSITY_QUERYING, IMAGE_SETTINGS_CHANGE, IMAGE_SETTINGS_REFRESH,
     IMAGE_VIEWER_CONTROLS_VISIBILITY, IMAGE_VIEWER_INTERACTION,
     IMAGE_VIEWER_RESIZE, IMAGE_VIEWPORT_CAPTURE,
     REGIONS_CHANGE_MODES, REGIONS_COPY_SHAPES, REGIONS_DRAW_SHAPE,
@@ -143,7 +143,7 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.saveCanvasData(params)],
         [VIEWER_SET_SYNC_GROUP,
             (params={}) => this.setSyncGroup(params)],
-        [BIRDSEYE_REFRESH,
+        [IMAGE_SETTINGS_REFRESH,
             (params={}) => this.refreshBirdsEye(params)]];
 
     /**
@@ -256,6 +256,7 @@ export default class Ol3Viewer extends EventSubscriber {
                     updates.push(chanUpdate);
                 };
                 this.viewer.changeChannelRange(updates);
+                this.image_config.image_info.refresh = false;
                 return;
             }
 
@@ -1247,6 +1248,7 @@ export default class Ol3Viewer extends EventSubscriber {
      * @return
      */
     saveCanvasData(params={}) {
+        if (params.config_id !== this.image_config.id) return;
         if (!params.supported) { // blob not supported
                 console.error("Capturing Viewport as Blob not supported");
                 return;
@@ -1256,10 +1258,8 @@ export default class Ol3Viewer extends EventSubscriber {
             typeof params.all_configs === 'boolean' && params.all_configs;
         let saveAs = () => {
             if (allConfigs) {
-                if (params.count > 0) return;
-                // we are finished and like to write the zip now
                 if (!params.zip) console.error("no jszip instance!");
-                else {
+                else if (params.count === 0) {
                     params.zip.generateAsync({type:"blob"}).then(
                         (content) => FileSaver.saveAs(content, "images.zip"));
                 }
