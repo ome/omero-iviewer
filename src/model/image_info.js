@@ -60,6 +60,14 @@ export default class ImageInfo {
     dataset_name = null;
 
     /**
+     * a flag that signals whether we have successfully
+     * received all backend info or not
+     * @memberof ImageInfo
+     * @type {boolean}
+     */
+    ready = false;
+
+    /**
      * a flag whether we want to refresh the image settings only
      * @memberof ImageInfo
      * @type {boolean}

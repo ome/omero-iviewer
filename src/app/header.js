@@ -471,13 +471,15 @@ export class Header {
      * @memberof Context
      */
     saveAllImageSettings() {
-        let conflictingImageChanged = this.context.saveAllImageSettings();
-        let len = conflictingImageChanged.length;
+        let conflictingImageChanges = this.context.saveAllImageSettings();
+        let len = conflictingImageChanges.length;
         if (len > 0) {
-            let msg = "Couldn't save image" + (len > 1 ? "s" : "") +
-                ":<br><br>";
-            for (let i in conflictingImageChanged)
-                msg += conflictingImageChanged[i] + '<br>';
+            let msg = "The following image" + (len > 1 ? "s were" : " was") +
+                " not saved (multiple/conflicting edits):" +
+                "<ul class='skipped-list-files'>";
+            for (let i in conflictingImageChanges)
+                msg += "<li>" + conflictingImageChanges[i] + "</li>";
+            msg += "</ul>";
 
             Ui.showModalMessage(msg, 'Close');
         }

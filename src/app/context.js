@@ -869,7 +869,7 @@ export default class Context {
 
     /**
      * Returns all configs that relate to the given image id
-     * and have modified image settings
+     * and have modified image settings or regions
      *
      * @param {number} image_id the image id
      * @param {boolean} has_modified_regions

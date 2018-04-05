@@ -1299,3 +1299,10 @@ thumbnail-slider img {
     min-width: 45px;
     max-width: 45px;
 }
+.skipped-list-files {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 150px;
+    font-size: 15px;
+    margin-top: 15px;
+}
