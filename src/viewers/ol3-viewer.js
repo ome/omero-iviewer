@@ -410,6 +410,8 @@ export default class Ol3Viewer extends EventSubscriber {
         this.context.resetInitParams();
         // use existing interpolation setting
         this.viewer.enableSmoothing(this.context.interpolate);
+        // zoom to fit
+        this.viewer.zoomToFit();
         // initialize regions if rois tab active
         if (this.context.isRoisTabActive()) this.initRegions();
         this.resizeViewer({window_resize: true, delay: 100});
