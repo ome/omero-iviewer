@@ -148,6 +148,7 @@ export default class Ol3ViewerLinkedEvents {
      * Handles the following image changes of sync_group members:
      * - channel range (start, end, color, reverse)
      * - color/grayscale
+     * - projection
      *
      * @memberof Ol3ViewerLinkedEvents
      * @param {Object} params the event notification parameters
@@ -247,6 +248,59 @@ export default class Ol3ViewerLinkedEvents {
     }
 
     /**
+     * Deals with projection changes of sync_group members
+     *
+     * @memberof Ol3ViewerLinkedEvents
+     * @param {Object} params the event notification parameters
+     * @param {Object} sync_locks the sync locks for the group
+     */
+    setProjection(params = {}, sync_locks = {}) {
+        if (!this.isLocked(SYNC_LOCK.ZT.CHAR, sync_locks)) return;
+
+        let history = [];
+        let conf = this.getImageConfig();
+        let oldProjectionValue = conf.image_info.projection;
+        let newProjectionValue = params.projection;
+        if (oldProjectionValue !== newProjectionValue) {
+            // update data
+            conf.image_info.projection = newProjectionValue;
+            // add a change entry
+            history.push({
+                prop: ['image_info', 'projection'],
+                old_val : oldProjectionValue, new_val: newProjectionValue,
+                type: 'string'});
+        }
+        let oldProjectionOpts = conf.image_info.projection_opts;
+        let newProjectionOpts = Object.assign({}, params.projection_opts);
+        let maxZ = conf.image_info.dimensions.max_z-1;
+        if (newProjectionOpts.start > maxZ) newProjectionOpts.start = maxZ;
+        if (newProjectionOpts.end > maxZ) newProjectionOpts.end = maxZ;
+        if (oldProjectionOpts.start !== newProjectionOpts.start ||
+            oldProjectionOpts.end !== newProjectionOpts.end) {
+                // update data
+                conf.image_info.projection_opts = newProjectionOpts;
+                // add a change entry
+                history.push({
+                    prop: ['image_info', 'projection_opts'],
+                    old_val : Object.assign({}, oldProjectionOpts),
+                    new_val: Object.assign({}, newProjectionOpts),
+                    type: 'object'});
+        }
+        if (history.length > 0) {
+            history.splice(0,0, {
+                prop: ['image_info', 'projection_opts', 'synced'],
+                old_val : false, new_val: false, type : "boolean"
+            });
+            conf.addHistory(history);
+            // propagate change to ol3 viewer
+            this.getViewer().changeImageProjection(
+                params.projection, newProjectionOpts);
+            // hack to indicate that we have been synced
+            conf.image_info.projection_opts.synced = true;
+        }
+    }
+
+    /**
      * Deals with dimension changes of sync_group members
      *
      * @memberof Ol3ViewerLinkedEvents
@@ -257,12 +311,30 @@ export default class Ol3ViewerLinkedEvents {
         if (!this.isLocked(SYNC_LOCK.ZT.CHAR, sync_locks)) return;
 
         let conf = this.getImageConfig();
+        let history = [];
+        let oldProjectionValue = conf.image_info.projection;
+        let newProjectionValue = params.projection;
+        if (oldProjectionValue !== newProjectionValue) {
+            // update data
+            conf.image_info.projection = newProjectionValue;
+            conf.image_info.projection_opts.synced = false;
+            // add a change entry
+            history.push({
+                prop: ['image_info', 'projection_opts', 'synced'],
+                old_val : false, new_val: false, type : "boolean"
+            });
+            history.push({
+                prop: ['image_info', 'projection'],
+                old_val : oldProjectionValue, new_val: newProjectionValue,
+                type: 'string'});
+        }
+
         let dims = conf.image_info.dimensions;
         let oldValue = dims[params.dim];
-        let dim_max = dims['max_' + params.dim];
+        let dim_max = dims['max_' + params.dim]-1;
         let newValue = params.value[0];
         // we must not exceed the bound
-        if (newValue >= dim_max) return;
+        if (newValue > dim_max) newValue = dim_max;
 
         this.preventEventPublish(true);
         try {
@@ -270,12 +342,13 @@ export default class Ol3ViewerLinkedEvents {
                 // update data
                 dims[params.dim] = newValue;
                 // add a change entry
-                conf.addHistory({
+                history.push({
                     prop: ['image_info', 'dimensions', params.dim],
                     old_val : oldValue, new_val: newValue, type: 'number'});
                 // propagate to ol3 viewer
                 this.getViewer().setDimensionIndex(params.dim, [newValue]);
             }
+            if (history.length > 0) conf.addHistory(history);
         } catch(just_in_case) {
             console.error(just_in_case);
         }

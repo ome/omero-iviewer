@@ -217,6 +217,7 @@ export default class DimensionSlider {
                                 IMAGE_DIMENSION_CHANGE,
                                     {config_id: this.image_config.id,
                                      sync_group: this.image_config.sync_group,
+                                     projection: this.image_config.image_info.projection,
                                      dim: this.dim,
                                      value: [newValue]});
                         }));
@@ -331,6 +332,7 @@ export default class DimensionSlider {
                 (event, ui) => {
                     if (event.originalEvent) {
                         this.add_projection_history = true;
+                        imgInf.projection_opts.synced = false;
                         this.changeProjection(ui.values);
                     }
                 };
@@ -359,14 +361,26 @@ export default class DimensionSlider {
      */
     changeProjection(values, toggle=false) {
         let conf = this.image_config;
-        let entries = [];
+        let entries = [{
+            prop: ['image_info', 'projection_opts', 'synced'],
+            old_val : false, new_val: false, type : "boolean"
+        }];
         if (Misc.isArray(values)) {
             values[0] = Math.round(parseFloat(values[0]));
             values[1] = Math.round(parseFloat(values[1]));
             let oldOpts = Object.assign({}, conf.image_info.projection_opts);
             conf.image_info.projection_opts.start = values[0];
             conf.image_info.projection_opts.end = values[1];
-            $(this.elSelector).slider("option", "values", values);
+            let maxZ = conf.image_info.dimensions.max_z-1;
+            if (conf.image_info.projection_opts.start > maxZ)
+                conf.image_info.projection_opts.start = maxZ;
+            if (conf.image_info.projection_opts.end > maxZ)
+                conf.image_info.projection_opts.end = maxZ;
+            $(this.elSelector).slider(
+                "option", "values", [
+                    conf.image_info.projection_opts.start,
+                    conf.image_info.projection_opts.end
+            ]);
             if (this.add_projection_history) {
                 if (toggle) {
                     entries.push({
@@ -396,9 +410,13 @@ export default class DimensionSlider {
             conf.addHistory(entries);
             this.add_projection_history = false;
         };
-        this.context.publish(IMAGE_SETTINGS_CHANGE, {
-            config_id: conf.id, projection: conf.image_info.projection
-        });
+        if (!conf.image_info.projection_opts.synced)
+            this.context.publish(IMAGE_SETTINGS_CHANGE, {
+                config_id: conf.id,
+                sync_group: conf.sync_group,
+                projection: conf.image_info.projection,
+                projection_opts: Object.assign({}, conf.image_info.projection_opts)
+            });
     }
 
     /**
@@ -445,6 +463,7 @@ export default class DimensionSlider {
             imgInf.projection_opts.end = diff;
         }
         this.add_projection_history = true;
+        imgInf.projection_opts.synced = false;
         imgInf.projection =
             imgInf.projection === PROJECTION.NORMAL ?
                 PROJECTION.INTMAX: PROJECTION.NORMAL;
