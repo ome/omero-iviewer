@@ -40,7 +40,8 @@ import {
     REGIONS_GENERATE_SHAPES, REGIONS_HISTORY_ACTION, REGIONS_HISTORY_ENTRY,
     REGIONS_MODIFY_SHAPES, REGIONS_PROPERTY_CHANGED, REGIONS_SET_PROPERTY,
     REGIONS_SHOW_COMMENTS, REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES,
-    VIEWER_IMAGE_SETTINGS, VIEWER_SET_SYNC_GROUP, EventSubscriber
+    VIEWER_IMAGE_SETTINGS, VIEWER_PROJECTIONS_SYNC, VIEWER_SET_SYNC_GROUP,
+    EventSubscriber
 } from '../events/events';
 
 
@@ -117,6 +118,8 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.setRegionsProperty(params)],
         [VIEWER_IMAGE_SETTINGS,
             (params={}) => this.getImageSettings(params)],
+        [VIEWER_PROJECTIONS_SYNC,
+            (params={}) => this.syncImageSettingsProjections(params)],
         [REGIONS_CHANGE_MODES,
             (params={}) => this.changeRegionsModes(params)],
         [REGIONS_DRAW_SHAPE,
@@ -409,6 +412,8 @@ export default class Ol3Viewer extends EventSubscriber {
         this.context.resetInitParams();
         // use existing interpolation setting
         this.viewer.enableSmoothing(this.context.interpolate);
+        // zoom to fit
+        this.viewer.zoomToFit();
         // initialize regions if rois tab active
         if (this.context.isRoisTabActive()) this.initRegions();
         this.resizeViewer({window_resize: true, delay: 100});
@@ -453,12 +458,25 @@ export default class Ol3Viewer extends EventSubscriber {
         } else if (isSameConfig && typeof params.projection === 'string') {
             this.viewer.changeImageProjection(
                 params.projection,
-                this.image_config.image_info.projection_opts);
+                Object.assign({}, params.projection_opts));
+            this.context.publish(VIEWER_PROJECTIONS_SYNC, params);
         } else if (Misc.isArray(params.ranges) && params.ranges.length > 0) {
             if (isSameConfig) this.viewer.changeChannelRange(params.ranges);
             else this.linked_events.syncAction(params, "changeImageSettings");
         } else if (typeof params.interpolate === 'boolean')
             this.viewer.enableSmoothing(params.interpolate);
+    }
+
+    /**
+     * Syncs projection (toggle, settings)
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     */
+    syncImageSettingsProjections(params = {}) {
+        // we are syncing only with configs other than the originating
+        if (typeof params.config_id !== 'number' ||
+            params.config_id === this.image_config.id) return;
+        this.linked_events.syncAction(params, "setProjection");
     }
 
     /**

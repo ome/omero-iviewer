@@ -1992,33 +1992,28 @@ ome.ol3.Viewer.prototype.sendCanvasContent = function(params) {
 
             sendNotification(ctx.canvas);
         }
-   };
+    };
 
-   this.viewer_.once('postcompose', function(event) {
-     omeroImage.on('tileloadstart', tileLoadStart);
-     omeroImage.on('tileloadend', tileLoadEnd, event.context);
-     omeroImage.on('tileloaderror', tileLoadEnd, event.context);
+    this.viewer_.once('postcompose', function(event) {
+        omeroImage.on('tileloadstart', tileLoadStart);
+        omeroImage.on('tileloadend', tileLoadEnd, event.context);
+        omeroImage.on('tileloaderror', tileLoadEnd, event.context);
 
-     setTimeout(function() {
-         if (loading === 0) {
-             omeroImage.un('tileloadstart', tileLoadStart);
-             omeroImage.un('tileloadend', tileLoadEnd, event.context);
-             omeroImage.un('tileloaderror', tileLoadEnd, event.context);
+        setTimeout(function() {
+            if (loading === 0) {
+                omeroImage.un('tileloadstart', tileLoadStart);
+                omeroImage.un('tileloadend', tileLoadEnd, event.context);
+                omeroImage.un('tileloaderror', tileLoadEnd, event.context);
 
-             sendNotification(event.context.canvas);
-        }
-     }, 50);
-   });
+                sendNotification(event.context.canvas);
+            }
+        }, 50);
+    });
 
-   if (this.viewer_ && typeof params['full_extent'] === 'boolean' &&
-       params['full_extent']) {
-           var view = this.viewer_ ? this.viewer_.getView() : null;
-           if (view === null) return;
+    if (typeof params['full_extent'] === 'boolean' && params['full_extent'])
+        this.zoomToFit();
 
-           var ext = view.getProjection().getExtent();
-           view.fit([ext[0], -ext[3], ext[2], ext[1]]);
-   }
-   this.viewer_.renderSync();
+    this.viewer_.renderSync();
 }
 
 /**
@@ -2231,6 +2226,18 @@ ome.ol3.Viewer.prototype.refreshBirdsEye = function(delay) {
 
     if (delay === 0) refresh();
     else setTimeout(refresh, delay);
+}
+
+/**
+ * Zooms to level that makes image fit into the available canvas
+ */
+ome.ol3.Viewer.prototype.zoomToFit = function() {
+    if (!(this.viewer_ instanceof ol.PluggableMap)) return;
+    var view = this.viewer_.getView();
+    if (view) {
+        var ext = view.getProjection().getExtent();
+        view.fit([ext[0], -ext[3], ext[2], ext[1]]);
+    }
 }
 
 /*
@@ -2455,3 +2462,8 @@ goog.exportProperty(
     ome.ol3.Viewer.prototype,
     'refreshBirdsEye',
 ome.ol3.Viewer.prototype.refreshBirdsEye);
+
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
+    'zoomToFit',
+ome.ol3.Viewer.prototype.zoomToFit);

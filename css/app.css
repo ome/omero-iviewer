@@ -772,6 +772,7 @@ thumbnail-slider img {
     font-weight: bold;
     font-size: 13px;
     border-bottom: solid #ddd 1px;
+    z-index: 1;
 }
 
 .regions-table {
