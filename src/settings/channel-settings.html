@@ -26,7 +26,7 @@
                 mode.bind="mode"
                 revision.bind="image_config.revision">
             </channel-range>
-            <channel-range-advanced
+            <channel-range-advanced if.bind="channel.family"
                 index.bind="$index"
                 channel.bind="channel"
                 mode.bind="mode"

@@ -688,7 +688,8 @@ thumbnail-slider img {
     flex-direction: row;
 }
 .channel-range-advanced .glyphicon-remove {
-    font-size: 20px;
+    cursor: pointer;
+    font-size: 15px;
 }
 .luts {
      max-height: 165px;
@@ -1328,8 +1329,9 @@ thumbnail-slider img {
     width: 125px;
 }
 .quantization-dropdown span {
-    float: right;
+    position: absolute;
     margin-top: 5px;
+    left: 110px;
 }
 .quantization-dropdown .dropdown-menu {
     min-width: 125px;
