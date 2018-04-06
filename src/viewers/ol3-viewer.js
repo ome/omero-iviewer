@@ -180,6 +180,9 @@ export default class Ol3Viewer extends EventSubscriber {
         let minX = 0, maxX = 0, minY = 0, maxY = 0;;
         let container = this.getContainer();
 
+        let config_ids = Array.from(this.image_config.context.image_configs.keys());
+        let config_index = config_ids.indexOf(this.image_config.id);
+
         // set previous position for mdi 'replacement'
         if (this.image_config.position === null) {
             minX = frame.position().left+10;
@@ -190,10 +193,23 @@ export default class Ol3Viewer extends EventSubscriber {
             maxY =
                 frame.position().top+frame.height()-
                     parseInt(this.image_config.size.height);
-            this.image_config.position = {
-                top: Misc.getRandomInteger(minY,maxY) + 'px',
-                left: Misc.getRandomInteger(minX,maxX) + 'px'
-            };
+
+            // For the first 4 viewers, position them in a 2 x 2 grid...
+            if (config_index === 0) {
+                this.image_config.position = {top: minY + 'px', left: minX + 'px'}
+            } else if (config_index === 1) {
+                this.image_config.position = {top: minY + 'px', left: frame.width()/2 + 'px'}
+            } else if (config_index === 2) {
+                this.image_config.position = {top: frame.height()/2 + 'px', left: minX + 'px'}
+            } else if (config_index === 3) {
+                this.image_config.position = {top: frame.height()/2 + 'px', left: frame.width()/2 + 'px'}
+            } else {
+                // Otherwise choose random location
+                this.image_config.position = {
+                    top: Misc.getRandomInteger(minY,maxY) + 'px',
+                    left: Misc.getRandomInteger(minX,maxX) + 'px'
+                };
+            }
         }
 
         // make viewer windows draggable/resizable within boundaries
