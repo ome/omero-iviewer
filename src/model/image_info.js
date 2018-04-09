@@ -180,6 +180,13 @@ export default class ImageInfo {
     initial_values = true;
 
     /**
+     * the available families
+     * @memberof ImageInfo
+     * @type {Array.<string>}
+     */
+    families = [];
+
+    /**
      * dimensions are initialized to defaults
      * @memberof ImageInfo
      * @type {Object}
@@ -361,6 +368,8 @@ export default class ImageInfo {
         this.roi_count = response.roi_count;
         if (typeof response.meta.datasetName === 'string')
             this.dataset_name = response.meta.datasetName;
+        // set available families
+        this.families = response.families;
         // set title
         document.title =
             (this.short_image_name !== '' ?

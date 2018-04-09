@@ -30,7 +30,7 @@ import {slider} from 'jquery-ui/ui/widgets/slider';
 @inject(Context, Element, BindingEngine)
 export default class ChannelRangeAdvanced  {
     /**
-     * channel informetion (bound in template)
+     * channel information (bound in template)
      * @memberof ChannelRangeAdvanced
      * @type {Object}
      */
@@ -51,6 +51,13 @@ export default class ChannelRangeAdvanced  {
     @bindable mode = null;
 
     /**
+     * the available families (bound via template)
+     * @memberof ChannelRangeAdvanced
+     * @type {Array.<string>}
+     */
+    @bindable families = null;
+
+    /**
      * the revision count (used for history)
      * @memberof ChannelRangeAdvanced
      * @type {number}
@@ -69,18 +76,6 @@ export default class ChannelRangeAdvanced  {
      * @type {Array.<number>}
      */
     GAMMA_MIN_MAX = [0,4];
-
-    /**
-     * the families allowed
-     * @memberof ChannelRangeAdvanced
-     * @type {Array.<string>}
-     */
-    families = [
-        'linear',
-        'logarithmic',
-        'exponential',
-        'polynomial'
-    ];
 
     /**
      * @constructor
