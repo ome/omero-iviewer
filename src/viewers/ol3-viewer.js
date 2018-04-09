@@ -170,6 +170,62 @@ export default class Ol3Viewer extends EventSubscriber {
     }
 
     /**
+     * Get the possible x & y coordinates for newly opened viewers.
+     * These represent 4 positions in a 2 x 2 grid in centre of the frame.
+     *
+     * @memberof Ol3Viewer
+     * @param {jQuery object} frame that contains viewers
+     * @param {Object} image_config.size of the image we want to open
+     * @return {list} of Objects with top and left coordinates
+     */
+    getInitialViewerPositions(frame, viewer_size) {
+        let left = frame.position().left;
+        let top = frame.position().top;
+        let width = frame.width();
+        let height = frame.height();
+        let viewer_w = parseInt(viewer_size.width);
+        let viewer_h = parseInt(viewer_size.height);
+        return [
+            {top: Math.max(0, top + (height/2) - viewer_h), left: left + (width/2) - viewer_w},
+            {top: Math.max(0, top + (height/2) - viewer_h), left: left + (width/2)},
+            {top: top + (height/2), left: left + (width/2) - viewer_w},
+            {top: top + (height/2), left: left + (width/2)},
+        ]
+    }
+
+    /**
+     * Get the best position for newly opened viewer.
+     * Try each of 4 positions in a 2 x 2 grid in centre of the frame,
+     * returning {top: '0px', left: '0px'} for first empty place.
+     *
+     * @memberof Ol3Viewer
+     * @param {jQuery object} frame that contains viewers
+     * @param {Object} image_config.size of the image we want to open
+     * @return {Object} with top and left coordinates
+     */
+    getNewViewerPosition(frame, viewer_size) {
+        let positions = this.getInitialViewerPositions(frame, viewer_size);
+        let context = this.image_config.context;
+        let viewer_width = parseInt(viewer_size.width);
+        let viewer_height = parseInt(viewer_size.height);
+
+        // Try each of the 4 positions in a 2 x 2 grid, looking for a space
+        let new_pos;
+        for (let i=0; i<positions.length; i++) {
+            let pos = positions[i];
+            // Are any viewers occupying the centrepoint of this grid position?
+            let viewers = context.getImageConfigsAtPosition(pos.left + viewer_width/2,
+                                                            pos.top + viewer_height/2);
+            if (viewers.length === 0) {
+                // if not, we use this position for the newly opened window
+                new_pos = {left: pos.left + 'px', top: pos.top + 'px'};
+                break;
+            }
+        }
+        return new_pos;
+    }
+
+    /**
      * Overridden aurelia lifecycle method:
      * fired when PAL (dom abstraction) is ready for use
      *
@@ -185,31 +241,23 @@ export default class Ol3Viewer extends EventSubscriber {
 
         // set previous position for mdi 'replacement'
         if (this.image_config.position === null) {
+            let viewer_width = parseInt(this.image_config.size.width);
+            let viewer_height = parseInt(this.image_config.size.height);
             minX = frame.position().left+10;
-            maxX =
-                frame.position().left+frame.width()-
-                    parseInt(this.image_config.size.width);
+            maxX = frame.position().left+frame.width() - viewer_width;
             minY = frame.position().top+10;
-            maxY =
-                frame.position().top+frame.height()-
-                    parseInt(this.image_config.size.height);
+            maxY = frame.position().top+frame.height() - viewer_height;
 
-            // For the first 4 viewers, position them in a 2 x 2 grid...
-            if (config_index === 0) {
-                this.image_config.position = {top: minY + 'px', left: minX + 'px'}
-            } else if (config_index === 1) {
-                this.image_config.position = {top: minY + 'px', left: frame.width()/2 + 'px'}
-            } else if (config_index === 2) {
-                this.image_config.position = {top: frame.height()/2 + 'px', left: minX + 'px'}
-            } else if (config_index === 3) {
-                this.image_config.position = {top: frame.height()/2 + 'px', left: frame.width()/2 + 'px'}
-            } else {
-                // Otherwise choose random location
-                this.image_config.position = {
+            // Try each of the 4 positions in a 2 x 2 grid, looking for a space
+            let new_pos = this.getNewViewerPosition(frame, this.image_config.size);
+            // If all occupied, use random spot
+            if (!new_pos) {
+                new_pos = {
                     top: Misc.getRandomInteger(minY,maxY) + 'px',
                     left: Misc.getRandomInteger(minX,maxX) + 'px'
                 };
             }
+            this.image_config.position = new_pos;
         }
 
         // make viewer windows draggable/resizable within boundaries

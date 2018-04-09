@@ -753,6 +753,31 @@ export default class Context {
     }
 
     /**
+     * Retrieves any image configs that occupy a given x, y position,
+     * based on the position and size of each image viewer
+     *
+     * @memberof Context
+     * @param {x} id the ImageConfig id
+     * @param {y} forceRequest if true an ajax request is forced to update the data
+     * @return {list} of ImageConfig objects
+     */
+    getImageConfigsAtPosition(x, y) {
+        let configs = [];
+        for (let [id, conf] of this.image_configs) {
+            if (conf.position === null) continue;
+            let left = parseInt(conf.position.left);
+            let top = parseInt(conf.position.top);
+            let width = parseInt(conf.size.width);
+            let height = parseInt(conf.size.height);
+            if (left < x && (left + width) > x &&
+                top < y && (top + height) > y) {
+                configs.push(conf);
+            }
+        }
+        return configs;
+    }
+
+    /**
      * Convenience or short hand way of publishing via the internal eventbus.
      * It will just delegate whatever you hand it as arguments
      *
