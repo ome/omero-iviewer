@@ -1,9 +1,10 @@
-1.0.0 (March 2018)
+1.0.0 (April 2018)
 ------------------
 
 This version includes:
 
 
+- added option to map pixels values using map other than linear
 - added option to display pixels intensity when mousing over image
 - enabled viewing of multiple images in the same browser window by double-clicking
 - added support for opening the image in other installed applications e.g. OMERO.figure
@@ -24,7 +25,7 @@ This version includes:
 - improved build system for development
 - improved testing infrastructure
 - upgraded Webpack to 3.6.0
-- upgraded Openlayers to version 4.6.3
+- upgraded Openlayers to version 4.6.5
 - upgraded JQuery to version 3.3.1
 
 
