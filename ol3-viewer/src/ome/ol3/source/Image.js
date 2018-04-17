@@ -266,11 +266,21 @@ ome.ol3.source.Image = function(options) {
                 url += (!channelInfo['active'] ? "-" : "") + (c + 1);
                 url += "|" + channelInfo['start'] + ":" + channelInfo['end'];
                 url += "$" + channelInfo['color']; // color info
-                maps.push(
-                    {"inverted" : { "enabled" :
+                var m = {
+                    "inverted" : { "enabled" :
                         typeof channelInfo['inverted'] === 'boolean' &&
-                        channelInfo['inverted']}
-                    });
+                            channelInfo['inverted']}
+                };
+                if (typeof channelInfo['family'] === 'string' &&
+                    channelInfo['family'] !== "" &&
+                    typeof channelInfo['coefficient'] === 'number' &&
+                    !isNaN(channelInfo['coefficient'])) {
+                        m["quantization"] = {
+                            "family": channelInfo['family'],
+                            "coefficient": channelInfo['coefficient']
+                        };
+                };
+                maps.push(m);
             }
             url += "&maps=" + JSON.stringify(maps);
             url += '&m=' + this.image_model_;
@@ -521,7 +531,6 @@ ome.ol3.source.Image.prototype.changeChannelRange = function(ranges) {
                 needsRerender = true;
         }
         var active = this.channels_info_[channel_index]['active'];
-
         // channel start/end changes
         if (this.channels_info_[channel_index]['start'] !== range['start'] ||
             this.channels_info_[channel_index]['end'] !== range['end']) {
@@ -529,7 +538,6 @@ ome.ol3.source.Image.prototype.changeChannelRange = function(ranges) {
                 this.channels_info_[channel_index]['end'] = range['end'];
                 if (active) needsRerender = true;
         }
-
         // color changes
         if (typeof range['color'] === 'string' && range['color'].length !== 0 &&
             this.channels_info_[channel_index]['color'] !== range['color']) {
@@ -540,6 +548,17 @@ ome.ol3.source.Image.prototype.changeChannelRange = function(ranges) {
         if (typeof range['inverted'] === 'boolean' &&
             this.channels_info_[channel_index]['inverted'] !== range['inverted']) {
                 this.channels_info_[channel_index]['inverted'] = range['inverted'];
+                if (active) needsRerender = true;
+        }
+        // quantization maps
+        if (typeof range['family'] === 'string' && range['family'] !== '' &&
+            this.channels_info_[channel_index]['family'] !== range['family']) {
+                this.channels_info_[channel_index]['family'] = range['family'];
+                if (active) needsRerender = true;
+        }
+        if (typeof range['coefficient'] === 'number' && !isNaN(range['coefficient']) &&
+            this.channels_info_[channel_index]['coefficient'] !== range['coefficient']) {
+                this.channels_info_[channel_index]['coefficient'] = range['coefficient'];
                 if (active) needsRerender = true;
         }
     }
@@ -579,6 +598,13 @@ ome.ol3.source.Image.prototype.captureImageSettings = function() {
         };
         if (typeof chan['inverted'] === 'boolean')
             chanSnap['inverted'] = chan['inverted'];
+        if (typeof chan['family'] === 'string' && chan['family'] !== "" &&
+            typeof chan['coefficient'] === 'number' &&
+            !isNaN(chan['coefficient'])) {
+                chanSnap["family"] = chan['family'];
+                chanSnap["coefficient"] = chan['coefficient'];
+        };
+
         ret['channels'].push(chanSnap);
     }
 

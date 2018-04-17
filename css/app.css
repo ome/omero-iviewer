@@ -634,15 +634,15 @@ thumbnail-slider img {
     display: flex;
     flex-direction: row;
 }
-.channel-range .ui-spinner {
+.channel-range .ui-spinner, .channel-range-advanced .ui-spinner {
     margin-left: 5px;
     height: 30px;
 }
-.channel-range .ui-spinner-input {
+.channel-range .ui-spinner-input, .channel-range-advanced .ui-spinner-input {
     width: 100%;
 }
 
-.channel-slider {
+.channel-slider, .gamma-slider {
     margin-top: 10px;
     height: 10px;
     -ms-flex: 1;              /* IE 10 */
@@ -660,8 +660,22 @@ thumbnail-slider img {
     image-rendering:pixelated;
     -ms-interpolation-mode:nearest-neighbor;
 }
-.channel-slider .ui-slider-handle {
+.channel-slider .ui-slider-handle, .gamma-slider .ui-slider-handle {
     width: 10px;
+}
+.channel-range-advanced {
+    width: 100%;
+    height: 100%;
+    line-height: 30px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    display: -ms-flexbox;      /* TWEENER - IE 10 */
+    display: flex;
+    flex-direction: row;
+}
+.channel-range-advanced .glyphicon-remove {
+    cursor: pointer;
+    font-size: 15px;
 }
 .luts {
      max-height: 165px;
@@ -703,7 +717,7 @@ thumbnail-slider img {
 }
 .channel-color {
     top: 30px;
-    max-height: 250px;
+    max-height: 280px;
     width: 200px;
 }
 .channel-color hr {
@@ -1299,4 +1313,22 @@ thumbnail-slider img {
 .config-linking .dropdown-menu {
     min-width: 45px;
     max-width: 45px;
+}
+
+.quantization-dropdown {
+    left: 35px;
+    flex-grow: 1;
+}
+.quantization-dropdown button {
+    width: 125px;
+}
+.quantization-dropdown span {
+    position: absolute;
+    margin-top: 5px;
+    left: 110px;
+}
+.quantization-dropdown .dropdown-menu {
+    min-width: 125px;
+    max-width: 125px;
+    padding: 10px;
 }
