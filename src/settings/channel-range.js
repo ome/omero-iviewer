@@ -535,7 +535,7 @@ export default class ChannelRange  {
      * Toggles a channel, i.e. sets it active or inactive
      *
      * @memberof ChannelRange
-    */
+     */
     toggleChannel() {
         let imgConf = this.context.getSelectedImageConfig();
 
@@ -569,5 +569,14 @@ export default class ChannelRange  {
             };
         };
         imgConf.addHistory(history);
+    }
+
+    /**
+     * Makes advanced settings visible
+     *
+     * @memberof ChannelRange
+     */
+    showAdvancedSettings() {
+        this.channel.show_advanced_settings = true
     }
 }

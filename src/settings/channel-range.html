@@ -96,6 +96,13 @@
                 <span>Color:</span>
                 <input class="spectrum-input" />
             </div>
+            <template if.bind="channel.family">
+                <hr/>
+                <div click.delegate="showAdvancedSettings()"
+                    style="text-align: center">
+                    Advanced Settings...
+                </div>
+            </template>
         </div>
     </div>
     <input class="channel-start"/>

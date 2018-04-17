@@ -197,14 +197,25 @@ export default class Settings extends EventSubscriber {
                 if (!Misc.isArray(response.rdefs) ||
                     img_id !== this.image_config.image_info.image_id) return;
 
-                // merge in lut info
-                response.rdefs.map((rdef) => {
+                let duplicatesCheck = new Map();
+                for (let r in response.rdefs) {
+                    let rdef = response.rdefs[r];
+                    let possibleDuplicate = duplicatesCheck.get(rdef.owner.id);
+                    if (possibleDuplicate) {
+                        if (possibleDuplicate.id < rdef.id)
+                            duplicatesCheck.set(rdef.owner.id, rdef);
+                        else continue;
+                    } else duplicatesCheck.set(rdef.owner.id, rdef);
+                }
+                this.rdefs = [];
+                for (let [id, rdef] of duplicatesCheck) {
+                    // merge in lut info and add to rdefs
                     rdef.c.map((chan) => {
                         if (typeof chan.lut === 'string' && chan.lut.length > 0)
                                 chan.color = chan.lut;
                     });
-                });
-                this.rdefs = response.rdefs;
+                    this.rdefs.push(rdef);
+                }
                 if (typeof action === 'function') action();
             },
             error : () => {
@@ -526,6 +537,23 @@ export default class Settings extends EventSubscriber {
                                 type: 'boolean'});
                     actChannel.inverted =
                         copiedChannel.inverted;
+                }
+                if (typeof copiedChannel['family'] === 'string' &&
+                    copiedChannel['family'] !== "" &&
+                    typeof copiedChannel['coefficient'] === 'number' &&
+                    !isNaN(copiedChannel['coefficient'])) {
+                        history.push({
+                            prop: ['image_info', 'channels', '' + i, 'family'],
+                            old_val : actChannel.family,
+                            new_val: copiedChannel.family,
+                            type: 'string'});
+                         actChannel.family = copiedChannel.family;
+                        history.push({
+                            prop: ['image_info', 'channels', '' + i, 'coefficient'],
+                            old_val : actChannel.coefficient,
+                            new_val: copiedChannel.coefficient,
+                            type: 'string'});
+                         actChannel.coefficient = copiedChannel.coefficient;
                 }
             };
         if (history.length > 0) {

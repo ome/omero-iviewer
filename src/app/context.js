@@ -186,8 +186,9 @@ export default class Context {
       * @type {Object}
       */
      luts_png = {
-         url : '',
-         height : 0
+         image: null,
+         url: '',
+         height: 0
      }
 
     /**
@@ -295,6 +296,7 @@ export default class Context {
         let lutsPng = new Image();
         lutsPng.onload = (e) => {
             this.luts_png.height = e.target.naturalHeight;
+            this.luts_png.image = lutsPng;
             for (let [id, conf] of this.image_configs) conf.changed();
         }
         lutsPng.src = this.luts_png.url;

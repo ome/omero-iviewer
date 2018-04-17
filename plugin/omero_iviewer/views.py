@@ -273,6 +273,12 @@ def image_data(request, image_id, conn=None, **kwargs):
         if image.getAcquisitionDate() is not None:
             rv['acquisition_date'] = image.getAcquisitionDate().strftime(df)
 
+        # add available families
+        rv['families'] = []
+        families = image.getFamilies().values()
+        for fam in families:
+            rv['families'].append(fam.getValue())
+
         return JsonResponse(rv)
     except Exception as image_data_retrieval_exception:
         return JsonResponse({'error': repr(image_data_retrieval_exception)})

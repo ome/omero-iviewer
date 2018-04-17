@@ -208,4 +208,29 @@ export class Converters {
 
       return shape;
     }
+
+    /**
+     * Takes a css color string in hex notation and returns the RGB int values
+     * (or null if malformed)
+     * @static
+     * @param {string} color a css color string (hex)
+     * @return {Array.<number>|null} an array with 3 entries (RGB) or null
+     */
+    static convertHexColorToRGB(color) {
+         if (typeof color !== 'string') return null;
+         let len = color.length;
+         if (len === 4 || len === 7) {
+             color = color.substring(1);
+             len--;
+         }
+         if (len !== 3 && len !== 6) return null;
+         let stride = len / 3;
+         let ret = [];
+         for (let p=0;p<len;p+=stride) {
+             let val = parseInt(color.substring(p, p+stride), 16);
+             if (isNaN(val)) return null;
+             ret.push(val);
+         }
+         return ret;
+     }
 }

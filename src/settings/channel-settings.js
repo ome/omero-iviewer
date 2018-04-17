@@ -99,6 +99,8 @@ export default class ChannelSettings extends EventSubscriber {
         {obj: null, prop: 'active'},
         {obj: null, prop: 'color'},
         {obj: null, prop: 'inverted'},
+        {obj: null, prop: 'family'},
+        {obj: null, prop: 'coefficient'},
         {obj: 'window', prop: 'start'},
         {obj: 'window', prop: 'end'}
     ];
@@ -305,7 +307,7 @@ export default class ChannelSettings extends EventSubscriber {
                 chan.color = impImgData.c[index].color;
              }
             // log inverted flag
-            //(taking into account that it might not be supported)
+            // (taking into account that it might not be supported)
             if (typeof impImgData.c[index].inverted === 'undefined')
                 impImgData.c[index].inverted = null;
             if (chan.inverted !== impImgData.c[index].inverted) {
@@ -315,6 +317,29 @@ export default class ChannelSettings extends EventSubscriber {
                    new_val: impImgData.c[index].inverted,
                    type: 'boolean'});
                 chan.inverted = impImgData.c[index].inverted;
+             }
+             // remember quantization info
+             // (taking into account that it might not be supported)
+             if (typeof impImgData.c[index].family === 'string' &&
+                 impImgData.c[index].family !== "" &&
+                 typeof impImgData.c[index].coefficient === 'number' &&
+                 !isNaN(impImgData.c[index].coefficient)) {
+                     if (chan.family !== impImgData.c[index].family) {
+                         history.push({
+                            prop: ['image_info', 'channels', '' + index, 'family'],
+                            old_val : chan.family,
+                            new_val: impImgData.c[index].family,
+                            type: 'string'});
+                         chan.family = impImgData.c[index].family;
+                      }
+                      if (chan.coefficient !== impImgData.c[index].coefficient) {
+                          history.push({
+                             prop: ['image_info', 'channels', '' + index, 'coefficient'],
+                             old_val : chan.coefficient,
+                             new_val: impImgData.c[index].coefficient,
+                             type: 'number'});
+                          chan.coefficient = impImgData.c[index].coefficient;
+                       }
              }
              // remember active
              if (chan.active !== impImgData.c[index].active) {
@@ -407,6 +432,12 @@ export default class ChannelSettings extends EventSubscriber {
                 color: c.color, active: c.active, inverted: c.inverted}
            ]
        };
+       if (typeof c.family === 'string' && c.family !== "" &&
+           typeof c.coefficient === 'number' && !isNaN(c.coefficient)) {
+               params.ranges[0].family = c.family;
+               params.ranges[0].coefficient = c.coefficient;
+       }
+
        this.context.publish(IMAGE_SETTINGS_CHANGE, params);
     }
 

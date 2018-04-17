@@ -180,6 +180,13 @@ export default class ImageInfo {
     initial_values = true;
 
     /**
+     * the available families
+     * @memberof ImageInfo
+     * @type {Array.<string>}
+     */
+    families = [];
+
+    /**
      * dimensions are initialized to defaults
      * @memberof ImageInfo
      * @type {Object}
@@ -361,6 +368,8 @@ export default class ImageInfo {
         this.roi_count = response.roi_count;
         if (typeof response.meta.datasetName === 'string')
             this.dataset_name = response.meta.datasetName;
+        // set available families
+        this.families = response.families;
         // set title
         document.title =
             (this.short_image_name !== '' ?
@@ -649,8 +658,11 @@ export default class ImageInfo {
     initAndMixChannelsWithInitialSettings(channels, initialChannels) {
         if (!Misc.isArray(channels)) return channels;
 
-        // apply lut if exists
+        // set flag for showing advanced settings,
+        // inverted flag and luts (if exists)
         channels.map((c) => {
+            c.show_advanced_settings =
+                typeof c.family === 'string' && c.family !== 'linear';
             if (typeof c.lut  === 'string' && c.lut.length > 0)
                 c.color = c.lut;
             if (typeof c.inverted !== 'boolean')
@@ -668,6 +680,11 @@ export default class ImageInfo {
                 chan.color = c.color;
                 if (typeof c.inverted === 'boolean')
                     chan.inverted = c.inverted;
+                if (typeof c.family === 'string')
+                    chan.family = c.family;
+                if (typeof c.coefficient === 'number' &&
+                    !isNaN(c.coefficient))
+                    chan.coefficient = c.coefficient;
             }
         });
 

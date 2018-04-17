@@ -190,14 +190,14 @@ export default class Misc {
 
         // integrate inverted flag from maps
         if (Misc.isArray(maps_info)) // we have an array of parsed objects
-            return Misc.integrateInvertedFlagIntoChannels(ret, maps_info);
+            return Misc.integrateMapsInfoIntoChannels(ret, maps_info);
 
         // we need to parse the json still
         if (typeof maps_info !== 'string' || maps_info.length === 0)
             return ret;
         try {
             maps_info = maps_info.replace(/&quot;/g, '"');
-            return Misc.integrateInvertedFlagIntoChannels(
+            return Misc.integrateMapsInfoIntoChannels(
                 ret, JSON.parse(maps_info));
         } catch(malformedJson) {
             console.error("Error parsing maps json");
@@ -240,7 +240,7 @@ export default class Misc {
 
 
     /**
-     * Integrate the inverted flag from the maps contents into the channels
+     * Integrate the maps contents into the channels
      *
      * @param {Array.<Object>} channels array with channels info
      * @param {Array.<Object>} maps array with maps info
@@ -249,7 +249,7 @@ export default class Misc {
      * @private
      * @return {Array} the channels (incl. inverted flag)
      */
-    static integrateInvertedFlagIntoChannels(channels, maps) {
+    static integrateMapsInfoIntoChannels(channels, maps) {
         if (!Misc.isArray(channels) || !Misc.isArray(maps) ||
             channels.length === 0 || maps.length === 0) return channels;
 
@@ -261,6 +261,14 @@ export default class Misc {
                 typeof m['inverted'] === 'object' && m['inverted'] &&
                 typeof m['inverted']['enabled'] === 'boolean' &&
                 m['inverted']['enabled'];
+            if (typeof m['quantization'] !== 'object' ||
+                m['quantization'] === null ||
+                !(typeof m['quantization']['family'] === 'string' &&
+                    m['quantization']['family'] !== "" &&
+                    typeof m['quantization']['coefficient'] === 'number' &&
+                    !isNaN(m['quantization']['coefficient']))) continue;
+            channels[i]['family'] = m['quantization']['family'];
+            channels[i]['coefficient'] = m['quantization']['coefficient'];
         }
 
         return channels;
@@ -289,10 +297,15 @@ export default class Misc {
             (c) => {
                 url+= (i !== 0 ? ',' : '') + (!c.active ? '-' : '') + (++i) +
                  "|" + c.window.start + ":" + c.window.end + "$" + c.color;
-                 maps.push(
-                     {"inverted" : { "enabled" :
-                         typeof c.inverted === 'boolean' && c.inverted
-                     }});
+                let m = {
+                    "inverted": { "enabled" :
+                        typeof c.inverted === 'boolean' && c.inverted}};
+                if (typeof c.family === 'string' && c.family !== "" &&
+                    typeof c.coefficient === 'number' && !isNaN(c.coefficient)) {
+                        m.quantization = {
+                            "family": c.family, "coefficient": c.coefficient};
+                }
+                maps.push(m);
              });
         return url + "&maps=" + JSON.stringify(maps);
     }
