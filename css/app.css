@@ -468,27 +468,27 @@ a.ui-button:active,
 
 .col-splitter {
     position:relative;
-    background-color: #e7e7e7;
     height:100%;
     float: left;
     width: 5px;
     cursor: ew-resize;
     z-index: 1;
+    background: url('images/drag_handle.png') no-repeat scroll center center #e7e7e7;
 }
 
 .left-split img {
     background-color:  #FFFFFF;
-    position: relative;
+    position: absolute;
     left: 0px;
-    top: 40%;
+    bottom: 5px;
     cursor: pointer;
 }
 
 .right-split img {
     background-color: #FFFFFF;
-    position: relative;
+    position: absolute;
     left: 0px;
-    top: 40%;
+    bottom: 5px;
     cursor: pointer;
 }
 
