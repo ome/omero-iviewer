@@ -123,6 +123,15 @@ ome.ol3.source.Image = function(options) {
         ome.ol3.utils.Misc.isArray(
             opts.channels) ? [].concat(opts.channels) : [];
 
+
+    /**
+     * TEMP / EXPERIMENTAL: Make a copy the channels info so we know what's changed
+     * TODO: Need to update this when changes are saved.
+     * @type {Array.<Object>}
+     * @private
+     */
+    this.saved_channels_info_ = this.channels_info_.map(c => Object.assign({}, c));
+
     /**
      * the omero image projection - optional params, e.g. start/end
      * @type {Object}
@@ -271,8 +280,12 @@ ome.ol3.source.Image = function(options) {
                         typeof channelInfo['inverted'] === 'boolean' &&
                             channelInfo['inverted']}
                 };
+                // Only need to include family if different from default
+                var family_not_default = (channelInfo['family'] !== "linear" ||
+                                          (channelInfo['family'] === "linear" && this.saved_channels_info_[c]["family"] !== "linear"));
                 if (typeof channelInfo['family'] === 'string' &&
                     channelInfo['family'] !== "" &&
+                    family_not_default &&
                     typeof channelInfo['coefficient'] === 'number' &&
                     !isNaN(channelInfo['coefficient'])) {
                         m["quantization"] = {
