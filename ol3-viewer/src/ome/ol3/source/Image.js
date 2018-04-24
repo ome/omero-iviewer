@@ -290,8 +290,10 @@ ome.ol3.source.Image = function(options) {
                     !isNaN(channelInfo['coefficient'])) {
                         m["quantization"] = {
                             "family": channelInfo['family'],
-                            "coefficient": channelInfo['coefficient']
                         };
+                        if (channelInfo['family'] !== 'linear') {
+                            m.quantization.coefficient = channelInfo['coefficient'];
+                        }
                 };
                 maps.push(m);
             }
