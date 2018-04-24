@@ -28,7 +28,7 @@ import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework'
 
 import {
     BIRDSEYE_REFRESH, IMAGE_INTENSITY_QUERYING, IMAGE_SETTINGS_CHANGE,
-    THUMBNAILS_UPDATE, EventSubscriber
+    IMAGE_SETTINGS_SAVE, THUMBNAILS_UPDATE, EventSubscriber
 } from '../events/events';
 
 /**
@@ -331,6 +331,7 @@ export default class Settings extends EventSubscriber {
              method: 'POST',
             success : (response) => {
                 this.image_config.resetHistory();
+                this.context.publish(IMAGE_SETTINGS_SAVE);
                 // reissue get rendering requests, then
                 // force thumbnail update
                 let action =

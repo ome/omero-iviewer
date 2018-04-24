@@ -34,7 +34,7 @@ import {
 import {
     BIRDSEYE_REFRESH, IMAGE_CANVAS_DATA, IMAGE_DIMENSION_CHANGE,
     IMAGE_DIMENSION_PLAY, IMAGE_INTENSITY_QUERYING, VIEWER_PROJECTIONS_SYNC,
-    IMAGE_SETTINGS_CHANGE, IMAGE_VIEWER_CONTROLS_VISIBILITY,
+    IMAGE_SETTINGS_CHANGE, IMAGE_SETTINGS_SAVE, IMAGE_VIEWER_CONTROLS_VISIBILITY,
     IMAGE_VIEWER_INTERACTION, IMAGE_VIEWER_RESIZE, IMAGE_VIEWPORT_CAPTURE,
     REGIONS_CHANGE_MODES, REGIONS_COPY_SHAPES, REGIONS_DRAW_SHAPE,
     REGIONS_GENERATE_SHAPES, REGIONS_HISTORY_ACTION, REGIONS_HISTORY_ENTRY,
@@ -111,6 +111,8 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.playDimension(params)],
         [IMAGE_SETTINGS_CHANGE,
             (params={}) => this.changeImageSettings(params)],
+        [IMAGE_SETTINGS_SAVE,
+            (params={}) => this.saveImageSettings(params)],
         [REGIONS_PROPERTY_CHANGED,
             (params={}) => this.getRegionsPropertyChange(params)],
         [REGIONS_SET_PROPERTY,
@@ -469,6 +471,20 @@ export default class Ol3Viewer extends EventSubscriber {
             else this.linked_events.syncAction(params, "changeImageSettings");
         } else if (typeof params.interpolate === 'boolean')
             this.viewer.enableSmoothing(params.interpolate);
+    }
+
+    /**
+     * Viewer needs to know when saved settings have changed since it
+     * uses the difference to build render query string
+     *
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     */
+    saveImageSettings(params = {}) {
+        if (this.viewer === null) return;
+
+        let isSameConfig = params.config_id === this.image_config.id;
+        this.viewer.updateSavedSettings();
     }
 
     /**

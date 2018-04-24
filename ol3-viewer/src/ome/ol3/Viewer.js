@@ -1732,6 +1732,15 @@ ome.ol3.Viewer.prototype.changeImageModel = function(value) {
 }
 
 /**
+ * Updates the saved settings to the current settings
+ * see: {@link ome.ol3.source.Image.updateSavedSettings}
+ */
+ome.ol3.Viewer.prototype.updateSavedSettings = function() {
+    if (this.getImage() === null) return;
+    this.getImage().updateSavedSettings();
+}
+
+/**
  * Enables/disabled scale bar
  *
  * @param {boolean} show if true we show the scale bar, otherwise not
@@ -2351,6 +2360,11 @@ goog.exportProperty(
     ome.ol3.Viewer.prototype,
     'changeImageModel',
     ome.ol3.Viewer.prototype.changeImageModel);
+
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
+    'updateSavedSettings',
+    ome.ol3.Viewer.prototype.updateSavedSettings);
 
 goog.exportProperty(
     ome.ol3.Viewer.prototype,

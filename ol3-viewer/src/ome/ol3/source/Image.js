@@ -123,14 +123,10 @@ ome.ol3.source.Image = function(options) {
         ome.ol3.utils.Misc.isArray(
             opts.channels) ? [].concat(opts.channels) : [];
 
-
     /**
-     * TEMP / EXPERIMENTAL: Make a copy the channels info so we know what's changed
-     * TODO: Need to update this when changes are saved.
-     * @type {Array.<Object>}
-     * @private
+     * Make an initial copy of the settings as current saved settings
      */
-    this.saved_channels_info_ = this.channels_info_.map(c => Object.assign({}, c));
+    this.updateSavedSettings();
 
     /**
      * the omero image projection - optional params, e.g. start/end
@@ -291,8 +287,9 @@ ome.ol3.source.Image = function(options) {
                         m["quantization"] = {
                             "family": channelInfo['family'],
                         };
+                        // Only need coefficient if family is not 'linear'
                         if (channelInfo['family'] !== 'linear') {
-                            m.quantization.coefficient = channelInfo['coefficient'];
+                            m["quantization"]["coefficient"] = channelInfo['coefficient'];
                         }
                 };
                 maps.push(m);
@@ -470,6 +467,15 @@ ome.ol3.source.Image.prototype.setChannels = function(value) {
             continue;
         this.channels_info_[c].active = true;
     }
+}
+
+/**
+ * Set the saved_channels_info to the current channels_info_
+ * We use the difference between saved and current settings to
+ * build the maps query string when rendering image.
+ */
+ome.ol3.source.Image.prototype.updateSavedSettings = function() {
+    this.saved_channels_info_ = this.channels_info_.map(c => Object.assign({}, c));
 }
 
 /**
@@ -805,3 +811,8 @@ goog.exportProperty(
     ome.ol3.source.Image.prototype,
     'setChannels',
     ome.ol3.source.Image.prototype.setChannels);
+
+goog.exportProperty(
+    ome.ol3.source.Image.prototype,
+    'updateSavedSettings',
+    ome.ol3.source.Image.prototype.updateSavedSettings);
