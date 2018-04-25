@@ -266,6 +266,8 @@ export default class Ol3Viewer extends EventSubscriber {
                     updates.push(chanUpdate);
                 };
                 this.viewer.changeChannelRange(updates);
+                // Viewer must know it's current settings are the saved settings
+                this.saveImageSettings();
                 return;
             }
 
@@ -474,16 +476,14 @@ export default class Ol3Viewer extends EventSubscriber {
     }
 
     /**
-     * Viewer needs to know when saved settings have changed since it
-     * uses the difference to build render query string
+     * Viewer needs to know when saved settings have changed since it uses the
+     * difference between current and saved settings to build render query string
      *
      * @memberof Ol3Viewer
      * @param {Object} params the event notification parameters
      */
     saveImageSettings(params = {}) {
         if (this.viewer === null) return;
-
-        let isSameConfig = params.config_id === this.image_config.id;
         this.viewer.updateSavedSettings();
     }
 
