@@ -277,18 +277,19 @@ ome.ol3.source.Image = function(options) {
                             channelInfo['inverted']}
                 };
                 // Only need to include family if different from default
-                var family_not_default = (channelInfo['family'] !== "linear" ||
-                                          (channelInfo['family'] === "linear" && this.saved_channels_info_[c]["family"] !== "linear"));
-                if (typeof channelInfo['family'] === 'string' &&
-                    channelInfo['family'] !== "" &&
+                var family = channelInfo['family'];
+                var family_not_default = (family !== "linear" ||
+                                          (family === "linear" && this.saved_channels_info_[c]["family"] !== "linear"));
+                if (typeof family === 'string' &&
+                    family !== "" &&
                     family_not_default &&
                     typeof channelInfo['coefficient'] === 'number' &&
                     !isNaN(channelInfo['coefficient'])) {
                         m["quantization"] = {
-                            "family": channelInfo['family'],
+                            "family": family,
                         };
-                        // Only need coefficient if family is not 'linear'
-                        if (channelInfo['family'] !== 'linear') {
+                        // Only need coefficient if family is not 'linear' or 'logarithmic'
+                        if (family !== 'linear' && family !== 'logarithmic') {
                             m["quantization"]["coefficient"] = channelInfo['coefficient'];
                         }
                 };
