@@ -266,7 +266,7 @@ export default class Ol3Viewer extends EventSubscriber {
                     updates.push(chanUpdate);
                 };
                 this.viewer.changeChannelRange(updates);
-                // Viewer must know it's current settings are the saved settings
+                // Viewer must know its current settings are the saved settings
                 this.saveImageSettings();
                 return;
             }
