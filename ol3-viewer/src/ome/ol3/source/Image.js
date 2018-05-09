@@ -271,28 +271,32 @@ ome.ol3.source.Image = function(options) {
                 url += (!channelInfo['active'] ? "-" : "") + (c + 1);
                 url += "|" + channelInfo['start'] + ":" + channelInfo['end'];
                 url += "$" + channelInfo['color']; // color info
-                var m = {
-                    "inverted" : { "enabled" :
+
+                var m = {};
+                if (channelInfo['active']) {
+                    m["inverted"] = { "enabled" :
                         typeof channelInfo['inverted'] === 'boolean' &&
-                            channelInfo['inverted']}
-                };
-                // Only need to include family if different from default
-                var family = channelInfo['family'];
-                var family_not_default = (family !== "linear" ||
-                                          (family === "linear" && this.saved_channels_info_[c]["family"] !== "linear"));
-                if (typeof family === 'string' &&
-                    family !== "" &&
-                    family_not_default &&
-                    typeof channelInfo['coefficient'] === 'number' &&
-                    !isNaN(channelInfo['coefficient'])) {
-                        m["quantization"] = {
-                            "family": family,
-                        };
-                        // Only need coefficient if family is not 'linear' or 'logarithmic'
-                        if (family !== 'linear' && family !== 'logarithmic') {
-                            m["quantization"]["coefficient"] = channelInfo['coefficient'];
-                        }
-                };
+                            channelInfo['inverted']
+                    }
+
+                    // Only need to include family if different from default
+                    var family = channelInfo['family'];
+                    var family_not_default = (family !== "linear" ||
+                                              (family === "linear" && this.saved_channels_info_[c]["family"] !== "linear"));
+                    if (typeof family === 'string' &&
+                        family !== "" &&
+                        family_not_default &&
+                        typeof channelInfo['coefficient'] === 'number' &&
+                        !isNaN(channelInfo['coefficient'])) {
+                            m["quantization"] = {
+                                "family": family,
+                            };
+                            // Only need coefficient if family is not 'linear' or 'logarithmic'
+                            if (family !== 'linear' && family !== 'logarithmic') {
+                                m["quantization"]["coefficient"] = channelInfo['coefficient'];
+                            }
+                    }
+                }
                 maps.push(m);
             }
             url += "&maps=" + JSON.stringify(maps);
