@@ -19,6 +19,7 @@
 import {inject,customElement, BindingEngine} from 'aurelia-framework';
 import Context from './context';
 import * as FileSaver from '../../node_modules/file-saver';
+import JSZip from '../../node_modules/jszip/dist/jszip';
 import * as TextEncoding from "../../node_modules/text-encoding";
 import Misc from '../utils/misc';
 import Ui from '../utils/ui';
@@ -51,6 +52,14 @@ export class Header {
     image_config = null;
 
     /**
+     * flag that indicates whether we have any modified image settings
+     * @see {@link checkIfAnyImageSettingsHasBeenModified} to set flag
+     * @memberof Header
+     * @type {boolean}
+     */
+    hasModifiedImageSettings = false;
+
+    /**
      * observer watching for changes in the selected image
      * @memberof Header
      * @type {Object}
@@ -77,6 +86,28 @@ export class Header {
      * @type {boolean}
      */
     selected_can_delete = true;
+
+    /**
+     * Overridden aurelia lifecycle method:
+     * fired when PAL (dom abstraction) is ready for use
+     *
+     * @memberof Header
+     */
+    attached() {
+        $('.fixed-header .dropdown').on(
+            'show.bs.dropdown', () =>
+                this.checkIfAnyImageSettingsHasBeenModified());
+    }
+
+    /**
+     * Overridden aurelia lifecycle method:
+     * fired when PAL (dom abstraction) is unmounted
+     *
+     * @memberof Header
+     */
+    detached() {
+        $('.fixed-header .dropdown').off();
+    }
 
     /**
      * Overridden aurelia lifecycle method:
@@ -368,8 +399,14 @@ export class Header {
      */
     captureViewport() {
         if (this.image_config === null) return;
-        this.context.eventbus.publish(
-            IMAGE_VIEWPORT_CAPTURE, {"config_id": this.image_config.id});
+        let params = {}
+        let configCount = this.context.image_configs.size;
+        if (configCount > 1) {
+            params.all_configs = true;
+            params.count = configCount;
+            params.zip = new JSZip();
+        } else params.config_id = this.image_config.id;
+        this.context.eventbus.publish(IMAGE_VIEWPORT_CAPTURE, params);
     }
 
     /**
@@ -409,5 +446,42 @@ export class Header {
      */
     unbind() {
         this.unregisterObserver();
+    }
+
+    /**
+     * Runs over open image configs to check if they have been modified
+     *
+     * @memberof Header
+     */
+    checkIfAnyImageSettingsHasBeenModified() {
+        for (let [id, conf] of this.context.image_configs) {
+            if (conf.image_info.can_annotate && conf.canUndo()) {
+                this.hasModifiedImageSettings = true;
+                return;
+            }
+        }
+        this.hasModifiedImageSettings = false;
+    }
+
+    /**
+     * Attempts to save the image settings for all open image configs.
+     * If we have edited an image twice but separately display a warning
+     *
+     * @return {Array.<string>} a list of images that couldn't be saved
+     * @memberof Context
+     */
+    saveAllImageSettings() {
+        let conflictingImageChanges = this.context.saveAllImageSettings();
+        let len = conflictingImageChanges.length;
+        if (len > 0) {
+            let msg = "The following image" + (len > 1 ? "s were" : " was") +
+                " not saved (multiple/conflicting edits):" +
+                "<ul class='skipped-list-files'>";
+            for (let i in conflictingImageChanges)
+                msg += "<li>" + conflictingImageChanges[i] + "</li>";
+            msg += "</ul>";
+
+            Ui.showModalMessage(msg, 'Close');
+        }
     }
 }

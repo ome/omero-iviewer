@@ -27,8 +27,8 @@ import {
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 
 import {
-    BIRDSEYE_REFRESH, IMAGE_INTENSITY_QUERYING, IMAGE_SETTINGS_CHANGE,
-    THUMBNAILS_UPDATE, EventSubscriber
+    IMAGE_SETTINGS_REFRESH, IMAGE_INTENSITY_QUERYING, IMAGE_SETTINGS_CHANGE,
+    SAVE_ACTIVE_IMAGE_SETTINGS, THUMBNAILS_UPDATE, EventSubscriber
 } from '../events/events';
 
 /**
@@ -103,7 +103,9 @@ export default class Settings extends EventSubscriber {
      * @type {Array.<string,function>}
      */
     sub_list = [[THUMBNAILS_UPDATE,
-                    (params={}) => this.revision++]];
+                    (params={}) => this.revision++],
+                [SAVE_ACTIVE_IMAGE_SETTINGS,
+                    (params={}) => this.saveImageSettings()]];
 
     /**
      * @constructor
@@ -304,48 +306,23 @@ export default class Settings extends EventSubscriber {
      * @memberof Settings
      */
     saveImageSettings() {
-        if (!this.image_config.image_info.ready ||
-            !this.image_config.image_info.can_annotate ||
-            this.image_config.history.length === 0 ||
-            this.image_config.historyPointer < 0) return;
-
         $('.save-settings').children('button').blur();
-        if (Misc.useJsonp(this.context.server)) {
-            alert("Saving the rendering settings will not work cross-domain!");
-            return;
-        }
-
-        let image_info = this.image_config.image_info;
-        let url =
-            this.context.server + this.context.getPrefixedURI(WEBGATEWAY) +
-            "/saveImgRDef/" +
-            image_info.image_id + '/?m=' + image_info.model[0] +
-            "&p=" + image_info.projection +
-            "&t=" + (image_info.dimensions.t+1) +
-            "&z=" + (image_info.dimensions.z+1) +
-            "&q=0.9&ia=0";
-        url = Misc.appendChannelsAndMapsToQueryString(image_info.channels, url);
-
-        $.ajax(
-            {url : url,
-             method: 'POST',
-            success : (response) => {
-                this.image_config.resetHistory();
-                // reissue get rendering requests, then
-                // force thumbnail update
-                let action =
-                    (() => {
-                        this.triggerUpdates([image_info.image_id]);
-                        if (this.context.useMDI)
-                            this.context.reloadImageConfigForGivenImage(
-                                image_info.image_id,
-                                IMAGE_CONFIG_RELOAD.IMAGE,
-                                this.image_config.id);
-                });
-                this.requestAllRenderingDefs(action);
-            },
-            error : (error) => {}
-        });
+        let success = (response) => {
+            this.image_config.resetHistory();
+            // reissue get rendering requests, then
+            // force thumbnail update
+            let action =
+                () => {
+                    let imgId = this.image_config.image_info.image_id;
+                    this.triggerUpdates([imgId]);
+                    if (this.context.useMDI)
+                        this.context.reloadImageConfigForGivenImage(
+                            imgId, IMAGE_CONFIG_RELOAD.IMAGE,
+                            this.image_config.id);
+            };
+            this.requestAllRenderingDefs(action);
+        };
+        this.image_config.saveImageSettings(success);
     }
 
     /**
@@ -455,7 +432,7 @@ export default class Settings extends EventSubscriber {
     }
 
     /**
-     * Triggers thumbnail/bird's eye update
+     * Triggered after image settings update
      *
      * @param {Array.<number>} ids image id(s) to update
      * @memberof Settings
@@ -465,7 +442,7 @@ export default class Settings extends EventSubscriber {
              THUMBNAILS_UPDATE,
              { "config_id" : this.image_config.id, "ids": ids});
          this.context.publish(
-             BIRDSEYE_REFRESH, { config_id : this.image_config.id});
+             IMAGE_SETTINGS_REFRESH, { config_id : this.image_config.id});
      }
 
     /**
