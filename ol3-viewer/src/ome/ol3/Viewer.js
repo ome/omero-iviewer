@@ -1941,12 +1941,18 @@ ome.ol3.Viewer.prototype.enableSmoothing = function(smoothing) {
  * Captures the canvas content, sending the data via event notification
  * (which is necessary since the loading is async and has to complete)
  *
- * @param {boolean} full_extent if true the image is scaled to show at a 100%
- *                              (default: false)
+ * @param {Object} params the event notification parameters
  */
-ome.ol3.Viewer.prototype.sendCanvasContent = function(full_extent) {
-    if (this.viewer_ === null || this.eventbus_ === null) return;
+ome.ol3.Viewer.prototype.sendCanvasContent = function(params) {
+    params = params || {};
+    var allConfigs =
+        typeof params['all_configs'] === 'boolean' && params['all_configs'];
+    if (this.viewer_ === null || this.eventbus_ === null) {
+        if (allConfigs) params['count']--;
+        return;
+    }
 
+    var zipEntry = params['zip_entry'];
     var supported = false;
     try {
         var MyBlob = new Blob(['test text'], {type : 'text/plain'});
@@ -1955,9 +1961,23 @@ ome.ol3.Viewer.prototype.sendCanvasContent = function(full_extent) {
 
     var that = this;
     var publishEvent = function(data) {
+        if (allConfigs) params['count']--;
         if (that.eventbus_ === null) return;
+        params["supported"] = supported;
+        if (supported && allConfigs) {
+            var zipEntryName = zipEntry + '.png';
+            if (typeof  params['zip']['files'][zipEntryName] === 'object') {
+                var sameCounter = 1;
+                zipEntryName = zipEntry + '-' + sameCounter + '.png';
+                while (typeof  params['zip']['files'][zipEntryName] === 'object') {
+                    ++sameCounter;
+                    zipEntryName = zipEntry + '-' + sameCounter + '.png';
+                }
+            }
+            params['zip'].file(zipEntryName, data);
+        } else params['data'] = data;
         ome.ol3.utils.Misc.sendEventNotification(
-            that, "IMAGE_CANVAS_DATA", {"supported": supported, "data": data});
+            that, "IMAGE_CANVAS_DATA", params);
     };
     var omeroImage = this.getImage();
     if (omeroImage === null || !supported) {
@@ -1987,26 +2007,28 @@ ome.ol3.Viewer.prototype.sendCanvasContent = function(full_extent) {
 
             sendNotification(ctx.canvas);
         }
-   };
+    };
 
-   this.viewer_.once('postcompose', function(event) {
-     omeroImage.on('tileloadstart', tileLoadStart);
-     omeroImage.on('tileloadend', tileLoadEnd, event.context);
-     omeroImage.on('tileloaderror', tileLoadEnd, event.context);
+    this.viewer_.once('postcompose', function(event) {
+        omeroImage.on('tileloadstart', tileLoadStart);
+        omeroImage.on('tileloadend', tileLoadEnd, event.context);
+        omeroImage.on('tileloaderror', tileLoadEnd, event.context);
 
-     setTimeout(function() {
-         if (loading === 0) {
-             omeroImage.un('tileloadstart', tileLoadStart);
-             omeroImage.un('tileloadend', tileLoadEnd, event.context);
-             omeroImage.un('tileloaderror', tileLoadEnd, event.context);
+        setTimeout(function() {
+            if (loading === 0) {
+                omeroImage.un('tileloadstart', tileLoadStart);
+                omeroImage.un('tileloadend', tileLoadEnd, event.context);
+                omeroImage.un('tileloaderror', tileLoadEnd, event.context);
 
-             sendNotification(event.context.canvas);
-        }
-     }, 50);
-   });
+                sendNotification(event.context.canvas);
+            }
+        }, 50);
+    });
 
-   if (typeof full_extent === 'boolean' && full_extent) this.zoomToFit();
-   this.viewer_.renderSync();
+    if (typeof params['full_extent'] === 'boolean' && params['full_extent'])
+        this.zoomToFit();
+
+    this.viewer_.renderSync();
 }
 
 /**

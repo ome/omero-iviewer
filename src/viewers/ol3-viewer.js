@@ -32,15 +32,16 @@ import {
     REGIONS_DRAWING_MODE, RENDER_STATUS, VIEWER_ELEMENT_PREFIX, WEBCLIENT
 } from '../utils/constants';
 import {
-    BIRDSEYE_REFRESH, IMAGE_CANVAS_DATA, IMAGE_DIMENSION_CHANGE,
-    IMAGE_DIMENSION_PLAY, IMAGE_INTENSITY_QUERYING, VIEWER_PROJECTIONS_SYNC,
-    IMAGE_SETTINGS_CHANGE, IMAGE_SETTINGS_SAVE, IMAGE_VIEWER_CONTROLS_VISIBILITY,
-    IMAGE_VIEWER_INTERACTION, IMAGE_VIEWER_RESIZE, IMAGE_VIEWPORT_CAPTURE,
+    IMAGE_CANVAS_DATA, IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY,
+    IMAGE_INTENSITY_QUERYING, IMAGE_SETTINGS_CHANGE, IMAGE_SETTINGS_REFRESH,
+    IMAGE_VIEWER_CONTROLS_VISIBILITY, IMAGE_VIEWER_INTERACTION,
+    IMAGE_VIEWER_RESIZE, IMAGE_VIEWPORT_CAPTURE, IMAGE_SETTINGS_SAVE,
     REGIONS_CHANGE_MODES, REGIONS_COPY_SHAPES, REGIONS_DRAW_SHAPE,
     REGIONS_GENERATE_SHAPES, REGIONS_HISTORY_ACTION, REGIONS_HISTORY_ENTRY,
     REGIONS_MODIFY_SHAPES, REGIONS_PROPERTY_CHANGED, REGIONS_SET_PROPERTY,
     REGIONS_SHOW_COMMENTS, REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES,
-    VIEWER_IMAGE_SETTINGS, VIEWER_SET_SYNC_GROUP, EventSubscriber
+    VIEWER_IMAGE_SETTINGS, VIEWER_PROJECTIONS_SYNC, VIEWER_SET_SYNC_GROUP,
+    EventSubscriber
 } from '../events/events';
 
 
@@ -147,7 +148,7 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.saveCanvasData(params)],
         [VIEWER_SET_SYNC_GROUP,
             (params={}) => this.setSyncGroup(params)],
-        [BIRDSEYE_REFRESH,
+        [IMAGE_SETTINGS_REFRESH,
             (params={}) => this.refreshBirdsEye(params)]];
 
     /**
@@ -268,6 +269,7 @@ export default class Ol3Viewer extends EventSubscriber {
                 this.viewer.changeChannelRange(updates);
                 // Viewer must know its current settings are the saved settings
                 this.saveImageSettings();
+                this.image_config.image_info.refresh = false;
                 return;
             }
 
@@ -1266,9 +1268,16 @@ export default class Ol3Viewer extends EventSubscriber {
      * @return
      */
     captureViewport(params={}) {
-        if (this.viewer === null ||
-            params.config_id !== this.image_config.id) return;
-        this.viewer.sendCanvasContent();
+        let allConfigs =
+            typeof params.all_configs === 'boolean' && params.all_configs;
+        if (this.viewer === null) {
+            if (allConfigs) params.count--;
+            return;
+        }
+        if (!allConfigs && params.config_id !== this.image_config.id) return;
+        if (allConfigs)
+            params.zip_entry = this.image_config.image_info.image_name;
+        this.viewer.sendCanvasContent(params);
     }
 
     /**
@@ -1279,15 +1288,32 @@ export default class Ol3Viewer extends EventSubscriber {
      * @return
      */
     saveCanvasData(params={}) {
-        if (this.image_config === null || // sanity check
-            this.image_config.id !== params.config_id) return; // not for us
+        if (params.config_id !== this.image_config.id) return;
         if (!params.supported) { // blob not supported
                 console.error("Capturing Viewport as Blob not supported");
                 return;
         }
 
-        FileSaver.saveAs(
-            params.data, this.image_config.image_info.image_name + ".png");
+        let allConfigs =
+            typeof params.all_configs === 'boolean' && params.all_configs;
+        let saveAs = () => {
+            if (allConfigs) {
+                if (!params.zip) console.error("no jszip instance!");
+                else if (params.count === 0) {
+                    params.zip.generateAsync({type:"blob"}).then(
+                        (content) => FileSaver.saveAs(content, "images.zip"));
+                }
+            } else  {
+                if (this.image_config === null) return;
+                FileSaver.saveAs(
+                    params.data,
+                    this.image_config.image_info.image_name + ".png");
+            }
+        };
+
+        // not for us
+        if (!allConfigs && this.image_config.id !== params.config_id) return;
+        saveAs();
     }
 
     /**

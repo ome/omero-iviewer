@@ -21,14 +21,16 @@ import Context from '../app/context';
 import Misc from '../utils/misc';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {CHANNEL_SETTINGS_MODE, WEBGATEWAY} from '../utils/constants';
-import { IMAGE_SETTINGS_CHANGE} from '../events/events';
+import {
+    IMAGE_SETTINGS_CHANGE, IMAGE_SETTINGS_REFRESH, EventSubscriber
+} from '../events/events';
 
 /**
  * Represents the settings section in the right hand panel
  */
 @customElement('channel-settings')
 @inject(Context, BindingEngine)
-export default class ChannelSettings {
+export default class ChannelSettings extends EventSubscriber {
     /**
      * a reference to the image config (bound in template)
      * @memberof ChannelSettings
@@ -38,6 +40,18 @@ export default class ChannelSettings {
     image_configChanged(newVal, oldVal) {
         this.waitForImageInfoReady();
     }
+
+    /**
+     * events we subscribe to
+     * @memberof Ol3Viewer
+     * @type {Array.<string,function>}
+     */
+    sub_list = [[IMAGE_SETTINGS_REFRESH,
+        (params={}) => {
+            if (typeof params.config_id !== 'number' ||
+                params.config_id !== this.image_config.id) return;
+            this.waitForImageInfoReady();
+        }]];
 
     /**
      * the present channel settings mode
@@ -97,6 +111,7 @@ export default class ChannelSettings {
      * @param {BindingEngine} bindingEngine injected instance of BindingEngine
      */
     constructor(context, bindingEngine) {
+        super(context.eventbus);
         this.context = context;
         this.bindingEngine = bindingEngine;
     }
@@ -109,6 +124,7 @@ export default class ChannelSettings {
      * @memberof ChannelSettings
      */
     bind() {
+        this.subscribe();
         this.waitForImageInfoReady();
     }
 
@@ -122,9 +138,12 @@ export default class ChannelSettings {
             this.image_config.image_info === null) return;
 
         let onceReady = () => {
-            // register observer
+            if (this.mode !== CHANNEL_SETTINGS_MODE.MIN_MAX) {
+                this.enable_mode_history = false;
+                this.mode = CHANNEL_SETTINGS_MODE.MIN_MAX;
+            }
+            // register observers
             this.registerObservers();
-            this.mode = CHANNEL_SETTINGS_MODE.MIN_MAX;
         };
 
         // tear down old observers
@@ -430,6 +449,7 @@ export default class ChannelSettings {
      * @memberof ChannelSettings
      */
     unbind() {
+        this.unsubscribe();
         this.unregisterObservers();
     }
 }

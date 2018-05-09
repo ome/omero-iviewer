@@ -21,6 +21,7 @@ import ImageInfo from './image_info';
 import RegionsInfo from './regions_info';
 import Misc from '../utils/misc';
 import History from './history';
+import {WEBGATEWAY} from '../utils/constants';
 import {VIEWER_SET_SYNC_GROUP} from '../events/events';
 
 /**
@@ -178,5 +179,43 @@ export default class ImageConfig extends History {
         this.context.publish(
             VIEWER_SET_SYNC_GROUP,
             {config_id: this.id, "sync_group": this.sync_group});
+    }
+
+    /**
+     * Sends ajax request, saving the image settings
+     * @param {function} success the success handler
+     * @param {function=} error the error handler
+     * @memberof ImageConfig
+     */
+    saveImageSettings(success, error) {
+        if (!this.image_info.ready ||
+            !this.image_info.can_annotate ||
+            this.history.length === 0 ||
+            this.historyPointer < 0 ||
+            typeof success !== 'function') return;
+
+        if (Misc.useJsonp(this.context.server)) {
+            console.error(
+                "Saving the rendering settings will not work cross-domain!");
+            return;
+        }
+
+        let image_info = this.image_info;
+        let url =
+            this.context.server + this.context.getPrefixedURI(WEBGATEWAY) +
+            "/saveImgRDef/" +
+            image_info.image_id + '/?m=' + image_info.model[0] +
+            "&p=" + image_info.projection +
+            "&t=" + (image_info.dimensions.t+1) +
+            "&z=" + (image_info.dimensions.z+1) +
+            "&q=0.9&ia=0";
+        url = Misc.appendChannelsAndMapsToQueryString(image_info.channels, url);
+
+        if (typeof error !== 'function')
+            error = (error) => console.error(error);
+        $.ajax({
+            'url': url, 'method': 'POST',
+            'success': success, 'error': error
+        });
     }
 }

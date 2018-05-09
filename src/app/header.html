@@ -34,10 +34,20 @@
                         <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu quantization-dropdown">
+                    <li show.bind="context.image_configs.size > 1"
+                        class="${ hasModifiedImageSettings ?
+                                 '' : 'disabled-color'}">
+                        <a click.delegate="saveAllImageSettings()"
+                           href="#">Save All Image Settings
+                        </a>
+                    </li>
                     <li class="${image_config.image_info.ready ?
                                  '' : 'disabled-color'}">
                         <a click.delegate="captureViewport()"
-                           href="#">Save Viewport as PNG</a>
+                           href="#">Save ${context.image_configs.size > 1 ?
+                                            'All Viewports as PNGs (zipped)' :
+                                            'Viewport as PNG'}
+                        </a>
                     </li>
                     <li class="${image_config.image_info.ready  &&
                                  image_config.image_info.projection !== PROJECTION.NORMAL?
