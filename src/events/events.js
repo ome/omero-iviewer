@@ -30,8 +30,6 @@ export const IMAGE_VIEWER_RESIZE = "IMAGE_VIEWER_RESIZE";
 export const IMAGE_VIEWER_INTERACTION = "IMAGE_VIEWER_INTERACTION";
 /** whenever the image rendering settings change: channel, model, projection*/
 export const IMAGE_SETTINGS_CHANGE = "IMAGE_SETTINGS_CHANGE";
-/** whenever the image rendering settings are saved */
-export const IMAGE_SETTINGS_SAVE = "IMAGE_SETTINGS_SAVE";
 /** whenever the projection settings need to be synced*/
 export const VIEWER_PROJECTIONS_SYNC = "VIEWER_PROJECTIONS_SYNC";
 /** whenever an image dimension (c,t,z) changes */

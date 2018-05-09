@@ -28,7 +28,7 @@ import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework'
 
 import {
     IMAGE_SETTINGS_REFRESH, IMAGE_INTENSITY_QUERYING, IMAGE_SETTINGS_CHANGE,
-    IMAGE_SETTINGS_SAVE, SAVE_ACTIVE_IMAGE_SETTINGS, THUMBNAILS_UPDATE, EventSubscriber
+    SAVE_ACTIVE_IMAGE_SETTINGS, THUMBNAILS_UPDATE, EventSubscriber
 } from '../events/events';
 
 /**
@@ -309,7 +309,6 @@ export default class Settings extends EventSubscriber {
         $('.save-settings').children('button').blur();
         let success = (response) => {
             this.image_config.resetHistory();
-            this.context.publish(IMAGE_SETTINGS_SAVE);
             // reissue get rendering requests, then
             // force thumbnail update
             let action =

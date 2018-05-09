@@ -35,7 +35,7 @@ import {
     IMAGE_CANVAS_DATA, IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY,
     IMAGE_INTENSITY_QUERYING, IMAGE_SETTINGS_CHANGE, IMAGE_SETTINGS_REFRESH,
     IMAGE_VIEWER_CONTROLS_VISIBILITY, IMAGE_VIEWER_INTERACTION,
-    IMAGE_VIEWER_RESIZE, IMAGE_VIEWPORT_CAPTURE, IMAGE_SETTINGS_SAVE,
+    IMAGE_VIEWER_RESIZE, IMAGE_VIEWPORT_CAPTURE,
     REGIONS_CHANGE_MODES, REGIONS_COPY_SHAPES, REGIONS_DRAW_SHAPE,
     REGIONS_GENERATE_SHAPES, REGIONS_HISTORY_ACTION, REGIONS_HISTORY_ENTRY,
     REGIONS_MODIFY_SHAPES, REGIONS_PROPERTY_CHANGED, REGIONS_SET_PROPERTY,
@@ -112,8 +112,6 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.playDimension(params)],
         [IMAGE_SETTINGS_CHANGE,
             (params={}) => this.changeImageSettings(params)],
-        [IMAGE_SETTINGS_SAVE,
-            (params={}) => this.saveImageSettings(params)],
         [REGIONS_PROPERTY_CHANGED,
             (params={}) => this.getRegionsPropertyChange(params)],
         [REGIONS_SET_PROPERTY,
@@ -149,7 +147,7 @@ export default class Ol3Viewer extends EventSubscriber {
         [VIEWER_SET_SYNC_GROUP,
             (params={}) => this.setSyncGroup(params)],
         [IMAGE_SETTINGS_REFRESH,
-            (params={}) => this.refreshBirdsEye(params)]];
+            (params={}) => this.refreshImageSettings(params)]];
 
     /**
      * @constructor
@@ -475,6 +473,20 @@ export default class Ol3Viewer extends EventSubscriber {
             else this.linked_events.syncAction(params, "changeImageSettings");
         } else if (typeof params.interpolate === 'boolean')
             this.viewer.enableSmoothing(params.interpolate);
+    }
+
+    /**
+     * Settings have changed so we need to refresh
+     *
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     */
+    refreshImageSettings(params = {}) {
+        if (this.viewer === null || this.image_config === null ||
+            this.image_config.id !== params.config_id) return;
+
+        this.viewer.refreshBirdsEye(500);
+        this.saveImageSettings(params);
     }
 
     /**
@@ -1376,19 +1388,5 @@ export default class Ol3Viewer extends EventSubscriber {
             $("#" + this.image_config.id + " .ol-control").hide();
             this.image_config.show_controls = false;
         }
-    }
-
-    /**
-     * Requests update of bird's eye view
-     *
-     * @memberof Ol3Viewer
-     * @param {Object} params the event notification parameters
-     */
-    refreshBirdsEye(params = {}) {
-        // sanity checks
-        if (this.viewer === null || this.image_config === null ||
-            this.image_config.id !== params.config_id) return;
-
-        this.viewer.refreshBirdsEye(500);
     }
 }
