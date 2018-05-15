@@ -449,7 +449,10 @@ export default class DimensionSlider {
      * @memberof DimensionSlider
      */
     toggleProjection() {
-        if (this.player_info.handle !== null) return;
+        if (this.getZProjectionDisabled(this.player_info.handle,
+                                        this.player_info.forwards)) {
+            return;
+        }
 
         let imgInf = this.image_config.image_info;
         imgInf.projection_opts.start = 0;
