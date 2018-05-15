@@ -19,6 +19,7 @@
 import Context from '../app/context';
 import {inject,customElement, bindable, BindingEngine} from 'aurelia-framework';
 import Misc from '../utils/misc';
+import {ol3} from '../../libs/ol3-viewer.js';
 import {slider} from 'jquery-ui/ui/widgets/slider';
 import {PROJECTION} from '../utils/constants';
 import {
@@ -467,5 +468,21 @@ export default class DimensionSlider {
         imgInf.projection =
             imgInf.projection === PROJECTION.NORMAL ?
                 PROJECTION.INTMAX: PROJECTION.NORMAL;
+    }
+
+    /**
+     * Calculates whether Z-projection should be disabled.
+     *
+     * Disabled is true while playing Z-stack movie or if
+     * the Viewer will be loading tiles
+     * Used by template which passes in arguments that are bound,
+     * so we update only when needed
+     * See http://davismj.me/blog/aurelia-computed-from-patterns/
+     *
+     * @memberof DimensionSlider
+     */
+    getZProjectionDisabled(handle, forwards) {
+        let dims = this.image_config.image_info.dimensions;
+        return (handle !== null && forwards || (dims.max_x * dims.max_y) > ol3.UNTILED_RETRIEVAL_LIMIT);
     }
 }
