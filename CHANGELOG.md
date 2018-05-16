@@ -3,7 +3,7 @@
 
 This version includes:
 
-
+- disabled projection for image where sizeX * sizeY > 4000000
 - added option to map pixels values using map other than linear
 - added option to display pixels intensity when mousing over image
 - enabled viewing of multiple images in the same browser window by double-clicking
