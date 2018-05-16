@@ -757,8 +757,8 @@ export default class Context {
      * based on the position and size of each image viewer
      *
      * @memberof Context
-     * @param {x} id the ImageConfig id
-     * @param {y} forceRequest if true an ajax request is forced to update the data
+     * @param {x} x coordinate
+     * @param {y} y coordinate
      * @return {list} of ImageConfig objects
      */
     getImageConfigsAtPosition(x, y) {
