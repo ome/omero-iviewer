@@ -147,7 +147,7 @@ export default class Ol3Viewer extends EventSubscriber {
         [VIEWER_SET_SYNC_GROUP,
             (params={}) => this.setSyncGroup(params)],
         [IMAGE_SETTINGS_REFRESH,
-            (params={}) => this.refreshBirdsEye(params)]];
+            (params={}) => this.refreshImageSettings(params)]];
 
     /**
      * @constructor
@@ -265,6 +265,8 @@ export default class Ol3Viewer extends EventSubscriber {
                     updates.push(chanUpdate);
                 };
                 this.viewer.changeChannelRange(updates);
+                // Viewer must know its current settings are the saved settings
+                this.saveImageSettings();
                 this.image_config.image_info.refresh = false;
                 return;
             }
@@ -471,6 +473,32 @@ export default class Ol3Viewer extends EventSubscriber {
             else this.linked_events.syncAction(params, "changeImageSettings");
         } else if (typeof params.interpolate === 'boolean')
             this.viewer.enableSmoothing(params.interpolate);
+    }
+
+    /**
+     * Settings have changed so we need to refresh
+     *
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     */
+    refreshImageSettings(params = {}) {
+        if (this.viewer === null || this.image_config === null ||
+            this.image_config.id !== params.config_id) return;
+
+        this.viewer.refreshBirdsEye(500);
+        this.saveImageSettings(params);
+    }
+
+    /**
+     * Viewer needs to know when saved settings have changed since it uses the
+     * difference between current and saved settings to build render query string
+     *
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     */
+    saveImageSettings(params = {}) {
+        if (this.viewer === null) return;
+        this.viewer.updateSavedSettings();
     }
 
     /**
@@ -1360,19 +1388,5 @@ export default class Ol3Viewer extends EventSubscriber {
             $("#" + this.image_config.id + " .ol-control").hide();
             this.image_config.show_controls = false;
         }
-    }
-
-    /**
-     * Requests update of bird's eye view
-     *
-     * @memberof Ol3Viewer
-     * @param {Object} params the event notification parameters
-     */
-    refreshBirdsEye(params = {}) {
-        // sanity checks
-        if (this.viewer === null || this.image_config === null ||
-            this.image_config.id !== params.config_id) return;
-
-        this.viewer.refreshBirdsEye(500);
     }
 }

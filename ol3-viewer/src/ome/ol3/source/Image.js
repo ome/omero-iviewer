@@ -124,6 +124,11 @@ ome.ol3.source.Image = function(options) {
             opts.channels) ? [].concat(opts.channels) : [];
 
     /**
+     * Make an initial copy of the settings as current saved settings
+     */
+    this.updateSavedSettings();
+
+    /**
      * the omero image projection - optional params, e.g. start/end
      * @type {Object}
      * @private
@@ -266,20 +271,32 @@ ome.ol3.source.Image = function(options) {
                 url += (!channelInfo['active'] ? "-" : "") + (c + 1);
                 url += "|" + channelInfo['start'] + ":" + channelInfo['end'];
                 url += "$" + channelInfo['color']; // color info
-                var m = {
-                    "inverted" : { "enabled" :
+
+                var m = {};
+                if (channelInfo['active']) {
+                    m["inverted"] = { "enabled" :
                         typeof channelInfo['inverted'] === 'boolean' &&
-                            channelInfo['inverted']}
-                };
-                if (typeof channelInfo['family'] === 'string' &&
-                    channelInfo['family'] !== "" &&
-                    typeof channelInfo['coefficient'] === 'number' &&
-                    !isNaN(channelInfo['coefficient'])) {
-                        m["quantization"] = {
-                            "family": channelInfo['family'],
-                            "coefficient": channelInfo['coefficient']
-                        };
-                };
+                            channelInfo['inverted']
+                    }
+
+                    // Only need to include family if different from default
+                    var family = channelInfo['family'];
+                    var family_not_default = (family !== "linear" ||
+                                              (family === "linear" && this.saved_channels_info_[c]["family"] !== "linear"));
+                    if (typeof family === 'string' &&
+                        family !== "" &&
+                        family_not_default &&
+                        typeof channelInfo['coefficient'] === 'number' &&
+                        !isNaN(channelInfo['coefficient'])) {
+                            m["quantization"] = {
+                                "family": family,
+                            };
+                            // Only need coefficient if family is not 'linear' or 'logarithmic'
+                            if (family !== 'linear' && family !== 'logarithmic') {
+                                m["quantization"]["coefficient"] = channelInfo['coefficient'];
+                            }
+                    }
+                }
                 maps.push(m);
             }
             url += "&maps=" + JSON.stringify(maps);
@@ -455,6 +472,15 @@ ome.ol3.source.Image.prototype.setChannels = function(value) {
             continue;
         this.channels_info_[c].active = true;
     }
+}
+
+/**
+ * Set the saved_channels_info to the current channels_info_
+ * We use the difference between saved and current settings to
+ * build the maps query string when rendering image.
+ */
+ome.ol3.source.Image.prototype.updateSavedSettings = function() {
+    this.saved_channels_info_ = this.channels_info_.map(c => Object.assign({}, c));
 }
 
 /**
@@ -790,3 +816,8 @@ goog.exportProperty(
     ome.ol3.source.Image.prototype,
     'setChannels',
     ome.ol3.source.Image.prototype.setChannels);
+
+goog.exportProperty(
+    ome.ol3.source.Image.prototype,
+    'updateSavedSettings',
+    ome.ol3.source.Image.prototype.updateSavedSettings);
