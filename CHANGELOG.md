@@ -1,3 +1,34 @@
+0.5.0 (May 2018)
+----------------
+
+This version includes:
+
+- disabled projection for image where sizeX * sizeY > 4000000
+- added option to map pixels values using map other than linear
+- added option to display pixels intensity when mousing over image
+- enabled viewing of multiple images in the same browser window by double-clicking
+- added support for opening the image in other installed applications e.g. OMERO.figure
+- added option to export ROIs statistics in CSV file or Excel file
+- improved ROIs creation, manipulation and persistence
+- improved copy/paste of ROIs across images
+- added new icon for polyline
+- improved handling of statistical values
+- handled images with large number of channels
+- added menus in header
+- improved loading and display of bird's eye view
+- improved loading of tiles
+- correctly handled data access depending on permissions level
+- improved UI
+- added minimal support for masks
+- updated documentation
+- reviewed build system to reduce the bundled size
+- improved build system for development
+- improved testing infrastructure
+- upgraded Webpack to 3.6.0
+- upgraded Openlayers to version 4.6.5
+- upgraded JQuery to version 3.3.1
+
+
 0.4.1 (November 2017)
 ---------------------
 
