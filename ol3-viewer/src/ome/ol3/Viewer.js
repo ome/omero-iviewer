@@ -1254,6 +1254,7 @@ ome.ol3.Viewer.prototype.readPrefixedUris = function(params) {
 
     for (var uri in ome.ol3.PREFIXED_URIS) {
         var resource = ome.ol3.PREFIXED_URIS[uri];
+        console.trace('resource', resource);
         if (typeof params[resource] === 'string')
             this.prefixed_uris_[resource] = params[resource];
         else this.prefixed_uris_[resource] = '/' + resource.toLowerCase();
