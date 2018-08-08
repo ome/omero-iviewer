@@ -1252,13 +1252,11 @@ ome.ol3.Viewer.prototype.getPrefixedURI = function(resource) {
 ome.ol3.Viewer.prototype.readPrefixedUris = function(params) {
     if (typeof params !== 'object' || params === null) return;
 
-    for (var uri in ome.ol3.PREFIXED_URIS) {
-        var resource = ome.ol3.PREFIXED_URIS[uri];
-        console.trace('resource', resource);
+    ome.ol3.PREFIXED_URIS.forEach(resource => {
         if (typeof params[resource] === 'string')
             this.prefixed_uris_[resource] = params[resource];
         else this.prefixed_uris_[resource] = '/' + resource.toLowerCase();
-    }
+    });
 }
 
 /**
