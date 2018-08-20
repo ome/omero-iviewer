@@ -657,6 +657,10 @@ export default class ThumbnailSlider extends EventSubscriber {
         return false;
     }
 
+    handleScrollEvent(event) {
+        console.log(event.target.scrollTop);
+    }
+
     /**
      * Updates one or more thumbnails
      *

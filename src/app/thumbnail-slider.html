@@ -24,26 +24,24 @@
          click.delegate="refreshThumbnails()"
          title="Refresh thumbnails">
     </div>
-    <div show.bind="thumbnails_start_index > 0"
-         click.delegate="requestMoreThumbnails(false, false)"
-         class='collapse-up thumbnail-collapse'
-         title="Show more images">
-    </div>
+
     <div class="thumbnail-scroll-panel"
-        show.bind="!requesting_thumbnail_data">
-        <img id="${'img-thumb-' + thumb.id}" repeat.for="thumb of thumbnails"
-             css="${image_config.image_info.image_id === thumb.id ?
-                 'border: 5px solid rgba(0,60,136,0.5)' : 'border: none'}"
-             src.bind="thumb.url + '?version=' + thumb.revision"
-             title="${thumb.title}"
-             alt="Not Found"
-             click.delegate="onClick(thumb.id)"
-             dblclick.delegate="onDoubleClick(thumb.id, $event)"/>
-    </div>
-    <div show.bind="thumbnails_end_index < thumbnails_count"
-         click.delegate="requestMoreThumbnails(false, true)"
-         class='expand-down thumbnail-collapse'
-         title="Show more images">
+        show.bind="!requesting_thumbnail_data"
+        scroll.trigger="handleScrollEvent($event)">
+
+        <div css="height: ${ (thumbnails_count * 50) }px">
+            Count: ${ thumbnails_count } ${ thumbnails_count * 10 }
+            <img id="${'img-thumb-' + thumb.id}" repeat.for="thumb of thumbnails"
+                css="${image_config.image_info.image_id === thumb.id ?
+                    'border: 5px solid rgba(0,60,136,0.5)' : 'border: none'}"
+                src.bind="thumb.url + '?version=' + thumb.revision"
+                title="${thumb.title}"
+                alt="Not Found"
+                click.delegate="onClick(thumb.id)"
+                dblclick.delegate="onDoubleClick(thumb.id, $event)"/>
+
+        </div>
+
     </div>
     <div class="disabled-color" style="position: relative;top: 40%;"
          show.bind="requesting_thumbnail_data">
