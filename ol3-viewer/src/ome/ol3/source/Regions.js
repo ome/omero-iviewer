@@ -282,6 +282,7 @@ ome.ol3.source.Regions.prototype.setModes = function(modes) {
     var oldModes = this.present_modes_.slice();
     this.present_modes_ = [];
 
+    console.log('modes', modes)
     for (var m in modes) {
         // we have to be a numnber and within the enum range
         if (typeof(modes[m]) !== 'number' || modes[m] < 0 || modes[m] > 4)

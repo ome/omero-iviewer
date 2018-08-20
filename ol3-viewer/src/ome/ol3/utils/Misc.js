@@ -132,6 +132,7 @@ function(features) {
 
     // determine priority of whih feature ought to be returned
     var filteredIntersectingFeatures = [];
+    console.log('featuresAtCoords features', features)
     for (var i in features)
         if (filteredIntersectingFeatures.length > 0) {
             // this should ensure that if a feature is contained by another
@@ -260,7 +261,7 @@ ome.ol3.utils.Misc.parseChannelParameters = function(channel_info, maps_info) {
     if (chans.length === 0) return null;
 
     // iterate over channel tokens
-    for (var k in chans) {
+    for (var k=0; k<chans.length; k++) {
         // extract channel number
         var c = chans[k];
         var pos = c.indexOf('|');

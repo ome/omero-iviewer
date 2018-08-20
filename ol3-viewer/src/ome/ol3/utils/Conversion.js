@@ -208,7 +208,7 @@ ome.ol3.utils.Conversion.checkColorObjectCorrectness = function(color) {
     // check correctness of color object,
     // we take alpha to be optional, setting it to 1
     var needsToBeThere = ["red", "green", "blue"];
-    for (var n in needsToBeThere) {
+    for (var n=0; n<needsToBeThere.length; n++) {
         if (typeof(color[needsToBeThere[n]]) === 'undefined') return null;
         var c = color[needsToBeThere[n]];
         if (c < 0 || c > 255) return null;
@@ -837,12 +837,13 @@ ome.ol3.utils.Conversion.toJsonObject =
 
     // flatten out shapes in rois
     var flattenedArray = [];
-    for (var r in rois) {
+    for (let r=0; r<rois.length; r++) {
         if (!ome.ol3.utils.Misc.isArray(
                 rois[r]['shapes'])) continue;
         var shap = rois[r]['shapes'];
-        for (var s in shap)
-            flattenedArray.push(shap[s]);
+        shap.forEach(s => {
+            flattenedArray.push(s);
+        });
     }
     categorizedRois['new'] =  flattenedArray;
 
@@ -910,21 +911,21 @@ ome.ol3.utils.Conversion.convertPointStringIntoCoords = function(points) {
     if (typeof points !== 'string') return null;
 
     var tokens = points.split(" ");
+    console.log('convertPointStringIntoCoords tokens', tokens);
     if (tokens.length === 0) return null;
 
-    var ret = [];
-    for (var t in tokens) {
-        var tok = tokens[t].trim();
-        // empty tokens are ignored
-        if (tok === '') continue;
-        var c = tok.split(",");
-        if (c.length < 2) return null;
+    tokens = tokens.map(t => t.trim());
+    tokens = tokens.filter(t => t.length > 0);
+    tokens = tokens.map(t => t.split(","));
+    tokens = tokens.filter(t => t.length > 1);
+
+    var ret = tokens.map(c => {
         var x = parseFloat(c[0]);
         var y = parseFloat(c[1]);
         // NaNs are not acceptable
         if (isNaN(x) || isNaN(y)) return null;
-        ret.push([x, -y]);
-    }
+        return [x, -y];
+    });
 
     return ret;
 }
