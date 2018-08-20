@@ -308,9 +308,8 @@ export default class RegionsInfo  {
 
         try {
             let count = 0;
-            for (let r in data) {
+            data.forEach(roi => {
                 let shapes = new Map();
-                let roi = data[r];
                 // add shapes
                 if (Misc.isArray(roi.shapes) && roi.shapes.length > 0) {
                     let roiId = roi['@id'];
@@ -324,8 +323,7 @@ export default class RegionsInfo  {
                         }
                         return (z1 < z2) ? -1: 1;
                     });
-                    for (let s in roi.shapes) {
-                        let shape = roi.shapes[s];
+                    roi.shapes.forEach(shape => {
                         let newShape =
                             Converters.amendShapeDefinition(
                                 Object.assign({}, shape));
@@ -338,14 +336,14 @@ export default class RegionsInfo  {
                         newShape.modified = false;
                         shapes.set(shapeId, newShape);
                         count++;
-                    }
+                    });
                     this.data.set(roiId, {
                         shapes: shapes,
                         show: false,
                         deleted: 0
                     });
                 }
-            }
+            });
             this.number_of_shapes = count;
             this.image_info.roi_count = this.data.size;
             this.tmp_data = data;
@@ -682,8 +680,7 @@ export default class RegionsInfo  {
             let statsOnShape = s.stats;
             // shape stats exist, we might not have all channels yet
             if (typeof statsOnShape === 'object' && statsOnShape !== null) {
-                for (let c in activeChannels) {
-                    let chan = activeChannels[c];
+                activeChannels.forEach(chan => {
                     if (typeof statsOnShape[chan] !== 'object') {
                         idsToBeRequested.push(s['@id']);
                         shapes.set(s['@id'], s);
@@ -692,7 +689,7 @@ export default class RegionsInfo  {
                             channelsToBeRequested.indexOf(chan) === -1)
                                 channelsToBeRequested.push(chan);
                     }
-                }
+                });
                 return;
             }
             // shape stats don't exist
@@ -704,7 +701,7 @@ export default class RegionsInfo  {
         }
 
         // loop and reduce what is requested
-        for (let i in ids) {
+        for (let i=0; i<ids.length; i++) {
             let id = ids[i];
             if (id.indexOf("-") !== -1) continue;
             let shape = this.getShape(ids[i]);
@@ -733,6 +730,7 @@ export default class RegionsInfo  {
             "success": (resp) => {
                 if (typeof resp === 'object' && resp !== null) {
                     // attach stats to their shapes
+                    console.log('resp', resp);
                     for (let r in resp) {
                         let shape = shapes.get(parseInt(r));
                         if (shape) {

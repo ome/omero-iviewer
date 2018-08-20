@@ -386,7 +386,7 @@ ome.ol3.utils.Regions.createFeaturesFromRegionsResponse =
             !ome.ol3.utils.Misc.isArray(regions.regions_info_)) return null;
 
         var ret = [];
-        for (var roi in regions.regions_info_) {
+        for (var roi=0; roi<regions.regions_info_.length; roi++) {
             // we gotta have an id and shapes, otherwise no features...
             if (typeof(regions.regions_info_[roi]['@id']) !== 'number' ||
                 !ome.ol3.utils.Misc.isArray(regions.regions_info_[roi]['shapes']))
@@ -397,7 +397,7 @@ ome.ol3.utils.Regions.createFeaturesFromRegionsResponse =
             regions.regions_info_[roi]['state'] = ome.ol3.REGIONS_STATE.DEFAULT;
 
             // descend deeper into shapes for rois
-            for (var s in regions.regions_info_[roi]['shapes']) {
+            for (var s=0; s<regions.regions_info_[roi]['shapes'].length; s++) {
                 var shape = regions.regions_info_[roi]['shapes'][s];
                 // id, TheT and TheZ have to be present
                 if (typeof(shape['@id']) !== 'number') continue;
@@ -477,7 +477,7 @@ ome.ol3.utils.Regions.createFeaturesFromRegionsResponse =
         // time and plane
         if (typeof include_new_features === 'boolean' && include_new_features &&
                 typeof regions.new_unsaved_shapes_ === 'object')
-            for (var f in regions.new_unsaved_shapes_) {
+            for (var f=0; f<regions.new_unsaved_shapes_.length; f++) {
                 var newUnsFeat = regions.new_unsaved_shapes_[f];
                 var newUnsFeatT =
                     typeof newUnsFeat['TheT'] === 'number' ?

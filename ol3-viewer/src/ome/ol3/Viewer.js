@@ -353,6 +353,7 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
     var dims = this.image_info_['size'];
     if (this.image_info_['zoomLevelScaling']) {
        var tmp = [];
+       console.log('zoomLevelScaling', this.image_info_['zoomLevelScaling'])
        for (var r in this.image_info_['zoomLevelScaling'])
            tmp.push(1 / this.image_info_['zoomLevelScaling'][r]);
        zoomLevelScaling = tmp.reverse();
@@ -436,9 +437,7 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
            initialChannels, initialMaps);
 
     // copy needed channels info
-    var channels = [];
-    for (var c in this.image_info_['channels']) {
-       var oldC = this.image_info_['channels'][c];
+    var channels = this.image_info_['channels'].map(oldC => {
        var newC = {
            "active" : oldC['active'],
            "label" : typeof oldC['label'] === 'string' ? oldC['label'] : c,
@@ -458,8 +457,8 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
                newC['family'] = oldC['family'];
                newC['coefficient'] = oldC['coefficient'];
        }
-       channels.push(newC);
-    }
+       return newC;
+    });
 
     var isTiled =
         typeof this.image_info_['tiles'] === 'boolean' &&
@@ -678,6 +677,7 @@ ome.ol3.Viewer.prototype.addRegions = function(data) {
     if (this.regions_ instanceof ome.ol3.source.Regions) return;
 
     var options = {};
+    console.log('addRegions data');
     if (data) options['data'] = data;
     this.regions_ = new ome.ol3.source.Regions(this, options);
 
@@ -983,12 +983,13 @@ ome.ol3.Viewer.prototype.addInteractionOrControl = function(key, type, descend, 
     // we are going to call ourselves again with an IMPORTANT flag that we are not
     // going to continue this way in a cyclic manner!
     if (followLinkedComponents) {
-        for (var link in componentFound['links'])
+        componentFound['links'].forEach(link => {
             this.addInteractionOrControl(
-                componentFound['links'][link],
+                link,
                 type === 'control' ? 'interaction' : 'control',
                 false);
-        }
+        });
+    }
 }
 
 /**
@@ -1023,6 +1024,7 @@ ome.ol3.Viewer.prototype.removeInteractionOrControl = function(key, descend) {
     // we are going to call ourselves again with an IMPORTANT flag that we are not
     // going to continue this way in a cyclic manner!
     if (followLinkedComponents) {
+        console.log("controlOrInteraction['links']", controlOrInteraction['links'])
         for (var link in controlOrInteraction['links'])
             this.removeInteractionOrControl(
                 controlOrInteraction['links'][link], false);
@@ -1063,7 +1065,7 @@ ome.ol3.Viewer.prototype.setDimensionIndex = function(key, values) {
     if (key === 'x') key = 'width'; // use alias
     if (key === 'y') key = 'height'; // use alias
     max = this.image_info_.size[key];
-    for (var c in values) {
+    for (var c=0; c<values.length; c++) {
         if (typeof(values[c]) === 'string')
                 values[c] = parseInt(values[c]);
         if (typeof(values[c]) !== 'number' || values[c] < 0)
@@ -1447,18 +1449,21 @@ ome.ol3.Viewer.prototype.getSmallestViewExtent = function() {
         this.regions_.idIndex_ === null) return null;
 
     var col = new ol.Collection();
-    for (var id in ids) {
+    ids.forEach(id => {
         try {
-            var f = this.regions_.idIndex_[ids[id]];
+            var f = this.regions_.idIndex_[id];
             if (f['state'] === ome.ol3.REGIONS_STATE.REMOVED ||
                 f.getGeometry() instanceof ome.ol3.geom.Mask ||
                 (typeof f['permissions'] === 'object' &&
                     f['permissions'] !== null &&
                     typeof f['permissions']['canEdit'] === 'boolean' &&
-                    !f['permissions']['canEdit'])) continue;
-            col.push(f);
+                    !f['permissions']['canEdit'])) {
+                // ignore
+            } else {
+                col.push(f);
+            }
         } catch(ignored) {}
-    }
+    })
 
     return col;
 }
@@ -1505,6 +1510,7 @@ ome.ol3.Viewer.prototype.getSmallestViewExtent = function() {
 
          var dims = ['TheT', 'TheZ', 'TheC'];
          col.forEach(function(f) {
+            console.log('shape_info', shape_info);
              for (var p in shape_info)
                 if (dims.indexOf(p) !== -1 &&
                      typeof shape_info[p] === 'number' &&
@@ -1555,6 +1561,7 @@ ome.ol3.Viewer.prototype.storeRegions =
             if (!omit_client_update &&
                 roisAsJsonObject['new_and_deleted'].length > 0) {
                     var ids = {};
+                    console.log('roisAsJsonObject', roisAsJsonObject['new_and_deleted']);
                     for (var i in roisAsJsonObject['new_and_deleted']) {
                         var id = roisAsJsonObject['new_and_deleted'][i];
                         if (typeof this.regions_.idIndex_[id] === 'object') {
@@ -1631,6 +1638,7 @@ ome.ol3.Viewer.prototype.dispose = function(rememberEnabled) {
     if (this.viewer_ instanceof ol.PluggableMap) {
         if (rememberEnabled && this.viewerState_) {
             // delete them from the list as well as the viewer
+            console.log('this.viewerState_', this.viewerState_);
             for (var K in this.viewerState_) {
                 var V = this.viewerState_[K];
                 this.removeInteractionOrControl(K);
@@ -2218,10 +2226,7 @@ ome.ol3.Viewer.prototype.getRois = function() {
         }
     };
 
-    ret = [];
-    for (var r in rois)
-        if (rois[r]['shapes'].length > 0) ret.push(rois[r]);
-    return ret;
+    return rois.filter(roi => roi.shapes.length > 0);
 };
 
 /**
