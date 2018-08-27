@@ -17,7 +17,7 @@
 //
 
 // js
-import {inject,customElement, BindingEngine} from 'aurelia-framework';
+import {inject,customElement, BindingEngine, TaskQueue} from 'aurelia-framework';
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import UI from '../utils/ui';
@@ -34,7 +34,7 @@ import {THUMBNAILS_UPDATE, EventSubscriber} from '../events/events';
  * @extends {EventSubscriber}
  */
 @customElement('thumbnail-slider')
-@inject(Context, Element, BindingEngine)
+@inject(Context, Element, BindingEngine, TaskQueue)
 export default class ThumbnailSlider extends EventSubscriber {
     /**
      * have we been initialized
@@ -118,7 +118,7 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @memberof ThumbnailSlider
      * @type {number}
      */
-    thumbnails_count = 0;
+    // thumbnails_count = 0;
 
     /**
      * the update handle of the setInterval
@@ -148,11 +148,12 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @param {Context} context the application context (injected)
      * @param {BindingEngine} bindingEngine the BindingEngine (injected)
      */
-    constructor(context, element, bindingEngine) {
+    constructor(context, element, bindingEngine, taskQueue) {
         super(context.eventbus)
         this.context = context;
         this.element = element;
         this.bindingEngine = bindingEngine;
+        this.taskQueue = taskQueue;
 
         // get webgateway prefix and web api base
         this.web_api_base = this.context.getPrefixedURI(WEB_API_BASE);
@@ -274,7 +275,7 @@ export default class ThumbnailSlider extends EventSubscriber {
         if (this.context.initial_type === INITIAL_TYPES.IMAGES) {
             if (this.context.initial_ids.length > 1) {
                 // we are a list of images
-                this.thumbnails_count = this.context.initial_ids.length;
+                this.setThumbnailsCount(this.context.initial_ids.length);
                 this.requestMoreThumbnails();
             } else {
                 this.gatherThumbnailMetaInfo(
@@ -350,8 +351,8 @@ export default class ThumbnailSlider extends EventSubscriber {
                 let initialize = (path === null);
                 if (path) {
                     // set count, start and end indices (if count > limit)
-                    this.thumbnails_count = path.childCount;
-                    if (this.thumbnails_count > this.thumbnails_request_size) {
+                    this.setThumbnailsCount(path.childCount);
+                    if (this.thumbnails.length > this.thumbnails_request_size) {
                         this.thumbnails_start_index =
                             is_top_thumbnail ?
                                 path.childIndex :
@@ -385,7 +386,7 @@ export default class ThumbnailSlider extends EventSubscriber {
             this.context.initial_ids.length > 1) {
             let until =
                 this.thumbnails_end_index + this.thumbnails_request_size;
-            if (until > this.thumbnails_count) until = this.thumbnails_count;
+            until = Math.max(until, this.thumbnails.length);
             let thumbPrefix =
                 (this.context.server !== "" ?
                     this.context.server + "/" : "") +
@@ -450,15 +451,13 @@ export default class ThumbnailSlider extends EventSubscriber {
                             this.hideMe();
                             return;
                         }
-                    this.thumbnails_count =
-                        typeof response.meta.totalCount === 'number' ?
-                            response.meta.totalCount : 0;
-                    if (this.thumbnails_count === 0) this.hideMe();
+                    this.setThumbnailsCount(response.meta.totalCount);
+                    if (this.thumbnails.length === 0) this.hideMe();
                 }
 
                 // return if count is null or
                 // if data array is not present/zero length
-                if (this.thumbnails_count === 0 ||
+                if (this.thumbnails.length === 0 ||
                     !Misc.isArray(response.data) ||
                     response.data.length === 0) return;
 
@@ -489,27 +488,55 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @memberof ThumbnailSlider
      */
     addThumbnails(thumbnails, append = true, skip_decrement = false) {
+        console.log('addThumbnails...');
         // if we are remote we include the server
         let thumbPrefix =
             (this.context.server !== "" ? this.context.server + "/" : "") +
             this.gateway_prefix + "/render_thumbnail/";
         if (!append) thumbnails.reverse();
 
-        thumbnails.map((item) => {
-            let id = item['@id'];
-            let entry = {
-                id: id,
-                url: thumbPrefix + id + "/",
-                title: typeof item.Name === 'string' ? item.Name : id,
-                revision : 0
-            }
-            if (append) {
-                this.thumbnails.push(entry);
-                this.thumbnails_end_index++;
+        let new_index = 0;
+        this.thumbnails = this.thumbnails.map((thumb, idx) => {
+            console.log({ thumb, idx, new_index });
+            if ((idx === this.thumbnails_start_index + new_index) && (new_index < thumbnails.length)) {
+                let t = thumbnails[new_index];
+                new_index++;
+                return {
+                    id: t['@id'],
+                    url: thumbPrefix + t['@id'] + "/",
+                    title: typeof t.Name === 'string' ? t.Name : t['@id'],
+                    revision : 0
+                }
             } else {
-                this.thumbnails.unshift(entry);
-                if (!skip_decrement) this.thumbnails_start_index--;
+                return thumb;
             }
+        });
+
+        // thumbnails.forEach((item, idx) => {
+        //     let id = item['@id'];
+        //     let entry = {
+        //         id: id,
+        //         url: thumbPrefix + id + "/",
+        //         title: typeof item.Name === 'string' ? item.Name : id,
+        //         revision : 0
+        //     }
+        //     console.log(idx, idx + this.thumbnails_start_index)
+        //     this.thumbnails[idx + this.thumbnails_start_index] = entry;
+
+            // if (append) {
+            //     this.thumbnails.push(entry);
+            //     this.thumbnails_end_index++;
+            // } else {
+            //     this.thumbnails.unshift(entry);
+            //     if (!skip_decrement) this.thumbnails_start_index--;
+            // }
+        // });
+        console.log('...', this.thumbnails);
+
+        this.taskQueue.queueMicroTask(() => {
+            const target = (this.thumbnails_start_index + 5) * 90;
+            console.log('scrolltop...', target)
+            document.querySelector('.thumbnail-scroll-panel').scrollTop = target;
         });
     }
 
@@ -704,6 +731,16 @@ export default class ThumbnailSlider extends EventSubscriber {
             }, 2000);
     }
 
+    setThumbnailsCount(count) {
+        console.log('setThumbnailsCount', count, this.thumbnails.length);
+        if (typeof count !== 'number') {
+            count = 0;
+        }
+        this.thumbnails.length = count;
+        this.thumbnails.fill({'version': 0, 'title': 'unloaded'});
+        console.log('thumbnails', this.thumbnails);
+    }
+
     /**
      * Refresh thumbnail slider contents by reinitialization
      *
@@ -718,8 +755,7 @@ export default class ThumbnailSlider extends EventSubscriber {
         this.initialized = false;
         this.thumbnails_start_index = 0;
         this.thumbnails_end_index = 0;
-        this.thumbnails_count = 0;
-        this.thumbnails = [];
+        this.setThumbnailsCount(0);
 
         // request again
         this.initializeThumbnails(true);

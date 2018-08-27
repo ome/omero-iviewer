@@ -29,9 +29,9 @@
         show.bind="!requesting_thumbnail_data"
         scroll.trigger="handleScrollEvent($event)">
 
-        <div css="height: ${ (thumbnails_count * 50) }px">
-            Count: ${ thumbnails_count } ${ thumbnails_count * 10 }
-            <img id="${'img-thumb-' + thumb.id}" repeat.for="thumb of thumbnails"
+        <div>
+            <div repeat.for="thumb of thumbnails" class="thumbnail-wrapper">
+              <img show.bind="thumb.id" id="${'img-thumb-' + thumb.id}"
                 css="${image_config.image_info.image_id === thumb.id ?
                     'border: 5px solid rgba(0,60,136,0.5)' : 'border: none'}"
                 src.bind="thumb.url + '?version=' + thumb.revision"
@@ -39,7 +39,7 @@
                 alt="Not Found"
                 click.delegate="onClick(thumb.id)"
                 dblclick.delegate="onDoubleClick(thumb.id, $event)"/>
-
+            </div>
         </div>
 
     </div>
