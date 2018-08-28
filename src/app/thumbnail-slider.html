@@ -27,7 +27,7 @@
 
     <div class="thumbnail-scroll-panel"
         show.bind="!requesting_thumbnail_data"
-        scroll.trigger="handleScrollEvent($event)">
+        scroll.trigger="handleScrollEvent($event) & debounce:10">
 
         <div>
             <div repeat.for="thumb of thumbnails" class="thumbnail-wrapper">

@@ -534,7 +534,7 @@ a.ui-button:active,
 }
 .thumbnail-wrapper {
     display: inline-block;
-    background: #cccccc;
+    background: #f0f0f0;
     width: 80px;
     height: 80px;
     margin: 5px;
