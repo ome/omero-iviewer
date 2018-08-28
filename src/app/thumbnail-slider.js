@@ -272,7 +272,7 @@ export default class ThumbnailSlider extends EventSubscriber {
      */
     initializeThumbnails(refresh = false) {
         // standard case: we are an image
-        console.log("initializeThumbnails", this.context.initial_type);
+        console.log("initializeThumbnails", refresh, this.context.initial_type);
         if (this.context.initial_type === INITIAL_TYPES.IMAGES) {
             if (this.context.initial_ids.length > 1) {
                 // we are a list of images
@@ -325,38 +325,39 @@ export default class ThumbnailSlider extends EventSubscriber {
                 // find type === dataset or type === well
                 // dataset has to match the present dataset id
                 // to ensure that we handle images in multiple datasets as well
-                let path = null;
+                let pid = this.image_config.image_info.parent_id;
+
+                let matching_parents = response.paths.map(containers => {
+                    let parents = containers.filter(c => c.type === 'well' || (c.type === 'dataset' && c.id === pid));
+                    return parents.length > 0 ? parents[0] : null;
+                }).filter(parent => parent);
+
+                let parent = matching_parents.length ? matching_parents[0] : null
                 let imgInf = this.image_config.image_info;
-                for (let i=0; i<response.paths.length; i++) {
-                    let p = response.paths[i];
-                    for (let j=0; j<p.length; j++)
-                        if (typeof p[j].type === 'string' &&
-                            p[j].type === 'dataset' &&
-                            p[j].id === this.image_config.image_info.parent_id) {
-                                if (typeof p[j].childCount === 'number')
-                                    path = p[j];
-                                imgInf.parent_type = INITIAL_TYPES.DATASET;
-                                break;
-                        } else if (typeof p[j].type === 'string' &&
-                                    p[j].type === 'well') {
-                                        imgInf.parent_type = INITIAL_TYPES.WELL;
-                                        imgInf.parent_id = p[j].id;
-                                        break;
-                        }
+
+                if (parent) {
+                    if (parent.type === 'dataset') {
+                        imgInf.parent_type = INITIAL_TYPES.DATASET
+                    } else if (parent.type === 'well') {
+                        imgInf.parent_type = INITIAL_TYPES.WELL;
+                        imgInf.parent_id = wells[0].id;
+                    }
                 }
+
+                console.log("imgInf.parent_type, imgInf.parent_id", imgInf.parent_type, imgInf.parent_id);
 
                 if (imgInf.parent_id === null) {
                     this.hideMe();
                     return;
                 }
 
-                let initialize = (path === null);
-                console.log('path', path);
-                if (path) {
+                let initialize = (parent === null);
+                console.log('parent', parent);
+                if (parent) {
                     // set count, start and end indices (if count > limit)
-                    this.setThumbnailsCount(path.childCount);
+                    this.setThumbnailsCount(parent.childCount);
                     if (this.thumbnails.length > this.thumbnails_request_size) {
-                        this.thumbnails_start_index = (path.childPage - 1) * this.thumbnails_request_size;
+                        this.thumbnails_start_index = (parent.childPage - 1) * this.thumbnails_request_size;
                     }
 
                     this.thumbnails_end_index =
