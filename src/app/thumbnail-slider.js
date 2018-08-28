@@ -276,8 +276,7 @@ export default class ThumbnailSlider extends EventSubscriber {
         if (this.context.initial_type === INITIAL_TYPES.IMAGES) {
             if (this.context.initial_ids.length > 1) {
                 // we are a list of images
-                this.setThumbnailsCount(this.context.initial_ids.length);
-                this.requestMoreThumbnails();
+                this.setThumbnailsFromImageIds(this.context.initial_ids);
             } else {
                 this.gatherThumbnailMetaInfo(
                         this.image_config.image_info.image_id);
@@ -297,7 +296,6 @@ export default class ThumbnailSlider extends EventSubscriber {
      * the parent id
      *
      * @param {number} image_id the id of the image in the dataset
-     * @param {boolean} is_top_thumbnail if true image appears first
      * @memberof ThumbnailSlider
      */
     gatherThumbnailMetaInfo(image_id) {
@@ -360,9 +358,8 @@ export default class ThumbnailSlider extends EventSubscriber {
                         this.thumbnails_start_index = (parent.childPage - 1) * this.thumbnails_request_size;
                     }
 
-                    this.thumbnails_end_index =
-                        this.thumbnails_start_index +
-                        this.thumbnails_request_size;
+                    // Prepare thumbs range before loading...
+                    // this.thumbnails_end_index = this.thumbnails_start_index + this.thumbnails_request_size;
                 }
                 this.requestMoreThumbnails(initialize);
             },
@@ -380,24 +377,26 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @param {boolean} refresh true if the user hit the refresh icon
      * @memberof ThumbnailSlider
      */
-    requestMoreThumbnails(init = false, refresh = false) {
-        if (this.context.initial_type === INITIAL_TYPES.IMAGES &&
-            this.context.initial_ids.length > 1) {
-            let until =
-                this.thumbnails_end_index + this.thumbnails_request_size;
-            until = Math.max(until, this.thumbnails.length);
-            let to_add = [];
-            for (let x=this.thumbnails_end_index;x<until;x++) {
-                let id = this.context.initial_ids[x];
-                to_add.push({
-                    '@id': id,
-                    Name: 'image: ' + id
-                });
-                this.thumbnails_end_index++;
-            };
-            this.addThumbnails(to_add, this.thumbnails_start_index)
-            return;
-        }
+    setThumbnailsFromImageIds(imageIds) {
+        this.setThumbnailsCount(imageIds.length);
+        let to_add = imageIds.map(id => ({
+            '@id': id,
+            Name: 'image: ' + id
+        }));
+        this.addThumbnails(to_add, 0);
+    }
+
+    /**
+     * Requests next batch of thumbnails
+     *
+     * @param {boolean} init if true we have to perform some init tasks/checks
+     * @param {boolean} end if true thumbnails after the end index are requested,
+     *                         otherwise before the start index
+     * @param {boolean} skip_decrement if true we don't decrement (first fetch)
+     * @param {boolean} refresh true if the user hit the refresh icon
+     * @memberof ThumbnailSlider
+     */
+    requestMoreThumbnails(init = false, refresh = false, thumb_index = 0) {
         let parent_id =
             this.context.initial_type === INITIAL_TYPES.DATASET ||
             this.context.initial_type === INITIAL_TYPES.WELL ?
