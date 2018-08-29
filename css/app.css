@@ -545,6 +545,12 @@ thumbnail-slider img {
     max-width: 80px;
     max-height: 80px;
 }
+.thumbnail-wrapper .selected {
+    border: 5px solid rgba(0,60,136,0.5)
+}
+.transparent {
+    opacity: 0;
+}
 .thumbnail-panel .thumbnail-collapse {
     height: 28px;
     position: absolute;

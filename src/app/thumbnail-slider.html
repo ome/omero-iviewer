@@ -27,13 +27,14 @@
 
     <div class="thumbnail-scroll-panel"
         show.bind="!requesting_thumbnail_data"
-        scroll.trigger="handleScrollEvent($event) & debounce:10">
+        resize.trigger="panelResized($event)"
+        scroll.trigger="handleScrollEvent($event) & debounce:100">
 
         <div>
             <div repeat.for="thumb of thumbnails" class="thumbnail-wrapper">
-              <img show.bind="thumb.id" id="${'img-thumb-' + thumb.id}"
-                css="${image_config.image_info.image_id === thumb.id ?
-                    'border: 5px solid rgba(0,60,136,0.5)' : 'border: none'}"
+              <img id="${'img-thumb-' + thumb.id}"
+                class="${image_config.image_info.image_id === thumb.id ? 'selected' : ''}
+                    ${thumb.id ? '' : 'transparent'}"
                 src.bind="thumb.url + '?version=' + thumb.revision"
                 title="${thumb.title}"
                 alt="Not Found"
