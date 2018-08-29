@@ -174,14 +174,26 @@ export default class ThumbnailSlider extends EventSubscriber {
         this.subscribe();
     }
 
+    /**
+     * Overridden aurelia lifecycle method:
+     * Used to get initial height of panel
+     *
+     * @memberof ThumbnailSlider
+     */
     attached() {
         this.slider_height =
-            document.querySelector('.thumbnail-scroll-panel').clientHeight
+            document.querySelector('.thumbnail-scroll-panel').clientHeight;
     }
 
+    /**
+     * Handle resize of the browse window.
+     * Updates height of panel
+     *
+     * @memberof ThumbnailSlider
+     */
     resizeViewer() {
         this.slider_height =
-            document.querySelector('.thumbnail-scroll-panel').clientHeight
+            document.querySelector('.thumbnail-scroll-panel').clientHeight;
     }
 
     /**
