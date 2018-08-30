@@ -388,13 +388,10 @@ export default class ThumbnailSlider extends EventSubscriber {
     }
 
     /**
-     * Requests next batch of thumbnails
+     * If we have the ImageIDs in hand, we can generate thumbnails without
+     * having to load them.
      *
-     * @param {boolean} init if true we have to perform some init tasks/checks
-     * @param {boolean} end if true thumbnails after the end index are requested,
-     *                         otherwise before the start index
-     * @param {boolean} skip_decrement if true we don't decrement (first fetch)
-     * @param {boolean} refresh true if the user hit the refresh icon
+     * @param {list} list of IDs
      * @memberof ThumbnailSlider
      */
     setThumbnailsFromImageIds(imageIds) {
@@ -407,13 +404,45 @@ export default class ThumbnailSlider extends EventSubscriber {
     }
 
     /**
+     * Loads unloaded thumbnails that scrolled into the thumbnail panel
+     *
+     * @param {number} scrollTop Current scroll position of the panel
+     * @memberof ThumbnailSlider
+     */
+    loadVisibleThumbnails(scrollTop, init = false, refresh = false) {
+        if (scrollTop === undefined) {
+            const panel = document.querySelector('.thumbnail-scroll-panel');
+            if (panel)
+            scrollTop = panel.scrollTop;
+        }
+        console.log('loadVisibleThumbnails scrollTop:', scrollTop);
+
+        let thumb_start_index = parseInt(scrollTop / this.thumbnail_size);
+        let thumb_end_index = parseInt((scrollTop + this.slider_height) / this.thumbnail_size);
+        console.log('this.thumbnail_size', this.slider_height);
+        console.log('scrolled to thumb_index...', thumb_start_index, thumb_end_index);
+
+        let unloaded = [];
+        for (var idx=thumb_start_index; idx<=thumb_end_index; idx++){
+            if (idx < this.thumbnails.length && !this.thumbnails[idx].id) {
+                unloaded.push(idx);
+            }
+        }
+        if (unloaded.length > 0) {
+            thumb_start_index = unloaded[0];
+            thumb_end_index = unloaded[unloaded.length-1];
+            console.log('unloaded thumbs: thumb_start_index, thumb_end_index', thumb_start_index, thumb_end_index);
+            this.requestMoreThumbnails(init, refresh, thumb_start_index, thumb_end_index);
+        }
+    }
+
+    /**
      * Requests next batch of thumbnails
      *
      * @param {boolean} init if true we have to perform some init tasks/checks
-     * @param {boolean} end if true thumbnails after the end index are requested,
-     *                         otherwise before the start index
-     * @param {boolean} skip_decrement if true we don't decrement (first fetch)
      * @param {boolean} refresh true if the user hit the refresh icon
+     * @param {number} thumb_start_index Index of first thumbnail. Selected
+     * @param {number} thumb_end_index Optional. Otherwise use request_size
      * @memberof ThumbnailSlider
      */
     requestMoreThumbnails(init = false, refresh = false,
@@ -478,7 +507,13 @@ export default class ThumbnailSlider extends EventSubscriber {
                 // add thumnails to the map which will trigger the loading
                 this.addThumbnails(response.data, offset);
                 if (init) {
-                    this.scrollToThumbnail(thumb_start_index);
+                    if (thumb_start_index > 0) {
+                        // Scrolling will trigger loading of any unloaded thumbs
+                        this.scrollToThumbnail(thumb_start_index);
+                    } else {
+                        // but if we don't need to scroll, trigger manually...
+                        this.loadVisibleThumbnails();
+                    }
                 }
 
                 // open first image for data/well
@@ -496,12 +531,13 @@ export default class ThumbnailSlider extends EventSubscriber {
     }
 
     /**
-     * Adds thumbnails to then be loaded.
+     * Adds thumbnails with Image IDs to this.thumbnails array.
+     * We create a new list from old, replacing the thumbnails (instead of
+     * modifying the old list) to make sure the changes is observed and
+     * UI updates.
      *
      * @param {Array.<Object>} thumbnails the thumbnails to be added
-     * @param {boolean} append if true thumbnails are appended,
-     *                         otherwise inserted at the beginning
-     * @param {boolean} skip_decrement if true we don't decrement (first fetch)
+     * @param {number} start_index Index to start replacing
      * @memberof ThumbnailSlider
      */
     addThumbnails(thumbnails, start_index) {
@@ -528,15 +564,24 @@ export default class ThumbnailSlider extends EventSubscriber {
         });
     }
 
-
+    /**
+     * Adds thumbnails with Image IDs to this.thumbnails array.
+     * We create a new list from old, replacing the thumbnails (instead of
+     * modifying the old list) to make sure the changes is observed and
+     * UI updates.
+     *
+     * @param {Array.<Object>} thumbnails the thumbnails to be added
+     * @param {number} start_index Index to start replacing
+     * @memberof ThumbnailSlider
+     */
     scrollToThumbnail(index) {
         // https://github.com/aurelia/templating/issues/79
         console.log("SCROLLING to ", index);
         this.taskQueue.queueMicroTask(() => {
             const target = (index) * this.thumbnail_size;
 
-            // If we didn't do ajax call to load thumbnails, ?image=1&image=2 the scroll-panel
-            // might not be ready yet.
+            // If we didn't do ajax call to load thumbnails, ?image=1&image=2
+            // the scroll-panel might not be ready yet.
             console.log('scroll to top...', target)
             let scroll_panel = document.querySelector('.thumbnail-scroll-panel');
             if (scroll_panel) {
@@ -694,23 +739,7 @@ export default class ThumbnailSlider extends EventSubscriber {
         console.log('scroll', event.target.scrollTop, this.thumbnail_size, event.target.scrollTop / this.thumbnail_size)
         // find index of any visible thumbnails that aren't loaded...
 
-
-        let thumb_start_index = parseInt(event.target.scrollTop / this.thumbnail_size);
-        let thumb_end_index = parseInt((event.target.scrollTop + this.slider_height) / this.thumbnail_size);
-
-        console.log('scrolled to thumb_index...', thumb_start_index, thumb_end_index);
-        let unloaded = [];
-        for (var idx=thumb_start_index; idx<=thumb_end_index; idx++){
-            if (idx < this.thumbnails.length && !this.thumbnails[idx].id) {
-                unloaded.push(idx);
-            }
-        }
-        if (unloaded.length > 0) {
-            thumb_start_index = unloaded[0];
-            thumb_end_index = unloaded[unloaded.length-1];
-            console.log('unloaded thumbs: thumb_start_index, thumb_end_index', thumb_start_index, thumb_end_index);
-            this.requestMoreThumbnails(false, false, thumb_start_index, thumb_end_index);
-        }
+        this.loadVisibleThumbnails(event.target.scrollTop);
     }
 
     /**
