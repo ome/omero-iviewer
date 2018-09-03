@@ -791,16 +791,27 @@ export default class Context {
         return configs;
     }
 
+    /**
+     * Sets a cache of image settings.
+     * Settings object contains 'channels' (same as imgData JSON)
+     * 'projection', 'model', 'time', 'plane'
+     *
+     * @memberof Context
+     * @param {number} id the Image ID
+     * @param {settings} Object
+     */
     setCachedImageSettings(image_id, settings) {
         this.cached_image_settings[image_id] = settings;
     }
 
     /**
      * Retrieves last viewed (unsaved) settings for an image by ID.
+     * Object returned contains 'channels' (same as imgData JSON)
+     * 'projection', 'model', 'time', 'plane'
      *
      * @memberof Context
      * @param {number} id the Image ID
-     * @return {ImageConfig} the image settings object or null
+     * @return {Object} similar to imgData JSON
      */
     getCachedImageSettings(image_id) {
         if (this.cached_image_settings[image_id]) {
