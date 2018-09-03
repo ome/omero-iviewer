@@ -267,13 +267,13 @@ ome.ol3.Viewer = function(id, options) {
      * @param {?function} initHook an optional initialization handler
      * @private
      */
-    this.initialize_ = function(scope, postSuccessHook, initHook) {
+    this.initialize_ = function(postSuccessHook, initHook) {
         // can happen if we instantitate the viewer without id
-        if (scope.id_ < 0) return;
+        if (this.id_ < 0) return;
 
         // use handed in image info instead of requesting it
-        if (scope.image_info_ !== null) {
-            scope.bootstrapOpenLayers(postSuccessHook, initHook);
+        if (this.image_info_ !== null) {
+            this.bootstrapOpenLayers(postSuccessHook, initHook);
             return;
         }
 
@@ -291,24 +291,24 @@ ome.ol3.Viewer = function(id, options) {
                 return;
              }
              // store response internally to be able to work with it later
-             scope.image_info_ = data;
+             this.image_info_ = data;
 
              // delegate
-             scope.bootstrapOpenLayers(postSuccessHook, initHook);
-        };
+             this.bootstrapOpenLayers(postSuccessHook, initHook);
+        }.bind(this);
 
         // define request settings
         var reqParams = {
-            "server" : scope.getServer(),
-            "uri" : scope.getPrefixedURI(ome.ol3.WEBGATEWAY) +
-                '/imgData/' + scope.id_,
+            "server" : this.getServer(),
+            "uri" : this.getPrefixedURI(ome.ol3.WEBGATEWAY) +
+                '/imgData/' + this.id_,
             "jsonp" : true, // this will only count if we are cross-domain
             "success" : success,
             "error" : function(error) {
                 console.error("Error retrieving image info for id: " +
-                    scope.id_ +
+                    this.id_ +
                     ((error && error.length > 0) ? (" => " + error) : ""));
-            }
+            }.bind(this)
         };
 
         // send request
@@ -319,7 +319,7 @@ ome.ol3.Viewer = function(id, options) {
     // for cross domain we check whether we need to have a login made, otherwise
     // we redirect to there ...
     if (ome.ol3.utils.Net.isSameOrigin(this.server_) || this.haveMadeCrossOriginLogin_) {
-        this.initialize_(this);
+        this.initialize_();
     } else ome.ol3.utils.Net.makeCrossDomainLoginRedirect(this.server_);
 };
 goog.inherits(ome.ol3.Viewer, ol.Object);
