@@ -537,6 +537,10 @@ export default class Ol3Viewer extends EventSubscriber {
             else this.linked_events.syncAction(params, "changeImageSettings");
         } else if (typeof params.interpolate === 'boolean')
             this.viewer.enableSmoothing(params.interpolate);
+
+        let settings = this.viewer.captureViewParameters()
+        let imageId = this.viewer.getId()
+        this.context.setCachedImageSettings(imageId, settings);
     }
 
     /**

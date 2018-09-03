@@ -2265,6 +2265,11 @@ goog.exportSymbol(
 
 goog.exportProperty(
     ome.ol3.Viewer.prototype,
+    'getId',
+    ome.ol3.Viewer.prototype.getId);
+
+goog.exportProperty(
+    ome.ol3.Viewer.prototype,
     'show',
     ome.ol3.Viewer.prototype.show);
 

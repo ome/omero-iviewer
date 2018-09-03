@@ -58,6 +58,7 @@ export class RightHandPanel {
         this.context = context;
         this.bindingEngine = bindingEngine;
         // set initial image config
+        // NB: This will likely be null initially
         this.image_config = this.context.getSelectedImageConfig();
     }
 

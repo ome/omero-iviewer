@@ -113,6 +113,14 @@ export default class Context {
     image_configs = new Map();
 
     /**
+     * a map for unsaved image settings
+     *
+     * @memberof Context
+     * @type {Map}
+     */
+    cached_image_settings = {};
+
+    /**
      * the initial type the viewer was opened with
      *
      * @memberof Context
@@ -655,6 +663,7 @@ export default class Context {
         // store the image config in the map and make it the selected one
         this.image_configs.set(image_config.id, image_config);
         this.selectConfig(image_config.id);
+        // Call bind() to initialize image data loading
         image_config.bind();
     }
 
@@ -780,6 +789,23 @@ export default class Context {
             }
         }
         return configs;
+    }
+
+    setCachedImageSettings(image_id, settings) {
+        this.cached_image_settings[image_id] = settings;
+    }
+
+    /**
+     * Retrieves last viewed (unsaved) settings for an image by ID.
+     *
+     * @memberof Context
+     * @param {number} id the Image ID
+     * @return {ImageConfig} the image settings object or null
+     */
+    getCachedImageSettings(image_id) {
+        if (this.cached_image_settings[image_id]) {
+            return this.cached_image_settings[image_id];
+        }
     }
 
     /**

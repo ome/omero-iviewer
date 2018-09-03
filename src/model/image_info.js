@@ -375,6 +375,9 @@ export default class ImageInfo {
             (this.short_image_name !== '' ?
                 this.short_image_name : APP_TITLE);
 
+        // If we've viewed this image before, apply cached settings
+        this.applyCachedSettings();
+
         // signal that we are ready
         this.ready = true;
         this.tmp_data = response;
@@ -382,6 +385,25 @@ export default class ImageInfo {
         if (refresh) {
             this.context.publish(
                 IMAGE_SETTINGS_REFRESH, { config_id : this.config_id});
+        }
+    }
+
+
+    applyCachedSettings() {
+        const image_id = this.image_id;
+        let cached = this.context.getCachedImageSettings(image_id);
+        console.log('image_info.initializeImageInfo() cached ', cached);
+        if (cached !== undefined) {
+            this.channels = this.channels.map((ch, i) => {
+                ch.active = cached.channels[i].active;
+                ch.coefficient = cached.channels[i].coefficient;
+                ch.color = cached.channels[i].color;
+                ch.family = cached.channels[i].family;
+                ch.active = cached.channels[i].active;
+                ch.window = Object.assign({}, cached.channels[i].window);
+                console.log('applyCachedSettingsToImageConfig:', i, ch);
+                return ch;
+            });
         }
     }
 
