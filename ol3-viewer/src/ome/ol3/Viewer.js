@@ -437,8 +437,7 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
 
     // copy needed channels info
     var channels = [];
-    for (var c in this.image_info_['channels']) {
-       var oldC = this.image_info_['channels'][c];
+    this.image_info_['channels'].forEach(function(oldC, c) {
        var newC = {
            "active" : oldC['active'],
            "label" : typeof oldC['label'] === 'string' ? oldC['label'] : c,
@@ -459,7 +458,7 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
                newC['coefficient'] = oldC['coefficient'];
        }
        channels.push(newC);
-    }
+    });
 
     var isTiled =
         typeof this.image_info_['tiles'] === 'boolean' &&
