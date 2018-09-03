@@ -376,7 +376,7 @@ export default class ImageInfo {
                 this.short_image_name : APP_TITLE);
 
         // If we've viewed this image before, apply cached settings
-        this.applyCachedSettings();
+        this.applyCachedSettings(response);
 
         // signal that we are ready
         this.ready = true;
@@ -394,10 +394,15 @@ export default class ImageInfo {
      * @private
      * @memberof ImageInfo
      */
-    applyCachedSettings() {
-        const image_id = this.image_id;
-        let cached = this.context.getCachedImageSettings(image_id);
+    applyCachedSettings(response) {
+        let cached = this.context.getCachedImageSettings(this.image_id);
         if (cached !== undefined) {
+
+            this.model = this.sanitizeModel(cached.model)
+            // this is passed to the ol3-viewer via tmp_data, so we need to update
+            response.rdefs.model = this.model;
+            // reponse.channels is the same object as this.channels, so
+            // it is automatically updated here
             this.channels = this.channels.map((ch, i) => {
                 ch.active = cached.channels[i].active;
                 ch.coefficient = cached.channels[i].coefficient;
@@ -523,12 +528,25 @@ export default class ImageInfo {
         if (this.dimensions.z < 0) this.dimensions.z = 0;
         if (this.dimensions.z >= this.dimensions.max_z)
             this.dimensions.z = this.dimensions.max_z-1;
-        let lowerCaseModel = this.model.toLowerCase()[0];
+        this.model = this.sanitizeModel(this.model);
+    }
+
+    /**
+     * Convert between the response.rdefs.model from imgData 'c' or 'g'
+     * to 'color' or 'greyscale'
+     *
+     * @private
+     * @memberof ImageInfo
+     */
+    sanitizeModel(model) {
+        let lowerCaseModel = model.toLowerCase()[0];
+        let m;
         switch (lowerCaseModel) {
-            case 'c': this.model = 'color'; break;
-            case 'g': this.model = 'greyscale'; break;
-            default: this.model = 'color';
+            case 'c': m = 'color'; break;
+            case 'g': m = 'greyscale'; break;
+            default: m = 'color';
         }
+        return m;
     }
 
     /**
