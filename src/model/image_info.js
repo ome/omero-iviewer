@@ -388,11 +388,15 @@ export default class ImageInfo {
         }
     }
 
-
+    /**
+     * Gets cached image settings from context and updates our settings
+     *
+     * @private
+     * @memberof ImageInfo
+     */
     applyCachedSettings() {
         const image_id = this.image_id;
         let cached = this.context.getCachedImageSettings(image_id);
-        console.log('image_info.initializeImageInfo() cached ', cached);
         if (cached !== undefined) {
             this.channels = this.channels.map((ch, i) => {
                 ch.active = cached.channels[i].active;
@@ -401,7 +405,6 @@ export default class ImageInfo {
                 ch.family = cached.channels[i].family;
                 ch.active = cached.channels[i].active;
                 ch.window = Object.assign({}, cached.channels[i].window);
-                console.log('applyCachedSettingsToImageConfig:', i, ch);
                 return ch;
             });
         }
