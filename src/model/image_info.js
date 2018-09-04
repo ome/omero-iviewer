@@ -403,6 +403,14 @@ export default class ImageInfo {
                 response.rotation = cached.rotation;
                 response.resolution = cached.resolution;
             }
+            if (cached.z !== undefined) {
+                response.rdefs.defaultZ = cached.z;
+                this.dimensions.z = cached.z;
+            }
+            if (cached.t !== undefined) {
+                response.rdefs.defaultT = cached.t;
+                this.dimensions.t = cached.t;
+            }
             this.model = this.sanitizeModel(cached.model)
             response.rdefs.model = this.model;
             // reponse.channels is the same object as this.channels, so

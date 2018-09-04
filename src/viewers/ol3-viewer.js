@@ -505,9 +505,18 @@ export default class Ol3Viewer extends EventSubscriber {
             !Misc.isArray(params.value) ||
             params.value.length === 0) return;
 
-        if (params.config_id === this.image_config.id)
+        if (params.config_id === this.image_config.id) {
             this.viewer.setDimensionIndex(params.dim, params.value);
-        else this.linked_events.syncAction(params, "setDimensionIndex");
+
+            // cache the Z/T change to the context
+            let toCache = {};
+            toCache[params.dim] = params.value[0];
+            let imageId = this.viewer.getId();
+            this.context.setCachedImageSettings(imageId, toCache);
+        }
+        else {
+            this.linked_events.syncAction(params, "setDimensionIndex");
+        }
     }
 
     /**
