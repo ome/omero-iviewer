@@ -101,7 +101,7 @@ export default class Ol3Viewer extends EventSubscriber {
      */
     sub_list = [
         [IMAGE_VIEWER_INTERACTION,
-            (params={}) => this.syncView(params)],
+            (params={}) => this.handleViewerInteraction(params)],
         [IMAGE_VIEWER_CONTROLS_VISIBILITY,
             (params={}) => this.toggleControlsVisibility(params)],
         [IMAGE_VIEWER_RESIZE,
@@ -539,9 +539,13 @@ export default class Ol3Viewer extends EventSubscriber {
             this.viewer.enableSmoothing(params.interpolate);
 
         // cache the current settings to the context
-        let settings = this.viewer.captureViewParameters()
-        let imageId = this.viewer.getId()
-        this.context.setCachedImageSettings(imageId, settings);
+        let settings = this.viewer.captureViewParameters();
+        let toCache = {
+            channels: settings.channels,
+            model: settings.model,
+        }
+        let imageId = this.viewer.getId();
+        this.context.setCachedImageSettings(imageId, toCache);
     }
 
     /**
@@ -1404,11 +1408,22 @@ export default class Ol3Viewer extends EventSubscriber {
      * @memberof Ol3Viewer
      * @param {Object} params the event notification parameters
      */
-     syncView(params={}) {
-         // not intended for same image configs
-         if (this.viewer === null ||
-             params.config_id === this.image_config.id) return;
-         this.linked_events.syncAction(params, "syncView");
+     handleViewerInteraction(params={}) {
+        if (this.viewer === null) return;
+
+        if (params.config_id === this.image_config.id) {
+            // Cache zoom/pan for same image config
+            let imageId = this.viewer.getId();
+            const toCache = {
+                center: [...params.center],
+                resolution: params.resolution,
+                rotation: params.rotation,
+            }
+            this.context.setCachedImageSettings(imageId, toCache);
+        } else {
+            // syncView not intended for same image configs
+            this.linked_events.syncAction(params, "syncView");
+        }
      }
 
      /**

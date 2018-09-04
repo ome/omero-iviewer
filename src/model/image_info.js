@@ -397,9 +397,13 @@ export default class ImageInfo {
     applyCachedSettings(response) {
         let cached = this.context.getCachedImageSettings(this.image_id);
         if (cached !== undefined) {
-
+            // response is passed to the ol3-viewer via tmp_data, so we need to update
+            if (cached.center) {
+                response.center = cached.center;
+                response.rotation = cached.rotation;
+                response.resolution = cached.resolution;
+            }
             this.model = this.sanitizeModel(cached.model)
-            // this is passed to the ol3-viewer via tmp_data, so we need to update
             response.rdefs.model = this.model;
             // reponse.channels is the same object as this.channels, so
             // it is automatically updated here

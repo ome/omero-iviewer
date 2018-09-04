@@ -357,7 +357,7 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
            tmp.push(1 / this.image_info_['zoomLevelScaling'][r]);
        zoomLevelScaling = tmp.reverse();
     }
-    var zoom= zoomLevelScaling ? zoomLevelScaling.length : -1;
+    var zoom = zoomLevelScaling ? zoomLevelScaling.length : -1;
 
     // get the initial projection
     var initialProjection =
@@ -581,6 +581,17 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
         ome.ol3.utils.Misc.sendEventNotification(
             viewer, "IMAGE_VIEWER_INTERACTION", viewer.getViewParameters());
     };
+
+    // get cached initial viewer center etc.
+    if (this.image_info_['center'] || this.image_info_['resolution'] || this.image_info_['rotation']) {
+        let center = this.image_info_['center'];
+        let resolution = this.image_info_['resolution'];
+        let rotation = this.image_info_['rotation'];
+        // Need to wait for viewer to be built before this works:
+        setTimeout(function() {
+            this.setViewParameters(center, resolution, rotation);
+        }.bind(this), 100)
+    }
 
     // listens to resolution changes
     this.onViewResolutionListener =
