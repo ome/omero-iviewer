@@ -411,19 +411,23 @@ export default class ImageInfo {
                 response.rdefs.defaultT = cached.t;
                 this.dimensions.t = cached.t;
             }
-            this.model = this.sanitizeModel(cached.model)
+            if (cached.model) {
+                this.model = this.sanitizeModel(cached.model);
+            }
             response.rdefs.model = this.model;
             // reponse.channels is the same object as this.channels, so
             // it is automatically updated here
-            this.channels = this.channels.map((ch, i) => {
-                ch.active = cached.channels[i].active;
-                ch.coefficient = cached.channels[i].coefficient;
-                ch.color = cached.channels[i].color;
-                ch.family = cached.channels[i].family;
-                ch.active = cached.channels[i].active;
-                ch.window = Object.assign({}, cached.channels[i].window);
-                return ch;
-            });
+            if (cached.channels) {
+                this.channels = this.channels.map((ch, i) => {
+                    ch.active = cached.channels[i].active;
+                    ch.coefficient = cached.channels[i].coefficient;
+                    ch.color = cached.channels[i].color;
+                    ch.family = cached.channels[i].family;
+                    ch.active = cached.channels[i].active;
+                    ch.window = Object.assign({}, cached.channels[i].window);
+                    return ch;
+                });
+            }
         }
     }
 
