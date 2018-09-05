@@ -547,11 +547,27 @@ export default class Ol3Viewer extends EventSubscriber {
         } else if (typeof params.interpolate === 'boolean')
             this.viewer.enableSmoothing(params.interpolate);
 
-        // cache the current settings to the context
+        // Save settings to cache
+        this.cacheImageSettings(params);
+    }
+
+    /**
+     * Cache the current settings to the context
+     *
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     */
+    cacheImageSettings(params = {}) {
         let settings = this.viewer.captureViewParameters();
         let toCache = {
             channels: settings.channels,
             model: settings.model,
+        }
+        if (params.projection) {
+            // Use the params for projection instead of settings since it's
+            // in the format we need for the viewer
+            toCache.projection = params.projection;
+            toCache.projection_opts = params.projection_opts;
         }
         let imageId = this.viewer.getId();
         this.context.setCachedImageSettings(imageId, toCache);

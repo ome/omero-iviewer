@@ -411,6 +411,14 @@ export default class ImageInfo {
                 response.rdefs.defaultT = cached.t;
                 this.dimensions.t = cached.t;
             }
+            if (cached.projection) {
+                // Don't need to update response since Z dimension-slider
+                // will update the ol3-viewer
+                // response.projection = cached.projection;
+                // response.projection_opts = cached.projection_opts;
+                this.projection = cached.projection;
+                this.projection_opts = cached.projection_opts;
+            }
             if (cached.model) {
                 this.model = this.sanitizeModel(cached.model);
             }
