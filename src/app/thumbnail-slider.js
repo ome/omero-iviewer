@@ -66,11 +66,11 @@ export default class ThumbnailSlider extends EventSubscriber {
     web_api_base = '';
 
     /**
-     * a possible gateway prefix for the urls
+     * webclient prefix for the urls
      * @memberof ThumbnailSlider
      * @type {string}
      */
-    gateway_prefix = '';
+    webclient_prefix = '';
 
     /**
      * observer watching for changes in the selected image
@@ -153,7 +153,7 @@ export default class ThumbnailSlider extends EventSubscriber {
 
         // get webgateway prefix and web api base
         this.web_api_base = this.context.getPrefixedURI(WEB_API_BASE);
-        this.gateway_prefix = this.context.getPrefixedURI(WEBGATEWAY);
+        this.webclient_prefix = this.context.getPrefixedURI(WEBCLIENT);
     }
 
     /**
@@ -317,9 +317,8 @@ export default class ThumbnailSlider extends EventSubscriber {
      */
     gatherThumbnailMetaInfo(image_id) {
         console.log("gatherThumbnailMetaInfo", image_id);
-        let webclient_prefix = this.context.getPrefixedURI(WEBCLIENT);
         let url =
-            this.context.server + webclient_prefix + "/api/paths_to_object/?" +
+            this.context.server + this.webclient_prefix + "/api/paths_to_object/?" +
             "image=" + image_id + "&page_size=" + this.thumbnails_request_size;
 
         $.ajax(
@@ -545,7 +544,7 @@ export default class ThumbnailSlider extends EventSubscriber {
         // if we are remote we include the server
         let thumbPrefix =
             (this.context.server !== "" ? this.context.server + "/" : "") +
-            this.gateway_prefix + "/render_thumbnail/";
+            this.webclient_prefix + "/render_thumbnail/";
 
         let new_index = 0;
         this.thumbnails = this.thumbnails.map((thumb, idx) => {
