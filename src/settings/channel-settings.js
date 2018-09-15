@@ -111,6 +111,7 @@ export default class ChannelSettings extends EventSubscriber {
      * @param {BindingEngine} bindingEngine injected instance of BindingEngine
      */
     constructor(context, bindingEngine) {
+        console.log("channel-settins constructor", arguments)
         super(context.eventbus);
         this.context = context;
         this.bindingEngine = bindingEngine;

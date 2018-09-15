@@ -59,6 +59,7 @@ goog.require('ol.events.EventType');
  *
  */
 ome.ol3.source.Image = function(options) {
+    console.log('new Image')
     var opts = options || {};
 
     /**
@@ -308,6 +309,7 @@ ome.ol3.source.Image = function(options) {
                     url += '|' + this.projection_opts_.start +
                            ':' + this.projection_opts_.end;
             }
+            console.log('--tileUrlFunction--', this.image_projection_, this.projection_opts_);
             url += '&q=0.9';
 
             return url;
@@ -502,6 +504,8 @@ ome.ol3.source.Image.prototype.setImageProjection = function(value, opts) {
                     {start: opts['start'], end: opts['end']};
         } else this.projection_opts_ = null;
      } catch(not_found) {}
+
+    console.log("Image.setImageProjection() this.image_projection_, this.projection_opts_", this.image_projection_, this.projection_opts_);
 }
 
 /**
