@@ -396,7 +396,11 @@ export default class ImageInfo {
      */
     applyCachedSettings(response) {
         let cached = this.context.getCachedImageSettings(this.image_id);
+        let conf = this.context.getImageConfig(this.config_id);
         if (cached !== undefined) {
+
+            let history = [];
+
             // response is passed to the ol3-viewer via tmp_data, so we need to update
             if (cached.center) {
                 response.center = cached.center;
@@ -404,10 +408,18 @@ export default class ImageInfo {
                 response.resolution = cached.resolution;
             }
             if (cached.z !== undefined) {
+                history.push({prop: ['image_info', 'dimensions', 'z'],
+                              old_val : this.dimensions.z,
+                              new_val: cached.z,
+                              type : "number"});
                 response.rdefs.defaultZ = cached.z;
                 this.dimensions.z = cached.z;
             }
             if (cached.t !== undefined) {
+                history.push({prop: ['image_info', 'dimensions', 't'],
+                              old_val : this.dimensions.t,
+                              new_val: cached.t,
+                              type : "number"});
                 response.rdefs.defaultT = cached.t;
                 this.dimensions.t = cached.t;
             }
@@ -420,21 +432,31 @@ export default class ImageInfo {
                 this.projection_opts = cached.projection_opts;
             }
             if (cached.model) {
-                this.model = this.sanitizeModel(cached.model);
+                let m = this.sanitizeModel(cached.model);
+                if (this.model != m) {
+                    history.push({
+                        prop: ['image_info', 'model'],
+                        old_val : this.model,
+                        new_val: m,
+                        type: 'string'});
+                    this.model = m;
+                }
             }
             response.rdefs.model = this.model;
-            // reponse.channels is the same object as this.channels, so
-            // it is automatically updated here
+
+            conf.addHistory(history);
+
+            // Update the channels by 'pasting'
+            // This adds to history separately from addHistory() above for all other settings.
             if (cached.channels) {
-                this.channels = this.channels.map((ch, i) => {
-                    ch.active = cached.channels[i].active;
-                    ch.coefficient = cached.channels[i].coefficient;
-                    ch.color = cached.channels[i].color;
-                    ch.family = cached.channels[i].family;
-                    ch.active = cached.channels[i].active;
-                    ch.window = Object.assign({}, cached.channels[i].window);
-                    return ch;
-                });
+                // "1|589:2288$00FF00,2|477:2823$FFFF00"
+                let c = cached.channels.map((ch, i) => `${ch.active ? '' : '-'}${i + 1}|${ch.window.start}:${ch.window.end}$${ch.color}`).join(',');
+
+                let maps = cached.channels.map(ch => ({inverted: {enabled: ch.inverted},
+                                                       quantization: {coefficient: ch.coefficient, family: ch.family}}));
+                console.log({c, maps});
+
+                conf.applyRenderingSettings({c, maps});
             }
         }
     }

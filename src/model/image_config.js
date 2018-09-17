@@ -23,6 +23,7 @@ import Misc from '../utils/misc';
 import History from './history';
 import {WEBGATEWAY} from '../utils/constants';
 import {VIEWER_SET_SYNC_GROUP} from '../events/events';
+import {CHANNEL_SETTINGS_MODE} from '../utils/constants';
 
 /**
  * Holds the combined data/model that is relevant to working with an image:
@@ -147,7 +148,132 @@ export default class ImageConfig extends History {
      * @memberof ImageConfig
      */
     changed() {
+        console.log("ImageConfig.changed()", this.revision+1);
         this.revision++;
+    }
+
+    /**
+     * Applies the rendering settings, keeping a history of the old settings
+     *
+     * @param {Object} rdef the rendering defintion
+     * @param {boolean} for_pasting true if rdef supplied it for pasting of settings, false otherwise
+     * @memberof Settings
+     */
+    applyRenderingSettings(rdef, for_pasting=true) {
+        console.log('applyRenderingSettings()', rdef, for_pasting);
+        if (rdef === null) return;
+
+        if (typeof for_pasting !== 'boolean') for_pasting = true;
+        let imgInfo = this.image_info;
+        let history = [];
+
+        // model (color/greyscale)
+        let model =
+            (for_pasting && typeof rdef.m === 'string' && rdef.m.length > 0) ?
+                rdef.m.toLowerCase() :
+                    (!for_pasting && typeof rdef.model === 'string' &&
+                        rdef.model.length > 0) ?
+                            (rdef.model.toLowerCase() === 'greyscale') ?
+                                "greyscale" : "color" : null;
+        if (model && (model[0] === 'g' || model[0] === 'c')) {
+            let oldValue = imgInfo.model;
+            imgInfo.model = model[0] === 'g' ? "greyscale" : "color";
+            if (oldValue !== imgInfo.model)
+               history.push({ // add to history if different
+                   prop: ['image_info', 'model'],
+                   old_val : oldValue,
+                   new_val: imgInfo.model,
+                   type: 'string'});
+        }
+
+        // copy channel values and add change to history
+        let channels = for_pasting ?
+            Misc.parseChannelParameters(rdef.c, rdef.maps) : rdef.c;
+        let mode = CHANNEL_SETTINGS_MODE.MIN_MAX;
+        if (channels)
+            for (let i=0;i<channels.length;i++) {
+                if (typeof imgInfo.channels[i] !== 'object') continue;
+                let actChannel = imgInfo.channels[i];
+                let copiedChannel = channels[i];
+                if (actChannel.active !== copiedChannel.active) {
+                   history.push({
+                       prop: ['image_info', 'channels', '' + i, 'active'],
+                       old_val : actChannel.active,
+                       new_val: copiedChannel.active,
+                       type: 'boolean'});
+                    actChannel.active = copiedChannel.active;
+                }
+                if (actChannel.window.start !== copiedChannel.start) {
+                    history.push({
+                        prop: ['image_info', 'channels',
+                            '' + i, 'window', 'start'],
+                        old_val : actChannel.window.start,
+                        new_val: copiedChannel.start,
+                        type: 'number'});
+                     actChannel.window.start = copiedChannel.start;
+                }
+                if (actChannel.window.end !== copiedChannel.end) {
+                    history.push({
+                        prop: ['image_info', 'channels',
+                            '' + i, 'window', 'end'],
+                        old_val : actChannel.window.end,
+                        new_val: copiedChannel.end,
+                        type: 'number'});
+                     actChannel.window.end = copiedChannel.end;
+                }
+                let newColor =
+                    typeof copiedChannel.lut === 'string' &&
+                        copiedChannel.lut.length > 0 ?
+                            copiedChannel.lut : copiedChannel.color;
+                if (actChannel.color !== newColor) {
+                   history.push({
+                       prop: ['image_info', 'channels', '' + i, 'color'],
+                       old_val : actChannel.color,
+                       new_val: newColor,
+                       type: 'string'});
+                    actChannel.color = copiedChannel.color;
+                }
+                if (typeof copiedChannel.inverted === 'undefined')
+                    copiedChannel.inverted = null;
+                if (actChannel.inverted !==
+                        copiedChannel.inverted) {
+                            history.push({
+                                prop: ['image_info',
+                                    'channels', '' + i, 'inverted'],
+                                old_val : actChannel.inverted,
+                                new_val: copiedChannel.inverted,
+                                type: 'boolean'});
+                    actChannel.inverted =
+                        copiedChannel.inverted;
+                }
+                if (typeof copiedChannel['family'] === 'string' &&
+                    copiedChannel['family'] !== "" &&
+                    typeof copiedChannel['coefficient'] === 'number' &&
+                    !isNaN(copiedChannel['coefficient'])) {
+                        history.push({
+                            prop: ['image_info', 'channels', '' + i, 'family'],
+                            old_val : actChannel.family,
+                            new_val: copiedChannel.family,
+                            type: 'string'});
+                         actChannel.family = copiedChannel.family;
+                        history.push({
+                            prop: ['image_info', 'channels', '' + i, 'coefficient'],
+                            old_val : actChannel.coefficient,
+                            new_val: copiedChannel.coefficient,
+                            type: 'string'});
+                         actChannel.coefficient = copiedChannel.coefficient;
+                }
+            };
+        if (history.length > 0) {
+            history.splice(0, 0,
+                {   prop: ['image_info','initial_values'],
+                    old_val : true,
+                    new_val:  true,
+                    type : "boolean"});
+            this.addHistory(history);
+        }
+
+        this.changed();
     }
 
     /**

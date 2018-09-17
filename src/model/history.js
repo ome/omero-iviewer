@@ -72,6 +72,7 @@ export default class History {
          let entries = [];
          if (Misc.isArray(record)) entries = record;
          else entries.push(record);
+         console.log('addHistory()', entries);
          if (entries.length === 0) return;
 
          // loop over entries

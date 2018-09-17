@@ -255,7 +255,7 @@ export default class ChannelSettings extends EventSubscriber {
                        type : "number"});
                     history = modeAdditions.concat(history);
                  };
-
+            console.log('takeHistorySnapshot', history);
             conf.addHistory(history);
             conf.changed();
         });
