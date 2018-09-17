@@ -354,7 +354,7 @@ export default class ThumbnailSlider extends EventSubscriber {
                         imgInf.parent_type = INITIAL_TYPES.DATASET
                     } else if (parent.type === 'well') {
                         imgInf.parent_type = INITIAL_TYPES.WELL;
-                        imgInf.parent_id = wells[0].id;
+                        imgInf.parent_id = parent.id;
                     }
                 }
 
