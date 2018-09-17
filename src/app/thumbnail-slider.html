@@ -32,6 +32,7 @@
 
         <div>
             <div repeat.for="thumb of thumbnails" class="thumbnail-wrapper">
+              <!-- show placeholder 1 x 1 px png if no thumb.url -->
               <img id="${'img-thumb-' + thumb.id}"
                 class="${image_config.image_info.image_id === thumb.id ? 'selected' : ''}
                     ${thumb.id ? '' : 'transparent'}"
