@@ -748,12 +748,13 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @param {Object} params the parameter object received by the event
      */
     updateThumbnails(params = {}) {
+        console.log('updateThumbnails', params);
         if (typeof params !== 'object' ||
             !Misc.isArray(params.ids) && params.ids.length > 0) return;
 
         // turn array into object for easier lookup
         let updatedIds = {};
-        params.ids.map((id) => updatedIds[id] = null);
+        params.ids.forEach((id) => updatedIds[id] = null);
 
         let position = 0;
         // we update in batches

@@ -35,9 +35,9 @@
               <img id="${'img-thumb-' + thumb.id}"
                 class="${image_config.image_info.image_id === thumb.id ? 'selected' : ''}
                     ${thumb.id ? '' : 'transparent'}"
-                src.bind="thumb.url + '?version=' + thumb.revision"
+                src.bind="thumb.url ? thumb.url + '?version=' + thumb.revision : 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNgYAAAAAMAASsJTYQAAAAASUVORK5CYII='"
                 title="${thumb.title}"
-                alt="Not Found"
+                alt=""
                 click.delegate="onClick(thumb.id)"
                 dblclick.delegate="onDoubleClick(thumb.id, $event)"/>
             </div>
