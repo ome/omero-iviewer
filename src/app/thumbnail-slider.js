@@ -290,7 +290,6 @@ export default class ThumbnailSlider extends EventSubscriber {
      */
     initializeThumbnails(refresh = false) {
         // standard case: we are an image
-        console.log("initializeThumbnails", refresh, this.context.initial_type);
         if (this.context.initial_type === INITIAL_TYPES.IMAGES) {
             if (this.context.initial_ids.length > 1) {
                 // we are a list of images
@@ -316,7 +315,6 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @memberof ThumbnailSlider
      */
     gatherThumbnailMetaInfo(image_id) {
-        console.log("gatherThumbnailMetaInfo", image_id);
         let url =
             this.context.server + this.webclient_prefix + "/api/paths_to_object/?" +
             "image=" + image_id + "&page_size=" + this.thumbnails_request_size;
@@ -358,28 +356,16 @@ export default class ThumbnailSlider extends EventSubscriber {
                     }
                 }
 
-                console.log("imgInf.parent_type, imgInf.parent_id", imgInf.parent_type, imgInf.parent_id);
-
                 if (imgInf.parent_id === null) {
                     this.hideMe();
                     return;
                 }
 
-                // let initialize = (parent === null);
-                // TODO: why would initialize not be true here?
-                let initialize = true;
-                console.log('parent', parent);
-
                 let start_index = 0;
                 if (parent) {
-                    // set count, start and end indices (if count > limit)
-                    // this.setThumbnailsCount(parent.childCount);  --
-                    // if (this.thumbnails.length > this.thumbnails_request_size) {
-                        // start_index = (parent.childPage - 1) * this.thumbnails_request_size;
-                        start_index = parent.childIndex;
-                        console.log('parent.childIndex', parent.childIndex);
-                    // }
+                    start_index = parent.childIndex;
                 }
+                let initialize = true;
                 this.requestMoreThumbnails(initialize, false, start_index);
             },
             error : (response) => this.requestMoreThumbnails(true)
@@ -414,12 +400,9 @@ export default class ThumbnailSlider extends EventSubscriber {
             if (panel)
             scrollTop = panel.scrollTop;
         }
-        console.log('loadVisibleThumbnails scrollTop:', scrollTop);
 
         let thumb_start_index = parseInt(scrollTop / this.thumbnail_size);
         let thumb_end_index = parseInt((scrollTop + this.slider_height) / this.thumbnail_size);
-        console.log('this.thumbnail_size', this.slider_height);
-        console.log('scrolled to thumb_index...', thumb_start_index, thumb_end_index);
 
         let unloaded = [];
         for (var idx=thumb_start_index; idx<=thumb_end_index; idx++){
@@ -430,7 +413,6 @@ export default class ThumbnailSlider extends EventSubscriber {
         if (unloaded.length > 0) {
             thumb_start_index = unloaded[0];
             thumb_end_index = unloaded[unloaded.length-1];
-            console.log('unloaded thumbs: thumb_start_index, thumb_end_index', thumb_start_index, thumb_end_index);
             this.requestMoreThumbnails(init, refresh, thumb_start_index, thumb_end_index);
         }
     }
@@ -464,7 +446,6 @@ export default class ThumbnailSlider extends EventSubscriber {
             limit = thumb_end_index - offset;
         }
 
-        console.log("requestMoreThumbnails... offset, limit", offset, limit);
 
         let url = this.context.server;
         if (this.context.initial_type === INITIAL_TYPES.DATASET ||
@@ -484,7 +465,6 @@ export default class ThumbnailSlider extends EventSubscriber {
             {url : url,
             success : (response) => {
                 this.requesting_thumbnail_data = false;
-                console.log("...requestMoreThumbnails init", init, this.thumbnails.length);
                 if (init) {
                     // we want the total count
                     if (typeof response !== 'object' || response === null ||
@@ -540,7 +520,6 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @memberof ThumbnailSlider
      */
     addThumbnails(thumbnails, start_index) {
-        console.log('addThumbnails...');
         // if we are remote we include the server
         let thumbPrefix =
             (this.context.server !== "" ? this.context.server + "/" : "") +
@@ -574,14 +553,13 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @memberof ThumbnailSlider
      */
     scrollToThumbnail(index) {
+        // Queue the task to happen after the UI renders
         // https://github.com/aurelia/templating/issues/79
-        console.log("SCROLLING to ", index);
         this.taskQueue.queueMicroTask(() => {
             const target = (index) * this.thumbnail_size;
 
             // If we didn't do ajax call to load thumbnails, ?image=1&image=2
             // the scroll-panel might not be ready yet.
-            console.log('scroll to top...', target)
             let scroll_panel = document.querySelector('.thumbnail-scroll-panel');
             if (scroll_panel) {
                 scroll_panel.scrollTop = target;
@@ -733,11 +711,14 @@ export default class ThumbnailSlider extends EventSubscriber {
         return false;
     }
 
+    /**
+     * Thumbnail scroll handler. Loads any unloaded visible thumbnails
+     *
+     * @memberof ThumbnailSlider
+     * @param {Object} Scroll event
+     */
     handleScrollEvent(event) {
-
-        console.log('scroll', event.target.scrollTop, this.thumbnail_size, event.target.scrollTop / this.thumbnail_size)
         // find index of any visible thumbnails that aren't loaded...
-
         this.loadVisibleThumbnails(event.target.scrollTop);
     }
 
@@ -748,7 +729,6 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @param {Object} params the parameter object received by the event
      */
     updateThumbnails(params = {}) {
-        console.log('updateThumbnails', params);
         if (typeof params !== 'object' ||
             !Misc.isArray(params.ids) && params.ids.length > 0) return;
 
@@ -786,7 +766,6 @@ export default class ThumbnailSlider extends EventSubscriber {
     }
 
     setThumbnailsCount(count) {
-        console.log('setThumbnailsCount:', count, 'was:', this.thumbnails.length);
         if (typeof count !== 'number') {
             count = 0;
         }
