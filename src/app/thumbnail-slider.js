@@ -791,7 +791,10 @@ export default class ThumbnailSlider extends EventSubscriber {
             count = 0;
         }
         this.thumbnails.length = count;
-        this.thumbnails.fill({'version': 0, 'title': 'unloaded'});
+        // IE doesn't support fill()
+        for (let i=0; i<count; i++) {
+            this.thumbnails[i] = {'version': 0, 'title': 'unloaded'};
+        }
     }
 
     /**
