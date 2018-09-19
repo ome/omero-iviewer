@@ -401,7 +401,7 @@ export default class ImageInfo {
 
             let history = [];
 
-            // response is passed to the ol3-viewer via tmp_data, so we need to update
+            // JSON response object is passed to the ol3-viewer via tmp_data, so we need to update
             if (cached.center) {
                 response.center = cached.center;
                 response.rotation = cached.rotation;
@@ -424,10 +424,8 @@ export default class ImageInfo {
                 this.dimensions.t = cached.t;
             }
             if (cached.projection) {
-                // Don't need to update response since Z dimension-slider
+                // Don't need to update response.projection since Z dimension-slider
                 // will update the ol3-viewer
-                // response.projection = cached.projection;
-                // response.projection_opts = cached.projection_opts;
                 this.projection = cached.projection;
                 this.projection_opts = cached.projection_opts;
             }
@@ -454,7 +452,6 @@ export default class ImageInfo {
 
                 let maps = cached.channels.map(ch => ({inverted: {enabled: ch.inverted},
                                                        quantization: {coefficient: ch.coefficient, family: ch.family}}));
-                console.log({c, maps});
 
                 conf.applyRenderingSettings({c, maps});
             }
