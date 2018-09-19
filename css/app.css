@@ -737,6 +737,17 @@ thumbnail-slider img {
     flex-grow: 1;
 }
 
+/* We don't want channel mode buttons to appear focussed */
+.channel-mode button.btn:focus,
+.channel-mode button.btn,
+.channel-mode button.btn.focus {
+  outline: none;
+}
+.channel-mode button.focus {
+  background: #ffffff;
+  border-color: #ccc;
+}
+
 .comment-checkbox {
     margin: 5px 0px 0px 10px;
 }
