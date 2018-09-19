@@ -530,7 +530,6 @@ export default class Ol3Viewer extends EventSubscriber {
      * @param {Object} params the event notification parameters
      */
     changeImageSettings(params = {}) {
-        console.log('ol3-viewer.changeImageSettings()... params', params)
         if (this.viewer === null) return;
 
         let isSameConfig = params.config_id === this.image_config.id;

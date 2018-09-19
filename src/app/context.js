@@ -801,7 +801,6 @@ export default class Context {
      * @param {settings} Object
      */
     setCachedImageSettings(image_id, settings) {
-        console.log('setCachedImageSettings', image_id, settings);
         const old = this.cached_image_settings[image_id] || {};
         this.cached_image_settings[image_id] = Object.assign({}, old, settings);
     }
@@ -817,7 +816,6 @@ export default class Context {
      */
     getCachedImageSettings(image_id) {
         if (this.cached_image_settings[image_id]) {
-            console.log('getCachedImageSettings', this.cached_image_settings[image_id]);
             return this.cached_image_settings[image_id];
         }
     }

@@ -148,7 +148,6 @@ export default class ImageConfig extends History {
      * @memberof ImageConfig
      */
     changed() {
-        console.log("ImageConfig.changed()", this.revision+1);
         this.revision++;
     }
 
@@ -160,7 +159,6 @@ export default class ImageConfig extends History {
      * @memberof Settings
      */
     applyRenderingSettings(rdef, for_pasting=true) {
-        console.log('applyRenderingSettings()', rdef, for_pasting);
         if (rdef === null) return;
 
         if (typeof for_pasting !== 'boolean') for_pasting = true;

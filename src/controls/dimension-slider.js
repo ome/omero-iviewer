@@ -343,7 +343,6 @@ export default class DimensionSlider {
             ];
         } else {
             options.value = imgInf.dimensions[this.dim];
-            console.log('initSlider', this.dim, options.value, imgInf.dimensions);
             options.change =
                 (event, ui) => this.onChange(ui.value,
                                     event.originalEvent ? true : false);
@@ -412,8 +411,6 @@ export default class DimensionSlider {
             conf.addHistory(entries);
             this.add_projection_history = false;
         };
-        console.log('dimension-slider.changeProjection(), synced', conf.image_info.projection_opts.synced,
-                    conf.image_info.projection, conf.image_info.projection_opts)
         if (!conf.image_info.projection_opts.synced)
             this.context.publish(IMAGE_SETTINGS_CHANGE, {
                 config_id: conf.id,

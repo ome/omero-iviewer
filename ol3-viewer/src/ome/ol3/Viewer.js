@@ -168,8 +168,6 @@ ome.ol3.Viewer = function(id, options) {
      */
     this.image_info_ = typeof opts['data'] === 'object' ? opts['data'] : null;
 
-    console.log('Viewer.js this.image_info_', this.image_info_);
-
     /**
      * the associated OmeroRegions object
      * @type {ome.ol3.source.Regions}
@@ -429,7 +427,6 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
            -initialCenterY >=0 && -initialCenterX <= dims['height'])
        imgCenter = [initialCenterX, initialCenterY];
     }
-    console.log('imgCenter', imgCenter);
     var initialChannels =
        this.getInitialRequestParam(ome.ol3.REQUEST_PARAMS.CHANNELS);
     var initialMaps =
@@ -601,7 +598,6 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
        ol.events.listen( // register a resolution handler for zoom display
            this.viewer_.getView(), "change:resolution",
            function(event) {
-               console.log("Viewer change:resolution event")
                this.displayResolutionInPercent();
                if (this.eventbus_) notifyAboutViewerInteraction(this);
            }, this);
@@ -611,7 +607,6 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
         ol.events.listen(
             this.viewer_.getView(), "change:rotation",
             function(event) {
-                console.log("Viewer change:rotation event")
                 var regions = this.getRegions();
                 if (regions) regions.changed();
                 if (this.eventbus_) notifyAboutViewerInteraction(this);
@@ -632,7 +627,6 @@ ome.ol3.Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHoo
            ol.events.listen(
                this.viewer_, ol.MapEventType.MOVEEND,
                function(event) {
-                   console.log("Viewer onEndMoveListener")
                    notifyAboutViewerInteraction(this);
                }, this);
     }

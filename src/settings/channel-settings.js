@@ -111,7 +111,6 @@ export default class ChannelSettings extends EventSubscriber {
      * @param {BindingEngine} bindingEngine injected instance of BindingEngine
      */
     constructor(context, bindingEngine) {
-        console.log("channel-settins constructor", arguments)
         super(context.eventbus);
         this.context = context;
         this.bindingEngine = bindingEngine;
@@ -255,7 +254,6 @@ export default class ChannelSettings extends EventSubscriber {
                        type : "number"});
                     history = modeAdditions.concat(history);
                  };
-            console.log('takeHistorySnapshot', history);
             conf.addHistory(history);
             conf.changed();
         });
