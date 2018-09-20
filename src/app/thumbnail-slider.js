@@ -108,7 +108,8 @@ export default class ThumbnailSlider extends EventSubscriber {
     thumbnail_size = 90;
 
     /**
-     * height of slider, so we which thumbs have scrolled into view
+     * height of slider, so we know which thumbs have scrolled into view.
+     * This is set in attached() and when window resizes.
      * @memberof ThumbnailSlider
      * @type {number}
      */
@@ -143,6 +144,7 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @constructor
      * @param {Context} context the application context (injected)
      * @param {BindingEngine} bindingEngine the BindingEngine (injected)
+     * @param {TaskQueue} Aurelia taskQueue for post-render tasks
      */
     constructor(context, element, bindingEngine, taskQueue) {
         super(context.eventbus)
@@ -392,6 +394,8 @@ export default class ThumbnailSlider extends EventSubscriber {
      * Loads unloaded thumbnails that scrolled into the thumbnail panel
      *
      * @param {number} scrollTop Current scroll position of the panel
+     * @param {boolean} init if true we have to perform some init tasks/checks
+     * @param {boolean} refresh true if the user hit the refresh icon
      * @memberof ThumbnailSlider
      */
     loadVisibleThumbnails(scrollTop, init = false, refresh = false) {
@@ -512,7 +516,7 @@ export default class ThumbnailSlider extends EventSubscriber {
     /**
      * Adds thumbnails with Image IDs to this.thumbnails array.
      * We create a new list from old, replacing the thumbnails (instead of
-     * modifying the old list) to make sure the changes is observed and
+     * modifying the old list) to make sure the changes are observed and
      * UI updates.
      *
      * @param {Array.<Object>} thumbnails the thumbnails to be added
@@ -545,11 +549,10 @@ export default class ThumbnailSlider extends EventSubscriber {
     /**
      * Adds thumbnails with Image IDs to this.thumbnails array.
      * We create a new list from old, replacing the thumbnails (instead of
-     * modifying the old list) to make sure the changes is observed and
+     * modifying the old list) to make sure the changes are observed and
      * UI updates.
      *
-     * @param {Array.<Object>} thumbnails the thumbnails to be added
-     * @param {number} start_index Index to start replacing
+     * @param {number} index  Index of thumbnail we want to scroll to.
      * @memberof ThumbnailSlider
      */
     scrollToThumbnail(index) {
