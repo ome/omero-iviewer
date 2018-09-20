@@ -324,7 +324,7 @@ ome.ol3.AVAILABLE_VIEWER_CONTROLS = {
  * <li>keyboardZoom [defaults:true, enabled: false]</li>
  * <li>shiftDragZoom [defaults:true, enabled: false]</li>
  * <li>shiftDragRotate [defaults:true, enabled: false]</li>
- * <li>doubleClickZoom [defaults:true, enabled: false]</li>
+ * <li>doubleClickZoom [defaults:true, enabled: true]</li>
  * <li>pinchRotate [defaults:true, enabled: false]</li>
  * <li>boxSelect [defaults:false, enabled: false]</li>
  *</ul>
@@ -360,10 +360,12 @@ ome.ol3.AVAILABLE_VIEWER_INTERACTIONS = {
         {"clazz" : ol.interaction.DragZoom,
          "options": {"zoomDuration" : null},
          "defaults": true, "enabled": false, "links" : []},
+    // NB: The delta option is strangely ignored for some reason
+    // So we manually re-create this class below...
     "doubleClickZoom" :
         {"clazz" : ol.interaction.DoubleClickZoom,
-         "options": {"zoomDuration" : null, "zoomDelta": null},
-         "defaults": true, "enabled": false, "links" : []},
+         "options": {duration : 1000, delta: 10},
+         "defaults": true, "enabled": true, "links" : []},
     "pinchRotate" :
         {"clazz" : ol.interaction.PinchRotate,
          "options": {}, "defaults": true, "enabled": false,
@@ -428,6 +430,18 @@ ome.ol3.defaultInteractions = function() {
                     "ref": new Constructor(V['options']),
                     "defaults" : V["defaults"]
                 };
+                // For some reason, calling new ol.interaction.DoubleClickZoom({"delta": 10})
+                // here, the 'delta' option is ignored. But if we create a defaults collection
+                // the same class is created and the {'delta': zoomDelta} is not ignored.
+                // We use altShiftDragRotate: false so that doubleClickZoom should be
+                // the first item in the ol.Collection.
+                if (K === "doubleClickZoom") {
+                    let defaults = ol.interaction.defaults({
+                        altShiftDragRotate: false,
+                        zoomDelta: 10,
+                    });
+                    ret[K]["ref"] = defaults.item(0);
+                }
             } catch(bad) {
                 // this could happen because the clazz does not point to a valid
                 // function definition, a ClassNotFound in a way ...
