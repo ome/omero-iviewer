@@ -17,7 +17,7 @@
 //
 
 // js
-import {inject,customElement, BindingEngine} from 'aurelia-framework';
+import {inject,customElement, BindingEngine, TaskQueue} from 'aurelia-framework';
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import UI from '../utils/ui';
@@ -25,7 +25,8 @@ import {
     DATASETS_REQUEST_URL, INITIAL_TYPES, IVIEWER,
     WEB_API_BASE, WEBCLIENT, WEBGATEWAY
 } from '../utils/constants';
-import {REGIONS_STORE_SHAPES, REGIONS_STORED_SHAPES} from '../events/events';
+import {REGIONS_STORE_SHAPES, REGIONS_STORED_SHAPES,
+        IMAGE_VIEWER_RESIZE} from '../events/events';
 import {THUMBNAILS_UPDATE, EventSubscriber} from '../events/events';
 
 /**
@@ -34,7 +35,7 @@ import {THUMBNAILS_UPDATE, EventSubscriber} from '../events/events';
  * @extends {EventSubscriber}
  */
 @customElement('thumbnail-slider')
-@inject(Context, Element, BindingEngine)
+@inject(Context, Element, BindingEngine, TaskQueue)
 export default class ThumbnailSlider extends EventSubscriber {
     /**
      * have we been initialized
@@ -65,11 +66,11 @@ export default class ThumbnailSlider extends EventSubscriber {
     web_api_base = '';
 
     /**
-     * a possible gateway prefix for the urls
+     * webclient prefix for the urls
      * @memberof ThumbnailSlider
      * @type {string}
      */
-    gateway_prefix = '';
+    webclient_prefix = '';
 
     /**
      * observer watching for changes in the selected image
@@ -100,25 +101,19 @@ export default class ThumbnailSlider extends EventSubscriber {
     thumbnails_request_size = 10;
 
     /**
-     * the start index of the displayed thumbnails
+     * size of thumbnails in slider (height + margin)
      * @memberof ThumbnailSlider
      * @type {number}
      */
-    thumbnails_start_index = 0;
+    thumbnail_size = 90;
 
     /**
-     * the end index of the displayed thumbnails
+     * height of slider, so we know which thumbs have scrolled into view.
+     * This is set in attached() and when window resizes.
      * @memberof ThumbnailSlider
      * @type {number}
      */
-    thumbnails_end_index = 0;
-
-    /**
-     * the total number of thumbnails
-     * @memberof ThumbnailSlider
-     * @type {number}
-     */
-    thumbnails_count = 0;
+    slider_height = 90;
 
     /**
      * the update handle of the setInterval
@@ -141,22 +136,26 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @type {Map}
      */
     sub_list = [[THUMBNAILS_UPDATE,
-                    (params={}) => this.updateThumbnails(params)]];
+                    (params={}) => this.updateThumbnails(params)],
+                [IMAGE_VIEWER_RESIZE,
+                    (params={}) => this.resizeViewer(params)]];
 
     /**
      * @constructor
      * @param {Context} context the application context (injected)
      * @param {BindingEngine} bindingEngine the BindingEngine (injected)
+     * @param {TaskQueue} Aurelia taskQueue for post-render tasks
      */
-    constructor(context, element, bindingEngine) {
+    constructor(context, element, bindingEngine, taskQueue) {
         super(context.eventbus)
         this.context = context;
         this.element = element;
         this.bindingEngine = bindingEngine;
+        this.taskQueue = taskQueue;
 
         // get webgateway prefix and web api base
         this.web_api_base = this.context.getPrefixedURI(WEB_API_BASE);
-        this.gateway_prefix = this.context.getPrefixedURI(WEBGATEWAY);
+        this.webclient_prefix = this.context.getPrefixedURI(WEBCLIENT);
     }
 
     /**
@@ -175,6 +174,28 @@ export default class ThumbnailSlider extends EventSubscriber {
                 this.context, 'selected_config').subscribe(
                     (newValue, oldValue) => this.onImageConfigChange());
         this.subscribe();
+    }
+
+    /**
+     * Overridden aurelia lifecycle method:
+     * Used to get initial height of panel
+     *
+     * @memberof ThumbnailSlider
+     */
+    attached() {
+        this.slider_height =
+            document.querySelector('.thumbnail-scroll-panel').clientHeight;
+    }
+
+    /**
+     * Handle resize of the browse window.
+     * Updates height of panel
+     *
+     * @memberof ThumbnailSlider
+     */
+    resizeViewer() {
+        this.slider_height =
+            document.querySelector('.thumbnail-scroll-panel').clientHeight;
     }
 
     /**
@@ -274,34 +295,30 @@ export default class ThumbnailSlider extends EventSubscriber {
         if (this.context.initial_type === INITIAL_TYPES.IMAGES) {
             if (this.context.initial_ids.length > 1) {
                 // we are a list of images
-                this.thumbnails_count = this.context.initial_ids.length;
-                this.requestMoreThumbnails();
+                this.setThumbnailsFromImageIds(this.context.initial_ids);
             } else {
                 this.gatherThumbnailMetaInfo(
                         this.image_config.image_info.image_id);
             }
         } else if (this.context.initial_type === INITIAL_TYPES.DATASET ||
                     this.context.initial_type === INITIAL_TYPES.WELL) {
-            this.requestMoreThumbnails(true, true, true, refresh);
+            this.requestMoreThumbnails(true, refresh);
         }
         this.initialized = true;
     }
 
     /**
-     * Initializes thumbnail count and thumbnails_start_index as well as
-     * thumbnails_end_index using /webclient/api/paths_to_object
+     * Finds parents of current image with /webclient/api/paths_to_object
      * For opening images that have no parent information from somewhere else
      * (e.g. open with) or for images whose parent is a well this method finds
      * the parent id
      *
      * @param {number} image_id the id of the image in the dataset
-     * @param {boolean} is_top_thumbnail if true image appears first
      * @memberof ThumbnailSlider
      */
-    gatherThumbnailMetaInfo(image_id, is_top_thumbnail = false) {
-        let webclient_prefix = this.context.getPrefixedURI(WEBCLIENT);
+    gatherThumbnailMetaInfo(image_id) {
         let url =
-            this.context.server + webclient_prefix + "/api/paths_to_object/?" +
+            this.context.server + this.webclient_prefix + "/api/paths_to_object/?" +
             "image=" + image_id + "&page_size=" + this.thumbnails_request_size;
 
         $.ajax(
@@ -314,7 +331,7 @@ export default class ThumbnailSlider extends EventSubscriber {
                         if (typeof this.image_config.image_info.parent_id === 'number' &&
                             !isNaN(this.image_config.image_info.parent_id) &&
                             this.image_config.image_info.parent_id > 0) {
-                                this.requestMoreThumbnails(true, true, true);
+                                this.requestMoreThumbnails(true);
                         } else this.hideMe();
                         return;
                 }
@@ -322,24 +339,23 @@ export default class ThumbnailSlider extends EventSubscriber {
                 // find type === dataset or type === well
                 // dataset has to match the present dataset id
                 // to ensure that we handle images in multiple datasets as well
-                let path = null;
+                let pid = this.image_config.image_info.parent_id;
+
+                let matching_parents = response.paths.map(containers => {
+                    let parents = containers.filter(c => c.type === 'well' || (c.type === 'dataset' && c.id === pid));
+                    return parents.length > 0 ? parents[0] : null;
+                }).filter(parent => parent);
+
+                let parent = matching_parents.length ? matching_parents[0] : null
                 let imgInf = this.image_config.image_info;
-                for (let i=0; i<response.paths.length; i++) {
-                    let p = response.paths[i];
-                    for (let j=0; j<p.length; j++)
-                        if (typeof p[j].type === 'string' &&
-                            p[j].type === 'dataset' &&
-                            p[j].id === this.image_config.image_info.parent_id) {
-                                if (typeof p[j].childCount === 'number')
-                                    path = p[j];
-                                imgInf.parent_type = INITIAL_TYPES.DATASET;
-                                break;
-                        } else if (typeof p[j].type === 'string' &&
-                                    p[j].type === 'well') {
-                                        imgInf.parent_type = INITIAL_TYPES.WELL;
-                                        imgInf.parent_id = p[j].id;
-                                        break;
-                        }
+
+                if (parent) {
+                    if (parent.type === 'dataset') {
+                        imgInf.parent_type = INITIAL_TYPES.DATASET
+                    } else if (parent.type === 'well') {
+                        imgInf.parent_type = INITIAL_TYPES.WELL;
+                        imgInf.parent_id = parent.id;
+                    }
                 }
 
                 if (imgInf.parent_id === null) {
@@ -347,61 +363,75 @@ export default class ThumbnailSlider extends EventSubscriber {
                     return;
                 }
 
-                let initialize = (path === null);
-                if (path) {
-                    // set count, start and end indices (if count > limit)
-                    this.thumbnails_count = path.childCount;
-                    if (this.thumbnails_count > this.thumbnails_request_size) {
-                        this.thumbnails_start_index =
-                            is_top_thumbnail ?
-                                path.childIndex :
-                                    (path.childPage - 1) *
-                                        this.thumbnails_request_size;
-                    }
-
-                    this.thumbnails_end_index =
-                        this.thumbnails_start_index +
-                        this.thumbnails_request_size;
+                let start_index = 0;
+                if (parent) {
+                    start_index = parent.childIndex;
                 }
-                this.requestMoreThumbnails(initialize, initialize, true);
+                let initialize = true;
+                this.requestMoreThumbnails(initialize, false, start_index);
             },
-            error : (response) => this.requestMoreThumbnails(true, true)
+            error : (response) => this.requestMoreThumbnails(true)
         });
+    }
+
+    /**
+     * If we have the ImageIDs in hand, we can generate thumbnails without
+     * having to load them.
+     *
+     * @param {list} list of IDs
+     * @memberof ThumbnailSlider
+     */
+    setThumbnailsFromImageIds(imageIds) {
+        this.setThumbnailsCount(imageIds.length);
+        let to_add = imageIds.map(id => ({
+            '@id': id,
+            Name: 'image: ' + id
+        }));
+        this.addThumbnails(to_add, 0);
+    }
+
+    /**
+     * Loads unloaded thumbnails that scrolled into the thumbnail panel
+     *
+     * @param {number} scrollTop Current scroll position of the panel
+     * @param {boolean} init if true we have to perform some init tasks/checks
+     * @param {boolean} refresh true if the user hit the refresh icon
+     * @memberof ThumbnailSlider
+     */
+    loadVisibleThumbnails(scrollTop, init = false, refresh = false) {
+        if (scrollTop === undefined) {
+            const panel = document.querySelector('.thumbnail-scroll-panel');
+            if (panel)
+            scrollTop = panel.scrollTop;
+        }
+
+        let thumb_start_index = parseInt(scrollTop / this.thumbnail_size);
+        let thumb_end_index = parseInt((scrollTop + this.slider_height) / this.thumbnail_size);
+
+        let unloaded = [];
+        for (var idx=thumb_start_index; idx<=thumb_end_index; idx++){
+            if (idx < this.thumbnails.length && !this.thumbnails[idx].id) {
+                unloaded.push(idx);
+            }
+        }
+        if (unloaded.length > 0) {
+            thumb_start_index = unloaded[0];
+            thumb_end_index = unloaded[unloaded.length-1];
+            this.requestMoreThumbnails(init, refresh, thumb_start_index, thumb_end_index);
+        }
     }
 
     /**
      * Requests next batch of thumbnails
      *
      * @param {boolean} init if true we have to perform some init tasks/checks
-     * @param {boolean} end if true thumbnails after the end index are requested,
-     *                         otherwise before the start index
-     * @param {boolean} skip_decrement if true we don't decrement (first fetch)
      * @param {boolean} refresh true if the user hit the refresh icon
+     * @param {number} thumb_start_index Index of first thumbnail. Selected
+     * @param {number} thumb_end_index Optional. Otherwise use request_size
      * @memberof ThumbnailSlider
      */
-    requestMoreThumbnails(
-        init = false, end = true, skip_decrement = false, refresh = false) {
-        if (this.context.initial_type === INITIAL_TYPES.IMAGES &&
-            this.context.initial_ids.length > 1) {
-            let until =
-                this.thumbnails_end_index + this.thumbnails_request_size;
-            if (until > this.thumbnails_count) until = this.thumbnails_count;
-            let thumbPrefix =
-                (this.context.server !== "" ?
-                    this.context.server + "/" : "") +
-                this.gateway_prefix + "/render_thumbnail/";
-            for (let x=this.thumbnails_end_index;x<until;x++) {
-                let id = this.context.initial_ids[x];
-                this.thumbnails.push({
-                    id: id,
-                    url: thumbPrefix + id + "/",
-                    title: id,
-                    revision : 0
-                });
-                this.thumbnails_end_index++;
-            };
-            return;
-        }
+    requestMoreThumbnails(init = false, refresh = false,
+                          thumb_start_index = 0, thumb_end_index) {
         let parent_id =
             this.context.initial_type === INITIAL_TYPES.DATASET ||
             this.context.initial_type === INITIAL_TYPES.WELL ?
@@ -412,17 +442,14 @@ export default class ThumbnailSlider extends EventSubscriber {
                 this.image_config.image_info.parent_type :
                 this.context.initial_type;
 
-        let offset =
-            end ? this.thumbnails_end_index :
-                skip_decrement ? this.thumbnails_start_index :
-                    this.thumbnails_start_index - this.thumbnails_request_size;
+        let offset = parseInt(thumb_start_index / this.thumbnails_request_size) * this.thumbnails_request_size;
         let limit = this.thumbnails_request_size;
-        if (offset < 0) {
-            // we want to go beyond the beginning...
-            // only request as much as gets us to the very beginning
-            limit = this.thumbnails_request_size + offset;
-            offset = 0;
+        if (thumb_end_index !== undefined) {
+            // load all thumbs in the range. Batches are multiples of request_size
+            thumb_end_index = Math.ceil(thumb_end_index / this.thumbnails_request_size) * this.thumbnails_request_size;
+            limit = thumb_end_index - offset;
         }
+
 
         let url = this.context.server;
         if (this.context.initial_type === INITIAL_TYPES.DATASET ||
@@ -450,20 +477,27 @@ export default class ThumbnailSlider extends EventSubscriber {
                             this.hideMe();
                             return;
                         }
-                    this.thumbnails_count =
-                        typeof response.meta.totalCount === 'number' ?
-                            response.meta.totalCount : 0;
-                    if (this.thumbnails_count === 0) this.hideMe();
+                    this.setThumbnailsCount(response.meta.totalCount);
+                    if (this.thumbnails.length === 0) this.hideMe();
                 }
 
                 // return if count is null or
                 // if data array is not present/zero length
-                if (this.thumbnails_count === 0 ||
+                if (this.thumbnails.length === 0 ||
                     !Misc.isArray(response.data) ||
                     response.data.length === 0) return;
 
                 // add thumnails to the map which will trigger the loading
-                this.addThumbnails(response.data, end, skip_decrement);
+                this.addThumbnails(response.data, offset);
+                if (init) {
+                    if (thumb_start_index > 0) {
+                        // Scrolling will trigger loading of any unloaded thumbs
+                        this.scrollToThumbnail(thumb_start_index);
+                    } else {
+                        // but if we don't need to scroll, trigger manually...
+                        this.loadVisibleThumbnails();
+                    }
+                }
 
                 // open first image for data/well
                 if (init && !refresh &&
@@ -480,35 +514,58 @@ export default class ThumbnailSlider extends EventSubscriber {
     }
 
     /**
-     * Adds thumbnails to then be loaded.
+     * Adds thumbnails with Image IDs to this.thumbnails array.
+     * We create a new list from old, replacing the thumbnails (instead of
+     * modifying the old list) to make sure the changes are observed and
+     * UI updates.
      *
      * @param {Array.<Object>} thumbnails the thumbnails to be added
-     * @param {boolean} append if true thumbnails are appended,
-     *                         otherwise inserted at the beginning
-     * @param {boolean} skip_decrement if true we don't decrement (first fetch)
+     * @param {number} start_index Index to start replacing
      * @memberof ThumbnailSlider
      */
-    addThumbnails(thumbnails, append = true, skip_decrement = false) {
+    addThumbnails(thumbnails, start_index) {
         // if we are remote we include the server
         let thumbPrefix =
             (this.context.server !== "" ? this.context.server + "/" : "") +
-            this.gateway_prefix + "/render_thumbnail/";
-        if (!append) thumbnails.reverse();
+            this.webclient_prefix + "/render_thumbnail/";
 
-        thumbnails.map((item) => {
-            let id = item['@id'];
-            let entry = {
-                id: id,
-                url: thumbPrefix + id + "/",
-                title: typeof item.Name === 'string' ? item.Name : id,
-                revision : 0
-            }
-            if (append) {
-                this.thumbnails.push(entry);
-                this.thumbnails_end_index++;
+        let new_index = 0;
+        this.thumbnails = this.thumbnails.map((thumb, idx) => {
+            if ((idx === start_index + new_index) && (new_index < thumbnails.length)) {
+                let t = thumbnails[new_index];
+                new_index++;
+                return {
+                    id: t['@id'],
+                    url: thumbPrefix + t['@id'] + "/",
+                    title: typeof t.Name === 'string' ? t.Name : t['@id'],
+                    revision : 0
+                }
             } else {
-                this.thumbnails.unshift(entry);
-                if (!skip_decrement) this.thumbnails_start_index--;
+                return thumb;
+            }
+        });
+    }
+
+    /**
+     * Adds thumbnails with Image IDs to this.thumbnails array.
+     * We create a new list from old, replacing the thumbnails (instead of
+     * modifying the old list) to make sure the changes are observed and
+     * UI updates.
+     *
+     * @param {number} index  Index of thumbnail we want to scroll to.
+     * @memberof ThumbnailSlider
+     */
+    scrollToThumbnail(index) {
+        // Queue the task to happen after the UI renders
+        // https://github.com/aurelia/templating/issues/79
+        this.taskQueue.queueMicroTask(() => {
+            const target = (index) * this.thumbnail_size;
+
+            // If we didn't do ajax call to load thumbnails, ?image=1&image=2
+            // the scroll-panel might not be ready yet.
+            let scroll_panel = document.querySelector('.thumbnail-scroll-panel');
+            if (scroll_panel) {
+                scroll_panel.scrollTop = target;
             }
         });
     }
@@ -658,6 +715,17 @@ export default class ThumbnailSlider extends EventSubscriber {
     }
 
     /**
+     * Thumbnail scroll handler. Loads any unloaded visible thumbnails
+     *
+     * @memberof ThumbnailSlider
+     * @param {Object} Scroll event
+     */
+    handleScrollEvent(event) {
+        // find index of any visible thumbnails that aren't loaded...
+        this.loadVisibleThumbnails(event.target.scrollTop);
+    }
+
+    /**
      * Updates one or more thumbnails
      *
      * @memberof ThumbnailSlider
@@ -669,7 +737,7 @@ export default class ThumbnailSlider extends EventSubscriber {
 
         // turn array into object for easier lookup
         let updatedIds = {};
-        params.ids.map((id) => updatedIds[id] = null);
+        params.ids.forEach((id) => updatedIds[id] = null);
 
         let position = 0;
         // we update in batches
@@ -700,6 +768,17 @@ export default class ThumbnailSlider extends EventSubscriber {
             }, 2000);
     }
 
+    setThumbnailsCount(count) {
+        if (typeof count !== 'number') {
+            count = 0;
+        }
+        this.thumbnails.length = count;
+        // IE doesn't support fill()
+        for (let i=0; i<count; i++) {
+            this.thumbnails[i] = {'version': 0, 'title': 'unloaded'};
+        }
+    }
+
     /**
      * Refresh thumbnail slider contents by reinitialization
      *
@@ -712,10 +791,7 @@ export default class ThumbnailSlider extends EventSubscriber {
 
         // reset
         this.initialized = false;
-        this.thumbnails_start_index = 0;
-        this.thumbnails_end_index = 0;
-        this.thumbnails_count = 0;
-        this.thumbnails = [];
+        this.setThumbnailsCount(0);
 
         // request again
         this.initializeThumbnails(true);

@@ -527,16 +527,29 @@ a.ui-button:active,
     background-color: #ffffff;
 }
 .thumbnail-panel .thumbnail-scroll-panel {
-    padding-bottom: 30px;
     overflow-x: hidden;
     overflow-y: auto;
     height: 100%;
     width: 100%;
 }
+.thumbnail-wrapper {
+    display: inline-block;
+    background: #f0f0f0;
+    width: 80px;
+    height: 80px;
+    margin: 5px;
+}
 thumbnail-slider img {
-    margin-top: 10px;
+    margin: 0;
     cursor: pointer;
-    max-width: 75px;
+    max-width: 80px;
+    max-height: 80px;
+}
+.thumbnail-wrapper .selected {
+    border: 5px solid rgba(0,60,136,0.5)
+}
+.transparent {
+    opacity: 0;
 }
 .thumbnail-panel .thumbnail-collapse {
     height: 28px;
