@@ -548,7 +548,9 @@ export default class Ol3Viewer extends EventSubscriber {
             this.viewer.enableSmoothing(params.interpolate);
 
         // Save settings to cache
-        this.cacheImageSettings(params);
+        if (isSameConfig) {
+            this.cacheImageSettings(params);
+        }
     }
 
     /**
