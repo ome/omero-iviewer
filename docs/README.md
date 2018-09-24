@@ -1,12 +1,9 @@
 
-Diagram
-=======
-
 <img src="https://raw.githubusercontent.com/will-moore/omero-iviewer/intro_docs/docs/iviewer_classes.png">
 
 This class diagram shows some of the major iviewer classes and some key attributes and relationships.
 
-To edit the diagram, go to https://www.draw.io/ and open the iviewer_classes.xml file.
+To edit the diagram, go to https://www.draw.io/ and open the ``iviewer_classes.xml`` file.
 When you save, this will download an updated xml file. Use ``Export as -> PNG`` to create a new diagram.
 
 
