@@ -1,4 +1,13 @@
 
+Diagram
+=======
+
+This class diagram shows some of the major iviewer classes and some key attributes and relationships.
+
+To edit the diagram, go to https://www.draw.io/ and open the iviewer_classes.xml file.
+When you save, this will download an updated xml file. Use ``Export as -> PNG`` to create a new diagram.
+
+
 Application loading
 ===================
 
@@ -31,14 +40,45 @@ The JavaScript entry point is src/main.js:
 	        () => aurelia.setRoot(PLATFORM.moduleName('app/index'), document.body));
 	});
 
-We create a singleton Context instance (app/context.js) which includes and EventAggregator (pub/sub events).
-This is registered with the aurelia's [dependency injection container](https://aurelia.io/docs/fundamentals/dependency-injection#explicit-configuration) to allow any component to get hold of it.
+We create a singleton ``Context`` instance (``app/context.js``) which includes an ``EventAggregator`` (pub/sub events)
+called ``eventbus``.
+The ``Context`` is registered with the aurelia's [dependency injection container](https://aurelia.io/docs/fundamentals/dependency-injection#explicit-configuration) to allow any component to get hold of it.
 
-Then the application is then started, specifying that the document.body is the root element of the app and that
-the Aurelia entry point is the app/index (index.js and index.html).
+Then the application is then started, specifying that the ``document.body`` is the root element of the app and that
+the Aurelia entry point is the ``app/index`` (``index.js`` and ``index.html``).
 
-The app/index.html template (a different file from the Django index.html template above)
+The ``app/index.html`` template (a different file from the Django ``index.html`` template above)
 contains the main layout of the iviewer, including custom components such as
 header, thumbnail-slider and right-hand-panel as well as an instance of ol3-viewer for each of the
 context.image_configs.
 
+
+Loading Images
+==============
+
+When the app loads, the ``thumbnail-slider`` component loads thumbnails for the selected images. For
+a single image, it loads the parent container to display thumbnails for all images within the container (Dataset or Well).
+
+The ``thumbnail-slider`` initiates image loading by calling ``context.addImageConfig(image_id, parent_id, parent_type)``.
+This may first remove other ``image_configs`` before creating a new one and loading image data:
+
+	let image_config = new ImageConfig(this, image_id, parent_id, parent_type);
+    // store the image config in the map and make it the selected one
+    this.image_configs.set(image_config.id, image_config);
+    this.selectConfig(image_config.id);
+    // Call bind() to initialize image data loading
+    image_config.bind();
+
+The ``context.selected_config`` attribute is ``Observed`` by the ``right-hand-panel`` component, so that changing the selected config causes the right hand panel to re-render, passing the new ``image_config`` down to all of the
+child components via ``bind``, for example ``<settings image_config.bind="image_config"></settings>``.
+
+When these components first re-render, the image data will not have been loaded yet. They wait for this by observing
+``image_config.image_info.ready`` which is set to ``true`` when the image is loaded.
+
+When a ``new ImageConfig()`` is created above, the constructor creates a new ``image_info``:
+
+	this.image_info = new ImageInfo(this.context, this.id, image_id, parent_id, parent_type);
+
+and the ``image_config.bind()`` calls ``image_info.bind()`` which calls ``image_info.requestData()`` to load the
+image data and calls ``initializeImageInfo(response, refresh);`` which finally sets ``image_info.ready = true``.
+This causes other view components to re-render and show the image as mentioned above.
