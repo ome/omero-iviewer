@@ -25,7 +25,7 @@ converts it into global JavaScript object:
                         WEB_API_BASE: "/api/v0/"}
 
 
-The index.html has no HTML elements except <body></body>
+The index.html has no HTML elements except ``<body></body>``
 
 The JavaScript entry point is src/main.js:
 
