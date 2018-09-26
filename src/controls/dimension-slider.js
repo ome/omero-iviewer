@@ -350,8 +350,7 @@ export default class DimensionSlider {
 
         $(this.elSelector).slider(options);
         $(this.element).show();
-        let publish = false;  // don't publish change event on init
-        this.changeProjection(options.values, toggle, publish);
+        this.changeProjection(options.values, toggle);
     }
 
     /**
@@ -361,7 +360,7 @@ export default class DimensionSlider {
      * @param {boolean} toggle true if called after projection toggle
      * @memberof DimensionSlider
      */
-    changeProjection(values, toggle=false, publish=true) {
+    changeProjection(values, toggle=false) {
         let conf = this.image_config;
         let entries = [{
             prop: ['image_info', 'projection_opts', 'synced'],
@@ -412,7 +411,7 @@ export default class DimensionSlider {
             conf.addHistory(entries);
             this.add_projection_history = false;
         };
-        if (publish && !conf.image_info.projection_opts.synced) {
+        if (!conf.image_info.projection_opts.synced) {
             this.context.publish(IMAGE_SETTINGS_CHANGE, {
                 config_id: conf.id,
                 sync_group: conf.sync_group,
