@@ -154,8 +154,8 @@ export default class ImageConfig extends History {
     /**
      * Applies the rendering settings, keeping a history of the old settings
      *
-     * @param {Object} rdef the rendering defintion
-     * @param {boolean} for_pasting true if rdef supplied it for pasting of settings, false otherwise
+     * @param {Object} rdef the rendering definition
+     * @param {boolean} for_pasting true if rdef supplied is for pasting of settings, false otherwise
      * @memberof Settings
      */
     applyRenderingSettings(rdef, for_pasting=true) {
