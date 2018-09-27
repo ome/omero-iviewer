@@ -79,7 +79,8 @@
                     <div if.bind="(roi.shapes.size - roi.deleted) > 1 &&
                                    roi.shapes.size > 1 && $first"
                         id="${'roi-' + roi_id}"
-                        title="ROI: ${roi_id} - Shape: ${shape_id}"
+                        title="${(shape_id > 0 ? 'ROI: ' + roi_id + ', Shape: ' + shape_id : 'Unsaved') +
+                                    (shape.owner ? '\nOwner: ' + shape.owner : '')}"
                         class="regions-table-row"
                         click.delegate="selectShape(roi_id, true, $event, true)">
                         <div class="regions-table-col roi-toggle">
@@ -104,11 +105,10 @@
                     </div>
                     <div if.bind="!(shape.deleted && shape.is_new) &&
                                    !(roi.shapes.size > 1 && !roi.show)"
-                        title="${'ROI: ' + roi_id + ' - Shape: ' + shape_id +
-                                    (hasPermissions(shape) ?
-                                        (shape.type === 'mask' ?
-                                            '\nMasks cannot be edited' : '') :
-                                        '\nOwner: ' + shape.owner)}"
+                        title="${(shape_id > 0 ? 'ROI: ' + roi_id + ', Shape: ' + shape_id : 'Unsaved') +
+                                    (shape.owner ? '\nOwner: ' + shape.owner : '') +
+                                    '\n' + formatCoords(shape) + ' ' + (shape.modified ? 'mod' : '') +
+                                    (shape.type === 'mask' ? '\nMasks cannot be edited' : '')}"
                         id="${'roi-' + shape.shape_id}"
                         class="regions-table-row"
                         css="${shape.selected ? 'background-color: #d0d0ff;' : ''}
