@@ -460,6 +460,33 @@ export default class RegionsList extends EventSubscriber {
     }
 
     /**
+     * Returns a string to show shape coordinates.
+     * E.g. for Rectangle "x: 100.01 y: 210 width: 1010 height: 123"
+     * (Helper method for template only!)
+     *
+     * @private
+     * @param {Object} shape a shape
+     * @return {String} to show shape coordinates
+     * @memberof RegionsList
+     */
+    formatCoords(shape) {
+        const f = (n) => n.toFixed(1);
+        let coords = ""
+        let attrs = {
+            rectangle: ['X', 'Y', 'Width', 'Height'],
+            line: ['X1', 'Y1', 'X2', 'Y2'],
+            ellipse: ['X', 'Y', 'RadiusX', 'RadiusY'],
+            point: ['X', 'Y']
+        }
+        if (attrs[shape.type]) {
+            coords = attrs[shape.type].map(a => `${a}: ${f(shape[a])}`).join(" ");
+        } else {
+            coords = "";
+        }
+        return coords;
+    }
+
+    /**
      * Overridden aurelia lifecycle method:
      * called whenever the view is unbound within aurelia
      * in other words a 'destruction' hook that happens after 'detached'

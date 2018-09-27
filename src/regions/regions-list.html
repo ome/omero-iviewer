@@ -107,6 +107,7 @@
                                    !(roi.shapes.size > 1 && !roi.show)"
                         title="${(shape_id > 0 ? 'ROI: ' + roi_id + ', Shape: ' + shape_id : 'Unsaved') +
                                     (shape.owner ? '\nOwner: ' + shape.owner : '') +
+                                    '\n' + formatCoords(shape) + ' ' + (shape.modified ? 'mod' : '') +
                                     (shape.type === 'mask' ? '\nMasks cannot be edited' : '')}"
                         id="${'roi-' + shape.shape_id}"
                         class="regions-table-row"
