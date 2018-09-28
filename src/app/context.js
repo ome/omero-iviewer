@@ -113,6 +113,14 @@ export default class Context {
     image_configs = new Map();
 
     /**
+     * a map for unsaved image settings
+     *
+     * @memberof Context
+     * @type {Map}
+     */
+    cached_image_settings = {};
+
+    /**
      * the initial type the viewer was opened with
      *
      * @memberof Context
@@ -655,6 +663,7 @@ export default class Context {
         // store the image config in the map and make it the selected one
         this.image_configs.set(image_config.id, image_config);
         this.selectConfig(image_config.id);
+        // Call bind() to initialize image data loading
         image_config.bind();
     }
 
@@ -780,6 +789,35 @@ export default class Context {
             }
         }
         return configs;
+    }
+
+    /**
+     * Sets a cache of image settings.
+     * Settings object contains 'channels' (same as imgData JSON)
+     * 'projection', 'model', 'time', 'plane'
+     *
+     * @memberof Context
+     * @param {number} id the Image ID
+     * @param {settings} Object
+     */
+    setCachedImageSettings(image_id, settings) {
+        const old = this.cached_image_settings[image_id] || {};
+        this.cached_image_settings[image_id] = Object.assign({}, old, settings);
+    }
+
+    /**
+     * Retrieves last viewed (unsaved) settings for an image by ID.
+     * Object returned contains 'channels' (same as imgData JSON)
+     * 'projection', 'model', 'time', 'plane'
+     *
+     * @memberof Context
+     * @param {number} id the Image ID
+     * @return {Object} similar to imgData JSON
+     */
+    getCachedImageSettings(image_id) {
+        if (this.cached_image_settings[image_id]) {
+            return this.cached_image_settings[image_id];
+        }
     }
 
     /**

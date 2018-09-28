@@ -375,6 +375,9 @@ export default class ImageInfo {
             (this.short_image_name !== '' ?
                 this.short_image_name : APP_TITLE);
 
+        // If we've viewed this image before, apply cached settings
+        this.applyCachedSettings(response);
+
         // signal that we are ready
         this.ready = true;
         this.tmp_data = response;
@@ -382,6 +385,76 @@ export default class ImageInfo {
         if (refresh) {
             this.context.publish(
                 IMAGE_SETTINGS_REFRESH, { config_id : this.config_id});
+        }
+    }
+
+    /**
+     * Gets cached image settings from context and updates our settings
+     *
+     * @private
+     * @memberof ImageInfo
+     */
+    applyCachedSettings(response) {
+        let cached = this.context.getCachedImageSettings(this.image_id);
+        let conf = this.context.getImageConfig(this.config_id);
+        if (cached !== undefined) {
+
+            let history = [];
+
+            // JSON response object is passed to the ol3-viewer via tmp_data, so we need to update
+            if (cached.center) {
+                response.center = cached.center;
+                response.rotation = cached.rotation;
+                response.resolution = cached.resolution;
+            }
+            if (cached.z !== undefined) {
+                history.push({prop: ['image_info', 'dimensions', 'z'],
+                              old_val : this.dimensions.z,
+                              new_val: cached.z,
+                              type : "number"});
+                response.rdefs.defaultZ = cached.z;
+                this.dimensions.z = cached.z;
+            }
+            if (cached.t !== undefined) {
+                history.push({prop: ['image_info', 'dimensions', 't'],
+                              old_val : this.dimensions.t,
+                              new_val: cached.t,
+                              type : "number"});
+                response.rdefs.defaultT = cached.t;
+                this.dimensions.t = cached.t;
+            }
+            if (cached.projection) {
+                // Don't need to update response.projection since Z dimension-slider
+                // will update the ol3-viewer
+                this.projection = cached.projection;
+                this.projection_opts = cached.projection_opts;
+            }
+            if (cached.model) {
+                let m = this.sanitizeModel(cached.model);
+                if (this.model != m) {
+                    history.push({
+                        prop: ['image_info', 'model'],
+                        old_val : this.model,
+                        new_val: m,
+                        type: 'string'});
+                    this.model = m;
+                }
+            }
+            response.rdefs.model = this.model;
+
+            conf.addHistory(history);
+
+            // Update the channels by 'pasting'
+            // This adds to history separately from addHistory() above for all other settings.
+            if (cached.channels) {
+                // "1|589:2288$00FF00,2|477:2823$FFFF00"
+                let c = cached.channels.map((ch, i) => `${ch.active ? '' : '-'}${i + 1}|${ch.window.start}:${ch.window.end}$${ch.color}`).join(',');
+
+                let maps = cached.channels.map(ch => ({inverted: {enabled: ch.inverted},
+                                                       quantization: {coefficient: ch.coefficient, family: ch.family}}));
+
+                conf.applyRenderingSettings({c, maps});
+            }
         }
     }
 
@@ -498,12 +571,25 @@ export default class ImageInfo {
         if (this.dimensions.z < 0) this.dimensions.z = 0;
         if (this.dimensions.z >= this.dimensions.max_z)
             this.dimensions.z = this.dimensions.max_z-1;
-        let lowerCaseModel = this.model.toLowerCase()[0];
+        this.model = this.sanitizeModel(this.model);
+    }
+
+    /**
+     * Convert between the response.rdefs.model from imgData 'c' or 'g'
+     * to 'color' or 'greyscale'
+     *
+     * @private
+     * @memberof ImageInfo
+     */
+    sanitizeModel(model) {
+        let lowerCaseModel = model.toLowerCase()[0];
+        let m;
         switch (lowerCaseModel) {
-            case 'c': this.model = 'color'; break;
-            case 'g': this.model = 'greyscale'; break;
-            default: this.model = 'color';
+            case 'c': m = 'color'; break;
+            case 'g': m = 'greyscale'; break;
+            default: m = 'color';
         }
+        return m;
     }
 
     /**
