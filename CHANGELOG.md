@@ -4,8 +4,8 @@
 This version includes:
 
 - cached image settings to allow navigation between images without losing unsaved settings
-- improved loading of thumbnails
-- enabled zoom using double-clicking on the image
+- improved thumbnail loading
+- enabled double-click to zoom on image viewing
 - improved tooltips on ROIs
 - added documentation for the architecture of the application
 
