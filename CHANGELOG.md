@@ -1,3 +1,14 @@
+0.6.0 (November 2018)
+---------------------
+
+This version includes:
+
+- cached image settings to allow navigation between images without losing unsaved settings
+- improved thumbnail loading
+- enabled double-click to zoom on image viewing
+- improved tooltips on ROIs
+- added documentation for the architecture of the application
+
 0.5.0 (May 2018)
 ----------------
 

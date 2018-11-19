@@ -18,7 +18,7 @@
 from omero_iviewer.utils import get_version
 
 
-VERSION = (0, 5, 0)
+VERSION = (0, 6, 0)
 
 
 __version__ = get_version(VERSION)
