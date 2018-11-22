@@ -19,15 +19,15 @@
 // js
 import {inject,customElement, BindingEngine, TaskQueue} from 'aurelia-framework';
 import Context from '../app/context';
-import Misc from '../utils/misc';
-import UI from '../utils/ui';
+import Misc from './utils/misc';
+import UI from './utils/ui';
 import {
     DATASETS_REQUEST_URL, INITIAL_TYPES, IVIEWER,
     WEB_API_BASE, WEBCLIENT, WEBGATEWAY
-} from '../utils/constants';
+} from './utils/constants';
 import {REGIONS_STORE_SHAPES, REGIONS_STORED_SHAPES,
-        IMAGE_VIEWER_RESIZE} from '../events/events';
-import {THUMBNAILS_UPDATE, EventSubscriber} from '../events/events';
+        IMAGE_VIEWER_RESIZE} from './events/events';
+import {THUMBNAILS_UPDATE, EventSubscriber} from './events/events';
 
 /**
  * Displays the image thumbnails

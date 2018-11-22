@@ -19,7 +19,7 @@
 // js
 import {inject, customElement, BindingEngine} from 'aurelia-framework';
 import Context from './context';
-import {PROJECTION, TABS} from '../utils/constants';
+import {PROJECTION, TABS} from './utils/constants';
 import 'bootstrap';
 
 /**

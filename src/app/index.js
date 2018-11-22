@@ -27,12 +27,12 @@ require('../../node_modules/jquery-ui/themes/base/images/ui-icons_444444_256x240
 // js
 import {inject} from 'aurelia-framework';
 import Context from './context';
-import Misc from '../utils/misc';
-import OpenWith from '../utils/openwith';
-import Ui from '../utils/ui';
-import {PLUGIN_PREFIX, SYNC_LOCK, WEBGATEWAY} from '../utils/constants';
+import Misc from './utils/misc';
+import OpenWith from './utils/openwith';
+import Ui from './utils/ui';
+import {PLUGIN_PREFIX, SYNC_LOCK, WEBGATEWAY} from './utils/constants';
 import {IMAGE_VIEWER_RESIZE, IMAGE_VIEWER_CONTROLS_VISIBILITY,
-        REGIONS_STORE_SHAPES, REGIONS_STORED_SHAPES} from '../events/events';
+        REGIONS_STORE_SHAPES, REGIONS_STORED_SHAPES} from './events/events';
 
 /**
  * @classdesc

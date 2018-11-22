@@ -17,20 +17,20 @@
 //
 import {noView} from 'aurelia-framework';
 import {EventAggregator} from 'aurelia-event-aggregator';
-import Misc from '../utils/misc';
-import OpenWith from '../utils/openwith';
-import ImageConfig from '../model/image_config';
-import ImageInfo from '../model/image_info';
-import RegionsInfo from '../model/regions_info';
+import Misc from './utils/misc';
+import OpenWith from './utils/openwith';
+import ImageConfig from './model/image_config';
+import ImageInfo from './model/image_info';
+import RegionsInfo from './model/regions_info';
 import {
     IMAGE_SETTINGS_REFRESH, IMAGE_VIEWER_CONTROLS_VISIBILITY,
     SAVE_ACTIVE_IMAGE_SETTINGS, THUMBNAILS_UPDATE
-} from '../events/events';
+} from './events/events';
 import {
     APP_NAME, IMAGE_CONFIG_RELOAD, IVIEWER, INITIAL_TYPES, LUTS_NAMES,
     LUTS_PNG_URL, PLUGIN_NAME, PLUGIN_PREFIX, REQUEST_PARAMS, SYNC_LOCK,
     TABS, URI_PREFIX, WEB_API_BASE, WEBCLIENT, WEBGATEWAY
-} from '../utils/constants';
+} from './utils/constants';
 
 /**
  * Provides all the information to the application that it shares

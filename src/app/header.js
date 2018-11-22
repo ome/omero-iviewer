@@ -21,13 +21,13 @@ import Context from './context';
 import * as FileSaver from '../../node_modules/file-saver';
 import JSZip from '../../node_modules/jszip/dist/jszip';
 import * as TextEncoding from "../../node_modules/text-encoding";
-import Misc from '../utils/misc';
-import Ui from '../utils/ui';
-import {IMAGE_VIEWPORT_CAPTURE} from '../events/events';
+import Misc from './utils/misc';
+import Ui from './utils/ui';
+import {IMAGE_VIEWPORT_CAPTURE} from './events/events';
 import {
     APP_TITLE, CSV_LINE_BREAK, INITIAL_TYPES, IVIEWER, PROJECTION, WEBCLIENT
-} from '../utils/constants';
-import { IMAGE_VIEWER_RESIZE } from '../events/events';
+} from './utils/constants';
+import { IMAGE_VIEWER_RESIZE } from './events/events';
 
 /**
  * @classdesc

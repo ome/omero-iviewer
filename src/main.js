@@ -20,8 +20,8 @@ import { bootstrap } from 'aurelia-bootstrapper';
 import {EventAggregator} from 'aurelia-event-aggregator';
 import Context from './app/context';
 import Index from './app/index';
-import Misc from './utils/misc';
-import {URI_PREFIX, PLUGIN_NAME, WINDOWS_1252} from './utils/constants';
+import Misc from './app/utils/misc';
+import {URI_PREFIX, PLUGIN_NAME, WINDOWS_1252} from './app/utils/constants';
 import * as Bluebird from 'bluebird';
 
 // #if process.env.NODE_ENV
