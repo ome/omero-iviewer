@@ -15,73 +15,77 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
+import Plugins from 'ol/plugins';
+import PluginType from 'ol/plugintype';
+import Map from 'ol/renderer/canvas/map';
+import ImageLayer from 'ol/renderer/canvas/imagelayer';
+import TileLayer from 'ol/renderer/canvas/tilelayer';
+import VectorLayer from 'ol/renderer/canvas/vectorlayer';
+import VectorTileLayer from 'ol/renderer/canvas/vectortilelayer';
+import Kinetic from 'ol/kinetic';
+import Attribution from 'ol/control/attribution';
+import Rotate from 'ol/control/rotate';
+import FullScreen from 'ol/control/fullscreen';
+import DragPan from 'ol/interaction/dragpan';
+import PinchZoom from 'ol/interaction/pinchzoom';
+import MouseWheelZoom from 'ol/interaction/mousewheelzoom';
+import KeyboardPan from 'ol/interaction/keyboardpan';
+import KeyboardZoom from 'ol/interaction/keyboardzoom';
+import DragZoom from 'ol/interaction/dragzoom';
+import DoubleClickZoom from 'ol/interaction/doubleclickzoom';
+import PinchRotate from 'ol/interaction/pinchrotate';
+import Interaction from 'ol/interaction';
 
-goog.require('ol.Kinetic');
-goog.require('ol.control.Attribution');
-goog.require('ol.control.Rotate');
-goog.require('ol.control.FullScreen');
-goog.require('ol.interaction.DragPan');
-goog.require('ol.interaction.PinchZoom');
-goog.require('ol.interaction.MouseWheelZoom');
-goog.require('ol.interaction.KeyboardPan');
-goog.require('ol.interaction.KeyboardZoom');
-goog.require('ol.interaction.DragZoom');
-goog.require('ol.interaction.DragRotate');
-goog.require('ol.interaction.DoubleClickZoom');
-goog.require('ol.interaction.PinchRotate');
-goog.require('ol.interaction.DragBox');
-goog.require('ol.events.condition');
+import _Zoom from './controls/Zoom';
+import _BirdsEye from './controls/BirdsEye';
+import _ScaleBar from './controls/ScaleBar';
+import _IntensityDisplay from './controls/IntensityDisplay';
+import _BoxSelect from './interaction/BoxSelect';
+import _Rotate from './interaction/Rotate';
 
-goog.require('ol.plugins');
-goog.require('ol.PluginType');
-goog.require('ol.renderer.canvas.ImageLayer');
-goog.require('ol.renderer.canvas.Map');
-goog.require('ol.renderer.canvas.TileLayer');
-goog.require('ol.renderer.canvas.VectorLayer');
-goog.require('ol.renderer.canvas.VectorTileLayer');
-
-ol.plugins.register(ol.PluginType.MAP_RENDERER, ol.renderer.canvas.Map);
-ol.plugins.registerMultiple(ol.PluginType.LAYER_RENDERER, [
-  ol.renderer.canvas.ImageLayer,
-  ol.renderer.canvas.TileLayer,
-  ol.renderer.canvas.VectorLayer,
-  ol.renderer.canvas.VectorTileLayer
+Plugins.register(PluginType.MAP_RENDERER, Map);
+Plugins.registerMultiple(PluginType.LAYER_RENDERER, [
+    ImageLayer,
+    TileLayer,
+    VectorLayer,
+    VectorTileLayer
 ]);
+
 
 /**
  * a simple string lookup constant for WEB_API_BASE
  * @const
  * @type {string}
  */
-ome.ol3.WEB_API_BASE = 'WEB_API_BASE';
+export const WEB_API_BASE = 'WEB_API_BASE';
 
 /**
  * the url for the regions request (relative to WEB_API_BASE)
  * @const
  * @type {string}
  */
-ome.ol3.REGIONS_REQUEST_URL = '/m/rois';
+export const REGIONS_REQUEST_URL = '/m/rois';
 
 /**
  * a simple string lookup constant for WEBGATEWAY
  * @const
  * @type {string}
  */
-ome.ol3.WEBGATEWAY = 'WEBGATEWAY';
+export const WEBGATEWAY = 'WEBGATEWAY';
 
 /**
  * a simple string lookup constant for WEBCLIENT
  * @const
  * @type {string}
  */
-ome.ol3.WEBCLIENT = 'WEBCLIENT';
+export const WEBCLIENT = 'WEBCLIENT';
 
 /**
  * a simple string lookup constant for PLUGIN_PREFIX
  * @const
  * @type {string}
  */
-ome.ol3.PLUGIN_PREFIX = 'PLUGIN_PREFIX';
+export const PLUGIN_PREFIX = 'PLUGIN_PREFIX';
 
 /**
  * a list of (possibly prefixed) uri resources we need
@@ -89,9 +93,9 @@ ome.ol3.PLUGIN_PREFIX = 'PLUGIN_PREFIX';
  * @const
  * @type {Array.<string>}
  */
-ome.ol3.PREFIXED_URIS = [
-    ome.ol3.PLUGIN_PREFIX, ome.ol3.WEB_API_BASE,
-    ome.ol3.WEBCLIENT, ome.ol3.WEBGATEWAY
+export const PREFIXED_URIS = [
+    PLUGIN_PREFIX, WEB_API_BASE,
+    WEBCLIENT, WEBGATEWAY
 ];
 
 /**
@@ -99,21 +103,21 @@ ome.ol3.PREFIXED_URIS = [
  * @const
  * @type {number}
  */
-ome.ol3.UNTILED_RETRIEVAL_LIMIT = 4000000;
+export const UNTILED_RETRIEVAL_LIMIT = 4000000;
 
 /**
  * the default tile dimensions
  * @const
  * @type {Object}
  */
-ome.ol3.DEFAULT_TILE_DIMS = {"width": 512, "height": 512};
+export const DEFAULT_TILE_DIMS = {"width": 512, "height": 512};
 
 /**
  * Enum for RequestParams.
  * @static
  * @enum {string}
  */
-ome.ol3.REQUEST_PARAMS = {
+export const REQUEST_PARAMS = {
     CHANNELS: 'C',
     CENTER_X: 'X',
     CENTER_Y: 'Y',
@@ -133,7 +137,7 @@ ome.ol3.REQUEST_PARAMS = {
  * @static
  * @enum {number}
  */
-ome.ol3.REGIONS_STATE = {
+export const REGIONS_STATE = {
     /** the original state */
     "DEFAULT" : 0,
     /** the changed state */
@@ -148,7 +152,7 @@ ome.ol3.REGIONS_STATE = {
 
 /**
  * Enum for RegionsMode.
- * Depending on the mode, various interactions will be active.
+ * Depending on the mode, letious interactions will be active.
  * <p>
  * Note, however, that some modes are inclusive and others mutually exclusive!
  * </p>
@@ -163,7 +167,7 @@ ome.ol3.REGIONS_STATE = {
  * @static
  * @enum {number}
  */
-ome.ol3.REGIONS_MODE = {
+export const REGIONS_MODE = {
     /** the original state i.e. no interaction possible, only display */
     "DEFAULT" : 0,
     /** select interaction */
@@ -181,7 +185,7 @@ ome.ol3.REGIONS_MODE = {
  * @static
  * @enum {number}
  */
-ome.ol3.RENDER_STATUS = {
+export const RENDER_STATUS = {
     /** we did no render watching */
     "NOT_WATCHED" : 0,
     /** we are watching and in progress */
@@ -197,7 +201,7 @@ ome.ol3.RENDER_STATUS = {
  * @static
  * @enum {string}
  */
-ome.ol3.PROJECTION = {
+export const PROJECTION = {
     /** normal **/
     "NORMAL" : 'normal',
     /** intmax **/
@@ -211,7 +215,7 @@ ome.ol3.PROJECTION = {
  * @const
  * @type {Object}
  */
-ome.ol3.UNITS_LENGTH = [
+export const UNITS_LENGTH = [
     { unit: 'angstrom',
       threshold: 0.1, multiplier: 10000, symbol: '\u212B'},
     { unit: 'nanometer',
@@ -232,7 +236,7 @@ ome.ol3.UNITS_LENGTH = [
  * @const
  * @type {Object}
  */
-ome.ol3.DIMENSION_LOOKUP = {
+export const DIMENSION_LOOKUP = {
     "x" : {"method" : "Width", "settable" : false},
     "width" : {"method" : "Width", "settable" : false}, // alias
     "y" : {"method" : "Height", "settable" : false},
@@ -262,45 +266,45 @@ ome.ol3.DIMENSION_LOOKUP = {
  * @const
  * @type {Object}
  */
-ome.ol3.AVAILABLE_VIEWER_CONTROLS = {
+export const AVAILABLE_VIEWER_CONTROLS = {
     "attribution" :
-        {"clazz" : ol.control.Attribution,
+        {"clazz" : Attribution,
          "options": {},
          "defaults": true,
          "enabled": false,
          "links" : []},
     "zoom" :
-        {"clazz" : ome.ol3.controls.Zoom,
+        {"clazz" : _Zoom,
          "options": {},
          "defaults": true,
          "enabled": true,
          "links" : []},
     "rotate" :
-        {"clazz" : ol.control.Rotate,
+        {"clazz" : Rotate,
          "options": {autoHide: false},
          "defaults": true,
          "enabled": true,
          "links" : ["shiftRotate"]},
     "fullscreen" :
-        {"clazz" : ol.control.FullScreen,
+        {"clazz" : FullScreen,
          "options": {},
          "defaults": true,
          "enabled": true,
          "links" : []},
     "birdseye" :
-        {"clazz" : ome.ol3.controls.BirdsEye,
+        {"clazz" : _BirdsEye,
         "options": {collapsed : true},
         "defaults": true,
         "enabled": false,
         "links" : []},
     "scalebar" :
-        {"clazz" : ome.ol3.controls.ScaleBar,
+        {"clazz" : _ScaleBar,
         "options": {},
         "defaults": true,
         "enabled": false,
         "links" : []},
     "intensity" :
-        {"clazz" : ome.ol3.controls.IntensityDisplay,
+        {"clazz" : _IntensityDisplay,
         "options": {},
         "defaults": true,
         "enabled": false,
@@ -332,51 +336,51 @@ ome.ol3.AVAILABLE_VIEWER_CONTROLS = {
  * @const
  * @type {Object}
  */
-ome.ol3.AVAILABLE_VIEWER_INTERACTIONS = {
+export const AVAILABLE_VIEWER_INTERACTIONS = {
     "dragPan" :
-        {"clazz" : ol.interaction.DragPan,
-         "options": {"kinetic" : new ol.Kinetic(-0.005, 0.05, 100)},
+        {"clazz" : DragPan,
+         "options": {"kinetic" : new Kinetic(-0.005, 0.05, 100)},
          "defaults": true, "enabled": true,
          "links" : []},
     "pinchZoom" :
-        {"clazz" : ol.interaction.PinchZoom,
+        {"clazz" : PinchZoom,
          "options": {"zoomDuration" : null},
          "defaults": true,
          "enabled": true,
          "links" : []},
     "mouseWheelZoom" :
-        {"clazz" : ol.interaction.MouseWheelZoom,
+        {"clazz" : MouseWheelZoom,
          "options": {"duration" : 0, "timeout": 0},
          "defaults": true,
          "enabled": true,
          "links" : []},
     "keyboardPan" :
-        {"clazz" : ol.interaction.KeyboardPan, "options": {},
+        {"clazz" : KeyboardPan, "options": {},
          "defaults": true, "enabled": false, "links" : []},
-         "keyboardZoom" : {"clazz" : ol.interaction.KeyboardZoom,
+         "keyboardZoom" : {"clazz" : KeyboardZoom,
          "options": {"zoomDuration" : null, "zoomDelta": null},
          "defaults": true, "enabled": false, "links" : []},
     "shiftDragZoom" :
-        {"clazz" : ol.interaction.DragZoom,
+        {"clazz" : DragZoom,
          "options": {"zoomDuration" : null},
          "defaults": true, "enabled": false, "links" : []},
     // NB: The delta option is strangely ignored for some reason
     // So we manually re-create this class below...
     "doubleClickZoom" :
-        {"clazz" : ol.interaction.DoubleClickZoom,
+        {"clazz" : DoubleClickZoom,
          "options": {duration : 1000, delta: 10},
          "defaults": true, "enabled": true, "links" : []},
     "pinchRotate" :
-        {"clazz" : ol.interaction.PinchRotate,
+        {"clazz" : PinchRotate,
          "options": {}, "defaults": true, "enabled": false,
          "links" : ["rotate"]},
     "shiftRotate" :
-        {"clazz" : ome.ol3.interaction.Rotate,
+        {"clazz" : _Rotate,
          "options": {},
          "defaults": true, "enabled": true,
          "links" : ["rotate"]},
     "boxSelect" :
-        {"clazz" : ome.ol3.interaction.BoxSelect,
+        {"clazz" : _BoxSelect,
          "options": {}, "defaults": false, "enabled": false, "links" : []}
 };
 
@@ -388,13 +392,13 @@ ome.ol3.AVAILABLE_VIEWER_INTERACTIONS = {
  * @function
  * @returns {Object} the default controls
  */
-ome.ol3.defaultControls = function() {
-    var ret = {};
-    for (var K in ome.ol3.AVAILABLE_VIEWER_CONTROLS) {
-        var V = ome.ol3.AVAILABLE_VIEWER_CONTROLS[K];
+export function defaultControls() {
+    let ret = {};
+    for (let K in AVAILABLE_VIEWER_CONTROLS) {
+        let V = AVAILABLE_VIEWER_CONTROLS[K];
         if (V['defaults'] && V['enabled']) {
             try {
-                var Constructor = V['clazz'];
+                let Constructor = V['clazz'];
                 ret[K] = {
                     "type": 'control',
                     "ref": new Constructor(V['options']),
@@ -406,9 +410,9 @@ ome.ol3.defaultControls = function() {
                 console.error("Failed to construct control: " + bad);
             }
         }
-    };
+    }
     return ret;
-};
+}
 
 /**
  * Return an associative array of all interactions
@@ -418,25 +422,25 @@ ome.ol3.defaultControls = function() {
  * @function
  * @returns {Object} the default interactions
  */
-ome.ol3.defaultInteractions = function() {
-    var ret = {};
-    for (var K in ome.ol3.AVAILABLE_VIEWER_INTERACTIONS) {
-        var V = ome.ol3.AVAILABLE_VIEWER_INTERACTIONS[K];
+export function defaultInteractions() {
+    let ret = {};
+    for (let K in AVAILABLE_VIEWER_INTERACTIONS) {
+        let V = AVAILABLE_VIEWER_INTERACTIONS[K];
         if (V['defaults'] && V['enabled']) {
             try {
-                var Constructor = V['clazz'];
+                let Constructor = V['clazz'];
                 ret[K] = {
                     "type": 'interaction',
                     "ref": new Constructor(V['options']),
                     "defaults" : V["defaults"]
                 };
-                // For some reason, calling new ol.interaction.DoubleClickZoom({"delta": 10})
+                // For some reason, calling new interaction.DoubleClickZoom({"delta": 10})
                 // here, the 'delta' option is ignored. But if we create a defaults collection
                 // the same class is created and the {'delta': zoomDelta} is not ignored.
                 // We use altShiftDragRotate: false so that doubleClickZoom should be
-                // the first item in the ol.Collection.
+                // the first item in the Collection.
                 if (K === "doubleClickZoom") {
-                    let defaults = ol.interaction.defaults({
+                    let defaults = Interaction.defaults({
                         altShiftDragRotate: false,
                         zoomDelta: 10,
                     });
@@ -448,17 +452,6 @@ ome.ol3.defaultInteractions = function() {
                 console.error("Failed to construct interaction: " + bad);
             }
         }
-    };
+    }
     return ret;
-};
-
-
-goog.exportSymbol(
-    'ome.ol3.REGIONS_MODE',
-    ome.ol3.REGIONS_MODE,
-    OME);
-
-goog.exportSymbol(
-    'ome.ol3.UNTILED_RETRIEVAL_LIMIT',
-    ome.ol3.UNTILED_RETRIEVAL_LIMIT,
-    OME);
+}

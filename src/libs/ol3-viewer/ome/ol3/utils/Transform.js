@@ -17,11 +17,6 @@
 //
 
 /**
- * @namespace ome.ol3.utils.Transform
- */
-goog.provide('ome.ol3.utils.Transform');
-
-/**
  * Converts the AffineTransform Object into a flat transformation matrix
  *
  * @static
@@ -29,7 +24,7 @@ goog.provide('ome.ol3.utils.Transform');
  * @return {Array.<number>} a transformation matrix as an array of length 6
  *                          or null if an error occured
  */
-ome.ol3.utils.Transform.convertAffineTransformIntoMatrix = function(transform) {
+export function convertAffineTransformIntoMatrix(transform) {
     if (typeof transform !== 'object' ||
         transform === null || typeof transform['@type'] !== 'string' ||
         transform['@type'].indexOf("#AffineTransform") === -1) return null;
@@ -53,9 +48,9 @@ ome.ol3.utils.Transform.convertAffineTransformIntoMatrix = function(transform) {
  * @param {Array.<number>} transform the supposed transformation matrix
  * @return {Object|null} an AffineTransform object according to omero marshal
  */
-ome.ol3.utils.Transform.convertMatrixToAffineTransform = function(transform) {
+export function convertMatrixToAffineTransform(transform) {
     // check geometry for a flat transformation matrix of length 6
-    if (!ome.ol3.utils.Misc.isArray(transform) || transform.length !== 6)
+    if (!Array.isArray(transform) || transform.length !== 6)
         return null;
 
     return {
@@ -74,15 +69,15 @@ ome.ol3.utils.Transform.convertMatrixToAffineTransform = function(transform) {
  * @param {Array.<number>} coords a flat array of coordinates (n * (x|y) tuples)
  * @return {Array.<number>} an array of transformed coords
  */
-ome.ol3.utils.Transform.applyTransform = function(transform, coords) {
+export function applyTransform(transform, coords) {
     // preliminary checks
-    if (!ome.ol3.utils.Misc.isArray(transform) || transform.length !== 6 ||
-        !ome.ol3.utils.Misc.isArray(coords) || coords.length === 0 ||
+    if (!Array.isArray(transform) || transform.length !== 6 ||
+        !Array.isArray(coords) || coords.length === 0 ||
         coords.length % 2 !== 0) return coords;
 
-    var len = coords.length;
-    var transCoords = new Array(len);
-    for (var i=0;i<len;i+=2) {
+    let len = coords.length;
+    let transCoords = new Array(len);
+    for (let i=0;i<len;i+=2) {
         transCoords[i] = //x
             transform[0] * coords[i] +
                 transform[2] * (-coords[i+1]) + transform[4];
@@ -102,22 +97,22 @@ ome.ol3.utils.Transform.applyTransform = function(transform, coords) {
  * @param {Array.<number>} coords a flat array of coordinates (n * (x|y) tuples)
  * @return {Array.<number>} an array of transformed coords equal in dimensinonality to the input
  */
-ome.ol3.utils.Transform.applyInverseTransform = function(transform, coords) {
+export function applyInverseTransform(transform, coords) {
     // preliminary checks:
-    if (!ome.ol3.utils.Misc.isArray(transform) || transform.length !== 6 ||
-        !ome.ol3.utils.Misc.isArray(coords) || coords.length === 0 ||
+    if (!Array.isArray(transform) || transform.length !== 6 ||
+        !Array.isArray(coords) || coords.length === 0 ||
         coords.length % 2 !== 0) return coords;
 
     // find matrix inverse hecking for determinant being 0 (trace)
-    var det = transform[0] * transform[3] - transform[1] * transform[2];
+    let det = transform[0] * transform[3] - transform[1] * transform[2];
     if (det === 0) return coords;
-    var inverse = new Array(transform.length);
-    var a = transform[0];
-    var b = transform[1];
-    var c = transform[2];
-    var d = transform[3];
-    var e = transform[4];
-    var f = transform[5];
+    let inverse = new Array(transform.length);
+    let a = transform[0];
+    let b = transform[1];
+    let c = transform[2];
+    let d = transform[3];
+    let e = transform[4];
+    let f = transform[5];
     inverse[0] = d / det;
     inverse[1] = -b / det;
     inverse[2] = -c / det;
@@ -126,9 +121,9 @@ ome.ol3.utils.Transform.applyInverseTransform = function(transform, coords) {
     inverse[5] = -(a * f - b * e) / det;
 
     // multiply coordinates with inverted matrix
-    var len = coords.length;
-    var transCoords = new Array(len);
-    for (var i=0;i<len;i+=2) {
+    let len = coords.length;
+    let transCoords = new Array(len);
+    for (let i=0;i<len;i+=2) {
         transCoords[i] = //x
             inverse[0] * coords[i] + inverse[2] * (-coords[i+1]) + inverse[4];
         transCoords[i+1] = //y
@@ -146,20 +141,20 @@ ome.ol3.utils.Transform.applyInverseTransform = function(transform, coords) {
  * @return {Object|null} an object properties for scale_x, scale_y,
  *                       rot_deg and rot_rad or null (if invalid matrix)
  */
-ome.ol3.utils.Transform.getRotationAndScaling = function(transform) {
+export function getRotationAndScaling(transform) {
     // preliminary checks:
-    if (!ome.ol3.utils.Misc.isArray(transform) ||
+    if (!Array.isArray(transform) ||
         transform.length !== 6) return null;
 
     // extract scale factors for x/y
-    var scale_x =
+    let scale_x =
         Math.sqrt(
             transform[0] * transform[0] + transform[1] * transform[1]);
-    var scale_y =
+    let scale_y =
         Math.sqrt(
             transform[2] * transform[2] + transform[3] * transform[3]);
     // recover angle in radians
-    var rot_rad = Math.atan2(transform[2],transform[3]);
+    let rot_rad = Math.atan2(transform[2],transform[3]);
     // see if scales are negative
     if ((rot_rad >= 0 && rot_rad <= Math.PI && transform[0] < 0) ||
         (rot_rad > Math.PI && rot_rad < Math.PI*2) && transform[0] > 0)

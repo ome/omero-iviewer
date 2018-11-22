@@ -15,9 +15,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-goog.provide('ome.ol3.geom.Point');
+import SimpleGeometry from "ol/geom/simplegeometry";
+import Circle from "ol/geom/circle";
+import * as MiscUtils from '../utils/Misc';
+import * as TransformUtils from "../utils/Transform";
 
-goog.require('ol.geom.Circle');
 
 /**
  * @classdesc
@@ -29,86 +31,92 @@ goog.require('ol.geom.Circle');
  * @param {Array.<number>} coords the point coordinates
  * @param {Object=} transform an AffineTransform object according to omero marshal
  */
-ome.ol3.geom.Point = function(coords, transform) {
-    // preliminary checks: are all mandatory paramters numeric
-    if (!ome.ol3.utils.Misc.isArray(coords) || coords.length !== 2)
-        console.error("Point needs an array of coordinates (length: 2)!");
+export default class Point extends Circle {
 
-    /**
-     * the size of the point (radius of circle that is)
-     * @type {Array.<number>}
-     * @private
-     */
-    this.radius_ = 5;
+    static DEFAULT_RADIUS = 5;
 
-    /**
-     * the initial coordinates as a flat array
-     * @type {Array.<number>}
-     * @private
-     */
-    this.initial_coords_ = null;
 
-    /**
-     * the transformation matrix of length 6
-     * @type {Array.<number>|null}
-     * @private
-     */
-    this.transform_ =
-        ome.ol3.utils.Transform.convertAffineTransformIntoMatrix(transform);
+    constructor(coords, transform) {
+        // preliminary checks: are all mandatory paramters numeric
+        if (!MiscUtils.isArray(coords) || coords.length !== 2)
+            console.error("Point needs an array of coordinates (length: 2)!");
 
-    // call super, handing in our coordinates and radius
-    goog.base(this, coords, this.radius_);
-    this.initial_coords_ = this.getFlatCoordinates();
+        super(coords, Point.DEFAULT_RADIUS);
 
-    // apply potential transform
-    this.flatCoordinates =
-        ome.ol3.utils.Transform.applyTransform(
+        /**
+         * the size of the point (radius of circle that is)
+         * @type {Array.<number>}
+         * @private
+         */
+        this.radius_ = Point.DEFAULT_RADIUS;
+
+        /**
+         * the initial coordinates as a flat array
+         * @type {Array.<number>}
+         * @private
+         */
+        this.initial_coords_ = null;
+
+        /**
+         * the transformation matrix of length 6
+         * @type {Array.<number>|null}
+         * @private
+         */
+        this.transform_ = TransformUtils.convertAffineTransformIntoMatrix(transform);
+
+        // call super, handing in our coordinates and radius
+
+        this.initial_coords_ = this.getFlatCoordinates();
+
+        // apply potential transform
+        this.flatCoordinates = TransformUtils.applyTransform(
             this.transform_, this.initial_coords_);
+    }
+
+    /**
+     * Returns the coordinates as a flat array (excl. any potential transform)
+     * @return {Array.<number>} the coordinates as a flat array
+     */
+    getPointCoordinates() {
+        let ret =
+            this.transform_ ? this.initial_coords_ : this.getFlatCoordinates();
+        return ret.slice(0, 2);
+    }
+
+    /**
+     * Gets the transformation associated with the point
+     * @return {Object|null} the AffineTransform object (omero marshal) or null
+     */
+    getTransform() {
+        return TransformUtils.convertMatrixToAffineTransform(this.transform_);
+    }
+
+    /**
+     * First translate then store the newly translated coords
+     *
+     * @private
+     */
+    translate(deltaX, deltaY) {
+        // delegate
+        if (this.transform_) {
+            this.transform_[4] += deltaX;
+            this.transform_[5] -= deltaY;
+            this.flatCoordinates =
+                ome.ol3.utils.Transform.applyTransform(
+                    this.transform_, this.initial_coords_);
+            this.changed();
+        } else {
+            SimpleGeometry.prototype.translate.call(this, deltaX, deltaY);
+        }
+    }
+
+    /**
+     * Make a complete copy of the geometry.
+     * @return {Point} Clone.
+     */
+    clone() {
+        return new Point(this.getPointCoordinates(), this.getTransform());
+    }
 }
-goog.inherits(ome.ol3.geom.Point, ol.geom.Circle);
 
 
-/**
- * Returns the coordinates as a flat array (excl. any potential transform)
- * @return {Array.<number>} the coordinates as a flat array
- */
-ome.ol3.geom.Point.prototype.getPointCoordinates = function() {
-    var ret =
-        this.transform_ ? this.initial_coords_ : this.getFlatCoordinates();
-    return ret.slice(0, 2);
-}
-
-/**
- * Gets the transformation associated with the point
- * @return {Object|null} the AffineTransform object (omero marshal) or null
- */
-ome.ol3.geom.Point.prototype.getTransform = function() {
-    return ome.ol3.utils.Transform.convertMatrixToAffineTransform(
-        this.transform_);
-}
-
-/**
- * First translate then store the newly translated coords
- *
- * @private
- */
-ome.ol3.geom.Point.prototype.translate = function(deltaX, deltaY) {
-    // delegate
-    if (this.transform_) {
-        this.transform_[4] += deltaX;
-        this.transform_[5] -= deltaY;
-        this.flatCoordinates =
-            ome.ol3.utils.Transform.applyTransform(
-                this.transform_, this.initial_coords_);
-        this.changed();
-    } else ol.geom.SimpleGeometry.prototype.translate.call(this, deltaX, deltaY);
-};
-
-/**
- * Make a complete copy of the geometry.
- * @return {ome.ol3.geom.Point} Clone.
- */
-ome.ol3.geom.Point.prototype.clone = function() {
-    return new ome.ol3.geom.Point(
-        this.getPointCoordinates(), this.getTransform());
-};

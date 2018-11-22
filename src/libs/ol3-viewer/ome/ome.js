@@ -15,9 +15,38 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-if (typeof(ome) !== 'object') {
-    /**
-     * @namespace ome
-     */
-    goog.provide('ome');
-}
+export * from './ol3/controls/controls';
+export * from './ol3/geom/geom';
+export * from './ol3/interaction/interaction';
+export * from './ol3/source/source';
+export * from './ol3/tiles/tiles';
+export * from './ol3/utils/utils';
+export * from './ol3/Globals';
+export * from './ol3/Viewer';
+
+// export {default as BirdsEye} from './ol3/controls/BirdsEye';
+// export {default as IntensityDisplay} from './ol3/controls/IntensityDisplay';
+// export {default as ScaleBar} from './ol3/controls/ScaleBar';
+// export {default as Zoom} from './ol3/controls/Zoom';
+//
+// export {default as Ellipse} from './ol3/geom/Ellipse';
+// export {default as Rectangle} from './ol3/geom/Rectangle';
+// export {default as Label} from './ol3/geom/Label';
+// export {default as Line} from './ol3/geom/Line';
+// export {default as Mask} from './ol3/geom/Mask';
+// export {default as Point} from './ol3/geom/Point';
+// export {default as Polygon} from './ol3/geom/Polygon';
+//
+// export {default as BoxSelect} from './ol3/interaction/BoxSelect';
+// export {default as Draw} from './ol3/interaction/Draw';
+// export {default as Modify} from './ol3/interaction/Modify';
+// export {default as Rotate} from './ol3/interaction/Rotate';
+// export {default as Select} from './ol3/interaction/Select';
+// export {default as Translate} from './ol3/interaction/Translate';
+//
+// export {default as Image} from './ol3/source/Image';
+// export {default as Regions} from './ol3/source/Regions';
+//
+// export {default as ImageTile} from './ol3/tiles/ImageTile';
+//
+// export {default as Viewer} from './ol3/Viewer';

@@ -15,9 +15,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-goog.provide('ome.ol3.controls.ScaleBar');
-
-goog.require('ol.control.ScaleLine');
+import ScaleLine from "ol/control/scaleline";
+import PluggableMap from "ol/pluggablemap";
+import Events from "ol/events";
 
 /**
  * @classdesc
@@ -27,103 +27,101 @@ goog.require('ol.control.ScaleLine');
  * @extends {ol.control.ScaleLine}
  * @param {Object} opt_options optional options
  */
-ome.ol3.controls.ScaleBar = function(opt_options) {
-    if (typeof(opt_options) !== 'object') opt_options = {};
+export default class ScaleBar extends ScaleLine {
+    constructor(opt_options) {
+        if (typeof(opt_options) !== 'object') opt_options = {};
+        super(opt_options);
 
-    /**
-     * default scale bar width in pixels
-     * @type {number}
-     * @private
-     */
-    this.bar_width_ = 100;
+        /**
+         * default scale bar width in pixels
+         * @type {number}
+         * @private
+         */
+        this.bar_width_ = 100;
 
-    /**
-     * the scalebar 'drag' listener
-     * @type {number}
-     * @private
-     */
-    this.drag_listener_ = null;
+        /**
+         * the scalebar 'drag' listener
+         * @type {number}
+         * @private
+         */
+        this.drag_listener_ = null;
 
-    goog.base(this, opt_options);
+        // give element a tooltip
+        this.element_.title = "Click and drag to move scalebar";
+        // append ol-control
+        this.element_.className += " ol-control";
 
-    // give element a tooltip
-    this.element_.title = "Click and drag to move scalebar";
-    // append ol-control
-    this.element_.className += " ol-control";
-
-    // register 'drag' listener
-    ol.events.listen(
-        this.element_, "mousedown",
-        function(start) {
-            if (!(this.map_ instanceof ol.PluggableMap)) return;
-            if (this.drag_listener_ !== null) {
-                ol.events.unlistenByKey(this.drag_listener_);
-                this.drag_listener_ = null;
-            }
-            var offsetX = -start.offsetX;
-            var offsetY = -start.offsetY;
-            this.drag_listener_ =
-                ol.events.listen(this.map_, "pointermove",
-                    function(move) {
-                        var e = move.originalEvent;
-                        if (!((typeof e.buttons === 'undefined' &&
-                            e.which === 1) || e.buttons === 1)) {
-                                ol.events.unlistenByKey(this.drag_listener_);
+        // register 'drag' listener
+        Events.listen(
+            this.element_, "mousedown",
+            (start) => {
+                if (!(this.map_ instanceof PluggableMap)) return;
+                if (this.drag_listener_ !== null) {
+                    Events.unlistenByKey(this.drag_listener_);
+                    this.drag_listener_ = null;
+                }
+                let offsetX = -start.offsetX;
+                let offsetY = -start.offsetY;
+                this.drag_listener_ = Events.listen(this.map_, "pointermove",
+                        (move) => {
+                            let e = move.originalEvent;
+                            if (!((typeof e.buttons === 'undefined' &&
+                                e.which === 1) || e.buttons === 1)) {
+                                Events.unlistenByKey(this.drag_listener_);
                                 this.drag_listener_ = null;
                                 return;
                             }
-                        this.element_.style.bottom = "auto";
-                        this.element_.style.left =
-                            (move.pixel[0] + offsetX) + "px";
-                        this.element_.style.top =
-                            (move.pixel[1] + offsetY) + "px";
-                    }, this);
-     }, this);
-}
-goog.inherits(ome.ol3.controls.ScaleBar, ol.control.ScaleLine);
-
-/**
- * Overridden to deal with mere pixel to unit issues instead of geographic
- * projections
- * @private
- */
-ome.ol3.controls.ScaleBar.prototype.updateElement_ = function() {
-  var viewState = this.viewState_;
-
-  if (!viewState) {
-    if (this.renderedVisible_) {
-      this.element_.style.display = 'none';
-      this.renderedVisible_ = false;
+                            this.element_.style.bottom = "auto";
+                            this.element_.style.left =
+                                (move.pixel[0] + offsetX) + "px";
+                            this.element_.style.top =
+                                (move.pixel[1] + offsetY) + "px";
+                        }, this);
+            }, this);
     }
-    return;
-  }
+    /**
+     * Overridden to deal with mere pixel to unit issues instead of geographic
+     * projections
+     * @private
+     */
+    updateElement_() {
+        let viewState = this.viewState_;
 
-  var micronsPerPixel = viewState.projection.getMetersPerUnit();
-  var resolution = viewState.resolution;
-  var scaleBarLengthInUnits = micronsPerPixel * this.bar_width_ * resolution;
-  var symbol = '\u00B5m';
-  for (var u=0;u<ome.ol3.UNITS_LENGTH.length;u++) {
-      var unit = ome.ol3.UNITS_LENGTH[u];
-      if (scaleBarLengthInUnits < unit.threshold) {
-          scaleBarLengthInUnits *= unit.multiplier;
-          symbol = unit.symbol;
-          break;
-      }
-  }
+        if (!viewState) {
+            if (this.renderedVisible_) {
+                this.element_.style.display = 'none';
+                this.renderedVisible_ = false;
+            }
+            return;
+        }
 
-  var html = scaleBarLengthInUnits.toFixed(2) + ' ' + symbol;
-  if (this.renderedHTML_ !== html) {
-    this.innerElement_.innerHTML = html;
-    this.renderedHTML_ = html;
-  }
+        let micronsPerPixel = viewState.projection.getMetersPerUnit();
+        let resolution = viewState.resolution;
+        let scaleBarLengthInUnits = micronsPerPixel * this.bar_width_ * resolution;
+        let symbol = '\u00B5m';
+        for (let u=0;u<ome.ol3.UNITS_LENGTH.length;u++) {
+            let unit = ome.ol3.UNITS_LENGTH[u];
+            if (scaleBarLengthInUnits < unit.threshold) {
+                scaleBarLengthInUnits *= unit.multiplier;
+                symbol = unit.symbol;
+                break;
+            }
+        }
 
-  if (this.renderedWidth_ != this.bar_width_) {
-    this.innerElement_.style.width = this.bar_width_ + 'px';
-    this.renderedWidth_ = this.bar_width_;
-  }
+        let html = scaleBarLengthInUnits.toFixed(2) + ' ' + symbol;
+        if (this.renderedHTML_ !== html) {
+            this.innerElement_.innerHTML = html;
+            this.renderedHTML_ = html;
+        }
 
-  if (!this.renderedVisible_) {
-    this.element_.style.display = '';
-    this.renderedVisible_ = true;
-  }
-};
+        if (this.renderedWidth_ !== this.bar_width_) {
+            this.innerElement_.style.width = this.bar_width_ + 'px';
+            this.renderedWidth_ = this.bar_width_;
+        }
+
+        if (!this.renderedVisible_) {
+            this.element_.style.display = '';
+            this.renderedVisible_ = true;
+        }
+    };
+}

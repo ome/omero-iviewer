@@ -17,11 +17,6 @@
 //
 
 /**
- * @namespace ome.ol3.utils.Net
- */
-goog.provide('ome.ol3.utils.Net');
-
-/**
  * Santitizes the uri and performs some basic validity checks. Used internally.
  * <p>
  * We rid the uri of all whitespace, all leading '/', breaking it apart into
@@ -38,19 +33,19 @@ goog.provide('ome.ol3.utils.Net');
  * @param {string} uri the uri given
  * @return {Object|null} a uri object or null (if something goes badly wrong)
  */
-ome.ol3.utils.Net.checkAndSanitizeUri = function(uri) {
+export function checkAndSanitizeUri(uri) {
     if (typeof(uri) !== 'string') return null;
 
     try {
-        var ret = { // prepare return object
+        let ret = { // prepare return object
             "path" : "/", "query" : "", "full" : "/", "relative" : true
         };
         uri = uri.replace(/\s/g, ""); // away with all white space
         if (uri.length === 0) return ret; // that's ok (strictly speaking)
 
         // get rid of any leading '/'
-        var len = uri.length;
-        for (var p=0;p<len;p++)
+        let len = uri.length;
+        for (let p=0;p<len;p++)
             if (uri.charAt(p) !== '/') break; // we stop, if it is not a '/'
             else {
                 ret['relative'] = false;
@@ -58,7 +53,7 @@ ome.ol3.utils.Net.checkAndSanitizeUri = function(uri) {
             }
 
         // do we have a query string ?
-        var position = uri.indexOf("?");
+        let position = uri.indexOf("?");
         if (position !== -1) {
             // cut it out and paste it into the return object without ?
             ret['query'] = uri.substring(position+1);
@@ -67,9 +62,9 @@ ome.ol3.utils.Net.checkAndSanitizeUri = function(uri) {
             uri = uri.substring(0,position);
         }
         // get rid of any trailing '/' for the path
-        var len = uri.length;
+        len = uri.length;
         if (len > 0) {
-            for (var p=len-1;p>=0;p--)
+            for (let p=len-1;p>=0;p--)
                 // we stop, if the last one is not a '/'
                 if (uri.charAt(p) !== '/') break;
                 else uri = uri.substring(0,p);
@@ -105,22 +100,22 @@ ome.ol3.utils.Net.checkAndSanitizeUri = function(uri) {
  * @param {string} addressOrIp a server address/ip
  * @return {Object|null} a server address or ip or null (if something goes badly wrong)
  */
-ome.ol3.utils.Net.checkAndSanitizeServerAddress = function(addressOrIp) {
+export function checkAndSanitizeServerAddress(addressOrIp) {
     if (typeof(addressOrIp) !== 'string') return null;
 
     try {
-        var ret = { // prepare return object
+        let ret = { // prepare return object
             "protocol" : "", "server" : "", "full" : ""
         };
         addressOrIp = addressOrIp.replace(/\s/g, "");
         if (addressOrIp.length === 0) return ret; // that's ok, relative info is used
 
         // do we have protocol info in there
-        var position = addressOrIp.indexOf("://");
+        let position = addressOrIp.indexOf("://");
         if (position === -1) ret['protocol'] = "http"; // we default
         else {
             // we do have a protocol, parse it. we accept only http(s) and file
-            var prot = addressOrIp.substring(0, position).toLowerCase();
+            let prot = addressOrIp.substring(0, position).toLowerCase();
             if (prot !== 'http' && prot !== 'https' && prot !== 'file') return null;
             ret["protocol"] = prot;
 
@@ -128,10 +123,10 @@ ome.ol3.utils.Net.checkAndSanitizeServerAddress = function(addressOrIp) {
             addressOrIp = addressOrIp.substring(position + '://'.length);
         }
         // get rid of any trailing '/'
-        var len = addressOrIp.length;
+        let len = addressOrIp.length;
         if (len > 0) {
             // the first one could be a '/', e.g. file protocol
-            for (var p=len-1;p>0;p--)
+            for (let p=len-1;p>0;p--)
                 // we stop, if the last one is not a '/'
                 if (addressOrIp.charAt(p) !== '/') break;
                 else addressOrIp = addressOrIp.substring(0,p);
@@ -162,7 +157,7 @@ ome.ol3.utils.Net.checkAndSanitizeServerAddress = function(addressOrIp) {
  * @param {Object} server the server info object
  * @return {boolean} true if we are same origin, false otherwise
  */
-ome.ol3.utils.Net.isSameOrigin = function(server) {
+export function isSameOrigin(server) {
     if (typeof(server) !== 'object' ||
         typeof(server['protocol']) !== "string" ||
         typeof(server['server']) !== "string" ||
@@ -171,7 +166,7 @@ ome.ol3.utils.Net.isSameOrigin = function(server) {
     if (server["full"] === "") // relative addresses will always be same origin
         return true;
 
-    var browserServerInformation = "";
+    let browserServerInformation = "";
     if (window.location.protocol === 'file:')
         browserServerInformation = window.location.href;
     else
@@ -180,7 +175,7 @@ ome.ol3.utils.Net.isSameOrigin = function(server) {
 
     // just to be absolutely paranoid, lower case everything before comparison
     browserServerInformation = browserServerInformation.toLowerCase();
-    var ourServer = server['full'].toLowerCase();
+    let ourServer = server['full'].toLowerCase();
     if (browserServerInformation === ourServer) return true; // we are exactly the same
 
     return false;
@@ -218,46 +213,46 @@ ome.ol3.utils.Net.isSameOrigin = function(server) {
  * @param {Object} parameters the request settings
  * @param {function=} context an optional context for the handlers
  */
-ome.ol3.utils.Net.sendRequest = function(parameters, context) {
-    var params = parameters || {};
+export function sendRequest(parameters, context) {
+    let params = parameters || {};
     if (typeof params !== 'object' || params === null)
         console.error("sendRequest did not receive a params object");
 
     // the mandatory parameters
     // the server can be accepted as either string or ready server object
-    var server = params['server'] || "";
+    let server = params['server'] || "";
     if (typeof(server) === 'string')
-        server = ome.ol3.utils.Net.checkAndSanitizeServerAddress(server);
+        server = checkAndSanitizeServerAddress(server);
     if (typeof server !== 'object' || server === null)
         console.error("sendRequest server info is invalid");
 
-    var uri = params.uri || "";
+    let uri = params.uri || "";
     if (typeof uri !== 'string')
         console.error("sendRequest uri parameter has to be a string");
 
-    uri = ome.ol3.utils.Net.checkAndSanitizeUri(uri);
+    uri = checkAndSanitizeUri(uri);
     if (typeof uri !== 'object' || uri === null)
         console.error("sendRequest uri parameter is invalid");
 
     // optional parameters
-    var method = (typeof(params['method']) === 'string') ?
+    let method = (typeof(params['method']) === 'string') ?
         params['method'].toUpperCase() : "GET";
-    var jsonp = (typeof(params['jsonp']) === 'boolean') ?
+    let jsonp = (typeof(params['jsonp']) === 'boolean') ?
         params['jsonp'] : false;
-    var headers = (typeof(params['headers']) === 'object') ?
+    let headers = (typeof(params['headers']) === 'object') ?
         params['headers'] : {};
-    var content = (typeof(params['content']) === 'string') ?
+    let content = (typeof(params['content']) === 'string') ?
         params['content'] : null;
-    var timeout =  (typeof(params['timeout']) === 'number') ?
+    let timeout =  (typeof(params['timeout']) === 'number') ?
         params['timeout'] : 60 * 1000;
-    var success =  (typeof(params['success']) === 'function') ?
+    let success =  (typeof(params['success']) === 'function') ?
         params['success'] : function(data) {};
-    var error =  (typeof(params['error']) === 'function') ?
+    let error =  (typeof(params['error']) === 'function') ?
         params['error'] : function(error) {console.error(error);};
 
     // let's check if we are same origin or not.
-    if (ome.ol3.utils.Net.isSameOrigin(server)) {
-        ome.ol3.utils.Net.sendSameOrigin(
+    if (isSameOrigin(server)) {
+        sendSameOrigin(
             server, uri, success, error, method, headers,
             timeout, content, context);
         return;
@@ -266,9 +261,9 @@ ome.ol3.utils.Net.sendRequest = function(parameters, context) {
     // seems we are cross-domain ... we have two choices => CORS or jsonp
     // we force jsonp (well supported)
     jsonp = true; // This line is intentional.
-    ome.ol3.utils.Net.sendJsonp(server, uri, success, error, context);
+    sendJsonp(server, uri, success, error, context);
     return;
-};
+}
 
 /**
  * Checks the request parameters and fails on asserts if they are invalid
@@ -287,7 +282,7 @@ ome.ol3.utils.Net.sendRequest = function(parameters, context) {
  * @param {number} timeout the timeout in millis
  * @param {string=} content optional POST content
  */
-ome.ol3.utils.Net.checkRequestParameters = function(
+export function checkRequestParameters(
     is_jsonp_request, server, uri,  success, error,
     method, headers, timeout, content) {
 
@@ -336,35 +331,35 @@ ome.ol3.utils.Net.checkRequestParameters = function(
  * @param {string} content optional POST content
  * @param {function=} context an optional context for the handlers
  */
-ome.ol3.utils.Net.sendSameOrigin = function(
+export function sendSameOrigin(
     server, uri, success, error, method, headers, timeout, content, context) {
 
-    ome.ol3.utils.Net.checkRequestParameters( // preliminary asserts
+    checkRequestParameters( // preliminary asserts
         false, server, uri, success, error, method, headers, timeout, content);
 
     // create xhr object
-    var xhr = typeof(window.XMLHttpRequest) !== 'undefined' ?
+    let xhr = typeof(window.XMLHttpRequest) !== 'undefined' ?
         new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
 
     // assemble the url from server and uri info
-    var url = server['full'] === "" &&  uri['relative'] ? uri['full'] :
+    let url = server['full'] === "" &&  uri['relative'] ? uri['full'] :
         server['full'] + "/" + uri['full'];
-    var timestamp = '_=' + new Date().getTime();
+    let timestamp = '_=' + new Date().getTime();
     if (uri['query'] === "") url += "/?" + timestamp; // to avoid redirects
     else url += "&" + timestamp;
     xhr.open(method, url, true);
 
-    for (var h in headers) // add headers (if there)
+    for (let h in headers) // add headers (if there)
         xhr.setRequestHeader(h, headers[h]);
 
     xhr.timeout = timeout; // timeout
     xhr.ontimeout = function() { console.error("xhr request timed out!");};
 
     xhr.onerror = function(error) { // error
-        var errorText =
+        let errorText =
             typeof(error.target) != 'undefined' ?
                 error.target.responseText : null;
-        var errorMessage =
+        let errorMessage =
             (errorText === null) ?
                 "xhr: an error occured" : ("xhr error: " + errorText);
         console.error(errorMessage);
@@ -372,19 +367,19 @@ ome.ol3.utils.Net.sendSameOrigin = function(
 
     xhr.onreadystatechange = function(event) { // 'success'
         if (xhr.readyState == 4 && xhr.status >= 200 && xhr.status < 300) {
-            var content = xhr['responseText'];
+            let content = xhr['responseText'];
             if (typeof(content) === 'undefined') content = null;
             if (content !== null) {
                 // check the case of a login redirect
-                var pattern = 'webclient/login/?url=';
-                var hasResponseUrl = typeof(xhr['responseURL']) === 'string';
-                var index = hasResponseUrl ?
+                let pattern = 'webclient/login/?url=';
+                let hasResponseUrl = typeof(xhr['responseURL']) === 'string';
+                let index = hasResponseUrl ?
                     xhr['responseURL'].lastIndexOf(pattern) :
                     xhr['responseText'].lastIndexOf(pattern);
 
                 if (index !== -1) {
-                    var part1ofRedirect = pattern;
-                    var part2ofRedirect = window['location']['href'];
+                    let part1ofRedirect = pattern;
+                    let part2ofRedirect = window['location']['href'];
                     if (hasResponseUrl)
                         part1ofRedirect =
                             xhr['responseURL'].substring(0, index + pattern.length);
@@ -420,19 +415,19 @@ ome.ol3.utils.Net.sendSameOrigin = function(
  * @function
  * @param {Object} server the server info as an object
  */
-ome.ol3.utils.Net.makeCrossDomainLoginRedirect = function(server) {
+export function makeCrossDomainLoginRedirect(server) {
     if (typeof(server) !== 'object' || typeof(server['full']) !== 'string')
         return;
 
     // that's where we'd like to come back to after redirect
-    var oldHref = window.location.href;
+    let oldHref = window.location.href;
     // check if out old href had a query string in it, then we need to append our
     // own flag to be returned to us
-    var appendFlagWithAmpersand = false;
+    let appendFlagWithAmpersand = false;
     if (oldHref.indexOf("?") !== -1)
         appendFlagWithAmpersand = true;
 
-    var newLocation =
+    let newLocation =
         server['full'] + "/webclient/login/?url=" + oldHref;
     // we append the flag to know that we have been there
     if (appendFlagWithAmpersand)
@@ -455,24 +450,24 @@ ome.ol3.utils.Net.makeCrossDomainLoginRedirect = function(server) {
  * @param {function} error the error handler
  * @param {function=} context an optional context for the handlers
  */
-ome.ol3.utils.Net.sendJsonp = function(server, uri, success, error, context) {
+export function sendJsonp(server, uri, success, error, context) {
     // preliminary asserts
-    ome.ol3.utils.Net.checkRequestParameters(true, server, uri, success, error);
+    checkRequestParameters(true, server, uri, success, error);
 
     // setup
-    var head = document.head;
-    var script = document.createElement("script");
-    var callback = 'jsonpCallback_' + new Date().getTime();
+    let head = document.head;
+    let script = document.createElement("script");
+    let callback = 'jsonpCallback_' + new Date().getTime();
 
     // tidy up
-    var cleanUp = function() {
+    let cleanUp = function() {
         delete window[callback];
         if (script) head.removeChild(script);
         script = null;
     };
 
-    var timeout = setTimeout(function() {
-        var err = "jsonp request ran into timeout";
+    let timeout = setTimeout(function() {
+        let err = "jsonp request ran into timeout";
         if (context) error.call(context, err);
         else error(err);
         cleanUp();
@@ -504,7 +499,7 @@ ome.ol3.utils.Net.sendJsonp = function(server, uri, success, error, context) {
 
     try {
         // assemble url
-        var url = server['full'] + '/' + uri['full'];
+        let url = server['full'] + '/' + uri['full'];
         if (uri['query'] == "") url += "/?";
         else url += "&";
         // 'fire' request

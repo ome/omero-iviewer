@@ -16,7 +16,9 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-/**
- * @namespace ome.ol3.interaction
- */
-goog.provide('ome.ol3.interaction');
+export * from './BoxSelect';
+export * from './Draw';
+export * from './Modify';
+export * from './Rotate';
+export * from './Select';
+export * from './Translate';

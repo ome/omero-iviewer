@@ -16,7 +16,10 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-/**
- * @namespace ome.ol3.geom
- */
-goog.provide('ome.ol3.geom');
+export * from './Ellipse';
+export * from './Rectangle';
+export * from './Label';
+export * from './Line';
+export * from './Mask';
+export * from './Point';
+export * from './Polygon';

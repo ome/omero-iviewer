@@ -16,7 +16,9 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-/**
- * @namespace ome.ol3.utils
- */
-goog.provide('ome.ol3.utils');
+export * from './Conversion';
+export * from './Misc';
+export * from './Net';
+export * from './Regions';
+export * from './Style';
+export * from './Transform';

@@ -15,11 +15,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-goog.provide('ome.ol3.tiles.ImageTile');
+import ol from "ol";
+import olImageTle from 'ol/imagetile';
+import TileState from "ol/tilestate";
+import Dom from "ol/dom";
 
-goog.require('ol.dom')
-goog.require('ol.ImageTile')
-goog.require('ol.Tile')
 
 /**
  * @classdesc
@@ -37,33 +37,31 @@ goog.require('ol.Tile')
  * @param {ol.TileLoadFunctionType} tileLoadFunction Tile load function.
  * @param {olx.TileOptions=} opt_options Tile options.
  */
-ome.ol3.tiles.ImageTile = function(
-    tileCoord, state, src, crossOrigin, tileLoadFunction, opt_options) {
-    goog.base(
-        this, tileCoord, state, src, crossOrigin, tileLoadFunction, opt_options);
+export default class ImageTile extends olImageTle {
+
+    constructor(tileCoord, state, src, crossOrigin, tileLoadFunction, opt_options) {
+        super(tileCoord, state, src, crossOrigin, tileLoadFunction, opt_options);
+
+        /**
+         * @type {object}
+         * @private
+         */
+        this.imageByContext_ = {};
+    };
 
     /**
-     * @type {object}
+     * A convenience method to draw the tile into the context to then be called
+     * within the scope of the post tile load hook for example...
+     *
+     * @function
      * @private
+     * @param {Object} tile the tile as an img object
+     * @param {Array.<number>} tileSize the tile size as an array [width, height]
+     * @param {boolean=} createContextOnlyForResize renders on canvas only if resize is needed
+     * @param {string=} key the uid (for createContextOnlyForResize is true)
+     * @return {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement} the image drawn on the context.
      */
-    this.imageByContext_ = {};
-};
-goog.inherits(ome.ol3.tiles.ImageTile, ol.ImageTile);
-
-/**
- * A convenience method to draw the tile into the context to then be called
- * within the scope of the post tile load hook for example...
- *
- * @function
- * @private
- * @param {Object} tile the tile as an img object
- * @param {Array.<number>} tileSize the tile size as an array [width, height]
- * @param {boolean=} createContextOnlyForResize renders on canvas only if resize is needed
- * @param {string=} key the uid (for createContextOnlyForResize is true)
- * @return {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement} the image drawn on the context.
- */
-ome.ol3.tiles.ImageTile.prototype.getRenderedTileAsContext =
-    function(tile, tileSize, createContextOnlyForResize, key) {
+    getRenderedTileAsContext(tile, tileSize, createContextOnlyForResize, key) {
         if ((typeof(tile) !== 'object') ||
             (typeof(tile['width']) !== 'number') ||
             (typeof(tile['height']) !== 'number')) return tile;
@@ -71,9 +69,9 @@ ome.ol3.tiles.ImageTile.prototype.getRenderedTileAsContext =
         if (typeof createContextOnlyForResize !== 'boolean')
             createContextOnlyForResize = false;
 
-        var w = tile.width;
-        var h = tile.height;
-        if (ome.ol3.utils.Misc.isArray(tileSize) && tileSize.length > 1) {
+        let w = tile.width;
+        let h = tile.height;
+        if (Array.isArray(tileSize) && tileSize.length > 1) {
             w = tileSize[0];
             h = tileSize[1];
         }
@@ -82,55 +80,57 @@ ome.ol3.tiles.ImageTile.prototype.getRenderedTileAsContext =
         if (createContextOnlyForResize && w === tile.width && h === tile.height)
             return tile;
 
-        var context = ol.dom.createCanvasContext2D(w,h);
-        context.drawImage(tile, 0,0);
+        let context = Dom.createCanvasContext2D(w, h);
+        context.drawImage(tile, 0, 0);
 
         // we'd like to store the resized tile so that we don't have to do it again
         if (createContextOnlyForResize && key)
             this.imageByContext_[key] = context.canvas;
 
         return context.canvas;
+    }
+
+    /**
+     * Get the HTML image element for this tile (may be a Canvas, Image, or Video).
+     * @function
+     * @param {Object=} opt_context Object.
+     * @return {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement} Image.
+     */
+    getImage(opt_context) {
+        // call super.getImage
+        let image = super.getImage(opt_context);
+        // we are not loaded yet => good byes
+        if (this.state !== TileState.LOADED) return image;
+
+        // do we have the image already (resized or post tile function applied)
+        let key = ol.getUid(image);
+        if (key in this.imageByContext_)
+            return this.imageByContext_[key];
+
+        // do we have a post tile function
+        let postTileFunction = this.source.getPostTileLoadFunction();
+        let tileSize = this.source.tileGrid.tileSize_;
+        if (typeof(postTileFunction) !== 'function') // no => return
+            return this.getRenderedTileAsContext(image, tileSize, true, key);
+
+        // post tile function
+        image = this.getRenderedTileAsContext(image);
+        try {
+            let context = postTileFunction.call(this, image);
+            if (context === null) context = image;
+
+            this.imageByContext_[key] = context;
+
+            return context;
+        } catch (planb) {
+            return image;
+        }
+    };
+
 }
 
-/**
- * Get the HTML image element for this tile (may be a Canvas, Image, or Video).
- * @function
- * @param {Object=} opt_context Object.
- * @return {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement} Image.
- */
-ome.ol3.tiles.ImageTile.prototype.getImage = function(opt_context) {
-    // call super.getImage
-    var image = goog.base(this, 'getImage', opt_context);
-    // we are not loaded yet => good byes
-    if (this.state !== ol.TileState.LOADED) return image;
 
-    // do we have the image already (resized or post tile function applied)
-    var key = ol.getUid(image);
-    if (key in this.imageByContext_)
-         return this.imageByContext_[key];
-
-    // do we have a post tile function
-    var postTileFunction = this.source.getPostTileLoadFunction();
-    var tileSize = this.source.tileGrid.tileSize_;
-    if (typeof(postTileFunction) !== 'function') // no => return
-        return this.getRenderedTileAsContext(image, tileSize, true, key);
-
-    // post tile function
-    image = this.getRenderedTileAsContext(image);
-    try {
-        var context =  postTileFunction.call(this, image);
-        if (context === null) context = image;
-
-        this.imageByContext_[key] = context;
-
-        return context;
-    } catch(planb) {
-        return image;
-    }
-};
-
-
-goog.exportProperty(
-    ome.ol3.tiles.ImageTile.prototype,
-    'getRenderedTileAsContext',
-    ome.ol3.tiles.ImageTile.prototype.getRenderedTileAsContext);
+// goog.exportProperty(
+//     ome.ol3.tiles.ImageTile.prototype,
+//     'getRenderedTileAsContext',
+//     getRenderedTileAsContext);

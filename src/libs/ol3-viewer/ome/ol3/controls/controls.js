@@ -16,7 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-/**
- * @namespace ome.ol3.controls
- */
-goog.provide('ome.ol3.controls');
+export * from './BirdsEye';
+export * from './IntensityDisplay';
+export * from './ScaleBar';
+export * from './Zoom';
