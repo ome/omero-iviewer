@@ -15,14 +15,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-export * from './ol3/controls/controls';
-export * from './ol3/geom/geom';
-export * from './ol3/interaction/interaction';
-export * from './ol3/source/source';
-export * from './ol3/tiles/tiles';
-export * from './ol3/utils/utils';
-export * from './ol3/Globals';
-export * from './ol3/Viewer';
+export * from './ome/ol3/controls/controls';
+export * from './ome/ol3/geom/geom';
+export * from './ome/ol3/interaction/interaction';
+export * from './ome/ol3/source/source';
+export * from './ome/ol3/tiles/tiles';
+export * from './ome/ol3/utils/utils';
+export * from './ome/ol3/Globals';
+export * from './ome/ol3/Viewer';
 
 // export {default as BirdsEye} from './ol3/controls/BirdsEye';
 // export {default as IntensityDisplay} from './ol3/controls/IntensityDisplay';

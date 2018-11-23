@@ -16,11 +16,12 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 // js
-import {inject,customElement, BindingEngine} from 'aurelia-framework';
+import {inject, customElement, BindingEngine} from 'aurelia-framework';
+
+import * as FileSaver from 'file-saver';
+import JSZip from 'jszip/dist/jszip';
+import * as TextEncoding from 'text-encoding';
 import Context from './context';
-import * as FileSaver from '../../node_modules/file-saver';
-import JSZip from '../../node_modules/jszip/dist/jszip';
-import * as TextEncoding from "../../node_modules/text-encoding";
 import Misc from './utils/misc';
 import Ui from './utils/ui';
 import {IMAGE_VIEWPORT_CAPTURE} from './events/events';

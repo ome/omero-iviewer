@@ -40,7 +40,7 @@ hr {
 }
 @font-face {
   font-family: 'Glyphicons Halflings';
-  src: url('fonts/glyphicons-halflings-regular.woff');
+  src: url('~bootstrap/dist/fonts/glyphicons-halflings-regular.woff');
 }
 /** BOOTSTRAP adjustments END **/
 
@@ -422,7 +422,7 @@ a.ui-button:active,
     cursor: pointer;
     position: absolute;
 }
-.dim-arrow-up {
+/*.dim-arrow-up {
     background-image: url('images/arrow-up.png');
     margin-bottom: 8px;
     margin-left: -3px;
@@ -456,7 +456,7 @@ a.ui-button:active,
 }
 .player-stop {
     background-image: url('images/play-stop.png');
-}
+}*/
 
 .sidebar {
     float:left;

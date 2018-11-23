@@ -17,12 +17,11 @@
 //
 
 // images
-require('../../node_modules/bootstrap/fonts/glyphicons-halflings-regular.woff');
-require('../../node_modules/jquery-ui/themes/base/images/ui-icons_777777_256x240.png');
-require('../../node_modules/jquery-ui/themes/base/images/ui-icons_555555_256x240.png');
-require('../../node_modules/jquery-ui/themes/base/images/ui-icons_ffffff_256x240.png');
-require('../../node_modules/jquery-ui/themes/base/images/ui-icons_444444_256x240.png');
-
+import 'bootstrap/fonts/glyphicons-halflings-regular.woff';
+import 'jquery-ui/themes/base/images/ui-icons_777777_256x240.png';
+import 'jquery-ui/themes/base/images/ui-icons_555555_256x240.png';
+import 'jquery-ui/themes/base/images/ui-icons_ffffff_256x240.png';
+import 'jquery-ui/themes/base/images/ui-icons_444444_256x240.png';
 
 // js
 import {inject} from 'aurelia-framework';
@@ -32,7 +31,7 @@ import OpenWith from './utils/openwith';
 import Ui from './utils/ui';
 import {PLUGIN_PREFIX, SYNC_LOCK, WEBGATEWAY} from './utils/constants';
 import {IMAGE_VIEWER_RESIZE, IMAGE_VIEWER_CONTROLS_VISIBILITY,
-        REGIONS_STORE_SHAPES, REGIONS_STORED_SHAPES} from './events/events';
+  REGIONS_STORE_SHAPES, REGIONS_STORED_SHAPES} from './events/events';
 
 /**
  * @classdesc

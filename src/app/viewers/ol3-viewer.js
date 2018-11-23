@@ -17,14 +17,14 @@
 //
 
 // dependencies
+import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import Context from '../context';
 import Misc from '../utils/misc';
 import {Converters} from '../utils/converters';
 import Ui from '../utils/ui';
-import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
-import {ol3} from '../../libs/ol3-viewer.js';
+import Viewer from '../../libs/ol3-viewer/ome/ol3/Viewer';
 import Ol3ViewerLinkedEvents from './ol3-viewer-linked-events';
-import * as FileSaver from '../../../node_modules/file-saver/FileSaver';
+import * as FileSaver from 'file-saver/FileSaver';
 import {draggable} from 'jquery-ui/ui/widgets/draggable';
 import {resizable} from 'jquery-ui/ui/widgets/resizable';
 import {
@@ -81,9 +81,9 @@ export default class Ol3Viewer extends EventSubscriber {
     image_config_selection_observer = null;
 
     /**
-     * the internal instance of the ol3.Viewer
+     * the internal instance of the ol3 Viewer
      * @memberof Ol3Viewer
-     * @type {ol3.Viewer}
+     * @type {Viewer}
      */
     viewer = null;
 
@@ -464,8 +464,7 @@ export default class Ol3Viewer extends EventSubscriber {
         ol3initParams[PLUGIN_PREFIX] = this.context.getPrefixedURI(IVIEWER);
 
         // create viewer instance
-        this.viewer =
-            new ol3.Viewer(
+        this.viewer = new Viewer(
                 this.image_config.image_info.image_id, {
                      eventbus : this.context.eventbus,
                      server : this.context.server,

@@ -17,8 +17,8 @@
 //
 
 // js
-import {inject,customElement, BindingEngine, TaskQueue} from 'aurelia-framework';
-import Context from '../app/context';
+import {inject, customElement, BindingEngine, TaskQueue} from 'aurelia-framework';
+import Context from './context';
 import Misc from './utils/misc';
 import UI from './utils/ui';
 import {

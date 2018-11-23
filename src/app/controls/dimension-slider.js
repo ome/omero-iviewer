@@ -16,15 +16,13 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-import Context from '../context';
-import {inject,customElement, bindable, BindingEngine} from 'aurelia-framework';
-import Misc from '../utils/misc';
-import {ol3} from '../../libs/ol3-viewer.js';
+import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {slider} from 'jquery-ui/ui/widgets/slider';
-import {PROJECTION} from '../utils/constants';
-import {
-    IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY, IMAGE_SETTINGS_CHANGE
-} from '../events/events';
+import {UNTILED_RETRIEVAL_LIMIT} from '../../libs/ol3-viewer/ome/ol3/Globals';
+import Context from '../context';
+import Misc from '../utils/misc';
+import { PROJECTION } from '../utils/constants';
+import { IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY, IMAGE_SETTINGS_CHANGE } from '../events/events';
 
 /**
  * Represents a dimension slider using jquery slider
@@ -487,6 +485,6 @@ export default class DimensionSlider {
      */
     getZProjectionDisabled(handle, forwards) {
         let dims = this.image_config.image_info.dimensions;
-        return (handle !== null && forwards || (dims.max_x * dims.max_y) > ol3.UNTILED_RETRIEVAL_LIMIT);
+        return (handle !== null && forwards || (dims.max_x * dims.max_y) > UNTILED_RETRIEVAL_LIMIT);
     }
 }

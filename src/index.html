@@ -19,7 +19,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-      <link rel="stylesheet" type="text/css" href="{% static 'omero_iviewer/css/all.min.css'|add:iviewer_url_suffix %}" />
+      <link rel="stylesheet" type="text/css" href="{% static 'omero_iviewer/app.css'|add:iviewer_url_suffix %}" />
 
       <script type="text/javascript">
         window.INITIAL_REQUEST_PARAMS = {};
@@ -62,20 +62,19 @@
             });
         };
       </script>
+      <script type="text/javascript" src="{% static 'omero_iviewer/app.js'|add:iviewer_url_suffix %}">
+      </script>
+      <script type="text/javascript" src="{% static 'omero_iviewer/vendor.js'|add:iviewer_url_suffix %}">
+      </script>
 
       <title>OMERO.iviewer</title>
   </head>
 
   <body class="container-fluid">
-      <script type="text/javascript"
-              src="{% static 'omero_iviewer/init.js'|add:iviewer_url_suffix %}">
-      </script>
-      <script type="text/javascript"
-              src="{% static 'omero_iviewer/main.js'|add:iviewer_url_suffix %}">
-      </script>
-      <script type="text/javascript"
-              src="{% static 'omero_iviewer/deps.js'|add:iviewer_url_suffix %}">
-      </script>
+  <div aurelia-app="main">Loading...</div>
+
   </body>
+
+
 
 </html>
