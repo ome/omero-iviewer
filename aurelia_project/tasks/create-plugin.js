@@ -2,7 +2,7 @@ import path from 'path';
 import gulp from 'gulp';
 import del from 'del';
 import rename from 'gulp-rename';
-import build, {config} from './build-plugin';
+import buildPlugin, {config} from './build-plugin';
 import project from '../aurelia.json';
 
 const templatePath = path.join(
@@ -15,7 +15,7 @@ const staticPath = path.join(
 );
 
 function copyStaticFiles() {
-  return gulp.src([config.output.path + '/**/*', '!/**/*.js', '!/**/*.html'])
+  return gulp.src([config.output.path + '/**/*', '!/**/*.html'])
     .pipe(gulp.dest(staticPath));
 }
 
@@ -46,11 +46,9 @@ function clearPlugin() {
 }
 
 const setupPlugin = gulp.series(
-  build,
+  buildPlugin,
   clearPlugin,
   copyStaticFiles,
-  copyAppFile,
-  copyVendorFile,
   copyOpenWith,
   copyIndexHtml
 );

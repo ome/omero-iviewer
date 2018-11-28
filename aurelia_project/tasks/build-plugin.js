@@ -19,18 +19,15 @@ const config = webpackConfig({
 });
 const compiler = webpack(config);
 
-function clearDist() {
-  return del([config.output.path]);
-}
-
 function buildWebpack(done) {
   if (CLIOptions.hasFlag('watch')) {
     compiler.watch({}, onBuild);
   } else {
     compiler.run(onBuild);
-    compiler.plugin('done', () => done());
+    compiler.hooks.done.tap('done', () => done());
   }
 }
+
 
 function onBuild(err, stats) {
   if (!CLIOptions.hasFlag('watch') && err) {
@@ -44,6 +41,10 @@ function onBuild(err, stats) {
       process.exit(1);
     }
   }
+}
+
+function clearDist() {
+  return del([config.output.path]);
 }
 
 // function runAntBuild() {

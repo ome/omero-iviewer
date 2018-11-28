@@ -62,19 +62,17 @@
             });
         };
       </script>
-      <script type="text/javascript" src="{% static 'omero_iviewer/app.js'|add:iviewer_url_suffix %}">
-      </script>
-      <script type="text/javascript" src="{% static 'omero_iviewer/vendor.js'|add:iviewer_url_suffix %}">
-      </script>
-
       <title>OMERO.iviewer</title>
   </head>
 
   <body class="container-fluid">
-  <div aurelia-app="main">Loading...</div>
-
+    <div aurelia-app="main">Loading...</div>
   </body>
 
-
+  <script type="text/javascript" src="{% static 'omero_iviewer/app.js'|add:iviewer_url_suffix %}"></script>
+  <script type="text/javascript" src="{% static 'omero_iviewer/vendor.aurelia.chunk.js'|add:iviewer_url_suffix %}"></script>
+  <script type="text/javascript" src="{% static 'omero_iviewer/vendor.aurelia-binding.chunk.js'|add:iviewer_url_suffix %}"></script>
+  <script type="text/javascript" src="{% static 'omero_iviewer/vendor.aurelia-templating.chunk.js'|add:iviewer_url_suffix %}"></script>
+  <script type="text/javascript" src="{% static 'omero_iviewer/vendor.bluebird.chunk.js'|add:iviewer_url_suffix %}"></script>
 
 </html>
