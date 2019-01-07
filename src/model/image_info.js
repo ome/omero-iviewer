@@ -312,7 +312,7 @@ export default class ImageInfo {
                 if (this.context.isRoisTabActive())
                     conf.regions_info.requestData();
             },
-            error : (error) => {
+            error : (error, textStatus) => {
                 this.ready = false;
                 this.error = true;
                 if (typeof error.responseText === 'string')
@@ -323,7 +323,8 @@ export default class ImageInfo {
                 // show message in case of error
                 let errMsg =
                     error.status === 404 ?
-                        "Image not found" : "Failed to get image data";
+                        "Image not found" :
+                        `Failed to get image data: '${textStatus}'`;
                 Ui.showModalMessage(errMsg, 'OK');
             }
         });
