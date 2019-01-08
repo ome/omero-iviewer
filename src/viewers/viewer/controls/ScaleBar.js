@@ -15,9 +15,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-goog.provide('ome.ol3.controls.ScaleBar');
 
-goog.require('ol.control.ScaleLine');
+import ScaleLine from 'ol/control/ScaleLine';
+import PluggableMap from 'ol/PluggableMap';
+import {inherits} from 'ol/util';
+import {listen, unlistenByKey} from 'ol/events';
+import {UNITS_LENGTH} from '../globals';
 
 /**
  * @classdesc
@@ -27,7 +30,7 @@ goog.require('ol.control.ScaleLine');
  * @extends {ol.control.ScaleLine}
  * @param {Object} opt_options optional options
  */
-ome.ol3.controls.ScaleBar = function(opt_options) {
+const ScaleBar = function(opt_options) {
     if (typeof(opt_options) !== 'object') opt_options = {};
 
     /**
@@ -52,23 +55,23 @@ ome.ol3.controls.ScaleBar = function(opt_options) {
     this.element_.className += " ol-control";
 
     // register 'drag' listener
-    ol.events.listen(
+    listen(
         this.element_, "mousedown",
         function(start) {
-            if (!(this.map_ instanceof ol.PluggableMap)) return;
+            if (!(this.map_ instanceof PluggableMap)) return;
             if (this.drag_listener_ !== null) {
-                ol.events.unlistenByKey(this.drag_listener_);
+                unlistenByKey(this.drag_listener_);
                 this.drag_listener_ = null;
             }
             var offsetX = -start.offsetX;
             var offsetY = -start.offsetY;
             this.drag_listener_ =
-                ol.events.listen(this.map_, "pointermove",
+                listen(this.map_, "pointermove",
                     function(move) {
                         var e = move.originalEvent;
                         if (!((typeof e.buttons === 'undefined' &&
                             e.which === 1) || e.buttons === 1)) {
-                                ol.events.unlistenByKey(this.drag_listener_);
+                                unlistenByKey(this.drag_listener_);
                                 this.drag_listener_ = null;
                                 return;
                             }
@@ -80,14 +83,14 @@ ome.ol3.controls.ScaleBar = function(opt_options) {
                     }, this);
      }, this);
 }
-goog.inherits(ome.ol3.controls.ScaleBar, ol.control.ScaleLine);
+inherits(ScaleBar, ScaleLine);
 
 /**
  * Overridden to deal with mere pixel to unit issues instead of geographic
  * projections
  * @private
  */
-ome.ol3.controls.ScaleBar.prototype.updateElement_ = function() {
+ScaleBar.prototype.updateElement_ = function() {
   var viewState = this.viewState_;
 
   if (!viewState) {
@@ -102,8 +105,8 @@ ome.ol3.controls.ScaleBar.prototype.updateElement_ = function() {
   var resolution = viewState.resolution;
   var scaleBarLengthInUnits = micronsPerPixel * this.bar_width_ * resolution;
   var symbol = '\u00B5m';
-  for (var u=0;u<ome.ol3.UNITS_LENGTH.length;u++) {
-      var unit = ome.ol3.UNITS_LENGTH[u];
+  for (var u=0;u<UNITS_LENGTH.length;u++) {
+      var unit = UNITS_LENGTH[u];
       if (scaleBarLengthInUnits < unit.threshold) {
           scaleBarLengthInUnits *= unit.multiplier;
           symbol = unit.symbol;
@@ -127,3 +130,5 @@ ome.ol3.controls.ScaleBar.prototype.updateElement_ = function() {
     this.renderedVisible_ = true;
   }
 };
+
+export default ScaleBar;

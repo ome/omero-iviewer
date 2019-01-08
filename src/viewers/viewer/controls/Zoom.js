@@ -21,7 +21,7 @@ import EventType from 'ol/events/EventType';
 import Control from 'ol/control/Control';
 import {CLASS_UNSELECTABLE, CLASS_CONTROL } from 'ol/css';
 import {easeOut} from 'ol/easing';
-
+import {inherits} from 'ol/util';
 
 /**
  * @classdesc
@@ -74,7 +74,7 @@ const Zoom = function(opt_options) {
         target: options.target
     });
 };
-ol.inherits(Zoom, Control);
+inherits(Zoom, Control);
 
 /**
  * Adds both, zoom in and out buttons
