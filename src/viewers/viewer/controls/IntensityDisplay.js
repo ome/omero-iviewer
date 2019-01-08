@@ -15,14 +15,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-goog.provide('ome.ol3.controls.IntensityDisplay');
 
-goog.require('ol');
-goog.require('ol.events');
-goog.require('ol.events.EventType');
-goog.require('ol.control.Control');
-goog.require('ol.css');
-
+import EventType from 'ol/events/EventType';
+import Control from 'ol/control/Control';
+import {listen, unlistenByKey} from 'ol/events';
+import {CLASS_UNSELECTABLE, CLASS_CONTROL} from 'ol/css';
+import {inherits} from 'ol/util';
 
 /**
  * @classdesc
@@ -31,7 +29,7 @@ goog.require('ol.css');
  *
  * @constructor
  */
-ome.ol3.controls.IntensityDisplay = function() {
+const IntensityDisplay = function() {
 
     /**
      * maximum number of cached intensity values
@@ -102,8 +100,7 @@ ome.ol3.controls.IntensityDisplay = function() {
 
     // set up html
     var cssClasses =
-        'ol-intensity ' + ol.css.CLASS_UNSELECTABLE + ' ' +
-            ol.css.CLASS_CONTROL;
+        'ol-intensity ' + CLASS_UNSELECTABLE + ' ' + CLASS_CONTROL;
 
     // main container
     var container = document.createElement('div');
@@ -115,7 +112,7 @@ ome.ol3.controls.IntensityDisplay = function() {
     var crosshair = document.createElement('span');
     crosshair.className = "intensity-toggler";
     crosshair.title = "Turn on intensity querying";
-    ol.events.listen(crosshair, ol.events.EventType.CLICK,
+    listen(crosshair, EventType.CLICK,
         function() {
             this.toggleIntensityQuerying(!this.query_intensity_);
             if (this.query_intensity_) {
@@ -131,23 +128,23 @@ ome.ol3.controls.IntensityDisplay = function() {
     container.appendChild(crosshair);
 
     // call super
-    ol.control.Control.call(this, {
+    Control.call(this, {
         element: container
     });
 };
-ol.inherits(ome.ol3.controls.IntensityDisplay, ol.control.Control);
+inherits(IntensityDisplay, Control);
 
 /**
  * Overide setMap to avoid listener keys being null when removing the control
  * @param {ol.PluggableMap} map Map.
  */
-ome.ol3.controls.IntensityDisplay.prototype.setMap = function(map) {
+IntensityDisplay.prototype.setMap = function(map) {
     if (this.map_) {
         ol.dom.removeNode(this.element);
     }
 
     for (var i = 0, ii = this.listenerKeys.length; i < ii; ++i) {
-        ol.events.unlistenByKey(this.listenerKeys[i]);
+        unlistenByKey(this.listenerKeys[i]);
     }
     this.listenerKeys = [];
     this.map_ = map;
@@ -157,7 +154,7 @@ ome.ol3.controls.IntensityDisplay.prototype.setMap = function(map) {
             this.target_ : map.getOverlayContainerStopEvent();
         target.appendChild(this.element);
         if (this.render !== ol.nullFunction) {
-            this.listenerKeys.push(ol.events.listen(map,
+            this.listenerKeys.push(listen(map,
                 ol.MapEventType.POSTRENDER, this.render, this));
         }
         map.render();
@@ -170,7 +167,7 @@ ome.ol3.controls.IntensityDisplay.prototype.setMap = function(map) {
  * see {@link toggleIntensityQuerying}
  * @param {string=} prefix the prefix for the intensity request
  */
-ome.ol3.controls.IntensityDisplay.prototype.enable = function(prefix) {
+IntensityDisplay.prototype.enable = function(prefix) {
     if (this.getMap() === null) return;
 
     this.query_intensity_ = false;
@@ -178,10 +175,10 @@ ome.ol3.controls.IntensityDisplay.prototype.enable = function(prefix) {
     this.image_ = this.getMap().getLayers().item(0).getSource();
 
     this.pointer_move_listener_ =
-        ol.events.listen(
+        listen(
             this.getMap(),
             ol.MapBrowserEventType.POINTERMOVE,
-            ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_.bind(this));
+            IntensityDisplay.prototype.handlePointerMove_.bind(this));
     this.getMap().getTargetElement().onmouseleave = function() {
         this.resetMoveTracking_();
     }.bind(this);
@@ -190,10 +187,10 @@ ome.ol3.controls.IntensityDisplay.prototype.enable = function(prefix) {
 /**
  * Stop listening to mouse movements (and querying intensities)
  */
-ome.ol3.controls.IntensityDisplay.prototype.disable = function() {
+IntensityDisplay.prototype.disable = function() {
     this.query_intensity_ = false;
     if (this.pointer_move_listener_) {
-        ol.events.unlistenByKey(this.pointer_move_listener_);
+        unlistenByKey(this.pointer_move_listener_);
         this.pointer_move_listener_ = null;
     }
 
@@ -216,7 +213,7 @@ ome.ol3.controls.IntensityDisplay.prototype.disable = function() {
  * @param {Array.<Object>} data the pixel intensity results
  * @param {boolean} is_querying if true we are querying and display a message
  */
-ome.ol3.controls.IntensityDisplay.prototype.updateTooltip =
+IntensityDisplay.prototype.updateTooltip =
     function(event, data, is_querying) {
         if (this.getMap() === null ||
             this.getMap().getTargetElement() === null) return;
@@ -306,7 +303,7 @@ ome.ol3.controls.IntensityDisplay.prototype.updateTooltip =
  * @param {Array.<number>} pixel the pixel coordinates to reset to
  * @private
  */
-ome.ol3.controls.IntensityDisplay.prototype.resetMoveTracking_ = function(pixel) {
+IntensityDisplay.prototype.resetMoveTracking_ = function(pixel) {
     this.last_cursor_ =
         ome.ol3.utils.Misc.isArray(pixel) && pixel.length === 2 ?
             pixel : [0,0];
@@ -321,7 +318,7 @@ ome.ol3.controls.IntensityDisplay.prototype.resetMoveTracking_ = function(pixel)
  * Returns the intensity display element
  * @return {Element|null} the intensity display element
  */
-ome.ol3.controls.IntensityDisplay.prototype.getIntensityDisplayElement = function() {
+IntensityDisplay.prototype.getIntensityDisplayElement = function() {
     if (this.element === null) return;
 
     var els = this.element.querySelectorAll('.intensity-display');
@@ -335,7 +332,7 @@ ome.ol3.controls.IntensityDisplay.prototype.getIntensityDisplayElement = functio
  * (display of coordinates and a potential triggering of the intensity request)
  * @private
  */
-ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
+IntensityDisplay.prototype.handlePointerMove_ = function(e) {
     var isMainCanvas = false;
     try {
         this.resetMoveTracking_(e.pixel);
@@ -440,7 +437,7 @@ ome.ol3.controls.IntensityDisplay.prototype.handlePointerMove_ = function(e) {
  * @param {number} y
  * @return {Object} an object with channels and their respective intensity
  */
-ome.ol3.controls.IntensityDisplay.prototype.getCachedIntensities =
+IntensityDisplay.prototype.getCachedIntensities =
     function(plane, time, x, y) {
         if (this.intensities_cache_['count'] === 0) return null;
         try {
@@ -454,7 +451,7 @@ ome.ol3.controls.IntensityDisplay.prototype.getCachedIntensities =
         }
 }
 
-ome.ol3.controls.IntensityDisplay.prototype.cacheIntensities =
+IntensityDisplay.prototype.cacheIntensities =
     function(intensities) {
         try {
             var plane = this.image_.getPlane();
@@ -512,7 +509,7 @@ ome.ol3.controls.IntensityDisplay.prototype.cacheIntensities =
  * Enables/Disables intensity querying on pointerdrag
  * @param {boolean} flag if true enable intensity querying, otherwise disable it
  */
-ome.ol3.controls.IntensityDisplay.prototype.toggleIntensityQuerying = function(flag) {
+IntensityDisplay.prototype.toggleIntensityQuerying = function(flag) {
     // could be we have not been enabled before
     if (this.pointer_move_listener_ === null || this.image_ === null) {
         this.disable(); // just to make sure
@@ -530,6 +527,6 @@ ome.ol3.controls.IntensityDisplay.prototype.toggleIntensityQuerying = function(f
 /**
  * sort of destructor
  */
-ome.ol3.controls.IntensityDisplay.prototype.disposeInternal = function() {
+IntensityDisplay.prototype.disposeInternal = function() {
     this.disable();
 };
