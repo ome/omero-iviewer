@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// Copyright (C) 2019 University of Dundee & Open Microscopy Environment.
 // All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,30 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-goog.provide('ome.ol3.controls.BirdsEye');
+
+import ImageLayer from 'ol/layer/Image';
+import {add as addCoord, rotate as rotateCoord} from 'ol/coordinate';
+import Collection from 'ol/Collection';
+import {Projection} from 'ol/proj';
+import {getCenter,
+    getForViewAndSize,
+    getBottomLeft,
+    getTopRight,
+    containsCoordinate} from 'ol/extent';
+import MapEventType from 'ol/MapEventType';
+import View from 'ol/View';
+import Overlay from 'ol/Overlay';
+import OverlayPositioning from 'ol/OverlayPositioning';
+import {inherits} from 'ol/util';
+import Pointer from 'ol/interaction/Pointer';
+import MapBrowserPointerEvent from 'ol/MapBrowserPointerEvent';
+import PluggableMap from 'ol/PluggableMap';
+import ImageStatic from 'ol/source/ImageStatic';
+import {listen, listenOnce, unlistenByKey} from 'ol/events';
+import EventType from 'ol/events/EventType';
+import Control from 'ol/control/Control';
+import {CLASS_UNSELECTABLE, CLASS_CONTROL} from 'ol/css';
+import {replaceNode, outerWidth, outerHeight} from 'ol/dom';
 
 /**
  * Altered version of ol.control.OverviewMap:
@@ -26,7 +49,7 @@ goog.provide('ome.ol3.controls.BirdsEye');
  * @extends {ol.control.Control}
  * @param {Object=} options additional (optional) options (e.g. collapsed)
  */
-ome.ol3.controls.BirdsEye = function(options) {
+const BirdsEye = function(options) {
 
     options = options || {};
 
@@ -54,7 +77,7 @@ ome.ol3.controls.BirdsEye = function(options) {
     var button = document.createElement('button');
     button.setAttribute('type', 'button');
     button.appendChild(activeLabel);
-    ol.events.listen(button, ol.events.EventType.CLICK, this.handleClick_, this);
+    listen(button, EventType.CLICK, this.handleClick_, this);
 
     /**
      * @type {Element}
@@ -116,32 +139,32 @@ ome.ol3.controls.BirdsEye = function(options) {
     * @type {ol.Overlay}
     * @private
     */
-    this.boxOverlay_ = new ol.Overlay({
+    this.boxOverlay_ = new Overlay({
         position: [0, 0],
-        positioning: ol.OverlayPositioning.BOTTOM_LEFT,
+        positioning: OverlayPositioning.BOTTOM_LEFT,
         element: box
     });
     this.birds_eye_.addOverlay(this.boxOverlay_);
 
     var element = document.createElement('div');
     element.className =
-        'ol-overviewmap  ' + ol.css.CLASS_UNSELECTABLE + ' ' +
-        ol.css.CLASS_CONTROL + (this.collapsed_ ? ' ol-collapsed' : '');
+        'ol-overviewmap  ' + CLASS_UNSELECTABLE + ' ' +
+        CLASS_CONTROL + (this.collapsed_ ? ' ol-collapsed' : '');
     element.appendChild(this.controlDiv_);
     element.appendChild(button);
 
-    ol.control.Control.call(this, {
+    Control.call(this, {
         element: element,
-        render: ome.ol3.controls.BirdsEye.render,
+        render: BirdsEye.render,
         target: options.target
     });
 
     this.singleBoxClick = null;
     this.lastBoxCoordinate_ = null;
 
-    this.birds_eye_.addInteraction(new ol.interaction.Pointer({
+    this.birds_eye_.addInteraction(new Pointer({
         handleDownEvent : function(event) {
-            if (!(event instanceof ol.MapBrowserPointerEvent) ||
+            if (!(event instanceof MapBrowserPointerEvent) ||
                 this.clickedIntoBox(event.pixel)) return false;
 
             var boxDims = this.getBoxDims();
@@ -160,7 +183,7 @@ ome.ol3.controls.BirdsEye = function(options) {
             return false;
         }.bind(this),
         handleMoveEvent : function(event) {
-            if (!(event instanceof ol.MapBrowserPointerEvent) ||
+            if (!(event instanceof MapBrowserPointerEvent) ||
                 !(event.originalEvent instanceof MouseEvent) ||
                 event.originalEvent.buttons === 0) return;
 
@@ -191,9 +214,9 @@ ome.ol3.controls.BirdsEye = function(options) {
     // this is unfortunately necessary
     // since the mouse up event is not bubbling up
     this.onUpEvent =
-        ol.events.listen(
+        listen(
             this.birds_eye_.getTarget(),
-            ol.events.EventType.MOUSEUP,
+            EventType.MOUSEUP,
             function(event) {
                 if (this.lastBoxCoordinate_ === null) return;
 
@@ -209,7 +232,7 @@ ome.ol3.controls.BirdsEye = function(options) {
                 this.clickDistance_ = null;
             }, this);
 };
-ol.inherits(ome.ol3.controls.BirdsEye, ol.control.Control);
+inherits(BirdsEye, Control);
 
 /**
  * Converts the bird's eye coordinates to full image coordinates
@@ -217,7 +240,7 @@ ol.inherits(ome.ol3.controls.BirdsEye, ol.control.Control);
  * @param {Array.<number>} coords the bird's eye coords
  * @return {Array.<number>} the corresponsing full image coordinates
  */
-ome.ol3.controls.BirdsEye.prototype.convertBirdsEyeCoords = function(coords) {
+BirdsEye.prototype.convertBirdsEyeCoords = function(coords) {
     return [coords[0] / this.ratio_[0], coords[1] / this.ratio_[1]];
 }
 
@@ -225,9 +248,9 @@ ome.ol3.controls.BirdsEye.prototype.convertBirdsEyeCoords = function(coords) {
  * Sets map and rerenders/updates bird's eye view
  * @param {ol.PluggableMap} map
  */
-ome.ol3.controls.BirdsEye.prototype.setMap = function(map) {
+BirdsEye.prototype.setMap = function(map) {
     if (map) {
-        ol.control.Control.prototype.setMap.call(this, map);
+        Control.prototype.setMap.call(this, map);
         this.birds_eye_.updateSize();
         this.render();
     }
@@ -238,10 +261,10 @@ ome.ol3.controls.BirdsEye.prototype.setMap = function(map) {
  * or merely updates it if one exists already
  * @return {ol.PluggableMap} the bird's eye view
  */
-ome.ol3.controls.BirdsEye.prototype.initOrUpdate = function() {
+BirdsEye.prototype.initOrUpdate = function() {
     // determine thumbnail size
     var ext = [0, -this.thumbnail_size_[1], this.thumbnail_size_[0], 0];
-    var proj = new ol.proj.Projection({
+    var proj = new Projection({
         code: 'BIRDSEYE',
         units: 'pixels',
         extent: ext.slice()
@@ -249,33 +272,32 @@ ome.ol3.controls.BirdsEye.prototype.initOrUpdate = function() {
 
     // replace layer if we have one already,
     // effectively updating the static image source
-    if (this.birds_eye_ instanceof ol.PluggableMap &&
+    if (this.birds_eye_ instanceof PluggableMap &&
         this.birds_eye_.getLayers().getLength() >0) {
         this.birds_eye_.getLayers().item(0).setSource(
-            new ol.source.ImageStatic({
+            new ImageStatic({
             url: this.getThumbnailUrlWithVersion(),
             projection: proj,
             imageExtent: ext}));
         return this.birds_eye_;
     }
 
-    var view = new ol.View({
+    var view = new View({
        projection: proj,
-       center: ol.extent.getCenter(ext),
+       center: getCenter(ext),
        resolutions : [1],
        resolution : 1
     });
-    var imageLayer = new ol.layer.Image({
-        source: new ol.source.ImageStatic({
+    var imageLayer = new ImageLayer({
+        source: new ImageStatic({
         url: this.getThumbnailUrlWithVersion(),
         projection: proj,
         imageExtent: ext})
     });
 
-    return new ol.PluggableMap({
-        controls: new ol.Collection(),
-        interactions: new ol.Collection(),
-        renderer: ol.renderer.Type.CANVAS,
+    return new PluggableMap({
+        controls: new Collection(),
+        interactions: new Collection(),
         layers: [imageLayer],
         view: view,
         target: this.controlDiv_
@@ -286,7 +308,7 @@ ome.ol3.controls.BirdsEye.prototype.initOrUpdate = function() {
  * Gets the thumbnail url for requesting
  * @return {string} the thumbnail url including config id and version
  */
-ome.ol3.controls.BirdsEye.prototype.getThumbnailUrlWithVersion = function() {
+BirdsEye.prototype.getThumbnailUrlWithVersion = function() {
     var map = this.getMap();
     var rev = new Date().getTime();
     if (map) rev += "-" + ome.ol3.utils.Misc.getTargetId(map.getTargetElement());
@@ -298,9 +320,9 @@ ome.ol3.controls.BirdsEye.prototype.getThumbnailUrlWithVersion = function() {
 /**
  * Update the bird eye view
  * @param {ol.MapEvent} mapEvent Map event.
- * @this {ome.ol3.controls.BirdsEye}
+ * @this {BirdsEye}
  */
-ome.ol3.controls.BirdsEye.render = function(mapEvent) {
+BirdsEye.render = function(mapEvent) {
     if (this.lastBoxCoordinate_ !== null || this.singleBoxClick) {
         this.singleBoxClick = false;
         return;
@@ -313,7 +335,7 @@ ome.ol3.controls.BirdsEye.render = function(mapEvent) {
  * Updates the box overlay
  * @private
  */
-ome.ol3.controls.BirdsEye.prototype.updateBox_ = function() {
+BirdsEye.prototype.updateBox_ = function() {
     var map = this.getMap();
     if (!this.birds_eye_.isRendered()) return;
 
@@ -321,11 +343,11 @@ ome.ol3.controls.BirdsEye.prototype.updateBox_ = function() {
     var rotation = view.getRotation();
     this.birds_eye_.getView().setRotation(rotation);
     var extent =
-        ol.extent.getForViewAndSize(
+        getForViewAndSize(
             view.getCenter(), view.getResolution(),
             0, map.getSize());
-    var bottomLeft = ol.extent.getBottomLeft(extent);
-    var topRight = ol.extent.getTopRight(extent);
+    var bottomLeft = getBottomLeft(extent);
+    var topRight = getTopRight(extent);
 
     var rotatedBottomLeft = this.calculateCoordinateRotate_(rotation, bottomLeft);
     this.boxOverlay_.setPosition(
@@ -346,7 +368,7 @@ ome.ol3.controls.BirdsEye.prototype.updateBox_ = function() {
  * @return {ol.Coordinate|undefined} Coordinate for rotation and center anchor.
  * @private
  */
-ome.ol3.controls.BirdsEye.prototype.calculateCoordinateRotate_ =
+BirdsEye.prototype.calculateCoordinateRotate_ =
     function(rotation, coordinate) {
         var coordinateRotate;
 
@@ -360,8 +382,8 @@ ome.ol3.controls.BirdsEye.prototype.calculateCoordinateRotate_ =
                 coordinate[0] - currentCenter[0],
                 coordinate[1] - currentCenter[1]
             ];
-            ol.coordinate.rotate(coordinateRotate, rotation);
-            ol.coordinate.add(coordinateRotate, currentCenter);
+            rotateCoord(coordinateRotate, rotation);
+            addCoord(coordinateRotate, currentCenter);
         }
         return coordinateRotate;
 };
@@ -371,7 +393,7 @@ ome.ol3.controls.BirdsEye.prototype.calculateCoordinateRotate_ =
  * @param {Event} event The event to handle
  * @private
  */
-ome.ol3.controls.BirdsEye.prototype.handleClick_ = function(event) {
+BirdsEye.prototype.handleClick_ = function(event) {
     event.preventDefault();
     this.handleToggle_();
 };
@@ -381,19 +403,19 @@ ome.ol3.controls.BirdsEye.prototype.handleClick_ = function(event) {
  * Handles transition from collapsed to not collapsed and vice versa
  * @private
  */
-ome.ol3.controls.BirdsEye.prototype.handleToggle_ = function() {
+BirdsEye.prototype.handleToggle_ = function() {
     this.element.classList.toggle('ol-collapsed');
         if (this.collapsed_) {
-            ol.dom.replaceNode(this.collapseLabel_, this.label_);
+            replaceNode(this.collapseLabel_, this.label_);
         } else {
-            ol.dom.replaceNode(this.label_, this.collapseLabel_);
+            replaceNode(this.label_, this.collapseLabel_);
         }
         this.collapsed_ = !this.collapsed_;
 
         if (!this.collapsed_) {
             if (!this.birds_eye_.isRendered()) this.birds_eye_.updateSize();
-            ol.events.listenOnce(
-                this.birds_eye_, ol.MapEventType.POSTRENDER,
+            listenOnce(
+                this.birds_eye_, MapEventType.POSTRENDER,
                 function() {
                     try {
                         this.updateBox_();
@@ -407,7 +429,7 @@ ome.ol3.controls.BirdsEye.prototype.handleToggle_ = function() {
  * Toggles collapsed state of bird eye view
  * @param {boolean} collapsed if true bird eye view will be hidden
  */
-ome.ol3.controls.BirdsEye.prototype.setCollapsed = function(collapsed) {
+BirdsEye.prototype.setCollapsed = function(collapsed) {
     if (this.collapsed_ === collapsed) return;
     this.handleToggle_();
 };
@@ -417,7 +439,7 @@ ome.ol3.controls.BirdsEye.prototype.setCollapsed = function(collapsed) {
  * Returns the collapsed state of the bird eye view
  * @return {boolean} true if bird eye view is hidden, false otherwise.
  */
-ome.ol3.controls.BirdsEye.prototype.getCollapsed = function() {
+BirdsEye.prototype.getCollapsed = function() {
     return this.collapsed_;
 };
 
@@ -427,11 +449,11 @@ ome.ol3.controls.BirdsEye.prototype.getCollapsed = function() {
  * @return {Array<number>} the dimension of the box
  * @private
  */
-ome.ol3.controls.BirdsEye.prototype.getBoxDims = function() {
+BirdsEye.prototype.getBoxDims = function() {
     var el = this.boxOverlay_.getElement();
     var tmp = [
-        ol.dom.outerWidth(el),
-        ol.dom.outerHeight(el)
+        outerWidth(el),
+        outerHeight(el)
     ];
 
     // in IE we get a NaN because the method calls parseInt on margin left
@@ -446,7 +468,7 @@ ome.ol3.controls.BirdsEye.prototype.getBoxDims = function() {
  * @param {Array.<number>} coords a pair of coordinates
  * @return {boolean} true if the given coordinates fall into the box
  */
-ome.ol3.controls.BirdsEye.prototype.clickedIntoBox = function(coords) {
+BirdsEye.prototype.clickedIntoBox = function(coords) {
     var offset =
         this.birds_eye_.getPixelFromCoordinate(this.boxOverlay_.getPosition());
     var boxDims = this.getBoxDims();
@@ -454,16 +476,19 @@ ome.ol3.controls.BirdsEye.prototype.clickedIntoBox = function(coords) {
         offset[0]-5, offset[1] - boxDims[1]-5,
         offset[0] + boxDims[0]+5, offset[1]+5
     ];
-    return ol.extent.containsCoordinate(extent, coords);
+    return containsCoordinate(extent, coords);
 }
 
 /**
  * sort of destructor
  */
-ome.ol3.controls.BirdsEye.prototype.disposeInternal = function() {
+BirdsEye.prototype.disposeInternal = function() {
     if (typeof(this.onUpEvent) !== 'undefined' && this.onUpEvent)
         ol.events.unlistenByKey(this.onUpEvent);
 
-    goog.base(this, 'disposeInternal');
+    // goog.base(this, 'disposeInternal');
+    BirdsEye.superClass_.disposeInternal.call(this);
     if (this.birds_eye_) this.birds_eye_.dispose();
 };
+
+export default BirdsEye;
