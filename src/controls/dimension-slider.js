@@ -19,7 +19,7 @@
 import Context from '../app/context';
 import {inject,customElement, bindable, BindingEngine} from 'aurelia-framework';
 import Misc from '../utils/misc';
-import {ol3} from '../../libs/ol3-viewer.js';
+// import {ol3} from '../../libs/ol3-viewer.js';
 import {slider} from 'jquery-ui/ui/widgets/slider';
 import {PROJECTION} from '../utils/constants';
 import {
@@ -487,6 +487,6 @@ export default class DimensionSlider {
      */
     getZProjectionDisabled(handle, forwards) {
         let dims = this.image_config.image_info.dimensions;
-        return (handle !== null && forwards || (dims.max_x * dims.max_y) > ol3.UNTILED_RETRIEVAL_LIMIT);
+        return (handle !== null && forwards || (dims.max_x * dims.max_y) > 4000000);
     }
 }

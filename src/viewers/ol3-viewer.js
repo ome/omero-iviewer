@@ -17,12 +17,16 @@
 //
 
 // dependencies
+import {Map, View} from 'ol';
+import TileLayer from 'ol/layer/Tile';
+import XYZ from 'ol/source/XYZ';
+
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import {Converters} from '../utils/converters';
 import Ui from '../utils/ui';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
-import {ol3} from '../../libs/ol3-viewer.js';
+// import {ol3} from '../../libs/ol3-viewer.js';
 import Ol3ViewerLinkedEvents from './ol3-viewer-linked-events';
 import * as FileSaver from '../../node_modules/file-saver';
 import {draggable} from 'jquery-ui/ui/widgets/draggable';
@@ -464,16 +468,32 @@ export default class Ol3Viewer extends EventSubscriber {
         ol3initParams[PLUGIN_PREFIX] = this.context.getPrefixedURI(IVIEWER);
 
         // create viewer instance
-        this.viewer =
-            new ol3.Viewer(
-                this.image_config.image_info.image_id, {
-                     eventbus : this.context.eventbus,
-                     server : this.context.server,
-                     data: this.image_config.image_info.tmp_data,
-                     initParams :  ol3initParams,
-                     container: this.container
-                 });
+        // this.viewer =
+        //     new ol3.Viewer(
+        //         this.image_config.image_info.image_id, {
+        //              eventbus : this.context.eventbus,
+        //              server : this.context.server,
+        //              data: this.image_config.image_info.tmp_data,
+        //              initParams :  ol3initParams,
+        //              container: this.container
+        //          });
         delete this.image_config.image_info.tmp_data;
+
+        console.log('container', this.container);
+        new Map({
+            target: this.container,
+            layers: [
+                new TileLayer({
+                source: new XYZ({
+                    url: 'https://{a-c}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+                })
+                })
+            ],
+            view: new View({
+                center: [0, 0],
+                zoom: 2
+            })
+        });
 
         // hide controls for mdi when more than 1 image configs
         if (this.context.useMDI && this.context.image_configs.size > 1)
@@ -483,9 +503,9 @@ export default class Ol3Viewer extends EventSubscriber {
         // only the first request should be affected
         this.context.resetInitParams();
         // use existing interpolation setting
-        this.viewer.enableSmoothing(this.context.interpolate);
+        // this.viewer.enableSmoothing(this.context.interpolate);
         // zoom to fit
-        this.viewer.zoomToFit();
+        // this.viewer.zoomToFit();
         // initialize regions if rois tab active
         if (this.context.isRoisTabActive()) this.initRegions();
         this.resizeViewer({window_resize: true, delay: 100});
@@ -560,6 +580,7 @@ export default class Ol3Viewer extends EventSubscriber {
      * @param {Object} params the event notification parameters
      */
     cacheImageSettings(params = {}) {
+        if (this.viewer === null) return;
         let settings = this.viewer.captureViewParameters();
         let toCache = {
             channels: settings.channels,
