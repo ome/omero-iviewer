@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// Copyright (C) 2019 University of Dundee & Open Microscopy Environment.
 // All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -15,11 +15,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-
-/**
- * @namespace ome.ol3.utils.Net
- */
-goog.provide('ome.ol3.utils.Net');
 
 /**
  * Santitizes the uri and performs some basic validity checks. Used internally.
@@ -38,7 +33,7 @@ goog.provide('ome.ol3.utils.Net');
  * @param {string} uri the uri given
  * @return {Object|null} a uri object or null (if something goes badly wrong)
  */
-ome.ol3.utils.Net.checkAndSanitizeUri = function(uri) {
+export const checkAndSanitizeUri = function(uri) {
     if (typeof(uri) !== 'string') return null;
 
     try {
@@ -105,7 +100,7 @@ ome.ol3.utils.Net.checkAndSanitizeUri = function(uri) {
  * @param {string} addressOrIp a server address/ip
  * @return {Object|null} a server address or ip or null (if something goes badly wrong)
  */
-ome.ol3.utils.Net.checkAndSanitizeServerAddress = function(addressOrIp) {
+export const checkAndSanitizeServerAddress = function(addressOrIp) {
     if (typeof(addressOrIp) !== 'string') return null;
 
     try {
@@ -162,7 +157,7 @@ ome.ol3.utils.Net.checkAndSanitizeServerAddress = function(addressOrIp) {
  * @param {Object} server the server info object
  * @return {boolean} true if we are same origin, false otherwise
  */
-ome.ol3.utils.Net.isSameOrigin = function(server) {
+export const isSameOrigin = function(server) {
     if (typeof(server) !== 'object' ||
         typeof(server['protocol']) !== "string" ||
         typeof(server['server']) !== "string" ||
@@ -218,7 +213,7 @@ ome.ol3.utils.Net.isSameOrigin = function(server) {
  * @param {Object} parameters the request settings
  * @param {function=} context an optional context for the handlers
  */
-ome.ol3.utils.Net.sendRequest = function(parameters, context) {
+export const sendRequest = function(parameters, context) {
     var params = parameters || {};
     if (typeof params !== 'object' || params === null)
         console.error("sendRequest did not receive a params object");
@@ -227,7 +222,7 @@ ome.ol3.utils.Net.sendRequest = function(parameters, context) {
     // the server can be accepted as either string or ready server object
     var server = params['server'] || "";
     if (typeof(server) === 'string')
-        server = ome.ol3.utils.Net.checkAndSanitizeServerAddress(server);
+        server = checkAndSanitizeServerAddress(server);
     if (typeof server !== 'object' || server === null)
         console.error("sendRequest server info is invalid");
 
@@ -256,8 +251,8 @@ ome.ol3.utils.Net.sendRequest = function(parameters, context) {
         params['error'] : function(error) {console.error(error);};
 
     // let's check if we are same origin or not.
-    if (ome.ol3.utils.Net.isSameOrigin(server)) {
-        ome.ol3.utils.Net.sendSameOrigin(
+    if (isSameOrigin(server)) {
+        sendSameOrigin(
             server, uri, success, error, method, headers,
             timeout, content, context);
         return;
@@ -266,7 +261,7 @@ ome.ol3.utils.Net.sendRequest = function(parameters, context) {
     // seems we are cross-domain ... we have two choices => CORS or jsonp
     // we force jsonp (well supported)
     jsonp = true; // This line is intentional.
-    ome.ol3.utils.Net.sendJsonp(server, uri, success, error, context);
+    sendJsonp(server, uri, success, error, context);
     return;
 };
 
@@ -287,7 +282,7 @@ ome.ol3.utils.Net.sendRequest = function(parameters, context) {
  * @param {number} timeout the timeout in millis
  * @param {string=} content optional POST content
  */
-ome.ol3.utils.Net.checkRequestParameters = function(
+export const checkRequestParameters = function(
     is_jsonp_request, server, uri,  success, error,
     method, headers, timeout, content) {
 
@@ -336,10 +331,10 @@ ome.ol3.utils.Net.checkRequestParameters = function(
  * @param {string} content optional POST content
  * @param {function=} context an optional context for the handlers
  */
-ome.ol3.utils.Net.sendSameOrigin = function(
+export const sendSameOrigin = function(
     server, uri, success, error, method, headers, timeout, content, context) {
 
-    ome.ol3.utils.Net.checkRequestParameters( // preliminary asserts
+    checkRequestParameters( // preliminary asserts
         false, server, uri, success, error, method, headers, timeout, content);
 
     // create xhr object
@@ -420,7 +415,7 @@ ome.ol3.utils.Net.sendSameOrigin = function(
  * @function
  * @param {Object} server the server info as an object
  */
-ome.ol3.utils.Net.makeCrossDomainLoginRedirect = function(server) {
+export const makeCrossDomainLoginRedirect = function(server) {
     if (typeof(server) !== 'object' || typeof(server['full']) !== 'string')
         return;
 
@@ -455,9 +450,9 @@ ome.ol3.utils.Net.makeCrossDomainLoginRedirect = function(server) {
  * @param {function} error the error handler
  * @param {function=} context an optional context for the handlers
  */
-ome.ol3.utils.Net.sendJsonp = function(server, uri, success, error, context) {
+export const sendJsonp = function(server, uri, success, error, context) {
     // preliminary asserts
-    ome.ol3.utils.Net.checkRequestParameters(true, server, uri, success, error);
+    checkRequestParameters(true, server, uri, success, error);
 
     // setup
     var head = document.head;

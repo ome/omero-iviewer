@@ -33,7 +33,10 @@ import {inherits} from 'ol/util';
 import {intersects, getCenter} from 'ol/extent';
 import {noModifierKeys, primaryAction} from 'ol/events/condition';
 
-// import Net from './utils/Net';
+import {checkAndSanitizeServerAddress,
+    isSameOrigin,
+    sendRequest,
+    makeCrossDomainLoginRedirect} from './utils/Net';
 // import {generateRegions} from './utils/Regions';
 // import {updateStyleFunction} from './utils/Style';
 // import Label from './geom/Label';
@@ -61,8 +64,6 @@ import {noModifierKeys, primaryAction} from 'ol/events/condition';
 //     LOOKUP} from './utils/Conversion';
 // import {Image as OmeroImage} from './source/Image';
 // import Regions from './source/Regions';
-
-// import Net from '../utils/Net';
 
 /**
  * @classdesc
@@ -135,7 +136,7 @@ const Viewer = function(id, options) {
      * @type {Object}
      * @private
      */
-    this.server_ = Net.checkAndSanitizeServerAddress(opts['server'] || "");
+    this.server_ = checkAndSanitizeServerAddress(opts['server'] || "");
 
     /**
      * some initial values/parameters for channel, model and projection (optional)
@@ -185,8 +186,7 @@ const Viewer = function(id, options) {
      * @type {boolean}
      * @private
      */
-     this.haveMadeCrossOriginLogin_ =
-         Net.isSameOrigin(this.server_) ? true : false;
+     this.haveMadeCrossOriginLogin_ = isSameOrigin(this.server_) ? true : false;
     if (!this.haveMadeCrossOriginLogin_ &&
         window['location']['href'].indexOf("haveMadeCrossOriginLogin_") !== -1)
         this.haveMadeCrossOriginLogin_ = true;
@@ -351,15 +351,15 @@ const Viewer = function(id, options) {
         };
 
         // send request
-        Net.sendRequest(reqParams);
+        sendRequest(reqParams);
     };
 
     // execute initialization function
     // for cross domain we check whether we need to have a login made, otherwise
     // we redirect to there ...
-    if (Net.isSameOrigin(this.server_) || this.haveMadeCrossOriginLogin_) {
+    if (isSameOrigin(this.server_) || this.haveMadeCrossOriginLogin_) {
         this.initialize_();
-    } else Net.makeCrossDomainLoginRedirect(this.server_);
+    } else makeCrossDomainLoginRedirect(this.server_);
 };
 inherits(Viewer, Object);
 
