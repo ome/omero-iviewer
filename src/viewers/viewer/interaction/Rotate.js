@@ -15,10 +15,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-goog.provide('ome.ol3.interaction.Rotate');
 
-goog.require('ol.events.condition');
-goog.require('ol.interaction.DragRotate');
+import {shiftKeyOnly} from 'ol/events/condition';
+import DragRotate from 'ol/interaction/DragRotate';
+import {inherits} from 'ol/util';
 
 /**
  * @classdesc
@@ -27,13 +27,16 @@ goog.require('ol.interaction.DragRotate');
  * @constructor
  * @extends {ol.interaction.DragRotate}
  */
-ome.ol3.interaction.Rotate = function() {
-  goog.base(this);
+const Rotate = function() {
+  // goog.base(this);
+  DragRotate.superClass_.constructor.call(this);
 
   /**
    * @private
    * @type {ol.events.ConditionType}
    */
-   this.condition_ = ol.events.condition.shiftKeyOnly;
+   this.condition_ = shiftKeyOnly;
 };
-goog.inherits(ome.ol3.interaction.Rotate, ol.interaction.DragRotate);
+inherits(Rotate, DragRotate);
+
+export default Rotate;
