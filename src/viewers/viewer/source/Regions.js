@@ -19,7 +19,7 @@
 import Vector from 'ol/source/Vector';
 import Feature from 'ol/Feature';
 import {inherits} from 'ol/util';
-// import Viewer from '../Viewer';
+import Viewer from '../Viewer';
 
 /**
  * @classdesc
