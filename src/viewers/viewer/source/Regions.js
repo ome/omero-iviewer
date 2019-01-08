@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// Copyright (C) 2019 University of Dundee & Open Microscopy Environment.
 // All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -16,15 +16,10 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-goog.provide('ome.ol3.source.Regions');
-
-goog.require('ol.source.Vector');
-goog.require('ol.events');
-goog.require('ol.Feature');
-goog.require('ol.layer.Image');
-goog.require('ol.source.ImageStatic');
-goog.require('ol.proj.Projection');
-
+import Vector from 'ol/source/Vector';
+import Feature from 'ol/Feature';
+import {inherits} from 'ol/util';
+// import Viewer from '../Viewer';
 
 /**
  * @classdesc
@@ -58,15 +53,16 @@ goog.require('ol.proj.Projection');
  * @param {ome.ol3.Viewer} viewerReference mandatory reference to the viewer parent
  * @param {Object=} options additional properties for initialization
  */
-ome.ol3.source.Regions = function(viewerReference, options) {
-    if (!(viewerReference instanceof ome.ol3.Viewer))
+const Regions = function(viewerReference, options) {
+    if (!(viewerReference instanceof Viewer))
         console.error("Regions needs an ome.ol3.Viewer instance!");
 
     var opts = options || {};
     // we always use the spatial index
     opts.useSpatialIndex = true;
     // call super
-    goog.base(this, opts);
+    // goog.base(this, opts);
+    Vector.superClass_.constructor.call(this);
 
     /**
      * a flag that tells us if we'd like for the text to be scaled with resolution
@@ -242,7 +238,7 @@ ome.ol3.source.Regions = function(viewerReference, options) {
     // execute initialization function
     this.initialize_(this, opts.data);
 }
-goog.inherits(ome.ol3.source.Regions, ol.source.Vector);
+inherits(Regions, Vector);
 
 
 /**
@@ -269,7 +265,7 @@ goog.inherits(ome.ol3.source.Regions, ol.source.Vector);
  *
  * @param {Array.<number>} modes an array of modes
  */
-ome.ol3.source.Regions.prototype.setModes = function(modes) {
+Regions.prototype.setModes = function(modes) {
     if (!ome.ol3.utils.Misc.isArray(modes)) return;
 
     var defaultMode = false;
@@ -421,7 +417,7 @@ ome.ol3.source.Regions.prototype.setModes = function(modes) {
  *
  * @param {boolean=} request_info force a server request to get the up-to-date rois
  */
-ome.ol3.source.Regions.prototype.updateRegions= function(request_info) {
+Regions.prototype.updateRegions= function(request_info) {
     var makeServerRequest = false;
     if (typeof(request_info) === 'boolean') makeServerRequest = request_info;
 
@@ -456,7 +452,7 @@ ome.ol3.source.Regions.prototype.updateRegions= function(request_info) {
  *
  * @param {boolean} scaleText a flag whether text should be scaled with resolution changes
  */
-ome.ol3.source.Regions.prototype.setScaleText = function(scaleText) {
+Regions.prototype.setScaleText = function(scaleText) {
     if (typeof(scaleText) !== 'boolean') return;
 
     // set member flag
@@ -469,7 +465,7 @@ ome.ol3.source.Regions.prototype.setScaleText = function(scaleText) {
  *
  * @param {boolean} rotateText a flag whether text should be rotated along with the view
  */
-ome.ol3.source.Regions.prototype.setRotateText = function(rotateText) {
+Regions.prototype.setRotateText = function(rotateText) {
     if (typeof(rotateText) !== 'boolean') return;
 
     // set member flag
@@ -486,7 +482,7 @@ ome.ol3.source.Regions.prototype.setRotateText = function(rotateText) {
  * @param {object=} opt_this The object to use as `this` in the callback.
  * @return {S|undefined} The return value from the last call to the callback.
  */
-ome.ol3.source.Regions.prototype.forEachFeatureInExtent =
+Regions.prototype.forEachFeatureInExtent =
     function(extent, callback, opt_this) {
         return this.featuresRtree_.forEachInExtent(extent, function(feature) {
             if (this.renderFeature(feature)) callback.call(this, feature);
@@ -504,7 +500,7 @@ ome.ol3.source.Regions.prototype.forEachFeatureInExtent =
  * @param {ol.Feature} feature an instance of ol.Feature
  * @return {boolean} true if the feature fulfills the criteria to be rendered
  */
-ome.ol3.source.Regions.prototype.renderFeature = function(feature) {
+Regions.prototype.renderFeature = function(feature) {
     var projection =  this.viewer_.getImage().image_projection_;
 
     var visible =
@@ -547,7 +543,7 @@ ome.ol3.source.Regions.prototype.renderFeature = function(feature) {
  *                  to indicate that a client side update to the response is not needed
  * @return {boolean} true if peristence request was made, false otherwise
  */
-ome.ol3.source.Regions.prototype.storeRegions =
+Regions.prototype.storeRegions =
     function(roisAsJsonObject, omit_client_update) {
 
     if (typeof omit_client_update !== 'boolean') omit_client_update = false;
@@ -654,7 +650,7 @@ ome.ol3.source.Regions.prototype.storeRegions =
  * @param {Object} value the new value for the property
  * @param {function=} callback an (optional) success handler
  */
-ome.ol3.source.Regions.prototype.setProperty =
+Regions.prototype.setProperty =
     function(roi_shape_ids, property, value, callback) {
 
     if (!ome.ol3.utils.Misc.isArray(roi_shape_ids) ||
@@ -670,7 +666,7 @@ ome.ol3.source.Regions.prototype.setProperty =
     for (var r in roi_shape_ids) {
         var s = roi_shape_ids[r];
         var f = this.idIndex_[s];
-        if (f instanceof ol.Feature) {
+        if (f instanceof Feature) {
             // we allow to toggle the selected state
             // as well as the state for removed, modified and rollback deletes
             var presentState = null;
@@ -760,7 +756,7 @@ ome.ol3.source.Regions.prototype.setProperty =
  *          if true we take the geometries to be the old value, otherwise new
  * @return {number} the id for the history entry
  */
-ome.ol3.source.Regions.prototype.addHistory =
+Regions.prototype.addHistory =
     function(features, is_old_value, hist_id) {
     if (!ome.ol3.utils.Misc.isArray(features) || features.length === 0) return;
 
@@ -800,7 +796,7 @@ ome.ol3.source.Regions.prototype.addHistory =
  * @param {number} hist_id the id for the history entry we like to un/redo
  * @param {boolean=} undo if true we undo, if false we redo, default: undo
  */
-ome.ol3.source.Regions.prototype.doHistory = function(hist_id, undo) {
+Regions.prototype.doHistory = function(hist_id, undo) {
     // get the history entry for the given id (if exists)
     if (typeof this.history_[hist_id] !== 'object') return;
     if (typeof undo !== 'boolean') undo = true;
@@ -811,7 +807,7 @@ ome.ol3.source.Regions.prototype.doHistory = function(hist_id, undo) {
     for (var f in hist_entry) {
         var hist_record = hist_entry[f];
         // check if we have such as feature
-        if (this.idIndex_[f] instanceof ol.Feature) {
+        if (this.idIndex_[f] instanceof Feature) {
             this.idIndex_[f].setGeometry(
                 undo ? hist_record.old_value : hist_record.new_value);
             var newState = undo ? hist_record.old_state : hist_record.new_state;
@@ -832,9 +828,9 @@ ome.ol3.source.Regions.prototype.doHistory = function(hist_id, undo) {
  * @param {boolean} recalculate flag: if true we redo the measurement (default: false)
  * @return {Object|null} an object containing shape id, area and length or null
  */
-ome.ol3.source.Regions.prototype.getLengthAndAreaForShape =
+Regions.prototype.getLengthAndAreaForShape =
     function(feature, recalculate) {
-        if (!(feature instanceof ol.Feature)) return null;
+        if (!(feature instanceof Feature)) return null;
 
         if (typeof recalculate !== 'boolean') recalculate = false;
 
@@ -848,7 +844,7 @@ ome.ol3.source.Regions.prototype.getLengthAndAreaForShape =
 /**
  * Clean up
  */
-ome.ol3.source.Regions.prototype.disposeInternal = function() {
+Regions.prototype.disposeInternal = function() {
     this.clear();
     this.featuresRtree_ = null;
     this.loadedExtentsRtree_ = null;
@@ -857,3 +853,5 @@ ome.ol3.source.Regions.prototype.disposeInternal = function() {
     this.regions_info_ = null;
     this.viewer_ = null;
 };
+
+export default Regions;

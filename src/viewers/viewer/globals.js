@@ -41,7 +41,7 @@ import BirdsEye from './controls/BirdsEye';
 import ScaleBar from './controls/ScaleBar';
 import IntensityDisplay from './controls/IntensityDisplay';
 import { Rotate as RotateInteraction } from './interaction/Rotate';
-// import BoxSelect from './interaction/BoxSelect';
+import BoxSelect from './interaction/BoxSelect';
 
 // Plugins.register(ol.PluginType.MAP_RENDERER, Map);
 // Plugins.registerMultiple(ol.PluginType.LAYER_RENDERER, [

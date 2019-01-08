@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// Copyright (C) 2019 University of Dundee & Open Microscopy Environment.
 // All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -15,11 +15,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-goog.provide('ome.ol3.interaction.BoxSelect');
-
-goog.require('ol.interaction.DragBox');
-goog.require('ol.Collection');
-goog.require('ol.Feature');
+import DragBox from 'ol/interaction/DragBox';
+import {listen, unlistenByKey} from 'ol/events';
+import {inherits} from 'ol/util';
+import Regions from '../source/Regions';
 
 /**
  * @classdesc
@@ -31,20 +30,21 @@ goog.require('ol.Feature');
  * @fires ol.interaction.DragBox.Event
  * @param {ome.ol3.source.Regions} regions_reference a reference to get to all (selected) rois
  */
-ome.ol3.interaction.BoxSelect = function(regions_reference) {
-    if (!(regions_reference instanceof ome.ol3.source.Regions))
+const BoxSelect = function(regions_reference) {
+    if (!(regions_reference instanceof Regions))
         console.error("Select needs Regions instance!");
     // super
-    goog.base(this);
+    // goog.base(this);
+    DragBox.superClass_.constructor.call(this);
 
     /**
      * @private
      * @type {ol.events.ConditionType}
      */
-    this.condition_ = ol.events.condition.platformModifierKeyOnly;
+    this.condition_ = condition.platformModifierKeyOnly;
 
     // we do need the regions reference to get the (selected) rois
-    if (!(regions_reference instanceof ome.ol3.source.Regions)) return;
+    if (!(regions_reference instanceof Regions)) return;
 
     /**
      * a reference to the Regions instance
@@ -85,19 +85,19 @@ ome.ol3.interaction.BoxSelect = function(regions_reference) {
 
     this.registerListeners = function() {
         this.boxStartListener_ =
-            ol.events.listen(this, 'boxstart', this.boxStartFunction_, this);
+            listen(this, 'boxstart', this.boxStartFunction_, this);
         this.boxEndListener_ =
-            ol.events.listen(this, 'boxend', this.boxEndFunction_, this);
+            listen(this, 'boxend', this.boxEndFunction_, this);
     };
 
     this.registerListeners();
 };
-goog.inherits(ome.ol3.interaction.BoxSelect, ol.interaction.DragBox);
+inherits(BoxSelect, DragBox);
 
 /**
  * Register the start/end listeners
  */
-ome.ol3.interaction.BoxSelect.prototype.resetListeners = function() {
+BoxSelect.prototype.resetListeners = function() {
     this.unregisterListeners();
     this.registerListeners();
 }
@@ -105,15 +105,15 @@ ome.ol3.interaction.BoxSelect.prototype.resetListeners = function() {
 /**
  * Unregister the start/end listeners
  */
-ome.ol3.interaction.BoxSelect.prototype.unregisterListeners = function() {
-    if (this.boxStartListener_) ol.events.unlistenByKey(this.boxStartListener_);
-    if (this.boxEndListener_) ol.events.unlistenByKey(this.boxEndListener_);
+BoxSelect.prototype.unregisterListeners = function() {
+    if (this.boxStartListener_) unlistenByKey(this.boxStartListener_);
+    if (this.boxEndListener_) unlistenByKey(this.boxEndListener_);
 }
 
 /**
  * a sort of desctructor
  */
-ome.ol3.interaction.BoxSelect.prototype.disposeInternal = function() {
+BoxSelect.prototype.disposeInternal = function() {
     this.unregisterListeners();
     this.regions_ = null;
 }

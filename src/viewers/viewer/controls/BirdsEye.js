@@ -484,7 +484,7 @@ BirdsEye.prototype.clickedIntoBox = function(coords) {
  */
 BirdsEye.prototype.disposeInternal = function() {
     if (typeof(this.onUpEvent) !== 'undefined' && this.onUpEvent)
-        ol.events.unlistenByKey(this.onUpEvent);
+        unlistenByKey(this.onUpEvent);
 
     // goog.base(this, 'disposeInternal');
     BirdsEye.superClass_.disposeInternal.call(this);
