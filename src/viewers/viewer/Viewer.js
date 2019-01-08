@@ -37,7 +37,7 @@ import {checkAndSanitizeServerAddress,
     isSameOrigin,
     sendRequest,
     makeCrossDomainLoginRedirect} from './utils/Net';
-// import {generateRegions} from './utils/Regions';
+import {generateRegions} from './utils/Regions';
 // import {updateStyleFunction} from './utils/Style';
 // import Label from './geom/Label';
 // import {AVAILABLE_VIEWER_INTERACTIONS,
