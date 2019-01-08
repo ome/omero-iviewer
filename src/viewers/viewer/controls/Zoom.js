@@ -15,14 +15,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-goog.provide('ome.ol3.controls.Zoom');
 
-goog.require('ol');
-goog.require('ol.events');
-goog.require('ol.events.EventType');
-goog.require('ol.control.Control');
-goog.require('ol.css');
-goog.require('ol.easing');
+import {listen} from 'ol/events';
+import EventType from 'ol/events/EventType';
+import Control from 'ol/control/Control';
+import {CLASS_UNSELECTABLE, CLASS_CONTROL } from 'ol/css';
+import {easeOut} from 'ol/easing';
 
 
 /**
@@ -34,7 +32,7 @@ goog.require('ol.easing');
  * @extends {ol.control.Control}
  * @param {olx.control.ZoomOptions=} opt_options Zoom options.
  */
-ome.ol3.controls.Zoom = function(opt_options) {
+const Zoom = function(opt_options) {
     var options = opt_options ? opt_options : {};
 
     /**
@@ -57,8 +55,8 @@ ome.ol3.controls.Zoom = function(opt_options) {
         options.className === 'string' ? options.className : 'ol-zoom';
 
     var cssClasses =
-        this.class_name_ + ' ' + ol.css.CLASS_UNSELECTABLE + ' ' +
-            ol.css.CLASS_CONTROL;
+        this.class_name_ + ' ' + CLASS_UNSELECTABLE + ' ' +
+            CLASS_CONTROL;
 
     var element = document.createElement('div');
     element.className = cssClasses;
@@ -71,19 +69,19 @@ ome.ol3.controls.Zoom = function(opt_options) {
     element.appendChild(buttonGroup);
     element.appendChild(this.addZoomPercentage_());
 
-    ol.control.Control.call(this, {
+    Control.call(this, {
         element: element,
         target: options.target
     });
 };
-ol.inherits(ome.ol3.controls.Zoom, ol.control.Control);
+ol.inherits(Zoom, Control);
 
 /**
  * Adds both, zoom in and out buttons
  * @param {boolean} zoom_in the in zoom button is added if true, otherwise out
  * @private
  */
-ome.ol3.controls.Zoom.prototype.addZoomButton_ = function(zoom_in) {
+Zoom.prototype.addZoomButton_ = function(zoom_in) {
     if (typeof zoom_in !== 'boolean') zoom_in = false;
 
     var title = 'Zoom ' + (zoom_in ? 'in' : 'out');
@@ -95,8 +93,8 @@ ome.ol3.controls.Zoom.prototype.addZoomButton_ = function(zoom_in) {
     element.setAttribute('type', 'button');
     element.title = title;
 
-    ol.events.listen(element, ol.events.EventType.CLICK,
-        ome.ol3.controls.Zoom.prototype.handleClick_,
+    listen(element, EventType.CLICK,
+        Zoom.prototype.handleClick_,
         this);
 
     return element;
@@ -106,12 +104,12 @@ ome.ol3.controls.Zoom.prototype.addZoomButton_ = function(zoom_in) {
  * Adds an input field for entering and displaying zoom values (in percent)
  * @private
  */
-ome.ol3.controls.Zoom.prototype.addZoomPercentage_ = function() {
+Zoom.prototype.addZoomPercentage_ = function() {
     var zoomDisplayElement = document.createElement('input');
     zoomDisplayElement.className = this.class_name_ + '-display';
     zoomDisplayElement.setAttribute('type', 'input');
     zoomDisplayElement.className = 'form-control ol-zoom-display';
-    ol.events.listen(
+    listen(
         zoomDisplayElement, "keyup",
         function(event) {
             if (event.keyCode === 13)
@@ -122,7 +120,7 @@ ome.ol3.controls.Zoom.prototype.addZoomPercentage_ = function() {
     percent.className = 'btn btn-default ol-zoom-percent';
     percent.title = 'Click to apply Zoom Value';
     percent.appendChild(document.createTextNode("%"));
-    ol.events.listen(
+    listen(
         percent, "click",
         function() {
             this.changeResolution_(parseInt(zoomDisplayElement.value));
@@ -144,7 +142,7 @@ ome.ol3.controls.Zoom.prototype.addZoomPercentage_ = function() {
  * @param {number} value the new value
  * @private
  */
-ome.ol3.controls.Zoom.prototype.changeResolution_ = function(value) {
+Zoom.prototype.changeResolution_ = function(value) {
     var map = this.getMap();
     var view = map ? map.getView() : null;
     if (view === null) return;
@@ -167,13 +165,13 @@ ome.ol3.controls.Zoom.prototype.changeResolution_ = function(value) {
  * Adds a 1:1 zoom button
  * @private
  */
-ome.ol3.controls.Zoom.prototype.addOneToOneButton_ = function() {
+Zoom.prototype.addOneToOneButton_ = function() {
     var oneToOneElement = document.createElement('button');
     oneToOneElement.className = this.class_name_ + '-1-1' + " btn btn-default";
     oneToOneElement.setAttribute('type', 'button');
     oneToOneElement.title = "Actual Size";
     oneToOneElement.appendChild(document.createTextNode("1:1"));
-    ol.events.listen(oneToOneElement, ol.events.EventType.CLICK,
+    listen(oneToOneElement, EventType.CLICK,
         function() {
             var map = this.getMap();
             var view = map ? map.getView() : null;
@@ -190,14 +188,14 @@ ome.ol3.controls.Zoom.prototype.addOneToOneButton_ = function() {
  * Adds a zoom button that will make the image fit into the viewing extent
  * @private
  */
-ome.ol3.controls.Zoom.prototype.addFitToExtentButton_ = function() {
+Zoom.prototype.addFitToExtentButton_ = function() {
     var oneToOneElement = document.createElement('button');
     oneToOneElement.className =
         this.class_name_ + '-fit' +
         " btn btn-default glyphicon glyphicon-fullscreen";
     oneToOneElement.setAttribute('type', 'button');
     oneToOneElement.title = "Zoom Image to Fit";
-    ol.events.listen(oneToOneElement, ol.events.EventType.CLICK,
+    listen(oneToOneElement, EventType.CLICK,
         function() {
             var map = this.getMap();
             var view = map ? map.getView() : null;
@@ -214,7 +212,7 @@ ome.ol3.controls.Zoom.prototype.addFitToExtentButton_ = function() {
  * @param {Event} event The event to handle
  * @private
  */
-ome.ol3.controls.Zoom.prototype.handleClick_ = function(event) {
+Zoom.prototype.handleClick_ = function(event) {
     event.preventDefault();
 
     var map = this.getMap();
@@ -232,8 +230,10 @@ ome.ol3.controls.Zoom.prototype.handleClick_ = function(event) {
             view.animate({
               resolution: newResolution,
               duration: this.duration_,
-              easing: ol.easing.easeOut
+              easing: easeOut
             });
         } else view.setResolution(newResolution);
     }
 };
+
+export default Zoom;

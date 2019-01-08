@@ -36,7 +36,7 @@ import TileLayer from 'ol/renderer/canvas/TileLayer';
 import VectorLayer from 'ol/renderer/canvas/VectorLayer';
 import VectorTileLayer from 'ol/renderer/canvas/VectorTileLayer';
 
-// import Zoom from './controls/Zoom';
+import Zoom from './controls/Zoom';
 // import BirdsEye from './controls/BirdsEye';
 // import ScaleBar from './controls/ScaleBar';
 // import IntensityDisplay from './controls/IntensityDisplay';
