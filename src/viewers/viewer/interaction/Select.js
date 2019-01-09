@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// Copyright (C) 2019 University of Dundee & Open Microscopy Environment.
 // All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -15,11 +15,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-goog.provide('ome.ol3.interaction.Select');
 
-goog.require('ol.interaction.Interaction')
-goog.require('ol.Overlay')
-goog.require('ol.Collection')
+import Feature from 'ol/Feature';
+import Interaction from 'ol/interaction/Interaction';
+import Collection from 'ol/Collection';
+import {includes} from 'ol/array';
+import {inherits} from 'ol/util';
+import {TRUE} from 'ol/functions';
+import {shiftKeyOnly,
+    pointerMove,
+    click} from 'ol/events/condition';
+import Regions from '../source/Regions';
+import {isArray,
+    featuresAtCoords} from '../utils/Misc';
 
 /**
  * @classdesc
@@ -28,23 +36,23 @@ goog.require('ol.Collection')
  *
  * @constructor
  * @extends {ol.interaction.Interaction}
- * @param {ome.ol3.source.Regions} regions_reference a reference to Regions
+ * @param {source.Regions} regions_reference a reference to Regions
  */
-ome.ol3.interaction.Select = function(regions_reference) {
+const Select = function(regions_reference) {
     // we do need the regions reference to get the (selected) rois
-    if (!(regions_reference instanceof ome.ol3.source.Regions))
+    if (!(regions_reference instanceof Regions))
         console.error("Select needs Regions instance!");
 
     /**
      * a reference to the Regions instance
      * @private
-     * @type {ome.ol3.source.Regions}
+     * @type {source.Regions}
      */
     this.regions_ = regions_reference;
 
     // call super
     goog.base(this, {});
-    this.handleEvent = ome.ol3.interaction.Select.handleEvent;
+    this.handleEvent = Select.handleEvent;
 
     /**
      * use click event
@@ -52,8 +60,7 @@ ome.ol3.interaction.Select = function(regions_reference) {
      * @type {ol.events.ConditionType}
      */
     this.condition_ =  function(mapBrowserEvent) {
-        return ol.events.condition.click.call(
-            regions_reference.select_, mapBrowserEvent);
+        return click.call(regions_reference.select_, mapBrowserEvent);
     };
 
     /**
@@ -61,7 +68,7 @@ ome.ol3.interaction.Select = function(regions_reference) {
      * @private
      * @type {ol.Collection}
      */
-    this.features_ = new ol.Collection();
+    this.features_ = new Collection();
 
     // we only want it to apply to our layer
     var regionsLayer = this.regions_.viewer_.getRegionsLayer();
@@ -70,22 +77,22 @@ ome.ol3.interaction.Select = function(regions_reference) {
      * @type {ol.interaction.SelectFilterFunction}
      */
     this.layerFilter_ = function(layer) {
-        return ol.array.includes([regionsLayer], layer);
+        return includes([regionsLayer], layer);
     }
 
     /**
      * @private
      * @type {ol.interaction.SelectFilterFunction}
      */
-    this.filter_ = ol.functions.TRUE;
+    this.filter_ = TRUE;
 };
-goog.inherits(ome.ol3.interaction.Select, ol.interaction.Interaction);
+inherits(Select, Interaction);
 
 /**
  * Clears/unselects all selected features
  *
  */
-ome.ol3.interaction.Select.prototype.clearSelection = function() {
+Select.prototype.clearSelection = function() {
     // delegate
     var ids = []
     this.getFeatures().forEach(
@@ -103,7 +110,7 @@ ome.ol3.interaction.Select.prototype.clearSelection = function() {
  * @this {ol.interaction.Select}
  * @api
  */
-ome.ol3.interaction.Select.handleEvent = function(mapBrowserEvent) {
+Select.handleEvent = function(mapBrowserEvent) {
     if (!this.condition_(mapBrowserEvent) || mapBrowserEvent.dragging) {
         return true;
     }
@@ -113,13 +120,13 @@ ome.ol3.interaction.Select.handleEvent = function(mapBrowserEvent) {
     var oldSelectedFlag =
         selected && typeof selected['selected'] === 'boolean' ?
             selected['selected'] : false;
-    if (selected === null || !ol.events.condition.shiftKeyOnly(mapBrowserEvent)) {
+    if (selected === null || !shiftKeyOnly(mapBrowserEvent)) {
         this.clearSelection();
         if (selected === null) return;
     }
     this.regions_.setProperty([selected.getId()], "selected", !oldSelectedFlag);
 
-    return ol.events.condition.pointerMove(mapBrowserEvent);
+    return pointerMove(mapBrowserEvent);
 };
 
 /**
@@ -130,9 +137,9 @@ ome.ol3.interaction.Select.handleEvent = function(mapBrowserEvent) {
  * @return {ol.Feature} Returns the feature found at the specified pixel
  *                      coordinates.
  */
-ome.ol3.interaction.Select.prototype.featuresAtCoords_ =
+Select.prototype.featuresAtCoords_ =
     function(pixel, tolerance, use_already_selected) {
-    if (!ome.ol3.utils.Misc.isArray(pixel) || pixel.length !== 2) return;
+    if (!isArray(pixel) || pixel.length !== 2) return;
 
     if (typeof tolerance !== 'number') tolerance = 5; // 5 pixel buffer
     if (typeof use_already_selected !== 'boolean') use_already_selected = false;
@@ -150,11 +157,11 @@ ome.ol3.interaction.Select.prototype.featuresAtCoords_ =
             if (feat.getGeometry().intersectsExtent(extent)) {
                 if (!use_already_selected ||
                     (use_already_selected &&
-                        ol.array.includes(alreadySelected, feat))) hits.push(feat);
+                        includes(alreadySelected, feat))) hits.push(feat);
             }
         });
 
-    return ome.ol3.utils.Misc.featuresAtCoords(hits);
+    return featuresAtCoords(hits);
 };
 
 /**
@@ -162,7 +169,7 @@ ome.ol3.interaction.Select.prototype.featuresAtCoords_ =
  *
  * @return {ol.Collection} the selected features
  */
-ome.ol3.interaction.Select.prototype.getFeatures = function() {
+Select.prototype.getFeatures = function() {
     return this.features_;
 }
 
@@ -175,9 +182,9 @@ ome.ol3.interaction.Select.prototype.getFeatures = function() {
  * @param {boolean=} remove_first on select we remove first to make sure that we
  *                   don't add twice
  */
- ome.ol3.interaction.Select.prototype.toggleFeatureSelection =
+ Select.prototype.toggleFeatureSelection =
     function(feature, select, remove_first) {
-     if (!(feature instanceof ol.Feature)) return;
+     if (!(feature instanceof Feature)) return;
 
      if (typeof select !== 'boolean' || select) {
          if (typeof remove_first === 'boolean' && remove_first)
@@ -193,6 +200,8 @@ ome.ol3.interaction.Select.prototype.getFeatures = function() {
 /**
  * a sort of desctructor
  */
-ome.ol3.interaction.Select.prototype.disposeInternal = function() {
+Select.prototype.disposeInternal = function() {
     this.regions_ = null;
 }
+
+export default Select;

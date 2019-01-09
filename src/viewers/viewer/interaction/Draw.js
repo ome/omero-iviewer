@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// Copyright (C) 2019 University of Dundee & Open Microscopy Environment.
 // All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -15,10 +15,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-goog.provide('ome.ol3.interaction.Draw');
 
-goog.require('ol.Feature');
-goog.require('ol.interaction.Draw');
+import Feature from 'ol/Feature';
+import Collection from 'ol/Collection';
+import OlDraw from 'ol/interaction/Draw';
+import Ellipse from '../geom/Ellipse';
+import Label from '../geom/Label';
+import Line from '../geom/Line';
+import Point from '../geom/Point';
+import Polygon from '../geom/Polygon';
+import Rectangle from '../geom/Rectangle';
+import Regions from '../source/Regions';
+import {inherits} from 'ol/util';
+import {isArray,
+    sendEventNotification} from '../utils/Misc';
+import {REGIONS_STATE} from '../globals';
+import {updateStyleFunction,
+    measureTextDimensions} from '../utils/Style';
+import {toJsonObject,
+    convertColorObjectToRgba,
+    convertSignedIntegerToColorObject} from '../utils/Conversion';
 
 /**
  * @classdesc
@@ -29,15 +45,14 @@ goog.require('ol.interaction.Draw');
  * @constructor
  * @extends {Object}
  * @param {Array} previous_modes the previously set interaction modes on the regions
- * @param {ome.ol3.source.Regions} regions_reference an Regions instance.
+ * @param {source.Regions} regions_reference an Regions instance.
 */
-ome.ol3.interaction.Draw =
-    function(previous_modes, regions_reference) {
-        if (!ome.ol3.utils.Misc.isArray(previous_modes))
+const Draw = function(previous_modes, regions_reference) {
+        if (!isArray(previous_modes))
             console.error("Draw needs the prevously set modes as an array");
 
         // we do need the regions reference to do translations
-        if (!(regions_reference instanceof ome.ol3.source.Regions))
+        if (!(regions_reference instanceof Regions))
             console.error("Draw needs Regions instance!");
 
         /**
@@ -48,7 +63,7 @@ ome.ol3.interaction.Draw =
         this.opts_ = {};
 
         /**
-         * @type {ome.ol3.source.Regions}
+         * @type {source.Regions}
          * @private
          */
         this.regions_ = regions_reference;
@@ -101,12 +116,12 @@ ome.ol3.interaction.Draw =
          */
         this.default_style_ = null;
 };
-goog.inherits(ome.ol3.interaction.Draw, ome.ol3.interaction);
+inherits(Draw, OlDraw);
 
 /**
  * Delegates to the openayers draw interaction wit a custom geometry function
  * that lets us use our own geometry classes which is not done for all types.
- * This method is called internally. Use {@link ome.ol3.interaction.Draw.drawShape}
+ * This method is called internally. Use {@link Draw.drawShape}
  * instead
  *
  * @private
@@ -114,25 +129,25 @@ goog.inherits(ome.ol3.interaction.Draw, ome.ol3.interaction);
  * @param {string} shape_type the shape type as used within omero
  * @param {function} geometryFunction a custom geometry function
  */
-ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
+Draw.prototype.drawShapeCommonCode_ =
     function(ol_shape, shape_type, geometryFunction) {
         if (typeof(ol_shape) !== 'string' || typeof(shape_type) !== 'string' ||
             ol_shape.length === 0 || shape_type.length === 0) return;
 
         // called after drawing the shape
         var onDrawEndAction = function(event) {
-            if (event.feature instanceof ol.Feature) {
+            if (event.feature instanceof Feature) {
                 // set id, type and state as new
                 event.feature.setId(
                     (typeof this.roi_id_ === 'number' && this.roi_id_ < 0 ?
                         "" + this.roi_id_ + ":" :
                         "-1:") + (-ol.getUid(event.feature)));
-                event.feature['state'] = ome.ol3.REGIONS_STATE.ADDED;
+                event.feature['state'] = REGIONS_STATE.ADDED;
                 event.feature['type'] = shape_type;
 
                 // set t and z info
                 var hasUnattachedDims =
-                    ome.ol3.utils.Misc.isArray(this.opts_['unattached']) &&
+                    isArray(this.opts_['unattached']) &&
                     this.opts_['unattached'].length > 0;
                 event.feature['TheT'] =
                     hasUnattachedDims &&
@@ -146,8 +161,7 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
 
                 // apply style function after setting a default style
                 event.feature.setStyle(this.default_style_);
-                ome.ol3.utils.Style.updateStyleFunction(
-                    event.feature, this.regions_, true);
+                updateStyleFunction(event.feature, this.regions_, true);
                 // calculate measurements
                 this.regions_.getLengthAndAreaForShape(event.feature, true);
 
@@ -159,11 +173,10 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                 if (this.regions_.viewer_.eventbus_) {
                     var hist_id = this.history_id_;
                     if (this.roi_id_ < 0) event.feature['roi_id'] = this.roi_id_;
-                    var newRegionsObject =
-                        ome.ol3.utils.Conversion.toJsonObject(
-                            new ol.Collection([event.feature]), false);
+                    var newRegionsObject = toJsonObject(
+                            new Collection([event.feature]), false);
                     if (typeof newRegionsObject !== 'object' ||
-                        !ome.ol3.utils.Misc.isArray(newRegionsObject['new']) ||
+                        !isArray(newRegionsObject['new']) ||
                         newRegionsObject['new'].length === 0) return;
                     var opts = {
                         "shapes": newRegionsObject['new'],
@@ -173,7 +186,7 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
                     if (typeof event.feature['roi_id'] === 'number')
                         opts['roi_id'] = event.feature['roi_id'];
 
-                    ome.ol3.utils.Misc.sendEventNotification(
+                    sendEventNotification(
                         this.regions_.viewer_, "REGIONS_SHAPE_GENERATED",
                         opts, 25);
                 }
@@ -231,7 +244,7 @@ ome.ol3.interaction.Draw.prototype.drawShapeCommonCode_ =
  *                       a list of unattached dimensions (unattached) or
  *                       a flag to not add the new shape (add)
  */
-ome.ol3.interaction.Draw.prototype.drawShape = function(shape, roi_id, opts) {
+Draw.prototype.drawShape = function(shape, roi_id, opts) {
     this.opts_ = opts || {};
     this.abort_polyline_ = false;
     if (typeof(shape['type']) !== 'string' || shape['type'].length === 0) {
@@ -248,28 +261,28 @@ ome.ol3.interaction.Draw.prototype.drawShape = function(shape, roi_id, opts) {
     var typeFunction = null;
     switch(shape['type'].toLowerCase()) {
         case "point" :
-            typeFunction = ome.ol3.interaction.Draw.prototype.drawPoint_;
+            typeFunction = Draw.prototype.drawPoint_;
             break;
         case "polygon" :
-            typeFunction = ome.ol3.interaction.Draw.prototype.drawPolygon_;
+            typeFunction = Draw.prototype.drawPolygon_;
             break;
         case "ellipse" :
-            typeFunction = ome.ol3.interaction.Draw.prototype.drawEllipse_;
+            typeFunction = Draw.prototype.drawEllipse_;
             break;
         case "polyline" :
-            typeFunction = ome.ol3.interaction.Draw.prototype.drawPolyLine_;
+            typeFunction = Draw.prototype.drawPolyLine_;
             break;
         case "line" :
-            typeFunction = ome.ol3.interaction.Draw.prototype.drawLine_;
+            typeFunction = Draw.prototype.drawLine_;
             break;
         case "arrow":
-            typeFunction = ome.ol3.interaction.Draw.prototype.drawArrow_;
+            typeFunction = Draw.prototype.drawArrow_;
             break;
         case "rectangle" :
-            typeFunction = ome.ol3.interaction.Draw.prototype.drawRectangle_;
+            typeFunction = Draw.prototype.drawRectangle_;
             break;
         case "label" :
-            typeFunction = ome.ol3.interaction.Draw.prototype.drawLabel_;
+            typeFunction = Draw.prototype.drawLabel_;
             break;
         default:
             this.regions_.setModes(this.previous_modes_);
@@ -284,7 +297,7 @@ ome.ol3.interaction.Draw.prototype.drawShape = function(shape, roi_id, opts) {
  *
  * @param {Object} shape the shape definition
  */
-ome.ol3.interaction.Draw.prototype.setDefaultDrawingStyle = function(shape) {
+Draw.prototype.setDefaultDrawingStyle = function(shape) {
     // reset previous defaults
     this.default_style_function_ = null;
     this.default_style_ = null;
@@ -299,14 +312,12 @@ ome.ol3.interaction.Draw.prototype.setDefaultDrawingStyle = function(shape) {
     // determine fill and stroke using defaults if not supplied
     var defaultFill =
         typeof shape['FillColor'] === 'number' ?
-            ome.ol3.utils.Conversion.convertSignedIntegerToColorObject(
-                shape['FillColor']) : null;
+            convertSignedIntegerToColorObject(shape['FillColor']) : null;
     if (defaultFill === null) defaultFill = transWhite;
-    else defaultFill =
-        ome.ol3.utils.Conversion.convertColorObjectToRgba(defaultFill);
+    else defaultFill = convertColorObjectToRgba(defaultFill);
     var defaultStroke = {
         'color': typeof shape['StrokeColor'] === 'number' ?
-                    ome.ol3.utils.Conversion.convertSignedIntegerToColorObject(
+                    convertSignedIntegerToColorObject(
                         shape['StrokeColor']) : null,
         'width': (typeof shape['StrokeWidth'] === 'object' &&
                   shape['StrokeWidth'] !== null &&
@@ -318,8 +329,7 @@ ome.ol3.interaction.Draw.prototype.setDefaultDrawingStyle = function(shape) {
     };
     if (defaultStroke['color'] === null) defaultStroke['color'] = blue;
     else defaultStroke['color'] =
-        ome.ol3.utils.Conversion.convertColorObjectToRgba(
-            defaultStroke['color']);
+        convertColorObjectToRgba(defaultStroke['color']);
     if (needsStroke && defaultStroke['width'] === 0)
         defaultStroke['width'] = 1;
     else if (isLabel) defaultStroke['width'] = 0;
@@ -342,7 +352,7 @@ ome.ol3.interaction.Draw.prototype.setDefaultDrawingStyle = function(shape) {
         if (optSketchFeature === null) return null;
 
         // for sketching labels
-        if (geom instanceof ome.ol3.geom.Label) {
+        if (geom instanceof Label) {
             var text =
                 new ol.style.Text(
                     {
@@ -361,7 +371,7 @@ ome.ol3.interaction.Draw.prototype.setDefaultDrawingStyle = function(shape) {
 
         var ret = [this.default_style_];
         // for sketching arrows
-        if (geom instanceof ome.ol3.geom.Line && geom.has_end_arrow_) {
+        if (geom instanceof Line && geom.has_end_arrow_) {
             var lineStroke = this.default_style_.getStroke();
             var strokeWidth = lineStroke.getWidth() || 1;
             var arrowBaseWidth = 15 * resolution;
@@ -387,7 +397,7 @@ ome.ol3.interaction.Draw.prototype.setDefaultDrawingStyle = function(shape) {
  * Ends an active drawing interaction
  * @param {boolean} reset if true (default) we reset back to the previous mode
  */
-ome.ol3.interaction.Draw.prototype.endDrawingInteraction = function(reset) {
+Draw.prototype.endDrawingInteraction = function(reset) {
     if (this.ol_draw_) {
         this.regions_.viewer_.viewer_.removeInteraction(this.ol_draw_);
         this.ol_draw_ = null;
@@ -402,10 +412,10 @@ ome.ol3.interaction.Draw.prototype.endDrawingInteraction = function(reset) {
  * @private
  * @param {Object} event the event object for the drawing interaction
  */
-ome.ol3.interaction.Draw.prototype.drawPolygon_ = function(event) {
+Draw.prototype.drawPolygon_ = function(event) {
     this.drawShapeCommonCode_('Polygon', 'polygon',
         function(coordinates, opt_geometry) {
-            var geometry = new ome.ol3.geom.Polygon(coordinates);
+            var geometry = new Polygon(coordinates);
 
             if (opt_geometry) {
                 opt_geometry.setCoordinates(geometry.getCoordinates());
@@ -421,10 +431,10 @@ ome.ol3.interaction.Draw.prototype.drawPolygon_ = function(event) {
  * @private
  * @param {Object} event the event object for the drawing interaction
  */
-ome.ol3.interaction.Draw.prototype.drawPolyLine_ = function(event) {
+Draw.prototype.drawPolyLine_ = function(event) {
     this.drawShapeCommonCode_('LineString', 'polyline',
         function(coordinates, opt_geometry) {
-            var geometry = new ome.ol3.geom.Line(coordinates);
+            var geometry = new Line(coordinates);
 
             if (opt_geometry) {
                 opt_geometry.setCoordinates(geometry.getCoordinates());
@@ -440,7 +450,7 @@ ome.ol3.interaction.Draw.prototype.drawPolyLine_ = function(event) {
  * @private
  * @param {Object} event the event object for the drawing interaction
  */
-ome.ol3.interaction.Draw.prototype.drawLine_ = function(event) {
+Draw.prototype.drawLine_ = function(event) {
     this.abort_polyline_ = true;
     this.drawPolyLine_();
 };
@@ -451,11 +461,11 @@ ome.ol3.interaction.Draw.prototype.drawLine_ = function(event) {
  * @private
  * @param {Object} event the event object for the drawing interaction
  */
-ome.ol3.interaction.Draw.prototype.drawArrow_ = function(event) {
+Draw.prototype.drawArrow_ = function(event) {
     this.abort_polyline_ = true;
     this.drawShapeCommonCode_('LineString', 'polyline',
         function(coordinates, opt_geometry) {
-            var geometry = new ome.ol3.geom.Line(coordinates, false, true);
+            var geometry = new Line(coordinates, false, true);
             if (opt_geometry) {
                 opt_geometry.setCoordinates(geometry.getCoordinates());
             }
@@ -470,10 +480,10 @@ ome.ol3.interaction.Draw.prototype.drawArrow_ = function(event) {
  * @private
  * @param {Object} event the event object for the drawing interaction
  */
-ome.ol3.interaction.Draw.prototype.drawPoint_ = function(event) {
+Draw.prototype.drawPoint_ = function(event) {
     this.drawShapeCommonCode_('Point', "point",
         function(coordinates, opt_geometry) {
-            return new ome.ol3.geom.Point(coordinates);
+            return new Point(coordinates);
     });
 };
 
@@ -483,7 +493,7 @@ ome.ol3.interaction.Draw.prototype.drawPoint_ = function(event) {
  * @private
  * @param {Object} event the event object for the drawing interaction
  */
-ome.ol3.interaction.Draw.prototype.drawRectangle_ = function(event) {
+Draw.prototype.drawRectangle_ = function(event) {
     this.drawShapeCommonCode_('Circle', "rectangle",
         function(coordinates, opt_geometry) {
             var supposedTopLeft = coordinates[0];
@@ -497,7 +507,7 @@ ome.ol3.interaction.Draw.prototype.drawRectangle_ = function(event) {
             var topLeftY = end[1] > supposedTopLeft[1] ?
                 end[1]: supposedTopLeft[1];
 
-            var geometry = new ome.ol3.geom.Rectangle(topLeftX, topLeftY, w, h);
+            var geometry = new Rectangle(topLeftX, topLeftY, w, h);
 
             if (opt_geometry) {
                 opt_geometry.setUpperLeftCorner(geometry.getUpperLeftCorner());
@@ -515,7 +525,7 @@ ome.ol3.interaction.Draw.prototype.drawRectangle_ = function(event) {
  * @private
  * @param {Object} event the event object for the drawing interaction
  */
-ome.ol3.interaction.Draw.prototype.drawLabel_ = function(event) {
+Draw.prototype.drawLabel_ = function(event) {
     var height = this.regions_.viewer_.getDimensionIndex('y');
 
     this.drawShapeCommonCode_('Circle', "label",
@@ -530,10 +540,9 @@ ome.ol3.interaction.Draw.prototype.drawLabel_ = function(event) {
             var topLeftY = end[1] > supposedTopLeft[1] ?
                 end[1]: supposedTopLeft[1];
 
-            var fontDims =
-                ome.ol3.utils.Style.measureTextDimensions(
+            var fontDims = measureTextDimensions(
                     "TEXT", "normal " + parseInt(h) + "px sans-serif");
-            var geometry = new ome.ol3.geom.Label(topLeftX, topLeftY, fontDims);
+            var geometry = new Label(topLeftX, topLeftY, fontDims);
 
             if (opt_geometry) {
                 opt_geometry.setUpperLeftCorner(geometry.getUpperLeftCorner());
@@ -551,7 +560,7 @@ ome.ol3.interaction.Draw.prototype.drawLabel_ = function(event) {
  * @private
  * @param {Object} event the event object for the drawing interaction
  */
-ome.ol3.interaction.Draw.prototype.drawEllipse_ = function(event) {
+Draw.prototype.drawEllipse_ = function(event) {
     this.drawShapeCommonCode_('Circle', "ellipse",
         function(coordinates, opt_geometry) {
             var center = coordinates[0];
@@ -559,7 +568,7 @@ ome.ol3.interaction.Draw.prototype.drawEllipse_ = function(event) {
             var rx = Math.abs(center[0]-end[0]);
             var ry =  Math.abs(center[1]- end[1]);
             var geometry =
-                new ome.ol3.geom.Ellipse(center[0], center[1], rx,ry);
+                new Ellipse(center[0], center[1], rx,ry);
 
             if (opt_geometry) {
                 opt_geometry.setCoordinates(geometry.getCoordinates());
@@ -573,7 +582,7 @@ ome.ol3.interaction.Draw.prototype.drawEllipse_ = function(event) {
 /**
  * a sort of desctructor
  */
-ome.ol3.interaction.Draw.prototype.dispose = function() {
+Draw.prototype.dispose = function() {
     if (this.ol_draw_) {
         this.regions_.viewer_.viewer_.removeInteraction(this.ol_draw_);
         this.ol_draw_ = null;
@@ -581,3 +590,5 @@ ome.ol3.interaction.Draw.prototype.dispose = function() {
     }
     this.regions_ = null;
 }
+
+export default Draw;
