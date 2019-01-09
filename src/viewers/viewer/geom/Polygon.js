@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// Copyright (C) 2019 University of Dundee & Open Microscopy Environment.
 // All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -15,9 +15,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-goog.provide('ome.ol3.geom.Polygon');
 
-goog.require('ol.geom.Polygon');
+import OlPolygon from 'ol/geom/Polygon';
+import SimpleGeometry from 'ol/geom/SimpleGeometry';
+import {inherits} from 'ol/util';
+import {isArray} from '../utils/Misc';
+import {getLength} from '../utils/Regions';
+import {applyTransform,
+    applyInverseTransform,
+    convertMatrixToAffineTransform,
+    convertAffineTransformIntoMatrix} from '../utils/Transform';
 
 /**
  * @classdesc
@@ -31,9 +38,9 @@ goog.require('ol.geom.Polygon');
  * @param {Array.<Array>} coords the coordinates for the polygon
  * @param {Object=} transform an AffineTransform object according to omero marshal
  */
-ome.ol3.geom.Polygon = function(coords, transform) {
+const Polygon = function(coords, transform) {
     // preliminary checks: are all mandatory paramters numeric
-    if (!ome.ol3.utils.Misc.isArray(coords) || coords.length === 0)
+    if (!isArray(coords) || coords.length === 0)
         console.error("Polygon needs a non-empty array of coordinates!");
 
     /**
@@ -48,26 +55,24 @@ ome.ol3.geom.Polygon = function(coords, transform) {
      * @type {Array.<number>|null}
      * @private
      */
-    this.transform_ =
-        ome.ol3.utils.Transform.convertAffineTransformIntoMatrix(transform);
+    this.transform_ = convertAffineTransformIntoMatrix(transform);
 
     // call super and hand in our coordinate array
-    goog.base(this, coords);
+    // goog.base(this, coords);
+    OlPolygon.call(this, coords);
     this.initial_coords_ = this.getFlatCoordinates();
 
     // apply potential transform
-    this.flatCoordinates =
-        ome.ol3.utils.Transform.applyTransform(
-            this.transform_, this.initial_coords_);
+    this.flatCoordinates = applyTransform(this.transform_, this.initial_coords_);
 }
-goog.inherits(ome.ol3.geom.Polygon, ol.geom.Polygon);
+inherits(Polygon, OlPolygon);
 
 
 /**
  * Returns the coordinates as a flat array (excl. any potential transform)
  * @return {Array.<number>} the coordinates as a flat array
  */
-ome.ol3.geom.Polygon.prototype.getPolygonCoordinates = function() {
+Polygon.prototype.getPolygonCoordinates = function() {
     return (
         this.transform_ ? this.initial_coords_ : this.getFlatCoordinates()
     );
@@ -77,9 +82,8 @@ ome.ol3.geom.Polygon.prototype.getPolygonCoordinates = function() {
  * Gets the transformation associated with the polygon
  * @return {Object|null} the AffineTransform object (omero marshal) or null
  */
-ome.ol3.geom.Polygon.prototype.getTransform = function() {
-    return ome.ol3.utils.Transform.convertMatrixToAffineTransform(
-        this.transform_);
+Polygon.prototype.getTransform = function() {
+    return convertMatrixToAffineTransform(this.transform_);
 }
 
 /**
@@ -87,30 +91,28 @@ ome.ol3.geom.Polygon.prototype.getTransform = function() {
  *
  * @private
  */
-ome.ol3.geom.Polygon.prototype.translate = function(deltaX, deltaY) {
+Polygon.prototype.translate = function(deltaX, deltaY) {
     // delegate
     if (this.transform_) {
         this.transform_[4] += deltaX;
         this.transform_[5] -= deltaY;
-        this.flatCoordinates =
-            ome.ol3.utils.Transform.applyTransform(
+        this.flatCoordinates = applyTransform(
                 this.transform_, this.initial_coords_);
         this.changed();
-    } else ol.geom.SimpleGeometry.prototype.translate.call(this, deltaX, deltaY);
+    } else SimpleGeometry.prototype.translate.call(this, deltaX, deltaY);
 };
 
 /**
  * Returns the coordinates after (potentially) inverting a transformation
  * @return {Array} the coordinate array
  */
-ome.ol3.geom.Polygon.prototype.getInvertedCoordinates = function() {
+Polygon.prototype.getInvertedCoordinates = function() {
     if (this.transform_ === null) return this.getCoordinates();
 
     var coords = this.getCoordinates();
     var invCoords = new Array(coords[0].length);
     for (var i=0;i<coords[0].length;i++)
-        invCoords[i] =
-            ome.ol3.utils.Transform.applyInverseTransform(
+        invCoords[i] = applyInverseTransform(
                 this.transform_, coords[0][i]);
 
     return [invCoords];
@@ -118,10 +120,10 @@ ome.ol3.geom.Polygon.prototype.getInvertedCoordinates = function() {
 
 /**
  * Make a complete copy of the geometry.
- * @return {ome.ol3.geom.Polygon} Clone.
+ * @return {Polygon} Clone.
  */
-ome.ol3.geom.Polygon.prototype.clone = function() {
-    return new ome.ol3.geom.Polygon(
+Polygon.prototype.clone = function() {
+    return new Polygon(
             this.getInvertedCoordinates(), this.getTransform());
 };
 
@@ -130,6 +132,8 @@ ome.ol3.geom.Polygon.prototype.clone = function() {
  *
  * @return {number} the length of the polygon
  */
-ome.ol3.geom.Polygon.prototype.getLength = function() {
-    return ome.ol3.utils.Regions.getLength(this);
+Polygon.prototype.getLength = function() {
+    return getLength(this);
 }
+
+export default Polygon;

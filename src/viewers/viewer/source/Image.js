@@ -17,11 +17,20 @@
 //
 
 import TileImage from 'ol/source/TileImage';
+import LRUCache from 'ol/structs/LRUCache';
 import TileGrid from 'ol/tilegrid/TileGrid';
 import EventType from 'ol/events/EventType';
+import TileState from 'ol/TileState';
 import {getTopLeft} from 'ol/extent';
 import {listen} from 'ol/events';
 import {inherits} from 'ol/util';
+// import ImageTile from '../tiles/ImageTile';
+import {checkAndSanitizeUri} from '../utils/Net';
+import {DEFAULT_TILE_DIMS,
+    PROJECTION,
+    RENDER_STATUS,
+    UNTILED_RETRIEVAL_LIMIT} from '../globals';
+import {isArray} from '../utils/Misc';
 
 /**
  * @classdesc
@@ -116,8 +125,7 @@ const OmeroImage = function(options) {
      * @type {Array.<Object>}
      * @private
      */
-    this.channels_info_ =
-        ome.ol3.utils.Misc.isArray(
+    this.channels_info_ = isArray(
             opts.channels) ? [].concat(opts.channels) : [];
 
     /**
@@ -156,8 +164,7 @@ const OmeroImage = function(options) {
      * @type {Array.<number>}
      * @private
      */
-    this.resolutions_ =
-        ome.ol3.utils.Misc.isArray(opts.resolutions) ? opts.resolutions : [1];
+    this.resolutions_ = isArray(opts.resolutions) ? opts.resolutions : [1];
 
     /**
      * are we treated as a tiled source
@@ -169,12 +176,12 @@ const OmeroImage = function(options) {
     /**
      * should we use tiled retrieval methods?
      * for now use them only for truly tiled/pyramidal sources
-     * and images that exceed {@link ome.ol3.UNTILED_RETRIEVAL_LIMIT}
+     * and images that exceed {@link UNTILED_RETRIEVAL_LIMIT}
      * @type {boolean}
      * @private
      */
     this.use_tiled_retrieval_ = this.tiled_ ||
-        this.width_ * this.height_ > ome.ol3.UNTILED_RETRIEVAL_LIMIT;
+        this.width_ * this.height_ > UNTILED_RETRIEVAL_LIMIT;
 
     /**
      * for untiled retrieval the tile size equals the entire image extent
@@ -200,7 +207,7 @@ const OmeroImage = function(options) {
      * @type {string}
      * @private
      */
-    this.uri_ = ome.ol3.utils.Net.checkAndSanitizeUri(opts.uri + '/' +
+    this.uri_ = checkAndSanitizeUri(opts.uri + '/' +
         (this.use_tiled_retrieval_ ? 'render_image_region' : 'render_image'));
 
     /**
@@ -215,7 +222,7 @@ const OmeroImage = function(options) {
      * @type {number}
      * @private
      */
-    this.render_status_ = ome.ol3.RENDER_STATUS.NOT_WATCHED;
+    this.render_status_ = RENDER_STATUS.NOT_WATCHED;
 
     /**
      * the present render watch handle
@@ -299,7 +306,7 @@ const OmeroImage = function(options) {
             url += "&maps=" + JSON.stringify(maps);
             url += '&m=' + this.image_model_;
             url += '&p=' + this.image_projection_;
-            if (this.image_projection_ === ome.ol3.PROJECTION['INTMAX'] &&
+            if (this.image_projection_ === PROJECTION['INTMAX'] &&
                 typeof this.projection_opts_ === 'object' &&
                 this.projection_opts_ !== null) {
                     url += '|' + this.projection_opts_.start +
@@ -312,10 +319,10 @@ const OmeroImage = function(options) {
 
     // get rest of parameters and instantiate a tile grid
     var extent = [0, -this.height_, this.width_, 0];
-    var tileGrid = new ol.tilegrid.TileGrid({
+    var tileGrid = new TileGrid({
         tileSize: this.tile_size_ ?
             [this.tile_size_.width, this.tile_size_.height] :
-            [ome.ol3.DEFAULT_TILE_DIMS.width, ome.ol3.DEFAULT_TILE_DIMS.height],
+            [DEFAULT_TILE_DIMS.width, DEFAULT_TILE_DIMS.height],
         extent: extent,
         origin: getTopLeft(extent),
         resolutions: this.resolutions_
@@ -326,7 +333,7 @@ const OmeroImage = function(options) {
     TileImage.call(this, {
         transition: 0,
         crossOrigin: opts.crossOrigin,
-        tileClass:  ome.ol3.tiles.ImageTile,
+        tileClass:  ImageTile,
         tileGrid: tileGrid,
         tileUrlFunction: this.tileUrlFunction_
     });
@@ -361,7 +368,7 @@ OmeroImage.prototype.createTile_ =
             new this.tileClass(
                 tileCoord,
                 tileUrl !== undefined ?
-                    ol.TileState.IDLE : ol.TileState.EMPTY,
+                    TileState.IDLE : TileState.EMPTY,
                 tileUrl !== undefined ? tileUrl : '',
                 this.crossOrigin, this.tileLoadFunction, this.tileOptions);
 
@@ -461,7 +468,7 @@ OmeroImage.prototype.getChannels = function() {
  * @param {Array.<number>} value the channels array (c indices)
  */
 OmeroImage.prototype.setChannels = function(value) {
-    if (!ome.ol3.utils.Misc.isArray(value)) return;
+    if (!isArray(value)) return;
 
     var max = this.channels_info_.length;
     for (var c in value) {
@@ -491,7 +498,7 @@ OmeroImage.prototype.setImageProjection = function(value, opts) {
     if (typeof value !== 'string' || value.length === 0) return;
 
     try {
-        this.image_projection_ = ome.ol3.PROJECTION[value.toUpperCase()];
+        this.image_projection_ = PROJECTION[value.toUpperCase()];
         if (typeof opts === 'object' && typeof opts['start'] === 'number' &&
             opts['start'] >= 0 && typeof opts['end'] === 'number' &&
             opts['end'] >= 0 && opts['end'] >= opts['start']) {
@@ -525,7 +532,7 @@ OmeroImage.prototype.setImageModel = function(value) {
  * @return {boolean} if true this indicates a rerender is needed, false otherwise
  */
 OmeroImage.prototype.changeChannelRange = function(ranges) {
-    if (!ome.ol3.utils.Misc.isArray(ranges)) return false;
+    if (!isArray(ranges)) return false;
 
     // we don't rerender if there haven't been changes
     // or changes don't necessitate rerenders such as:
@@ -597,7 +604,7 @@ OmeroImage.prototype.changeChannelRange = function(ranges) {
 OmeroImage.prototype.captureImageSettings = function() {
     var ret = {
         'projection' :
-            this.image_projection_ === ome.ol3.PROJECTION['INTMAX'] ?
+            this.image_projection_ === PROJECTION['INTMAX'] ?
                 (this.image_projection_ + '|' + this.projection_opts_.start +
                 ':' + this.projection_opts_.end) : this.image_projection_,
         'model' : this.image_model_,
@@ -713,7 +720,7 @@ OmeroImage.prototype.watchRenderStatus =
                         this.un("tileloadstart", incToBeLoaded);
                         this.un("tileloadend", checkLoaded, this);
                         this.un("tileloaderror", checkLoaded, this);
-                        this.render_status_ = ome.ol3.RENDER_STATUS.RENDERED;
+                        this.render_status_ = RENDER_STATUS.RENDERED;
                         this.render_watch_ = null;
                     }
                 };
@@ -724,7 +731,7 @@ OmeroImage.prototype.watchRenderStatus =
                             this.un("tileloadstart", incToBeLoaded);
                             this.un("tileloadend", checkLoaded, this);
                             this.un("tileloaderror", checkError, this);
-                            this.render_status_ = ome.ol3.RENDER_STATUS.ERROR;
+                            this.render_status_ = RENDER_STATUS.ERROR;
                             this.render_watch_ = null;
                         } : checkLoaded;
 
@@ -734,14 +741,14 @@ OmeroImage.prototype.watchRenderStatus =
 
                 // check if we have tiles loading, otherwise they are in the cache
                 // already. to that end we give a delay of 50 millis
-                this.render_status_ = ome.ol3.RENDER_STATUS.IN_PROGRESS;
+                this.render_status_ = RENDER_STATUS.IN_PROGRESS;
                 setTimeout(
                     function() {
                         if (tilesToBeLoaded === 0) {
                             this.un("tileloadstart", incToBeLoaded);
                             this.un("tileloadend", checkLoaded, this);
                             this.un("tileloaderror", checkError, this);
-                            this.render_status_ = ome.ol3.RENDER_STATUS.NOT_WATCHED;
+                            this.render_status_ = RENDER_STATUS.NOT_WATCHED;
                             this.render_watch_ = null;
                         };
                     }.bind(this), 50);
@@ -753,13 +760,13 @@ OmeroImage.prototype.watchRenderStatus =
  * Returns the render status, resetting to not watched
  *
  * @params {boolean} reset if true we reset to NOT_WATCHED
- * @return {ome.ol3.RENDER_STATUS} the render status
+ * @return {RENDER_STATUS} the render status
  */
 OmeroImage.prototype.getRenderStatus = function(reset) {
     if (typeof reset !== 'boolean') reset = false;
 
     var ret = this.render_status_;
-    if (reset) this.render_status_ = ome.ol3.RENDER_STATUS.NOT_WATCHED;
+    if (reset) this.render_status_ = RENDER_STATUS.NOT_WATCHED;
 
     return ret;
 }
@@ -769,7 +776,7 @@ OmeroImage.prototype.getRenderStatus = function(reset) {
  * Clean up
  */
 OmeroImage.prototype.disposeInternal = function() {
-    if (this.tileCache instanceof ol.structs.LRUCache) this.tileCache.clear();
+    if (this.tileCache instanceof LRUCache) this.tileCache.clear();
     this.channels_info_ = [];
 };
 

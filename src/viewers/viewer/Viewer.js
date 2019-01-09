@@ -62,7 +62,7 @@ import {integrateStyleIntoJsonObject,
     toJsonObject,
     featureToJsonObject,
     LOOKUP} from './utils/Conversion';
-import {Image as OmeroImage} from './source/Image';
+import OmeroImage from './source/Image';
 import Regions from './source/Regions';
 
 /**

@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// Copyright (C) 2019 University of Dundee & Open Microscopy Environment.
 // All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -15,9 +15,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-goog.provide('ome.ol3.geom.Mask');
 
-goog.require('ol.geom.Point');
+import Point from 'ol/geom/Point';
+import SimpleGeometry from 'ol/geom/SimpleGeometry';
+import {intersectsLinearRing} from 'ol/geom/flat/intersectsextent';
+import {inherits} from 'ol/util';
+import Rectangle from './Rectangle';
+import {applyTransform,
+    convertMatrixToAffineTransform,
+    convertAffineTransformIntoMatrix} from '../utils/Transform';
 
 /**
  * @classdesc
@@ -33,7 +39,7 @@ goog.require('ol.geom.Point');
  * @param {number} h the height of the mask
  * @param {Object=} transform an AffineTransform object according to omero marshal
  */
-ome.ol3.geom.Mask = function(x, y, w, h, transform) {
+const Mask = function(x, y, w, h, transform) {
     // preliminary checks
     if (typeof x !== 'number' || typeof y !== 'number' ||
         typeof w !== 'number' || typeof h !== 'number' ||
@@ -59,26 +65,25 @@ ome.ol3.geom.Mask = function(x, y, w, h, transform) {
      * @type {Array.<number>|null}
      * @private
      */
-    this.transform_ =
-        ome.ol3.utils.Transform.convertAffineTransformIntoMatrix(transform);
+    this.transform_ = convertAffineTransformIntoMatrix(transform);
 
     // call super
-    goog.base(this, [x, y]);
+    // goog.base(this, [x, y]);
+    Point.call(this, [x, y]);
     this.initial_coords_ = this.getFlatCoordinates();
 
     // apply potential transform
-    this.flatCoordinates =
-        ome.ol3.utils.Transform.applyTransform(
+    this.flatCoordinates = applyTransform(
             this.transform_, this.initial_coords_);
 }
-goog.inherits(ome.ol3.geom.Mask, ol.geom.Point);
+inherits(Mask, Point);
 
 
 /**
  * Returns the coordinates as a flat array (excl. any potential transform)
  * @return {Array.<number>} the coordinates as a flat array
  */
-ome.ol3.geom.Mask.prototype.getPointCoordinates = function() {
+Mask.prototype.getPointCoordinates = function() {
     var ret =
         this.transform_ ? this.initial_coords_ : this.getFlatCoordinates();
     return ret.slice(0, 2);
@@ -88,9 +93,8 @@ ome.ol3.geom.Mask.prototype.getPointCoordinates = function() {
  * Gets the transformation associated with the point
  * @return {Object|null} the AffineTransform object (omero marshal) or null
  */
-ome.ol3.geom.Mask.prototype.getTransform = function() {
-    return ome.ol3.utils.Transform.convertMatrixToAffineTransform(
-        this.transform_);
+Mask.prototype.getTransform = function() {
+    return convertMatrixToAffineTransform(this.transform_);
 }
 
 /**
@@ -98,25 +102,24 @@ ome.ol3.geom.Mask.prototype.getTransform = function() {
  *
  * @private
  */
-ome.ol3.geom.Mask.prototype.translate = function(deltaX, deltaY) {
+Mask.prototype.translate = function(deltaX, deltaY) {
     // delegate
     if (this.transform_) {
         this.transform_[4] += deltaX;
         this.transform_[5] -= deltaY;
-        this.flatCoordinates =
-            ome.ol3.utils.Transform.applyTransform(
+        this.flatCoordinates = applyTransform(
                 this.transform_, this.initial_coords_);
         this.changed();
-    } else ol.geom.SimpleGeometry.prototype.translate.call(this, deltaX, deltaY);
+    } else SimpleGeometry.prototype.translate.call(this, deltaX, deltaY);
 };
 
 /**
  * Make a complete copy of the geometry.
- * @return {ome.ol3.geom.Mask} Clone.
+ * @return {Mask} Clone.
  */
-ome.ol3.geom.Mask.prototype.clone = function() {
+Mask.prototype.clone = function() {
     var pointCoords = this.getPointCoordinates();
-    return new ome.ol3.geom.Mask(
+    return new Mask(
         pointCoords[0], pointCoords[1],
         this.size_[0], this.size_[1], this.getTransform());
 };
@@ -125,7 +128,7 @@ ome.ol3.geom.Mask.prototype.clone = function() {
  * Returns the area.of the mask
  * @return {number} the area of the mask.
  */
-ome.ol3.geom.Mask.prototype.getArea = function() {
+Mask.prototype.getArea = function() {
     return this.size_[0] * this.size_[1];
 }
 
@@ -134,7 +137,7 @@ ome.ol3.geom.Mask.prototype.getArea = function() {
  *
  * @return {number} the length of the mask
  */
-ome.ol3.geom.Mask.prototype.getLength = function() {
+Mask.prototype.getLength = function() {
     return 2 * (this.size_[0] + this.size_[1]);
 }
 
@@ -143,7 +146,7 @@ ome.ol3.geom.Mask.prototype.getLength = function() {
  *
  * @return {Array.<number>} the extent of the mask
  */
-ome.ol3.geom.Mask.prototype.getExtent = function() {
+Mask.prototype.getExtent = function() {
     var pointCoords = this.getPointCoordinates();
     return [
         pointCoords[0], pointCoords[1] - this.size_[1],
@@ -157,9 +160,9 @@ ome.ol3.geom.Mask.prototype.getExtent = function() {
  * @param {Array.<number>} extent the extent to test against
  * @return {boolean} true if the given extent intersects with the mask
  */
-ome.ol3.geom.Mask.prototype.intersectsExtent = function(extent) {
+Mask.prototype.intersectsExtent = function(extent) {
     var extRect = this.getOutline().getRectangleCoordinates();
-    return ol.geom.flat.intersectsextent.linearRings(
+    return intersectsLinearRing(
         extRect, 0, [extRect.length], 2, extent);
 }
 
@@ -168,8 +171,9 @@ ome.ol3.geom.Mask.prototype.intersectsExtent = function(extent) {
  *
  * @return {Array.<number>} the rectangle outline
  */
-ome.ol3.geom.Mask.prototype.getOutline = function() {
+Mask.prototype.getOutline = function() {
     var point = this.getPointCoordinates();
-    return new ome.ol3.geom.Rectangle(
-        point[0], point[1], this.size_[0], this.size_[1]);
+    return new Rectangle(point[0], point[1], this.size_[0], this.size_[1]);
 }
+
+export default Mask;
