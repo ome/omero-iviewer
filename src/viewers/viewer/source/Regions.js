@@ -23,14 +23,22 @@ import Viewer from '../Viewer';
 import Draw from '../interaction/Draw';
 import Select from '../interaction/Select';
 import BoxSelect from '../interaction/BoxSelect';
-import {createFeaturesFromRegionsResponse} from '../utils/Regions';
-import {isArray} from '../utils/Misc';
+import Modify from '../interaction/Modify';
+import Translate from '../interaction/Translate';
+import {calculateLengthAndArea,
+    createFeaturesFromRegionsResponse} from '../utils/Regions';
+import {isArray,
+    getCookie,
+    sendEventNotification} from '../utils/Misc';
 import {sendRequest} from '../utils/Net';
-import {WEB_API_BASE,
+import {PROJECTION,
+    PLUGIN_PREFIX,
+    WEB_API_BASE,
+    REGIONS_STATE,
     REGIONS_MODE,
     REGIONS_REQUEST_URL} from '../globals';
 
-/**
+    /**
  * @classdesc
  * Regions is the viewer's layer source for displaying the regions.
  *
@@ -374,7 +382,7 @@ Regions.prototype.setModes = function(modes) {
     if (defaultMode) { // reset all interactions
         removeDrawInteractions.call(this);
         removeModifyInteractions.call(this);
-        this.present_modes_.push(ome.ol3.REGIONS_MODE.DEFAULT);
+        this.present_modes_.push(REGIONS_MODE.DEFAULT);
         return;
     }
 
@@ -382,7 +390,7 @@ Regions.prototype.setModes = function(modes) {
         removeModifyInteractions.call(this);
         if (this.draw_ === null) // no need to do this if we have a draw already
             this.draw_ = new Draw(oldModes, this);
-        this.present_modes_.push(ome.ol3.REGIONS_MODE.DRAW);
+        this.present_modes_.push(REGIONS_MODE.DRAW);
         return;
     }
 
@@ -392,26 +400,26 @@ Regions.prototype.setModes = function(modes) {
         removeDrawInteractions.call(this);
         addSelectInteraction.call(this);
         if (this.modify_ === null) {
-            this.modify_ = new ome.ol3.interaction.Modify(this);
+            this.modify_ = new Modify(this);
             this.viewer_.viewer_.addInteraction(this.modify_);
         }
-        this.present_modes_.push(ome.ol3.REGIONS_MODE.MODIFY);
+        this.present_modes_.push(REGIONS_MODE.MODIFY);
     }
 
     if (translateMode) { // remove mutually exclusive interactions
         removeDrawInteractions.call(this);
         addSelectInteraction.call(this);
         if (this.translate_ === null) {
-            this.translate_ = new ome.ol3.interaction.Translate(this);
+            this.translate_ = new Translate(this);
             this.viewer_.viewer_.addInteraction(this.translate_);
         }
-        this.present_modes_.push(ome.ol3.REGIONS_MODE.TRANSLATE);
+        this.present_modes_.push(REGIONS_MODE.TRANSLATE);
     }
 
     if (selectMode) { // remove mutually exclusive interactions
         removeDrawInteractions.call(this);
         addSelectInteraction.call(this);
-        this.present_modes_.push(ome.ol3.REGIONS_MODE.SELECT);
+        this.present_modes_.push(REGIONS_MODE.SELECT);
     }
 }
 
@@ -437,7 +445,7 @@ Regions.prototype.updateRegions= function(request_info) {
     var allFeatures = this.featuresRtree_.getAll();
     for (var f in allFeatures) {
         var feat = allFeatures[f];
-        if (feat['state'] === ome.ol3.REGIONS_STATE.ADDED &&
+        if (feat['state'] === REGIONS_STATE.ADDED &&
             typeof this.new_unsaved_shapes_[feat.getId()] !== 'object')
                 this.new_unsaved_shapes_[feat.getId()] = feat;
     }
@@ -449,8 +457,7 @@ Regions.prototype.updateRegions= function(request_info) {
     }
 
     // just take the roi info that we had already (and include orphaned additions)
-    var regionsAsFeatures =
-        ome.ol3.utils.Regions.createFeaturesFromRegionsResponse(this, true);
+    var regionsAsFeatures = createFeaturesFromRegionsResponse(this, true);
     if (!isArray(regionsAsFeatures)) regionsAsFeatures = [];
     if (regionsAsFeatures.length > 0) this.addFeatures(regionsAsFeatures);
 }
@@ -515,7 +522,7 @@ Regions.prototype.renderFeature = function(feature) {
         typeof(feature['visible']) !== 'boolean' || feature['visible'];
     var deleted =
         typeof feature['state'] === 'number' &&
-            feature['state'] === ome.ol3.REGIONS_STATE.REMOVED;
+            feature['state'] === REGIONS_STATE.REMOVED;
 
     var shapeT = typeof feature['TheT'] === 'number' ? feature['TheT'] : -1;
     var shapeZ = typeof feature['TheZ'] === 'number' ? feature['TheZ'] : -1;
@@ -529,7 +536,7 @@ Regions.prototype.renderFeature = function(feature) {
     // projection range
     var belongsToDimension = true;
     var excludeZ = function() {
-        if (projection === ome.ol3.PROJECTION['INTMAX']) {
+        if (projection === PROJECTION['INTMAX']) {
             var projectionBounds = this.viewer_.getImage().projection_opts_;
             var lowerBoundZ = projectionBounds ? projectionBounds['start'] : viewerZ;
             var upperBoundZ = projectionBounds ? projectionBounds['end'] : viewerZ;
@@ -565,11 +572,11 @@ Regions.prototype.storeRegions =
         // set properties for ajax request
         var properties = {
             "server" : this.viewer_.getServer(),
-            "uri" : this.viewer_.getPrefixedURI(ome.ol3.PLUGIN_PREFIX) +
+            "uri" : this.viewer_.getPrefixedURI(PLUGIN_PREFIX) +
                     '/persist_rois',
             "method" : 'POST',
             "content" : JSON.stringify(postContent),
-            "headers" : {"X-CSRFToken" : ome.ol3.utils.Misc.getCookie("csrftoken")},
+            "headers" : {"X-CSRFToken" : getCookie("csrftoken")},
             "jsonp" : false
         };
 
@@ -597,10 +604,10 @@ Regions.prototype.storeRegions =
                 // synchronize ids and states
                 for (var id in params['shapes']) {
                     var f = capturedRegionsReference.idIndex_[id];
-                    if (f['state'] === ome.ol3.REGIONS_STATE.REMOVED)
+                    if (f['state'] === REGIONS_STATE.REMOVED)
                         capturedRegionsReference.removeFeature(f);
                     else {
-                        f['state'] = ome.ol3.REGIONS_STATE.DEFAULT;
+                        f['state'] = REGIONS_STATE.DEFAULT;
                         f.setId(params['shapes'][id]);
                         if (typeof f['permissions'] !== 'object') {
                             f['permissions'] = {
@@ -625,7 +632,7 @@ Regions.prototype.storeRegions =
             }
 
             if (errors.length > 0) params['errors'] = errors;
-            ome.ol3.utils.Misc.sendEventNotification(
+            sendEventNotification(
                 capturedRegionsReference.viewer_, "REGIONS_STORED_SHAPES", params);
         };
 
@@ -635,12 +642,12 @@ Regions.prototype.storeRegions =
                 "shapes": [],
                 "errors" : [error]
             };
-            ome.ol3.utils.Misc.sendEventNotification(
+            sendEventNotification(
                 capturedRegionsReference.viewer_, "REGIONS_STORED_SHAPES", params);
         };
 
         // send request
-        ome.ol3.utils.Net.sendRequest(properties, this);
+        sendRequest(properties, this);
     } catch(requestNotSent) {
         console.error(requestNotSent);
         return false;
@@ -678,14 +685,14 @@ Regions.prototype.setProperty =
             // we allow to toggle the selected state
             // as well as the state for removed, modified and rollback deletes
             var presentState = null;
-            var hasSelect = (this.select_ instanceof ome.ol3.interaction.Select);
+            var hasSelect = (this.select_ instanceof Select);
             if (property === 'selected' || property === 'visible') {
                 eventProperty = property;
                 if (hasSelect && !(property === 'visible' && value))
                     this.select_.toggleFeatureSelection(f, value);
             } else if (property === 'state') {
                 presentState = f[property];
-                if (value === ome.ol3.REGIONS_STATE.REMOVED) {
+                if (value === REGIONS_STATE.REMOVED) {
                     // check delete permissions
                     if (typeof f['permissions'] === 'object' &&
                         f['permissions'] !== null &&
@@ -693,12 +700,12 @@ Regions.prototype.setProperty =
                         !f['permissions']['canDelete']) continue;
                     if (hasSelect) this.select_.toggleFeatureSelection(f, false);
                     // we have already done this
-                    if (presentState !== ome.ol3.REGIONS_STATE.REMOVED &&
+                    if (presentState !== REGIONS_STATE.REMOVED &&
                         (typeof f["old_state"] !== 'number' ||
-                         f["old_state"] !== ome.ol3.REGIONS_STATE.ADDED))
+                         f["old_state"] !== REGIONS_STATE.ADDED))
                             f["old_state"] = presentState;
                     eventProperty = "deleted";
-                } else if (value === ome.ol3.REGIONS_STATE.MODIFIED) {
+                } else if (value === REGIONS_STATE.MODIFIED) {
                     // check edit permissions
                     if (typeof f['permissions'] === 'object' &&
                         f['permissions'] !== null &&
@@ -707,14 +714,14 @@ Regions.prototype.setProperty =
                     // we are presently deleted
                     // so all we do is remember the modification as the
                     // 'old_state' in case of a rollback
-                    if (presentState === ome.ol3.REGIONS_STATE.REMOVED) {
+                    if (presentState === REGIONS_STATE.REMOVED) {
                         f["old_state"] = value;
                         continue;
-                    } else if (presentState === ome.ol3.REGIONS_STATE.ADDED)
+                    } else if (presentState === REGIONS_STATE.ADDED)
                         // we maintain the added state at all times
                         f["old_state"] = presentState;
                     eventProperty = "modified";
-                } else if (value === ome.ol3.REGIONS_STATE.ROLLBACK) {
+                } else if (value === REGIONS_STATE.ROLLBACK) {
                     // check delete permissions
                     if (typeof f['permissions'] === 'object' &&
                         f['permissions'] !== null &&
@@ -726,9 +733,9 @@ Regions.prototype.setProperty =
 
             // set new value
             f[property] =
-                (property === 'state' && value === ome.ol3.REGIONS_STATE.ROLLBACK) ?
+                (property === 'state' && value === REGIONS_STATE.ROLLBACK) ?
                     (typeof f["old_state"] === 'number' ?
-                        f["old_state"] : ome.ol3.REGIONS_STATE.DEFAULT) : value;
+                        f["old_state"] : REGIONS_STATE.DEFAULT) : value;
 
             // gather info for event response
             changedFeatures.push(s);
@@ -746,7 +753,7 @@ Regions.prototype.setProperty =
     }
     this.changed();
 
-    ome.ol3.utils.Misc.sendEventNotification(
+    sendEventNotification(
         this.viewer_, "REGIONS_PROPERTY_CHANGED",
         {
             "properties" : changedProperties,
@@ -784,7 +791,7 @@ Regions.prototype.addHistory =
         // if we don't have one yet, we ar going to create and add it
         var hist_record = {
             old_state: f['state'],
-            new_state: ome.ol3.REGIONS_STATE.MODIFIED,
+            new_state: REGIONS_STATE.MODIFIED,
             old_value : null, new_value : null};
         if (typeof hist_entry[f.getId()] === 'object')
             hist_record = hist_entry[f.getId()];
@@ -823,7 +830,7 @@ Regions.prototype.doHistory = function(hist_id, undo) {
                 this.idIndex_[f]['state'] = newState;
                 this.setProperty(
                     [this.idIndex_[f].getId()], "modified",
-                    newState !== ome.ol3.REGIONS_STATE.DEFAULT);
+                    newState !== REGIONS_STATE.DEFAULT);
             }
         }
     }
@@ -842,7 +849,7 @@ Regions.prototype.getLengthAndAreaForShape =
 
         if (typeof recalculate !== 'boolean') recalculate = false;
 
-        return ome.ol3.utils.Regions.calculateLengthAndArea(
+        return calculateLengthAndArea(
             feature, recalculate,
             this.viewer_.viewer_.getView().getProjection().getMetersPerUnit(),
             this.viewer_.image_info_['pixel_size']['symbol_x'] || 'px'
