@@ -117,3 +117,5 @@ BoxSelect.prototype.disposeInternal = function() {
     this.unregisterListeners();
     this.regions_ = null;
 }
+
+export default BoxSelect;
