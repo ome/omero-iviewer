@@ -24,17 +24,17 @@ import Label from '../geom/Label';
 import Mask from '../geom/Mask';
 import Polygon from '../geom/Polygon';
 import Rectangle from '../geom/Rectangle';
-// import Regions from '../source/Regions';
-// import {REGIONS_STATE, UNITS_LENGTH} from '../globals';
-// import {remedyStyleIfNecessary,
-//     remedyShapeInfoIfNecessary,
-//     measureTextDimensions,
-//     cloneStyle,
-//     createFeatureStyle,
-//     updateStyleFunction} from './Style';
-// import {isArray} from './Misc';
-// import {convertPointStringIntoCoords} from './Conversion';
-// import {getWidth, getHeight, getTopLeft} from 'ol/extent';
+import Regions from '../source/Regions';
+import {REGIONS_STATE, UNITS_LENGTH} from '../globals';
+import {remedyStyleIfNecessary,
+    remedyShapeInfoIfNecessary,
+    measureTextDimensions,
+    cloneStyle,
+    createFeatureStyle,
+    updateStyleFunction} from './Style';
+import {isArray} from './Misc';
+import {convertPointStringIntoCoords} from './Conversion';
+import {getWidth, getHeight, getTopLeft} from 'ol/extent';
 
 
 /**
