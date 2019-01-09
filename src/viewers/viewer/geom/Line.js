@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// Copyright (C) 2019 University of Dundee & Open Microscopy Environment.
 // All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -15,10 +15,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-goog.provide('ome.ol3.geom.Line');
 
-goog.require('ol.geom.LineString');
-goog.require('ol.geom.Polygon');
+import LineString from 'ol/geom/LineString';
+import SimpleGeometry from 'ol/geom/SimpleGeometry';
+import Polygon from 'ol/geom/Polygon';
+import {inherits} from 'ol/util';
+import {isArray} from '../utils/Misc';
+import {getLength} from '../utils/Regions';
+import {applyTransform,
+    applyInverseTransform,
+    convertMatrixToAffineTransform,
+    convertAffineTransformIntoMatrix} from '../utils/Transform';
 
 /**
  * @classdesc
@@ -32,9 +39,9 @@ goog.require('ol.geom.Polygon');
  * @param {boolean} draw_end_arrow flag if we need to draw an arrow at the tail
  * @param {Object=} transform an AffineTransform object according to omero marshal
  */
-ome.ol3.geom.Line = function(
+const Line = function(
     coordinates, draw_start_arrow, draw_end_arrow, transform) {
-    if (!ome.ol3.utils.Misc.isArray(coordinates) || coordinates.length < 2)
+    if (!isArray(coordinates) || coordinates.length < 2)
         console.error("Line needs a minimum of 2 points!");
 
     /**
@@ -49,8 +56,7 @@ ome.ol3.geom.Line = function(
      * @type {Array.<number>|null}
      * @private
      */
-    this.transform_ =
-        ome.ol3.utils.Transform.convertAffineTransformIntoMatrix(transform);
+    this.transform_ = convertAffineTransformIntoMatrix(transform);
 
     /**
      * flag whether we have a start arrow
@@ -71,15 +77,14 @@ ome.ol3.geom.Line = function(
         typeof draw_end_arrow === 'boolean' && draw_end_arrow;
 
     // call super
-    goog.base(this, coordinates);
+    // goog.base(this, coordinates);
+    LineString.call(this, coordinates);
     this.initial_coords_ = this.getFlatCoordinates();
 
     // apply potential transform
-    this.flatCoordinates =
-        ome.ol3.utils.Transform.applyTransform(
-            this.transform_, this.initial_coords_);
+    this.flatCoordinates = applyTransform(this.transform_, this.initial_coords_);
 }
-goog.inherits(ome.ol3.geom.Line, ol.geom.LineString);
+inherits(Line, LineString);
 
 
 /**
@@ -87,7 +92,7 @@ goog.inherits(ome.ol3.geom.Line, ol.geom.LineString);
  * @return {boolean} true if we have more than 2 points, otherwise false
  * @api stable
  */
-ome.ol3.geom.Line.prototype.isPolyline = function() {
+Line.prototype.isPolyline = function() {
     var coords = this.getCoordinates();
     if (coords.length > 2) return true;
 
@@ -99,16 +104,15 @@ ome.ol3.geom.Line.prototype.isPolyline = function() {
  *
  * @private
  */
-ome.ol3.geom.Line.prototype.translate = function(deltaX, deltaY) {
+Line.prototype.translate = function(deltaX, deltaY) {
     // delegate
     if (this.transform_) {
         this.transform_[4] += deltaX;
         this.transform_[5] -= deltaY;
-        this.flatCoordinates =
-            ome.ol3.utils.Transform.applyTransform(
+        this.flatCoordinates = applyTransform(
                 this.transform_, this.initial_coords_);
         this.changed();
-    } else ol.geom.SimpleGeometry.prototype.translate.call(this, deltaX, deltaY);
+    } else SimpleGeometry.prototype.translate.call(this, deltaX, deltaY);
 };
 
 /**
@@ -121,7 +125,7 @@ ome.ol3.geom.Line.prototype.translate = function(deltaX, deltaY) {
  * @return {ol.geom.Polygon} the arrowhead triangle
  * @api stable
  */
-ome.ol3.geom.Line.prototype.getArrowGeometry = function(head, width, height) {
+Line.prototype.getArrowGeometry = function(head, width, height) {
     // check params , using reasonable defaults
     if (typeof head !== 'boolean') head = true;
     if (typeof width !== 'number' || width <= 0) width = 10;
@@ -154,14 +158,14 @@ ome.ol3.geom.Line.prototype.getArrowGeometry = function(head, width, height) {
     var point2 = [tip[0] - direction*height*unitLine[0] + width*perpLine[0],
                   tip[1] - direction*height*unitLine[1] + width*perpLine[1]];
 
-    return new ol.geom.Polygon([[tip, point1, point2]]);
+    return new Polygon([[tip, point1, point2]]);
 };
 
 /**
  * Returns the coordinates as a flat array (excl. any potential transform)
  * @return {Array.<number>} the coordinates as a flat array
  */
-ome.ol3.geom.Line.prototype.getLineCoordinates = function() {
+Line.prototype.getLineCoordinates = function() {
     return (
         this.transform_ ? this.initial_coords_ : this.getFlatCoordinates()
     );
@@ -171,35 +175,32 @@ ome.ol3.geom.Line.prototype.getLineCoordinates = function() {
  * Gets the transformation associated with the Line
  * @return {Object|null} the AffineTransform object (omero marshal) or null
  */
-ome.ol3.geom.Line.prototype.getTransform = function() {
-    return ome.ol3.utils.Transform.convertMatrixToAffineTransform(
-        this.transform_);
+Line.prototype.getTransform = function() {
+    return convertMatrixToAffineTransform(this.transform_);
 }
 
 /**
  * Returns the coordinates after (potentially) inverting a transformation
  * @return {Array} the coordinate array
  */
-ome.ol3.geom.Line.prototype.getInvertedCoordinates = function() {
+Line.prototype.getInvertedCoordinates = function() {
     if (this.transform_ === null) return this.getCoordinates();
 
     var coords = this.getCoordinates();
     var invCoords = new Array(coords.length);
     for (var i=0;i<coords.length;i++)
-        invCoords[i] =
-            ome.ol3.utils.Transform.applyInverseTransform(
-                this.transform_, coords[i]);
+        invCoords[i] = applyInverseTransform(this.transform_, coords[i]);
 
     return invCoords;
 }
 
 /**
  * Make a complete copy of the geometry.
- * @return {ome.ol3.geom.Line} Clone.
+ * @return {Line} Clone.
  * @api stable
  */
-ome.ol3.geom.Line.prototype.clone = function() {
-  return new ome.ol3.geom.Line(
+Line.prototype.clone = function() {
+  return new Line(
       this.getInvertedCoordinates().slice(),
         this.has_start_arrow_, this.has_end_arrow_, this.getTransform());
 };
@@ -209,6 +210,8 @@ ome.ol3.geom.Line.prototype.clone = function() {
  *
  * @return {number} the length of the line
  */
-ome.ol3.geom.Line.prototype.getLength = function() {
-    return ome.ol3.utils.Regions.getLength(this);
+Line.prototype.getLength = function() {
+    return getLength(this);
 }
+
+export default Line;

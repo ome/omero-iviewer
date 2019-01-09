@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// Copyright (C) 2019 University of Dundee & Open Microscopy Environment.
 // All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -15,9 +15,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-goog.provide('ome.ol3.geom.Ellipse');
 
-goog.require('ol.geom.Polygon');
+import Polygon from 'ol/geom/Polygon';
+import {inherits} from 'ol/util';
 
 /**
  * @classdesc
@@ -50,7 +50,7 @@ goog.require('ol.geom.Polygon');
  * @param {number} ry the radius y distance of the ellipse
  * @param {Object=} transform an AffineTransform object according to omero marshal
  */
-ome.ol3.geom.Ellipse = function(cx, cy, rx, ry, transform) {
+const Ellipse = function(cx, cy, rx, ry, transform) {
     // preliminary checks: are all mandatory paramters numeric
     if (typeof cx !== 'number' || typeof cy !== 'number' ||
             typeof rx !== 'number' || typeof ry !== 'number')
@@ -100,15 +100,16 @@ ome.ol3.geom.Ellipse = function(cx, cy, rx, ry, transform) {
     this.step_ = 0.1;
 
     // call super and hand in our coordinate array
-    goog.base(this, [this.getPolygonCoords()]);
+    // goog.base(this, [this.getPolygonCoords()]);
+    Polygon.call(this, [this.getPolygonCoords()]);
 }
-goog.inherits(ome.ol3.geom.Ellipse, ol.geom.Polygon);
+inherits(Ellipse, Polygon);
 
 /**
  * Traces out the ellipse and returns the coords
  * @return {Array.<number>} the coordinate array for the outline
  */
-ome.ol3.geom.Ellipse.prototype.getPolygonCoords = function() {
+Ellipse.prototype.getPolygonCoords = function() {
     // trace ellipse now and store coordinates
     var coords = [];
     for (var i = 0 * Math.PI, ii=2*Math.PI; i < ii; i += this.step_) {
@@ -126,7 +127,7 @@ ome.ol3.geom.Ellipse.prototype.getPolygonCoords = function() {
  * Gets the transformation associated with the ellipse
  * @return {Object|null} the AffineTransform object (omero marshal) or null
  */
-ome.ol3.geom.Ellipse.prototype.getTransform = function() {
+Ellipse.prototype.getTransform = function() {
     return ome.ol3.utils.Transform.convertMatrixToAffineTransform(
         this.transform_);
 }
@@ -135,7 +136,7 @@ ome.ol3.geom.Ellipse.prototype.getTransform = function() {
  * Gets the center of the ellipse in array form [cx,cy]
  * @return {Array.<number>} the center of the ellipse as an array
  */
-ome.ol3.geom.Ellipse.prototype.getCenter = function() {
+Ellipse.prototype.getCenter = function() {
     return [this.cx_,this.cy_] ;
 }
 
@@ -144,7 +145,7 @@ ome.ol3.geom.Ellipse.prototype.getCenter = function() {
  *
  * @param {Array.<number>} value the center of the ellipse as an array
  */
-ome.ol3.geom.Ellipse.prototype.setCenter = function(value) {
+Ellipse.prototype.setCenter = function(value) {
     if (!ome.ol3.utils.Misc.isArray(value) ||
         typeof value[0] !== 'number' || typeof value[1] !== 'number')
             console.error(
@@ -157,7 +158,7 @@ ome.ol3.geom.Ellipse.prototype.setCenter = function(value) {
  * Gets the radius (distance x, distance y) of the ellipse in array form [rx,ry]
  * @return {Array.<number>} the radius of the ellipse as an array
  */
-ome.ol3.geom.Ellipse.prototype.getRadius = function() {
+Ellipse.prototype.getRadius = function() {
     return [this.rx_, this.ry_];
 }
 
@@ -166,7 +167,7 @@ ome.ol3.geom.Ellipse.prototype.getRadius = function() {
  *
  * @param {Array.<number>} value the radius of the ellipse as an array
  */
-ome.ol3.geom.Ellipse.prototype.setRadius = function(value) {
+Ellipse.prototype.setRadius = function(value) {
     if (!ome.ol3.utils.Misc.isArray(value) ||
         typeof value[0] !== 'number' || typeof value[1] !== 'number')
             console.error("the radius needs to be given as a numeric array [cx,cy]");
@@ -179,7 +180,7 @@ ome.ol3.geom.Ellipse.prototype.setRadius = function(value) {
  *
  * @private
  */
-ome.ol3.geom.Ellipse.prototype.translate = function(deltaX, deltaY) {
+Ellipse.prototype.translate = function(deltaX, deltaY) {
     // delegate
     if (this.transform_) {
             this.transform_[4] += deltaX;
@@ -196,7 +197,7 @@ ome.ol3.geom.Ellipse.prototype.translate = function(deltaX, deltaY) {
  *
  * @private
  */
-ome.ol3.geom.Ellipse.prototype.scale = function(factor) {
+Ellipse.prototype.scale = function(factor) {
     // delegate
     if (this.transform_) {
         this.transform_[0] *= factor;
@@ -216,15 +217,17 @@ ome.ol3.geom.Ellipse.prototype.scale = function(factor) {
  *
  * @return {number} the length of the ellipse
  */
-ome.ol3.geom.Ellipse.prototype.getLength = function() {
+Ellipse.prototype.getLength = function() {
     return ome.ol3.utils.Regions.getLength(this);
 }
 
 /**
  * Make a complete copy of the geometry.
- * @return {ome.ol3.geom.Ellipse} Clone.
+ * @return {Ellipse} Clone.
  */
-ome.ol3.geom.Ellipse.prototype.clone = function() {
-    return new ome.ol3.geom.Ellipse(
+Ellipse.prototype.clone = function() {
+    return new Ellipse(
         this.cx_, this.cy_, this.rx_, this.ry_, this.getTransform());
 };
+
+export default Ellipse;

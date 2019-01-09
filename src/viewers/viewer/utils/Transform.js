@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// Copyright (C) 2019 University of Dundee & Open Microscopy Environment.
 // All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -16,10 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-/**
- * @namespace ome.ol3.utils.Transform
- */
-goog.provide('ome.ol3.utils.Transform');
+import {isArray} from '../utils/Misc';
 
 /**
  * Converts the AffineTransform Object into a flat transformation matrix
@@ -29,7 +26,7 @@ goog.provide('ome.ol3.utils.Transform');
  * @return {Array.<number>} a transformation matrix as an array of length 6
  *                          or null if an error occured
  */
-ome.ol3.utils.Transform.convertAffineTransformIntoMatrix = function(transform) {
+export const convertAffineTransformIntoMatrix = function(transform) {
     if (typeof transform !== 'object' ||
         transform === null || typeof transform['@type'] !== 'string' ||
         transform['@type'].indexOf("#AffineTransform") === -1) return null;
@@ -53,9 +50,9 @@ ome.ol3.utils.Transform.convertAffineTransformIntoMatrix = function(transform) {
  * @param {Array.<number>} transform the supposed transformation matrix
  * @return {Object|null} an AffineTransform object according to omero marshal
  */
-ome.ol3.utils.Transform.convertMatrixToAffineTransform = function(transform) {
+export const convertMatrixToAffineTransform = function(transform) {
     // check geometry for a flat transformation matrix of length 6
-    if (!ome.ol3.utils.Misc.isArray(transform) || transform.length !== 6)
+    if (!isArray(transform) || transform.length !== 6)
         return null;
 
     return {
@@ -74,10 +71,10 @@ ome.ol3.utils.Transform.convertMatrixToAffineTransform = function(transform) {
  * @param {Array.<number>} coords a flat array of coordinates (n * (x|y) tuples)
  * @return {Array.<number>} an array of transformed coords
  */
-ome.ol3.utils.Transform.applyTransform = function(transform, coords) {
+export const applyTransform = function(transform, coords) {
     // preliminary checks
-    if (!ome.ol3.utils.Misc.isArray(transform) || transform.length !== 6 ||
-        !ome.ol3.utils.Misc.isArray(coords) || coords.length === 0 ||
+    if (!isArray(transform) || transform.length !== 6 ||
+        !isArray(coords) || coords.length === 0 ||
         coords.length % 2 !== 0) return coords;
 
     var len = coords.length;
@@ -102,10 +99,10 @@ ome.ol3.utils.Transform.applyTransform = function(transform, coords) {
  * @param {Array.<number>} coords a flat array of coordinates (n * (x|y) tuples)
  * @return {Array.<number>} an array of transformed coords equal in dimensinonality to the input
  */
-ome.ol3.utils.Transform.applyInverseTransform = function(transform, coords) {
+export const applyInverseTransform = function(transform, coords) {
     // preliminary checks:
-    if (!ome.ol3.utils.Misc.isArray(transform) || transform.length !== 6 ||
-        !ome.ol3.utils.Misc.isArray(coords) || coords.length === 0 ||
+    if (!isArray(transform) || transform.length !== 6 ||
+        !isArray(coords) || coords.length === 0 ||
         coords.length % 2 !== 0) return coords;
 
     // find matrix inverse hecking for determinant being 0 (trace)
@@ -146,9 +143,9 @@ ome.ol3.utils.Transform.applyInverseTransform = function(transform, coords) {
  * @return {Object|null} an object properties for scale_x, scale_y,
  *                       rot_deg and rot_rad or null (if invalid matrix)
  */
-ome.ol3.utils.Transform.getRotationAndScaling = function(transform) {
+export const getRotationAndScaling = function(transform) {
     // preliminary checks:
-    if (!ome.ol3.utils.Misc.isArray(transform) ||
+    if (!isArray(transform) ||
         transform.length !== 6) return null;
 
     // extract scale factors for x/y

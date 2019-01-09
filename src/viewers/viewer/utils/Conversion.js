@@ -17,6 +17,7 @@
 //
 
 import {isArray} from './Misc';
+import Ellipse from '../geom/Ellipse';
 
 /**
  * Converts a color given as a rgb(a) string, e.g. 'rgba(255,255,255, 0.75)'
@@ -339,7 +340,7 @@ export const pointToJsonObject = function(geometry, shape_id) {
  * @return {Object} returns an object ready to be turned into json
  */
 export const ellipseToJsonObject = function(geometry, shape_id) {
-    if (!(geometry instanceof ome.ol3.geom.Ellipse))
+    if (!(geometry instanceof Ellipse))
         throw "type ellipse must be an instance of ome.ol3.geom.Ellipse!";
 
     var ret = {};

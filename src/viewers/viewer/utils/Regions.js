@@ -17,12 +17,30 @@
 //
 
 import Feature from 'ol/Feature';
-import {getWidth, getHeight, getTopLeft} from 'ol/extent';
+import Ellipse from '../geom/Ellipse';
+import Point from '../geom/Point';
+import Line from '../geom/Line';
+import Label from '../geom/Label';
+// import Mask from '../geom/Mask';
+// import Polygon from '../geom/Polygon';
+import Rectangle from '../geom/Rectangle';
+// import Regions from '../source/Regions';
+// import {REGIONS_STATE, UNITS_LENGTH} from '../globals';
+// import {remedyStyleIfNecessary,
+//     remedyShapeInfoIfNecessary,
+//     measureTextDimensions,
+//     cloneStyle,
+//     createFeatureStyle,
+//     updateStyleFunction} from './Style';
+// import {isArray} from './Misc';
+// import {convertPointStringIntoCoords} from './Conversion';
+// import {getWidth, getHeight, getTopLeft} from 'ol/extent';
+
 
 /**
  * The feature factory lookup table.
- * Access via {@link ome.ol3.utils.Regions.featureFactory} or
- * {@link ome.ol3.utils.Regions.lookupFeatureFunction}
+ * Access via {@link featureFactory} or
+ * {@link lookupFeatureFunction}
  *
  * @static
  * @private
@@ -31,31 +49,31 @@ export const FEATURE_FACTORY_LOOKUP_TABLE = {
     "point" : function(shape) {
         var feat =
             new Feature({
-                "geometry" : new ome.ol3.geom.Point(
+                "geometry" : new Point(
                     [shape['X'], -shape['Y']],
                     typeof shape['Transform'] === 'object' ?
                         shape['Transform'] : null)});
         feat['type'] = "point";
-        feat.setStyle(ome.ol3.utils.Style.createFeatureStyle(shape));
+        feat.setStyle(createFeatureStyle(shape));
         return feat;
     },
     "ellipse" : function(shape) {
         var feat =
-            new Feature({"geometry" : new ome.ol3.geom.Ellipse(
+            new Feature({"geometry" : new Ellipse(
                 shape['X'], -shape['Y'], shape['RadiusX'], shape['RadiusY'],
                 typeof shape['Transform'] === 'object' ?
                     shape['Transform'] : null)});
         feat['type'] = "ellipse";
-        feat.setStyle(ome.ol3.utils.Style.createFeatureStyle(shape));
+        feat.setStyle(createFeatureStyle(shape));
         return feat;
     },
     "rectangle" : function(shape) {
-        var feat = new Feature({"geometry" : new ome.ol3.geom.Rectangle(
+        var feat = new Feature({"geometry" : new Rectangle(
             shape['X'], -shape['Y'], shape['Width'], shape['Height'],
             typeof shape['Transform'] === 'object' ?
                 shape['Transform'] : null)});
         feat['type'] = "rectangle";
-        feat.setStyle(ome.ol3.utils.Style.createFeatureStyle(shape));
+        feat.setStyle(createFeatureStyle(shape));
         return feat;
     }, "line" : function(shape) {
         var drawStartArrow =
@@ -64,19 +82,17 @@ export const FEATURE_FACTORY_LOOKUP_TABLE = {
         var drawEndArrow =
             typeof shape['MarkerEnd'] === 'string' &&
                 shape['MarkerEnd'] === 'Arrow';
-        var feat = new Feature({"geometry" : new ome.ol3.geom.Line(
+        var feat = new Feature({"geometry" : new Line(
                 [[shape['X1'], -shape['Y1']], [shape['X2'], -shape['Y2']]],
                 drawStartArrow, drawEndArrow,
                 typeof shape['Transform'] === 'object' ?
                     shape['Transform'] : null)});
         feat['type'] = "line";
-        feat.setStyle(ome.ol3.utils.Style.createFeatureStyle(shape));
+        feat.setStyle(createFeatureStyle(shape));
         return feat;
     }, "polyline" : function(shape) {
         if (typeof(shape['Points']) != 'string') return null;
-        var coords =
-            ome.ol3.utils.Conversion.convertPointStringIntoCoords(
-                shape['Points']);
+        var coords = convertPointStringIntoCoords(shape['Points']);
         if (coords === null) return null;
         var drawStartArrow =
             typeof shape['MarkerStart'] === 'string' &&
@@ -84,12 +100,12 @@ export const FEATURE_FACTORY_LOOKUP_TABLE = {
         var drawEndArrow =
             typeof shape['MarkerEnd'] === 'string' &&
                 shape['MarkerEnd'] === 'Arrow';
-        var feat = new Feature({"geometry" : new ome.ol3.geom.Line(
+        var feat = new Feature({"geometry" : new Line(
                 coords, drawStartArrow, drawEndArrow,
                 typeof shape['Transform'] === 'object' ?
                     shape['Transform'] : null)});
         feat['type'] = "polyline";
-        feat.setStyle(ome.ol3.utils.Style.createFeatureStyle(shape));
+        feat.setStyle(createFeatureStyle(shape));
         return feat;
     }, "label" : function(shape) {
         if (typeof shape['Text'] !== 'string') shape['Text'] = '';
@@ -114,36 +130,35 @@ export const FEATURE_FACTORY_LOOKUP_TABLE = {
             shape['FontFamily'];
         // calculate the font dimensions for label
         var fontDims =
-            ome.ol3.utils.Style.measureTextDimensions(shape['Text'], font);
+            measureTextDimensions(shape['Text'], font);
         var feat = new Feature({"geometry" :
-            new ome.ol3.geom.Label(shape['X'], -shape['Y'], fontDims)});
+            new Label(shape['X'], -shape['Y'], fontDims)});
         feat['type'] = "label";
-        feat.setStyle(ome.ol3.utils.Style.createFeatureStyle(shape, true));
+        feat.setStyle(createFeatureStyle(shape, true));
         return feat;
     }, "polygon" : function(shape) {
         if (typeof(shape['Points']) != 'string') return null;
 
-        var coords =
-            ome.ol3.utils.Conversion.convertPointStringIntoCoords(shape['Points']);
+        var coords = convertPointStringIntoCoords(shape['Points']);
         if (coords === null) return null;
 
         var feat = new Feature({"geometry" :
-            new ome.ol3.geom.Polygon([coords],
+            new Polygon([coords],
                 typeof shape['Transform'] === 'object' ?
                     shape['Transform'] : null)});
         feat['type'] = "polygon";
-        feat.setStyle(ome.ol3.utils.Style.createFeatureStyle(shape));
+        feat.setStyle(createFeatureStyle(shape));
         return feat;
     },
     "mask" : function(shape) {
         var feat =
             new Feature({
-                "geometry" : new ome.ol3.geom.Mask(
+                "geometry" : new Mask(
                     shape['X'], -shape['Y'], shape['Width'], shape['Height'],
                     typeof shape['Transform'] === 'object' ?
                         shape['Transform'] : null)});
         feat['type'] = "mask";
-        feat.setStyle(ome.ol3.utils.Style.createFeatureStyle(shape, true));
+        feat.setStyle(createFeatureStyle(shape, true));
         return feat;
     }
 };
@@ -164,16 +179,16 @@ export const lookupFeatureFunction = function(type) {
     var type = type.toLowerCase();
     // a lookup check if we might have received an invalid type which we are
     // going to ignore
-    if (typeof FEATURE_FACTORY_LOOKUP_TABLE === 'undefined')
+    if (typeof FEATURE_FACTORY_LOOKUP_TABLE[type] === 'undefined')
         return null;
 
-    return ome.ol3.utils.Regions.FEATURE_FACTORY_LOOKUP_TABLE[type];
+    return FEATURE_FACTORY_LOOKUP_TABLE[type];
 };
 
 /**
  * The feature factory takes roi the roi shape type and returns
  * an openlayers feature with associated style.
- * Uses {@link ome.ol3.source.Regions.lookupFeatureFunction} internally
+ * Uses {@link source.Regions.lookupFeatureFunction} internally
  *
  * @static
  * @param {Object} shape_info the roi shape information
@@ -188,7 +203,7 @@ export const featureFactory = function(shape_info) {
     }
 
     // check if, at a minimum, we received style information to render the shapes
-    ome.ol3.utils.Style.remedyStyleIfNecessary(shape_info);
+    remedyStyleIfNecessary(shape_info);
 
     // instantiate the feature and create its associated style
     var actualFeature = lookedUpTypeFunction(shape_info);
@@ -218,9 +233,8 @@ export const scaleTextAndLabels = function(feature, factor) {
         if (scaledFontSize < 10) scaledFontSize = 10;
         featureStyle.getText().font_ =
             tok[0] + " " + scaledFontSize + "px " + tok[2];
-        if (feature.getGeometry() instanceof ome.ol3.geom.Label) {
-            var resizedDims =
-                ome.ol3.utils.Style.measureTextDimensions(
+        if (feature.getGeometry() instanceof Label) {
+            var resizedDims = measureTextDimensions(
                     featureStyle.getText().getText(),
                     featureStyle.getText().getFont(), null);
             feature.getGeometry().resize(resizedDims);
@@ -249,7 +263,7 @@ export const scaleTextAndLabels = function(feature, factor) {
 export const generateRegions =
     function(shape_info, number, extent, position, is_compatible) {
         // sanity checks
-        if (!ome.ol3.utils.Misc.isArray(extent) || extent.length != 4 ||
+        if (!isArray(extent) || extent.length != 4 ||
             typeof number !== 'number' || number <= 0) return;
 
         var lookedUpTypeFunction = lookupFeatureFunction(shape_info['type']);
@@ -258,17 +272,17 @@ export const generateRegions =
         if (typeof is_compatible !== 'boolean') is_compatible = false;
 
         // check if, at a minimum, we received style information to render the shapes
-        ome.ol3.utils.Style.remedyStyleIfNecessary(shape_info);
+        remedyStyleIfNecessary(shape_info);
         // check if, at a minimum, we received the essential information to construct the shape
-        ome.ol3.utils.Style.remedyShapeInfoIfNecessary(shape_info);
+        remedyShapeInfoIfNecessary(shape_info);
 
         // generate the prototype feature
         var prototypeFeature = featureFactory(shape_info);
         if (prototypeFeature == null) return null;
-            prototypeFeature['state'] = ome.ol3.REGIONS_STATE.ADDED;
+            prototypeFeature['state'] = REGIONS_STATE.ADDED;
 
         var location =
-            (ome.ol3.utils.Misc.isArray(position) && position.length === 2) ?
+            (isArray(position) && position.length === 2) ?
                 position.slice() : null;
         if (location !== null || (location === null && !is_compatible)) {
             // get the bounding box for our prototype
@@ -304,8 +318,7 @@ export const generateRegions =
                 new Feature(
                     { "geometry" : prototypeFeature.getGeometry().clone()});
             newFeature['type'] = prototypeFeature['type'];
-            newFeature.setStyle(
-                ome.ol3.utils.Style.cloneStyle(prototypeFeature.getStyle()));
+            newFeature.setStyle(cloneStyle(prototypeFeature.getStyle()));
             // we generate an id of the form -1:-uid
             if (typeof shape_info['shape_id'] !== 'string' ||
                 shape_info['shape_id'].length === 0 ||
@@ -315,7 +328,7 @@ export const generateRegions =
                             "" + shape_info['roi_id'] + ":" : "-1:") +
                                 (-ol.getUid(newFeature)));
             else newFeature.setId(shape_info['shape_id']); // state: added
-                newFeature['state'] = ome.ol3.REGIONS_STATE.ADDED;
+                newFeature['state'] = REGIONS_STATE.ADDED;
 
             // if a location for pasting was given we use it
             // if not and the target image is compatible to the shape's
@@ -343,7 +356,7 @@ export const generateRegions =
  * @return {Array.<number>} a coordinate tuple
  */
 export const getRandomCoordinateWithinExtent = function(extent) {
-    if (!ome.ol3.utils.Misc.isArray(extent) || extent.length != 4) return null;
+    if (!isArray(extent) || extent.length != 4) return null;
 
     var randomMin = 0;
     var randomMax = extent[2];
@@ -363,29 +376,29 @@ export const getRandomCoordinateWithinExtent = function(extent) {
  * displayed and worked with on top of a vector layer.
  *
  * Doing so each level (roi or contained shape) gets a state assigned (DEFAULT):
- * see: {@link ome.ol3.REGIONS_STATE}
+ * see: {@link REGIONS_STATE}
  *
  * @private
  * @static
- * @param {ome.ol3.source.Regions} regions an instance of the Regions
+ * @param {source.Regions} regions an instance of the Regions
  * @param {boolean=} include_new_features should new, unsaved features be included?
  * @return {Array.<Feature>|null} an array of converted shapes or null
  */
 export const createFeaturesFromRegionsResponse =
     function(regions, include_new_features) {
-        if (!(regions instanceof ome.ol3.source.Regions) ||
-            !ome.ol3.utils.Misc.isArray(regions.regions_info_)) return null;
+        if (!(regions instanceof Regions) ||
+            !isArray(regions.regions_info_)) return null;
 
         var ret = [];
         for (var roi in regions.regions_info_) {
             // we gotta have an id and shapes, otherwise no features...
             if (typeof(regions.regions_info_[roi]['@id']) !== 'number' ||
-                !ome.ol3.utils.Misc.isArray(regions.regions_info_[roi]['shapes']))
+                !isArray(regions.regions_info_[roi]['shapes']))
                     continue;
 
             var roiId = regions.regions_info_[roi]['@id'];
             // each 'level', roi or shape gets the state info property 'DEFAULT' assigned
-            regions.regions_info_[roi]['state'] = ome.ol3.REGIONS_STATE.DEFAULT;
+            regions.regions_info_[roi]['state'] = REGIONS_STATE.DEFAULT;
 
             // descend deeper into shapes for rois
             for (var s in regions.regions_info_[roi]['shapes']) {
@@ -407,7 +420,7 @@ export const createFeaturesFromRegionsResponse =
                 var shapeCindex =
                     typeof shape['TheC'] === 'number' ? shape['TheC'] : -1;
                 // set state
-                shape['state'] = ome.ol3.REGIONS_STATE.DEFAULT;
+                shape['state'] = REGIONS_STATE.DEFAULT;
 
                 try {
                     // create the feature via the factory
@@ -426,16 +439,16 @@ export const createFeaturesFromRegionsResponse =
                      * namely a styling function returning the style.
                      */
                     var rot = regions.viewer_.viewer_.getView().getRotation();
-                    if (actualFeature.getGeometry() instanceof ome.ol3.geom.Label &&
+                    if (actualFeature.getGeometry() instanceof Label &&
                         rot !== 0 && !regions.rotate_text_)
                             actualFeature.getGeometry().rotate(-rot);
-                    ome.ol3.utils.Style.updateStyleFunction(actualFeature, regions, true);
+                    updateStyleFunction(actualFeature, regions, true);
 
                     // set attachments
                     actualFeature['TheT'] = shapeTindex;
                     actualFeature['TheZ'] = shapeZindex;
                     actualFeature['TheC'] = shapeCindex;
-                    actualFeature['state'] = ome.ol3.REGIONS_STATE.DEFAULT;
+                    actualFeature['state'] = REGIONS_STATE.DEFAULT;
 
                     // append permissions
                     if (typeof shape['omero:details'] !== 'object' ||
@@ -502,17 +515,17 @@ export const calculateLengthAndArea =
         // we represent points as circles
         var hasArea =
             !(geom instanceof ol.geom.Circle) &&
-            !(geom instanceof ome.ol3.geom.Line) &&
-            !(geom instanceof ome.ol3.geom.Label);
+            !(geom instanceof Line) &&
+            !(geom instanceof Label);
         // for now we only calculate length for line geometries
         // TODO: adjust if perimeter for closed geometries is needed as well
-        var hasLength = geom instanceof ome.ol3.geom.Line;
+        var hasLength = geom instanceof Line;
 
         // if we are not micron we convert
         if (typeof pixel_symbol !== 'string' ||
             pixel_symbol.localeCompare('\u00B5m') !== 0) {
-            for (var u=0;u<ome.ol3.UNITS_LENGTH.length;u++) {
-                var unit = ome.ol3.UNITS_LENGTH[u];
+            for (var u=0;u<UNITS_LENGTH.length;u++) {
+                var unit = UNITS_LENGTH[u];
                 if (unit.symbol.localeCompare(pixel_symbol) === 0) {
                     pixel_size *= unit.multiplier;
                     break;
