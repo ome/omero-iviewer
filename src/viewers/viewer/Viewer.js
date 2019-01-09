@@ -33,16 +33,20 @@ import {inherits} from 'ol/util';
 import {intersects, getCenter} from 'ol/extent';
 import {noModifierKeys, primaryAction} from 'ol/events/condition';
 
+import Mask from './geom/Mask';
+import Draw from './interaction/Draw';
 import {checkAndSanitizeServerAddress,
     isSameOrigin,
     sendRequest,
     makeCrossDomainLoginRedirect} from './utils/Net';
 import {generateRegions} from './utils/Regions';
-import {updateStyleFunction} from './utils/Style';
+import {modifyStyles,
+    updateStyleFunction} from './utils/Style';
 import Label from './geom/Label';
 import {AVAILABLE_VIEWER_INTERACTIONS,
     AVAILABLE_VIEWER_CONTROLS,
     WEBGATEWAY,
+    PLUGIN_PREFIX,
     REQUEST_PARAMS,
     DEFAULT_TILE_DIMS,
     REGIONS_MODE,
@@ -1495,7 +1499,7 @@ Viewer.prototype.getSmallestViewExtent = function() {
         try {
             var f = this.regions_.idIndex_[ids[id]];
             if (f['state'] === REGIONS_STATE.REMOVED ||
-                f.getGeometry() instanceof ome.ol3.geom.Mask ||
+                f.getGeometry() instanceof Mask ||
                 (typeof f['permissions'] === 'object' &&
                     f['permissions'] !== null &&
                     typeof f['permissions']['canEdit'] === 'boolean' &&
@@ -1639,7 +1643,7 @@ Viewer.prototype.drawShape = function(shape, roi_id, opts) {
 
     var oldModes = this.regions_.present_modes_.slice();
     this.setRegionsModes([REGIONS_MODE.DRAW]);
-    if (!(this.regions_.draw_ instanceof ome.ol3.interaction.Draw)) {
+    if (!(this.regions_.draw_ instanceof Draw)) {
         this.setRegionsModes(oldModes);
         return;
     }
