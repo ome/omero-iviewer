@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// Copyright (C) 2019 University of Dundee & Open Microscopy Environment.
 // All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -16,15 +16,12 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-goog.provide('ome.ol3.source.Image');
-
-goog.require('ol');
-goog.require('ol.source.TileImage');
-goog.require('ol.Tile');
-goog.require('ol.tilegrid.TileGrid');
-goog.require('ol.extent');
-goog.require('ol.events');
-goog.require('ol.events.EventType');
+import TileImage from 'ol/source/TileImage';
+import TileGrid from 'ol/tilegrid/TileGrid';
+import EventType from 'ol/events/EventType';
+import {getTopLeft} from 'ol/extent';
+import {listen} from 'ol/events';
+import {inherits} from 'ol/util';
 
 /**
  * @classdesc
@@ -58,7 +55,7 @@ goog.require('ol.events.EventType');
  * @param {Object.<string, *>=} options all properties needed to create a tiled source
  *
  */
-ome.ol3.source.Image = function(options) {
+const OmeroImage = function(options) {
     var opts = options || {};
 
     /**
@@ -320,12 +317,13 @@ ome.ol3.source.Image = function(options) {
             [this.tile_size_.width, this.tile_size_.height] :
             [ome.ol3.DEFAULT_TILE_DIMS.width, ome.ol3.DEFAULT_TILE_DIMS.height],
         extent: extent,
-        origin: ol.extent.getTopLeft(extent),
+        origin: getTopLeft(extent),
         resolutions: this.resolutions_
     });
 
     // call super constructor and set proprerties needed
-    goog.base(this, {
+    // goog.base(this, {
+    TileImage.call(this, {
         transition: 0,
         crossOrigin: opts.crossOrigin,
         tileClass:  ome.ol3.tiles.ImageTile,
@@ -333,7 +331,7 @@ ome.ol3.source.Image = function(options) {
         tileUrlFunction: this.tileUrlFunction_
     });
 };
-goog.inherits(ome.ol3.source.Image, ol.source.TileImage);
+inherits(OmeroImage, TileImage);
 
 /**
  * overridden method from open layers
@@ -348,7 +346,7 @@ goog.inherits(ome.ol3.source.Image, ol.source.TileImage);
  * @return {ol.Tile} Tile.
  * @private
  */
-ome.ol3.source.Image.prototype.createTile_ =
+OmeroImage.prototype.createTile_ =
     function(z, x, y, pixelRatio, projection, key) {
         var tileCoord = [z, x, y];
         var urlTileCoord =
@@ -370,8 +368,7 @@ ome.ol3.source.Image.prototype.createTile_ =
         tile.key = key;
         tile.source = this;
 
-        ol.events.listen(
-            tile, ol.events.EventType.CHANGE, this.handleTileChange, this);
+        listen(tile, EventType.CHANGE, this.handleTileChange, this);
 
         return tile;
 };
@@ -381,7 +378,7 @@ ome.ol3.source.Image.prototype.createTile_ =
  *
  * @return {number} the present cache version
 */
-ome.ol3.source.Image.prototype.getKey = function() {
+OmeroImage.prototype.getKey = function() {
     return this.cache_version_;
 }
 
@@ -390,7 +387,7 @@ ome.ol3.source.Image.prototype.getKey = function() {
  *
  * @return {number} the width (x index)
  */
-ome.ol3.source.Image.prototype.getWidth = function() {
+OmeroImage.prototype.getWidth = function() {
     return this.width_;
 }
 
@@ -399,7 +396,7 @@ ome.ol3.source.Image.prototype.getWidth = function() {
  *
  * @return {number} the height (y index)
 */
-ome.ol3.source.Image.prototype.getHeight = function() {
+OmeroImage.prototype.getHeight = function() {
     return this.height_;
 }
 
@@ -408,7 +405,7 @@ ome.ol3.source.Image.prototype.getHeight = function() {
  *
  * @return {number} the plane (z index)
 */
-ome.ol3.source.Image.prototype.getPlane = function() {
+OmeroImage.prototype.getPlane = function() {
     return this.plane_;
 }
 
@@ -418,7 +415,7 @@ ome.ol3.source.Image.prototype.getPlane = function() {
  * @private
  * @param {number} value the plane (z index)
  */
-ome.ol3.source.Image.prototype.setPlane = function(value) {
+OmeroImage.prototype.setPlane = function(value) {
     if (typeof value !== 'number' || value < 0)
         console.error("Image plane must be a non negative integer");
     this.plane_ = value;
@@ -428,7 +425,7 @@ ome.ol3.source.Image.prototype.setPlane = function(value) {
  * Time (t index) getter
  * @return {number} the time (t index)
  */
-ome.ol3.source.Image.prototype.getTime = function() {
+OmeroImage.prototype.getTime = function() {
     return this.time_;
 }
 
@@ -438,7 +435,7 @@ ome.ol3.source.Image.prototype.getTime = function() {
  * @private
  * @param {number} value the time (t index)
  */
-ome.ol3.source.Image.prototype.setTime = function(value) {
+OmeroImage.prototype.setTime = function(value) {
     if (typeof value !== 'number' || value < 0)
         console.error("Image time must be a non negative integer");
     this.time_ = value;
@@ -449,7 +446,7 @@ ome.ol3.source.Image.prototype.setTime = function(value) {
  *
  * @return {Array.<number>} an array of channels (c indices)
  */
-ome.ol3.source.Image.prototype.getChannels = function() {
+OmeroImage.prototype.getChannels = function() {
     var activeChannels = [];
     for (var i=0;i<this.channels_info_.length;i++)
         if (this.channels_info_[i].active) activeChannels.push(i);
@@ -463,7 +460,7 @@ ome.ol3.source.Image.prototype.getChannels = function() {
  * @private
  * @param {Array.<number>} value the channels array (c indices)
  */
-ome.ol3.source.Image.prototype.setChannels = function(value) {
+OmeroImage.prototype.setChannels = function(value) {
     if (!ome.ol3.utils.Misc.isArray(value)) return;
 
     var max = this.channels_info_.length;
@@ -479,7 +476,7 @@ ome.ol3.source.Image.prototype.setChannels = function(value) {
  * We use the difference between saved and current settings to
  * build the maps query string when rendering image.
  */
-ome.ol3.source.Image.prototype.updateSavedSettings = function() {
+OmeroImage.prototype.updateSavedSettings = function() {
     this.saved_channels_info_ = this.channels_info_.map(c => Object.assign({}, c));
 }
 
@@ -490,7 +487,7 @@ ome.ol3.source.Image.prototype.updateSavedSettings = function() {
  * @param {string} value a string indicating the image projection
  * @param {Object=} opts additional options, e.g. intmax projection start/end
  */
-ome.ol3.source.Image.prototype.setImageProjection = function(value, opts) {
+OmeroImage.prototype.setImageProjection = function(value, opts) {
     if (typeof value !== 'string' || value.length === 0) return;
 
     try {
@@ -510,7 +507,7 @@ ome.ol3.source.Image.prototype.setImageProjection = function(value, opts) {
  *
  * @param {string} value a string indicating the image model
  */
-ome.ol3.source.Image.prototype.setImageModel = function(value) {
+OmeroImage.prototype.setImageModel = function(value) {
     if (typeof value !== 'string' || value.length === 0 ||
         (value.toLowerCase() !== 'greyscale' &&
          value.toLowerCase() !== 'color' &&
@@ -527,7 +524,7 @@ ome.ol3.source.Image.prototype.setImageModel = function(value) {
  * @param {Array.<Object>} ranges an array of objects with above mentioned props
  * @return {boolean} if true this indicates a rerender is needed, false otherwise
  */
-ome.ol3.source.Image.prototype.changeChannelRange = function(ranges) {
+OmeroImage.prototype.changeChannelRange = function(ranges) {
     if (!ome.ol3.utils.Misc.isArray(ranges)) return false;
 
     // we don't rerender if there haven't been changes
@@ -597,7 +594,7 @@ ome.ol3.source.Image.prototype.changeChannelRange = function(ranges) {
  *
  * @return {object} an object populated with the channel_info, model and projection
 */
-ome.ol3.source.Image.prototype.captureImageSettings = function() {
+OmeroImage.prototype.captureImageSettings = function() {
     var ret = {
         'projection' :
             this.image_projection_ === ome.ol3.PROJECTION['INTMAX'] ?
@@ -642,7 +639,7 @@ ome.ol3.source.Image.prototype.captureImageSettings = function() {
  *
  * @return {ol.TileLoadFunctionType|null} the post tile hook
  */
-ome.ol3.source.Image.prototype.getPostTileLoadFunction = function() {
+OmeroImage.prototype.getPostTileLoadFunction = function() {
     return this.postTileLoadFunction_;
 }
 
@@ -672,7 +669,7 @@ ome.ol3.source.Image.prototype.getPostTileLoadFunction = function() {
  * @param {ol.TileLoadFunctionType} func the post tile load function
  *    with signature: function(tile) {}
  */
-ome.ol3.source.Image.prototype.setPostTileLoadFunction = function(func) {
+OmeroImage.prototype.setPostTileLoadFunction = function(func) {
     if (typeof(func) !== 'function') return;
     this.postTileLoadFunction_ =  func;
 }
@@ -680,7 +677,7 @@ ome.ol3.source.Image.prototype.setPostTileLoadFunction = function(func) {
 /**
  * Removes the post tiling function
  */
-ome.ol3.source.Image.prototype.clearPostTileLoadFunction = function() {
+OmeroImage.prototype.clearPostTileLoadFunction = function() {
     this.postTileLoadFunction_ =  null;
 }
 
@@ -694,7 +691,7 @@ ome.ol3.source.Image.prototype.clearPostTileLoadFunction = function() {
  *                      defaults to false
  * @return {boolean} true if the watch has been started, false otherwise
  */
-ome.ol3.source.Image.prototype.watchRenderStatus =
+OmeroImage.prototype.watchRenderStatus =
     function(viewer,stopOnTileLoadError) {
         if (this.render_watch_ !== null) return false;
 
@@ -758,7 +755,7 @@ ome.ol3.source.Image.prototype.watchRenderStatus =
  * @params {boolean} reset if true we reset to NOT_WATCHED
  * @return {ome.ol3.RENDER_STATUS} the render status
  */
-ome.ol3.source.Image.prototype.getRenderStatus = function(reset) {
+OmeroImage.prototype.getRenderStatus = function(reset) {
     if (typeof reset !== 'boolean') reset = false;
 
     var ret = this.render_status_;
@@ -771,53 +768,9 @@ ome.ol3.source.Image.prototype.getRenderStatus = function(reset) {
 /**
  * Clean up
  */
-ome.ol3.source.Image.prototype.disposeInternal = function() {
+OmeroImage.prototype.disposeInternal = function() {
     if (this.tileCache instanceof ol.structs.LRUCache) this.tileCache.clear();
     this.channels_info_ = [];
 };
 
-
-goog.exportProperty(
-    ome.ol3.source.Image.prototype,
-    'getWidth',
-    ome.ol3.source.Image.prototype.getWidth);
-
-goog.exportProperty(
-    ome.ol3.source.Image.prototype,
-    'getHeight',
-    ome.ol3.source.Image.prototype.getHeight);
-
-goog.exportProperty(
-    ome.ol3.source.Image.prototype,
-    'getPlane',
-    ome.ol3.source.Image.prototype.getPlane);
-
-goog.exportProperty(
-    ome.ol3.source.Image.prototype,
-    'setPlane',
-    ome.ol3.source.Image.prototype.setPlane);
-
-goog.exportProperty(
-    ome.ol3.source.Image.prototype,
-    'getTime',
-    ome.ol3.source.Image.prototype.getTime);
-
-goog.exportProperty(
-    ome.ol3.source.Image.prototype,
-    'setTime',
-    ome.ol3.source.Image.prototype.setTime);
-
-goog.exportProperty(
-    ome.ol3.source.Image.prototype,
-    'getChannels',
-    ome.ol3.source.Image.prototype.getChannels);
-
-goog.exportProperty(
-    ome.ol3.source.Image.prototype,
-    'setChannels',
-    ome.ol3.source.Image.prototype.setChannels);
-
-goog.exportProperty(
-    ome.ol3.source.Image.prototype,
-    'updateSavedSettings',
-    ome.ol3.source.Image.prototype.updateSavedSettings);
+export default OmeroImage
