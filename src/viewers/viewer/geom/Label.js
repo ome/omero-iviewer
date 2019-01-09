@@ -1,5 +1,23 @@
-goog.provide('ome.ol3.geom.Label');
+//
+// Copyright (C) 2019 University of Dundee & Open Microscopy Environment.
+// All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 
+import {inherits} from 'ol/util';
+import Rectangle from './Rectangle';
 
 /**
  * @classdesc
@@ -19,14 +37,15 @@ goog.provide('ome.ol3.geom.Label');
  * @param {number} y the y coordinate of the label location (upper left corner)
  * @param {font_dimensions=} font_dimensions the font dimensions or null
  */
-ome.ol3.geom.Label = function(x, y, font_dimensions) {
+const Label = function(x, y, font_dimensions) {
     var fontDims = font_dimensions || null;
     if (fontDims == null || typeof(fontDims['width']) !== 'number' ||
         typeof(fontDims['height']) !== 'number')
         fontDims = {'width' : 10, 'height' : 10};
 
     // call super
-    goog.base(this, x, y, fontDims['width'], fontDims['height']);
+    // goog.base(this, x, y, fontDims['width'], fontDims['height']);
+    Rectangle.call(this, x, y, fontDims['width'], fontDims['height']);
 
     /**
      * the original coordinates as set
@@ -43,7 +62,7 @@ ome.ol3.geom.Label = function(x, y, font_dimensions) {
     };
     this.setOriginalCoordinates();
 }
-goog.inherits(ome.ol3.geom.Label, ome.ol3.geom.Rectangle);
+inherits(Label, Rectangle);
 
 /**
  * Override rectangle's changeRectangle
@@ -54,8 +73,9 @@ goog.inherits(ome.ol3.geom.Label, ome.ol3.geom.Rectangle);
  * @param {number} w the width of the rectangle
  * @param {number} h the height of the rectangle
  */
-ome.ol3.geom.Label.prototype.changeRectangle = function(x,y,w,h) {
-    goog.base(this, 'changeRectangle', x, y,w, h);
+Label.prototype.changeRectangle = function(x,y,w,h) {
+    // goog.base(this, 'changeRectangle', x, y,w, h);
+    Rectangle.changeRectangle.call(this, x, y,w, h)
     this.setOriginalCoordinates();
 }
 
@@ -66,7 +86,7 @@ ome.ol3.geom.Label.prototype.changeRectangle = function(x,y,w,h) {
  * @param {number} rotation the angle of rotation
  * @param {number} scaling the scaling factor
  */
-ome.ol3.geom.Label.prototype.modifyOriginalCoordinates = function(rotation, scaling) {
+Label.prototype.modifyOriginalCoordinates = function(rotation, scaling) {
     if (typeof(rotation) !== 'number') rotation = 0;
     if (typeof(scaling) !== 'number') scaling = 1;
 
@@ -114,7 +134,7 @@ ome.ol3.geom.Label.prototype.modifyOriginalCoordinates = function(rotation, scal
  * @param {number} rotation the angle of rotation
  * @param {Object} dims the dimensions of the text rectangle
  */
- ome.ol3.geom.Label.prototype.adjustCoordinates = function(rotation, dims) {
+ Label.prototype.adjustCoordinates = function(rotation, dims) {
      if (typeof(rotation) !== 'number') return;
 
      // reset
@@ -144,7 +164,7 @@ ome.ol3.geom.Label.prototype.modifyOriginalCoordinates = function(rotation, scal
  *
  * @param {number} rotation the angle of rotation
  */
-ome.ol3.geom.Label.prototype.rotate = function(rotation) {
+Label.prototype.rotate = function(rotation) {
     var transform = function(coords_old, coords_new, stride) {
         var cos = Math.cos(rotation);
         var sin = Math.sin(rotation);
@@ -166,7 +186,7 @@ ome.ol3.geom.Label.prototype.rotate = function(rotation) {
  *
  * @param {object} dims the dimensions object
  */
-ome.ol3.geom.Label.prototype.resize = function(dims) {
+Label.prototype.resize = function(dims) {
     if (typeof(dims) !== 'object' || dims === null ||
         typeof(dims['width']) !== 'number' || typeof(dims['height']) !== 'number')
             return;
@@ -189,7 +209,7 @@ ome.ol3.geom.Label.prototype.resize = function(dims) {
  *
  * @private
  */
-ome.ol3.geom.Label.prototype.translate = function(deltaX, deltaY) {
+Label.prototype.translate = function(deltaX, deltaY) {
     // delegate
     ol.geom.SimpleGeometry.prototype.translate.call(this, deltaX, deltaY);
 
@@ -198,9 +218,9 @@ ome.ol3.geom.Label.prototype.translate = function(deltaX, deltaY) {
 
 /**
  * Make a complete copy of the geometry.
- * @return {!ome.ol3.geom.Label} Clone.
+ * @return {!Label} Clone.
  */
-ome.ol3.geom.Label.prototype.clone = function() {
+Label.prototype.clone = function() {
     var topLeft = this.getUpperLeftCorner();
     return new ome.ol3.geom.Label(
         topLeft[0], topLeft[1],
@@ -208,3 +228,5 @@ ome.ol3.geom.Label.prototype.clone = function() {
           "height" : this.getHeight()
      });
 };
+
+export default Label;

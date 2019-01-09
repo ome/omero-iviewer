@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// Copyright (C) 2019 University of Dundee & Open Microscopy Environment.
 // All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -15,9 +15,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-goog.provide('ome.ol3.geom.Rectangle');
 
-goog.require('ol.geom.Polygon');
+import Polygon from 'ol/geom/Polygon';
+import GeometryLayout from 'ol/geom/GeometryLayout';
+import inherits from 'ol/util';
 
 /**
  * @classdesc
@@ -37,7 +38,7 @@ goog.require('ol.geom.Polygon');
  * @param {number} h the height of the rectangle
  * @param {Object=} transform an AffineTransform object according to omero marshal
  */
-ome.ol3.geom.Rectangle = function(x, y, w, h, transform) {
+const Rectangle = function(x, y, w, h, transform) {
     // preliminary checks: set sensible defaults if violated
     if (typeof x !== 'number') x = 0;
     if (typeof y !== 'number') y = 0;
@@ -69,7 +70,8 @@ ome.ol3.geom.Rectangle = function(x, y, w, h, transform) {
         ome.ol3.utils.Transform.convertAffineTransformIntoMatrix(transform);
 
     // call super and hand in our coordinate array
-    goog.base(this, coords, ol.geom.GeometryLayout.XY);
+    // goog.base(this, coords, GeometryLayout.XY);
+    Polygon.call(this, coords, GeometryLayout.XY);
     this.initial_coords_ =  this.getFlatCoordinates();
 
     // apply potential transform
@@ -77,13 +79,13 @@ ome.ol3.geom.Rectangle = function(x, y, w, h, transform) {
         ome.ol3.utils.Transform.applyTransform(
             this.transform_, this.initial_coords_);
 }
-goog.inherits(ome.ol3.geom.Rectangle, ol.geom.Polygon);
+inherits(Rectangle, Polygon);
 
 /**
  * Gets the upper left corner coordinates as an array [x,y]
  * @return {Array.<number>} the upper left corner
  */
-ome.ol3.geom.Rectangle.prototype.getUpperLeftCorner = function() {
+Rectangle.prototype.getUpperLeftCorner = function() {
     var flatCoords = this.getRectangleCoordinates();
     if (!ome.ol3.utils.Misc.isArray(flatCoords) || flatCoords.length != 10)
         return null;
@@ -96,7 +98,7 @@ ome.ol3.geom.Rectangle.prototype.getUpperLeftCorner = function() {
  *
  * @param {Array.<number>} value upper left corner
  */
-ome.ol3.geom.Rectangle.prototype.setUpperLeftCorner = function(value) {
+Rectangle.prototype.setUpperLeftCorner = function(value) {
     if (!ome.ol3.utils.Misc.isArray(value)) return;
     this.changeRectangle(value[0], value[1]);
 }
@@ -105,7 +107,7 @@ ome.ol3.geom.Rectangle.prototype.setUpperLeftCorner = function(value) {
  * Gets the width of the rectangle
  * @return {number} the width of the rectangle
  */
-ome.ol3.geom.Rectangle.prototype.getWidth = function() {
+Rectangle.prototype.getWidth = function() {
     var flatCoords = this.getRectangleCoordinates();
     if (!ome.ol3.utils.Misc.isArray(flatCoords) || flatCoords.length != 10)
         return 0;
@@ -118,7 +120,7 @@ ome.ol3.geom.Rectangle.prototype.getWidth = function() {
  *
  * @param {number} value the width of the rectangle
  */
-ome.ol3.geom.Rectangle.prototype.setWidth = function(value) {
+Rectangle.prototype.setWidth = function(value) {
     this.changeRectangle(null,null,value, null);
 }
 
@@ -126,7 +128,7 @@ ome.ol3.geom.Rectangle.prototype.setWidth = function(value) {
  * Gets the height of the rectangle
  * @return {number} the height of the rectangle
  */
-ome.ol3.geom.Rectangle.prototype.getHeight = function() {
+Rectangle.prototype.getHeight = function() {
     var flatCoords = this.getRectangleCoordinates();
     if (!ome.ol3.utils.Misc.isArray(flatCoords) || flatCoords.length != 10)
         return 0;
@@ -139,7 +141,7 @@ ome.ol3.geom.Rectangle.prototype.getHeight = function() {
  *
  * @param {number} value the height of the rectangle
  */
-ome.ol3.geom.Rectangle.prototype.setHeight = function(value) {
+Rectangle.prototype.setHeight = function(value) {
     this.changeRectangle(null,null,null, value);
 }
 
@@ -153,7 +155,7 @@ ome.ol3.geom.Rectangle.prototype.setHeight = function(value) {
  * @param {number} w the width of the rectangle
  * @param {number} h the height of the rectangle
  */
-ome.ol3.geom.Rectangle.prototype.changeRectangle = function(x,y,w,h) {
+Rectangle.prototype.changeRectangle = function(x,y,w,h) {
     var flatCoords = this.getRectangleCoordinates();
     if (!ome.ol3.utils.Misc.isArray(flatCoords) || flatCoords.length != 10)
         return;
@@ -170,7 +172,7 @@ ome.ol3.geom.Rectangle.prototype.changeRectangle = function(x,y,w,h) {
         [x, y-h],
         [x, y]
     ]];
- this.setCoordinates(coords);
+    this.setCoordinates(coords);
 }
 
 /**
@@ -178,7 +180,7 @@ ome.ol3.geom.Rectangle.prototype.changeRectangle = function(x,y,w,h) {
  *
  * @private
  */
-ome.ol3.geom.Rectangle.prototype.translate = function(deltaX, deltaY) {
+Rectangle.prototype.translate = function(deltaX, deltaY) {
     // delegate
     if (this.transform_) {
         this.transform_[4] += deltaX;
@@ -194,7 +196,7 @@ ome.ol3.geom.Rectangle.prototype.translate = function(deltaX, deltaY) {
  * Turns the tansformation matrix back into the ome model object
  * @return {Object|null} the ome model transformation
  */
-ome.ol3.geom.Rectangle.prototype.getTransform = function() {
+Rectangle.prototype.getTransform = function() {
     if (!ome.ol3.utils.Misc.isArray(this.transform_)) return null;
 
     return {'@type': "http://www.openmicroscopy.org/Schemas/OME/2016-06#AffineTransform",
@@ -208,7 +210,7 @@ ome.ol3.geom.Rectangle.prototype.getTransform = function() {
  * Returns the coordinates as a flat array (excl. any potential transform)
  * @return {Array.<number>} the coordinates as a flat array
  */
-ome.ol3.geom.Rectangle.prototype.getRectangleCoordinates = function() {
+Rectangle.prototype.getRectangleCoordinates = function() {
     return (
         this.transform_ ? this.initial_coords_ : this.getFlatCoordinates()
     );
@@ -216,11 +218,11 @@ ome.ol3.geom.Rectangle.prototype.getRectangleCoordinates = function() {
 
 /**
  * Make a complete copy of the geometry.
- * @return {ome.ol3.geom.Rectangle} Clone.
+ * @return {Rectangle} Clone.
  */
-ome.ol3.geom.Rectangle.prototype.clone = function() {
+Rectangle.prototype.clone = function() {
     var topLeft = this.getUpperLeftCorner();
-    return new ome.ol3.geom.Rectangle(
+    return new Rectangle(
         topLeft[0], topLeft[1], this.getWidth(), this.getHeight(),
         this.getTransform());
 };
@@ -230,6 +232,8 @@ ome.ol3.geom.Rectangle.prototype.clone = function() {
  *
  * @return {number} the length of the rectangle
  */
-ome.ol3.geom.Rectangle.prototype.getLength = function() {
+Rectangle.prototype.getLength = function() {
     return ome.ol3.utils.Regions.getLength(this);
 }
+
+export default Rectangle;
