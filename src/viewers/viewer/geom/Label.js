@@ -16,6 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+import SimpleGeometry from 'ol/geom/SimpleGeometry';
 import {inherits} from 'ol/util';
 import Rectangle from './Rectangle';
 
@@ -28,10 +29,10 @@ import Rectangle from './Rectangle';
  * will work well. to find the rectangle that surrounds the text we have to
  * measure the dimensions of the text given a specific font
  *
- * see also: {@link ome.ol3.utils.Style.measureTextDimensions}
+ * see also: {@link Style.measureTextDimensions}
  *
  * @constructor
- * @extends {ome.ol3.geom.Rectangle}
+ * @extends {geom.Rectangle}
  *
  * @param {number} x the x coordinate of the label location (upper left corner)
  * @param {number} y the y coordinate of the label location (upper left corner)
@@ -211,7 +212,7 @@ Label.prototype.resize = function(dims) {
  */
 Label.prototype.translate = function(deltaX, deltaY) {
     // delegate
-    ol.geom.SimpleGeometry.prototype.translate.call(this, deltaX, deltaY);
+    SimpleGeometry.prototype.translate.call(this, deltaX, deltaY);
 
     this.setOriginalCoordinates();
 };
@@ -222,7 +223,7 @@ Label.prototype.translate = function(deltaX, deltaY) {
  */
 Label.prototype.clone = function() {
     var topLeft = this.getUpperLeftCorner();
-    return new ome.ol3.geom.Label(
+    return new Label(
         topLeft[0], topLeft[1],
         { "width" : this.getWidth(),
           "height" : this.getHeight()

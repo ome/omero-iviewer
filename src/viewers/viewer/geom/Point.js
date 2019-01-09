@@ -16,6 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+import SimpleGeometry from 'ol/geom/SimpleGeometry';
 import Circle from 'ol/geom/Circle';
 import {applyTransform,
     convertAffineTransformIntoMatrix} from '../utils/Transform';
@@ -101,7 +102,7 @@ Point.prototype.translate = function(deltaX, deltaY) {
         this.flatCoordinates = applyTransform(
                 this.transform_, this.initial_coords_);
         this.changed();
-    } else ol.geom.SimpleGeometry.prototype.translate.call(this, deltaX, deltaY);
+    } else SimpleGeometry.prototype.translate.call(this, deltaX, deltaY);
 };
 
 /**

@@ -17,7 +17,13 @@
 //
 
 import Polygon from 'ol/geom/Polygon';
+import SimpleGeometry from 'ol/geom/SimpleGeometry';
 import {inherits} from 'ol/util';
+import {applyTransform,
+    convertMatrixToAffineTransform,
+    convertAffineTransformIntoMatrix} from '../utils/Transform';
+import {isArray} from '../utils/Misc';
+import {getLength} from '../utils/Regions';
 
 /**
  * @classdesc
@@ -89,8 +95,7 @@ const Ellipse = function(cx, cy, rx, ry, transform) {
      * @type {Array.<number>|null}
      * @private
      */
-    this.transform_ =
-        ome.ol3.utils.Transform.convertAffineTransformIntoMatrix(transform);
+    this.transform_ = convertAffineTransformIntoMatrix(transform);
 
     /**
      * the step size for plotting
@@ -115,8 +120,7 @@ Ellipse.prototype.getPolygonCoords = function() {
     for (var i = 0 * Math.PI, ii=2*Math.PI; i < ii; i += this.step_) {
         var x = this.cx_ + this.rx_ * Math.cos(i);
         var y = this.cy_ + this.ry_ * Math.sin(i);
-        coords.push(
-            ome.ol3.utils.Transform.applyTransform(this.transform_, [x, y]));
+        coords.push(applyTransform(this.transform_, [x, y]));
     }
     if (coords.length > 0) coords.push(coords[0]); // close polygon
 
@@ -128,8 +132,7 @@ Ellipse.prototype.getPolygonCoords = function() {
  * @return {Object|null} the AffineTransform object (omero marshal) or null
  */
 Ellipse.prototype.getTransform = function() {
-    return ome.ol3.utils.Transform.convertMatrixToAffineTransform(
-        this.transform_);
+    return convertMatrixToAffineTransform(this.transform_);
 }
 
 /**
@@ -146,7 +149,7 @@ Ellipse.prototype.getCenter = function() {
  * @param {Array.<number>} value the center of the ellipse as an array
  */
 Ellipse.prototype.setCenter = function(value) {
-    if (!ome.ol3.utils.Misc.isArray(value) ||
+    if (!isArray(value) ||
         typeof value[0] !== 'number' || typeof value[1] !== 'number')
             console.error(
                 "the center needs to be given as a numeric array [cx,cy]");
@@ -168,7 +171,7 @@ Ellipse.prototype.getRadius = function() {
  * @param {Array.<number>} value the radius of the ellipse as an array
  */
 Ellipse.prototype.setRadius = function(value) {
-    if (!ome.ol3.utils.Misc.isArray(value) ||
+    if (!isArray(value) ||
         typeof value[0] !== 'number' || typeof value[1] !== 'number')
             console.error("the radius needs to be given as a numeric array [cx,cy]");
     this.rx_ = value[0];
@@ -187,7 +190,7 @@ Ellipse.prototype.translate = function(deltaX, deltaY) {
             this.transform_[5] -= deltaY;
             this.setCoordinates([this.getPolygonCoords()]);
     } else {
-        ol.geom.SimpleGeometry.prototype.translate.call(this, deltaX, deltaY);
+        SimpleGeometry.prototype.translate.call(this, deltaX, deltaY);
         this.setCenter([this.cx_ + deltaX, this.cy_ + deltaY]);
     }
 };
@@ -206,7 +209,7 @@ Ellipse.prototype.scale = function(factor) {
         this.transform_[3] *= factor;
         this.setCoordinates([this.getPolygonCoords()]);
     } else {
-        ol.geom.SimpleGeometry.prototype.scale.call(this, factor);
+        SimpleGeometry.prototype.scale.call(this, factor);
         var radius = this.getRadius();
         this.setRadius([radius[0] * factor, radius[1] * factor])
     }
@@ -218,7 +221,7 @@ Ellipse.prototype.scale = function(factor) {
  * @return {number} the length of the ellipse
  */
 Ellipse.prototype.getLength = function() {
-    return ome.ol3.utils.Regions.getLength(this);
+    return getLength(this);
 }
 
 /**

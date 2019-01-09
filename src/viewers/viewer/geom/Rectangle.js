@@ -17,8 +17,13 @@
 //
 
 import Polygon from 'ol/geom/Polygon';
+import SimpleGeometry from 'ol/geom/SimpleGeometry';
 import GeometryLayout from 'ol/geom/GeometryLayout';
 import {inherits} from 'ol/util';
+import {isArray} from '../utils/Misc';
+import {getLength} from '../utils/Regions';
+import {applyTransform,
+    convertAffineTransformIntoMatrix} from '../utils/Transform';
 
 /**
  * @classdesc
@@ -66,8 +71,7 @@ const Rectangle = function(x, y, w, h, transform) {
      * @type {Array.<number>|null}
      * @private
      */
-    this.transform_ =
-        ome.ol3.utils.Transform.convertAffineTransformIntoMatrix(transform);
+    this.transform_ = convertAffineTransformIntoMatrix(transform);
 
     // call super and hand in our coordinate array
     // goog.base(this, coords, GeometryLayout.XY);
@@ -75,8 +79,7 @@ const Rectangle = function(x, y, w, h, transform) {
     this.initial_coords_ =  this.getFlatCoordinates();
 
     // apply potential transform
-    this.flatCoordinates =
-        ome.ol3.utils.Transform.applyTransform(
+    this.flatCoordinates = applyTransform(
             this.transform_, this.initial_coords_);
 }
 inherits(Rectangle, Polygon);
@@ -87,7 +90,7 @@ inherits(Rectangle, Polygon);
  */
 Rectangle.prototype.getUpperLeftCorner = function() {
     var flatCoords = this.getRectangleCoordinates();
-    if (!ome.ol3.utils.Misc.isArray(flatCoords) || flatCoords.length != 10)
+    if (!isArray(flatCoords) || flatCoords.length != 10)
         return null;
 
     return [flatCoords[0], flatCoords[1]];
@@ -99,7 +102,7 @@ Rectangle.prototype.getUpperLeftCorner = function() {
  * @param {Array.<number>} value upper left corner
  */
 Rectangle.prototype.setUpperLeftCorner = function(value) {
-    if (!ome.ol3.utils.Misc.isArray(value)) return;
+    if (!isArray(value)) return;
     this.changeRectangle(value[0], value[1]);
 }
 
@@ -109,7 +112,7 @@ Rectangle.prototype.setUpperLeftCorner = function(value) {
  */
 Rectangle.prototype.getWidth = function() {
     var flatCoords = this.getRectangleCoordinates();
-    if (!ome.ol3.utils.Misc.isArray(flatCoords) || flatCoords.length != 10)
+    if (!isArray(flatCoords) || flatCoords.length != 10)
         return 0;
 
     return flatCoords[2]-flatCoords[0];
@@ -130,7 +133,7 @@ Rectangle.prototype.setWidth = function(value) {
  */
 Rectangle.prototype.getHeight = function() {
     var flatCoords = this.getRectangleCoordinates();
-    if (!ome.ol3.utils.Misc.isArray(flatCoords) || flatCoords.length != 10)
+    if (!isArray(flatCoords) || flatCoords.length != 10)
         return 0;
 
     return Math.abs(flatCoords[5]-flatCoords[3]);
@@ -157,7 +160,7 @@ Rectangle.prototype.setHeight = function(value) {
  */
 Rectangle.prototype.changeRectangle = function(x,y,w,h) {
     var flatCoords = this.getRectangleCoordinates();
-    if (!ome.ol3.utils.Misc.isArray(flatCoords) || flatCoords.length != 10)
+    if (!isArray(flatCoords) || flatCoords.length != 10)
         return;
 
     if (typeof(x) !== 'number') x = flatCoords[0];
@@ -185,11 +188,10 @@ Rectangle.prototype.translate = function(deltaX, deltaY) {
     if (this.transform_) {
         this.transform_[4] += deltaX;
         this.transform_[5] -= deltaY;
-        this.flatCoordinates =
-            ome.ol3.utils.Transform.applyTransform(
+        this.flatCoordinates = applyTransform(
                 this.transform_, this.initial_coords_);
         this.changed();
-    } else ol.geom.SimpleGeometry.prototype.translate.call(this, deltaX, deltaY);
+    } else SimpleGeometry.prototype.translate.call(this, deltaX, deltaY);
 };
 
 /**
@@ -197,7 +199,7 @@ Rectangle.prototype.translate = function(deltaX, deltaY) {
  * @return {Object|null} the ome model transformation
  */
 Rectangle.prototype.getTransform = function() {
-    if (!ome.ol3.utils.Misc.isArray(this.transform_)) return null;
+    if (!isArray(this.transform_)) return null;
 
     return {'@type': "http://www.openmicroscopy.org/Schemas/OME/2016-06#AffineTransform",
             'A00' : this.transform_[0], 'A10' : this.transform_[1],
@@ -233,7 +235,7 @@ Rectangle.prototype.clone = function() {
  * @return {number} the length of the rectangle
  */
 Rectangle.prototype.getLength = function() {
-    return ome.ol3.utils.Regions.getLength(this);
+    return getLength(this);
 }
 
 export default Rectangle;

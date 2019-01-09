@@ -17,10 +17,16 @@
 //
 
 import EventType from 'ol/events/EventType';
+import MapEventType from 'ol/MapEventType';
+import MapBrowserEventType from 'ol/MapBrowserEventType';
+import {removeNode} from 'ol/dom';
 import Control from 'ol/control/Control';
 import {listen, unlistenByKey} from 'ol/events';
 import {CLASS_UNSELECTABLE, CLASS_CONTROL} from 'ol/css';
 import {inherits} from 'ol/util';
+import {getTargetId,
+    isArray} from '../utils/Misc';
+import {sendRequest} from '../utils/Net';
 
 /**
  * @classdesc
@@ -86,7 +92,7 @@ const IntensityDisplay = function() {
 
     /**
      * a reference to the Image instance
-     * @type {ome.ol3.source.Image}
+     * @type {source.Image}
      * @private
      */
     this.image_ = null;
@@ -140,7 +146,7 @@ inherits(IntensityDisplay, Control);
  */
 IntensityDisplay.prototype.setMap = function(map) {
     if (this.map_) {
-        ol.dom.removeNode(this.element);
+        removeNode(this.element);
     }
 
     for (var i = 0, ii = this.listenerKeys.length; i < ii; ++i) {
@@ -153,9 +159,9 @@ IntensityDisplay.prototype.setMap = function(map) {
         var target = this.target_ ?
             this.target_ : map.getOverlayContainerStopEvent();
         target.appendChild(this.element);
-        if (this.render !== ol.nullFunction) {
+        if (this.render !== null) {
             this.listenerKeys.push(listen(map,
-                ol.MapEventType.POSTRENDER, this.render, this));
+                MapEventType.POSTRENDER, this.render, this));
         }
         map.render();
     }
@@ -177,7 +183,7 @@ IntensityDisplay.prototype.enable = function(prefix) {
     this.pointer_move_listener_ =
         listen(
             this.getMap(),
-            ol.MapBrowserEventType.POINTERMOVE,
+            MapBrowserEventType.POINTERMOVE,
             IntensityDisplay.prototype.handlePointerMove_.bind(this));
     this.getMap().getTargetElement().onmouseleave = function() {
         this.resetMoveTracking_();
@@ -219,8 +225,7 @@ IntensityDisplay.prototype.updateTooltip =
             this.getMap().getTargetElement() === null) return;
 
         if (typeof is_querying !== 'boolean') is_querying = false;
-        var targetId =
-            ome.ol3.utils.Misc.getTargetId(this.getMap().getTargetElement());
+        var targetId = getTargetId(this.getMap().getTargetElement());
         if (targetId === null) return;
 
         var els = document.getElementById('' + targetId).querySelectorAll(
@@ -304,8 +309,7 @@ IntensityDisplay.prototype.updateTooltip =
  * @private
  */
 IntensityDisplay.prototype.resetMoveTracking_ = function(pixel) {
-    this.last_cursor_ =
-        ome.ol3.utils.Misc.isArray(pixel) && pixel.length === 2 ?
+    this.last_cursor_ = isArray(pixel) && pixel.length === 2 ?
             pixel : [0,0];
     this.updateTooltip();
     if (typeof this.movement_handle_ === 'number') {
@@ -414,7 +418,7 @@ IntensityDisplay.prototype.handlePointerMove_ = function(e) {
                     }.bind(this)
                 };
                 this.updateTooltip(e, null, true);
-                ome.ol3.utils.Net.sendRequest(reqParams);
+                sendRequest(reqParams);
             }
         } else {
             action = function() {displayIntensity(cache_entry);};

@@ -39,6 +39,7 @@ import EventType from 'ol/events/EventType';
 import Control from 'ol/control/Control';
 import {CLASS_UNSELECTABLE, CLASS_CONTROL} from 'ol/css';
 import {replaceNode, outerWidth, outerHeight} from 'ol/dom';
+import {getTargetId} from '../utils/Misc';
 
 /**
  * Altered version of ol.control.OverviewMap:
@@ -311,7 +312,7 @@ BirdsEye.prototype.initOrUpdate = function() {
 BirdsEye.prototype.getThumbnailUrlWithVersion = function() {
     var map = this.getMap();
     var rev = new Date().getTime();
-    if (map) rev += "-" + ome.ol3.utils.Misc.getTargetId(map.getTargetElement());
+    if (map) rev += "-" + getTargetId(map.getTargetElement());
 
     return this.thumbnail_url_ + "/" + this.thumbnail_size_[0] +
         "/" + this.thumbnail_size_[1] + "/?rev=" + rev;
