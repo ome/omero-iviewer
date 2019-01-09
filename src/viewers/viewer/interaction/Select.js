@@ -51,7 +51,8 @@ const Select = function(regions_reference) {
     this.regions_ = regions_reference;
 
     // call super
-    goog.base(this, {});
+    // goog.base(this, {});
+    Interaction.call(this, {});
     this.handleEvent = Select.handleEvent;
 
     /**

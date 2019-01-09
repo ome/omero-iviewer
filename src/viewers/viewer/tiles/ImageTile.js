@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// Copyright (C) 2019 University of Dundee & Open Microscopy Environment.
 // All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -15,11 +15,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-goog.provide('ome.ol3.tiles.ImageTile');
 
-goog.require('ol.dom')
-goog.require('ol.ImageTile')
-goog.require('ol.Tile')
+import {createCanvasContext2D} from 'ol/dom';
+import OlImageTile from 'ol/ImageTile';
+import TileState from 'ol/TileState';
+import {getUid,
+    inherits} from 'ol/util';
+import {isArray} from '../utils/Misc';
 
 /**
  * @classdesc
@@ -37,10 +39,11 @@ goog.require('ol.Tile')
  * @param {ol.TileLoadFunctionType} tileLoadFunction Tile load function.
  * @param {olx.TileOptions=} opt_options Tile options.
  */
-ome.ol3.tiles.ImageTile = function(
+const ImageTile = function(
     tileCoord, state, src, crossOrigin, tileLoadFunction, opt_options) {
-    goog.base(
-        this, tileCoord, state, src, crossOrigin, tileLoadFunction, opt_options);
+    // goog.base(
+    OlImageTile.call(this, tileCoord, state, src, crossOrigin,
+                     tileLoadFunction, opt_options);
 
     /**
      * @type {object}
@@ -48,7 +51,7 @@ ome.ol3.tiles.ImageTile = function(
      */
     this.imageByContext_ = {};
 };
-goog.inherits(ome.ol3.tiles.ImageTile, ol.ImageTile);
+inherits(ImageTile, OlImageTile);
 
 /**
  * A convenience method to draw the tile into the context to then be called
@@ -62,7 +65,7 @@ goog.inherits(ome.ol3.tiles.ImageTile, ol.ImageTile);
  * @param {string=} key the uid (for createContextOnlyForResize is true)
  * @return {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement} the image drawn on the context.
  */
-ome.ol3.tiles.ImageTile.prototype.getRenderedTileAsContext =
+ImageTile.prototype.getRenderedTileAsContext =
     function(tile, tileSize, createContextOnlyForResize, key) {
         if ((typeof(tile) !== 'object') ||
             (typeof(tile['width']) !== 'number') ||
@@ -73,7 +76,7 @@ ome.ol3.tiles.ImageTile.prototype.getRenderedTileAsContext =
 
         var w = tile.width;
         var h = tile.height;
-        if (ome.ol3.utils.Misc.isArray(tileSize) && tileSize.length > 1) {
+        if (isArray(tileSize) && tileSize.length > 1) {
             w = tileSize[0];
             h = tileSize[1];
         }
@@ -82,7 +85,7 @@ ome.ol3.tiles.ImageTile.prototype.getRenderedTileAsContext =
         if (createContextOnlyForResize && w === tile.width && h === tile.height)
             return tile;
 
-        var context = ol.dom.createCanvasContext2D(w,h);
+        var context = createCanvasContext2D(w,h);
         context.drawImage(tile, 0,0);
 
         // we'd like to store the resized tile so that we don't have to do it again
@@ -98,14 +101,15 @@ ome.ol3.tiles.ImageTile.prototype.getRenderedTileAsContext =
  * @param {Object=} opt_context Object.
  * @return {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement} Image.
  */
-ome.ol3.tiles.ImageTile.prototype.getImage = function(opt_context) {
+ImageTile.prototype.getImage = function(opt_context) {
     // call super.getImage
-    var image = goog.base(this, 'getImage', opt_context);
+    // var image = goog.base(this, 'getImage', opt_context);
+    var image = OlImageTile.getImage.call(this, opt_context);
     // we are not loaded yet => good byes
-    if (this.state !== ol.TileState.LOADED) return image;
+    if (this.state !== TileState.LOADED) return image;
 
     // do we have the image already (resized or post tile function applied)
-    var key = ol.getUid(image);
+    var key = getUid(image);
     if (key in this.imageByContext_)
          return this.imageByContext_[key];
 
@@ -129,8 +133,4 @@ ome.ol3.tiles.ImageTile.prototype.getImage = function(opt_context) {
     }
 };
 
-
-goog.exportProperty(
-    ome.ol3.tiles.ImageTile.prototype,
-    'getRenderedTileAsContext',
-    ome.ol3.tiles.ImageTile.prototype.getRenderedTileAsContext);
+export default ImageTile;

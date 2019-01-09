@@ -24,7 +24,7 @@ import TileState from 'ol/TileState';
 import {getTopLeft} from 'ol/extent';
 import {listen} from 'ol/events';
 import {inherits} from 'ol/util';
-// import ImageTile from '../tiles/ImageTile';
+import ImageTile from '../tiles/ImageTile';
 import {checkAndSanitizeUri} from '../utils/Net';
 import {DEFAULT_TILE_DIMS,
     PROJECTION,

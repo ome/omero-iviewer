@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// Copyright (C) 2019 University of Dundee & Open Microscopy Environment.
 // All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -16,10 +16,16 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-goog.provide('ome.ol3.interaction.Translate');
-
-goog.require('ol.interaction.Translate');
-goog.require('ol.Collection');
+import OlTranslate from 'ol/interaction/Translate';
+import {TranslateEvent} from 'ol/interaction/Translate';
+import Collection from 'ol/Collection';
+import {listen} from 'ol/events';
+import {inherits} from 'ol/util';
+import Regions from '../source/Regions';
+import Mask from '../geom/Mask';
+import Label from '../geom/Label';
+import {sendEventNotification} from '../utils/Misc';
+import {REGIONS_STATE} from '../globals';
 
 /**
  * @classdesc
@@ -27,15 +33,15 @@ goog.require('ol.Collection');
  *
  * @constructor
  * @extends {ol.interaction.Translate}
- * @param {ome.ol3.source.Regions} regions_reference an Regions instance.
+ * @param {source.Regions} regions_reference an Regions instance.
  */
-ome.ol3.interaction.Translate = function(regions_reference) {
+const Translate = function(regions_reference) {
     // we do need the regions reference to do translations
-    if (!(regions_reference instanceof ome.ol3.source.Regions))
+    if (!(regions_reference instanceof Regions))
         console.error("Translate needs Regions instance!");
 
     /**
-     * @type {ome.ol3.source.Regions}
+     * @type {source.Regions}
      * @private
      */
     this.regions_ = regions_reference;
@@ -53,30 +59,31 @@ ome.ol3.interaction.Translate = function(regions_reference) {
     this.hist_id_ = -1;
 
     // call super
-    goog.base(this, {});
+    // goog.base(this, {});
+    OlTranslate.call(this, {});
 
     // we use our event handlers altogether
-    this.handleDownEvent_ = ome.ol3.interaction.Translate.handleDownEvent_;
-    this.handleMoveEvent_ = ome.ol3.interaction.Translate.handleMoveEvent_;
-    this.handleDragEvent_ = ome.ol3.interaction.Translate.handleDragEvent_;
-    this.handleUpEvent_ = ome.ol3.interaction.Translate.handleUpEvent_;
+    this.handleDownEvent_ = Translate.handleDownEvent_;
+    this.handleMoveEvent_ = Translate.handleMoveEvent_;
+    this.handleDragEvent_ = Translate.handleDragEvent_;
+    this.handleUpEvent_ = Translate.handleUpEvent_;
 
     /**
-     * @type {ol.Collection.<ol.Feature>}
+     * @type {Collection.<ol.Feature>}
      * @private
      */
     this.features_ = this.regions_.select_.getFeatures();
 
     // a listener to react on translate start
-    ol.events.listen(
+    listen(
         this,
-        ol.interaction.TranslateEventType.TRANSLATESTART,
+        'translatestart',  // ol.interaction.TranslateEventType.TRANSLATESTART,
         function(event) {
             this.translatedFeatures_ = [];
             var features = event.features.array_;
             for (var x=0;x<features.length;x++) {
                 var f = features[x];
-                if (f.getGeometry() instanceof ome.ol3.geom.Mask ||
+                if (f.getGeometry() instanceof Mask ||
                     (typeof f['permissions'] === 'object' &&
                     f['permissions'] !== null &&
                     typeof f['permissions']['canEdit'] === 'boolean' &&
@@ -88,9 +95,9 @@ ome.ol3.interaction.Translate = function(regions_reference) {
         }, this);
 
     // a listener to note whether there was an actual translate ...
-    ol.events.listen(
+    listen(
         this,
-        ol.interaction.TranslateEventType.TRANSLATING,
+        'translating',  // ol.interaction.TranslateEventType.TRANSLATING,
         function(event) {
             // start the history for the translate
             // if we haven't done so already
@@ -101,19 +108,19 @@ ome.ol3.interaction.Translate = function(regions_reference) {
         }, this);
 
     // a listener to react on translate end
-    ol.events.listen(
+    listen(
         this,
-        ol.interaction.TranslateEventType.TRANSLATEEND,
-        ome.ol3.interaction.Translate.prototype.handleTranslateEnd,
+        'translateend',  // ol.interaction.TranslateEventType.TRANSLATEEND,
+        Translate.prototype.handleTranslateEnd,
         this);
 };
-goog.inherits(ome.ol3.interaction.Translate, ol.interaction.Translate);
+inherits(Translate, OlTranslate);
 
 /**
  * We want to react to the end of translation for some features
  * @param {ol.interaction.Translate.Event} event a translate event.
  */
-ome.ol3.interaction.Translate.prototype.handleTranslateEnd = function(event) {
+Translate.prototype.handleTranslateEnd = function(event) {
     // reset original feature array
     this.translatedFeatures_ = [];
 
@@ -123,12 +130,12 @@ ome.ol3.interaction.Translate.prototype.handleTranslateEnd = function(event) {
     var ids = [];
     for (var x=0;x<featuresTranslated.length;x++) {
         var f = featuresTranslated[x];
-        if (f.getGeometry() instanceof ome.ol3.geom.Mask ||
+        if (f.getGeometry() instanceof Mask ||
             (typeof f['permissions'] === 'object' &&
             f['permissions'] !== null &&
             typeof f['permissions']['canEdit'] === 'boolean' &&
             !f['permissions']['canEdit'])) continue;
-        if (f.getGeometry() instanceof ome.ol3.geom.Label)
+        if (f.getGeometry() instanceof Label)
             f.getGeometry().modifyOriginalCoordinates(
                 event.target.getMap().getView().getRotation(),
                 event.target.getMap().getView().getResolution()
@@ -141,14 +148,14 @@ ome.ol3.interaction.Translate.prototype.handleTranslateEnd = function(event) {
 
     // complete history entry
     this.regions_.addHistory(filtered, false, this.hist_id_);
-    ome.ol3.utils.Misc.sendEventNotification(
+    sendEventNotification(
         this.regions_.viewer_,
         "REGIONS_HISTORY_ENTRY", {"hist_id": this.hist_id_, "shape_ids": ids});
     this.hist_id_ = -1; // reset
 
     // set modified flag
     if (ids.length > 0) this.regions_.setProperty(
-        ids, "state", ome.ol3.REGIONS_STATE.MODIFIED);
+        ids, "state", REGIONS_STATE.MODIFIED);
 }
 
 /**
@@ -157,15 +164,15 @@ ome.ol3.interaction.Translate.prototype.handleTranslateEnd = function(event) {
  * @this {ol.interaction.Translate}
  * @private
  */
-ome.ol3.interaction.Translate.handleDownEvent_ = function(mapBrowserEvent) {
+Translate.handleDownEvent_ = function(mapBrowserEvent) {
     this.lastFeature_ = this.featuresAtCoords_(mapBrowserEvent.pixel);
     if (!this.lastCoordinate_ && this.lastFeature_) {
         this.lastCoordinate_ = mapBrowserEvent.coordinate;
-        ome.ol3.interaction.Translate.handleMoveEvent_.call(
+        Translate.handleMoveEvent_.call(
             this, mapBrowserEvent);
         this.dispatchEvent(
-            new ol.interaction.Translate.Event(
-                ol.interaction.TranslateEventType.TRANSLATESTART,
+            new TranslateEvent(
+                'translatestart',
                 this.features_, mapBrowserEvent.coordinate));
         return true;
     }
@@ -177,7 +184,7 @@ ome.ol3.interaction.Translate.handleDownEvent_ = function(mapBrowserEvent) {
  * @this {ol.interaction.Translate}
  * @private
  */
-ome.ol3.interaction.Translate.handleMoveEvent_ = function(mapBrowserEvent) {
+Translate.handleMoveEvent_ = function(mapBrowserEvent) {
     // overridden on purpose to do nothing
 };
 
@@ -187,14 +194,14 @@ ome.ol3.interaction.Translate.handleMoveEvent_ = function(mapBrowserEvent) {
  * @this {ol.interaction.Translate}
  * @private
  */
-ome.ol3.interaction.Translate.handleUpEvent_ = function(mapBrowserEvent) {
+Translate.handleUpEvent_ = function(mapBrowserEvent) {
     if (this.lastCoordinate_) {
         this.lastCoordinate_ = null;
-        ome.ol3.interaction.Translate.handleMoveEvent_.call(
+        Translate.handleMoveEvent_.call(
             this, mapBrowserEvent);
         this.dispatchEvent(
-            new ol.interaction.Translate.Event(
-                ol.interaction.TranslateEventType.TRANSLATEEND,
+            new TranslateEvent(
+                'translateend',
                 this.features_, mapBrowserEvent.coordinate));
         return true;
     }
@@ -206,19 +213,19 @@ ome.ol3.interaction.Translate.handleUpEvent_ = function(mapBrowserEvent) {
  * @this {ol.interaction.Translate}
  * @private
  */
-ome.ol3.interaction.Translate.handleDragEvent_ = function(event) {
+Translate.handleDragEvent_ = function(event) {
   if (this.lastCoordinate_) {
     var newCoordinate = event.coordinate;
     var deltaX = newCoordinate[0] - this.lastCoordinate_[0];
     var deltaY = newCoordinate[1] - this.lastCoordinate_[1];
 
-    var features = this.features_ || new ol.Collection([this.lastFeature_]);
-    var filteredFeatures = new ol.Collection();
+    var features = this.features_ || new Collection([this.lastFeature_]);
+    var filteredFeatures = new Collection();
 
     var featuresArray = features.getArray();
     for (var x=0;x<featuresArray.length;x++) {
         var feature = featuresArray[x];
-        if (feature.getGeometry() instanceof ome.ol3.geom.Mask ||
+        if (feature.getGeometry() instanceof Mask ||
             (typeof feature['permissions'] === 'object' &&
             feature['permissions'] !== null &&
             typeof feature['permissions']['canEdit'] === 'boolean' &&
@@ -231,8 +238,8 @@ ome.ol3.interaction.Translate.handleDragEvent_ = function(event) {
 
     this.lastCoordinate_ = newCoordinate;
     this.dispatchEvent(
-        new ol.interaction.Translate.Event(
-            ol.interaction.TranslateEventType.TRANSLATING, filteredFeatures,
+        new TranslateEvent(
+            'translating', filteredFeatures,
             newCoordinate));
   }
 };
@@ -245,10 +252,10 @@ ome.ol3.interaction.Translate.handleDragEvent_ = function(event) {
  * coordinates.
  * @private
  */
-ome.ol3.interaction.Translate.prototype.featuresAtCoords_ = function(coord) {
+Translate.prototype.featuresAtCoords_ = function(coord) {
     var hit = this.regions_.select_.featuresAtCoords_(coord, 5, true);
-    if (hit === null || !(this.features_ instanceof ol.Collection) ||
-        hit.getGeometry() instanceof ome.ol3.geom.Mask ||
+    if (hit === null || !(this.features_ instanceof Collection) ||
+        hit.getGeometry() instanceof Mask ||
             (typeof hit['permissions'] === 'object' &&
             hit['permissions'] !== null &&
             typeof hit['permissions']['canEdit'] === 'boolean' &&
@@ -262,7 +269,9 @@ ome.ol3.interaction.Translate.prototype.featuresAtCoords_ = function(coord) {
 /**
  * a sort of desctructor
  */
-ome.ol3.interaction.Translate.prototype.disposeInternal = function() {
+Translate.prototype.disposeInternal = function() {
     this.features_  = null;
     this.regions_ = null;
 }
+
+export default Translate;
