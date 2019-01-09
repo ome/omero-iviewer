@@ -18,7 +18,7 @@
 
 import Polygon from 'ol/geom/Polygon';
 import GeometryLayout from 'ol/geom/GeometryLayout';
-import inherits from 'ol/util';
+import {inherits} from 'ol/util';
 
 /**
  * @classdesc

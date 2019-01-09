@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// Copyright (C) 2018 University of Dundee & Open Microscopy Environment.
 // All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -17,14 +17,6 @@
 //
 
 /**
- * @namespace ome.ol3.utils.Misc
- */
-goog.provide('ome.ol3.utils.Misc');
-
-
-goog.require('ol.array');
-
-/**
  * Generates an array of resolutions according to a step size
  * If one likes to think of it in terms of 100% (resolution: 1)
  * then the step size will determine how many levels there will be.
@@ -37,7 +29,7 @@ goog.require('ol.array');
  * @param {number} zoom_in the increment for zoom_in
  * @param {number} zoom_out the increment for zoom_out
  */
-ome.ol3.utils.Misc.generateDefaultResolutions = function(zoom_in, zoom_out) {
+export const generateDefaultResolutions = function(zoom_in, zoom_out) {
     // checks and clamps so as to not get an unreasonable number of
     // levels
     if (typeof zoom_in !== 'number' || zoom_in < 0.01 || zoom_in >= 1)
@@ -68,11 +60,11 @@ ome.ol3.utils.Misc.generateDefaultResolutions = function(zoom_in, zoom_out) {
  * @function
  * @param {?Array} resolutions the resolutions array or null
  */
-ome.ol3.utils.Misc.prepareResolutions = function(resolutions) {
-    if (!ome.ol3.utils.Misc.isArray(resolutions) ||
+export const prepareResolutions = function(resolutions) {
+    if (!isArray(resolutions) ||
         resolutions.length === 0 ||
         (resolutions.length === 1 && resolutions[0] === 1))
-            return ome.ol3.utils.Misc.generateDefaultResolutions(0.025, 0.10);
+            return generateDefaultResolutions(0.025, 0.10);
 
     // for tiled sources we find the 1:1, then go backwards in the array
     // filling up with levels for zoom out
@@ -126,9 +118,8 @@ ome.ol3.utils.Misc.prepareResolutions = function(resolutions) {
  * @static
  * @param {Array.<ol.Feature>} features the features found under the coordinate
  */
-ome.ol3.utils.Misc.featuresAtCoords =
-function(features) {
-    if (!ome.ol3.utils.Misc.isArray(features) || features.length ===0) return null;
+export const featuresAtCoords = function(features) {
+    if (!isArray(features) || features.length ===0) return null;
 
     // determine priority of whih feature ought to be returned
     var filteredIntersectingFeatures = [];
@@ -155,7 +146,7 @@ function(features) {
  * @param {Object} element an html element
  * @return {Array.<string>|null} an array of classes or null
  */
-ome.ol3.utils.Misc.getClass = function(element) {
+export const getClass = function(element) {
     if (typeof(element) !== 'object' ||
         typeof(element['className']) !== 'string') return null;
 
@@ -171,7 +162,7 @@ ome.ol3.utils.Misc.getClass = function(element) {
  * @param {Object} element an html element
  * @param {string} className a class
  */
-ome.ol3.utils.Misc.setClass = function(element, className) {
+export const setClass = function(element, className) {
     if (typeof(element) !== 'object' ||
         typeof(element['className']) !== 'string' ||
         typeof(className) !== 'string') return;
@@ -187,13 +178,13 @@ ome.ol3.utils.Misc.setClass = function(element, className) {
  * @param {string} className a class
  * @return {boolean} true if the element has the class on it, false otherwise
  */
-ome.ol3.utils.Misc.containsClass = function(element, className) {
+export const containsClass = function(element, className) {
     if (typeof(className) !== 'string' || className.length === 0) return false;
 
-    var allClasses = ome.ol3.utils.Misc.getClass(element);
+    var allClasses = getClass(element);
     if (allClasses === null) return false;
 
-    return ol.array.includes(allClasses, className);
+    return allClasses.indexOf(className) >= 0;
 }
 
 /**
@@ -203,7 +194,7 @@ ome.ol3.utils.Misc.containsClass = function(element, className) {
  * @param {string} something a potential array
  * @return {boolean} true if something is an array, otherwise false
  */
-ome.ol3.utils.Misc.isArray = function(something) {
+export const isArray = function(something) {
    if (typeof something !== 'object' || something === null) return false;
 
    if (something instanceof Array ||
@@ -220,7 +211,7 @@ ome.ol3.utils.Misc.isArray = function(something) {
  * @param {string} name the name of the cookie
  * @return {string} the cookie's value
  */
-ome.ol3.utils.Misc.getCookie = function(name) {
+export const getCookie = function(name) {
     if (typeof(name) != 'string') return "";
 
     var all = document.cookie.split(';');
@@ -246,7 +237,7 @@ ome.ol3.utils.Misc.getCookie = function(name) {
  * @param {string} maps_info a string in json format containing inverted flag
  * @return {Array|null} an array of channel objects or null
  */
-ome.ol3.utils.Misc.parseChannelParameters = function(channel_info, maps_info) {
+export const parseChannelParameters = function(channel_info, maps_info) {
     if (typeof channel_info !== 'string' || channel_info.length === 0)
         return null;
 
@@ -299,7 +290,7 @@ ome.ol3.utils.Misc.parseChannelParameters = function(channel_info, maps_info) {
     try {
         maps_info = maps_info.replace(/&quot;/g, '"');
         var maps = JSON.parse(maps_info);
-        if (!ome.ol3.utils.Misc.isArray(maps)) return ret;
+        if (!isArray(maps)) return ret;
         var len = ret.length;
         for (var i=0;i<len && i<maps.length;i++) {
             var m = maps[i];
@@ -330,7 +321,7 @@ ome.ol3.utils.Misc.parseChannelParameters = function(channel_info, maps_info) {
  * @param {string} projection_info a string containing the projection info
  * @return {Object} an object containing the parsed projection info
  */
-ome.ol3.utils.Misc.parseProjectionParameter = function(projection_info) {
+export const parseProjectionParameter = function(projection_info) {
     var ret = {
         projection: ome.ol3.PROJECTION['NORMAL']
     };
@@ -364,15 +355,14 @@ ome.ol3.utils.Misc.parseProjectionParameter = function(projection_info) {
  * @param {Object=} content the event content as an object (optional)
  * @param {number=} delay delay for sending (optional)
  */
-ome.ol3.utils.Misc.sendEventNotification = function(viewer, type, content, delay) {
+export const sendEventNotification = function(viewer, type, content, delay) {
     if (!(viewer instanceof ome.ol3.Viewer) ||
         !(viewer.viewer_ instanceof ol.PluggableMap) ||
         viewer.prevent_event_notification_ ||
         typeof type !== 'string' ||
         type.length === 0) return;
 
-    var config_id =
-        ome.ol3.utils.Misc.getTargetId(viewer.viewer_.getTargetElement());
+    var config_id = getTargetId(viewer.viewer_.getTargetElement());
     var eventbus = viewer.eventbus_;
     if (config_id && eventbus) { // publish
         if (typeof content !== 'object' || content === null) content = {};
@@ -398,7 +388,7 @@ ome.ol3.utils.Misc.sendEventNotification = function(viewer, type, content, delay
  *                              (latter: for ol3 alone) or null
  *                              (no element id or parse error)
  */
-ome.ol3.utils.Misc.getTargetId = function(target) {
+export const getTargetId = function(target) {
     try {
         var elemId =
             typeof target === 'string' ? target :
