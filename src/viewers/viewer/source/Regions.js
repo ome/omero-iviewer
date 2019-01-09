@@ -20,6 +20,15 @@ import Vector from 'ol/source/Vector';
 import Feature from 'ol/Feature';
 import {inherits} from 'ol/util';
 import Viewer from '../Viewer';
+// import Draw from '../interaction/Draw';
+// import Select from '../interaction/Select';
+import BoxSelect from '../interaction/BoxSelect';
+import {createFeaturesFromRegionsResponse} from '../utils/Regions';
+import {isArray} from '../utils/Misc';
+import {sendRequest} from '../utils/Net';
+import {WEB_API_BASE,
+    REGIONS_MODE,
+    REGIONS_REQUEST_URL} from '../globals';
 
 /**
  * @classdesc
@@ -50,12 +59,12 @@ import Viewer from '../Viewer';
  * @constructor
  * @extends {ol.source.Vector}
  *
- * @param {ome.ol3.Viewer} viewerReference mandatory reference to the viewer parent
+ * @param {Viewer} viewerReference mandatory reference to the viewer parent
  * @param {Object=} options additional properties for initialization
  */
 const Regions = function(viewerReference, options) {
     if (!(viewerReference instanceof Viewer))
-        console.error("Regions needs an ome.ol3.Viewer instance!");
+        console.error("Regions needs an Viewer instance!");
 
     var opts = options || {};
     // we always use the spatial index
@@ -110,7 +119,7 @@ const Regions = function(viewerReference, options) {
     /**
      * the viewer reference
      *
-     * @type {ome.ol3.Viewer}
+     * @type {Viewer}
      * @private
      */
     this.viewer_ = viewerReference;
@@ -118,7 +127,7 @@ const Regions = function(viewerReference, options) {
     /**
      * a select interaction
      *
-     * @type {ome.ol3.interaction.Select}
+     * @type {interaction.Select}
      * @private
      */
     this.select_ = null;
@@ -126,7 +135,7 @@ const Regions = function(viewerReference, options) {
     /**
      * a translate interaction
      *
-     * @type {ome.ol3.interaction.Translate}
+     * @type {interaction.Translate}
      * @private
      */
     this.translate_ = null;
@@ -134,7 +143,7 @@ const Regions = function(viewerReference, options) {
     /**
      * a modify interaction
      *
-     * @type {ome.ol3.interaction.Modify}
+     * @type {interaction.Modify}
      * @private
      */
     this.modify_ = null;
@@ -142,7 +151,7 @@ const Regions = function(viewerReference, options) {
     /**
      * a draw interaction
      *
-     * @type {ome.ol3.interaction.Draw}
+     * @type {interaction.Draw}
      * @private
      */
     this.draw_ = null;
@@ -191,15 +200,14 @@ const Regions = function(viewerReference, options) {
             // store response internally to be able to work with it later
             scope.regions_info_ = data;
             scope.new_unsaved_shapes_ = {}; // reset
-            var regionsAsFeatures =
-                ome.ol3.utils.Regions.createFeaturesFromRegionsResponse(scope);
-            if (ome.ol3.utils.Misc.isArray(regionsAsFeatures) &&
+            var regionsAsFeatures = createFeaturesFromRegionsResponse(scope);
+            if (isArray(regionsAsFeatures) &&
                 regionsAsFeatures.length > 0)
                     scope.addFeatures(regionsAsFeatures);
         }
 
         // we use provided data if there
-        if (ome.ol3.utils.Misc.isArray(data)) {
+        if (isArray(data)) {
             init0(data);
             return;
         }
@@ -207,8 +215,8 @@ const Regions = function(viewerReference, options) {
          // define request settings
          var reqParams = {
              "server" : scope.viewer_.getServer(),
-             "uri" : scope.viewer_.getPrefixedURI(ome.ol3.WEB_API_BASE) +
-                     ome.ol3.REGIONS_REQUEST_URL +
+             "uri" : scope.viewer_.getPrefixedURI(WEB_API_BASE) +
+                     REGIONS_REQUEST_URL +
                      '/?image=' + scope.viewer_.getId(),
              "success" : function(response) {
                  if (typeof(response) === 'string') {
@@ -232,7 +240,7 @@ const Regions = function(viewerReference, options) {
          };
 
          // send request
-         ome.ol3.utils.Net.sendRequest(reqParams);
+         sendRequest(reqParams);
      };
 
     // execute initialization function
@@ -244,7 +252,7 @@ inherits(Regions, Vector);
 /**
  * This method enables and disables modes, i.e. it (dis)allows certain interactions
  * The disabling works by selecting a mutually exlusive mode or default.
- * see: {@link ome.ol3.REGIONS_MODE}
+ * see: {@link REGIONS_MODE}
  *
  * <p>
  * As mentioned already, some modes are inclusive and others mutually exclusive.
@@ -259,14 +267,14 @@ inherits(Regions, Vector);
  * overrrided the previous DRAW.
  *
  * The required parameter to the function takes an array of values
- * where the key is a ome.ol3.REGIONS_MODE enum value and the value is a boolean
+ * where the key is a REGIONS_MODE enum value and the value is a boolean
  *
- * <pre>[ome.ol3.REGIONS_MODE.SELECT, ome.ol3.REGIONS_MODE.TRANSLATE]</pre>
+ * <pre>[REGIONS_MODE.SELECT, REGIONS_MODE.TRANSLATE]</pre>
  *
  * @param {Array.<number>} modes an array of modes
  */
 Regions.prototype.setModes = function(modes) {
-    if (!ome.ol3.utils.Misc.isArray(modes)) return;
+    if (!isArray(modes)) return;
 
     var defaultMode = false;
     var selectMode = false;
@@ -283,33 +291,33 @@ Regions.prototype.setModes = function(modes) {
         if (typeof(modes[m]) !== 'number' || modes[m] < 0 || modes[m] > 4)
             continue;
 
-        if (modes[m] === ome.ol3.REGIONS_MODE['DEFAULT']) { // DEFAULT
+        if (modes[m] === REGIONS_MODE['DEFAULT']) { // DEFAULT
             defaultMode = true;
             selectMode = translateMode = modifyMode = drawMode = false;
             break;
         }
 
-        if (modes[m] === ome.ol3.REGIONS_MODE['SELECT']) { // SELECT
+        if (modes[m] === REGIONS_MODE['SELECT']) { // SELECT
             selectMode = true;
             drawMode = false; // mutally exclusive
             continue;
         }
 
-        if (modes[m] === ome.ol3.REGIONS_MODE['TRANSLATE']) { // TRANSLATE
+        if (modes[m] === REGIONS_MODE['TRANSLATE']) { // TRANSLATE
             selectMode = true; // we need it
             translateMode = true; // set it
             drawMode = false; // mutally exclusive
             continue;
         }
 
-        if (modes[m] === ome.ol3.REGIONS_MODE['MODIFY']) { // MODIFY
+        if (modes[m] === REGIONS_MODE['MODIFY']) { // MODIFY
             selectMode = true; // we need it
             modifyMode = true; // set it
             drawMode = false; // mutally exclusive
             continue;
         }
 
-        if (modes[m] === ome.ol3.REGIONS_MODE['DRAW']) { // DRAW
+        if (modes[m] === REGIONS_MODE['DRAW']) { // DRAW
             selectMode = false; // mutally exclusive
             translateMode = false; // mutally exclusive
             modifyMode = false; // mutally exclusive
@@ -354,12 +362,12 @@ Regions.prototype.setModes = function(modes) {
 
     var addSelectInteraction = function() {
         if (this.select_ === null) {
-            this.select_ = new ome.ol3.interaction.Select(this);
+            this.select_ = new Select(this);
             this.viewer_.viewer_.addInteraction(this.select_);
             // we also add muliple (box) select by default
             this.viewer_.addInteraction(
                 "boxSelect",
-                new ome.ol3.interaction.BoxSelect(this));
+                new BoxSelect(this));
         }
     }
 
@@ -373,7 +381,7 @@ Regions.prototype.setModes = function(modes) {
     if (drawMode) { // remove mutually exclusive interactions
         removeModifyInteractions.call(this);
         if (this.draw_ === null) // no need to do this if we have a draw already
-            this.draw_ = new ome.ol3.interaction.Draw(oldModes, this);
+            this.draw_ = new Draw(oldModes, this);
         this.present_modes_.push(ome.ol3.REGIONS_MODE.DRAW);
         return;
     }
@@ -443,7 +451,7 @@ Regions.prototype.updateRegions= function(request_info) {
     // just take the roi info that we had already (and include orphaned additions)
     var regionsAsFeatures =
         ome.ol3.utils.Regions.createFeaturesFromRegionsResponse(this, true);
-    if (!ome.ol3.utils.Misc.isArray(regionsAsFeatures)) regionsAsFeatures = [];
+    if (!isArray(regionsAsFeatures)) regionsAsFeatures = [];
     if (regionsAsFeatures.length > 0) this.addFeatures(regionsAsFeatures);
 }
 
@@ -579,7 +587,7 @@ Regions.prototype.storeRegions =
                 data = JSON.parse(data);
                 if (data && typeof data['ids'] === 'object')
                     params['shapes'] = data['ids'];
-                if (data && ome.ol3.utils.Misc.isArray(data['errors']))
+                if (data && isArray(data['errors']))
                     errors = data['errors'];
             } catch(parseError) {
                 errors.push("Failed to parse JSON response");
@@ -653,7 +661,7 @@ Regions.prototype.storeRegions =
 Regions.prototype.setProperty =
     function(roi_shape_ids, property, value, callback) {
 
-    if (!ome.ol3.utils.Misc.isArray(roi_shape_ids) ||
+    if (!isArray(roi_shape_ids) ||
         roi_shape_ids.length === 0 ||
         typeof property !== 'string' ||
         typeof value === 'undefined' ||
@@ -758,7 +766,7 @@ Regions.prototype.setProperty =
  */
 Regions.prototype.addHistory =
     function(features, is_old_value, hist_id) {
-    if (!ome.ol3.utils.Misc.isArray(features) || features.length === 0) return;
+    if (!isArray(features) || features.length === 0) return;
 
     // get the latest id and increment it, if we don't have an id
     var hist_entry = {};

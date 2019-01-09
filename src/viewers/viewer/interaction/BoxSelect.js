@@ -28,7 +28,7 @@ import Regions from '../source/Regions';
  * @constructor
  * @extends {ol.interaction.DragBox}
  * @fires ol.interaction.DragBox.Event
- * @param {ome.ol3.source.Regions} regions_reference a reference to get to all (selected) rois
+ * @param {source.Regions} regions_reference a reference to get to all (selected) rois
  */
 const BoxSelect = function(regions_reference) {
     if (!(regions_reference instanceof Regions))
@@ -49,7 +49,7 @@ const BoxSelect = function(regions_reference) {
     /**
      * a reference to the Regions instance
      * @private
-     * @type {ome.ol3.source.Regions}
+     * @type {source.Regions}
      */
     this.regions_ = regions_reference;
 
