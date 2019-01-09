@@ -20,7 +20,10 @@ import Point from 'ol/geom/Point';
 import SimpleGeometry from 'ol/geom/SimpleGeometry';
 import {intersectsLinearRing} from 'ol/geom/flat/intersectsextent';
 import {inherits} from 'ol/util';
-import Rectangle from './Rectangle';
+
+// importing Rectangle here means that when Rectangle is imported
+// into Label.js is undefined!
+// import Rectangle from './Rectangle';
 import {applyTransform,
     convertMatrixToAffineTransform,
     convertAffineTransformIntoMatrix} from '../utils/Transform';
