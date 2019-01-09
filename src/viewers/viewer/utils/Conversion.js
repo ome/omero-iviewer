@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// Copyright (C) 2019 University of Dundee & Open Microscopy Environment.
 // All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -16,10 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-/**
- * @namespace ome.ol3.utils.Conversion
- */
-goog.provide('ome.ol3.utils.Conversion');
+import {isArray} from './Misc';
 
 /**
  * Converts a color given as a rgb(a) string, e.g. 'rgba(255,255,255, 0.75)'
@@ -37,7 +34,7 @@ goog.provide('ome.ol3.utils.Conversion');
  * @param {number=} alpha an optional alpha channel for rgb strings
  * @return {object|null} returns the color as an object or null if parse errors
  */
-ome.ol3.utils.Conversion.convertRgbaColorFormatToObject = function(rgba, alpha) {
+export const convertRgbaColorFormatToObject = function(rgba, alpha) {
     if (typeof(rgba) !== 'string' || rgba.length === 0) return null;
     if (typeof(alpha) !== 'number') alpha = 1.0;
 
@@ -84,8 +81,8 @@ ome.ol3.utils.Conversion.convertRgbaColorFormatToObject = function(rgba, alpha) 
  * @param {number=} alpha an optional alpha channel for rgb strings
  * @return {object|null} returns the color as an object or null if parse errors
  */
-ome.ol3.utils.Conversion.convertColorArrayToObject = function(rgba, alpha) {
-    if (!ome.ol3.utils.Misc.isArray(rgba) || rgba.length < 3) return null;
+export const convertColorArrayToObject = function(rgba, alpha) {
+    if (!isArray(rgba) || rgba.length < 3) return null;
 
     if (rgba.length === 3 && typeof(alpha) !== 'number') alpha = 1.0;
     else alpha = rgba[3];
@@ -111,7 +108,7 @@ ome.ol3.utils.Conversion.convertColorArrayToObject = function(rgba, alpha) {
  * @param {number=} alpha an optional alpha channel or 1.0 by default
  * @return {object|null} returns the color as an object or null if parse errors
  */
-ome.ol3.utils.Conversion.convertHexColorFormatToObject = function(hex, alpha) {
+export const convertHexColorFormatToObject = function(hex, alpha) {
     if (typeof(hex) !== 'string' || hex.length === 0) return null;
     if (typeof(alpha) !== 'number') alpha = 1.0;
 
@@ -149,9 +146,8 @@ ome.ol3.utils.Conversion.convertHexColorFormatToObject = function(hex, alpha) {
  * @param {object} color the color object
  * @return {string|null} returns the color as hex string or null (if incorrect color object)
  */
-ome.ol3.utils.Conversion.convertColorObjectToHex = function(color) {
-    var checkedColorObject =
-        ome.ol3.utils.Conversion.checkColorObjectCorrectness(color);
+export const convertColorObjectToHex = function(color) {
+    var checkedColorObject = checkColorObjectCorrectness(color);
     if (checkedColorObject == null) return null;
 
     var ret = "#";
@@ -174,9 +170,8 @@ ome.ol3.utils.Conversion.convertColorObjectToHex = function(color) {
  * @param {object} color the color object
  * @return {string|null} returns the color as rgba string or null (if incorrect color object)
  */
-ome.ol3.utils.Conversion.convertColorObjectToRgba = function(color) {
-    var checkedColorObject =
-        ome.ol3.utils.Conversion.checkColorObjectCorrectness(color);
+export const convertColorObjectToRgba = function(color) {
+    var checkedColorObject = checkColorObjectCorrectness(color);
     if (checkedColorObject == null) return null;
 
     var ret = "rgba(";
@@ -202,7 +197,7 @@ ome.ol3.utils.Conversion.convertColorObjectToRgba = function(color) {
  * @param {object} color the color object
  * @return {object|null} returns the handed in object or null (if incorrect)
  */
-ome.ol3.utils.Conversion.checkColorObjectCorrectness = function(color) {
+export const checkColorObjectCorrectness = function(color) {
     if (typeof(color) !== 'object') return null;
 
     // check correctness of color object,
@@ -229,7 +224,7 @@ ome.ol3.utils.Conversion.checkColorObjectCorrectness = function(color) {
  * @param {number} signed_integer the signed integer in RGBA
  * @return {object|null} returns the color as an object or null in case of errors
  */
-ome.ol3.utils.Conversion.convertSignedIntegerToColorObject =
+export const convertSignedIntegerToColorObject =
     function(signed_integer) {
         if (typeof signed_integer !== 'number') return null;
 
@@ -275,7 +270,7 @@ ome.ol3.utils.Conversion.convertSignedIntegerToColorObject =
  * @param {number=} alpha an optinal alpha value if the color argument does not include one
  * @return {number|null} returns the color/alpha info encoded in a signed integer
  */
-ome.ol3.utils.Conversion.convertColorToSignedInteger = function(color, alpha) {
+export const convertColorToSignedInteger = function(color, alpha) {
     if (typeof(alpha) !== 'number') {
         alpha = parseInt(alpha);
         if (isNaN(alpha)) alpha = 1.0;
@@ -283,19 +278,17 @@ ome.ol3.utils.Conversion.convertColorToSignedInteger = function(color, alpha) {
 
     if (typeof(color) == 'string') { // delegate to appropriate conversion
         if (color.indexOf('rgba') != -1)
-            color = ome.ol3.utils.Conversion.convertRgbaColorFormatToObject(
-                        color, alpha);
+            color = convertRgbaColorFormatToObject(color, alpha);
         else
-            color = ome.ol3.utils.Conversion.convertHexColorFormatToObject(
-                        color, alpha);
-    } else if (ome.ol3.utils.Misc.isArray(color))
-        color = ome.ol3.utils.Conversion.convertColorArrayToObject(color, alpha);
+            color = convertHexColorFormatToObject(color, alpha);
+    } else if (isArray(color))
+        color = convertColorArrayToObject(color, alpha);
 
     if (typeof color === 'object' && color !== null &&
         typeof color['alpha'] !== 'number')
             color['alpha'] = alpha;
     if ((typeof(color) !== 'object') || // last check of correctness
-        typeof((color = ome.ol3.utils.Conversion.checkColorObjectCorrectness(
+        typeof((color = checkColorObjectCorrectness(
                 color))) !== 'object') return null;
 
     var decimalMultiplied = color['alpha'] * 255;
@@ -316,7 +309,7 @@ ome.ol3.utils.Conversion.convertColorToSignedInteger = function(color, alpha) {
  * @param {number=} shape_id the optional shape id
  * @return {Object} returns an object ready to be turned into json
  */
-ome.ol3.utils.Conversion.pointToJsonObject = function(geometry, shape_id) {
+export const pointToJsonObject = function(geometry, shape_id) {
     if (!(geometry instanceof ome.ol3.geom.Point))
         throw "type point must be an instance of ome.ol3.geom.Point!";
 
@@ -345,7 +338,7 @@ ome.ol3.utils.Conversion.pointToJsonObject = function(geometry, shape_id) {
  * @param {number=} shape_id the optional shape id
  * @return {Object} returns an object ready to be turned into json
  */
-ome.ol3.utils.Conversion.ellipseToJsonObject = function(geometry, shape_id) {
+export const ellipseToJsonObject = function(geometry, shape_id) {
     if (!(geometry instanceof ome.ol3.geom.Ellipse))
         throw "type ellipse must be an instance of ome.ol3.geom.Ellipse!";
 
@@ -377,7 +370,7 @@ ome.ol3.utils.Conversion.ellipseToJsonObject = function(geometry, shape_id) {
  * @param {number=} shape_id the optional shape id
  * @return {Object} returns an object ready to be turned into json
  */
-ome.ol3.utils.Conversion.rectangleToJsonObject = function(geometry, shape_id) {
+export const rectangleToJsonObject = function(geometry, shape_id) {
     if (!(geometry instanceof ome.ol3.geom.Rectangle))
         throw "type rectangle must be an instance of ome.ol3.geom.Rectangle!";
 
@@ -409,7 +402,7 @@ ome.ol3.utils.Conversion.rectangleToJsonObject = function(geometry, shape_id) {
  * @param {number=} shape_id the optional shape id
  * @return {Object} returns an object ready to be turned into json
  */
-ome.ol3.utils.Conversion.lineToJsonObject = function(geometry, shape_id) {
+export const lineToJsonObject = function(geometry, shape_id) {
     if (!(geometry instanceof ome.ol3.geom.Line))
         throw "type line must be an instance of ome.ol3.geom.Line!";
 
@@ -418,8 +411,7 @@ ome.ol3.utils.Conversion.lineToJsonObject = function(geometry, shape_id) {
     var flatCoords = geometry.getLineCoordinates();
     //delegate if we happen to have turned into a polyline
     if (geometry.isPolyline())
-        return ome.ol3.utils.Conversion.polylineToJsonObject.call(
-            null, geometry, shape_id);
+        return polylineToJsonObject.call(null, geometry, shape_id);
 
     ret['@type'] = "http://www.openmicroscopy.org/Schemas/OME/2016-06#Line";
     ret['X1'] = flatCoords[0];
@@ -449,7 +441,7 @@ ome.ol3.utils.Conversion.lineToJsonObject = function(geometry, shape_id) {
  * @param {number=} shape_id the optional shape id
  * @return {Object} returns an object ready to be turned into json
  */
-ome.ol3.utils.Conversion.polylineToJsonObject = function(geometry, shape_id) {
+export const polylineToJsonObject = function(geometry, shape_id) {
     if (!(geometry instanceof ome.ol3.geom.Line))
         throw "type polyline must be an instance of ome.ol3.geom.Line!";
 
@@ -458,8 +450,7 @@ ome.ol3.utils.Conversion.polylineToJsonObject = function(geometry, shape_id) {
     var flatCoords = geometry.getLineCoordinates();
     //delegate if we happen to have turned into a line
     if (!geometry.isPolyline())
-        return ome.ol3.utils.Conversion.lineToJsonObject.call(
-            null, geometry, shape_id);
+        return lineToJsonObject.call(null, geometry, shape_id);
 
     ret['@type'] = "http://www.openmicroscopy.org/Schemas/OME/2016-06#Polyline";
     ret['Points'] = "";
@@ -491,7 +482,7 @@ ome.ol3.utils.Conversion.polylineToJsonObject = function(geometry, shape_id) {
  * @param {number=} shape_id the optional shape id
  * @return {Object} returns an object ready to be turned into a json object
  */
-ome.ol3.utils.Conversion.labelToJsonObject = function(geometry, shape_id) {
+export const labelToJsonObject = function(geometry, shape_id) {
     if (!(geometry instanceof ome.ol3.geom.Label))
         throw "type label must be an instance of ome.ol3.geom.Label!";
 
@@ -514,7 +505,7 @@ ome.ol3.utils.Conversion.labelToJsonObject = function(geometry, shape_id) {
  * @param {number=} shape_id the optional shape id
  * @return {Object} returns an object ready to be turned into json
  */
-ome.ol3.utils.Conversion.polygonToJsonObject = function(geometry, shape_id) {
+export const polygonToJsonObject = function(geometry, shape_id) {
     if (!(geometry instanceof ome.ol3.geom.Polygon))
         throw "type polygon must be an instance of ome.ol3.geom.Polygon!";
 
@@ -548,7 +539,7 @@ ome.ol3.utils.Conversion.polygonToJsonObject = function(geometry, shape_id) {
  * @param {number=} shape_id the optional shape id
  * @return {Object} returns an object ready to be turned into json
  */
-ome.ol3.utils.Conversion.maskToJsonObject = function(geometry, shape_id) {
+export const maskToJsonObject = function(geometry, shape_id) {
     if (!(geometry instanceof ome.ol3.geom.Mask))
         throw "type mask must be an instance of ome.ol3.geom.Mask!";
 
@@ -578,15 +569,15 @@ ome.ol3.utils.Conversion.maskToJsonObject = function(geometry, shape_id) {
  * @private
  * @return {function} the conversion function for the specific shape type
  */
-ome.ol3.utils.Conversion.LOOKUP = {
-    "point" : ome.ol3.utils.Conversion.pointToJsonObject,
-    "ellipse" : ome.ol3.utils.Conversion.ellipseToJsonObject,
-    "rectangle" : ome.ol3.utils.Conversion.rectangleToJsonObject,
-    "line" : ome.ol3.utils.Conversion.lineToJsonObject,
-    "polyline" : ome.ol3.utils.Conversion.polylineToJsonObject,
-    "label" : ome.ol3.utils.Conversion.labelToJsonObject,
-    "polygon" : ome.ol3.utils.Conversion.polygonToJsonObject,
-    "mask" : ome.ol3.utils.Conversion.maskToJsonObject
+export const LOOKUP = {
+    "point" : pointToJsonObject,
+    "ellipse" : ellipseToJsonObject,
+    "rectangle" : rectangleToJsonObject,
+    "line" : lineToJsonObject,
+    "polyline" : polylineToJsonObject,
+    "label" : labelToJsonObject,
+    "polygon" : polygonToJsonObject,
+    "mask" : maskToJsonObject
 };
 
 /**
@@ -599,7 +590,7 @@ ome.ol3.utils.Conversion.LOOKUP = {
  * @param {ol.Feature} feature whose style (function) we like to use
  * @param {Object} jsonObject an object containing shape information
  */
-ome.ol3.utils.Conversion.integrateStyleIntoJsonObject = function(feature, jsonObject) {
+export const integrateStyleIntoJsonObject = function(feature, jsonObject) {
     if (typeof(jsonObject) !== 'object' ||
         typeof(jsonObject['@type']) !== 'string' ||
         !(feature instanceof ol.Feature) ||
@@ -609,7 +600,7 @@ ome.ol3.utils.Conversion.integrateStyleIntoJsonObject = function(feature, jsonOb
     // we now have an array of styles (due to arrows)
     var presentStyle = feature.getStyle();
     if (typeof(presentStyle) === 'function') presentStyle = presentStyle(1);
-    if (ome.ol3.utils.Misc.isArray(presentStyle))
+    if (isArray(presentStyle))
         presentStyle = presentStyle[0];
     if (!(presentStyle instanceof ol.style.Style)) return;
 
@@ -621,9 +612,7 @@ ome.ol3.utils.Conversion.integrateStyleIntoJsonObject = function(feature, jsonOb
             presentStyle.getText().getFill().getColor() :
                 presentStyle.getFill() ? presentStyle.getFill().getColor() : null;
     if (presentFillColor)
-        jsonObject['FillColor'] =
-            ome.ol3.utils.Conversion.convertColorToSignedInteger(
-                presentFillColor);
+        jsonObject['FillColor'] = convertColorToSignedInteger(presentFillColor);
 
     var presentStrokeStyle =
         isLabel && presentStyle.getText() && presentStyle.getText().getFill() ?
@@ -634,8 +623,7 @@ ome.ol3.utils.Conversion.integrateStyleIntoJsonObject = function(feature, jsonOb
                     feature['oldStrokeStyle']['color'] : null);
 
     if (presentStrokeStyle) { // STROKE
-        jsonObject['StrokeColor'] =
-            ome.ol3.utils.Conversion.convertColorToSignedInteger(
+        jsonObject['StrokeColor'] = convertColorToSignedInteger(
                 presentStrokeStyle);
     }
     var presentStrokeWidth =
@@ -691,7 +679,7 @@ ome.ol3.utils.Conversion.integrateStyleIntoJsonObject = function(feature, jsonOb
  * @param {ol.Feature} feature the open layers feature that holds shape information
  * @param {Object} jsonObject an object containing shape information
  */
-ome.ol3.utils.Conversion.integrateMiscInfoIntoJsonObject  = function(feature, jsonObject) {
+export const integrateMiscInfoIntoJsonObject  = function(feature, jsonObject) {
     if (typeof(jsonObject) !== 'object' || !(feature instanceof ol.Feature))
         return;
 
@@ -718,7 +706,7 @@ ome.ol3.utils.Conversion.integrateMiscInfoIntoJsonObject  = function(feature, js
  * @param {Object} empty_rois deleted shapes within an empty rois will not be added to the deleted list
  * @return {Object|null} returns an assocative array of rois with contained shapes or null if something went wrong badly
  */
-ome.ol3.utils.Conversion.toJsonObject =
+export const toJsonObject =
     function(features, storeNewShapesInSeparateRois, empty_rois) {
     if (!(features instanceof ol.Collection) || features.getLength() === 0)
         return null;
@@ -782,12 +770,12 @@ ome.ol3.utils.Conversion.toJsonObject =
                  }
             // if rois is empty we don't list them individually
             if (typeof empty_rois[roiId] === 'undefined' ) {
-                if (!ome.ol3.utils.Misc.isArray(
+                if (!isArray(
                         categorizedRois['deleted'][roiId]))
                             categorizedRois['deleted'][roiId] = [];
                 categorizedRois['deleted'][roiId].push(feature.getId());
             } else {
-                if (!ome.ol3.utils.Misc.isArray(
+                if (!isArray(
                         categorizedRois['empty_rois'][roiId]))
                             categorizedRois['empty_rois'][roiId] = [];
                 categorizedRois['empty_rois'][roiId].push(feature.getId());
@@ -802,9 +790,7 @@ ome.ol3.utils.Conversion.toJsonObject =
             if ((roiId < 0 || shapeId < 0) && newRoisForEachNewShape)
                 roiIdToBeUsed = currentNewId--;
             else if (roiId > 0 && shapeId > 0) {
-                var modifiedShape =
-                    ome.ol3.utils.Conversion.featureToJsonObject(
-                        feature, shapeId, roiIdToBeUsed);
+                var modifiedShape = featureToJsonObject(feature, shapeId, roiIdToBeUsed);
                 modifiedShape['oldId'] = feature.getId();
                 categorizedRois['modified'].push(modifiedShape);
                 categorizedRois['count']++;
@@ -824,9 +810,7 @@ ome.ol3.utils.Conversion.toJsonObject =
             roiContainer = rois[roiIdToBeUsed];
         }
 
-        var jsonObject =
-            ome.ol3.utils.Conversion.featureToJsonObject(
-                feature, shapeId, roiIdToBeUsed);
+        var jsonObject = featureToJsonObject(feature, shapeId, roiIdToBeUsed);
         if (jsonObject === null) continue;
 
         // we like to keep the old id for later synchronization
@@ -838,7 +822,7 @@ ome.ol3.utils.Conversion.toJsonObject =
     // flatten out shapes in rois
     var flattenedArray = [];
     for (var r in rois) {
-        if (!ome.ol3.utils.Misc.isArray(
+        if (!isArray(
                 rois[r]['shapes'])) continue;
         var shap = rois[r]['shapes'];
         for (var s in shap)
@@ -860,7 +844,7 @@ ome.ol3.utils.Conversion.toJsonObject =
  * @param {number=} roi_id an (optional) roi_id
  * @return {Object|null} returns the json definition of the shape or null if an error occured
  */
-ome.ol3.utils.Conversion.featureToJsonObject = function(feature, shape_id, roi_id) {
+export const featureToJsonObject = function(feature, shape_id, roi_id) {
     var type = feature['type'];
     try {
         // extract the shape id from the feature's compound rois:shape id
@@ -877,17 +861,15 @@ ome.ol3.utils.Conversion.featureToJsonObject = function(feature, shape_id, roi_i
             }
         }
 
-        var jsonObject = // retrieve object with 'geometry' type of properties
-            ome.ol3.utils.Conversion.LOOKUP[type].call(
-                null, feature.getGeometry(),
+        // retrieve object with 'geometry' type of properties
+        var jsonObject = LOOKUP[type].call(null, feature.getGeometry(),
                 typeof roi_id !== 'number' || roi_id > -1 ? shape_id : null);
 
         // add 'style' properties
-        ome.ol3.utils.Conversion.integrateStyleIntoJsonObject(
-            feature, jsonObject);
+        integrateStyleIntoJsonObject(feature, jsonObject);
 
         // add any additional information related to the shape that needs storing
-        ome.ol3.utils.Conversion.integrateMiscInfoIntoJsonObject(feature, jsonObject);
+        integrateMiscInfoIntoJsonObject(feature, jsonObject);
 
         return jsonObject;
     } catch(conversion_error) {
@@ -906,7 +888,7 @@ ome.ol3.utils.Conversion.featureToJsonObject = function(feature, shape_id, roi_i
  * @param {string} points a string of points (x,y) separated by space
  * @return {Array.<Array.<number,number>>} returns an array of coordinate pairs
  */
-ome.ol3.utils.Conversion.convertPointStringIntoCoords = function(points) {
+export const convertPointStringIntoCoords = function(points) {
     if (typeof points !== 'string') return null;
 
     var tokens = points.split(" ");

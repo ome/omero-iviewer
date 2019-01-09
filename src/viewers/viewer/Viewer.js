@@ -57,11 +57,11 @@ import {isArray,
     sendEventNotification,
     prepareResolutions,
     getTargetId} from './utils/Misc';
-// import {integrateStyleIntoJsonObject,
-//     integrateMiscInfoIntoJsonObject,
-//     toJsonObject,
-//     featureToJsonObject,
-//     LOOKUP} from './utils/Conversion';
+import {integrateStyleIntoJsonObject,
+    integrateMiscInfoIntoJsonObject,
+    toJsonObject,
+    featureToJsonObject,
+    LOOKUP} from './utils/Conversion';
 // import {Image as OmeroImage} from './source/Image';
 // import Regions from './source/Regions';
 
