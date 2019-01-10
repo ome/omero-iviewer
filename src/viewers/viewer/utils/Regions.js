@@ -17,6 +17,11 @@
 //
 
 import Feature from 'ol/Feature';
+import Circle from 'ol/geom/Circle';
+import Text from 'ol/style/Text';
+import Style from 'ol/style/Style';
+import Geometry from 'ol/geom/Geometry';
+import {lineStringLength} from 'ol/geom/flat/length';
 import Ellipse from '../geom/Ellipse';
 import Point from '../geom/Point';
 import Line from '../geom/Line';
@@ -223,8 +228,8 @@ export const scaleTextAndLabels = function(feature, factor) {
     if (!(feature instanceof Feature) || typeof factor !== 'number') return;
 
     var featureStyle = feature.getStyle();
-    if (!(featureStyle instanceof ol.style.Style) ||
-        !(featureStyle.getText() instanceof ol.style.Text) ||
+    if (!(featureStyle instanceof Style) ||
+        !(featureStyle.getText() instanceof Text) ||
         typeof featureStyle.getText().getFont() !== 'string') return;
 
     var tok = featureStyle.getText().getFont().split(" ");
@@ -514,7 +519,7 @@ export const calculateLengthAndArea =
         var geom = feature.getGeometry();
         // we represent points as circles
         var hasArea =
-            !(geom instanceof ol.geom.Circle) &&
+            !(geom instanceof Circle) &&
             !(geom instanceof Line) &&
             !(geom instanceof Label);
         // for now we only calculate length for line geometries
@@ -564,8 +569,8 @@ export const calculateLengthAndArea =
  * @return {number} the length of the geometry or 0 (if no geometry)
  */
 export const getLength = function(geom) {
-    if (!(geom instanceof ol.geom.Geometry)) return 0;
-    return ol.geom.flat.length.lineString(
+    if (!(geom instanceof Geometry)) return 0;
+    return lineStringLength(
         geom.flatCoordinates, 0,
         geom.flatCoordinates.length, geom.stride);
 }

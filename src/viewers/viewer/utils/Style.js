@@ -16,12 +16,22 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+import Feature from 'ol/Feature';
+import Collection from 'ol/Collection';
 import Style from 'ol/style/Style';
 import Icon from 'ol/style/Icon';
 import Fill from 'ol/style/Fill';
 import Stroke from 'ol/style/Stroke';
 import Text from 'ol/style/Text';
-import RegularShape from 'ol/style/RegularShape';
+import {WEBGATEWAY,
+    REGIONS_STATE} from '../globals'; 
+import Regions from '../source/Regions';
+import Label from '../geom/Label';
+import Mask from '../geom/Mask';
+import Line from '../geom/Line';
+import {isArray} from '../utils/Misc';
+import {convertSignedIntegerToColorObject,
+    convertColorObjectToRgba} from './Conversion';
 
 /**
  * Creates an open layers style object based on the handed in roi shapes info
@@ -46,20 +56,18 @@ export const createFeatureStyle = function(shape_info, is_label, fill_in_default
     // FILL PROPERTIES
     if (typeof(shape_info['FillColor']) === 'number') {
         // we need hex +alpha to rgba conversion via color object
-        tmpColor =
-            ome.ol3.utils.Conversion.convertSignedIntegerToColorObject(
+        tmpColor = convertSignedIntegerToColorObject(
                 shape_info['FillColor']);
-        fill['color'] = ome.ol3.utils.Conversion.convertColorObjectToRgba(tmpColor);
+        fill['color'] = convertColorObjectToRgba(tmpColor);
         if (fill['color'] != null) fill['count']++;
     }
 
     // STROKE PROPERTIES
     if (typeof(shape_info['StrokeColor']) === 'number') {
         // we need hex +alpha to rgba conversion via color object
-        tmpColor =
-            ome.ol3.utils.Conversion.convertSignedIntegerToColorObject(
+        tmpColor = convertSignedIntegerToColorObject(
                 shape_info['StrokeColor']);
-        stroke['color'] = ome.ol3.utils.Conversion.convertColorObjectToRgba(tmpColor);
+        stroke['color'] = convertColorObjectToRgba(tmpColor);
         if (stroke['color'] != null) stroke['count']++;
     }
     if (typeof shape_info['StrokeWidth'] === 'object' &&
@@ -78,8 +86,8 @@ export const createFeatureStyle = function(shape_info, is_label, fill_in_default
     }
 
     // instantiate style objects
-    var strokeStyle = (stroke['count'] > 0) ? new ol.style.Stroke(stroke) : null;
-    var fillStyle = (fill['count'] > 0) ? new ol.style.Fill(fill) : null;
+    var strokeStyle = (stroke['count'] > 0) ? new Stroke(stroke) : null;
+    var fillStyle = (fill['count'] > 0) ? new Fill(fill) : null;
 
     // contains style information
     var style = {};
@@ -111,16 +119,16 @@ export const createFeatureStyle = function(shape_info, is_label, fill_in_default
         // we don't want spikes
         stroke['lineCap'] = "round";
         stroke['lineJoin'] = "round";
-        text['fill'] = new ol.style.Fill(stroke);
+        text['fill'] = new Fill(stroke);
         text['count']++;
     } else if (forLabel &&
-        !(text['fill'] instanceof ol.style.Fill) && fillStyle) {
-            text['fill'] = new ol.style.Fill(fill);
+        !(text['fill'] instanceof Fill) && fillStyle) {
+            text['fill'] = new Fill(fill);
             text['count']++;
     }
     if (text['count'] > 0) {
         text['overflow'] = true;
-        style['text'] = new ol.style.Text(text);
+        style['text'] = new Text(text);
 
         // we do not wish for defaults (ol creates default fill color)
         if (!fill_in_defaults &&
@@ -133,11 +141,11 @@ export const createFeatureStyle = function(shape_info, is_label, fill_in_default
     if (strokeStyle) style['stroke'] = strokeStyle;
     if (fillStyle) style['fill'] = fillStyle;
     if (forLabel) { // the workaround for mere labels
-        style['stroke'] = new ol.style.Stroke(
+        style['stroke'] = new Stroke(
             {'color': "rgba(255,255,255,0)", 'width': 1,
              'lineCap' : "butt", 'lineJoin' : "miter", 'miterLimit' : 20
             });
-        style['fill'] = new ol.style.Fill({'color': "rgba(255,255,255,0)"});
+        style['fill'] = new Fill({'color': "rgba(255,255,255,0)"});
     }
 
     return new Style(style);
@@ -147,20 +155,20 @@ export const createFeatureStyle = function(shape_info, is_label, fill_in_default
 /**
  * Used internally to replace the style/style function of a feature.
  * In specific, this is called if setScaleText or setRotateText members are called
- * see {@link ome.ol3.source.Regions.setScaleText}
- * see {@link ome.ol3.source.Regions.setRotateText}
+ * see {@link source.Regions.setScaleText}
+ * see {@link source.Regions.setRotateText}
  *
  * @private
  * @param {olFeature} feature the feature whose style (function) to adjust
- * @param {ome.ol3.source.Regions} regions_reference a reference to the regions instance
+ * @param {source.Regions} regions_reference a reference to the regions instance
  * @param {boolean=} forceUpdate forces label to be updated even if rotation/resolution (flags) were not modified
  */
 export const updateStyleFunction =
     function(feature, regions_reference, forceUpdate) {
-        if (!(feature instanceof ol.Feature))
+        if (!(feature instanceof Feature))
             console.error("A style function requires an instance of a feature!");
 
-        if (!(regions_reference instanceof ome.ol3.source.Regions))
+        if (!(regions_reference instanceof Regions))
             console.error("A style function requires an instance of Regions!");
 
         // all this makes only sense with a style really
@@ -173,7 +181,7 @@ export const updateStyleFunction =
         // or a style function...
         if (typeof(oldStyle) === 'function')
             oldStyle = oldStyle.call(feature, viewRef.getResolution());
-        if (ome.ol3.utils.Misc.isArray(oldStyle))
+        if (isArray(oldStyle))
             oldStyle = oldStyle[0]; // we want the first one only
 
         // keep regions reference handy
@@ -192,7 +200,7 @@ export const updateStyleFunction =
         }
         // 2. remember old resolution/rotation and text scale/rotate flags
         // this is only relevant for labels
-        if (feature.getGeometry() instanceof ome.ol3.geom.Label) {
+        if (feature.getGeometry() instanceof Label) {
             if (typeof(feature['oldRotation']) === 'undefined')
                 feature['oldRotation'] = viewRef.getRotation();
             if (typeof(feature['oldScale']) === 'undefined')
@@ -204,13 +212,13 @@ export const updateStyleFunction =
         }
 
         // 3. set masks (via style)
-        if (feature.getGeometry() instanceof ome.ol3.geom.Mask) {
+        if (feature.getGeometry() instanceof Mask) {
             var maskId = feature.getId();
             var url = regions_reference.viewer_.getServer()['full'] +
-                regions_reference.viewer_.getPrefixedURI(ome.ol3.WEBGATEWAY) +
+                regions_reference.viewer_.getPrefixedURI(WEBGATEWAY) +
                 '/render_shape_mask/' +
                 maskId.substring(maskId.indexOf(":")+1) + '/';
-            oldStyle.setImage(new ol.style.Icon({
+            oldStyle.setImage(new Icon({
                 anchorOrigin: 'top-left',
                 anchor: [0,0],
                 rotateWithView: true,
@@ -221,7 +229,7 @@ export const updateStyleFunction =
         // replace style function
         feature.setStyle(function(actual_resolution) {
             // fetch view via regions reference
-            if (!(feature['regions'] instanceof ome.ol3.source.Regions))
+            if (!(feature['regions'] instanceof Regions))
                 return oldStyle; // we are screwed, return old setStyle
 
             var regions = feature['regions'];
@@ -235,21 +243,21 @@ export const updateStyleFunction =
             // is there a text style?
             var textStyle = oldStyle.getText();
             // if show_comments flag is to false, we only set the text for labels
-            var isLabel = (geom instanceof ome.ol3.geom.Label);
+            var isLabel = (geom instanceof Label);
             if (!isLabel && !regions.show_comments_ &&
-                (textStyle instanceof ol.style.Text)) {
+                (textStyle instanceof Text)) {
                     feature['oldText'] = textStyle.clone();
                     textStyle = null;
                     oldStyle.text_ = textStyle;
             } else if (!isLabel && regions.show_comments_ &&
-                       !(textStyle instanceof ol.style.Text) &&
-                       (feature['oldText'] instanceof ol.style.Text)) {
+                       !(textStyle instanceof Text) &&
+                       (feature['oldText'] instanceof Text)) {
                            // this brings back a previously not shown comment
                            textStyle = feature['oldText'].clone();
                            oldStyle.text_ = textStyle;
             }
 
-            if (textStyle instanceof ol.style.Text) {
+            if (textStyle instanceof Text) {
                 textStyle.setOverflow(true);
                 // seems we want to adjust text to resolution level
                 if (scale_text) {
@@ -279,8 +287,7 @@ export const updateStyleFunction =
                         feature['oldScaleFlag'] = scale_text;
                     // reset the flag, we do this only once
                     if (forceUpdate) forceUpdate = false;
-                    var newDims =
-                        ome.ol3.utils.Style.measureTextDimensions(
+                    var newDims = measureTextDimensions(
                             textStyle.getText(), textStyle.getFont(),
                             scale_text ? null : actual_resolution);
                     var newRot = rotate_text ? 0 : 0-rotation;
@@ -291,16 +298,16 @@ export const updateStyleFunction =
             var selected =
                 typeof(feature['selected'] === 'boolean') ?
                     feature['selected'] : false;
-            var selectionStyle = selStyle = new ol.style.Stroke();
-            selStyle.setColor('rgba(0,153,255,1)');
-            selStyle.setWidth(3);
+            var selectionStyle = new Stroke();
+            selectionStyle.setColor('rgba(0,153,255,1)');
+            selectionStyle.setWidth(3);
             if (selected) {
                 oldStyle.stroke_ = selectionStyle;
             } else if (feature['oldStrokeStyle']) {
                 // restore old style
                 var w = feature['oldStrokeStyle']['width'];
                 if (w === 0) w = 1;
-                oldStyle.stroke_ = new ol.style.Stroke({
+                oldStyle.stroke_ = new Stroke({
                     'color' : feature['oldStrokeStyle']['color'],
                     'width' : w
                 });
@@ -312,7 +319,7 @@ export const updateStyleFunction =
             var zIndex = selected ? 2 : 1;
 
             // arrow heads/tails for lines
-            if (geom instanceof ome.ol3.geom.Line &&
+            if (geom instanceof Line &&
                     (geom.has_start_arrow_ || geom.has_end_arrow_)) {
 
                 var lineStroke = oldStyle.getStroke();
@@ -333,7 +340,7 @@ export const updateStyleFunction =
                     var arrowStyle =
                         new Style({
                             geometry: arrow,
-                            fill: new ol.style.Fill(
+                            fill: new Fill(
                                     {color: lineStroke.getColor()}),
                             stroke: lineStroke,
                             zIndex: zIndex
@@ -343,7 +350,7 @@ export const updateStyleFunction =
             }
 
             // make adjustments for masks
-            if (geom instanceof ome.ol3.geom.Mask) {
+            if (geom instanceof Mask) {
                 oldStyle.getImage().setScale(1/actual_resolution);
                 if (selected) {
                     ret.push(new Style({
@@ -421,7 +428,7 @@ export const cloneStyle = function(style) {
     // FILL
     var newFill = null;
     if (style.getFill())
-        newFill = new ol.style.Fill({"color" : style.getFill().getColor()});
+        newFill = new Fill({"color" : style.getFill().getColor()});
 
     // STROKE
     var newStroke = cloneStroke(style.getStroke());
@@ -436,12 +443,12 @@ export const cloneStyle = function(style) {
             style.getText().getText() : "";
         var stroke = cloneStroke(style.getText().getStroke());
         var fill = style.getText().getFill() ?
-            new ol.style.Fill(
+            new Fill(
                 {"color" : style.getText().getFill().getColor()}) : null;
 
         // for our purposes and for now we are not going to set some things which
         // have sensible defaults anyhow
-        newText = new ol.style.Text({
+        newText = new Text({
             "overflow" : true,
             "font" : font,
             "text" : text,
@@ -467,7 +474,7 @@ export const cloneStyle = function(style) {
  * @return {ol.style.Stroke|null} an open layer's stroke instance or null
  */
 export const cloneStroke = function(stroke) {
-    if (!(stroke instanceof ol.style.Stroke)) return null;
+    if (!(stroke instanceof Stroke)) return null;
 
     var strokeColor = stroke.getColor() ? stroke.getColor() : null;
     var strokeWidth = stroke.getWidth() !== null ? stroke.getWidth() : 1;
@@ -476,7 +483,7 @@ export const cloneStroke = function(stroke) {
     var lineJoin = stroke.getLineJoin() ? stroke.getLineJoin() : "miter";
     var miterLimit = stroke.getMiterLimit() ? stroke.getMiterLimit() : 20;
 
-    return new ol.style.Stroke({
+    return new Stroke({
         "color" : strokeColor,
         "lineCap" : lineCap,
         "lineDash" : lineDash,
@@ -492,17 +499,17 @@ export const cloneStroke = function(stroke) {
  * @static
  * @function
  * @param {Object} shape_info the shape info containing style among other things
- * @param {ome.ol3.source.Regions} regions_reference a reference to the regions instance
+ * @param {Regions} regions_reference a reference to the regions instance
  * @param {ol.Collection} feats a collection of features
  * @param {function=} callback a success handler
  */
 export const modifyStyles =
     function(shape_info, regions_reference, feats, callback) {
-        if (!(regions_reference instanceof ome.ol3.source.Regions) ||
+        if (!(regions_reference instanceof Regions) ||
             typeof(shape_info) !== 'object') return;
 
         // use the selected features if no handed ins were present
-        if (!(feats instanceof ol.Collection)) {
+        if (!(feats instanceof Collection)) {
             if (regions_reference.select_ === null) return;
             feats =  regions_reference.select_.getFeatures();
         }
@@ -512,7 +519,7 @@ export const modifyStyles =
         for (var i=0;i<features.length;i++) {
             var feature = features[i];
 
-            if (feature instanceof ol.Feature) {
+            if (feature instanceof Feature) {
                 // we pick the type from the existing feature
                 var type = feature['type'].toLowerCase();
                 shape_info['type'] = type;
@@ -536,7 +543,7 @@ export const modifyStyles =
                         shape_info['MarkerEnd'] === null)
                         feature.getGeometry().has_end_arrow_ = false;
                 }
-                var newStyle = ome.ol3.utils.Style.createFeatureStyle(
+                var newStyle = createFeatureStyle(
                     shape_info, (type === 'label'), false);
                 if (newStyle === null) continue;
 
@@ -544,7 +551,7 @@ export const modifyStyles =
                 if (typeof(style) === 'function')
                     style = style(
                         regions_reference.viewer_.viewer_.getView().getResolution());
-                if (ome.ol3.utils.Misc.isArray(style)) style = style[0];
+                if (isArray(style)) style = style[0];
                 var newFillStyle =
                     newStyle.getFill() ? newStyle.getFill() : style.getFill();
 
@@ -552,7 +559,7 @@ export const modifyStyles =
                 // first restore the old stroke style before selection
                 if (typeof(feature['oldStrokeStyle']) === 'object' &&
                     feature['oldStrokeStyle'] !== null) {
-                        newStrokeStyle = new ol.style.Stroke();
+                        newStrokeStyle = new Stroke();
                         newStrokeStyle.setColor(
                         feature['oldStrokeStyle']['color']);
                         newStrokeStyle.setWidth(
@@ -568,7 +575,7 @@ export const modifyStyles =
                 }
                 if (newStyle.getStroke()) {
                     if (newStrokeStyle === null)
-                    newStrokeStyle = new ol.style.Stroke();
+                    newStrokeStyle = new Stroke();
                     // mix in new properties
                     if (newStyle.getStroke().getColor())
                         newStrokeStyle.setColor(newStyle.getStroke().getColor());
@@ -585,9 +592,9 @@ export const modifyStyles =
                 }
                 var newTextStyle = style.getText();
                 if (newTextStyle === null &&
-                    feature['oldText'] instanceof ol.style.Text) {
+                    feature['oldText'] instanceof Text) {
                         var tmp = newStyle.getText();
-                        if (tmp instanceof ol.style.Text) {
+                        if (tmp instanceof Text) {
                             if (typeof tmp.getText() === 'string')
                                 feature['oldText'].text_ = tmp.getText();
                             if (typeof tmp.getFont() === 'string')
@@ -620,12 +627,12 @@ export const modifyStyles =
                     if (newStyle.getText().getTextBaseline())
                         newTextStyle.setTextBaseline(newStyle.getText().getTextBaseline());
                 }
-                if (newTextStyle instanceof ol.style.Text) {
+                if (newTextStyle instanceof Text) {
                     newTextStyle.setOverflow(true);
                     if (typeof newTextStyle.text_ !== 'string') newTextStyle.text_ = "";
                     if (newTextStyle.fill_ === null)
                         newTextStyle.fill_ =
-                            new ol.style.Fill({color: newStrokeStyle.getColor()});
+                            new Fill({color: newStrokeStyle.getColor()});
                 }
 
                 var newMixedStyle = new Style({
@@ -647,7 +654,7 @@ export const modifyStyles =
 
         if (ids.length > 0)
             regions_reference.setProperty(
-                ids, "state", ome.ol3.REGIONS_STATE.MODIFIED, callback);
+                ids, "state", REGIONS_STATE.MODIFIED, callback);
 }
 
 /**

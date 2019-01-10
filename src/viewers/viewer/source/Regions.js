@@ -79,7 +79,7 @@ const Regions = function(viewerReference, options) {
     opts.useSpatialIndex = true;
     // call super
     // goog.base(this, opts);
-    Vector.superClass_.constructor.call(this);
+    Vector.call(this, opts);
 
     /**
      * a flag that tells us if we'd like for the text to be scaled with resolution

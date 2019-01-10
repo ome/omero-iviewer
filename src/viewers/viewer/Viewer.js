@@ -1658,7 +1658,7 @@ Viewer.prototype.drawShape = function(shape, roi_id, opts) {
  */
 Viewer.prototype.abortDrawing = function() {
     if (!(this.regions_ instanceof Regions) ||
-        !(this.regions_.draw_ instanceof ome.ol3.interaction.Draw)) return;
+        !(this.regions_.draw_ instanceof Draw)) return;
     this.regions_.draw_.endDrawingInteraction();
 }
 

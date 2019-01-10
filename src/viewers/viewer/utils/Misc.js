@@ -17,6 +17,7 @@
 //
 
 import PluggableMap from 'ol/PluggableMap';
+import {containsExtent} from 'ol/extent';
 import Viewer from '../Viewer';
 // import PROJECTION from '../globals';
 // this is undefined when used below. TODO: Look at import order?
@@ -140,7 +141,7 @@ export const featuresAtCoords = function(features) {
             // this should ensure that if a feature is contained by another
             // it will be always ranked first
             var firstSuchGeometry= filteredIntersectingFeatures[0].getGeometry();
-            if (ol.extent.containsExtent( // we have a feature that is contained by our first feature
+            if (containsExtent( // we have a feature that is contained by our first feature
                         firstSuchGeometry.getExtent(),
                         features[i].getGeometry().getExtent()))
                 filteredIntersectingFeatures[0] = features[i]; // replace it

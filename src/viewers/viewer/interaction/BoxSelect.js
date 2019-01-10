@@ -16,7 +16,9 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 import DragBox from 'ol/interaction/DragBox';
-import {listen, unlistenByKey} from 'ol/events';
+import {listen,
+    unlistenByKey} from 'ol/events';
+import {platformModifierKeyOnly} from 'ol/events/condition';
 import {inherits} from 'ol/util';
 import Regions from '../source/Regions';
 
@@ -35,13 +37,13 @@ const BoxSelect = function(regions_reference) {
         console.error("Select needs Regions instance!");
     // super
     // goog.base(this);
-    DragBox.superClass_.constructor.call(this);
+    DragBox.call(this);
 
     /**
      * @private
      * @type {ol.events.ConditionType}
      */
-    this.condition_ = condition.platformModifierKeyOnly;
+    this.condition_ = platformModifierKeyOnly;
 
     // we do need the regions reference to get the (selected) rois
     if (!(regions_reference instanceof Regions)) return;
