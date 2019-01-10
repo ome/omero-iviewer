@@ -410,6 +410,36 @@ Modify.handleUpEvent_ = function(mapBrowserEvent) {
     return false;
 };
 
+Modify.prototype.handlePointerEvent = function handlePointerEvent (mapBrowserEvent) {
+    if (!(/** @type {import("../MapBrowserPointerEvent.js").default} */ (mapBrowserEvent).pointerEvent)) {
+      return true;
+    }
+
+    var stopEvent = false;
+    this.updateTrackedPointers_(mapBrowserEvent);
+    if (this.handlingDownUpSequence) {
+      if (mapBrowserEvent.type == MapBrowserEventType.POINTERDRAG) {
+        this.handleDragEvent(mapBrowserEvent);
+      } else if (mapBrowserEvent.type == MapBrowserEventType.POINTERUP) {
+        var handledUp = this.handleUpEvent(mapBrowserEvent);
+        this.handlingDownUpSequence = handledUp && this.targetPointers.length > 0;
+      }
+    } else {
+      if (mapBrowserEvent.type == MapBrowserEventType.POINTERDOWN) {
+        var handled = this.handleDownEvent(mapBrowserEvent);
+        if (handled) {
+          mapBrowserEvent.preventDefault();
+        }
+        this.handlingDownUpSequence = handled;
+        stopEvent = this.stopDown(handled);
+      } else if (mapBrowserEvent.type == MapBrowserEventType.POINTERMOVE) {
+        this.handleMoveEvent(mapBrowserEvent);
+      }
+    }
+    return !stopEvent;
+  };
+
+
 /**
  * Handles the {@link ol.MapBrowserEvent map browser event} and may modify the
  * geometry.
@@ -455,8 +485,7 @@ Modify.handleEvent = function(mapBrowserEvent) {
         this.ignoreNextSingleClick_ = false;
     }
 
-    return Pointer.handleEvent.call(this, mapBrowserEvent) &&
-            !handled;
+    return this.handlePointerEvent(mapBrowserEvent) && !handled;
 };
 
 /**
