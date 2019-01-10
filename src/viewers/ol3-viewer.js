@@ -26,6 +26,7 @@ import Misc from '../utils/misc';
 import {Converters} from '../utils/converters';
 import Ui from '../utils/ui';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
+import Viewer from './viewer/Viewer';
 // import {ol3} from '../../libs/ol3-viewer.js';
 import Ol3ViewerLinkedEvents from './ol3-viewer-linked-events';
 import * as FileSaver from '../../node_modules/file-saver';
@@ -468,32 +469,16 @@ export default class Ol3Viewer extends EventSubscriber {
         ol3initParams[PLUGIN_PREFIX] = this.context.getPrefixedURI(IVIEWER);
 
         // create viewer instance
-        // this.viewer =
-        //     new ol3.Viewer(
-        //         this.image_config.image_info.image_id, {
-        //              eventbus : this.context.eventbus,
-        //              server : this.context.server,
-        //              data: this.image_config.image_info.tmp_data,
-        //              initParams :  ol3initParams,
-        //              container: this.container
-        //          });
+        this.viewer =
+            new Viewer(
+                this.image_config.image_info.image_id, {
+                     eventbus : this.context.eventbus,
+                     server : this.context.server,
+                     data: this.image_config.image_info.tmp_data,
+                     initParams :  ol3initParams,
+                     container: this.container
+                 });
         delete this.image_config.image_info.tmp_data;
-
-        console.log('container', this.container);
-        new Map({
-            target: this.container,
-            layers: [
-                new TileLayer({
-                source: new XYZ({
-                    url: 'https://{a-c}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-                })
-                })
-            ],
-            view: new View({
-                center: [0, 0],
-                zoom: 2
-            })
-        });
 
         // hide controls for mdi when more than 1 image configs
         if (this.context.useMDI && this.context.image_configs.size > 1)
