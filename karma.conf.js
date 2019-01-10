@@ -1,7 +1,7 @@
 module.exports = function(config) {
   config.set({
     frameworks: ['mocha', 'chai'],
-    files: ['test/build/ol3-viewer-test.js','test/unit/**/*.js'],
+    files: ['test/unit/**/*.js'],
     exclude: ['test/unit/debug_mocha.js'],
     reporters: ['spec'],
     port: 9876,
@@ -16,6 +16,5 @@ module.exports = function(config) {
     },
     autoWatch: false,
     concurrency: Infinity,
-    preprocessors: {"test/build/ol3-viewer-test.js": ["babel"]}
   })
 }
