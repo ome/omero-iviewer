@@ -1334,6 +1334,7 @@ Viewer.prototype.getServer = function() {
  */
 Viewer.prototype.setRegionsModes = function(modes) {
     // delegate
+    console.log('Viewer.setRegionsModes', modes, 'was', this.getRegions().present_modes_);
     if (this.getRegionsLayer()) {
         this.getRegions().setModes(modes);
         return this.getRegions().present_modes_;
@@ -1638,6 +1639,7 @@ Viewer.prototype.storeRegions =
  *                       or a list of unattached dimensions (unattached)
  */
 Viewer.prototype.drawShape = function(shape, roi_id, opts) {
+    console.log('Viewer.drawShape...');
     if (!this.image_info_['perms']['canAnnotate'] ||
         !(this.regions_ instanceof Regions) ||
         typeof(shape) !== 'object' || typeof(shape) === null ||
@@ -1657,6 +1659,7 @@ Viewer.prototype.drawShape = function(shape, roi_id, opts) {
  * Cancels any active drawing interactions
  */
 Viewer.prototype.abortDrawing = function() {
+    console.log('Viewer.abortDrawing()')
     if (!(this.regions_ instanceof Regions) ||
         !(this.regions_.draw_ instanceof Draw)) return;
     this.regions_.draw_.endDrawingInteraction();

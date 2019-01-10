@@ -958,6 +958,7 @@ export default class Ol3Viewer extends EventSubscriber {
         if (params.config_id !== this.image_config.id ||
             this.viewer === null) return;
 
+        console.log('ol3-viewer.drawShape', params.abort, params.shape);
         // we want to only abort
         if (typeof params.abort === 'boolean' && params.abort) {
             this.abortDrawing();

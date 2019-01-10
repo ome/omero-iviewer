@@ -17,8 +17,15 @@
 //
 
 import Feature from 'ol/Feature';
+import Text from 'ol/style/Text';
+import Stroke from 'ol/style/Stroke';
+import Fill from 'ol/style/Fill';
+import Style from 'ol/style/Style';
+import Observable from 'ol/Observable';
 import Collection from 'ol/Collection';
 import OlDraw from 'ol/interaction/Draw';
+import {noModifierKeys,
+    primaryAction} from 'ol/events/condition';
 import Ellipse from '../geom/Ellipse';
 import Label from '../geom/Label';
 import Line from '../geom/Line';
@@ -26,7 +33,7 @@ import Point from '../geom/Point';
 import Polygon from '../geom/Polygon';
 import Rectangle from '../geom/Rectangle';
 import Regions from '../source/Regions';
-import {inherits} from 'ol/util';
+import {inherits, getUid} from 'ol/util';
 import {isArray,
     sendEventNotification} from '../utils/Misc';
 import {REGIONS_STATE} from '../globals';
@@ -35,6 +42,25 @@ import {updateStyleFunction,
 import {toJsonObject,
     convertColorObjectToRgba,
     convertSignedIntegerToColorObject} from '../utils/Conversion';
+
+/**
+ * DrawEventType is not exported from ol/interaction/Draw
+ * so we have to redefine it here:
+ */
+const DrawEventType = {
+    /**
+     * Triggered upon feature draw start
+     * @event DrawEvent#drawstart
+     * @api
+     */
+    DRAWSTART: 'drawstart',
+    /**
+     * Triggered upon feature draw end
+     * @event DrawEvent#drawend
+     * @api
+     */
+    DRAWEND: 'drawend'
+};
 
 /**
  * @classdesc
@@ -79,7 +105,7 @@ const Draw = function(previous_modes, regions_reference) {
         /**
          * the contained open layers draw interaction
          *
-         * @type {ol.interaction.Draw}
+         * @type {OlDraw}
          * @private
          */
         this.ol_draw_ = null;
@@ -134,45 +160,48 @@ Draw.prototype.drawShapeCommonCode_ =
         if (typeof(ol_shape) !== 'string' || typeof(shape_type) !== 'string' ||
             ol_shape.length === 0 || shape_type.length === 0) return;
 
+        // This is needed within onDrawEndAction
+        let self = this;
+
         // called after drawing the shape
         var onDrawEndAction = function(event) {
             if (event.feature instanceof Feature) {
                 // set id, type and state as new
                 event.feature.setId(
-                    (typeof this.roi_id_ === 'number' && this.roi_id_ < 0 ?
-                        "" + this.roi_id_ + ":" :
-                        "-1:") + (-ol.getUid(event.feature)));
+                    (typeof self.roi_id_ === 'number' && self.roi_id_ < 0 ?
+                        "" + self.roi_id_ + ":" :
+                        "-1:") + (-getUid(event.feature)));
                 event.feature['state'] = REGIONS_STATE.ADDED;
                 event.feature['type'] = shape_type;
 
                 // set t and z info
-                var hasUnattachedDims =
-                    isArray(this.opts_['unattached']) &&
-                    this.opts_['unattached'].length > 0;
+                let opts = self.opts_;
+                    isArray(self.opts_['unattached']) &&
+                    self.opts_['unattached'].length > 0;
                 event.feature['TheT'] =
                     hasUnattachedDims &&
-                    this.opts_['unattached'].indexOf('t') !== -1 ?
-                        -1 : this.regions_.viewer_.getDimensionIndex('t');
+                    self.opts_['unattached'].indexOf('t') !== -1 ?
+                        -1 : self.regions_.viewer_.getDimensionIndex('t');
                 event.feature['TheZ'] =
                     hasUnattachedDims &&
-                    this.opts_['unattached'].indexOf('z') !== -1 ?
-                        -1 : this.regions_.viewer_.getDimensionIndex('z');
+                    self.opts_['unattached'].indexOf('z') !== -1 ?
+                        -1 : self.regions_.viewer_.getDimensionIndex('z');
                 event.feature['TheC'] = -1;
 
                 // apply style function after setting a default style
-                event.feature.setStyle(this.default_style_);
-                updateStyleFunction(event.feature, this.regions_, true);
+                event.feature.setStyle(self.default_style_);
+                updateStyleFunction(event.feature, self.regions_, true);
                 // calculate measurements
-                this.regions_.getLengthAndAreaForShape(event.feature, true);
+                self.regions_.getLengthAndAreaForShape(event.feature, true);
 
                 var add =
-                    typeof this.opts_['add'] !== 'boolean' || this.opts_['add'];
-                if (add) this.regions_.addFeature(event.feature);
+                    typeof self.opts_['add'] !== 'boolean' || self.opts_['add'];
+                if (add) self.regions_.addFeature(event.feature);
 
-                var eventbus = this.regions_.viewer_.eventbus_;
-                if (this.regions_.viewer_.eventbus_) {
-                    var hist_id = this.history_id_;
-                    if (this.roi_id_ < 0) event.feature['roi_id'] = this.roi_id_;
+                var eventbus = self.regions_.viewer_.eventbus_;
+                if (self.regions_.viewer_.eventbus_) {
+                    var hist_id = self.history_id_;
+                    if (self.roi_id_ < 0) event.feature['roi_id'] = self.roi_id_;
                     var newRegionsObject = toJsonObject(
                             new Collection([event.feature]), false);
                     if (typeof newRegionsObject !== 'object' ||
@@ -187,26 +216,25 @@ Draw.prototype.drawShapeCommonCode_ =
                         opts['roi_id'] = event.feature['roi_id'];
 
                     sendEventNotification(
-                        this.regions_.viewer_, "REGIONS_SHAPE_GENERATED",
+                        self.regions_.viewer_, "REGIONS_SHAPE_GENERATED",
                         opts, 25);
                 }
-                this.history_id_ = null;
-                this.rois_id_ = 0;
+                self.history_id_ = null;
+                self.rois_id_ = 0;
             }
 
-            this.endDrawingInteraction(false);
+            self.endDrawingInteraction(false);
         };
 
         // create a new draw interaction removing possible existing ones first
         if (this.ol_draw_)
             this.regions_.viewer_.viewer_.removeInteraction(this.ol_draw_);
-        this.ol_draw_ = new ol.interaction.Draw({
+        this.ol_draw_ = new OlDraw({
             style: this.default_style_function_,
             type: ol_shape,
             condition: function(e) {
                 // ignore right clicks (from context)
-                return ol.events.condition.noModifierKeys(e) &&
-                    ol.events.condition.primaryAction(e);
+                return noModifierKeys(e) && primaryAction(e);
             },
             geometryFunction:
                 typeof(geometryFunction) === 'function' ?
@@ -217,7 +245,7 @@ Draw.prototype.drawShapeCommonCode_ =
         this.regions_.viewer_.viewer_.addInteraction(this.ol_draw_);
         if (this.abort_polyline_)
             this.ol_draw_.once(
-                ol.interaction.DrawEventType.DRAWSTART,
+                DrawEventType.DRAWSTART,
                 function(e) {
                     var f = e.feature;
                     var changeHandler =
@@ -225,13 +253,16 @@ Draw.prototype.drawShapeCommonCode_ =
                             'change', function(e) {
                                 var geom = e.target;
                                 if (geom.getCoordinates().length >= 3) {
-                                    ol.Observable.unByKey(changeHandler);
+                                    Observable.unByKey(changeHandler);
                                     this.ol_draw_.finishDrawing();
                                 }
                         }, this);
                     }, this);
+
+        // The 'this' below seems to be ignored.
+        // So onDrawEndAction() uses 'self' instead.
         this.ol_draw_.on(
-            ol.interaction.DrawEventType.DRAWEND, onDrawEndAction, this);
+            DrawEventType.DRAWEND, onDrawEndAction, this);
 }
 
 /**
@@ -250,8 +281,9 @@ Draw.prototype.drawShape = function(shape, roi_id, opts) {
     if (typeof(shape['type']) !== 'string' || shape['type'].length === 0) {
         this.history_id_ = null;
         this.roi_id_ = 0;
-        this.dispatchEvent(new ol.interaction.Draw.Event(
-             ol.interaction.DrawEventType.DRAWEND, null));
+        // TODO: Handle Drawend: OlDraw.Event doesn't exist!
+        this.dispatchEvent(new OlDraw.Event(
+             DrawEventType.DRAWEND, null));
         return;
     }
 
@@ -336,10 +368,10 @@ Draw.prototype.setDefaultDrawingStyle = function(shape) {
 
     // set default style
     var defStyle = {
-        'stroke': new ol.style.Stroke(defaultStroke)
+        'stroke': new Stroke(defaultStroke)
     };
-    if (!isLabel) defStyle['fill'] = new ol.style.Fill({color: defaultFill});
-    this.default_style_ = new ol.style.Style(defStyle);
+    if (!isLabel) defStyle['fill'] = new Fill({color: defaultFill});
+    this.default_style_ = new Style(defStyle);
 
     // set default style function for sketching
     this.default_style_function_ = function(feature, resolution) {
@@ -354,12 +386,12 @@ Draw.prototype.setDefaultDrawingStyle = function(shape) {
         // for sketching labels
         if (geom instanceof Label) {
             var text =
-                new ol.style.Text(
+                new Text(
                     {
                       overflow: true,
                       text: "TEXT",
                       font: "normal " + geom.getHeight() + "px sans-serif",
-                      fill: new ol.style.Fill(
+                      fill: new Fill(
                           {color: this.default_style_.getStroke().getColor()})
                     });
             //adjust scale and rotation
@@ -377,11 +409,11 @@ Draw.prototype.setDefaultDrawingStyle = function(shape) {
             var arrowBaseWidth = 15 * resolution;
 
             var arrowStyle =
-                new ol.style.Style({
+                new Style({
                     geometry:
                         geom.getArrowGeometry(
                             true, arrowBaseWidth, arrowBaseWidth),
-                    fill: new ol.style.Fill({'color': lineStroke.getColor()}),
+                    fill: new Fill({'color': lineStroke.getColor()}),
                     stroke: lineStroke
             });
             ret.push(arrowStyle);
