@@ -16,7 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-import Object from 'ol/Object';
+import OlObject from 'ol/Object';
 import MapEventType from 'ol/MapEventType';
 import Geometry from 'ol/geom/Geometry';
 import GeometryType from 'ol/geom/GeometryType';
@@ -29,6 +29,7 @@ import Tile from 'ol/layer/Tile';
 import Vector from 'ol/layer/Vector';
 import View from 'ol/View';
 import PluggableMap from 'ol/PluggableMap';
+import Map from 'ol/Map';
 import {inherits} from 'ol/util';
 import {intersects, getCenter} from 'ol/extent';
 import {noModifierKeys, primaryAction} from 'ol/events/condition';
@@ -54,7 +55,7 @@ import {AVAILABLE_VIEWER_INTERACTIONS,
     DIMENSION_LOOKUP,
     PREFIXED_URIS,
     defaultInteractions,
-    defaultControls} from 'globals';
+    defaultControls} from './globals';
 import {isArray,
     parseProjectionParameter,
     parseChannelParameters,
@@ -111,7 +112,7 @@ import Regions from './source/Regions';
  */
 const Viewer = function(id, options) {
     // goog.base(this);
-    Viewer.superClass_.constructor.call(this);
+    OlObject.call(this);
 
     var opts = options || {};
 
@@ -287,7 +288,7 @@ const Viewer = function(id, options) {
         if (isNaN(version) || ('' + version).length !== 3) return false;
 
         // check against actual version
-        actual_version =
+        let actual_version =
             this.getInitialRequestParam(REQUEST_PARAMS.OMERO_VERSION);
         if (typeof actual_version !== 'string') return false;
         actual_version = parseInt(actual_version.replace(/[.]/g, ""));
@@ -365,7 +366,7 @@ const Viewer = function(id, options) {
         this.initialize_();
     } else makeCrossDomainLoginRedirect(this.server_);
 };
-inherits(Viewer, Object);
+inherits(Viewer, OlObject);
 
 /**
  * Bootstraps the Openlayers components
@@ -582,7 +583,8 @@ Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHook) {
     }
 
     // finally construct the open layers map object
-    this.viewer_ = new PluggableMap({
+    // this.viewer_ = new PluggableMap({
+    this.viewer_ = new Map({
        logo: false,
        controls: controls,
        interactions:  interactions,
@@ -989,7 +991,7 @@ Viewer.prototype.addControl = function(key, options) {
  * @param {Object=} options (optional) options for control
  */
 Viewer.prototype.addInteractionOrControl = function(key, type, descend, options) {
-    if (!(this.viewer_ instanceof PluggableMap) || // could be the viewer was not initialized
+    if (!(this.viewer_ instanceof Map) || // could be the viewer was not initialized
         (typeof(key) !== 'string') || // key not a string
         (typeof(type) !== 'string')) return; // type is not a string
 
@@ -1048,7 +1050,7 @@ Viewer.prototype.addInteractionOrControl = function(key, type, descend, options)
  * @param {boolean} descend a flag whether we should follow linked interactions/controls
  */
 Viewer.prototype.removeInteractionOrControl = function(key, descend) {
-    if (!(this.viewer_ instanceof PluggableMap) || // could be the viewer was not initialized
+    if (!(this.viewer_ instanceof Map) || // could be the viewer was not initialized
         (typeof(key) !== 'string')) return; // key is not a string
 
     if (typeof this.viewerState_[key] !== 'object')
@@ -1834,7 +1836,7 @@ Viewer.prototype.updateSavedSettings = function() {
      }
      if (!haveControl) this.addControl("intensity");
      this.viewerState_["intensity"]['ref'].enable(
-         this.getPrefixedURI(ome.ol3.PLUGIN_PREFIX));
+         this.getPrefixedURI(PLUGIN_PREFIX));
   }
 
 /**

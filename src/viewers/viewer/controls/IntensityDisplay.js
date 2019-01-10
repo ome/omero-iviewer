@@ -534,3 +534,5 @@ IntensityDisplay.prototype.toggleIntensityQuerying = function(flag) {
 IntensityDisplay.prototype.disposeInternal = function() {
     this.disable();
 };
+
+export default IntensityDisplay

@@ -265,50 +265,50 @@ export const DIMENSION_LOOKUP = {
  * @const
  * @type {Object}
  */
-// export const AVAILABLE_VIEWER_CONTROLS = {
-//     "attribution" :
-//         {"clazz" : Attribution,
-//          "options": {},
-//          "defaults": true,
-//          "enabled": false,
-//          "links" : []},
-//     "zoom" :
-//         {"clazz" : Zoom,
-//          "options": {},
-//          "defaults": true,
-//          "enabled": true,
-//          "links" : []},
-//     "rotate" :
-//         {"clazz" : Rotate,
-//          "options": {autoHide: false},
-//          "defaults": true,
-//          "enabled": true,
-//          "links" : ["shiftRotate"]},
-//     "fullscreen" :
-//         {"clazz" : FullScreen,
-//          "options": {},
-//          "defaults": true,
-//          "enabled": true,
-//          "links" : []},
-//     "birdseye" :
-//         {"clazz" : BirdsEye,
-//         "options": {collapsed : true},
-//         "defaults": true,
-//         "enabled": false,
-//         "links" : []},
-//     "scalebar" :
-//         {"clazz" : ScaleBar,
-//         "options": {},
-//         "defaults": true,
-//         "enabled": false,
-//         "links" : []},
-//     "intensity" :
-//         {"clazz" : IntensityDisplay,
-//         "options": {},
-//         "defaults": true,
-//         "enabled": false,
-//         "links" : []}
-// };
+export const AVAILABLE_VIEWER_CONTROLS = {
+    "attribution" :
+        {"clazz" : Attribution,
+         "options": {},
+         "defaults": true,
+         "enabled": false,
+         "links" : []},
+    "zoom" :
+        {"clazz" : Zoom,
+         "options": {},
+         "defaults": true,
+         "enabled": true,
+         "links" : []},
+    "rotate" :
+        {"clazz" : Rotate,
+         "options": {autoHide: false},
+         "defaults": true,
+         "enabled": true,
+         "links" : ["shiftRotate"]},
+    "fullscreen" :
+        {"clazz" : FullScreen,
+         "options": {},
+         "defaults": true,
+         "enabled": true,
+         "links" : []},
+    "birdseye" :
+        {"clazz" : BirdsEye,
+        "options": {collapsed : true},
+        "defaults": true,
+        "enabled": false,
+        "links" : []},
+    "scalebar" :
+        {"clazz" : ScaleBar,
+        "options": {},
+        "defaults": true,
+        "enabled": false,
+        "links" : []},
+    "intensity" :
+        {"clazz" : IntensityDisplay,
+        "options": {},
+        "defaults": true,
+        "enabled": false,
+        "links" : []}
+};
 
 /**
  * List of available viewer interactions by key.

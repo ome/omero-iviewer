@@ -47,16 +47,17 @@ const ScaleBar = function(opt_options) {
      */
     this.drag_listener_ = null;
 
-    goog.base(this, opt_options);
+    // goog.base(this, opt_options);
+    ScaleLine.call(this, opt_options);
 
     // give element a tooltip
-    this.element_.title = "Click and drag to move scalebar";
+    this.element.title = "Click and drag to move scalebar";
     // append ol-control
-    this.element_.className += " ol-control";
+    this.element.className += " ol-control";
 
     // register 'drag' listener
     listen(
-        this.element_, "mousedown",
+        this.element, "mousedown",
         function(start) {
             if (!(this.map_ instanceof PluggableMap)) return;
             if (this.drag_listener_ !== null) {
@@ -75,10 +76,10 @@ const ScaleBar = function(opt_options) {
                                 this.drag_listener_ = null;
                                 return;
                             }
-                        this.element_.style.bottom = "auto";
-                        this.element_.style.left =
+                        this.element.style.bottom = "auto";
+                        this.element.style.left =
                             (move.pixel[0] + offsetX) + "px";
-                        this.element_.style.top =
+                        this.element.style.top =
                             (move.pixel[1] + offsetY) + "px";
                     }, this);
      }, this);
@@ -95,7 +96,7 @@ ScaleBar.prototype.updateElement_ = function() {
 
   if (!viewState) {
     if (this.renderedVisible_) {
-      this.element_.style.display = 'none';
+      this.element.style.display = 'none';
       this.renderedVisible_ = false;
     }
     return;
@@ -126,7 +127,7 @@ ScaleBar.prototype.updateElement_ = function() {
   }
 
   if (!this.renderedVisible_) {
-    this.element_.style.display = '';
+    this.element.style.display = '';
     this.renderedVisible_ = true;
   }
 };

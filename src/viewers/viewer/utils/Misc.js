@@ -16,6 +16,18 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+import PluggableMap from 'ol/PluggableMap';
+import Viewer from '../Viewer';
+// import PROJECTION from '../globals';
+// this is undefined when used below. TODO: Look at import order?
+// TEMP workaround is to devine it again here:
+const PROJECTION = {
+    /** normal **/
+    "NORMAL" : 'normal',
+    /** intmax **/
+    "INTMAX" : 'intmax'
+};
+
 /**
  * Generates an array of resolutions according to a step size
  * If one likes to think of it in terms of 100% (resolution: 1)
@@ -53,7 +65,7 @@ export const generateDefaultResolutions = function(zoom_in, zoom_out) {
 
 /**
  * This convenience method prepares the resolutions for pyramid and non-tiled
- * sources likewise. It makes use of {@link ome.ol3.DEFAULT_RESOLUTIONS} to achieve a
+ * sources likewise. It makes use of {@link DEFAULT_RESOLUTIONS} to achieve a
  * certain number of zoom levels
  *
  * @static
@@ -323,7 +335,7 @@ export const parseChannelParameters = function(channel_info, maps_info) {
  */
 export const parseProjectionParameter = function(projection_info) {
     var ret = {
-        projection: ome.ol3.PROJECTION['NORMAL']
+        projection: PROJECTION['NORMAL']
     };
     if (typeof projection_info !== 'string' || projection_info.length === 0)
         return ret;
@@ -339,9 +351,9 @@ export const parseProjectionParameter = function(projection_info) {
     } else ret.projection = projection_info;
 
     // last sanity check before returning
-    if (ret.projection !== ome.ol3.PROJECTION['NORMAL'] &&
-        ret.projection !== ome.ol3.PROJECTION['INTMAX'])
-            ret.projection = ome.ol3.PROJECTION['NORMAL'];
+    if (ret.projection !== PROJECTION['NORMAL'] &&
+        ret.projection !== PROJECTION['INTMAX'])
+            ret.projection = PROJECTION['NORMAL'];
 
     return ret;
 }
@@ -350,14 +362,14 @@ export const parseProjectionParameter = function(projection_info) {
  * Sends out an event notification
  *
  * @static
- * @param {ome.ol3.Viewer} viewer an instance of the ome.ol3.Viewer
+ * @param {Viewer} viewer an instance of the Viewer
  * @param {string} type the event type
  * @param {Object=} content the event content as an object (optional)
  * @param {number=} delay delay for sending (optional)
  */
 export const sendEventNotification = function(viewer, type, content, delay) {
-    if (!(viewer instanceof ome.ol3.Viewer) ||
-        !(viewer.viewer_ instanceof ol.PluggableMap) ||
+    if (!(viewer instanceof Viewer) ||
+        !(viewer.viewer_ instanceof PluggableMap) ||
         viewer.prevent_event_notification_ ||
         typeof type !== 'string' ||
         type.length === 0) return;

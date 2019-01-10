@@ -33,6 +33,7 @@ import {inherits} from 'ol/util';
 import Pointer from 'ol/interaction/Pointer';
 import MapBrowserPointerEvent from 'ol/MapBrowserPointerEvent';
 import PluggableMap from 'ol/PluggableMap';
+import Map from 'ol/Map';
 import ImageStatic from 'ol/source/ImageStatic';
 import {listen, listenOnce, unlistenByKey} from 'ol/events';
 import EventType from 'ol/events/EventType';
@@ -296,7 +297,7 @@ BirdsEye.prototype.initOrUpdate = function() {
         imageExtent: ext})
     });
 
-    return new PluggableMap({
+    return new Map({
         controls: new Collection(),
         interactions: new Collection(),
         layers: [imageLayer],
