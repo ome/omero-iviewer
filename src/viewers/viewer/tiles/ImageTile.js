@@ -104,7 +104,9 @@ ImageTile.prototype.getRenderedTileAsContext =
 ImageTile.prototype.getImage = function(opt_context) {
     // call super.getImage
     // var image = goog.base(this, 'getImage', opt_context);
-    var image = OlImageTile.getImage.call(this, opt_context);
+    // var image = OlImageTile.getImage.call(this, opt_context);
+    // Since OlImageTile.getImage is undefined here, workaround...
+    var image = this.image_;
     // we are not loaded yet => good byes
     if (this.state !== TileState.LOADED) return image;
 
