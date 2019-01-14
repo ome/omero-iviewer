@@ -204,7 +204,7 @@ export const isSameOrigin = function(server) {
  *  </ul>
  *
  * <pre>
- *  ome.ol3.Net.sendRequest({server: 'http://localhost', uri: '/someServerUrl',
+ *  Net.sendRequest({server: 'http://localhost', uri: '/someServerUrl',
  *      success: function(data){// do something with response}});
  *</pre>
  *
@@ -230,7 +230,7 @@ export const sendRequest = function(parameters, context) {
     if (typeof uri !== 'string')
         console.error("sendRequest uri parameter has to be a string");
 
-    uri = ome.ol3.utils.Net.checkAndSanitizeUri(uri);
+    uri = checkAndSanitizeUri(uri);
     if (typeof uri !== 'object' || uri === null)
         console.error("sendRequest uri parameter is invalid");
 
@@ -316,7 +316,7 @@ export const checkRequestParameters = function(
 
 /**
  * Sends an ajax request the good old-fashioned way - useded internally!
- *<p>NOTE: Use [sendRequest]{@link ome.ol3.utils#sendRequest} instead!</p
+ *<p>NOTE: Use [sendRequest]{@link utils#sendRequest} instead!</p
  *
  * @private
  * @static
@@ -439,7 +439,7 @@ export const makeCrossDomainLoginRedirect = function(server) {
 
 /**
  * Sends an ajax request using jsonp - useded internally!
- *<p>NOTE: Use [sendRequest]{@link ome.ol3.utils#sendRequest} instead!</p
+ *<p>NOTE: Use [sendRequest]{@link utils#sendRequest} instead!</p
  *
  * @private
  * @static
