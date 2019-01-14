@@ -21,7 +21,7 @@ import Text from 'ol/style/Text';
 import Stroke from 'ol/style/Stroke';
 import Fill from 'ol/style/Fill';
 import Style from 'ol/style/Style';
-import Observable from 'ol/Observable';
+import {unByKey} from 'ol/Observable';
 import Collection from 'ol/Collection';
 import OlDraw from 'ol/interaction/Draw';
 import {noModifierKeys,
@@ -175,7 +175,7 @@ Draw.prototype.drawShapeCommonCode_ =
                 event.feature['type'] = shape_type;
 
                 // set t and z info
-                let opts = self.opts_;
+                var hasUnattachedDims =
                     isArray(self.opts_['unattached']) &&
                     self.opts_['unattached'].length > 0;
                 event.feature['TheT'] =
@@ -253,8 +253,8 @@ Draw.prototype.drawShapeCommonCode_ =
                             'change', function(e) {
                                 var geom = e.target;
                                 if (geom.getCoordinates().length >= 3) {
-                                    Observable.unByKey(changeHandler);
-                                    this.ol_draw_.finishDrawing();
+                                    unByKey(changeHandler);
+                                    self.ol_draw_.finishDrawing();
                                 }
                         }, this);
                     }, this);
