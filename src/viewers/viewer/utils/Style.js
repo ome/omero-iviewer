@@ -227,7 +227,7 @@ export const updateStyleFunction =
         }
 
         // replace style function
-        feature.setStyle(function(actual_resolution) {
+        feature.setStyle(function(featureToStyle, actual_resolution) {
             // fetch view via regions reference
             if (!(feature['regions'] instanceof Regions))
                 return oldStyle; // we are screwed, return old setStyle
