@@ -17,7 +17,6 @@
 //
 
 import SimpleGeometry from 'ol/geom/SimpleGeometry';
-import {inherits} from 'ol/util';
 import Rectangle from './Rectangle';
 
 /**
@@ -38,46 +37,49 @@ import Rectangle from './Rectangle';
  * @param {number} y the y coordinate of the label location (upper left corner)
  * @param {font_dimensions=} font_dimensions the font dimensions or null
  */
-const Label = function(x, y, font_dimensions) {
-    var fontDims = font_dimensions || null;
-    if (fontDims == null || typeof(fontDims['width']) !== 'number' ||
-        typeof(fontDims['height']) !== 'number')
-        fontDims = {'width' : 10, 'height' : 10};
+class Label extends Rectangle {
+    constructor(x, y, font_dimensions) {
+        var fontDims = font_dimensions || null;
+        if (fontDims == null || typeof(fontDims['width']) !== 'number' ||
+            typeof(fontDims['height']) !== 'number')
+            fontDims = {'width' : 10, 'height' : 10};
 
-    // call super
-    // goog.base(this, x, y, fontDims['width'], fontDims['height']);
-    Rectangle.call(this, x, y, fontDims['width'], fontDims['height']);
+        // call super
+        // goog.base(this, x, y, fontDims['width'], fontDims['height']);
+        super(x, y, fontDims['width'], fontDims['height'])
+
+        /**
+         * the original coordinates as set
+         * we remember them since we have a need to alter them in case of non-rotation
+         * of the surrounding rectangle
+         * @type {Array.<number>}
+         * @private
+         */
+        this.original_coordinates;
+        this.setOriginalCoordinates = function() { // update function
+            this.original_coordinates = [];
+            var tmp = this.getFlatCoordinates();
+            for (var c in tmp) this.original_coordinates.push(tmp[c]);
+        };
+        this.setOriginalCoordinates();
+    }
 
     /**
-     * the original coordinates as set
-     * we remember them since we have a need to alter them in case of non-rotation
-     * of the surrounding rectangle
-     * @type {Array.<number>}
+     * Override rectangle's changeRectangle
+     *
      * @private
+     * @param {number} x the x coordinate of the upper left corner
+     * @param {number} y the y coordinate of the upper left corner
+     * @param {number} w the width of the rectangle
+     * @param {number} h the height of the rectangle
      */
-    this.original_coordinates;
-    this.setOriginalCoordinates = function() { // update function
-        this.original_coordinates = [];
-        var tmp = this.getFlatCoordinates();
-        for (var c in tmp) this.original_coordinates.push(tmp[c]);
-    };
-    this.setOriginalCoordinates();
-}
-inherits(Label, Rectangle);
-
-/**
- * Override rectangle's changeRectangle
- *
- * @private
- * @param {number} x the x coordinate of the upper left corner
- * @param {number} y the y coordinate of the upper left corner
- * @param {number} w the width of the rectangle
- * @param {number} h the height of the rectangle
- */
-Label.prototype.changeRectangle = function(x,y,w,h) {
-    // goog.base(this, 'changeRectangle', x, y,w, h);
-    Rectangle.changeRectangle.call(this, x, y,w, h)
-    this.setOriginalCoordinates();
+    changeRectangle(x,y,w,h) {
+        // goog.base(this, 'changeRectangle', x, y,w, h);
+        // Rectangle.changeRectangle.call(this, x, y,w, h)
+        console.log('changeRectangle...');
+        super.changeRectangle(x, y, w, h);
+        this.setOriginalCoordinates();
+    }
 }
 
 /**
