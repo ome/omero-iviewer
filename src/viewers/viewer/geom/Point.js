@@ -19,6 +19,7 @@
 import SimpleGeometry from 'ol/geom/SimpleGeometry';
 import Circle from 'ol/geom/Circle';
 import {applyTransform,
+    convertMatrixToAffineTransform,
     convertAffineTransformIntoMatrix} from '../utils/Transform';
 import {isArray} from '../utils/Misc';
 import {inherits} from 'ol/util';

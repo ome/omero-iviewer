@@ -1529,7 +1529,7 @@ Viewer.prototype.getSmallestViewExtent = function() {
         if (!(this.regions_ instanceof Regions) ||
             typeof(shape_info) !== 'object' || shape_info === null) return;
 
-        ome.ol3.utils.Style.modifyStyles(
+        modifyStyles(
             shape_info, this.regions_,
             this.getFeatureCollection(ids), callback);
  }
