@@ -72,11 +72,11 @@ import Regions from './source/Regions';
 
 /**
  * @classdesc
- * ome.ol3.Viewer is the central object to view images served by the Omero Server.
+ * Viewer is the central object to view images served by the Omero Server.
  * In its simplest form it takes an id to display the associated image:
  *
  * <pre>
- * var omeImgViewer = new ome.ol3.Viewer(1);
+ * var omeImgViewer = new Viewer(1);
  * </pre>
  *
  * The constructor takes an object as its second parameter to set further options.
@@ -87,7 +87,7 @@ import Regions from './source/Regions';
  *
  * e.g.
  * <pre>
- * var omeImgViewer = new ome.ol3.Viewer(1
+ * var omeImgViewer = new Viewer(1
  *    { eventbus: eventbus_instance,
  *      server: 'https://myomeroserver',
  *      initParams : {'m' : 'c'},
@@ -707,11 +707,11 @@ Viewer.prototype.hide = function() {
  * when the tried_regions_ flag is checked.
  *
  * Should you want to hide the regions, once created, call:
- * [setRegionsVisibility]{@link ome.ol3.Viewer#setRegionsVisibility} passing in: false
+ * [setRegionsVisibility]{@link Viewer#setRegionsVisibility} passing in: false
  *
  * If, indeed, you wish to remove the regions layer use:
- * [removeRegions]{@link ome.ol3.Viewer#removeRegions} but bear in mind that this requires a call to
- * [addRegions]{@link ome.ol3.Viewer#addRegions} again if you want it back which is more expensive
+ * [removeRegions]{@link Viewer#removeRegions} but bear in mind that this requires a call to
+ * [addRegions]{@link Viewer#addRegions} again if you want it back which is more expensive
  * than toggling visibility
  *
  * @param {Array=} data regions data (optional)
@@ -1090,7 +1090,7 @@ Viewer.prototype.removeInteractionOrControl = function(key, descend) {
  * This error behavior will extend to unrecognized dimension keys or negative
  * index values as well as non array input for channels
  *
- * Check also out the code in: {@link ome.ol3.source.Image}
+ * Check also out the code in: {@link source.Image}
  *
  * @param {string} key a 'key' denoting the dimension. allowed are z,t and c!
  * @param {Array.<number>} values the value(s)
@@ -1182,7 +1182,7 @@ Viewer.prototype.getDimensionIndex = function(key) {
  * by the framework.
  *
  * For more info have a look at:
- * [OmeroImage.setPostTileLoadFunction]{@link ome.ol3.source.Image#setPostTileLoadFunction}
+ * [OmeroImage.setPostTileLoadFunction]{@link source.Image#setPostTileLoadFunction}
  *
  * @param {ol.TileLoadFunctionType} func a function with signature function(tile) {}
  */
@@ -1238,7 +1238,7 @@ Viewer.prototype.getRegionsLayer = function() {
  * Internal convenience method to get to the image source (in open layers terminoloy)
  *
  * @private
- * @return {ome.ol3.source.Image|null} an instance of OmeroImage or null
+ * @return {source.Image|null} an instance of OmeroImage or null
  */
 Viewer.prototype.getImage = function() {
     // delegate
@@ -1345,7 +1345,7 @@ Viewer.prototype.setRegionsModes = function(modes) {
 
 /**
  * This method generates shapes and adds them to the regions layer
- * It uses {@link ome.ol3.utils.Regions.generateRegions} internally
+ * It uses {@link utils.Regions.generateRegions} internally
  *
  * The options argument is optional and can have the following properties:
  * - shape_info => the roi shape definition (omero marshal format)
@@ -1451,7 +1451,7 @@ Viewer.prototype.generateShapes = function(shape_info, options) {
 
 /**
  * Gets the viewport extent in internal coordinates. This method is therefore
- * not suitable for use in {@link ome.ol3.Viewer#generateShapes} !
+ * not suitable for use in {@link Viewer#generateShapes} !
  *
  * @private
  * @return {ol.Extent|null} an array like this: [minX, minY, maxX, maxY] or null (if no viewer)
@@ -1737,7 +1737,7 @@ Viewer.prototype.destroyViewer = function() {
 
 /**
  * Modifies the channel value range
- * see: {@link ome.ol3.source.Image.changeChannelRange}
+ * see: {@link source.Image.changeChannelRange}
  *
  * @param {Array.<Object>} ranges an array of objects with channel props
  */
@@ -1754,7 +1754,7 @@ Viewer.prototype.changeChannelRange = function(ranges) {
 
 /**
  * Modifies the image projection
- * see: {@link ome.ol3.source.Image.setImageProjection}
+ * see: {@link source.Image.setImageProjection}
  *
  * @param {string} value the new value
  * @param {Object=} opts additional options, e.g. intmax projection start/end
@@ -1771,7 +1771,7 @@ Viewer.prototype.changeImageProjection = function(value, opts) {
 
 /**
  * Modifies the image model
- * see: {@link ome.ol3.source.Image.setImageModel}
+ * see: {@link source.Image.setImageModel}
  *
  * @param {string} value the new value
  */
@@ -1784,7 +1784,7 @@ Viewer.prototype.changeImageModel = function(value) {
 
 /**
  * Updates the saved settings to the current settings
- * see: {@link ome.ol3.source.Image.updateSavedSettings}
+ * see: {@link source.Image.updateSavedSettings}
  */
 Viewer.prototype.updateSavedSettings = function() {
     if (this.getImage() === null) return;
@@ -1964,7 +1964,7 @@ Viewer.prototype.watchRenderStatus = function(stopOnTileLoadError) {
 /**
  * Gets the present render status
  * @param {boolean} reset if true we reset to NOT_WATCHED
- * @return {ome.ol3.RENDER_STATUS} the render status
+ * @return {RENDER_STATUS} the render status
  */
 Viewer.prototype.getRenderStatus = function(reset) {
     // delegate
