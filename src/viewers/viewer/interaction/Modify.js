@@ -92,9 +92,9 @@ const Modify = function(regions_reference) {
             features : this.regions_.select_.getFeatures()
         });
 
-    this.handleDragEvent_ = Modify.handleDragEvent_;
-    this.handleEvent = Modify.handleEvent;
-    this.handleUpEvent_ = Modify.handleUpEvent_;
+    this.handleDragEvent_ = handleDragEvent_;
+    this.handleEvent = handleEvent;
+    this.handleUpEvent_ = handleUpEvent_;
 
     this.deleteCondition_ = function(mapBrowserEvent) {
         return noModifierKeys(mapBrowserEvent) &&
@@ -148,7 +148,9 @@ Modify.prototype.handleFeatureAdd_ = function(evt) {
 };
 
 /**
- * Overridden method
+ * Overridden method.
+ * E.g. shows the drag handle when the pointer is near the corner of a
+ * Rectangle or end of Line or Ellipse.
  *
  * @param {ol.Pixel} pixel Pixel
  * @param {ol.PluggableMap} map Map.
@@ -208,6 +210,7 @@ Modify.prototype.handlePointerAtPixel_ = function(pixel, map) {
 
                     // for rectangles we force snap to vertex
                     // to only be able to drag them at one of the vertices
+                    // this.snappedToVertex_ is True if we are near to handle
                     if ((node.geometry instanceof Rectangle ||
                          node.geometry instanceof Ellipse ||
                          node.geometry instanceof Line) &&
@@ -253,7 +256,7 @@ Modify.prototype.handlePointerAtPixel_ = function(pixel, map) {
  * @this {ol.interaction.Modify}
  * @private
  */
-Modify.handleDragEvent_ = function(mapBrowserEvent) {
+const handleDragEvent_ = function(mapBrowserEvent) {
     this.ignoreNextSingleClick_ = false;
     this.willModifyFeatures_(mapBrowserEvent);
 
@@ -378,7 +381,7 @@ Modify.handleDragEvent_ = function(mapBrowserEvent) {
  * @this {ol.interaction.Modify}
  * @private
  */
-Modify.handleUpEvent_ = function(mapBrowserEvent) {
+const handleUpEvent_ = function(mapBrowserEvent) {
     this.oppVertBeingDragged = null;
     var segmentData;
 
@@ -448,7 +451,7 @@ Modify.prototype.handlePointerEvent = function handlePointerEvent (mapBrowserEve
  * @this {ol.interaction.Modify}
  * @api
  */
-Modify.handleEvent = function(mapBrowserEvent) {
+const handleEvent = function(mapBrowserEvent) {
     var handled;
     if (!mapBrowserEvent.map.getView().getHints()[ViewHint.INTERACTING] &&
         mapBrowserEvent.type == MapBrowserEventType.POINTERMOVE &&
