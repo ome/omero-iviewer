@@ -16,8 +16,19 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-import {isArray} from './Misc';
+import Collection from 'ol/Collection';
+import Feature from 'ol/Feature';
+import Style from 'ol/style/Style';
+import Text from 'ol/style/Text';
 import Ellipse from '../geom/Ellipse';
+import Label from '../geom/Label'
+import Line from '../geom/Line';
+import Mask from '../geom/Mask';
+import Point from '../geom/Point';
+import Polygon from '../geom/Polygon';
+import Rectangle from '../geom/Rectangle';
+import {REGIONS_STATE} from '../globals';
+import {isArray} from './Misc';
 
 /**
  * Converts a color given as a rgb(a) string, e.g. 'rgba(255,255,255, 0.75)'
@@ -247,7 +258,7 @@ export const convertSignedIntegerToColorObject =
 
 /**
  * Omero Server api wants RGBA information for regions as a signed integer
- * while open layers works with ol.style.Style objects that accept color/alpha
+ * while open layers works with Style objects that accept color/alpha
  * as rgba(255,255,255, 0.75) as well as hex rgb colors, i.e. #ffffff.
  * This routine does the conversion.
  * <p/>
@@ -255,9 +266,9 @@ export const convertSignedIntegerToColorObject =
  * Note: Depending on the format it might employ the services of 2 other conversion
  * routines
  * <ul>
- * <li>{@link ome.ol3.utils.Conversion.convertRgbaColorFormatToObject}</li>
- * <li>{@link ome.ol3.utils.Conversion.convertHexColorFormatToObject}</li>
- * <li>{@link ome.ol3.utils.Conversion.convertColorArrayToObject}</li>
+ * <li>{@link utils.Conversion.convertRgbaColorFormatToObject}</li>
+ * <li>{@link utils.Conversion.convertHexColorFormatToObject}</li>
+ * <li>{@link utils.Conversion.convertColorArrayToObject}</li>
  * </ul>
  * Alternatively it also accepts color information in internal object notation
  * (such as the aboved functions will convert it into):
@@ -306,13 +317,13 @@ export const convertColorToSignedInteger = function(color, alpha) {
  *
  * @static
  * @function
- * @param {ome.ol3.geom.Point} geometry the point geometry
+ * @param {geom.Point} geometry the point geometry
  * @param {number=} shape_id the optional shape id
  * @return {Object} returns an object ready to be turned into json
  */
 export const pointToJsonObject = function(geometry, shape_id) {
-    if (!(geometry instanceof ome.ol3.geom.Point))
-        throw "type point must be an instance of ome.ol3.geom.Point!";
+    if (!(geometry instanceof Point))
+        throw "type point must be an instance of geom.Point!";
 
     var ret = {};
     if (typeof shape_id === 'number') ret['@id'] = shape_id;
@@ -335,13 +346,13 @@ export const pointToJsonObject = function(geometry, shape_id) {
  *
  * @static
  * @function
- * @param {ome.ol3.geom.Ellipse} geometry the ellipse instance
+ * @param {Ellipse} geometry the ellipse instance
  * @param {number=} shape_id the optional shape id
  * @return {Object} returns an object ready to be turned into json
  */
 export const ellipseToJsonObject = function(geometry, shape_id) {
     if (!(geometry instanceof Ellipse))
-        throw "type ellipse must be an instance of ome.ol3.geom.Ellipse!";
+        throw "type ellipse must be an instance of Ellipse!";
 
     var ret = {};
     if (typeof shape_id === 'number') ret['@id'] = shape_id;
@@ -367,13 +378,13 @@ export const ellipseToJsonObject = function(geometry, shape_id) {
  *
  * @static
  * @function
- * @param {ome.ol3.geom.Rectangle} geometry the rectangle instance
+ * @param {Rectangle} geometry the rectangle instance
  * @param {number=} shape_id the optional shape id
  * @return {Object} returns an object ready to be turned into json
  */
 export const rectangleToJsonObject = function(geometry, shape_id) {
-    if (!(geometry instanceof ome.ol3.geom.Rectangle))
-        throw "type rectangle must be an instance of ome.ol3.geom.Rectangle!";
+    if (!(geometry instanceof Rectangle))
+        throw "type rectangle must be an instance of Rectangle!";
 
     var ret = {};
     if (typeof shape_id === 'number') ret['@id'] = shape_id;
@@ -399,13 +410,13 @@ export const rectangleToJsonObject = function(geometry, shape_id) {
  *
  * @static
  * @function
- * @param {ome.ol3.geom.Line} geometry the line instance
+ * @param {Line} geometry the line instance
  * @param {number=} shape_id the optional shape id
  * @return {Object} returns an object ready to be turned into json
  */
 export const lineToJsonObject = function(geometry, shape_id) {
-    if (!(geometry instanceof ome.ol3.geom.Line))
-        throw "type line must be an instance of ome.ol3.geom.Line!";
+    if (!(geometry instanceof Line))
+        throw "type line must be an instance of Line!";
 
     var ret = {};
     if (typeof shape_id === 'number') ret['@id'] = shape_id;
@@ -438,13 +449,13 @@ export const lineToJsonObject = function(geometry, shape_id) {
  *
  * @static
  * @function
- * @param {ome.ol3.geom.Line} geometry the polyline instance
+ * @param {Line} geometry the polyline instance
  * @param {number=} shape_id the optional shape id
  * @return {Object} returns an object ready to be turned into json
  */
 export const polylineToJsonObject = function(geometry, shape_id) {
-    if (!(geometry instanceof ome.ol3.geom.Line))
-        throw "type polyline must be an instance of ome.ol3.geom.Line!";
+    if (!(geometry instanceof Line))
+        throw "type polyline must be an instance of Line!";
 
     var ret = {};
     if (typeof shape_id === 'number') ret['@id'] = shape_id;
@@ -479,13 +490,13 @@ export const polylineToJsonObject = function(geometry, shape_id) {
  *
  * @static
  * @function
- * @param {ome.ol3.geom.Label} geometry the label instance
+ * @param {Label} geometry the label instance
  * @param {number=} shape_id the optional shape id
  * @return {Object} returns an object ready to be turned into a json object
  */
 export const labelToJsonObject = function(geometry, shape_id) {
-    if (!(geometry instanceof ome.ol3.geom.Label))
-        throw "type label must be an instance of ome.ol3.geom.Label!";
+    if (!(geometry instanceof Label))
+        throw "type label must be an instance of Label!";
 
     var ret = {};
     if (typeof shape_id === 'number') ret['@id'] = shape_id;
@@ -502,13 +513,13 @@ export const labelToJsonObject = function(geometry, shape_id) {
  *
  * @static
  * @function
- * @param {ome.ol3.geom.Polygon} geometry the polygon instance
+ * @param {Polygon} geometry the polygon instance
  * @param {number=} shape_id the optional shape id
  * @return {Object} returns an object ready to be turned into json
  */
 export const polygonToJsonObject = function(geometry, shape_id) {
-    if (!(geometry instanceof ome.ol3.geom.Polygon))
-        throw "type polygon must be an instance of ome.ol3.geom.Polygon!";
+    if (!(geometry instanceof Polygon))
+        throw "type polygon must be an instance of Polygon!";
 
     var ret = {};
     if (typeof shape_id === 'number') ret['@id'] = shape_id;
@@ -536,13 +547,13 @@ export const polygonToJsonObject = function(geometry, shape_id) {
  *
  * @static
  * @function
- * @param {ol.geom.Polygon} geometry the polygon instance
+ * @param {Mask} geometry the polygon instance
  * @param {number=} shape_id the optional shape id
  * @return {Object} returns an object ready to be turned into json
  */
 export const maskToJsonObject = function(geometry, shape_id) {
-    if (!(geometry instanceof ome.ol3.geom.Mask))
-        throw "type mask must be an instance of ome.ol3.geom.Mask!";
+    if (!(geometry instanceof Mask))
+        throw "type mask must be an instance of Mask!";
 
     var ret = {};
     if (typeof shape_id === 'number') ret['@id'] = shape_id;
@@ -583,7 +594,7 @@ export const LOOKUP = {
 
 /**
  * Turns a shape's style to json. This function is used by:
- * {@link ome.ol3.utils.Conversion.toJsonObject}
+ * {@link viewer.utils.Conversion.toJsonObject}
  *
  * @static
  * @private
@@ -594,8 +605,8 @@ export const LOOKUP = {
 export const integrateStyleIntoJsonObject = function(feature, jsonObject) {
     if (typeof(jsonObject) !== 'object' ||
         typeof(jsonObject['@type']) !== 'string' ||
-        !(feature instanceof ol.Feature) ||
-        (!(feature.getStyle() instanceof ol.style.Style) &&
+        !(feature instanceof Feature) ||
+        (!(feature.getStyle() instanceof Style) &&
         typeof(feature.getStyle()) !== 'function')) return;
 
     // we now have an array of styles (due to arrows)
@@ -603,7 +614,7 @@ export const integrateStyleIntoJsonObject = function(feature, jsonObject) {
     if (typeof(presentStyle) === 'function') presentStyle = presentStyle(1);
     if (isArray(presentStyle))
         presentStyle = presentStyle[0];
-    if (!(presentStyle instanceof ol.style.Style)) return;
+    if (!(presentStyle instanceof Style)) return;
 
     var isLabel =
         jsonObject['@type'] ===
@@ -645,9 +656,9 @@ export const integrateStyleIntoJsonObject = function(feature, jsonObject) {
     };
 
     var presentText = presentStyle.getText();
-    if (presentText === null && feature['oldText'] instanceof ol.style.Text)
+    if (presentText === null && feature['oldText'] instanceof Text)
         presentText = feature['oldText'];
-    if (presentText instanceof ol.style.Text) {  // TEXT
+    if (presentText instanceof Text) {  // TEXT
         if (presentText.getText()) jsonObject['Text'] = presentText.getText();
         if (presentText.getFont()) {
             var font = presentText.getFont();
@@ -672,7 +683,7 @@ export const integrateStyleIntoJsonObject = function(feature, jsonObject) {
 
 /**
  * Adds miscellanous information related to the shape.
- * see: {@link ome.ol3.utils.Conversion.toJsonObject}
+ * see: {@link viewer.utils.Conversion.toJsonObject}
  *
  * @static
  * @private
@@ -681,7 +692,7 @@ export const integrateStyleIntoJsonObject = function(feature, jsonObject) {
  * @param {Object} jsonObject an object containing shape information
  */
 export const integrateMiscInfoIntoJsonObject  = function(feature, jsonObject) {
-    if (typeof(jsonObject) !== 'object' || !(feature instanceof ol.Feature))
+    if (typeof(jsonObject) !== 'object' || !(feature instanceof Feature))
         return;
 
     ['TheZ', 'TheT', 'TheC'].map((d) => {
@@ -709,13 +720,12 @@ export const integrateMiscInfoIntoJsonObject  = function(feature, jsonObject) {
  */
 export const toJsonObject =
     function(features, storeNewShapesInSeparateRois, empty_rois) {
-    if (!(features instanceof ol.Collection) || features.getLength() === 0)
+    if (!(features instanceof Collection) || features.getLength() === 0)
         return null;
 
     var newRoisForEachNewShape =
         typeof(storeNewShapesInSeparateRois) === 'boolean' ?
             storeNewShapesInSeparateRois : false;
-    if (typeof returnFlattenedArray !== 'boolean') returnFlattenedArray = false;
     empty_rois = empty_rois || {};
 
     var currentNewId = -1;
@@ -735,9 +745,9 @@ export const toJsonObject =
 
         // we skip if we are not a feature or have no geometry (sanity check)
         // OR if we haven't a state or the state is unchanged
-        if (!(feature instanceof ol.Feature) || feature.getGeometry() === null ||
+        if (!(feature instanceof Feature) || feature.getGeometry() === null ||
             typeof(feature['state']) !== 'number' || // no state info or unchanged
-            feature['state'] === ome.ol3.REGIONS_STATE.DEFAULT) continue;
+            feature['state'] === REGIONS_STATE.DEFAULT) continue;
 
         // dissect id which comes in the form roiId:shapeId
         var roiId = -1;
@@ -760,7 +770,7 @@ export const toJsonObject =
         // - existing ones that have been deleted
         // - existing ones that have been modified
         // - new ones
-        if (feature['state'] === ome.ol3.REGIONS_STATE.REMOVED) {
+        if (feature['state'] === REGIONS_STATE.REMOVED) {
             if ((roiId < 0 || shapeId < 0) ||
                 (typeof feature['permissions'] === 'object' &&
                  feature['permissions'] !== null &&
@@ -783,7 +793,7 @@ export const toJsonObject =
             }
             categorizedRois['count']++;
             continue;
-        } else if (feature['state'] === ome.ol3.REGIONS_STATE.MODIFIED) {
+        } else if (feature['state'] === REGIONS_STATE.MODIFIED) {
             if (typeof feature['permissions'] === 'object' &&
                 feature['permissions'] !== null &&
                 typeof feature['permissions']['canEdit'] === 'boolean' &&
@@ -797,7 +807,7 @@ export const toJsonObject =
                 categorizedRois['count']++;
                 continue;
             }
-        } else if (feature['state'] === ome.ol3.REGIONS_STATE.ADDED &&
+        } else if (feature['state'] === REGIONS_STATE.ADDED &&
              newRoisForEachNewShape) roiIdToBeUsed = currentNewId--;
 
         var roiContainer = null;
