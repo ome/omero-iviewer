@@ -17,10 +17,6 @@
 //
 
 // dependencies
-import {Map, View} from 'ol';
-import TileLayer from 'ol/layer/Tile';
-import XYZ from 'ol/source/XYZ';
-
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import {Converters} from '../utils/converters';
@@ -1128,6 +1124,7 @@ export default class Ol3Viewer extends EventSubscriber {
                             show: false,
                             deleted: 0
                         };
+                        // Modifying regions_info.data causes regions-list to re-render
                         this.image_config.regions_info.data.set(
                             newRoiAndShapeId.roi_id, newRoi);
                     }
