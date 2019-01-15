@@ -56,19 +56,19 @@ module.exports = {
     port: 8080,
     proxy: {
         '/iviewer/**': {
-            target: 'http://localhost'
+            target: 'http://localhost:4080'
         },
         '/api/**': {
-            target: 'http://localhost'
+            target: 'http://localhost:4080'
         },
         '/webgateway/**': {
-            target: 'http://localhost'
+            target: 'http://localhost:4080'
         },
         '/webclient/**': {
-            target: 'http://localhost'
+            target: 'http://localhost:4080'
         },
         '/static/**': {
-            target: 'http://localhost'
+            target: 'http://localhost:4080'
         }
     }
   }
