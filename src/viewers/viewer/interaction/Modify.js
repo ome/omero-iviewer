@@ -89,12 +89,13 @@ const Modify = function(regions_reference) {
     OlModify.call(
         this, {
             pixelTolerance : 5,
-            features : this.regions_.select_.getFeatures()
+            features : this.regions_.select_.getFeatures(),
+            // Override these in parent ol.interaction.Modify
+            handleDragEvent: handleDragEvent_,
+            handleUpEvent: handleUpEvent_,
         });
 
-    this.handleDragEvent_ = handleDragEvent_;
     this.handleEvent = handleEvent;
-    this.handleUpEvent_ = handleUpEvent_;
 
     this.deleteCondition_ = function(mapBrowserEvent) {
         return noModifierKeys(mapBrowserEvent) &&
