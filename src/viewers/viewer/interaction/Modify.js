@@ -125,8 +125,13 @@ const Modify = function(regions_reference) {
                     [featId], "state", REGIONS_STATE.MODIFIED);
             }
         },this);
-};
-inherits(Modify, OlModify);
+  };
+// inherits(Modify, OlModify);
+
+// Do the inheritance dance
+if ( OlModify ) Modify.__proto__ = OlModify;
+Modify.prototype = Object.create( OlModify && OlModify.prototype );
+Modify.prototype.constructor = Modify;
 
 
 /**
@@ -489,7 +494,8 @@ const handleEvent = function(mapBrowserEvent) {
         this.ignoreNextSingleClick_ = false;
     }
 
-    return this.handlePointerEvent(mapBrowserEvent) && !handled;
+    // This will call handleDragEvent etc as needed
+    return Pointer.prototype.handleEvent.call(this, mapBrowserEvent) && !handled;
 };
 
 /**
