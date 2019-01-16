@@ -19,7 +19,6 @@
 import Point from 'ol/geom/Point';
 import SimpleGeometry from 'ol/geom/SimpleGeometry';
 import {intersectsLinearRing} from 'ol/geom/flat/intersectsextent';
-import {inherits} from 'ol/util';
 
 // importing Rectangle here means that when Rectangle is imported
 // into Label.js is undefined!
@@ -33,150 +32,152 @@ import {applyTransform,
  * In order to be able to conform to the general workflow for rois
  * masks have to be treated as points with IconImageStyle.
  *
- * @constructor
  * @extends {ol.geom.Point}
- *
- * @param {number} x the top left x coordinate of the mask
- * @param {number} y the top left y coordinate of the mask
- * @param {number} w the width of the mask
- * @param {number} h the height of the mask
- * @param {Object=} transform an AffineTransform object according to omero marshal
  */
-const Mask = function(x, y, w, h, transform) {
-    // preliminary checks
-    if (typeof x !== 'number' || typeof y !== 'number' ||
-        typeof w !== 'number' || typeof h !== 'number' ||
-        isNaN(x) || isNaN(y) || isNaN(w) || isNaN(h))
-            console.error("Mask needs x,y, width and height!");
+class Mask extends Point {
 
     /**
-     * the
-     * @type {Array.<number>}
-     * @private
+     * @constructor
+     *
+     * @param {number} x the top left x coordinate of the mask
+     * @param {number} y the top left y coordinate of the mask
+     * @param {number} w the width of the mask
+     * @param {number} h the height of the mask
+     * @param {Object=} transform an AffineTransform object according to omero marshal
      */
-    this.size_ = [w, h];
+    constructor(x, y, w, h, transform) {
+        // preliminary checks
+        if (typeof x !== 'number' || typeof y !== 'number' ||
+            typeof w !== 'number' || typeof h !== 'number' ||
+            isNaN(x) || isNaN(y) || isNaN(w) || isNaN(h))
+                console.error("Mask needs x,y, width and height!");
 
-    /**
-     * the initial coordinates as a flat array
-     * @type {Array.<number>}
-     * @private
-     */
-    this.initial_coords_ = null;
+        super([x, y]);
 
-    /**
-     * the transformation matrix of length 6
-     * @type {Array.<number>|null}
-     * @private
-     */
-    this.transform_ = convertAffineTransformIntoMatrix(transform);
+        /**
+         * the
+         * @type {Array.<number>}
+         * @private
+         */
+        this.size_ = [w, h];
 
-    // call super
-    // goog.base(this, [x, y]);
-    Point.call(this, [x, y]);
-    this.initial_coords_ = this.getFlatCoordinates();
+        /**
+         * the initial coordinates as a flat array
+         * @type {Array.<number>}
+         * @private
+         */
+        this.initial_coords_ = null;
 
-    // apply potential transform
-    this.flatCoordinates = applyTransform(
-            this.transform_, this.initial_coords_);
-}
-inherits(Mask, Point);
+        /**
+         * the transformation matrix of length 6
+         * @type {Array.<number>|null}
+         * @private
+         */
+        this.transform_ = convertAffineTransformIntoMatrix(transform);
 
+        this.initial_coords_ = this.getFlatCoordinates();
 
-/**
- * Returns the coordinates as a flat array (excl. any potential transform)
- * @return {Array.<number>} the coordinates as a flat array
- */
-Mask.prototype.getPointCoordinates = function() {
-    var ret =
-        this.transform_ ? this.initial_coords_ : this.getFlatCoordinates();
-    return ret.slice(0, 2);
-}
-
-/**
- * Gets the transformation associated with the point
- * @return {Object|null} the AffineTransform object (omero marshal) or null
- */
-Mask.prototype.getTransform = function() {
-    return convertMatrixToAffineTransform(this.transform_);
-}
-
-/**
- * First translate then store the newly translated coords
- *
- * @private
- */
-Mask.prototype.translate = function(deltaX, deltaY) {
-    // delegate
-    if (this.transform_) {
-        this.transform_[4] += deltaX;
-        this.transform_[5] -= deltaY;
+        // apply potential transform
         this.flatCoordinates = applyTransform(
                 this.transform_, this.initial_coords_);
-        this.changed();
-    } else SimpleGeometry.prototype.translate.call(this, deltaX, deltaY);
-};
+    }
 
-/**
- * Make a complete copy of the geometry.
- * @return {Mask} Clone.
- */
-Mask.prototype.clone = function() {
-    var pointCoords = this.getPointCoordinates();
-    return new Mask(
-        pointCoords[0], pointCoords[1],
-        this.size_[0], this.size_[1], this.getTransform());
-};
+    /**
+     * Returns the coordinates as a flat array (excl. any potential transform)
+     * @return {Array.<number>} the coordinates as a flat array
+     */
+    getPointCoordinates() {
+        var ret =
+            this.transform_ ? this.initial_coords_ : this.getFlatCoordinates();
+        return ret.slice(0, 2);
+    }
 
-/**
- * Returns the area.of the mask
- * @return {number} the area of the mask.
- */
-Mask.prototype.getArea = function() {
-    return this.size_[0] * this.size_[1];
-}
+    /**
+     * Gets the transformation associated with the point
+     * @return {Object|null} the AffineTransform object (omero marshal) or null
+     */
+    getTransform() {
+        return convertMatrixToAffineTransform(this.transform_);
+    }
 
-/**
- * Returns the length of the mask
- *
- * @return {number} the length of the mask
- */
-Mask.prototype.getLength = function() {
-    return 2 * (this.size_[0] + this.size_[1]);
-}
+    /**
+     * First translate then store the newly translated coords
+     *
+     * @private
+     */
+    translate(deltaX, deltaY) {
+        // delegate
+        if (this.transform_) {
+            this.transform_[4] += deltaX;
+            this.transform_[5] -= deltaY;
+            this.flatCoordinates = applyTransform(
+                    this.transform_, this.initial_coords_);
+            this.changed();
+        } else SimpleGeometry.prototype.translate.call(this, deltaX, deltaY);
+    };
 
-/**
- * Overrides getExtent of point geometry
- *
- * @return {Array.<number>} the extent of the mask
- */
-Mask.prototype.getExtent = function() {
-    var pointCoords = this.getPointCoordinates();
-    return [
-        pointCoords[0], pointCoords[1] - this.size_[1],
-        pointCoords[0] + this.size_[0], pointCoords[1],
-    ];
-}
+    /**
+     * Make a complete copy of the geometry.
+     * @return {Mask} Clone.
+     */
+    clone() {
+        var pointCoords = this.getPointCoordinates();
+        return new Mask(
+            pointCoords[0], pointCoords[1],
+            this.size_[0], this.size_[1], this.getTransform());
+    };
 
-/**
- * Overrides intersectsExtent of point geometry
- *
- * @param {Array.<number>} extent the extent to test against
- * @return {boolean} true if the given extent intersects with the mask
- */
-Mask.prototype.intersectsExtent = function(extent) {
-    var extRect = this.getOutline().getRectangleCoordinates();
-    return intersectsLinearRing(
-        extRect, 0, [extRect.length], 2, extent);
-}
+    /**
+     * Returns the area.of the mask
+     * @return {number} the area of the mask.
+     */
+    getArea() {
+        return this.size_[0] * this.size_[1];
+    }
 
-/**
- * Returns a rectangle outline surrounding the mask
- *
- * @return {Array.<number>} the rectangle outline
- */
-Mask.prototype.getOutline = function() {
-    var point = this.getPointCoordinates();
-    return new Rectangle(point[0], point[1], this.size_[0], this.size_[1]);
+    /**
+     * Returns the length of the mask
+     *
+     * @return {number} the length of the mask
+     */
+    getLength() {
+        return 2 * (this.size_[0] + this.size_[1]);
+    }
+
+    /**
+     * Overrides getExtent of point geometry
+     *
+     * @return {Array.<number>} the extent of the mask
+     */
+    getExtent() {
+        var pointCoords = this.getPointCoordinates();
+        return [
+            pointCoords[0], pointCoords[1] - this.size_[1],
+            pointCoords[0] + this.size_[0], pointCoords[1],
+        ];
+    }
+
+    /**
+     * Overrides intersectsExtent of point geometry
+     *
+     * @param {Array.<number>} extent the extent to test against
+     * @return {boolean} true if the given extent intersects with the mask
+     */
+    intersectsExtent(extent) {
+        var extRect = this.getOutline().getRectangleCoordinates();
+        return intersectsLinearRing(
+            extRect, 0, [extRect.length], 2, extent);
+    }
+
+    /**
+     * Returns a rectangle outline surrounding the mask
+     *
+     * @return {Array.<number>} the rectangle outline
+     */
+    getOutline() {
+        var point = this.getPointCoordinates();
+        return new Rectangle(point[0], point[1], this.size_[0], this.size_[1]);
+    }
 }
 
 export default Mask;
