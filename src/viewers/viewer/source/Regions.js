@@ -396,15 +396,6 @@ Regions.prototype.setModes = function(modes) {
 
     // this gets rid of any existing modifies but leaves select
     removeModifyInteractions.call(this, true);
-    if (modifyMode) { // remove mutually exclusive interactions
-        removeDrawInteractions.call(this);
-        addSelectInteraction.call(this);
-        if (this.modify_ === null) {
-            this.modify_ = new Modify(this);
-            this.viewer_.viewer_.addInteraction(this.modify_);
-        }
-        this.present_modes_.push(REGIONS_MODE.MODIFY);
-    }
 
     if (translateMode) { // remove mutually exclusive interactions
         removeDrawInteractions.call(this);
@@ -414,6 +405,18 @@ Regions.prototype.setModes = function(modes) {
             this.viewer_.viewer_.addInteraction(this.translate_);
         }
         this.present_modes_.push(REGIONS_MODE.TRANSLATE);
+    }
+
+    // We add Modify (edit shapes by dragging handles) *after*
+    // Translate so that the handles are *above* the draggable shape
+    if (modifyMode) { // remove mutually exclusive interactions
+        removeDrawInteractions.call(this);
+        addSelectInteraction.call(this);
+        if (this.modify_ === null) {
+            this.modify_ = new Modify(this);
+            this.viewer_.viewer_.addInteraction(this.modify_);
+        }
+        this.present_modes_.push(REGIONS_MODE.MODIFY);
     }
 
     if (selectMode) { // remove mutually exclusive interactions
