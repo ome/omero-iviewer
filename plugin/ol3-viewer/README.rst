@@ -32,9 +32,9 @@ Django directories:
 
 ::
 
-    $ compile/compile-debug plugin
+    $ compile plugin
 
-Choose one out of the two as a first parameter. This way of compiling is shorter and easier for development
+This way of compiling is shorter and easier for development
 
 
 To keep the files up-to-date during development, don't forget to call
