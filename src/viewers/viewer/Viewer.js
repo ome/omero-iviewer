@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// Copyright (C) 2019 University of Dundee & Open Microscopy Environment.
 // All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -29,7 +29,7 @@ import Tile from 'ol/layer/Tile';
 import Vector from 'ol/layer/Vector';
 import View from 'ol/View';
 import PluggableMap from 'ol/PluggableMap';
-import Map from 'ol/Map';
+import OlMap from 'ol/Map';
 import {inherits} from 'ol/util';
 import {intersects, getCenter} from 'ol/extent';
 import {noModifierKeys, primaryAction} from 'ol/events/condition';
@@ -583,8 +583,7 @@ Viewer.prototype.bootstrapOpenLayers = function(postSuccessHook, initHook) {
     }
 
     // finally construct the open layers map object
-    // this.viewer_ = new PluggableMap({
-    this.viewer_ = new Map({
+    this.viewer_ = new OlMap({
        logo: false,
        controls: controls,
        interactions:  interactions,
@@ -991,7 +990,7 @@ Viewer.prototype.addControl = function(key, options) {
  * @param {Object=} options (optional) options for control
  */
 Viewer.prototype.addInteractionOrControl = function(key, type, descend, options) {
-    if (!(this.viewer_ instanceof Map) || // could be the viewer was not initialized
+    if (!(this.viewer_ instanceof OlMap) || // could be the viewer was not initialized
         (typeof(key) !== 'string') || // key not a string
         (typeof(type) !== 'string')) return; // type is not a string
 
@@ -1050,7 +1049,7 @@ Viewer.prototype.addInteractionOrControl = function(key, type, descend, options)
  * @param {boolean} descend a flag whether we should follow linked interactions/controls
  */
 Viewer.prototype.removeInteractionOrControl = function(key, descend) {
-    if (!(this.viewer_ instanceof Map) || // could be the viewer was not initialized
+    if (!(this.viewer_ instanceof OlMap) || // could be the viewer was not initialized
         (typeof(key) !== 'string')) return; // key is not a string
 
     if (typeof this.viewerState_[key] !== 'object')
