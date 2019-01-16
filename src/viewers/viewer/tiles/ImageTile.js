@@ -19,8 +19,7 @@
 import {createCanvasContext2D} from 'ol/dom';
 import OlImageTile from 'ol/ImageTile';
 import TileState from 'ol/TileState';
-import {getUid,
-    inherits} from 'ol/util';
+import {getUid} from 'ol/util';
 import {isArray} from '../utils/Misc';
 
 /**
@@ -39,34 +38,34 @@ import {isArray} from '../utils/Misc';
  * @param {ol.TileLoadFunctionType} tileLoadFunction Tile load function.
  * @param {olx.TileOptions=} opt_options Tile options.
  */
-const ImageTile = function(
-    tileCoord, state, src, crossOrigin, tileLoadFunction, opt_options) {
-    // goog.base(
-    OlImageTile.call(this, tileCoord, state, src, crossOrigin,
+class ImageTile extends OlImageTile {
+
+    constructor(tileCoord, state, src, crossOrigin,
+                tileLoadFunction, opt_options) {
+
+        super(tileCoord, state, src, crossOrigin,
                      tileLoadFunction, opt_options);
 
-    /**
-     * @type {object}
-     * @private
-     */
-    this.imageByContext_ = {};
-};
-inherits(ImageTile, OlImageTile);
+        /**
+         * @type {object}
+         * @private
+         */
+        this.imageByContext_ = {};
+    };
 
-/**
- * A convenience method to draw the tile into the context to then be called
- * within the scope of the post tile load hook for example...
- *
- * @function
- * @private
- * @param {Object} tile the tile as an img object
- * @param {Array.<number>} tileSize the tile size as an array [width, height]
- * @param {boolean=} createContextOnlyForResize renders on canvas only if resize is needed
- * @param {string=} key the uid (for createContextOnlyForResize is true)
- * @return {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement} the image drawn on the context.
- */
-ImageTile.prototype.getRenderedTileAsContext =
-    function(tile, tileSize, createContextOnlyForResize, key) {
+    /**
+     * A convenience method to draw the tile into the context to then be called
+     * within the scope of the post tile load hook for example...
+     *
+     * @function
+     * @private
+     * @param {Object} tile the tile as an img object
+     * @param {Array.<number>} tileSize the tile size as an array [width, height]
+     * @param {boolean=} createContextOnlyForResize renders on canvas only if resize is needed
+     * @param {string=} key the uid (for createContextOnlyForResize is true)
+     * @return {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement} the image drawn on the context.
+     */
+    getRenderedTileAsContext(tile, tileSize, createContextOnlyForResize, key) {
         if ((typeof(tile) !== 'object') ||
             (typeof(tile['width']) !== 'number') ||
             (typeof(tile['height']) !== 'number')) return tile;
@@ -93,46 +92,43 @@ ImageTile.prototype.getRenderedTileAsContext =
             this.imageByContext_[key] = context.canvas;
 
         return context.canvas;
-}
-
-/**
- * Get the HTML image element for this tile (may be a Canvas, Image, or Video).
- * @function
- * @param {Object=} opt_context Object.
- * @return {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement} Image.
- */
-ImageTile.prototype.getImage = function(opt_context) {
-    // call super.getImage
-    // var image = goog.base(this, 'getImage', opt_context);
-    // var image = OlImageTile.getImage.call(this, opt_context);
-    // Since OlImageTile.getImage is undefined here, workaround...
-    var image = this.image_;
-    // we are not loaded yet => good byes
-    if (this.state !== TileState.LOADED) return image;
-
-    // do we have the image already (resized or post tile function applied)
-    var key = getUid(image);
-    if (key in this.imageByContext_)
-         return this.imageByContext_[key];
-
-    // do we have a post tile function
-    var postTileFunction = this.source.getPostTileLoadFunction();
-    var tileSize = this.source.tileGrid.tileSize_;
-    if (typeof(postTileFunction) !== 'function') // no => return
-        return this.getRenderedTileAsContext(image, tileSize, true, key);
-
-    // post tile function
-    image = this.getRenderedTileAsContext(image);
-    try {
-        var context =  postTileFunction.call(this, image);
-        if (context === null) context = image;
-
-        this.imageByContext_[key] = context;
-
-        return context;
-    } catch(planb) {
-        return image;
     }
-};
+
+    /**
+     * Get the HTML image element for this tile (may be a Canvas, Image, or Video).
+     * @function
+     * @param {Object=} opt_context Object.
+     * @return {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement} Image.
+     */
+    getImage(opt_context) {
+        var image = super.getImage();
+        // we are not loaded yet => good byes
+        if (this.state !== TileState.LOADED) return image;
+
+        // do we have the image already (resized or post tile function applied)
+        var key = getUid(image);
+        if (key in this.imageByContext_)
+            return this.imageByContext_[key];
+
+        // do we have a post tile function
+        var postTileFunction = this.source.getPostTileLoadFunction();
+        var tileSize = this.source.tileGrid.tileSize_;
+        if (typeof(postTileFunction) !== 'function') // no => return
+            return this.getRenderedTileAsContext(image, tileSize, true, key);
+
+        // post tile function
+        image = this.getRenderedTileAsContext(image);
+        try {
+            var context =  postTileFunction.call(this, image);
+            if (context === null) context = image;
+
+            this.imageByContext_[key] = context;
+
+            return context;
+        } catch(planb) {
+            return image;
+        }
+    }
+}
 
 export default ImageTile;
