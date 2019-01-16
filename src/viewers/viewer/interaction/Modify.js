@@ -30,8 +30,7 @@ import GeometryType from 'ol/geom/GeometryType';
 import MapBrowserEventType from 'ol/MapBrowserEventType';
 import {ModifyEvent} from 'ol/interaction/Modify';
 import {listen} from 'ol/events';
-import {getUid,
-    inherits} from 'ol/util';
+import {getUid} from 'ol/util';
 import {boundingExtent} from 'ol/extent';
 import {squaredDistanceToSegment,
     squaredDistance,
@@ -61,199 +60,363 @@ const MODIFYEND = 'modifyend';
  * It ensure that labels are not modified, rectangles remain rectangles, as
  * well as ellipses not losing their form.
  *
- * @constructor
  * @extends {ol.interaction.Modify}
- * @param {source.Regions} regions_reference an Regions instance.
  */
-const Modify = function(regions_reference) {
-    // we do need the regions reference to do modifications
-    if (!(regions_reference instanceof Regions))
-        console.error("Modify needs a Regions instance!");
-    if (!(regions_reference.select_ instanceof Select))
-        console.error("Select needs a Select instance!");
+class Modify extends OlModify {
 
     /**
-     * @type {source.Regions}
-     * @private
+     * @constructor
+     * 
+     * @param {source.Regions} regions_reference an Regions instance.
      */
-    this.regions_ = regions_reference;
+    constructor(regions_reference) {
+        // we do need the regions reference to do modifications
+        if (!(regions_reference instanceof Regions))
+            console.error("Modify needs a Regions instance!");
+        if (!(regions_reference.select_ instanceof Select))
+            console.error("Select needs a Select instance!");
 
-    /**
-     * @type {number}
-     * @private
-     */
-    this.hist_id_ = -1;
-
-    // call super
-    // goog.base(
-    OlModify.call(
-        this, {
+        super({
             pixelTolerance : 5,
-            features : this.regions_.select_.getFeatures(),
+            features : regions_reference.select_.getFeatures(),
             // Override these in parent ol.interaction.Modify
             handleDragEvent: handleDragEvent_,
             handleUpEvent: handleUpEvent_,
         });
 
-    this.handleEvent = handleEvent;
+        /**
+         * @type {source.Regions}
+         * @private
+         */
+        this.regions_ = regions_reference;
 
-    this.deleteCondition_ = function(mapBrowserEvent) {
-        return noModifierKeys(mapBrowserEvent) &&
-               click(mapBrowserEvent);
-    }
+        /**
+         * @type {number}
+         * @private
+         */
+        this.hist_id_ = -1;
 
-    // a listener to react on modify start
-    listen(this, MODIFYSTART,
-        function(event) {
-            this.hist_id_ =
-                this.regions_.addHistory(event.features.array_, true);
-        }, this);
+        this.handleEvent = handleEvent;
 
-    // a listener to react on modify end
-    listen(this, MODIFYEND,
-        function(event) {
-            // complete history entry
-            if (this.hist_id_ >= 0) {
-                var featId = event.features.array_[0].getId();
-                this.regions_.addHistory(
-                    event.features.array_, false, this.hist_id_);
-                sendEventNotification(
-                    this.regions_.viewer_,
-                    "REGIONS_HISTORY_ENTRY",
-                    {"hist_id": this.hist_id_, "shape_ids": [featId]});
-                this.regions_.setProperty(
-                    [featId], "state", REGIONS_STATE.MODIFIED);
-            }
-        },this);
-  };
-// inherits(Modify, OlModify);
+        this.deleteCondition_ = function(mapBrowserEvent) {
+            return noModifierKeys(mapBrowserEvent) &&
+                click(mapBrowserEvent);
+        }
 
-// Do the inheritance dance
-if ( OlModify ) Modify.__proto__ = OlModify;
-Modify.prototype = Object.create( OlModify && OlModify.prototype );
-Modify.prototype.constructor = Modify;
+        // a listener to react on modify start
+        listen(this, MODIFYSTART,
+            function(event) {
+                this.hist_id_ =
+                    this.regions_.addHistory(event.features.array_, true);
+            }, this);
 
-
-/**
- * Override for dimension/permission/visibility filtering
- * @param {Collection.Event} evt Event.
- * @private
- */
-Modify.prototype.handleFeatureAdd_ = function(evt) {
-    var feature = evt.element;
-
-    var renderFeature = this.regions_.renderFeature(feature);
-    if (!renderFeature ||
-        feature.getGeometry() instanceof Mask ||
-         (typeof feature['permissions'] === 'object' &&
-            feature['permissions'] !== null &&
-            typeof feature['permissions']['canEdit'] === 'boolean' &&
-            !feature['permissions']['canEdit'])) return;
-
-    this.addFeature_(feature);
-};
-
-/**
- * Overridden method.
- * E.g. shows the drag handle when the pointer is near the corner of a
- * Rectangle or end of Line or Ellipse.
- *
- * @param {ol.Pixel} pixel Pixel
- * @param {ol.PluggableMap} map Map.
- * @private
- */
-Modify.prototype.handlePointerAtPixel_ = function(pixel, map) {
-    if (!(this.features_ instanceof Collection) ||
-          this.features_.getLength() === 0) return;
-
-    var pixelCoordinate = map.getCoordinateFromPixel(pixel);
-    var sortByDistance = function(a, b) {
-        return squaredDistanceToSegment(
-                    pixelCoordinate, a.segment) -
-                    squaredDistanceToSegment(
-                        pixelCoordinate, b.segment);
+        // a listener to react on modify end
+        listen(this, MODIFYEND,
+            function(event) {
+                // complete history entry
+                if (this.hist_id_ >= 0) {
+                    var featId = event.features.array_[0].getId();
+                    this.regions_.addHistory(
+                        event.features.array_, false, this.hist_id_);
+                    sendEventNotification(
+                        this.regions_.viewer_,
+                        "REGIONS_HISTORY_ENTRY",
+                        {"hist_id": this.hist_id_, "shape_ids": [featId]});
+                    this.regions_.setProperty(
+                        [featId], "state", REGIONS_STATE.MODIFIED);
+                }
+            }, this);
     };
 
-    var lowerLeft =
-        map.getCoordinateFromPixel(
-            [pixel[0] - this.pixelTolerance_, pixel[1] + this.pixelTolerance_]);
-    var upperRight =
-        map.getCoordinateFromPixel(
-            [pixel[0] + this.pixelTolerance_, pixel[1] - this.pixelTolerance_]);
-    var box = boundingExtent([lowerLeft, upperRight]);
+    /**
+     * Override for dimension/permission/visibility filtering
+     * @param {Collection.Event} evt Event.
+     * @private
+     */
+    handleFeatureAdd_(evt) {
+        var feature = evt.element;
 
-    var rBush = this.rBush_;
-    var nodes = rBush.getInExtent(box);
+        var renderFeature = this.regions_.renderFeature(feature);
+        if (!renderFeature ||
+            feature.getGeometry() instanceof Mask ||
+            (typeof feature['permissions'] === 'object' &&
+                feature['permissions'] !== null &&
+                typeof feature['permissions']['canEdit'] === 'boolean' &&
+                !feature['permissions']['canEdit'])) return;
 
-    // we are within a feature's bounding box
-    if (nodes.length > 0) {
-        nodes.sort(sortByDistance);
-        // get closest node
-        var node = nodes[0];
+        this.addFeature_(feature);
+    };
 
-        var disallowModification =
-            node.geometry instanceof Label ||
-            node.geometry instanceof Mask ||
-            node.geometry instanceof Circle ||
-            !this.regions_.renderFeature(node.feature);
-        if (!disallowModification) {
-            var closestSegment = node.segment;
-            var vertex =
-                (closestOnSegment(
-                    pixelCoordinate,closestSegment));
-            var vertexPixel = map.getPixelFromCoordinate(vertex);
+    /**
+     * Overridden method.
+     * E.g. shows the drag handle when the pointer is near the corner of a
+     * Rectangle or end of Line or Ellipse.
+     *
+     * @param {ol.Pixel} pixel Pixel
+     * @param {ol.PluggableMap} map Map.
+     * @private
+     */
+    handlePointerAtPixel_(pixel, map) {
+        if (!(this.features_ instanceof Collection) ||
+            this.features_.getLength() === 0) return;
 
-            if (Math.sqrt(squaredDistance(pixel, vertexPixel)) <=
-                this.pixelTolerance_) {
-                    var pixel1 = map.getPixelFromCoordinate(closestSegment[0]);
-                    var pixel2 = map.getPixelFromCoordinate(closestSegment[1]);
-                    var squaredDist1 =
-                        squaredDistance(vertexPixel, pixel1);
-                    var squaredDist2 =
-                        squaredDistance(vertexPixel, pixel2);
-                    var dist = Math.sqrt(Math.min(squaredDist1, squaredDist2));
-                    this.snappedToVertex_ = dist <= this.pixelTolerance_;
+        var pixelCoordinate = map.getCoordinateFromPixel(pixel);
+        var sortByDistance = function(a, b) {
+            return squaredDistanceToSegment(
+                        pixelCoordinate, a.segment) -
+                        squaredDistanceToSegment(
+                            pixelCoordinate, b.segment);
+        };
 
-                    // for rectangles we force snap to vertex
-                    // to only be able to drag them at one of the vertices
-                    // this.snappedToVertex_ is True if we are near to handle
-                    if ((node.geometry instanceof Rectangle ||
-                         node.geometry instanceof Ellipse ||
-                         node.geometry instanceof Line) &&
-                         !this.snappedToVertex_) return;
+        var lowerLeft =
+            map.getCoordinateFromPixel(
+                [pixel[0] - this.pixelTolerance_, pixel[1] + this.pixelTolerance_]);
+        var upperRight =
+            map.getCoordinateFromPixel(
+                [pixel[0] + this.pixelTolerance_, pixel[1] - this.pixelTolerance_]);
+        var box = boundingExtent([lowerLeft, upperRight]);
 
-                    if (this.snappedToVertex_) {
-                        vertex = squaredDist1 > squaredDist2 ?
-                        closestSegment[1] : closestSegment[0];
-                    }
+        var rBush = this.rBush_;
+        var nodes = rBush.getInExtent(box);
 
-                    this.createOrUpdateVertexFeature_(vertex);
-                    var vertexSegments = {};
-                    vertexSegments[getUid(closestSegment)] = true;
-                    var segment;
-                    for (var i = 1, ii = nodes.length; i < ii; ++i) {
-                        segment = nodes[i].segment;
-                        if ((equals(closestSegment[0], segment[0]) &&
-                            equals(closestSegment[1], segment[1]) ||
-                            (equals(closestSegment[0], segment[1]) &&
-                            equals(closestSegment[1], segment[0])))) {
-                                    vertexSegments[getUid(segment)] = true;
-                        } else break;
-                    }
-                    this.vertexSegments_ = vertexSegments;
-                    this.regions_['is_modified'] = true;
-                    return;
+        // we are within a feature's bounding box
+        if (nodes.length > 0) {
+            nodes.sort(sortByDistance);
+            // get closest node
+            var node = nodes[0];
+
+            var disallowModification =
+                node.geometry instanceof Label ||
+                node.geometry instanceof Mask ||
+                node.geometry instanceof Circle ||
+                !this.regions_.renderFeature(node.feature);
+            if (!disallowModification) {
+                var closestSegment = node.segment;
+                var vertex =
+                    (closestOnSegment(
+                        pixelCoordinate,closestSegment));
+                var vertexPixel = map.getPixelFromCoordinate(vertex);
+
+                if (Math.sqrt(squaredDistance(pixel, vertexPixel)) <=
+                    this.pixelTolerance_) {
+                        var pixel1 = map.getPixelFromCoordinate(closestSegment[0]);
+                        var pixel2 = map.getPixelFromCoordinate(closestSegment[1]);
+                        var squaredDist1 =
+                            squaredDistance(vertexPixel, pixel1);
+                        var squaredDist2 =
+                            squaredDistance(vertexPixel, pixel2);
+                        var dist = Math.sqrt(Math.min(squaredDist1, squaredDist2));
+                        this.snappedToVertex_ = dist <= this.pixelTolerance_;
+
+                        // for rectangles we force snap to vertex
+                        // to only be able to drag them at one of the vertices
+                        // this.snappedToVertex_ is True if we are near to handle
+                        if ((node.geometry instanceof Rectangle ||
+                            node.geometry instanceof Ellipse ||
+                            node.geometry instanceof Line) &&
+                            !this.snappedToVertex_) return;
+
+                        if (this.snappedToVertex_) {
+                            vertex = squaredDist1 > squaredDist2 ?
+                            closestSegment[1] : closestSegment[0];
+                        }
+
+                        this.createOrUpdateVertexFeature_(vertex);
+                        var vertexSegments = {};
+                        vertexSegments[getUid(closestSegment)] = true;
+                        var segment;
+                        for (var i = 1, ii = nodes.length; i < ii; ++i) {
+                            segment = nodes[i].segment;
+                            if ((equals(closestSegment[0], segment[0]) &&
+                                equals(closestSegment[1], segment[1]) ||
+                                (equals(closestSegment[0], segment[1]) &&
+                                equals(closestSegment[1], segment[0])))) {
+                                        vertexSegments[getUid(segment)] = true;
+                            } else break;
+                        }
+                        this.vertexSegments_ = vertexSegments;
+                        this.regions_['is_modified'] = true;
+                        return;
+                }
             }
         }
-    }
 
-    // remove if we are not within a feature's bounding box
-    if (this.vertexFeature_) {
-        this.regions_['is_modified'] = false;
-        this.overlay_.getSource().removeFeature(this.vertexFeature_);
-        this.vertexFeature_ = null;
+        // remove if we are not within a feature's bounding box
+        if (this.vertexFeature_) {
+            this.regions_['is_modified'] = false;
+            this.overlay_.getSource().removeFeature(this.vertexFeature_);
+            this.vertexFeature_ = null;
+        }
+    };
+
+    handlePointerEvent(mapBrowserEvent) {
+        if (!(/** @type {import("../MapBrowserPointerEvent.js").default} */ (mapBrowserEvent).pointerEvent)) {
+            return true;
+        }
+
+        var stopEvent = false;
+        this.updateTrackedPointers_(mapBrowserEvent);
+        if (this.handlingDownUpSequence) {
+            if (mapBrowserEvent.type == MapBrowserEventType.POINTERDRAG) {
+                this.handleDragEvent(mapBrowserEvent);
+            } else if (mapBrowserEvent.type == MapBrowserEventType.POINTERUP) {
+                var handledUp = this.handleUpEvent(mapBrowserEvent);
+                this.handlingDownUpSequence = handledUp && this.targetPointers.length > 0;
+            }
+        } else {
+            if (mapBrowserEvent.type == MapBrowserEventType.POINTERDOWN) {
+                var handled = this.handleDownEvent(mapBrowserEvent);
+                if (handled) {
+                    mapBrowserEvent.preventDefault();
+                }
+                this.handlingDownUpSequence = handled;
+                stopEvent = this.stopDown(handled);
+            } else if (mapBrowserEvent.type == MapBrowserEventType.POINTERMOVE) {
+            this.handleMoveEvent(mapBrowserEvent);
+            }
+        }
+        return !stopEvent;
+    };
+
+    /**
+     * Removes a vertex from all matching features
+     *
+     * @return {boolean} True when a vertex was removed.
+     * @private
+     */
+    removeVertex_() {
+        var dragSegments = this.dragSegments_;
+        var segmentsByFeature = {};
+        var deleted = false;
+        var component, coordinates, dragSegment, geometry, i, index, left;
+        var newIndex, right, segmentData, uid;
+    
+        for (i = dragSegments.length - 1; i >= 0; --i) {
+            dragSegment = dragSegments[i];
+            segmentData = dragSegment[0];
+            uid = getUid(segmentData.feature);
+            if (segmentData.depth) {
+                // separate feature components
+                uid += '-' + segmentData.depth.join('-');
+            }
+            if (!(uid in segmentsByFeature)) {
+                segmentsByFeature[uid] = {};
+            }
+            if (dragSegment[1] === 0) {
+                segmentsByFeature[uid].right = segmentData;
+                segmentsByFeature[uid].index = segmentData.index;
+            } else if (dragSegment[1] == 1) {
+                segmentsByFeature[uid].left = segmentData;
+                segmentsByFeature[uid].index = segmentData.index + 1;
+            }
+        }
+    
+        for (uid in segmentsByFeature) {
+            right = segmentsByFeature[uid].right;
+            left = segmentsByFeature[uid].left;
+            index = segmentsByFeature[uid].index;
+            newIndex = index - 1;
+            if (left !== undefined) {
+                segmentData = left;
+            } else {
+                segmentData = right;
+            }
+            if (newIndex < 0) {
+                newIndex = 0;
+            }
+            geometry = segmentData.geometry;
+            coordinates = geometry.getCoordinates();
+            component = coordinates;
+            deleted = false;
+            var potentialTransform = geometry.getTransform();
+            switch (geometry.getType()) {
+                case GeometryType.MULTI_LINE_STRING:
+                    if (coordinates[segmentData.depth[0]].length > 2) {
+                        coordinates[segmentData.depth[0]].splice(index, 1);
+                        deleted = true;
+                    }
+                    break;
+                case GeometryType.LINE_STRING:
+                    if (coordinates.length > 2) {
+                        coordinates.splice(index, 1);
+                        deleted = true;
+                        if (potentialTransform) {
+                            this.setGeometryCoordinates_(geometry, coordinates);
+                            var tmp =
+                                new Line(
+                                    geometry.getInvertedCoordinates(),
+                                    geometry.has_start_arrow_,
+                                    geometry.has_end_arrow_,
+                                    potentialTransform);
+                            geometry.initial_coords_ = tmp.getLineCoordinates();
+                        }
+                    }
+                    break;
+                case GeometryType.MULTI_POLYGON:
+                    component = component[segmentData.depth[1]];
+                    /* falls through */
+                case GeometryType.POLYGON:
+                    component = component[segmentData.depth[0]];
+                    if (component.length > 4) {
+                        if (index == component.length - 1) {
+                            index = 0;
+                        }
+                    component.splice(index, 1);
+                    deleted = true;
+                    if (index === 0) {
+                        // close the ring again
+                        component.pop();
+                        component.push(component[0]);
+                        newIndex = component.length - 1;
+                    }
+                    if (potentialTransform) {
+                        this.setGeometryCoordinates_(geometry, coordinates);
+                        var tmp =
+                            new Polygon(
+                                geometry.getInvertedCoordinates(),
+                                potentialTransform);
+                        geometry.initial_coords_ = tmp.getPolygonCoordinates();
+                    }
+                }
+                break;
+                default:
+                // pass
+            }
+    
+            if (deleted) {
+                this.setGeometryCoordinates_(geometry, coordinates);
+                var segments = [];
+                if (left !== undefined) {
+                    this.rBush_.remove(left);
+                    segments.push(left.segment[0]);
+                }
+                if (right !== undefined) {
+                    this.rBush_.remove(right);
+                    segments.push(right.segment[1]);
+                }
+                if (left !== undefined && right !== undefined) {
+                    var newSegmentData = /** @type {ol.ModifySegmentDataType} */ ({
+                        depth: segmentData.depth,
+                        feature: segmentData.feature,
+                        geometry: segmentData.geometry,
+                        index: newIndex,
+                        segment: segments
+                    });
+                    this.rBush_.insert(
+                        boundingExtent(newSegmentData.segment),
+                        newSegmentData);
+                }
+                this.updateSegmentIndices_(geometry, index, segmentData.depth, -1);
+                if (this.vertexFeature_) {
+                    this.overlay_.getSource().removeFeature(this.vertexFeature_);
+                    this.vertexFeature_ = null;
+                }
+                dragSegments.length = 0;
+            }
+        }
+        return deleted;
     }
-};
+}
 
 /**
  * Overridden method
@@ -419,36 +582,6 @@ const handleUpEvent_ = function(mapBrowserEvent) {
     return false;
 };
 
-Modify.prototype.handlePointerEvent = function handlePointerEvent (mapBrowserEvent) {
-    if (!(/** @type {import("../MapBrowserPointerEvent.js").default} */ (mapBrowserEvent).pointerEvent)) {
-      return true;
-    }
-
-    var stopEvent = false;
-    this.updateTrackedPointers_(mapBrowserEvent);
-    if (this.handlingDownUpSequence) {
-      if (mapBrowserEvent.type == MapBrowserEventType.POINTERDRAG) {
-        this.handleDragEvent(mapBrowserEvent);
-      } else if (mapBrowserEvent.type == MapBrowserEventType.POINTERUP) {
-        var handledUp = this.handleUpEvent(mapBrowserEvent);
-        this.handlingDownUpSequence = handledUp && this.targetPointers.length > 0;
-      }
-    } else {
-      if (mapBrowserEvent.type == MapBrowserEventType.POINTERDOWN) {
-        var handled = this.handleDownEvent(mapBrowserEvent);
-        if (handled) {
-          mapBrowserEvent.preventDefault();
-        }
-        this.handlingDownUpSequence = handled;
-        stopEvent = this.stopDown(handled);
-      } else if (mapBrowserEvent.type == MapBrowserEventType.POINTERMOVE) {
-        this.handleMoveEvent(mapBrowserEvent);
-      }
-    }
-    return !stopEvent;
-  };
-
-
 /**
  * Handles the {@link ol.MapBrowserEvent map browser event} and may modify the
  * geometry.
@@ -496,146 +629,6 @@ const handleEvent = function(mapBrowserEvent) {
 
     // This will call handleDragEvent etc as needed
     return Pointer.prototype.handleEvent.call(this, mapBrowserEvent) && !handled;
-};
-
-/**
- * Removes a vertex from all matching features
- *
- * @return {boolean} True when a vertex was removed.
- * @private
- */
-Modify.prototype.removeVertex_ = function() {
-    var dragSegments = this.dragSegments_;
-    var segmentsByFeature = {};
-    var deleted = false;
-    var component, coordinates, dragSegment, geometry, i, index, left;
-    var newIndex, right, segmentData, uid;
-
-    for (i = dragSegments.length - 1; i >= 0; --i) {
-        dragSegment = dragSegments[i];
-        segmentData = dragSegment[0];
-        uid = getUid(segmentData.feature);
-        if (segmentData.depth) {
-            // separate feature components
-            uid += '-' + segmentData.depth.join('-');
-        }
-        if (!(uid in segmentsByFeature)) {
-            segmentsByFeature[uid] = {};
-        }
-        if (dragSegment[1] === 0) {
-            segmentsByFeature[uid].right = segmentData;
-            segmentsByFeature[uid].index = segmentData.index;
-        } else if (dragSegment[1] == 1) {
-            segmentsByFeature[uid].left = segmentData;
-            segmentsByFeature[uid].index = segmentData.index + 1;
-        }
-    }
-
-    for (uid in segmentsByFeature) {
-        right = segmentsByFeature[uid].right;
-        left = segmentsByFeature[uid].left;
-        index = segmentsByFeature[uid].index;
-        newIndex = index - 1;
-        if (left !== undefined) {
-            segmentData = left;
-        } else {
-            segmentData = right;
-        }
-        if (newIndex < 0) {
-            newIndex = 0;
-        }
-        geometry = segmentData.geometry;
-        coordinates = geometry.getCoordinates();
-        component = coordinates;
-        deleted = false;
-        var potentialTransform = geometry.getTransform();
-        switch (geometry.getType()) {
-            case GeometryType.MULTI_LINE_STRING:
-                if (coordinates[segmentData.depth[0]].length > 2) {
-                    coordinates[segmentData.depth[0]].splice(index, 1);
-                    deleted = true;
-                }
-                break;
-            case GeometryType.LINE_STRING:
-                if (coordinates.length > 2) {
-                    coordinates.splice(index, 1);
-                    deleted = true;
-                    if (potentialTransform) {
-                        this.setGeometryCoordinates_(geometry, coordinates);
-                        var tmp =
-                            new Line(
-                                geometry.getInvertedCoordinates(),
-                                geometry.has_start_arrow_,
-                                geometry.has_end_arrow_,
-                                potentialTransform);
-                        geometry.initial_coords_ = tmp.getLineCoordinates();
-                    }
-                }
-                break;
-            case GeometryType.MULTI_POLYGON:
-                component = component[segmentData.depth[1]];
-                /* falls through */
-            case GeometryType.POLYGON:
-                component = component[segmentData.depth[0]];
-                if (component.length > 4) {
-                    if (index == component.length - 1) {
-                        index = 0;
-                    }
-                component.splice(index, 1);
-                deleted = true;
-                if (index === 0) {
-                    // close the ring again
-                    component.pop();
-                    component.push(component[0]);
-                    newIndex = component.length - 1;
-                }
-                if (potentialTransform) {
-                    this.setGeometryCoordinates_(geometry, coordinates);
-                    var tmp =
-                        new Polygon(
-                            geometry.getInvertedCoordinates(),
-                            potentialTransform);
-                    geometry.initial_coords_ = tmp.getPolygonCoordinates();
-                }
-            }
-            break;
-            default:
-            // pass
-        }
-
-        if (deleted) {
-            this.setGeometryCoordinates_(geometry, coordinates);
-            var segments = [];
-            if (left !== undefined) {
-                this.rBush_.remove(left);
-                segments.push(left.segment[0]);
-            }
-            if (right !== undefined) {
-                this.rBush_.remove(right);
-                segments.push(right.segment[1]);
-            }
-            if (left !== undefined && right !== undefined) {
-                var newSegmentData = /** @type {ol.ModifySegmentDataType} */ ({
-                    depth: segmentData.depth,
-                    feature: segmentData.feature,
-                    geometry: segmentData.geometry,
-                    index: newIndex,
-                    segment: segments
-                });
-                this.rBush_.insert(
-                    boundingExtent(newSegmentData.segment),
-                    newSegmentData);
-            }
-            this.updateSegmentIndices_(geometry, index, segmentData.depth, -1);
-            if (this.vertexFeature_) {
-                this.overlay_.getSource().removeFeature(this.vertexFeature_);
-                this.vertexFeature_ = null;
-            }
-            dragSegments.length = 0;
-        }
-  }
-
-  return deleted;
 };
 
 export default Modify;
