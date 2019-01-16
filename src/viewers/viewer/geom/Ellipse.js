@@ -18,7 +18,6 @@
 
 import Polygon from 'ol/geom/Polygon';
 import SimpleGeometry from 'ol/geom/SimpleGeometry';
-import {inherits} from 'ol/util';
 import {applyTransform,
     convertMatrixToAffineTransform,
     convertAffineTransformIntoMatrix} from '../utils/Transform';
@@ -46,191 +45,202 @@ import {getLength} from '../utils/Regions';
  * The latter technique is used here since it's accurate enough and produces
  * a polygon of connected points which openlayers likes.
  *
- *
- * @constructor
  * @extends {ol.geom.Polygon}
- *
- * @param {number} cx the center x coordinate of the ellipse
- * @param {number} cy the center y coordinate of the ellipse
- * @param {number} rx the radius x distance of the ellipse
- * @param {number} ry the radius y distance of the ellipse
- * @param {Object=} transform an AffineTransform object according to omero marshal
  */
-const Ellipse = function(cx, cy, rx, ry, transform) {
-    // preliminary checks: are all mandatory paramters numeric
-    if (typeof cx !== 'number' || typeof cy !== 'number' ||
-            typeof rx !== 'number' || typeof ry !== 'number')
-        console.error("at least one ellipse param is not numeric!");
+class Ellipse extends Polygon {
 
     /**
-     * center x coordinate
-     * @type {number}
-     * @private
+     * @constructor
+     *
+     * @param {number} cx the center x coordinate of the ellipse
+     * @param {number} cy the center y coordinate of the ellipse
+     * @param {number} rx the radius x distance of the ellipse
+     * @param {number} ry the radius y distance of the ellipse
+     * @param {Object=} transform an AffineTransform object according to omero marshal
      */
-    this.cx_ = cx;
+    constructor(cx, cy, rx, ry, transform) {
+        // preliminary checks: are all mandatory paramters numeric
+        if (typeof cx !== 'number' || typeof cy !== 'number' ||
+                typeof rx !== 'number' || typeof ry !== 'number')
+            console.error("at least one ellipse param is not numeric!");
+
+        let step = 0.1;
+        super([getEllipseCoords(cx, cy, rx, ry, transform, step)]);
+
+        /**
+         * center x coordinate
+         * @type {number}
+         * @private
+         */
+        this.cx_ = cx;
+
+        /**
+         * center y coordinate
+         * @type {number}
+         * @private
+         */
+        this.cy_ = cy;
+
+        /**
+         * radius x distance
+         * @type {number}
+         * @private
+         */
+        this.rx_ = rx;
+
+        /**
+         * radius y distance
+         * @type {number}
+         * @private
+         */
+        this.ry_ = ry;
+
+        /**
+         * the transformation matrix of length 6
+         * @type {Array.<number>|null}
+         * @private
+         */
+        this.transform_ = convertAffineTransformIntoMatrix(transform);
+
+        /**
+         * the step size for plotting
+         * @type {number}
+         * @private
+         */
+        this.step_ = step;
+    }
 
     /**
-     * center y coordinate
-     * @type {number}
-     * @private
+     * Traces out the ellipse and returns the coords
+     * @return {Array.<number>} the coordinate array for the outline
      */
-    this.cy_ = cy;
+    getPolygonCoords() {
+        return getEllipseCoords(this.cx_,  this.cy_,  this.rx_,  this.ry_,
+            this.transform_, this.step_);
+    }
 
     /**
-     * radius x distance
-     * @type {number}
-     * @private
+     * Gets the transformation associated with the ellipse
+     * @return {Object|null} the AffineTransform object (omero marshal) or null
      */
-    this.rx_ = rx;
+    getTransform() {
+        return convertMatrixToAffineTransform(this.transform_);
+    }
 
     /**
-     * radius y distance
-     * @type {number}
-     * @private
+     * Gets the center of the ellipse in array form [cx,cy]
+     * @return {Array.<number>} the center of the ellipse as an array
      */
-    this.ry_ = ry;
+    getCenter() {
+        return [this.cx_,this.cy_] ;
+    }
 
     /**
-     * the transformation matrix of length 6
-     * @type {Array.<number>|null}
-     * @private
+     * Sets the center of the ellipse using a coordinate array [cx, cy]
+     *
+     * @param {Array.<number>} value the center of the ellipse as an array
      */
-    this.transform_ = convertAffineTransformIntoMatrix(transform);
+    setCenter(value) {
+        if (!isArray(value) ||
+            typeof value[0] !== 'number' || typeof value[1] !== 'number')
+                console.error(
+                    "the center needs to be given as a numeric array [cx,cy]");
+        this.cx_ = value[0];
+        this.cy_ = value[1];
+    }
 
     /**
-     * the step size for plotting
-     * @type {number}
+     * Gets the radius (distance x, distance y) of the ellipse in array form [rx,ry]
+     * @return {Array.<number>} the radius of the ellipse as an array
+     */
+    getRadius() {
+        return [this.rx_, this.ry_];
+    }
+
+    /**
+     * Sets the radius (distance x, distance y) of the ellipse in array form [rx,ry]
+     *
+     * @param {Array.<number>} value the radius of the ellipse as an array
+     */
+    setRadius(value) {
+        if (!isArray(value) ||
+            typeof value[0] !== 'number' || typeof value[1] !== 'number')
+                console.error("the radius needs to be given as a numeric array [cx,cy]");
+        this.rx_ = value[0];
+        this.ry_ = value[1];
+    }
+
+    /**
+     * First translate then store the newly translated coords
+     *
      * @private
      */
-    this.step_ = 0.1;
+    translate(deltaX, deltaY) {
+        // delegate
+        if (this.transform_) {
+                this.transform_[4] += deltaX;
+                this.transform_[5] -= deltaY;
+                this.setCoordinates([this.getPolygonCoords()]);
+        } else {
+            SimpleGeometry.prototype.translate.call(this, deltaX, deltaY);
+            this.setCenter([this.cx_ + deltaX, this.cy_ + deltaY]);
+        }
+    }
 
-    // call super and hand in our coordinate array
-    // goog.base(this, [this.getPolygonCoords()]);
-    Polygon.call(this, [this.getPolygonCoords()]);
+    /**
+     * First scale then store the newly scaled coords
+     *
+     * @private
+     */
+    scale(factor) {
+        // delegate
+        if (this.transform_) {
+            this.transform_[0] *= factor;
+            this.transform_[1] *= factor;
+            this.transform_[2] *= factor;
+            this.transform_[3] *= factor;
+            this.setCoordinates([this.getPolygonCoords()]);
+        } else {
+            SimpleGeometry.prototype.scale.call(this, factor);
+            var radius = this.getRadius();
+            this.setRadius([radius[0] * factor, radius[1] * factor])
+        }
+    }
+
+    /**
+     * Returns the length of the ellipse
+     *
+     * @return {number} the length of the ellipse
+     */
+    getLength() {
+        return getLength(this);
+    }
+
+    /**
+     * Make a complete copy of the geometry.
+     * @return {Ellipse} Clone.
+     */
+    clone() {
+        return new Ellipse(
+            this.cx_, this.cy_, this.rx_, this.ry_, this.getTransform());
+    }
 }
-inherits(Ellipse, Polygon);
 
 /**
  * Traces out the ellipse and returns the coords
  * @return {Array.<number>} the coordinate array for the outline
  */
-Ellipse.prototype.getPolygonCoords = function() {
+function getEllipseCoords(cx, cy, rx, ry, transform, step) {
     // trace ellipse now and store coordinates
     var coords = [];
-    for (var i = 0 * Math.PI, ii=2*Math.PI; i < ii; i += this.step_) {
-        var x = this.cx_ + this.rx_ * Math.cos(i);
-        var y = this.cy_ + this.ry_ * Math.sin(i);
-        coords.push(applyTransform(this.transform_, [x, y]));
+    for (var i = 0 * Math.PI, ii=2*Math.PI; i < ii; i += step) {
+        var x = cx + rx * Math.cos(i);
+        var y = cy + ry * Math.sin(i);
+        coords.push(applyTransform(transform, [x, y]));
     }
     if (coords.length > 0) coords.push(coords[0]); // close polygon
 
     return coords;
 }
-
-/**
- * Gets the transformation associated with the ellipse
- * @return {Object|null} the AffineTransform object (omero marshal) or null
- */
-Ellipse.prototype.getTransform = function() {
-    return convertMatrixToAffineTransform(this.transform_);
-}
-
-/**
- * Gets the center of the ellipse in array form [cx,cy]
- * @return {Array.<number>} the center of the ellipse as an array
- */
-Ellipse.prototype.getCenter = function() {
-    return [this.cx_,this.cy_] ;
-}
-
-/**
- * Sets the center of the ellipse using a coordinate array [cx, cy]
- *
- * @param {Array.<number>} value the center of the ellipse as an array
- */
-Ellipse.prototype.setCenter = function(value) {
-    if (!isArray(value) ||
-        typeof value[0] !== 'number' || typeof value[1] !== 'number')
-            console.error(
-                "the center needs to be given as a numeric array [cx,cy]");
-    this.cx_ = value[0];
-    this.cy_ = value[1];
-}
-
-/**
- * Gets the radius (distance x, distance y) of the ellipse in array form [rx,ry]
- * @return {Array.<number>} the radius of the ellipse as an array
- */
-Ellipse.prototype.getRadius = function() {
-    return [this.rx_, this.ry_];
-}
-
-/**
- * Sets the radius (distance x, distance y) of the ellipse in array form [rx,ry]
- *
- * @param {Array.<number>} value the radius of the ellipse as an array
- */
-Ellipse.prototype.setRadius = function(value) {
-    if (!isArray(value) ||
-        typeof value[0] !== 'number' || typeof value[1] !== 'number')
-            console.error("the radius needs to be given as a numeric array [cx,cy]");
-    this.rx_ = value[0];
-    this.ry_ = value[1];
-}
-
-/**
- * First translate then store the newly translated coords
- *
- * @private
- */
-Ellipse.prototype.translate = function(deltaX, deltaY) {
-    // delegate
-    if (this.transform_) {
-            this.transform_[4] += deltaX;
-            this.transform_[5] -= deltaY;
-            this.setCoordinates([this.getPolygonCoords()]);
-    } else {
-        SimpleGeometry.prototype.translate.call(this, deltaX, deltaY);
-        this.setCenter([this.cx_ + deltaX, this.cy_ + deltaY]);
-    }
-};
-
-/**
- * First scale then store the newly scaled coords
- *
- * @private
- */
-Ellipse.prototype.scale = function(factor) {
-    // delegate
-    if (this.transform_) {
-        this.transform_[0] *= factor;
-        this.transform_[1] *= factor;
-        this.transform_[2] *= factor;
-        this.transform_[3] *= factor;
-        this.setCoordinates([this.getPolygonCoords()]);
-    } else {
-        SimpleGeometry.prototype.scale.call(this, factor);
-        var radius = this.getRadius();
-        this.setRadius([radius[0] * factor, radius[1] * factor])
-    }
-};
-
-/**
- * Returns the length of the ellipse
- *
- * @return {number} the length of the ellipse
- */
-Ellipse.prototype.getLength = function() {
-    return getLength(this);
-}
-
-/**
- * Make a complete copy of the geometry.
- * @return {Ellipse} Clone.
- */
-Ellipse.prototype.clone = function() {
-    return new Ellipse(
-        this.cx_, this.cy_, this.rx_, this.ry_, this.getTransform());
-};
 
 export default Ellipse;
