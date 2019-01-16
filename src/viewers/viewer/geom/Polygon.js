@@ -18,7 +18,6 @@
 
 import OlPolygon from 'ol/geom/Polygon';
 import SimpleGeometry from 'ol/geom/SimpleGeometry';
-import {inherits} from 'ol/util';
 import {isArray} from '../utils/Misc';
 import {getLength} from '../utils/Regions';
 import {applyTransform,
@@ -31,109 +30,110 @@ import {applyTransform,
  * Polygon is an extension of the built-in ol.geom.Polygon to be able
  * to use affine transformations
  *
- *
- * @constructor
  * @extends {ol.geom.Polygon}
- *
- * @param {Array.<Array>} coords the coordinates for the polygon
- * @param {Object=} transform an AffineTransform object according to omero marshal
  */
-const Polygon = function(coords, transform) {
-    // preliminary checks: are all mandatory paramters numeric
-    if (!isArray(coords) || coords.length === 0)
-        console.error("Polygon needs a non-empty array of coordinates!");
+class Polygon extends OlPolygon {
 
     /**
-     * the initial coordinates as a flat array
-     * @type {Array.<number>}
-     * @private
+     * @constructor
+     *
+     * @param {Array.<Array>} coords the coordinates for the polygon
+     * @param {Object=} transform an AffineTransform object according to omero marshal
      */
-    this.initial_coords_ = null;
+    constructor(coords, transform) {
+        // preliminary checks: are all mandatory paramters numeric
+        if (!isArray(coords) || coords.length === 0)
+            console.error("Polygon needs a non-empty array of coordinates!");
+
+        super(coords);
+
+        /**
+         * the initial coordinates as a flat array
+         * @type {Array.<number>}
+         * @private
+         */
+        this.initial_coords_ = null;
+
+        /**
+         * the transformation matrix of length 6
+         * @type {Array.<number>|null}
+         * @private
+         */
+        this.transform_ = convertAffineTransformIntoMatrix(transform);
+
+        this.initial_coords_ = this.getFlatCoordinates();
+
+        // apply potential transform
+        this.flatCoordinates = applyTransform(this.transform_, this.initial_coords_);
+    }
 
     /**
-     * the transformation matrix of length 6
-     * @type {Array.<number>|null}
+     * Returns the coordinates as a flat array (excl. any potential transform)
+     * @return {Array.<number>} the coordinates as a flat array
+     */
+    getPolygonCoordinates() {
+        return (
+            this.transform_ ? this.initial_coords_ : this.getFlatCoordinates()
+        );
+    }
+
+    /**
+     * Gets the transformation associated with the polygon
+     * @return {Object|null} the AffineTransform object (omero marshal) or null
+     */
+    getTransform() {
+        return convertMatrixToAffineTransform(this.transform_);
+    }
+
+    /**
+     * First translate then store the newly translated coords
+     *
      * @private
      */
-    this.transform_ = convertAffineTransformIntoMatrix(transform);
+    translate(deltaX, deltaY) {
+        // delegate
+        if (this.transform_) {
+            this.transform_[4] += deltaX;
+            this.transform_[5] -= deltaY;
+            this.flatCoordinates = applyTransform(
+                    this.transform_, this.initial_coords_);
+            this.changed();
+        } else SimpleGeometry.prototype.translate.call(this, deltaX, deltaY);
+    };
 
-    // call super and hand in our coordinate array
-    // goog.base(this, coords);
-    OlPolygon.call(this, coords);
-    this.initial_coords_ = this.getFlatCoordinates();
+    /**
+     * Returns the coordinates after (potentially) inverting a transformation
+     * @return {Array} the coordinate array
+     */
+    getInvertedCoordinates() {
+        if (this.transform_ === null) return this.getCoordinates();
 
-    // apply potential transform
-    this.flatCoordinates = applyTransform(this.transform_, this.initial_coords_);
-}
-inherits(Polygon, OlPolygon);
+        var coords = this.getCoordinates();
+        var invCoords = new Array(coords[0].length);
+        for (var i=0;i<coords[0].length;i++)
+            invCoords[i] = applyInverseTransform(
+                    this.transform_, coords[0][i]);
 
+        return [invCoords];
+    }
 
-/**
- * Returns the coordinates as a flat array (excl. any potential transform)
- * @return {Array.<number>} the coordinates as a flat array
- */
-Polygon.prototype.getPolygonCoordinates = function() {
-    return (
-        this.transform_ ? this.initial_coords_ : this.getFlatCoordinates()
-    );
-}
+    /**
+     * Make a complete copy of the geometry.
+     * @return {Polygon} Clone.
+     */
+    clone() {
+        return new Polygon(
+                this.getInvertedCoordinates(), this.getTransform());
+    };
 
-/**
- * Gets the transformation associated with the polygon
- * @return {Object|null} the AffineTransform object (omero marshal) or null
- */
-Polygon.prototype.getTransform = function() {
-    return convertMatrixToAffineTransform(this.transform_);
-}
-
-/**
- * First translate then store the newly translated coords
- *
- * @private
- */
-Polygon.prototype.translate = function(deltaX, deltaY) {
-    // delegate
-    if (this.transform_) {
-        this.transform_[4] += deltaX;
-        this.transform_[5] -= deltaY;
-        this.flatCoordinates = applyTransform(
-                this.transform_, this.initial_coords_);
-        this.changed();
-    } else SimpleGeometry.prototype.translate.call(this, deltaX, deltaY);
-};
-
-/**
- * Returns the coordinates after (potentially) inverting a transformation
- * @return {Array} the coordinate array
- */
-Polygon.prototype.getInvertedCoordinates = function() {
-    if (this.transform_ === null) return this.getCoordinates();
-
-    var coords = this.getCoordinates();
-    var invCoords = new Array(coords[0].length);
-    for (var i=0;i<coords[0].length;i++)
-        invCoords[i] = applyInverseTransform(
-                this.transform_, coords[0][i]);
-
-    return [invCoords];
-}
-
-/**
- * Make a complete copy of the geometry.
- * @return {Polygon} Clone.
- */
-Polygon.prototype.clone = function() {
-    return new Polygon(
-            this.getInvertedCoordinates(), this.getTransform());
-};
-
-/**
- * Returns the length of the polygon
- *
- * @return {number} the length of the polygon
- */
-Polygon.prototype.getLength = function() {
-    return getLength(this);
+    /**
+     * Returns the length of the polygon
+     *
+     * @return {number} the length of the polygon
+     */
+    getLength() {
+        return getLength(this);
+    }
 }
 
 export default Polygon;
