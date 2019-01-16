@@ -19,7 +19,6 @@ import DragBox from 'ol/interaction/DragBox';
 import {listen,
     unlistenByKey} from 'ol/events';
 import {platformModifierKeyOnly} from 'ol/events/condition';
-import {inherits} from 'ol/util';
 import Regions from '../source/Regions';
 
 /**
@@ -27,97 +26,99 @@ import Regions from '../source/Regions';
  * Extends the built in dragbox interaction to make it more custom in terms of keys
  * and add the appropriate boxstart and boxend handlers straight away
  *
- * @constructor
  * @extends {ol.interaction.DragBox}
  * @fires ol.interaction.DragBox.Event
- * @param {source.Regions} regions_reference a reference to get to all (selected) rois
  */
-const BoxSelect = function(regions_reference) {
-    if (!(regions_reference instanceof Regions))
-        console.error("Select needs Regions instance!");
-    // super
-    // goog.base(this);
-    DragBox.call(this);
+class BoxSelect extends DragBox {
 
     /**
-     * @private
-     * @type {ol.events.ConditionType}
+     * @constructor
+     * @param {source.Regions} regions_reference a reference to get to all (selected) rois
      */
-    this.condition_ = platformModifierKeyOnly;
+    constructor(regions_reference) {
+        if (!(regions_reference instanceof Regions))
+            console.error("Select needs Regions instance!");
+        super();
 
-    // we do need the regions reference to get the (selected) rois
-    if (!(regions_reference instanceof Regions)) return;
+        /**
+         * @private
+         * @type {ol.events.ConditionType}
+         */
+        this.condition_ = platformModifierKeyOnly;
 
-    /**
-     * a reference to the Regions instance
-     * @private
-     * @type {source.Regions}
-     */
-    this.regions_ = regions_reference;
+        // we do need the regions reference to get the (selected) rois
+        if (!(regions_reference instanceof Regions)) return;
 
-    /**
-     * the box start listener
-     * @private
-     * @type {function}
-     */
-    this.boxStartFunction_ =
-        function() {
-            if (this.regions_.select_) this.regions_.select_.clearSelection();
+        /**
+         * a reference to the Regions instance
+         * @private
+         * @type {source.Regions}
+         */
+        this.regions_ = regions_reference;
+
+        /**
+         * the box start listener
+         * @private
+         * @type {function}
+         */
+        this.boxStartFunction_ =
+            function() {
+                if (this.regions_.select_) this.regions_.select_.clearSelection();
+            };
+        this.boxStartListener_ = null;
+
+        /**
+         * the box end listener
+         * @private
+         * @type {function}
+         */
+        this.boxEndFunction_ = function() {
+            if (this.regions_.select_ === null) return;
+
+            var ids = [];
+            var extent = this.getGeometry().getExtent();
+            this.regions_.forEachFeatureInExtent(
+                extent, function(feature) {
+                    if (feature.getGeometry().intersectsExtent(extent))
+                        ids.push(feature.getId());
+                });
+            if (ids.length > 0) this.regions_.setProperty(ids, "selected", true);
         };
-    this.boxStartListener_ = null;
+        this.boxEndListener_ = null;
+
+        this.registerListeners = function() {
+            this.boxStartListener_ =
+                listen(this, 'boxstart', this.boxStartFunction_, this);
+            this.boxEndListener_ =
+                listen(this, 'boxend', this.boxEndFunction_, this);
+        };
+
+        this.registerListeners();
+    };
 
     /**
-     * the box end listener
-     * @private
-     * @type {function}
+     * Register the start/end listeners
      */
-   this.boxEndFunction_ = function() {
-        if (this.regions_.select_ === null) return;
+    resetListeners() {
+        this.unregisterListeners();
+        this.registerListeners();
+    }
 
-        var ids = [];
-        var extent = this.getGeometry().getExtent();
-        this.regions_.forEachFeatureInExtent(
-            extent, function(feature) {
-                if (feature.getGeometry().intersectsExtent(extent))
-                    ids.push(feature.getId());
-            });
-        if (ids.length > 0) this.regions_.setProperty(ids, "selected", true);
-    };
-    this.boxEndListener_ = null;
+    /**
+     * Unregister the start/end listeners
+     */
+    unregisterListeners() {
+        if (this.boxStartListener_) unlistenByKey(this.boxStartListener_);
+        if (this.boxEndListener_) unlistenByKey(this.boxEndListener_);
+    }
 
-    this.registerListeners = function() {
-        this.boxStartListener_ =
-            listen(this, 'boxstart', this.boxStartFunction_, this);
-        this.boxEndListener_ =
-            listen(this, 'boxend', this.boxEndFunction_, this);
-    };
-
-    this.registerListeners();
-};
-inherits(BoxSelect, DragBox);
-
-/**
- * Register the start/end listeners
- */
-BoxSelect.prototype.resetListeners = function() {
-    this.unregisterListeners();
-    this.registerListeners();
-}
-
-/**
- * Unregister the start/end listeners
- */
-BoxSelect.prototype.unregisterListeners = function() {
-    if (this.boxStartListener_) unlistenByKey(this.boxStartListener_);
-    if (this.boxEndListener_) unlistenByKey(this.boxEndListener_);
-}
-
-/**
- * a sort of desctructor
- */
-BoxSelect.prototype.disposeInternal = function() {
-    this.unregisterListeners();
-    this.regions_ = null;
+    /**
+     * a sort of desctructor
+     */
+    disposeInternal() {
+        this.unregisterListeners();
+        this.regions_ = null;
+    }
 }
 
 export default BoxSelect;
