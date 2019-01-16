@@ -18,25 +18,28 @@
 
 import {shiftKeyOnly} from 'ol/events/condition';
 import DragRotate from 'ol/interaction/DragRotate';
-import {inherits} from 'ol/util';
 
 /**
- * @classdesc
- * Extension that is necessary to override key condition to be SHIFT key only
- *
- * @constructor
- * @extends {ol.interaction.DragRotate}
- */
-const Rotate = function() {
-  // goog.base(this);
-  DragRotate.superClass_.constructor.call(this);
+* @classdesc
+* Extension that is necessary to override key condition to be SHIFT key only
+*
+* @constructor
+* @extends {ol.interaction.DragRotate}
+*/
+class Rotate extends DragRotate {
 
-  /**
-   * @private
-   * @type {ol.events.ConditionType}
-   */
-   this.condition_ = shiftKeyOnly;
-};
-inherits(Rotate, DragRotate);
+    /**
+    * @constructor
+    */
+    constructor() {
+        super();
+
+        /**
+        * @private
+        * @type {ol.events.ConditionType}
+        */
+        this.condition_ = shiftKeyOnly;
+    };
+}
 
 export default Rotate;
