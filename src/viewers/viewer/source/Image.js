@@ -57,6 +57,12 @@ import {isArray} from '../utils/Misc';
  *
  * Note: Properties plane, time and channels have setters as well
  *       since they can change at runtime
+ * 
+ * NB: Tried to update this class to ES6 but
+ * this fails because we need to create a tileUrlFunction() that is needed for super()
+ * but this function cannot use 'this' because we can't use 'this' before super().
+ * So, tileUrlFunction() cannot use any class variables and any changes made
+ * to e.g. time index or Z section etc after init are ignored by tileUrlFunction().
  *
  * @constructor
  * @extends {ol.source.TileImage}
