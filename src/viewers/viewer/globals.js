@@ -440,13 +440,3 @@ export const defaultInteractions = function() {
     };
     return ret;
 };
-
-// goog.exportSymbol(
-//     'ome.ol3.REGIONS_MODE',
-//     ome.ol3.REGIONS_MODE,
-//     OME);
-
-// goog.exportSymbol(
-//     'ome.ol3.UNTILED_RETRIEVAL_LIMIT',
-//     ome.ol3.UNTILED_RETRIEVAL_LIMIT,
-//     OME);
