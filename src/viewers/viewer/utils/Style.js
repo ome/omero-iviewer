@@ -24,7 +24,10 @@ import Fill from 'ol/style/Fill';
 import Stroke from 'ol/style/Stroke';
 import Text from 'ol/style/Text';
 import {WEBGATEWAY,
-    REGIONS_STATE} from '../globals'; 
+    REGIONS_STATE,
+    DEFAULT_LINE_CAP,
+    DEFAULT_LINE_JOIN,
+    DEFAULT_MITER_LIMIT} from '../globals';
 import {TRANSPARENT_PLACEHOLDER} from './Conversion';
 import Regions from '../source/Regions';
 import Label from '../geom/Label';
@@ -81,9 +84,9 @@ export const createFeatureStyle = function(shape_info, is_label, fill_in_default
     }
     if (stroke['count'] > 0) {
         // we need to set some sensible defaults for the following
-        stroke['lineCap'] = "butt";
-        stroke['lineJoin'] = "miter";
-        stroke['miterLimit'] = 20;
+        stroke['lineCap'] = DEFAULT_LINE_CAP;
+        stroke['lineJoin'] = DEFAULT_LINE_JOIN;
+        stroke['miterLimit'] = DEFAULT_MITER_LIMIT;
     }
 
     // instantiate style objects
@@ -144,7 +147,8 @@ export const createFeatureStyle = function(shape_info, is_label, fill_in_default
     if (forLabel) { // the workaround for mere labels
         style['stroke'] = new Stroke(
             {'color': "rgba(255,255,255,0)", 'width': 1,
-             'lineCap' : "butt", 'lineJoin' : "miter", 'miterLimit' : 20
+             'lineCap' : DEFAULT_LINE_CAP, 'lineJoin' : DEFAULT_LINE_JOIN,
+             'miterLimit' : DEFAULT_MITER_LIMIT
             });
         style['fill'] = new Fill({'color': "rgba(255,255,255,0)"});
     }
@@ -330,14 +334,16 @@ export const updateStyleFunction =
                     (geom.has_start_arrow_ || geom.has_end_arrow_)) {
 
                 var lineStroke = oldStyle.getStroke();
-                var strokeWidth = lineStroke.getWidth() || 1;
                 var arrowBaseWidth = 15 * actual_resolution;
 
                 // determine which arrows we need
                 var arrowsToDo = [];
                 if (geom.has_end_arrow_) arrowsToDo.push(true);
                 if (geom.has_start_arrow_) arrowsToDo.push(false);
-
+                // make sure arrow is pointy, not rounded.
+                lineStroke.setLineCap(DEFAULT_LINE_CAP);
+                lineStroke.setLineJoin(DEFAULT_LINE_JOIN);
+                lineStroke.setMiterLimit(DEFAULT_MITER_LIMIT);
                 // create arrow head with styling
                 for (var a in arrowsToDo) {
                     var isHeadArrow = arrowsToDo[a];

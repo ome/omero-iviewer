@@ -36,7 +36,10 @@ import Regions from '../source/Regions';
 import {getUid} from 'ol/util';
 import {isArray,
     sendEventNotification} from '../utils/Misc';
-import {REGIONS_STATE} from '../globals';
+import {REGIONS_STATE,
+    DEFAULT_LINE_CAP,
+    DEFAULT_LINE_JOIN,
+    DEFAULT_MITER_LIMIT} from '../globals';
 import {updateStyleFunction,
     measureTextDimensions} from '../utils/Style';
 import {toJsonObject,
@@ -355,9 +358,9 @@ class Draw {
                     shape['StrokeWidth'] !== null &&
                     typeof shape['StrokeWidth']['Value'] === 'number') ?
                         shape['StrokeWidth']['Value'] : 1,
-            'lineCap': "butt",
-            'lineJoin': "miter",
-            'miterLimit': 20
+            'lineCap': DEFAULT_LINE_CAP,
+            'lineJoin': DEFAULT_LINE_JOIN,
+            'miterLimit': DEFAULT_MITER_LIMIT
         };
         if (defaultStroke['color'] === null) defaultStroke['color'] = blue;
         else defaultStroke['color'] =
