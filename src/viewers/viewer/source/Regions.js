@@ -398,15 +398,15 @@ class Regions extends Vector {
         // this gets rid of any existing modifies but leaves select
         removeModifyInteractions.call(this, true);
 
-        // if (translateMode) { // remove mutually exclusive interactions
-        //     removeDrawInteractions.call(this);
-        //     addSelectInteraction.call(this);
-        //     if (this.translate_ === null) {
-        //         this.translate_ = new Translate(this);
-        //         this.viewer_.viewer_.addInteraction(this.translate_);
-        //     }
-        //     this.present_modes_.push(REGIONS_MODE.TRANSLATE);
-        // }
+        if (translateMode) { // remove mutually exclusive interactions
+            removeDrawInteractions.call(this);
+            addSelectInteraction.call(this);
+            if (this.translate_ === null) {
+                this.translate_ = new Translate(this);
+                this.viewer_.viewer_.addInteraction(this.translate_);
+            }
+            this.present_modes_.push(REGIONS_MODE.TRANSLATE);
+        }
 
         // We add Modify (edit shapes by dragging handles) *after*
         // Translate so that the handles are *above* the draggable shape
@@ -418,17 +418,6 @@ class Regions extends Vector {
                 this.viewer_.viewer_.addInteraction(this.modify_);
             }
             this.present_modes_.push(REGIONS_MODE.MODIFY);
-        }
-
-        console.log('translateMode', translateMode, 'selectMode', selectMode);
-        if (translateMode) { // remove mutually exclusive interactions
-            removeDrawInteractions.call(this);
-            addSelectInteraction.call(this);
-            if (this.translate_ === null) {
-                this.translate_ = new Translate(this);
-                this.viewer_.viewer_.addInteraction(this.translate_);
-            }
-            this.present_modes_.push(REGIONS_MODE.TRANSLATE);
         }
 
         if (selectMode) { // remove mutually exclusive interactions
