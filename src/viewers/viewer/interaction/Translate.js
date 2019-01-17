@@ -21,8 +21,8 @@ import {TranslateEvent} from 'ol/interaction/Translate';
 import Collection from 'ol/Collection';
 import {listen} from 'ol/events';
 import Regions from '../source/Regions';
-import Mask from '../geom/Mask';
 import Label from '../geom/Label';
+import Mask from '../geom/Mask';
 import {sendEventNotification} from '../utils/Misc';
 import {REGIONS_STATE} from '../globals';
 

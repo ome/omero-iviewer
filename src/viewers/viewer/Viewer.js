@@ -33,7 +33,6 @@ import OlMap from 'ol/Map';
 import {intersects, getCenter} from 'ol/extent';
 import {noModifierKeys, primaryAction} from 'ol/events/condition';
 
-import Mask from './geom/Mask';
 import Draw from './interaction/Draw';
 import {checkAndSanitizeServerAddress,
     isSameOrigin,
@@ -68,6 +67,7 @@ import {integrateStyleIntoJsonObject,
     LOOKUP} from './utils/Conversion';
 import OmeroImage from './source/Image';
 import Regions from './source/Regions';
+import Mask from './geom/Mask';
 
 /**
  * @classdesc

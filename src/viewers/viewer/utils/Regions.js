@@ -27,10 +27,10 @@ import Ellipse from '../geom/Ellipse';
 import Point from '../geom/Point';
 import Line from '../geom/Line';
 import Label from '../geom/Label';
-import Mask from '../geom/Mask';
 import Polygon from '../geom/Polygon';
 import Rectangle from '../geom/Rectangle';
 import Regions from '../source/Regions';
+import Mask from '../geom/Mask';
 import {REGIONS_STATE, UNITS_LENGTH} from '../globals';
 import {remedyStyleIfNecessary,
     remedyShapeInfoIfNecessary,

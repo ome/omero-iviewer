@@ -23,10 +23,10 @@ import Text from 'ol/style/Text';
 import Ellipse from '../geom/Ellipse';
 import Label from '../geom/Label'
 import Line from '../geom/Line';
-import Mask from '../geom/Mask';
 import Point from '../geom/Point';
 import Polygon from '../geom/Polygon';
 import Rectangle from '../geom/Rectangle';
+import Mask from '../geom/Mask';
 import {REGIONS_STATE} from '../globals';
 import {isArray} from './Misc';
 

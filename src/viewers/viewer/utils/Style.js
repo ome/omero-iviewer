@@ -31,8 +31,8 @@ import {WEBGATEWAY,
 import {TRANSPARENT_PLACEHOLDER} from './Conversion';
 import Regions from '../source/Regions';
 import Label from '../geom/Label';
-import Mask from '../geom/Mask';
 import Line from '../geom/Line';
+import Mask from '../geom/Mask';
 import {isArray} from '../utils/Misc';
 import {convertSignedIntegerToColorObject,
     convertColorObjectToRgba} from './Conversion';

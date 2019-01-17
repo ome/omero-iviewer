@@ -39,13 +39,13 @@ import {squaredDistanceToSegment,
 import {click,
     noModifierKeys} from 'ol/events/condition';
 import Label from '../geom/Label';
-import Mask from '../geom/Mask';
 import Rectangle from '../geom/Rectangle';
 import Ellipse from '../geom/Ellipse';
 import Line from '../geom/Line';
 import Polygon from '../geom/Polygon';
 import Regions from '../source/Regions';
 import Select from '../interaction/Select';
+import Mask from '../geom/Mask';
 import {applyInverseTransform} from '../utils/Transform';
 import {sendEventNotification} from '../utils/Misc';
 import {REGIONS_STATE} from '../globals';
