@@ -31,6 +31,13 @@ import {REGIONS_STATE} from '../globals';
 import {isArray} from './Misc';
 
 /**
+ * We need to fill shapes with *some* color so that they are draggable
+ * but we don't want to save this back to the DB. By using this color
+ * for shapes with no fill, we can know not to save it to DB.
+ */
+export const TRANSPARENT_PLACEHOLDER = "rgba(1,1,1,0)";
+
+/**
  * Converts a color given as a rgb(a) string, e.g. 'rgba(255,255,255, 0.75)'
  * into an internal color object looking like this:
  *<pre>
@@ -623,8 +630,10 @@ export const integrateStyleIntoJsonObject = function(feature, jsonObject) {
         isLabel && presentStyle.getText() && presentStyle.getText().getFill() ?
             presentStyle.getText().getFill().getColor() :
                 presentStyle.getFill() ? presentStyle.getFill().getColor() : null;
-    if (presentFillColor)
+    // Don't save our placeholder fill (only used to make shapes draggable)
+    if (presentFillColor && presentFillColor !== TRANSPARENT_PLACEHOLDER){
         jsonObject['FillColor'] = convertColorToSignedInteger(presentFillColor);
+    }
 
     var presentStrokeStyle =
         isLabel && presentStyle.getText() && presentStyle.getText().getFill() ?

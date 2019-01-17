@@ -25,6 +25,7 @@ import Stroke from 'ol/style/Stroke';
 import Text from 'ol/style/Text';
 import {WEBGATEWAY,
     REGIONS_STATE} from '../globals'; 
+import {TRANSPARENT_PLACEHOLDER} from './Conversion';
 import Regions from '../source/Regions';
 import Label from '../geom/Label';
 import Mask from '../geom/Mask';
@@ -231,6 +232,12 @@ export const updateStyleFunction =
             // fetch view via regions reference
             if (!(feature['regions'] instanceof Regions))
                 return oldStyle; // we are screwed, return old setStyle
+
+            // OpenLayers5 doesn't allow you to drag (Translate) if no fill
+            if (oldStyle.getFill() == null) {
+                // fill with transparent placeholder (not saved)
+                oldStyle.setFill(new Fill({color: TRANSPARENT_PLACEHOLDER}));
+            }
 
             var regions = feature['regions'];
             var geom = feature.getGeometry();
