@@ -29,18 +29,11 @@ import DragZoom from 'ol/interaction/DragZoom';
 import DoubleClickZoom from 'ol/interaction/DoubleClickZoom';
 import PinchRotate from 'ol/interaction/PinchRotate';
 
-// import Plugins from 'ol/Plugins';
-import ImageLayer from 'ol/renderer/canvas/ImageLayer';
-import Map from 'ol/renderer/canvas/Map';
-import TileLayer from 'ol/renderer/canvas/TileLayer';
-import VectorLayer from 'ol/renderer/canvas/VectorLayer';
-import VectorTileLayer from 'ol/renderer/canvas/VectorTileLayer';
-
 import Zoom from './controls/Zoom';
 import BirdsEye from './controls/BirdsEye';
 import ScaleBar from './controls/ScaleBar';
 import IntensityDisplay from './controls/IntensityDisplay';
-import { Rotate as RotateInteraction } from './interaction/Rotate';
+import RotateInteraction from './interaction/Rotate';
 import BoxSelect from './interaction/BoxSelect';
 
 /**
