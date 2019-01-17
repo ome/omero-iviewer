@@ -22,6 +22,7 @@ import Text from 'ol/style/Text';
 import Style from 'ol/style/Style';
 import Geometry from 'ol/geom/Geometry';
 import {lineStringLength} from 'ol/geom/flat/length';
+import {getUid} from 'ol/util';
 import Ellipse from '../geom/Ellipse';
 import Point from '../geom/Point';
 import Line from '../geom/Line';
@@ -331,7 +332,7 @@ export const generateRegions =
                     newFeature.setId(
                         (typeof shape_info['roi_id'] === 'number' ?
                             "" + shape_info['roi_id'] + ":" : "-1:") +
-                                (-ol.getUid(newFeature)));
+                                (-getUid(newFeature)));
             else newFeature.setId(shape_info['shape_id']); // state: added
                 newFeature['state'] = REGIONS_STATE.ADDED;
 
