@@ -384,14 +384,14 @@ export const AVAILABLE_VIEWER_INTERACTIONS = {
         {"clazz" : PinchRotate,
          "options": {}, "defaults": true, "enabled": false,
          "links" : ["rotate"]},
-    // "shiftRotate" :
-    //     {"clazz" : RotateInteraction,
-    //      "options": {},
-    //      "defaults": true, "enabled": true,
-    //      "links" : ["rotate"]},
-    // "boxSelect" :
-    //     {"clazz" : BoxSelect,
-    //      "options": {}, "defaults": false, "enabled": false, "links" : []}
+    "shiftRotate" :
+        {"clazz" : RotateInteraction,
+         "options": {},
+         "defaults": true, "enabled": true,
+         "links" : ["rotate"]},
+    "boxSelect" :
+        {"clazz" : BoxSelect,
+         "options": {}, "defaults": false, "enabled": false, "links" : []}
 };
 
 /**
