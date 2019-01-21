@@ -14,11 +14,14 @@ rm -rf build
 #delete plugin directories
 rm -rf plugin/dist plugin/omero_iviewer.egg-info
 rm -rf plugin/omero_iviewer/static plugin/omero_iviewer/templates
+rm -rf plugin/ol3-viewer/static/
 
 #recreate static and templates directories
 echo "Recreating build/deploy directories..."
 mkdir -p plugin/omero_iviewer/static/omero_iviewer/css/images
 mkdir -p plugin/omero_iviewer/templates/omero_iviewer
+mkdir -p plugin/ol3-viewer/static/ol3-viewer/js
+mkdir -p plugin/ol3-viewer/static/ol3-viewer/css
 
 #prepare css (combine and minify)
 if [ "$#" -gt 0 ] && [ "$1" = "DEV" ]; then
