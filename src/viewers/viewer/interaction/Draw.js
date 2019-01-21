@@ -202,7 +202,6 @@ class Draw {
                     typeof self.opts_['add'] !== 'boolean' || self.opts_['add'];
                 if (add) self.regions_.addFeature(event.feature);
 
-                var eventbus = self.regions_.viewer_.eventbus_;
                 if (self.regions_.viewer_.eventbus_) {
                     var hist_id = self.history_id_;
                     if (self.roi_id_ < 0) event.feature['roi_id'] = self.roi_id_;
