@@ -731,6 +731,7 @@ class Viewer extends OlObject {
 
         var options = {};
         if (data) options['data'] = data;
+        // Regions constructor creates ol.Features from JSON data
         this.regions_ = new Regions(this, options);
 
         // add a vector layer with the regions
