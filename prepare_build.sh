@@ -29,3 +29,6 @@ if [ "$#" -gt 0 ] && [ "$1" = "DEV" ]; then
 else
     ant prepare-css-prod
 fi
+
+# Copy css to ol3-viewer
+cp -r build/css plugin/ol3-viewer/static/ol3-viewer/

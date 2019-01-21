@@ -28,11 +28,14 @@ To keep the files up-to-date during development, don't forget to call:
 After restarting your web server, you should be able to open images with a
 URL like:
 
+::
+
     /ol3-viewer/[IMAGE_ID]
 
 You can use the browse console to interact with the viewer, for example:
 
 ::
+
     // Load and display any ROIs from OMERO, allow shape selection etc.
     viewer.addRegions()
     // Allow user to draw a new Rectangle on the image
