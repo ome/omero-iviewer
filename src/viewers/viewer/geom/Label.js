@@ -75,9 +75,6 @@ class Label extends Rectangle {
      * @param {number} h the height of the rectangle
      */
     changeRectangle(x,y,w,h) {
-        // goog.base(this, 'changeRectangle', x, y,w, h);
-        // Rectangle.changeRectangle.call(this, x, y,w, h)
-        console.log('changeRectangle...');
         super.changeRectangle(x, y, w, h);
         this.setOriginalCoordinates();
     }

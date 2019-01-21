@@ -23,7 +23,6 @@ import {Converters} from '../utils/converters';
 import Ui from '../utils/ui';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import Viewer from './viewer/Viewer';
-// import {ol3} from '../../libs/ol3-viewer.js';
 import Ol3ViewerLinkedEvents from './ol3-viewer-linked-events';
 import * as FileSaver from '../../node_modules/file-saver';
 import {draggable} from 'jquery-ui/ui/widgets/draggable';

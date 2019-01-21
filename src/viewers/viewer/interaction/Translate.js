@@ -32,6 +32,13 @@ import {REGIONS_STATE} from '../globals';
  *
  * @extends {ol.interaction.Translate}
  */
+
+// Since we can't import e.g. ol.interaction.TranslateEventType.TRANSLATESTART
+// We define equivalent constants here:
+const TRANSLATESTART = 'translatestart';
+const TRANSLATEEND = 'translateend';
+const TRANSLATING = 'translating';
+
 class Translate extends OlTranslate {
 
     /**
@@ -73,7 +80,7 @@ class Translate extends OlTranslate {
         // a listener to react on translate start
         listen(
             this,
-            'translatestart',  // ol.interaction.TranslateEventType.TRANSLATESTART,
+            TRANSLATESTART,
             function(event) {
                 this.translatedFeatures_ = [];
                 var features = event.features.array_;
@@ -93,7 +100,7 @@ class Translate extends OlTranslate {
         // a listener to note whether there was an actual translate ...
         listen(
             this,
-            'translating',  // ol.interaction.TranslateEventType.TRANSLATING,
+            TRANSLATING,
             function(event) {
                 // start the history for the translate
                 // if we haven't done so already
@@ -106,7 +113,7 @@ class Translate extends OlTranslate {
         // a listener to react on translate end
         listen(
             this,
-            'translateend',  // ol.interaction.TranslateEventType.TRANSLATEEND,
+            TRANSLATEEND,
             Translate.prototype.handleTranslateEnd,
             this);
     };
@@ -262,7 +269,7 @@ class Translate extends OlTranslate {
     };
 
     /**
-     * a sort of desctructor
+     * a sort of destructor
      */
     disposeInternal() {
         this.features_  = null;

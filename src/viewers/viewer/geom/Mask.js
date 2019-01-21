@@ -52,7 +52,7 @@ class Mask extends Point {
         super([x, y]);
 
         /**
-         * the
+         * the size of the Mask [w, h]
          * @type {Array.<number>}
          * @private
          */
@@ -114,7 +114,7 @@ class Mask extends Point {
     };
 
     /**
-     * Make a complete copy of the geometry.
+     * Makes a complete copy of the geometry.
      * @return {Mask} Clone.
      */
     clone() {
@@ -125,7 +125,7 @@ class Mask extends Point {
     };
 
     /**
-     * Returns the area.of the mask
+     * Returns the area of the mask
      * @return {number} the area of the mask.
      */
     getArea() {

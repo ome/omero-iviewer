@@ -113,7 +113,7 @@ class BoxSelect extends DragBox {
     }
 
     /**
-     * a sort of desctructor
+     * a sort of destructor
      */
     disposeInternal() {
         this.unregisterListeners();

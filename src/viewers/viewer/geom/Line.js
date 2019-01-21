@@ -87,7 +87,7 @@ class Line extends LineString {
     }
 
     /**
-     * Does this line have multiple points?
+     * Check if the line has multiple points or not
      * @return {boolean} true if we have more than 2 points, otherwise false
      * @api stable
      */
@@ -194,7 +194,7 @@ class Line extends LineString {
     }
 
     /**
-     * Make a complete copy of the geometry.
+     * Makes a complete copy of the geometry.
      * @return {Line} Clone.
      * @api stable
      */

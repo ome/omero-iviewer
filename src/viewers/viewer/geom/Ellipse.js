@@ -59,7 +59,7 @@ class Ellipse extends Polygon {
      * @param {Object=} transform an AffineTransform object according to omero marshal
      */
     constructor(cx, cy, rx, ry, transform) {
-        // preliminary checks: are all mandatory paramters numeric
+        // preliminary checks: are all mandatory parameters numeric
         if (typeof cx !== 'number' || typeof cy !== 'number' ||
                 typeof rx !== 'number' || typeof ry !== 'number')
             console.error("at least one ellipse param is not numeric!");
@@ -165,7 +165,7 @@ class Ellipse extends Polygon {
     setRadius(value) {
         if (!isArray(value) ||
             typeof value[0] !== 'number' || typeof value[1] !== 'number')
-                console.error("the radius needs to be given as a numeric array [cx,cy]");
+                console.error("the radius needs to be given as a numeric array [rx,ry]");
         this.rx_ = value[0];
         this.ry_ = value[1];
     }

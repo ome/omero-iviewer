@@ -96,7 +96,7 @@ class Rectangle extends Polygon {
     }
 
     /**
-     * sets the upper left corner using a coordinate array [x,y]
+     * Sets the upper left corner using a coordinate array [x,y]
      *
      * @param {Array.<number>} value upper left corner
      */
@@ -194,7 +194,7 @@ class Rectangle extends Polygon {
     };
 
     /**
-     * Turns the tansformation matrix back into the ome model object
+     * Turns the transformation matrix back into the ome model object
      * @return {Object|null} the ome model transformation
      */
     getTransform() {
@@ -218,7 +218,7 @@ class Rectangle extends Polygon {
     }
 
     /**
-     * Make a complete copy of the geometry.
+     * Makes a complete copy of the geometry.
      * @return {Rectangle} Clone.
      */
     clone() {

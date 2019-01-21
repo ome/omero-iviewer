@@ -93,7 +93,6 @@ class Select extends Interaction {
 
     /**
      * Clears/unselects all selected features
-     *
      */
     clearSelection = function() {
         // delegate
@@ -181,7 +180,7 @@ class Select extends Interaction {
      * @param {ol.Feature} feature the feature to be (de)selected
      * @param {boolean} select if true we want to select, otherwise deselect,
      *                   the former being default
-     * @param {boolean=} remove_first on select we remove first to make sure that we
+     * @param {boolean} remove_first on select we remove first to make sure that we
      *                   don't add twice
      */
     toggleFeatureSelection(feature, select, remove_first) {
@@ -199,7 +198,7 @@ class Select extends Interaction {
     }
 
     /**
-     * a sort of desctructor
+     * a sort of destructor
      */
     disposeInternal() {
         this.regions_ = null;

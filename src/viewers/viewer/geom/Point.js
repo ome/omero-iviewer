@@ -38,7 +38,7 @@ class Point extends Circle {
      * @param {Object=} transform an AffineTransform object according to omero marshal
      */
     constructor(coords, transform) {
-        // preliminary checks: are all mandatory paramters numeric
+        // preliminary checks: are all mandatory parameters numeric
         if (!isArray(coords) || coords.length !== 2)
             console.error("Point needs an array of coordinates (length: 2)!");
 
@@ -108,7 +108,7 @@ class Point extends Circle {
     }
 
     /**
-     * Make a complete copy of the geometry.
+     * Makes a complete copy of the geometry.
      * @return {Point} Clone.
      */
     clone() {

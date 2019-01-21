@@ -41,7 +41,7 @@ class Polygon extends OlPolygon {
      * @param {Object=} transform an AffineTransform object according to omero marshal
      */
     constructor(coords, transform) {
-        // preliminary checks: are all mandatory paramters numeric
+        // preliminary checks: are all mandatory parameters numeric
         if (!isArray(coords) || coords.length === 0)
             console.error("Polygon needs a non-empty array of coordinates!");
 
@@ -118,7 +118,7 @@ class Polygon extends OlPolygon {
     }
 
     /**
-     * Make a complete copy of the geometry.
+     * Makes a complete copy of the geometry.
      * @return {Polygon} Clone.
      */
     clone() {

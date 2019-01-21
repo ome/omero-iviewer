@@ -59,10 +59,10 @@ class ImageTile extends OlImageTile {
      *
      * @function
      * @private
-     * @param {Object} tile the tile as an img object
+     * @param {Object} tile the tile as an image object
      * @param {Array.<number>} tileSize the tile size as an array [width, height]
-     * @param {boolean=} createContextOnlyForResize renders on canvas only if resize is needed
-     * @param {string=} key the uid (for createContextOnlyForResize is true)
+     * @param {boolean} createContextOnlyForResize renders on canvas only if resize is needed
+     * @param {string} key the uid (for createContextOnlyForResize is true)
      * @return {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement} the image drawn on the context.
      */
     getRenderedTileAsContext(tile, tileSize, createContextOnlyForResize, key) {
@@ -97,7 +97,7 @@ class ImageTile extends OlImageTile {
     /**
      * Get the HTML image element for this tile (may be a Canvas, Image, or Video).
      * @function
-     * @param {Object=} opt_context Object.
+     * @param {Object} opt_context Object.
      * @return {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement} Image.
      */
     getImage(opt_context) {

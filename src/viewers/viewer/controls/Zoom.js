@@ -34,7 +34,7 @@ class Zoom extends Control {
 
     /**
      * @constructor
-     * @param {olx.control.ZoomOptions=} opt_options Zoom options.
+     * @param {ol.control.ZoomOptions=} opt_options Zoom options.
      */
     constructor(opt_options) {
         var options = opt_options ? opt_options : {};
