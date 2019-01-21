@@ -381,8 +381,8 @@ class Viewer extends OlObject {
      */
     bootstrapOpenLayers(postSuccessHook, initHook) {
         if (typeof(this.image_info_['size']) === 'undefined') {
-        console.error("Image Info does not contain size info!");
-        return;
+            console.error("Image Info does not contain size info!");
+            return;
         }
 
         // we might need to run some initialization handler after we have
@@ -398,10 +398,10 @@ class Viewer extends OlObject {
         var zoomLevelScaling = null;
         var dims = this.image_info_['size'];
         if (this.image_info_['zoomLevelScaling']) {
-        var tmp = [];
-        for (var r in this.image_info_['zoomLevelScaling'])
-            tmp.push(1 / this.image_info_['zoomLevelScaling'][r]);
-        zoomLevelScaling = tmp.reverse();
+            var tmp = [];
+            for (var r in this.image_info_['zoomLevelScaling'])
+                tmp.push(1 / this.image_info_['zoomLevelScaling'][r]);
+            zoomLevelScaling = tmp.reverse();
         }
         var zoom = zoomLevelScaling ? zoomLevelScaling.length : -1;
 
@@ -424,9 +424,9 @@ class Viewer extends OlObject {
             this.image_info_['rdefs']['model']
         var lowerCaseModel = initialModel.toLowerCase()[0];
         switch (lowerCaseModel) {
-        case 'c': initialModel = 'color'; break;
-        case 'g': initialModel = 'greyscale'; break;
-        default: initialModel = 'color';
+            case 'c': initialModel = 'color'; break;
+            case 'g': initialModel = 'greyscale'; break;
+            default: initialModel = 'color';
         };
 
         // determine the center
@@ -509,22 +509,22 @@ class Viewer extends OlObject {
                 this.image_info_['tiles'];
         // create an OmeroImage source
         var source = new OmeroImage({
-        server : this.getServer(),
-        uri : this.getPrefixedURI(WEBGATEWAY),
-        image: this.id_,
-        width: dims['width'],
-        height: dims['height'],
-        plane: initialPlane,
-        time: initialTime,
-        channels: channels,
-        resolutions: zoom > 1 ? zoomLevelScaling : [1],
-        img_proj:  parsedInitialProjection,
-        img_model:  initialModel,
-        tiled: isTiled,
-        tile_size: isTiled && this.supportsOmeroServerVersion("5.4.4") ?
-                DEFAULT_TILE_DIMS :
-                    this.image_info_['tile_size'] ?
-                        this.image_info_['tile_size'] : null
+            server : this.getServer(),
+            uri : this.getPrefixedURI(WEBGATEWAY),
+            image: this.id_,
+            width: dims['width'],
+            height: dims['height'],
+            plane: initialPlane,
+            time: initialTime,
+            channels: channels,
+            resolutions: zoom > 1 ? zoomLevelScaling : [1],
+            img_proj:  parsedInitialProjection,
+            img_model:  initialModel,
+            tiled: isTiled,
+            tile_size: isTiled && this.supportsOmeroServerVersion("5.4.4") ?
+                    DEFAULT_TILE_DIMS :
+                        this.image_info_['tile_size'] ?
+                            this.image_info_['tile_size'] : null
         });
         source.changeChannelRange(initialChannels, false);
 
@@ -560,12 +560,12 @@ class Viewer extends OlObject {
 
         // we need a View object for the map
         var view = new View({
-        projection: proj,
-        center: imgCenter,
-        extent: [0, -dims['height'], dims['width'], 0],
-        resolutions : possibleResolutions,
-        resolution : actualZoom,
-        maxZoom: possibleResolutions.length-1
+            projection: proj,
+            center: imgCenter,
+            extent: [0, -dims['height'], dims['width'], 0],
+            resolutions : possibleResolutions,
+            resolution : actualZoom,
+            maxZoom: possibleResolutions.length-1
         });
 
         // we have a need to keep a list & reference of the controls
@@ -586,12 +586,12 @@ class Viewer extends OlObject {
 
         // finally construct the open layers map object
         this.viewer_ = new OlMap({
-        logo: false,
-        controls: controls,
-        interactions:  interactions,
-        layers: [new Tile({source: source})],
-        target: this.container_,
-        view: view
+            logo: false,
+            controls: controls,
+            interactions: interactions,
+            layers: [new Tile({source: source})],
+            target: this.container_,
+            view: view
         });
 
         // enable bird's eye view
