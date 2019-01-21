@@ -22,7 +22,7 @@ import Misc from '../utils/misc';
 import {Converters} from '../utils/converters';
 import Ui from '../utils/ui';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
-import {ol3} from '../../libs/ol3-viewer.js';
+import Viewer from './viewer/Viewer';
 import Ol3ViewerLinkedEvents from './ol3-viewer-linked-events';
 import * as FileSaver from '../../node_modules/file-saver';
 import {draggable} from 'jquery-ui/ui/widgets/draggable';
@@ -465,7 +465,7 @@ export default class Ol3Viewer extends EventSubscriber {
 
         // create viewer instance
         this.viewer =
-            new ol3.Viewer(
+            new Viewer(
                 this.image_config.image_info.image_id, {
                      eventbus : this.context.eventbus,
                      server : this.context.server,
@@ -560,6 +560,7 @@ export default class Ol3Viewer extends EventSubscriber {
      * @param {Object} params the event notification parameters
      */
     cacheImageSettings(params = {}) {
+        if (this.viewer === null) return;
         let settings = this.viewer.captureViewParameters();
         let toCache = {
             channels: settings.channels,
@@ -1121,6 +1122,7 @@ export default class Ol3Viewer extends EventSubscriber {
                             show: false,
                             deleted: 0
                         };
+                        // Modifying regions_info.data causes regions-list to re-render
                         this.image_config.regions_info.data.set(
                             newRoiAndShapeId.roi_id, newRoi);
                     }

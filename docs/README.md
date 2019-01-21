@@ -48,8 +48,8 @@ the Aurelia entry point is the ``app/index`` (``index.js`` and ``index.html``).
 
 The ``app/index.html`` template (a different file from the Django ``index.html`` template above)
 contains the main layout of the iviewer, including custom components such as
-header, thumbnail-slider and right-hand-panel as well as an instance of ol3-viewer for each of the
-context.image_configs.
+header, thumbnail-slider and right-hand-panel as well as an instance of
+openlayers viewer for each of the context.image_configs.
 
 
 Loading Images
@@ -86,24 +86,21 @@ This causes other view components to re-render and show the image as mentioned a
 Image viewer (OpenLayers)
 =========================
 
-Each ``ol3-viewer`` Aurelia component wraps an ``OpenLayers`` viewer. The OpenLayers classes are
-under ``ol3-viewer/src`` and are built via Google's closure compiler into a ``libs/ol3-viewer.js`` library
-which is then included in the ``main.js`` built by webpack.
+Each ``ol3-viewer`` Aurelia component wraps an ``OpenLayers`` viewer.
+The OpenLayers classes are under ``src/viewers/viewer`` with ``Viewer.js``
+being the entry point.
 
-NB: The closure compiler will minimize all internal variable names, so you cannot use dot notation.
-You must use ``foo['bar']`` instead of ``foo.bar``.
+The Viewer class gets passed the ``context.eventbus`` but not the
+``context`` or ``image_info`` like other Aurelia classes.
 
-The ol3.Viewer class gets passed the ``context.eventbus`` but not the ``context`` or ``image_info``
-like other Aurelia classes.
-
-    this.viewer = new ol3.Viewer(
+    this.viewer = new Viewer(
         this.image_config.image_info.image_id, {
             eventbus : this.context.eventbus,
             server : this.context.server,
             data: this.image_config.image_info.tmp_data,
-            initParams :  ol3initParams,
+            initParams :  initParams,
             container: this.container
          });
 
-The ``ol3.Viewer.image_info_`` is actually the ``image_info.tmp_data`` JSON response object,
+The ``Viewer.image_info_`` is actually the ``image_info.tmp_data`` JSON response object,
 not the ``Image_Info`` class.

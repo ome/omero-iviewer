@@ -24,8 +24,6 @@
     <property name="plugin.dir.static" value="${basedir}/plugin/${ant.project.name}/static/${ant.project.name}" />
 
     <property name="dist.css" value="${build.dir}/css" />
-    <property name="dist.name" value="${build.dir}/ol3-viewer.js" />
-    <property name="debug.name" value="${build.dir}/ol3-viewer-debug.js" />
     <property name="test.name" value="${test.build.dir}/ol3-viewer-test.js" />
 
     <property name="outputwrapper" value="
@@ -87,63 +85,6 @@
                 <arg line='-f "--output_wrapper=${outputwrapper}" -f "--externs=${src}/externs.js"' />
             </extraflags>
         </closure-compile>
-    </target>
-
-    <target name="compile-debug">
-        <mkdir dir="${build.dir}" />
-        <concat destfile="${debug.name}" overwrite="true">
-            <filelist dir="${ol.js}/dist" files="ol-debug.js" />
-        </concat>
-        <concat destfile="${debug.name}" append="true">
-
-(function (root, factory) {
-    root.ome = factory(root);
-}(this, function (ctx) {
-        var OME = {};
-        if (typeof(ctx.ome) !== 'object' || Array.isArray(ctx.ome)
-                || ctx.ome === null) ctx.ome = undefined;
-        </concat>
-        <concat destfile="${debug.name}" append="true">
-            <fileset file="${src}/ome/ome.js"/>
-            <fileset file="${src}/ome/ol3/ol3.js"/>
-            <fileset file="${src}/ome/ol3/utils/utils.js"/>
-            <fileset file="${src}/ome/ol3/utils/Transform.js"/>
-            <fileset file="${src}/ome/ol3/utils/Conversion.js"/>
-            <fileset file="${src}/ome/ol3/utils/Net.js"/>
-            <fileset file="${src}/ome/ol3/utils/Misc.js"/>
-            <fileset file="${src}/ome/ol3/utils/Style.js"/>
-            <fileset file="${src}/ome/ol3/geom/geom.js"/>
-            <fileset file="${src}/ome/ol3/geom/Ellipse.js"/>
-            <fileset file="${src}/ome/ol3/geom/LabelRectangle.js"/>
-            <fileset file="${src}/ome/ol3/geom/Line.js"/>
-            <fileset file="${src}/ome/ol3/geom/Polygon.js"/>
-            <fileset file="${src}/ome/ol3/geom/Point.js"/>
-            <fileset file="${src}/ome/ol3/geom/Mask.js"/>
-            <fileset file="${src}/ome/ol3/interaction/interaction.js"/>
-            <fileset file="${src}/ome/ol3/interaction/Rotate.js"/>
-            <fileset file="${src}/ome/ol3/interaction/BoxSelect.js"/>
-            <fileset file="${src}/ome/ol3/interaction/Select.js"/>
-            <fileset file="${src}/ome/ol3/interaction/Modify.js"/>
-            <fileset file="${src}/ome/ol3/interaction/Translate.js"/>
-            <fileset file="${src}/ome/ol3/interaction/Draw.js"/>
-            <fileset file="${src}/ome/ol3/controls/controls.js"/>
-            <fileset file="${src}/ome/ol3/controls/BirdsEye.js"/>
-            <fileset file="${src}/ome/ol3/controls/Zoom.js"/>
-            <fileset file="${src}/ome/ol3/controls/ScaleBar.js"/>
-            <fileset file="${src}/ome/ol3/controls/IntensityDisplay.js"/>
-            <fileset file="${src}/ome/ol3/globals.js"/>
-            <fileset file="${src}/ome/ol3/tiles/tiles.js"/>
-            <fileset file="${src}/ome/ol3/tiles/ImageTile.js"/>
-            <fileset file="${src}/ome/ol3/source/source.js"/>
-            <fileset file="${src}/ome/ol3/source/Image.js"/>
-            <fileset file="${src}/ome/ol3/utils/Regions.js"/>
-            <fileset file="${src}/ome/ol3/source/Regions.js"/>
-            <fileset file="${src}/ome/ol3/Viewer.js"/>
-        </concat>
-        <concat destfile="${debug.name}" append="true">
-    return ome;
-}));
-        </concat>
     </target>
 
     <target name="plugin">
@@ -264,9 +205,9 @@
     </target>
 
     <target name="build" depends="build-all, copy-to-lib" description="builds production and debug version, copying it to omero_iviewer's lib directory" />
-    <target name="build-all" depends="clean, init, compile, compile-debug" description="builds both, production and debug version" />
+    <target name="build-all" depends="clean, init, compile" description="builds both, production and debug version" />
     <target name="build-prod" depends="clean, init, compile" description="builds production version" />
-    <target name="build-debug" depends="clean, init, compile-debug" description="builds debug version" />
+    <target name="build-debug" depends="clean, init" description="builds debug version" />
     <target name="build-plugin" depends="build-all, plugin" description="builds production version, deploying it into its respective plugin directory" />
 
 </project>
