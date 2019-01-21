@@ -21,13 +21,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en" style='width: 100%; height: 100%'>
 
 <head>
-     <title>Omero Open Layers 3 Viewer Plugin</title>
-        {% if debug %}
-            <script type="text/javascript" src="{% static 'ol3-viewer/js/ol3-viewer-debug.js' %}"></script>
-        {% else %}
-            <script type="text/javascript" src="{% static 'ol3-viewer/js/ol3-viewer.js' %}" /></script>
-        {% endif %}
-            <link rel="stylesheet" type="text/css" href="{% static 'ol3-viewer/css/ol3-viewer.css' %}" />
+    <title>OMERO OpenLayers Viewer Plugin</title>
+    <script type="text/javascript" src="{% static 'ol3-viewer/js/viewer.js' %}" /></script>
+    <link rel="stylesheet" type="text/css" href="{% static 'ol3-viewer/css/ol3-viewer.css' %}" />
 </head>
 
 <body style='font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
@@ -36,12 +32,13 @@
     <div id="ome-viewer" style="width: 100%; height: 100%"></div>
 
     <script type="text/javascript">
+        var Viewer = openlayers_viewer.default;
         var p = {};
         {% for key, value in params.items %}
             p['{{key}}'] = "{{value}}";
         {% endfor %}
             var viewer = ((function() {
-                var _viewerInstance = new ome.ol3.Viewer(
+                var _viewerInstance = new Viewer(
                 {{ image_id }},{initParams : p});
                 return function() {
                     return _viewerInstance;
