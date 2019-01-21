@@ -93,14 +93,122 @@ being the entry point.
 The Viewer class gets passed the ``context.eventbus`` but not the
 ``context`` or ``image_info`` like other Aurelia classes.
 
-    this.viewer = new Viewer(
+    this.viewer_ = new Viewer(
         this.image_config.image_info.image_id, {
             eventbus : this.context.eventbus,
             server : this.context.server,
             data: this.image_config.image_info.tmp_data,
-            initParams :  initParams,
+            initParams : initParams,
             container: this.container
-         });
+        });
 
 The ``Viewer.image_info_`` is actually the ``image_info.tmp_data`` JSON response object,
 not the ``Image_Info`` class.
+
+
+When the Viewer is created, we create the OpenLayers Map and other components
+from the image_info_ data:
+
+    import OlMap from 'ol/Map';
+
+    // within bootstrapOpenLayers(), called by constructor
+
+    // use image_info_ data to get IDs, dimensions etc. E.g.
+    dims = this.image_info_['size']
+
+    var source = new OmeroImage({
+        image: this.id_,
+        width: dims['width'],
+        height: dims['height'],
+        // other parameters omitted
+    });
+
+    this.viewer_ = new OlMap({
+        controls: controls,                 // e.g. [ScaleBar, Zoom]
+        interactions: interactions,         // e.g. [DragPan, MouseWheelZoom]
+        layers: [new Tile({source: source})],
+        target: this.container_,
+        view: view                          // ol.View
+    });
+
+The ``OmeroImage`` extends ``OpenLayers TileImage`` with a custom
+``tileUrlFunction`` that uses the image data as well as the current rendering
+settings to provide tile URLs.
+
+
+Regions (ROIs)
+==============
+
+When we select the ROIs tab in the ``right-hand-panel`` component, this calls
+``this.image_config.regions_info.requestData()`` which makes the AJAX call to
+load ROIs. When ready, the ``ol3-viewer`` calls ``this.viewer.addRegions(data)``.
+This adds a Vector layer to the Openlayers Map:
+
+    // Viewer.js
+
+    import Vector from 'ol/layer/Vector'
+    import Regions from './source/Regions';    // extends 'ol/source/Vector'
+
+    addRegions(data) {
+
+        // Regions constructor creates ol.Features from JSON data
+        this.regions_ = new Regions(this, {data: data});
+        this.viewer_.addLayer(new Vector({source : this.regions_}));
+
+        // enable roi selection by default, as well as modify and translate
+        this.regions_.setModes([SELECT, MODIFY, TRANSLATE]);
+    }
+
+When a drawing tool such as Rectangle is selected, the ol3-viewer calls
+``this.viewer.drawShape(params)``:
+
+    // Viewer.js
+
+    drawShape(shape, roi_id, opts) {
+        this.setRegionsModes([DRAW]);
+        this.regions_.draw_.drawShape(shape, roi_id, opts);
+    }
+
+This first calls ``source/Regions.setModes(DRAW)`` to create a new
+``viewer/interaction/Draw``...
+
+    // source/Regions.js
+
+    setModes(modes) {
+        // if DRAW in modes
+        this.draw_ = new Draw(oldModes, this);
+    }
+
+The viewer/interaction/Draw calls wraps an OpenLayers Draw instance instead of
+extending it. A new ``OpenLayers Draw`` instance is created with a function that
+generates e.g a new viewer/geom/Rectangle:
+
+    // interaction/Draw.js
+
+    // called by Viewer.drawShape() above
+    drawShape(shape, roi_id, opts)
+
+    // which calls e.g.
+    drawRectangle_()
+
+    // which calls
+    drawShapeCommonCode_(ol_shape, shape_type, geometryFunction) {
+
+        // where geometryFunction returns e.g. new Rectangle(x, y, w, h);
+
+        this.ol_draw_ = new OlDraw({
+            geometryFunction: geometryFunction
+        }
+
+        this.regions_.viewer_.viewer_.addInteraction(this.ol_draw_);
+        this.ol_draw_.on(DrawEventType.DRAWEND, onDrawEndAction, this);
+    }
+
+The ``onDrawEndAction()`` is fired when a shape is completed and calls:
+
+    // interaction/Draw.js
+
+    self.regions_.addFeature(event.feature);
+
+    // sends notification via
+    self.regions_.viewer_.eventbus_
