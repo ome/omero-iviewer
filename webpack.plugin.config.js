@@ -15,20 +15,9 @@ module.exports = {
     library: 'openlayers_viewer',
   },
   plugins: [
-    // new AureliaPlugin({
-    //   aureliaApp: undefined,
-    //   aureliaConfig: "basic",
-    //   features: {svg: false}}),
     new ProvidePlugin({
         Promise: 'bluebird',
-        $: 'jquery',
-        jQuery: 'jquery',
-        'window.jQuery': 'jquery'
     }),
-    // new HtmlWebpackPlugin({
-    //   template : './src/index-dev.html',
-    //   filename: 'index.html'
-    // })
   ],
   resolve: {
       extensions: [".js"],
@@ -46,11 +35,6 @@ module.exports = {
                plugins: ['transform-decorators-legacy',
                          'transform-class-properties'] } },
       { test: /[\/\\]node_modules[\/\\]bluebird[\/\\].+\.js$/, loader: 'expose-loader?Promise' },
-      { test: require.resolve('jquery'), loader: 'expose-loader?$!expose-loader?jQuery' },
-      { test: /\.(png|gif|jpg|jpeg)$/, loader: 'file-loader?name=css/images/[name].[ext]' },
-      { test: /\.(woff|woff2)$/, loader: 'file-loader?name=css/fonts/[name].[ext]' },
-      { test: /\.css?$/, loader: 'file-loader?name=css/[name].[ext]' },
-      { test: /\.html$/, loader: 'html-loader' }
     ]
   },
 };
