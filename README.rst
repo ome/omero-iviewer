@@ -15,8 +15,9 @@ Build
 
 In order to build you need:
 
-* nodejs version 6.x
-* npm version equal or greater to 3.0!
+* ``nodejs`` version 6.x
+* ``npm`` version equal or greater to 3.0!
+* ``apache ant``
 
 To build an uncompressed version, run:
 
@@ -34,35 +35,31 @@ To build an uglified version, run:
 All builds will build into the build directory and deploy to the plugin directory
 which can then be used like any Django plugin.
 
+Install
+=======
+
 Intructions on how to add the OMERO.iviewer app to your installed OMERO.web apps
 can be found in the `OMERO.iviewer README <plugin/omero_iviewer/README.rst>`_.
-
-**Note**:
-
-Should you like or need to rebuild OMERO.iviewer's internal ol3 viewer,
-please read the section *ol3-viewer* below!
 
 Development
 ===========
 
-Building the uncompressed version of iviewer as described above the application
-can be deployed locally or to a test server, to then be debugged.
-It is also possible to run/debug it with webpack dev-server:
+It is recommended to use the webpack dev-server to build and serve iviewer
+as this will watch for file saves and re-compile.
+
+To build the bundle and start the webpack dev-server (localhost:8080):
 
 ::
 
     $ npm run dev
 
-will build the bundle and start the webpack dev-server (localhost:8080)
-
-Either development setup expects the following:
-
-- an OMERO server installation
-- an iviewer 'deploy' to that OMERO server:
+You will also need an OMERO.web install with ``omero_iviewer`` installed.
+To add your project to your local OMERO.web install, add the project
+to your ``PYTHONPATH`` and add to ``omero.web.apps``
 
 ::
 
-    $ export PYTHONPATH=$PYTHONPATH:/path/to/iviewer-project-root/plugin
+    $ export PYTHONPATH=$PYTHONPATH:/path/to/omero_iviewer/plugin
     $ bin/omero config append omero.web.apps '"omero_iviewer"'
 
 **Notes**:
@@ -125,25 +122,16 @@ To build the html in build/docs, run:
 
     $ npm run docs
 
-
 ol3-viewer
 ==========
 
-The OMERO.iviewer's internal image viewer is based on `OpenLayers 3 <https://openlayers.org/>`_,
+The OMERO.iviewer's internal image viewer is based on `OpenLayers <https://openlayers.org/>`_,
 
-The following software has to be installed in order to compile the java script code:
+For details on how to run and test this viewer independently of the iviewer,
+see https://github.com/ome/omero-iviewer/tree/master/plugin/ol3-viewer
 
-1. ``npm`` (node package manager)
-2. ``apache ant`` (and therefore a java runtime)
-3. ``python`` (for closure's calcdeps.py)
-
-To build the OpenLayers viewer for OMERO.iviewer (deploys into libs directory), run:
-
-::
-
-    $ ant
-
-For further options type ``ant -p``.
+More details
+============
 
 More detailed resources on how to create a web app and development setup can be found at:
 
