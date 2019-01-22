@@ -1,28 +1,20 @@
-<project name="ol3-viewer" default="build">
+<project name="ol3-viewer" default="plugin">
     <description>
         #################################################
         ####                OL3 VIEWER               ####
         #################################################
     </description>
 
-    <property name="version.major" value="1" />
-    <property name="version.minor" value="0" />
-
     <property name="node_modules" value="${basedir}/node_modules" />
     <property name="karma" value="${node_modules}/.bin/karma" />
     <property name="clean-css" value="${node_modules}/.bin/cleancss" />
 
-    <property name="src" value="${basedir}/${ant.project.name}/src" />
     <property name="build.dir" value="${basedir}/build" />
     <property name="test.build.dir" value="${basedir}/test/build" />
     <property name="plugin.dir.static" value="${basedir}/plugin/${ant.project.name}/static/${ant.project.name}" />
 
     <property name="dist.css" value="${build.dir}/css" />
     <property name="test.name" value="${test.build.dir}/ol3-viewer-test.js" />
-
-    <target name="clean">
-        <delete dir="${build.dir}" />
-    </target>
 
     <target name="plugin">
         <delete dir="${plugin.dir.static}/js" />
@@ -34,10 +26,6 @@
         </copy>
         <copy file="${debug.name}" todir="${plugin.dir.static}/js" overwrite="true"/>
         <copy file="${dist.name}" todir="${plugin.dir.static}/js" overwrite="true"/>
-    </target>
-
-    <target name="copy-to-lib">
-        <copy file="${dist.name}" todir="libs" overwrite="true"/>
     </target>
 
     <target name="clean-css-dir">
@@ -93,10 +81,11 @@
         <echo>Preparing test build directory ....</echo>
         <delete dir="${test.build.dir}" />
         <mkdir dir="${test.build.dir}" />
+        <!-- TODO - need to build OpenLayers Viewer 'npm run viewer' and copy -->
         <copy file="${debug.name}" tofile="${test.name}" overwrite="true"/>
     </target>
 
-    <target name="unit-tests" depends="build-debug, prepare-unit-tests, unit-tests-only" description="runs unit tests" />
+    <target name="unit-tests" depends="prepare-unit-tests, unit-tests-only" description="runs unit tests" />
 
     <target name="unit-tests-only">
         <echo>Fetching test libraries ....</echo>
@@ -127,11 +116,4 @@
             </condition>
         </fail>
     </target>
-
-    <!-- <target name="build" depends="build-all, copy-to-lib" description="builds production and debug version, copying it to omero_iviewer's lib directory" /> -->
-    <target name="build-all" depends="clean" description="builds both, production and debug version" />
-    <target name="build-prod" depends="clean" description="builds production version" />
-    <target name="build-debug" depends="clean" description="builds debug version" />
-    <target name="build-plugin" depends="build-all, plugin" description="builds production version, deploying it into its respective plugin directory" />
-
 </project>
