@@ -7,17 +7,20 @@ This is primarily for testing purporses (see below).
 
 Prerequisite is, of course, an installed and working instance of OMERO.web.
 
-Add this folder to the PYTHONPATH, then register the plugin as a web.app:
+Add the plugin folder to the ``PYTHONPATH`` if not already set (this is
+the same path as for development of omero_iviewer itself).
+Then register the plugin as a web.app:
 
 ::
 
+    $ export PYTHONPATH=$PYTHONPATH:/path/to/omero_iviewer/plugin/
     $ bin/omero config append omero.web.apps '"ol3-viewer"'
 
 You need to build the OpenLayers Viewer JavaScript files:
 
 ::
 
-    $ npm run viewer
+    $ npm run plugin
 
 To keep the files up-to-date during development, don't forget to call:
 
@@ -32,7 +35,7 @@ URL like:
 
     /ol3-viewer/[IMAGE_ID]
 
-You can use the browse console to interact with the viewer, for example:
+You can use the browser console to interact with the viewer, for example:
 
 ::
 
@@ -42,11 +45,7 @@ You can use the browse console to interact with the viewer, for example:
     viewer.drawShape({type: 'rectangle'})
 
 If you wish to set this viewer as your default image viewer:
-    
+
+::
+
     $ bin/omero config set omero.web.viewer.view ol3-viewer.views.plugin
-
-
-More detailed resources on how to create a web app and development setup can be found here:
-
-1. `CreateApp <https://docs.openmicroscopy.org/latest/omero/developers/Web/CreateApp.html>`_
-2. `Deployment <https://docs.openmicroscopy.org/latest/omero/developers/Web/Deployment.html>`_
