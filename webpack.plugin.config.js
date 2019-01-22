@@ -10,8 +10,8 @@ module.exports = {
     ]
   },
   output: {
-    path: path.join(__dirname, 'plugin', 'ol3-viewer', 'static', 'ol3-viewer', 'js'),
-    filename: 'viewer.js',
+    path: path.join(__dirname, 'build'),
+    filename: 'ol-viewer.js',
     library: 'openlayers_viewer',
   },
   plugins: [
