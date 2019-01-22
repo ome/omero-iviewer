@@ -28,7 +28,6 @@ import Projection from 'ol/proj/Projection';
 import Tile from 'ol/layer/Tile';
 import Vector from 'ol/layer/Vector';
 import View from 'ol/View';
-import PluggableMap from 'ol/PluggableMap';
 import OlMap from 'ol/Map';
 import {intersects, getCenter} from 'ol/extent';
 import {noModifierKeys, primaryAction} from 'ol/events/condition';
@@ -245,7 +244,7 @@ class Viewer extends OlObject {
         /**
          * the viewer instance
          *
-         * @type {ol.PluggableMap}
+         * @type {ol.Map}
          * @private
          */
         this.viewer_ = null;
@@ -719,7 +718,7 @@ class Viewer extends OlObject {
      */
     addRegions(data) {
         // without a map, no need for a regions overlay...
-        if (!(this.viewer_ instanceof PluggableMap)) {
+        if (!(this.viewer_ instanceof OlMap)) {
             this.tried_regions_ = true;
             if (isArray(data))
                 this.tried_regions_data_ = data;
@@ -951,7 +950,7 @@ class Viewer extends OlObject {
             return;
 
         // if we don't have an instance in our viewer state, we return
-        if (!(this.viewer_ instanceof PluggableMap) || // could be the viewer was not initialized
+        if (!(this.viewer_ instanceof OlMap) || // could be the viewer was not initialized
                     (typeof(key) !== 'string')) // key not a string
                         return;
 
@@ -1215,7 +1214,7 @@ class Viewer extends OlObject {
      * @return {ol.layer.Tile|null} the open layers tile layer being our image or null
      */
     getImageLayer() {
-        if (!(this.viewer_ instanceof PluggableMap) || // mandatory viewer presence check
+        if (!(this.viewer_ instanceof OlMap) || // mandatory viewer presence check
             this.viewer_.getLayers().getLength() == 0) // unfathomable event of layer missing...
             return null;
 
@@ -1229,7 +1228,7 @@ class Viewer extends OlObject {
      * @return { ol.layer.Vector|null} the open layers vector layer being our regions or null
      */
     getRegionsLayer() {
-        if (!(this.viewer_ instanceof PluggableMap) || // mandatory viewer presence check
+        if (!(this.viewer_ instanceof OlMap) || // mandatory viewer presence check
             this.viewer_.getLayers().getLength() < 2) // unfathomable event of layer missing...
             return null;
 
@@ -1458,7 +1457,7 @@ class Viewer extends OlObject {
      * @return {ol.Extent|null} an array like this: [minX, minY, maxX, maxY] or null (if no viewer)
      */
     getViewExtent() {
-        if (!(this.viewer_ instanceof PluggableMap ||
+        if (!(this.viewer_ instanceof OlMap ||
                 this.viewer_.getView() === null)) return null;
 
         return this.viewer_.getView().calculateExtent(this.viewer_.getSize());
@@ -1676,7 +1675,7 @@ class Viewer extends OlObject {
         var componentsRegistered = rememberEnabled ? [] : null;
 
         // tidy up viewer incl. layers, controls and interactions
-        if (this.viewer_ instanceof PluggableMap) {
+        if (this.viewer_ instanceof OlMap) {
             if (rememberEnabled && this.viewerState_) {
                 // delete them from the list as well as the viewer
                 for (var K in this.viewerState_) {
@@ -2276,7 +2275,7 @@ class Viewer extends OlObject {
      * @param {number=} delay an (optional delay) in millis
      */
     refreshBirdsEye(delay) {
-        if (!(this.viewer_ instanceof PluggableMap) ||
+        if (!(this.viewer_ instanceof OlMap) ||
             typeof this.viewerState_['birdseye'] !== 'object') return;
         if (typeof delay !== 'number' || isNaN(delay) || delay < 0) delay = 0;
 
@@ -2292,7 +2291,7 @@ class Viewer extends OlObject {
      * Zooms to level that makes image fit into the available canvas
      */
     zoomToFit() {
-        if (!(this.viewer_ instanceof PluggableMap)) return;
+        if (!(this.viewer_ instanceof OlMap)) return;
         var view = this.viewer_.getView();
         if (view) {
             var ext = view.getProjection().getExtent();
