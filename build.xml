@@ -1,7 +1,7 @@
-<project name="ol3-viewer" default="plugin">
+<project name="ol3-viewer" default="prepare-css-prod">
     <description>
         #################################################
-        ####                OL3 VIEWER               ####
+        ####                BUILD CSS                ####
         #################################################
     </description>
 
@@ -11,22 +11,9 @@
 
     <property name="build.dir" value="${basedir}/build" />
     <property name="test.build.dir" value="${basedir}/test/build" />
-    <property name="plugin.dir.static" value="${basedir}/plugin/${ant.project.name}/static/${ant.project.name}" />
 
     <property name="dist.css" value="${build.dir}/css" />
     <property name="test.name" value="${test.build.dir}/ol3-viewer-test.js" />
-
-    <target name="plugin">
-        <delete dir="${plugin.dir.static}/js" />
-        <delete dir="${plugin.dir.static}/css" />
-        <mkdir dir="${plugin.dir.static}/js" />
-        <mkdir dir="${plugin.dir.static}/css" />
-        <copy todir="${plugin.dir.static}/css" overwrite="true">
-            <fileset dir="${basedir}/css"/>
-        </copy>
-        <copy file="${debug.name}" todir="${plugin.dir.static}/js" overwrite="true"/>
-        <copy file="${dist.name}" todir="${plugin.dir.static}/js" overwrite="true"/>
-    </target>
 
     <target name="clean-css-dir">
         <delete dir="${dist.css}" />
