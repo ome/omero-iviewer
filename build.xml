@@ -28,7 +28,7 @@
     </target>
 
     <target name="prepare-css-prod"
-            depends="clean-css-dir, copy-images"
+            depends="copy-images"
             description="prepares css for production">
         <echo>Combine and minify css...</echo>
         <exec dir="${basedir}" executable="npm">
@@ -51,7 +51,7 @@
     </target>
 
     <target name="prepare-css-debug"
-            depends="clean-css-dir, copy-images"
+            depends="copy-images"
             description="prepares css for debug">
         <echo>Combine css...</echo>
         <concat destfile="${dist.css}/all.min.css" overwrite="true">
