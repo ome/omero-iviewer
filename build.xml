@@ -81,6 +81,7 @@
         <exec dir="${basedir}" executable="npm">
             <arg value="install"/>
             <arg value="webpack"/>
+            <arg value="babel-loader"/>
             <arg value="karma"/>
             <arg value="karma-chrome-launcher"/>
             <arg value="karma-mocha"/>
