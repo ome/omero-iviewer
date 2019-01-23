@@ -8,7 +8,7 @@ module.exports = function(config) {
       require('karma-spec-reporter'),
     ],
     files: [
-      'test/build/ol-viewer.js',
+      'build/ol-viewer.js',
       'test/test.js',
     ],
     exclude: ['test/unit/debug_mocha.js'],
