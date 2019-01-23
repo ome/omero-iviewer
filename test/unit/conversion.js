@@ -16,22 +16,50 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+import Collection from 'ol/Collection';
+import Feature from 'ol/Feature';
+import Fill from 'ol/style/Fill';
+import Stroke from 'ol/style/Stroke';
+import Style from 'ol/style/Style';
+import Text from 'ol/style/Text';
+import Ellipse from '../../src/viewers/viewer/geom/Ellipse';
+import Label from '../../src/viewers/viewer/geom/Label';
+import Line from '../../src/viewers/viewer/geom/Line';
+import Point from '../../src/viewers/viewer/geom/Point';
+import Polygon from '../../src/viewers/viewer/geom/Polygon';
+import Rectangle from '../../src/viewers/viewer/geom/Rectangle';
+import {REGIONS_STATE} from '../../src/viewers/viewer/globals';
+import {convertRgbaColorFormatToObject,
+    convertHexColorFormatToObject,
+    convertColorObjectToHex,
+    convertColorObjectToRgba,
+    convertColorToSignedInteger,
+    convertPointStringIntoCoords,
+    convertSignedIntegerToColorObject,
+    pointToJsonObject,
+    ellipseToJsonObject,
+    rectangleToJsonObject,
+    lineToJsonObject,
+    labelToJsonObject,
+    polylineToJsonObject,
+    polygonToJsonObject,
+    integrateStyleIntoJsonObject,
+    integrateMiscInfoIntoJsonObject,
+    toJsonObject} from '../../src/viewers/viewer/utils/Conversion';
 /*
  * Tests utility routines in ome.ol3.utils.Conversion
  */
 describe("Conversion", function() {
 
     it('convertRgbaColorFormatToObject', function() {
-        var colorObject =
-            ome.ol3.utils.Conversion.convertRgbaColorFormatToObject(
+        var colorObject = convertRgbaColorFormatToObject(
                 "rgba(255,128,0,0.75)");
         assert.equal(colorObject.red,255);
         assert.equal(colorObject.green,128);
         assert.equal(colorObject.blue, 0);
         assert.equal(colorObject.alpha,0.75);
 
-        colorObject =
-            ome.ol3.utils.Conversion.convertRgbaColorFormatToObject(
+        colorObject = convertRgbaColorFormatToObject(
                 "rgb(0,128,255)", 0.11);
         assert.equal(colorObject.red,0);
         assert.equal(colorObject.green,128);
@@ -40,17 +68,13 @@ describe("Conversion", function() {
     });
 
     it('convertHexColorFormatToObject', function() {
-        var colorObject =
-            ome.ol3.utils.Conversion.convertHexColorFormatToObject(
-                "#FF8000", 0.5);
+        var colorObject = convertHexColorFormatToObject("#FF8000", 0.5);
         assert.equal(colorObject.red,255);
         assert.equal(colorObject.green,128);
         assert.equal(colorObject.blue,0);
         assert.equal(colorObject.alpha,0.5);
 
-        colorObject =
-            ome.ol3.utils.Conversion.convertHexColorFormatToObject(
-                "#0080FF", 0.11);
+        colorObject = convertHexColorFormatToObject("#0080FF", 0.11);
         assert.equal(colorObject.red,0);
         assert.equal(colorObject.green,128);
         assert.equal(colorObject.blue,255);
@@ -58,45 +82,34 @@ describe("Conversion", function() {
     });
 
     it('convertColorObjectToHex', function() {
-        var hexColor =
-            ome.ol3.utils.Conversion.convertColorObjectToHex(
-                {red : 255, green : 128, blue: 0, alpha: 0.9});
+        var hexColor = convertColorObjectToHex(
+            {red : 255, green : 128, blue: 0, alpha: 0.9});
         assert.equal(hexColor, "#ff8000");
     });
 
     it('convertColorObjectToRgba', function() {
-        var rgbColor =
-            ome.ol3.utils.Conversion.convertColorObjectToRgba(
-                {red : 255, green : 128, blue: 0});
+        var rgbColor = convertColorObjectToRgba(
+            {red : 255, green : 128, blue: 0});
         assert.equal(rgbColor,"rgba(255,128,0,1)");
-        rgbColor =
-            ome.ol3.utils.Conversion.convertColorObjectToRgba(
-                {red : 0, green : 128, blue: 255, alpha: 0.321 });
+        rgbColor = convertColorObjectToRgba(
+            {red : 0, green : 128, blue: 255, alpha: 0.321 });
         assert.equal(rgbColor,"rgba(0,128,255,0.321)");
     });
 
     it('convertColorToSignedInteger', function() {
-        var signedInteger =
-            ome.ol3.utils.Conversion.convertColorToSignedInteger(
+        var signedInteger = convertColorToSignedInteger(
                 {red : 0, green : 255, blue: 0, alpha: 0.5});
         assert.equal(signedInteger,16711807);
-        signedInteger =
-            ome.ol3.utils.Conversion.convertColorToSignedInteger(
-                "#0000FF", 0.0196);
+        signedInteger = convertColorToSignedInteger("#0000FF", 0.0196);
         assert.equal(signedInteger,65285);
-        signedInteger =
-            ome.ol3.utils.Conversion.convertColorToSignedInteger(
-                "rgba(255,112,122,0.7)");
+        signedInteger = convertColorToSignedInteger("rgba(255,112,122,0.7)");
         assert.equal(signedInteger,-9405774);
     });
 
     it('convertSignedIntegerToColorObject', function() {
         var color = {red : 123, green : 200, blue: 22, alpha: 0.321};
-        var signedInteger =
-            ome.ol3.utils.Conversion.convertColorToSignedInteger(color);
-        var color2 =
-            ome.ol3.utils.Conversion.convertSignedIntegerToColorObject(
-                signedInteger);
+        var signedInteger = convertColorToSignedInteger(color);
+        var color2 = convertSignedIntegerToColorObject(signedInteger);
         // truncate for floating point deviations
         color2.alpha = Math.floor(color2.alpha * 1000) / 1000;
         expect(color2).to.eql(color);
@@ -105,20 +118,17 @@ describe("Conversion", function() {
     it('convertPointStringIntoCoords', function() {
         var points = "7,5 8,3 9,1 7,5";
         var expCoords = [[7,-5], [8,-3], [9,-1], [7,-5]];
-        var coords =
-            ome.ol3.utils.Conversion.convertPointStringIntoCoords(points);
+        var coords = convertPointStringIntoCoords(points);
         for (var c in coords)
             expect(coords[c]).to.eql(coords[c], expCoords[c]);
     });
 
-    var pointFeature = new ol.Feature({
-        geometry: new ome.ol3.geom.Point([10,-10])
+    var pointFeature = new Feature({
+        geometry: new Point([10,-10])
     });
 
     it('pointToJsonObject', function() {
-        var jsonObject =
-            ome.ol3.utils.Conversion.pointToJsonObject(
-                pointFeature.getGeometry(),255);
+        var jsonObject = pointToJsonObject(pointFeature.getGeometry(),255);
         assert.equal(jsonObject['@id'],255);
         assert.equal(jsonObject['@type'],
             "http://www.openmicroscopy.org/Schemas/OME/2016-06#Point");
@@ -126,13 +136,12 @@ describe("Conversion", function() {
         assert.equal(jsonObject['Y'],10);
     });
 
-    var ellipseFeature = new ol.Feature({
-        geometry: new ome.ol3.geom.Ellipse(100,-100, 20, 40)
+    var ellipseFeature = new Feature({
+        geometry: new Ellipse(100,-100, 20, 40)
     });
 
     it('ellipseToJsonObject', function() {
-        var jsonObject =
-        ome.ol3.utils.Conversion.ellipseToJsonObject(
+        var jsonObject = ellipseToJsonObject(
             ellipseFeature.getGeometry(),333);
         assert.equal(jsonObject['@id'] , 333);
         assert.equal(jsonObject['@type'] ,
@@ -143,14 +152,13 @@ describe("Conversion", function() {
         assert.equal(jsonObject['RadiusY'] , 40);
     });
 
-    var rectangleFeature = new ol.Feature({
-        geometry: new ome.ol3.geom.Rectangle(33,-77, 20, 40)
+    var rectangleFeature = new Feature({
+        geometry: new Rectangle(33,-77, 20, 40)
     });
 
     it('rectangleToJsonObject', function() {
-        var jsonObject =
-            ome.ol3.utils.Conversion.rectangleToJsonObject(
-        rectangleFeature.getGeometry(),123);
+        var jsonObject = rectangleToJsonObject(
+            rectangleFeature.getGeometry(),123);
         assert.equal(jsonObject['@id'] , 123);
         assert.equal(jsonObject['@type'] ,
             "http://www.openmicroscopy.org/Schemas/OME/2016-06#Rectangle");
@@ -160,14 +168,12 @@ describe("Conversion", function() {
         assert.equal(jsonObject['Height'] , 40);
     });
 
-    var lineFeature = new ol.Feature({
-        geometry: new ome.ol3.geom.Line([[0,0],[10,-10]])
+    var lineFeature = new Feature({
+        geometry: new Line([[0,0],[10,-10]])
     });
 
     it('lineToJsonObject', function() {
-        var jsonObject =
-            ome.ol3.utils.Conversion.lineToJsonObject(
-        lineFeature.getGeometry(),673);
+        var jsonObject = lineToJsonObject(lineFeature.getGeometry(),673);
         assert.equal(jsonObject['@id'] , 673);
         assert.equal(jsonObject['@type'] ,
             "http://www.openmicroscopy.org/Schemas/OME/2016-06#Line");
@@ -177,28 +183,25 @@ describe("Conversion", function() {
         assert.equal(jsonObject['Y2'] , 10);
     });
 
-    var polylineFeature = new ol.Feature({
-        geometry: new ome.ol3.geom.Line([[0,0],[10,-10], [0,-100]])
+    var polylineFeature = new Feature({
+        geometry: new Line([[0,0],[10,-10], [0,-100]])
     });
 
     it('polylineToJsonObject', function() {
-        var jsonObject =
-            ome.ol3.utils.Conversion.polylineToJsonObject(
-                polylineFeature.getGeometry(),342);
+        var jsonObject = polylineToJsonObject(
+            polylineFeature.getGeometry(),342);
         assert.equal(jsonObject['@id'] , 342);
         assert.equal(jsonObject['@type'] ,
             "http://www.openmicroscopy.org/Schemas/OME/2016-06#Polyline");
             assert.equal(jsonObject['Points'] , '0,0 10,10 0,100');
     });
 
-    var labelFeature = new ol.Feature({
-        geometry: new ome.ol3.geom.Label(500,-66, {'width' : 7, 'height' : 3})
+    var labelFeature = new Feature({
+        geometry: new Label(500,-66, {'width' : 7, 'height' : 3})
     });
 
     it('labelToJsonObject', function() {
-        var jsonObject =
-            ome.ol3.utils.Conversion.labelToJsonObject(
-                labelFeature.getGeometry(),99);
+        var jsonObject = labelToJsonObject(labelFeature.getGeometry(),99);
         assert.equal(jsonObject['@id'] , 99);
         assert.equal(jsonObject['@type'] ,
             "http://www.openmicroscopy.org/Schemas/OME/2016-06#Label");
@@ -206,33 +209,31 @@ describe("Conversion", function() {
         assert.equal(jsonObject['Y'] , 66);
     });
 
-    var polygonFeature = new ol.Feature({
-        geometry: new ome.ol3.geom.Polygon(
+    var polygonFeature = new Feature({
+        geometry: new Polygon(
             [[[0,0],[10,-10], [0,-100], [0,0]]])
     });
 
     it('polygonToJsonObject', function() {
-        var jsonObject =
-            ome.ol3.utils.Conversion.polygonToJsonObject(
-                polygonFeature.getGeometry(),4332);
+        var jsonObject = polygonToJsonObject(polygonFeature.getGeometry(),4332);
         assert.equal(jsonObject['@id'] , 4332);
         assert.equal(jsonObject['@type'] ,
             "http://www.openmicroscopy.org/Schemas/OME/2016-06#Polygon");
         assert.equal(jsonObject['Points'] , '0,0 10,10 0,100 0,0');
     });
 
-    labelFeature.setStyle(new ol.style.Style({
-        "text" : new ol.style.Text({
+    labelFeature.setStyle(new Style({
+        "text" : new Text({
         "text" : "unit test",
         "font" : "bold 666px arial",
-        "fill" : new ol.style.Fill({color : "rgba(255,128,0, 1)"}),
-        "stroke" : new ol.style.Stroke({
+        "fill" : new Fill({color : "rgba(255,128,0, 1)"}),
+        "stroke" : new Stroke({
         color : "rgba(255,255,0, 0.7)",
         width : 2})})
     }));
-    rectangleFeature.setStyle(new ol.style.Style({
-        "fill" : new ol.style.Fill({color : "rgba(255,128,0, 1)"}),
-        "stroke" : new ol.style.Stroke({
+    rectangleFeature.setStyle(new Style({
+        "fill" : new Fill({color : "rgba(255,128,0, 1)"}),
+        "stroke" : new Stroke({
         color : "rgba(255,255,0, 0.7)",
         width : 5})}));
     rectangleFeature['TheC'] = 1;
@@ -240,11 +241,8 @@ describe("Conversion", function() {
     rectangleFeature['TheZ'] = 3;
 
     it('integrateStyleAndMiscIntoJsonObject1', function() {
-        var jsonObject =
-            ome.ol3.utils.Conversion.labelToJsonObject(
-                labelFeature.getGeometry(),6);
-        ome.ol3.utils.Conversion.integrateStyleIntoJsonObject(
-            labelFeature, jsonObject);
+        var jsonObject = labelToJsonObject(labelFeature.getGeometry(),6);
+        integrateStyleIntoJsonObject(labelFeature, jsonObject);
         assert.equal(jsonObject['@id'] , 6);
         assert.equal(jsonObject['@type'] ,
             "http://www.openmicroscopy.org/Schemas/OME/2016-06#Label");
@@ -263,13 +261,10 @@ describe("Conversion", function() {
     });
 
     it('integrateStyleAndMiscIntoJsonObject2', function() {
-        var jsonObject =
-            ome.ol3.utils.Conversion.rectangleToJsonObject(
-                rectangleFeature.getGeometry(),3);
-        ome.ol3.utils.Conversion.integrateStyleIntoJsonObject(
-            rectangleFeature, jsonObject);
-        ome.ol3.utils.Conversion.integrateMiscInfoIntoJsonObject(
-            rectangleFeature, jsonObject);
+        var jsonObject = rectangleToJsonObject(
+            rectangleFeature.getGeometry(),3);
+        integrateStyleIntoJsonObject(rectangleFeature, jsonObject);
+        integrateMiscInfoIntoJsonObject(rectangleFeature, jsonObject);
 
         assert.equal(jsonObject['@id'], 3);
         assert.equal(jsonObject['@type'],
@@ -292,8 +287,7 @@ describe("Conversion", function() {
         rectangleFeature.getStyle().getStroke().getColor();
         rectangleFeature['oldStrokeStyle']['width'] =
         rectangleFeature.getStyle().getStroke().getWidth();
-        ome.ol3.utils.Conversion.integrateStyleIntoJsonObject(
-            rectangleFeature, jsonObject);
+        integrateStyleIntoJsonObject(rectangleFeature, jsonObject);
         assert.equal(jsonObject['StrokeColor'],-65358);
         assert.equal(jsonObject['StrokeWidth']['@type'],'TBD#LengthI');
         assert.equal(jsonObject['StrokeWidth']['Unit'],'PIXEL');
@@ -301,32 +295,31 @@ describe("Conversion", function() {
     });
 
     it('toJsonObject', function() {
-        var features = new ol.Collection();
-        labelFeature['state'] = ome.ol3.REGIONS_STATE.MODIFIED;
+        var features = new Collection();
+        labelFeature['state'] = REGIONS_STATE.MODIFIED;
         labelFeature['type'] = 'label';
         labelFeature.setId("1:1");
         features.push(labelFeature);
-        rectangleFeature['state'] = ome.ol3.REGIONS_STATE.ADDED;
+        rectangleFeature['state'] = REGIONS_STATE.ADDED;
         rectangleFeature['type'] = 'rectangle';
         rectangleFeature.setId("-1:1");
         features.push(rectangleFeature);
-        pointFeature['state'] = ome.ol3.REGIONS_STATE.ADDED;
+        pointFeature['state'] = REGIONS_STATE.ADDED;
         pointFeature['type'] = 'point';
         pointFeature.setId("-1:2");
         features.push(pointFeature);
-        ellipseFeature['state'] = ome.ol3.REGIONS_STATE.REMOVED;
+        ellipseFeature['state'] = REGIONS_STATE.REMOVED;
         ellipseFeature.setId("2:2");
         features.push(ellipseFeature);
-        lineFeature['state'] = ome.ol3.REGIONS_STATE.REMOVED;
+        lineFeature['state'] = REGIONS_STATE.REMOVED;
         lineFeature.setId("-2:-2");
         features.push(lineFeature);
-        polylineFeature['state'] = ome.ol3.REGIONS_STATE.REMOVED;
+        polylineFeature['state'] = REGIONS_STATE.REMOVED;
         polylineFeature.setId("10:10");
         features.push(polylineFeature);
 
         var empty_rois = {'10': null};
-        var jsonObject =
-            ome.ol3.utils.Conversion.toJsonObject(features, true, empty_rois);
+        var jsonObject = toJsonObject(features, true, empty_rois);
 
         assert.equal(jsonObject['count'], 5);
         assert.equal(jsonObject['modified'][0]['@id'], 1);
