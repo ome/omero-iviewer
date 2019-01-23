@@ -10,9 +10,10 @@ module.exports = function(config) {
     ],
     files: [
       'test/test.js',
+      'test/unit/conversion.js'
     ],
     preprocessors: {
-      'test/test.js': ['webpack']
+      'test/**/*.js': ['webpack']
     },
     webpack: {
       // minimal webpack config
