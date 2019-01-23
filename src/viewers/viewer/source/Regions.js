@@ -812,7 +812,7 @@ class Regions extends Vector {
      * @param {number} hist_id the id for the history entry we like to un/redo
      * @param {boolean=} undo if true we undo, if false we redo, default: undo
      */
-    doHistory = function(hist_id, undo) {
+    doHistory(hist_id, undo) {
         // get the history entry for the given id (if exists)
         if (typeof this.history_[hist_id] !== 'object') return;
         if (typeof undo !== 'boolean') undo = true;

@@ -356,24 +356,23 @@ class BirdsEye extends Control {
      * @return {ol.Coordinate|undefined} Coordinate for rotation and center anchor.
      * @private
      */
-    calculateCoordinateRotate_ =
-        function(rotation, coordinate) {
-            var coordinateRotate;
+    calculateCoordinateRotate_(rotation, coordinate) {
+        var coordinateRotate;
 
-            var map = this.getMap();
-            var view = map.getView();
+        var map = this.getMap();
+        var view = map.getView();
 
-            var currentCenter = view.getCenter();
+        var currentCenter = view.getCenter();
 
-            if (currentCenter) {
-                coordinateRotate = [
-                    coordinate[0] - currentCenter[0],
-                    coordinate[1] - currentCenter[1]
-                ];
-                rotateCoord(coordinateRotate, rotation);
-                addCoord(coordinateRotate, currentCenter);
-            }
-            return coordinateRotate;
+        if (currentCenter) {
+            coordinateRotate = [
+                coordinate[0] - currentCenter[0],
+                coordinate[1] - currentCenter[1]
+            ];
+            rotateCoord(coordinateRotate, rotation);
+            addCoord(coordinateRotate, currentCenter);
+        }
+        return coordinateRotate;
     }
 
 
