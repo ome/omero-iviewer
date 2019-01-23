@@ -5,7 +5,7 @@
     "dev": "webpack-dev-server --config webpack.dev.config.js --hot --inline --progress --devtool eval-source-map",
     "debug": "./prepare_build.sh DEV && webpack --config webpack.prod.config.js --progress --devtool source-map && ./deploy_build.sh",
     "prod": "./prepare_build.sh && webpack -p --config webpack.prod.config.js --progress && ./deploy_build.sh",
-    "plugin": "webpack --config webpack.plugin.config.js --progress && ./deploy_plugin.sh",
+    "plugin": "./npm_install.sh && webpack --config webpack.plugin.config.js --progress && ./deploy_plugin.sh",
     "docs": "./generate_docs.sh"
   },
   "dependencies": {
