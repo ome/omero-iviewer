@@ -78,7 +78,6 @@ class Install(setuptools.command.install.install):
 class Test(setuptools.command.install.install):
 
     def run(self):
-        # self.spawn(['npm', 'run', 'plugin'])
         self.spawn(['ant', 'unit-tests-only'])
         pass
 
