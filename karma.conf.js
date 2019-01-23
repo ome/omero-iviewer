@@ -10,7 +10,11 @@ module.exports = function(config) {
     ],
     files: [
       'test/test.js',
-      'test/unit/conversion.js'
+      'test/unit/conversion.js',
+      'test/unit/geometries.js',
+      'test/unit/misc.js',
+      'test/unit/net.js',
+      'test/unit/regions.js',
     ],
     preprocessors: {
       'test/**/*.js': ['webpack']
