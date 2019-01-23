@@ -1,7 +1,7 @@
 <project name="ol3-viewer" default="prepare-css-prod">
     <description>
         #################################################
-        ####                BUILD CSS                ####
+        ####                  IVIEWER                ####
         #################################################
     </description>
 
@@ -84,6 +84,7 @@
             <arg value="karma-chrome-launcher"/>
             <arg value="karma-mocha"/>
             <arg value="karma-chai"/>
+            <arg value="karma-webpack"/>
             <arg value="mocha"/>
             <arg value="chai"/>
             <arg value="babel-core@6.26.0"/>

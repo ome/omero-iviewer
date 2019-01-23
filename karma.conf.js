@@ -6,11 +6,33 @@ module.exports = function(config) {
       require('karma-chai'),
       require('karma-chrome-launcher'),
       require('karma-spec-reporter'),
+      require('karma-webpack'),
     ],
     files: [
-      'build/ol-viewer.js',
       'test/test.js',
     ],
+    preprocessors: {
+      'test/test.js': ['webpack']
+    },
+    webpack: {
+      // minimal webpack config
+      resolve: {
+          extensions: [".js"],
+             modules: ["src", "node_modules"]
+      },
+      module: {
+        rules: [
+          { test: /\.js$/, loader: 'babel-loader', exclude: /node_modules/}
+        ]
+      },
+    },
+    webpackMiddleware: {
+      noInfo: true,
+      // and use stats to turn off verbose output
+      stats: {
+        chunks: false
+      }
+    },
     exclude: ['test/unit/debug_mocha.js'],
     reporters: ['spec'],
     port: 9876,
