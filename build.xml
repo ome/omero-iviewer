@@ -87,7 +87,6 @@
             <arg value="mocha"/>
             <arg value="chai"/>
             <arg value="babel-core@6.26.0"/>
-            <arg value="karma-babel-preprocessor"/>
             <arg value="karma-spec-reporter"/>
         </exec>
         <echo>Running Test Suite ....</echo>
