@@ -1,7 +1,16 @@
 module.exports = function(config) {
   config.set({
     frameworks: ['mocha', 'chai'],
-    files: ['test/unit/**/*.js'],
+    plugins: [
+      require('karma-mocha'),
+      require('karma-chai'),
+      require('karma-chrome-launcher'),
+      require('karma-spec-reporter'),
+    ],
+    files: [
+      'test/build/ol-viewer.js',
+      'test/test.js',
+    ],
     exclude: ['test/unit/debug_mocha.js'],
     reporters: ['spec'],
     port: 9876,
