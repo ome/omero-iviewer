@@ -80,6 +80,7 @@
         <echo>Fetching test libraries ....</echo>
         <exec dir="${basedir}" executable="npm">
             <arg value="install"/>
+            <arg value="webpack"/>
             <arg value="karma"/>
             <arg value="karma-chrome-launcher"/>
             <arg value="karma-mocha"/>
@@ -87,7 +88,6 @@
             <arg value="karma-webpack"/>
             <arg value="mocha"/>
             <arg value="chai"/>
-            <arg value="webpack"/>
             <arg value="babel-core@6.26.0"/>
             <arg value="karma-spec-reporter"/>
         </exec>
