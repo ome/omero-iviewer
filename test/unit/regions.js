@@ -94,7 +94,7 @@ describe("Regions", function() {
 
         feature = featureFactory(polygon_info);
         assert.instanceOf(feature, Feature);
-        assert.instanceOf(feature.getGeometry(), OlPolygon);
+        assert.instanceOf(feature.getGeometry(), Polygon);
         expect(feature.getGeometry().getFlatCoordinates()).to.eql(
             [5521,-2928,5304,-2795,5173,-3033,5521,-2928]);
 
