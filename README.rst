@@ -113,6 +113,17 @@ in `index-dev.html <src/index-dev.html>`_:
             </script>
     ...
 
+Testing
+=======
+
+To run all tests, run:
+
+::
+
+    $ ant unit-tests
+
+For more details on testing, see https://github.com/ome/omero-iviewer/tree/master/tests
+
 Documentation
 =============
 
