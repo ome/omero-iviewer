@@ -65,18 +65,7 @@
         </concat>
     </target>
 
-    <target name="prepare-unit-tests">
-        <echo>Preparing test build directory ....</echo>
-        <exec dir="${basedir}" executable="npm">
-            <arg value="run"/>
-            <arg value="plugin"/>
-        </exec>
-        <copy file="build/${plugin.name}" tofile="${test.name}" overwrite="true"/>
-    </target>
-
-    <target name="unit-tests" depends="prepare-unit-tests, unit-tests-only" description="runs unit tests" />
-
-    <target name="unit-tests-only">
+    <target name="unit-tests">
         <echo>Fetching test libraries ....</echo>
         <exec dir="${basedir}" executable="npm">
             <arg value="install"/>

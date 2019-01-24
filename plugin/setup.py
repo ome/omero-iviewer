@@ -78,7 +78,7 @@ class Install(setuptools.command.install.install):
 class Test(setuptools.command.install.install):
 
     def run(self):
-        self.spawn(['ant', 'unit-tests-only'])
+        self.spawn(['ant', 'unit-tests'])
         pass
 
 
