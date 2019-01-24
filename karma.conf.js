@@ -15,8 +15,6 @@ module.exports = function(config) {
       'test/unit/misc.js',
       'test/unit/net.js',
       'test/unit/regions.js',
-      'test/unit/rois.js',
-      'test/unit/style.js',
     ],
     preprocessors: {
       'test/**/*.js': ['webpack']
