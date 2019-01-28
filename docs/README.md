@@ -10,10 +10,12 @@ When you save, this will download an updated xml file. Use ``Export as -> PNG`` 
 Application loading
 ===================
 
-In views.py ``def index()`` loads variables from the query string,
-uses reverse(url) to generate URLS and the Django index.html template
-(at plugin/omero_iviewer/templates/omero_iviewer/index.html)
+In ``views.py`` ``def index()`` loads variables from the query string,
+uses ``reverse(url)`` to generate URLS and the Django ``index.html`` template
+(at ``plugin/omero_iviewer/templates/omero_iviewer/index.html``)
 converts it into global JavaScript object:
+
+    // example JavaScript object created in index.html
 
     INITIAL_REQUEST_PARAMS = {DATASET: "601",
                         IMAGES: "3727,3728,3731,55184",
@@ -25,9 +27,11 @@ converts it into global JavaScript object:
                         WEB_API_BASE: "/api/v0/"}
 
 
-The index.html has no HTML elements except ``<body></body>``
+The ``index.html`` has no HTML elements except ``<body></body>``
 
-The JavaScript entry point is src/main.js:
+The JavaScript entry point is ``src/main.js``:
+
+    // src/main.js
 
     bootstrap(function(aurelia) {
         aurelia.use.basicConfiguration();
@@ -61,6 +65,8 @@ a single image, it loads the parent container to display thumbnails for all imag
 The ``thumbnail-slider`` initiates image loading by calling ``context.addImageConfig(image_id, parent_id, parent_type)``.
 This may first remove other ``image_configs`` before creating a new one and loading image data:
 
+    // src/app/context.js
+
     let image_config = new ImageConfig(this, image_id, parent_id, parent_type);
     // store the image config in the map and make it the selected one
     this.image_configs.set(image_config.id, image_config);
@@ -93,6 +99,8 @@ being the entry point.
 The Viewer class gets passed the ``context.eventbus`` but not the
 ``context`` or ``image_info`` like other Aurelia classes.
 
+    // src/viewers/ol3-viewer.js
+
     this.viewer_ = new Viewer(
         this.image_config.image_info.image_id, {
             eventbus : this.context.eventbus,
@@ -105,14 +113,14 @@ The Viewer class gets passed the ``context.eventbus`` but not the
 The ``Viewer.image_info_`` is actually the ``image_info.tmp_data`` JSON response object,
 not the ``Image_Info`` class.
 
-
 When the Viewer is created, we create the OpenLayers Map and other components
-from the image_info_ data:
+from the ``image_info_`` data:
+
+    // src/viewers/ol3-viewer.js
 
     import OlMap from 'ol/Map';
 
     // within bootstrapOpenLayers(), called by constructor
-
     // use image_info_ data to get IDs, dimensions etc. E.g.
     dims = this.image_info_['size']
 
@@ -142,9 +150,9 @@ Regions (ROIs)
 When we select the ROIs tab in the ``right-hand-panel`` component, this calls
 ``this.image_config.regions_info.requestData()`` which makes the AJAX call to
 load ROIs. When ready, the ``ol3-viewer`` calls ``this.viewer.addRegions(data)``.
-This adds a Vector layer to the Openlayers Map:
+This adds a Vector layer to the OpenLayers Map:
 
-    // Viewer.js
+    // src/viewers/viewer/Viewer.js
 
     import Vector from 'ol/layer/Vector'
     import Regions from './source/Regions';    // extends 'ol/source/Vector'
@@ -162,7 +170,7 @@ This adds a Vector layer to the Openlayers Map:
 When a drawing tool such as Rectangle is selected, the ol3-viewer calls
 ``this.viewer.drawShape(params)``:
 
-    // Viewer.js
+    // src/viewers/viewer/Viewer.js
 
     drawShape(shape, roi_id, opts) {
         this.setRegionsModes([DRAW]);
@@ -172,7 +180,7 @@ When a drawing tool such as Rectangle is selected, the ol3-viewer calls
 This first calls ``source/Regions.setModes(DRAW)`` to create a new
 ``viewer/interaction/Draw``...
 
-    // source/Regions.js
+    // src/viewers/viewer/source/Regions.js
 
     setModes(modes) {
         // if DRAW in modes
@@ -181,9 +189,9 @@ This first calls ``source/Regions.setModes(DRAW)`` to create a new
 
 The viewer/interaction/Draw calls wraps an OpenLayers Draw instance instead of
 extending it. A new ``OpenLayers Draw`` instance is created with a function that
-generates e.g a new viewer/geom/Rectangle:
+generates e.g. a new viewer/geom/Rectangle:
 
-    // interaction/Draw.js
+    // src/viewers/viewer/interaction/Draw.js
 
     // called by Viewer.drawShape() above
     drawShape(shape, roi_id, opts)
@@ -206,7 +214,7 @@ generates e.g a new viewer/geom/Rectangle:
 
 The ``onDrawEndAction()`` is fired when a shape is completed and calls:
 
-    // interaction/Draw.js
+    // src/viewers/viewer/interaction/Draw.js
 
     self.regions_.addFeature(event.feature);
 
