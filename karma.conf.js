@@ -9,12 +9,12 @@ module.exports = function(config) {
       require('karma-webpack'),
     ],
     files: [
-      'test/test.js',
       'test/unit/conversion.js',
       'test/unit/geometries.js',
       'test/unit/misc.js',
       'test/unit/net.js',
       'test/unit/regions.js',
+      'test/unit/viewer.js',
     ],
     preprocessors: {
       'test/**/*.js': ['webpack']
