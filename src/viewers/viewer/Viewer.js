@@ -30,8 +30,11 @@ import Vector from 'ol/layer/Vector';
 import View from 'ol/View';
 import PluggableMap from 'ol/PluggableMap';
 import OlMap from 'ol/Map';
-import {intersects, getCenter} from 'ol/extent';
+import {intersects, getCenter, getTopLeft} from 'ol/extent';
 import {noModifierKeys, primaryAction} from 'ol/events/condition';
+import TileGrid from 'ol/tilegrid/TileGrid.js';
+import VectorTileLayer from 'ol/layer/VectorTile.js';
+import VectorTileSource from 'ol/source/VectorTile.js';
 
 import Draw from './interaction/Draw';
 import {checkAndSanitizeServerAddress,
@@ -68,6 +71,7 @@ import {integrateStyleIntoJsonObject,
 import OmeroImage from './source/Image';
 import Regions from './source/Regions';
 import Mask from './geom/Mask';
+import OmeJSON from './format/OmeJSON';
 
 /**
  * @classdesc
@@ -584,12 +588,54 @@ class Viewer extends OlObject {
         this.viewerState_[contr] = defaultConts[contr];
         }
 
+        // Load ROIs by tile
+        let tileUrlFunction = (tileCoord) => {
+            // let zoom = tileCoord[0];
+            let x = tileCoord[1];
+            let y = -tileCoord[2] - 1;
+            var zoom = zoomLevelScaling.length - tileCoord[0] - 1;
+            var tile = + zoom  + ',' + tileCoord[1] + ',' + (-tileCoord[2]-1);
+            console.log('tileUrlFunction zoom', zoom, 'x', x, 'y', y);
+            return x === 0 ? `http://localhost:8080/api/v0/m/rois/?image=${ this.id_ }&tile=${ tile }` : "fail";
+          }
+        
+        var extent = [0, -dims['height'], dims['width'], 0];
+        var tgOpts = {
+            tileSize: this.image_info_['tile_size'] ?
+                [this.image_info_['tile_size'].width,
+                 this.image_info_['tile_size'].height] :
+                [DEFAULT_TILE_DIMS.width, DEFAULT_TILE_DIMS.height],
+            extent: extent,
+            origin: getTopLeft(extent),
+            resolutions: zoom > 1 ? zoomLevelScaling : [1],
+        }
+        console.log("TileGrid", tgOpts);
+        var tileGrid = new TileGrid(tgOpts);
+
+        class OmeVectorTileSource extends VectorTileSource {
+            getTileGridForProjection(p) {
+                return this.tileGrid;
+            }
+        }
+
+        let omeFormat = new OmeJSON({
+            projection: proj
+        })
+        let roiTiles = new VectorTileLayer({
+            source: new OmeVectorTileSource({
+                format: omeFormat,
+                tileUrlFunction: tileUrlFunction,
+                tileGrid: tileGrid,
+            }),
+        });
+
         // finally construct the open layers map object
         this.viewer_ = new OlMap({
             logo: false,
             controls: controls,
             interactions: interactions,
-            layers: [new Tile({source: source})],
+            layers: [new Tile({source: source}),
+                roiTiles],
             target: this.container_,
             view: view
         });
@@ -1230,9 +1276,9 @@ class Viewer extends OlObject {
      */
     getRegionsLayer() {
         if (!(this.viewer_ instanceof PluggableMap) || // mandatory viewer presence check
-            this.viewer_.getLayers().getLength() < 2) // unfathomable event of layer missing...
+            this.viewer_.getLayers().getLength() < 3) // If we haven't added layer yet
             return null;
-
+        // Return last layer added
         return this.viewer_.getLayers().item(this.viewer_.getLayers().getLength()-1);
     }
 
