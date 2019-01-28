@@ -17,7 +17,6 @@
 //
 
 import Feature from 'ol/Feature';
-import OlPolygon from 'ol/geom/Polygon';
 import {containsExtent,
     getTopLeft} from 'ol/extent';
 import {featureFactory,
