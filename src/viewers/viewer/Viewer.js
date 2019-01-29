@@ -30,7 +30,7 @@ import Vector from 'ol/layer/Vector';
 import View from 'ol/View';
 import PluggableMap from 'ol/PluggableMap';
 import OlMap from 'ol/Map';
-import {intersects, getCenter, getTopLeft} from 'ol/extent';
+import {intersects, getCenter} from 'ol/extent';
 import {noModifierKeys, primaryAction} from 'ol/events/condition';
 import TileGrid from 'ol/tilegrid/TileGrid.js';
 import VectorTileLayer from 'ol/layer/VectorTile.js';
@@ -70,8 +70,8 @@ import {integrateStyleIntoJsonObject,
     LOOKUP} from './utils/Conversion';
 import OmeroImage from './source/Image';
 import Regions from './source/Regions';
+import TiledRegions from './source/TiledRegions';
 import Mask from './geom/Mask';
-import OmeJSON from './format/OmeJSON';
 
 /**
  * @classdesc
@@ -589,44 +589,8 @@ class Viewer extends OlObject {
         }
 
         // Load ROIs by tile
-        let tileUrlFunction = (tileCoord) => {
-            // let zoom = tileCoord[0];
-            let x = tileCoord[1];
-            let y = -tileCoord[2] - 1;
-            var zoom = zoomLevelScaling.length - tileCoord[0] - 1;
-            var tile = + zoom  + ',' + tileCoord[1] + ',' + (-tileCoord[2]-1);
-            console.log('tileUrlFunction zoom', zoom, 'x', x, 'y', y);
-            return x === 0 ? `http://localhost:8080/api/v0/m/rois/?image=${ this.id_ }&tile=${ tile }` : "fail";
-          }
-        
-        var extent = [0, -dims['height'], dims['width'], 0];
-        var tgOpts = {
-            tileSize: this.image_info_['tile_size'] ?
-                [this.image_info_['tile_size'].width,
-                 this.image_info_['tile_size'].height] :
-                [DEFAULT_TILE_DIMS.width, DEFAULT_TILE_DIMS.height],
-            extent: extent,
-            origin: getTopLeft(extent),
-            resolutions: zoom > 1 ? zoomLevelScaling : [1],
-        }
-        console.log("TileGrid", tgOpts);
-        var tileGrid = new TileGrid(tgOpts);
-
-        class OmeVectorTileSource extends VectorTileSource {
-            getTileGridForProjection(p) {
-                return this.tileGrid;
-            }
-        }
-
-        let omeFormat = new OmeJSON({
-            projection: proj
-        })
         let roiTiles = new VectorTileLayer({
-            source: new OmeVectorTileSource({
-                format: omeFormat,
-                tileUrlFunction: tileUrlFunction,
-                tileGrid: tileGrid,
-            }),
+            source: new TiledRegions(this.image_info_, proj),
         });
 
         // finally construct the open layers map object

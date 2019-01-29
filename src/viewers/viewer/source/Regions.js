@@ -210,6 +210,7 @@ class Regions extends Vector {
                 // store response internally to be able to work with it later
                 scope.regions_info_ = data;
                 scope.new_unsaved_shapes_ = {}; // reset
+                console.log('init0');
                 var regionsAsFeatures = createFeaturesFromRegionsResponse(scope);
                 if (isArray(regionsAsFeatures) &&
                     regionsAsFeatures.length > 0)
@@ -290,6 +291,7 @@ class Regions extends Vector {
         var translateMode = false;
         var modifyMode = false;
         var drawMode = false;
+        console.log('setModes....');
 
         // empty present modes, remembering old ones for draw reset
         var oldModes = this.present_modes_.slice();

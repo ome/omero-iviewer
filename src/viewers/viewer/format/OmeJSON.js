@@ -147,22 +147,40 @@ class OmeJSON extends JSONFeature {
   readFeatures(source, opt_options) {
     let responseJSON = JSON.parse(source);
     let roisJSON = responseJSON.data;
-    let roi = roisJSON[3];
-    let shape = roi.shapes[0];
-    // let shape = testShape;
-    shape.type = shape['@type'].split('#')[1].toLowerCase();
-    let feature = featureFactory(shape);
 
-    feature.setStyle(
+    let shapes = [];
+    roisJSON.forEach((roi) => {
+      roi.shapes.forEach(shape => {
+        shapes.push(shape);
+      });
+    });
+
+    let features = shapes.map((shape) => {
+      shape.type = shape['@type'].split('#')[1].toLowerCase();
+      let feature = featureFactory(shape);
+      feature.setStyle(
         new Style({
           stroke: new Stroke({
             color: '#f00',
             width: 20
           })
         })
-    );
+      );
+      return feature;
+    });
+    // shape.type = shape['@type'].split('#')[1].toLowerCase();
+    // let feature = featureFactory(shape);
 
-    return [feature];
+    // feature.setStyle(
+    //     new Style({
+    //       stroke: new Stroke({
+    //         color: '#f00',
+    //         width: 20
+    //       })
+    //     })
+    // );
+
+    return features;
   };
 
   readProjection(source) {
