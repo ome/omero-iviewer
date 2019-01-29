@@ -10,7 +10,7 @@ When you save, this will download an updated xml file. Use ``Export as -> PNG`` 
 Application loading
 ===================
 
-In ``views.py`` ``def index()`` loads variables from the query string,
+In ``views.py``, ``def index()`` loads variables from the query string,
 uses ``reverse(url)`` to generate URLS and the Django ``index.html`` template
 (at ``plugin/omero_iviewer/templates/omero_iviewer/index.html``)
 converts it into global JavaScript object:
@@ -121,7 +121,7 @@ from the ``image_info_`` data:
     import OlMap from 'ol/Map';
 
     // within bootstrapOpenLayers(), called by constructor
-    // use image_info_ data to get IDs, dimensions etc. E.g.
+    // use image_info_ data to get IDs, dimensions etc. e.g.
     dims = this.image_info_['size']
 
     var source = new OmeroImage({
@@ -187,9 +187,9 @@ This first calls ``source/Regions.setModes(DRAW)`` to create a new
         this.draw_ = new Draw(oldModes, this);
     }
 
-The viewer/interaction/Draw calls wraps an OpenLayers Draw instance instead of
+The ``viewer/interaction/Draw`` calls wraps an OpenLayers Draw instance instead of
 extending it. A new ``OpenLayers Draw`` instance is created with a function that
-generates e.g. a new viewer/geom/Rectangle:
+generates e.g. a new ``viewer/geom/Rectangle``:
 
     // src/viewers/viewer/interaction/Draw.js
 
