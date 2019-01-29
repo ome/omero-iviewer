@@ -22,7 +22,7 @@ class OmeVectorTileSource extends VectorTileSource {
             if (zoom > 0) {
                 return
             }
-            return `http://localhost:8080/api/v0/m/rois/?image=${ image_info_.id }&tile=${ tile }`;
+            return `http://localhost:8080/iviewer/shapes_by_region/${ image_info_.id }/?tile=${ tile }`;
         }
 
         var zoomLevelScaling = null;
