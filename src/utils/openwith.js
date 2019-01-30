@@ -67,7 +67,7 @@ export default class OpenWith {
      * Fetches the open with scripts and stores them in OpenWith.OPEN_WITH
      *
      * @static
-     * @param {string} prefixed_server_uri the server prefix
+     * @param {string} server_prefix the server prefix
      */
     static fetchOpenWithScripts(server_prefix) {
         OpenWith.OPEN_WITH = [];
@@ -95,6 +95,7 @@ export default class OpenWith {
      * @param {number} image_id the image id for the open_with_links
      * @param {string} image_name the image_name for the open_with_links
      * @param {string} iviewer_url the prefixed iviewer url
+     * @param {string} webgateway_url the prefixed webgateway url
      * @return {Array.<Object>} a list of link parameters or empty list
      */
     static getOpenWithLinkParams(image_id, image_name, iviewer_url, webgateway_url) {

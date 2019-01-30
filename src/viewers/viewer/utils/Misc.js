@@ -16,7 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-import PluggableMap from 'ol/PluggableMap';
+import OlMap from 'ol/Map';
 import {containsExtent} from 'ol/extent';
 import Viewer from '../Viewer';
 // import PROJECTION from '../globals';
@@ -370,7 +370,7 @@ export const parseProjectionParameter = function(projection_info) {
  */
 export const sendEventNotification = function(viewer, type, content, delay) {
     if (!(viewer instanceof Viewer) ||
-        !(viewer.viewer_ instanceof PluggableMap) ||
+        !(viewer.viewer_ instanceof OlMap) ||
         viewer.prevent_event_notification_ ||
         typeof type !== 'string' ||
         type.length === 0) return;

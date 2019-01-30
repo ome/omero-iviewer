@@ -141,9 +141,9 @@ def persist_rois(request, conn=None, **kwargs):
                 ids_to_sync[new[r]['oldId']] = \
                     str(decoded_rois[r].getId().getValue()) + ':' + \
                     str(decoded_rois[r].getShape(0).getId().getValue())
-    except Exception as marshalOrPersistenceException:
+    except Exception as marshal_or_persistence_exception:
         errors.append('Error persisting new rois: ' +
-                      repr(marshalOrPersistenceException))
+                      repr(marshal_or_persistence_exception))
 
     # modify existing ones
     try:
@@ -158,9 +158,9 @@ def persist_rois(request, conn=None, **kwargs):
         # set ids after successful modification
         for r in range(modified_count):
             ids_to_sync[modified[r]['oldId']] = modified[r]['oldId']
-    except Exception as marshalOrPersistenceException:
+    except Exception as marshal_or_persistence_exception:
         errors.append('Error modifying rois: ' +
-                      repr(marshalOrPersistenceException))
+                      repr(marshal_or_persistence_exception))
 
     # delete entire (empty) rois
     try:
@@ -172,9 +172,9 @@ def persist_rois(request, conn=None, **kwargs):
         for e in empty_rois:
             for s in empty_rois[e]:
                 ids_to_sync[s] = s
-    except Exception as deletionException:
+    except Exception as deletion_exception:
         errors.append('Error deleting empty rois: ' +
-                      repr(deletionException))
+                      repr(deletion_exception))
 
     # remove individual shapes (so as to not punch holes into shape index)
     try:
@@ -196,8 +196,8 @@ def persist_rois(request, conn=None, **kwargs):
             for d in deleted:
                 for s in deleted[d]:
                     ids_to_sync[s] = s
-    except Exception as deletionException:
-        errors.append('Error deleting shapes: ' + repr(deletionException))
+    except Exception as deletion_exception:
+        errors.append('Error deleting shapes: ' + repr(deletion_exception))
 
     # prepare response
     ret = {'ids': ids_to_sync}

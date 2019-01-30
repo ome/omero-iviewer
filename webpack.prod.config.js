@@ -37,7 +37,6 @@ module.exports = {
       modules: ["src", "libs", "node_modules"]
   },
   module: {
-    noParse: [/libs\/ol3-viewer.js$/],
     rules: [
         { test: /\.js$/, exclude: /node_modules/, use: [{
             loader: 'babel-loader',

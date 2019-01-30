@@ -1,44 +1,51 @@
 ol3-viewer plugin
 =================
 
-In order to replace the default OMERO.web viewer follow the instructions below.
+This plugin allows the running of the OpenLayers-based viewer as a
+stand-alone image viewer, without any Aurelia model / UI components.
+This is primarily for testing purposes (see below).
 
 Prerequisite is, of course, an installed and working instance of OMERO.web.
 
-Don't forget to add this folder to the PYTHONPATH, then register the plugin
-as a web.app, and last but not least set it to be used as the default viewer:
+Add the plugin folder to the ``PYTHONPATH`` if not already set (this is
+the same path as for development of omero_iviewer itself).
+Then register the plugin as a web.app:
 
 ::
 
+    $ export PYTHONPATH=$PYTHONPATH:/path/to/omero_iviewer/plugin/
     $ bin/omero config append omero.web.apps '"ol3-viewer"'
-    $ bin/omero config set omero.web.viewer.view ol3-viewer.views.plugin
 
-
-Depending on your setup you might also have to add this directory to your web server configuration, e.g. apache
-
-More detailed resources on how to create a web app and development setup can be found here:
-
-1. `CreateApp <https://docs.openmicroscopy.org/latest/omero/developers/Web/CreateApp.html>`_
-2. `Deployment <https://docs.openmicroscopy.org/latest/omero/developers/Web/Deployment.html>`_
-
-IMPORTANT: In order to have the javascript files built and deployed you can choose to run either:
+You need to build the OpenLayers Viewer JavaScript files:
 
 ::
 
-    $ ant build-plugin
+    $ npm run plugin
 
-This will build compressed/debug versions of the viewer, then copy them over to the static
-Django directories:
-
-::
-
-    $ compile plugin
-
-This way of compiling is shorter and easier for development
-
-
-To keep the files up-to-date during development, don't forget to call
+To keep the files up-to-date during development, don't forget to call:
 
 ::
 
     $ bin/omero websync
+
+After restarting your web server, you should be able to open images with a
+URL like:
+
+::
+
+    /ol3-viewer/[IMAGE_ID]
+
+You can use the browser console to interact with the viewer, for example:
+
+::
+
+    // Load and display any ROIs from OMERO, allow shape selection etc.
+    viewer.addRegions()
+    // Allow user to draw a new Rectangle on the image
+    viewer.drawShape({type: 'rectangle'})
+
+If you wish to set this viewer as your default image viewer:
+
+::
+
+    $ bin/omero config set omero.web.viewer.view ol3-viewer.views.plugin

@@ -153,7 +153,7 @@ class Modify extends OlModify {
      * Rectangle or end of Line or Ellipse.
      *
      * @param {ol.Pixel} pixel Pixel
-     * @param {ol.PluggableMap} map Map.
+     * @param {ol.Map} map Map.
      * @private
      */
     handlePointerAtPixel_(pixel, map) {

@@ -807,6 +807,7 @@ class Regions extends Vector {
      * @param {Array.<ol.Feature>} features an array of features containing the geometries
      * @param {boolean} is_old_value
      *          if true we take the geometries to be the old value, otherwise new
+     * @param {number} hist_id Option to specify a history id
      * @return {number} the id for the history entry
      */
     addHistory(features, is_old_value, hist_id) {
