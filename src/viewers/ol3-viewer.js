@@ -29,7 +29,8 @@ import {draggable} from 'jquery-ui/ui/widgets/draggable';
 import {resizable} from 'jquery-ui/ui/widgets/resizable';
 import {
     IMAGE_CONFIG_RELOAD, IVIEWER, PLUGIN_PREFIX, PROJECTION,
-    REGIONS_DRAWING_MODE, RENDER_STATUS, VIEWER_ELEMENT_PREFIX, WEBCLIENT
+    REGIONS_DRAWING_MODE, RENDER_STATUS, VIEWER_ELEMENT_PREFIX,
+    REGIONS_PAGE_SIZE
 } from '../utils/constants';
 import {
     IMAGE_CANVAS_DATA, IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY,
@@ -836,12 +837,12 @@ export default class Ol3Viewer extends EventSubscriber {
             } else shapeSelection = null;
         }
         let delay = 0;
+        let shape;
         if (shapeSelection) {
             let viewerT = this.viewer.getDimensionIndex('t');
             let viewerZ = this.viewer.getDimensionIndex('z');
             let viewerC = this.viewer.getDimensionIndex('c');
-            let shape =
-                this.image_config.regions_info.getShape(shapeSelection);
+            shape = this.image_config.regions_info.getShape(shapeSelection);
             let shapeT = typeof shape.TheT === 'number' ? shape.TheT : -1;
             if (shapeT !== -1 && shapeT !== viewerT) {
                 this.image_config.image_info.dimensions.t = shapeT;
@@ -863,7 +864,7 @@ export default class Ol3Viewer extends EventSubscriber {
             this.abortDrawing();
             this.viewer.selectShapes(
                 params.shapes, params.value, params.clear,
-                params.center ? shapeSelection : null);
+                params.center ? shape : null);
         }, delay);
       }
 
@@ -914,7 +915,14 @@ export default class Ol3Viewer extends EventSubscriber {
             !this.image_config.regions_info.ready ||
             !Misc.isArray(this.image_config.regions_info.tmp_data)) return;
 
-        this.viewer.addRegions(this.image_config.regions_info.tmp_data);
+        // If ROI count is greater than 1 page (we don't have all ROIs in hand)
+        // then we use Tiled Regions
+        if (this.image_config.image_info.roi_count > REGIONS_PAGE_SIZE) {
+            this.viewer.addTiledRegions();
+        } else {
+            this.viewer.addRegions(this.image_config.regions_info.tmp_data);
+        }
+
         this.changeRegionsModes(
             { modes: this.image_config.regions_info.regions_modes});
         this.viewer.showShapeComments(
@@ -1160,10 +1168,6 @@ export default class Ol3Viewer extends EventSubscriber {
                 }
             }
         }
-
-        // update roi count
-        this.image_config.image_info.roi_count =
-            this.image_config.regions_info.data.size;
 
         // clear history
         this.image_config.regions_info.history.resetHistory();

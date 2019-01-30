@@ -210,7 +210,6 @@ class Regions extends Vector {
                 // store response internally to be able to work with it later
                 scope.regions_info_ = data;
                 scope.new_unsaved_shapes_ = {}; // reset
-                console.log('init0');
                 var regionsAsFeatures = createFeaturesFromRegionsResponse(scope);
                 if (isArray(regionsAsFeatures) &&
                     regionsAsFeatures.length > 0)
@@ -657,6 +656,42 @@ class Regions extends Vector {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Get the geometry of the feature specified by ID
+     *
+     * @param {string} shape_id The shapeId (takes form of shapeId:roiId)
+     */
+    getGeometry(shape_id) {
+        if (this.idIndex_[shape_id]) {
+            return this.idIndex_[shape_id].getGeometry();
+        }
+    }
+
+    /**
+     * Return True if this feature is selected
+     *
+     * @param {ol.Feature} feature The feature
+     */
+    isFeatureSelected(feature) {
+        return feature['selected']
+    }
+
+    /**
+     * Marks given shapes as selected, clearing any previously selected if clear flag
+     * is set. Optionally the view centers on a given shape.
+     *
+     * @param {Array<string>} roi_shape_ids list in roi_id:shape_id notation
+     * @param {boolean} selected flag whether we should (de)select the rois
+     * @param {boolean} clear flag whether we should clear existing selection beforehand
+     * @param {string|null} center the id of the shape to center on or null
+     */
+    selectShapes(roi_shape_ids, selected, clear) {
+        if (this.select_ === null) return;
+
+        if (typeof clear === 'boolean' && clear) this.select_.clearSelection();
+        this.setProperty(roi_shape_ids, "selected", selected);
     }
 
     /**

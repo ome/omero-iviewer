@@ -347,7 +347,6 @@ export default class RegionsInfo  {
                 }
             }
             this.number_of_shapes = count;
-            this.image_info.roi_count = this.data.size;
             this.tmp_data = data;
         } catch(err) {
             console.error("Failed to sync Rois: " + err);

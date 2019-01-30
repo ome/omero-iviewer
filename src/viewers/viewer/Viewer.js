@@ -27,21 +27,20 @@ import Feature from 'ol/Feature';
 import Projection from 'ol/proj/Projection';
 import Tile from 'ol/layer/Tile';
 import Vector from 'ol/layer/Vector';
+import VectorTile from 'ol/layer/VectorTile';
 import View from 'ol/View';
 import PluggableMap from 'ol/PluggableMap';
 import OlMap from 'ol/Map';
 import {intersects, getCenter} from 'ol/extent';
 import {noModifierKeys, primaryAction} from 'ol/events/condition';
-import TileGrid from 'ol/tilegrid/TileGrid.js';
-import VectorTileLayer from 'ol/layer/VectorTile.js';
-import VectorTileSource from 'ol/source/VectorTile.js';
 
 import Draw from './interaction/Draw';
 import {checkAndSanitizeServerAddress,
     isSameOrigin,
     sendRequest,
     makeCrossDomainLoginRedirect} from './utils/Net';
-import {generateRegions} from './utils/Regions';
+import {generateRegions,
+    featureFactory} from './utils/Regions';
 import {modifyStyles,
     updateStyleFunction} from './utils/Style';
 import Label from './geom/Label';
@@ -442,7 +441,7 @@ class Viewer extends OlObject {
             this.image_info_['pixel_size']['x'] : null;
 
         // instantiate a pixel projection for omero data
-        var proj = new Projection({
+        this.proj_ = new Projection({
             code: 'OMERO',
             units: 'pixels',
             extent: [0, 0, dims['width'], dims['height']],
@@ -564,7 +563,7 @@ class Viewer extends OlObject {
 
         // we need a View object for the map
         var view = new View({
-            projection: proj,
+            projection: this.proj_,
             center: imgCenter,
             extent: [0, -dims['height'], dims['width'], 0],
             resolutions : possibleResolutions,
@@ -588,18 +587,12 @@ class Viewer extends OlObject {
         this.viewerState_[contr] = defaultConts[contr];
         }
 
-        // Load ROIs by tile
-        let roiTiles = new VectorTileLayer({
-            source: new TiledRegions(this.image_info_, proj),
-        });
-
         // finally construct the open layers map object
         this.viewer_ = new OlMap({
             logo: false,
             controls: controls,
             interactions: interactions,
-            layers: [new Tile({source: source}),
-                roiTiles],
+            layers: [new Tile({source: source})],
             target: this.container_,
             view: view
         });
@@ -757,6 +750,19 @@ class Viewer extends OlObject {
     }
 
     /**
+     * Adds a VectorTile layer to load Shapes by tile.
+     * Shapes cannot be modified or translated.
+     */
+    addTiledRegions() {
+
+        this.viewer_.addLayer(
+            new VectorTile({
+                source: new TiledRegions(this),
+            })
+        );
+    }
+
+    /**
      * Toggles the visibility of the regions/layer.
      * If a non-empty array of rois is handed in, only the listed regions will be affected,
      * otherwise the entire layer
@@ -796,24 +802,44 @@ class Viewer extends OlObject {
     /**
      * Marks given shapes as selected, clearing any previously selected if clear flag
      * is set. Optionally the view centers on a given shape.
+     * NB: If we're using TiledRegions, we need to specify the centre_on_shape as
+     * a shape Object since we don't have shape objects loaded
+     * However, if we've loaded all Regions, we can use an ID 'roiId:shapeId' instead
      *
      * @param {Array<string>} roi_shape_ids list in roi_id:shape_id notation
      * @param {boolean} selected flag whether we should (de)select the rois
      * @param {boolean} clear flag whether we should clear existing selection beforehand
-     * @param {string|null} center the id of the shape to center on or null
+     * @param {any} centre_on_shape the shape object OR id of the shape to center on or null
      */
-    selectShapes(
-        roi_shape_ids, selected, clear, center) {
+    selectShapes(roi_shape_ids, selected, clear, centre_on_shape) {
         // without a regions layer there will be no select of regions ...
         var regions = this.getRegions();
         if (regions === null || regions.select_ === null) return;
 
-        if (typeof clear === 'boolean' && clear) regions.select_.clearSelection();
-        regions.setProperty(roi_shape_ids, "selected", selected);
+        // regions could be source.TiledRegions or source.Regions
+        // This will send notification of property change
+        regions.selectShapes(roi_shape_ids, selected, clear);
 
-        if (typeof center === 'string' &&
-            typeof regions.idIndex_[center] === 'object')
-                this.centerOnGeometry(regions.idIndex_[center].getGeometry());
+        let regionsLayer = this.getRegionsLayer();
+        let resolution;
+        if (regionsLayer instanceof VectorTile) {
+            // force redraw of layer style
+            regionsLayer.setStyle(regionsLayer.getStyle());
+            // Zoom in to 100% so that VectorTiles load
+            resolution = 1;
+        }
+
+        // Find shape Geometry and centre image
+        let geometry;
+        if (typeof centre_on_shape === "object") {
+            let feature = featureFactory(centre_on_shape);
+            geometry = feature ? feature.getGeometry() : undefined;
+        } else if (typeof centre_on_shape === "string") {
+            geometry = regions.getGeometry(centre_on_shape);
+        }
+        if (geometry) {
+            this.centerOnGeometry(geometry, resolution);
+        }
     }
 
     /**
@@ -846,11 +872,6 @@ class Viewer extends OlObject {
     centerOnGeometry(geometry, resolution) {
         if (!(geometry instanceof Geometry)) return;
 
-        // only center if we don't intersect the viewport
-        if (intersects(
-                geometry.getExtent(),
-                this.viewer_.getView().calculateExtent())) return;
-
         // use given resolution for zoom
         if (typeof resolution === 'number' && !isNaN(resolution)) {
             var constrainedResolution =
@@ -858,6 +879,11 @@ class Viewer extends OlObject {
             if (typeof constrainedResolution === 'number')
                 this.viewer_.getView().setResolution(constrainedResolution);
         }
+
+        // only center if we don't intersect the viewport
+        if (intersects(
+            geometry.getExtent(),
+            this.viewer_.getView().calculateExtent())) return;
 
         // center (taking into account potential rotation)
         var rot = this.viewer_.getView().getRotation();
@@ -1236,11 +1262,11 @@ class Viewer extends OlObject {
      * Internal Method to get to the 'regions layer' which will always be the second!
      *
      * @private
-     * @return { ol.layer.Vector|null} the open layers vector layer being our regions or null
+     * @return { ol.layer.Vector|ol.layer.VectorTile|null} the open layers vector layer being our regions or null
      */
     getRegionsLayer() {
         if (!(this.viewer_ instanceof PluggableMap) || // mandatory viewer presence check
-            this.viewer_.getLayers().getLength() < 3) // If we haven't added layer yet
+            this.viewer_.getLayers().getLength() < 2) // If we haven't added layer yet
             return null;
         // Return last layer added
         return this.viewer_.getLayers().item(this.viewer_.getLayers().getLength()-1);
