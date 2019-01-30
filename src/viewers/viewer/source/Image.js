@@ -698,7 +698,7 @@ OmeroImage.prototype.clearPostTileLoadFunction = function() {
  * Watches the render status by setting up a post render event once
  * and registering the appropriate tile load listeners
  *
- * @param {ol.PluggableMap} viewer a map reference for postrender
+ * @param {ol.Map} viewer a map reference for postrender
  * @param {boolean} stopOnTileLoadError we don't continue watching the load
  *                      progress if we experience tile load errors,
  *                      defaults to false

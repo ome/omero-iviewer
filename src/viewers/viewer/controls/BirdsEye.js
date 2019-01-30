@@ -31,8 +31,7 @@ import Overlay from 'ol/Overlay';
 import OverlayPositioning from 'ol/OverlayPositioning';
 import Pointer from 'ol/interaction/Pointer';
 import MapBrowserPointerEvent from 'ol/MapBrowserPointerEvent';
-import PluggableMap from 'ol/PluggableMap';
-import Map from 'ol/Map';
+import OlMap from 'ol/Map';
 import ImageStatic from 'ol/source/ImageStatic';
 import {listen, listenOnce, unlistenByKey} from 'ol/events';
 import EventType from 'ol/events/EventType';
@@ -136,7 +135,7 @@ class BirdsEye extends Control {
         ];
 
         /**
-        * @type {ol.PluggableMap}
+        * @type {ol.Map}
         * @private
         */
         this.birds_eye_ = this.initOrUpdate();
@@ -249,7 +248,7 @@ class BirdsEye extends Control {
 
     /**
      * Sets map and rerenders/updates bird's eye view
-     * @param {ol.PluggableMap} map
+     * @param {ol.Map} map
      */
     setMap(map) {
         if (map) {
@@ -260,9 +259,9 @@ class BirdsEye extends Control {
     }
 
     /**
-     * Creates/Initializes a ol.PluggableMap that represents the bird's eye view
+     * Creates/Initializes a ol.Map that represents the bird's eye view
      * or merely updates it if one exists already
-     * @return {ol.PluggableMap} the bird's eye view
+     * @return {ol.Map} the bird's eye view
      */
     initOrUpdate() {
         // determine thumbnail size
@@ -275,7 +274,7 @@ class BirdsEye extends Control {
 
         // replace layer if we have one already,
         // effectively updating the static image source
-        if (this.birds_eye_ instanceof PluggableMap &&
+        if (this.birds_eye_ instanceof OlMap &&
             this.birds_eye_.getLayers().getLength() >0) {
             this.birds_eye_.getLayers().item(0).setSource(
                 new ImageStatic({
@@ -298,7 +297,7 @@ class BirdsEye extends Control {
             imageExtent: ext})
         });
 
-        return new Map({
+        return new OlMap({
             controls: new Collection(),
             interactions: new Collection(),
             layers: [imageLayer],

@@ -33,7 +33,6 @@ module.exports = {
          modules: ["src", "node_modules"]
   },
   module: {
-    noParse: [/libs\/ol3-viewer.js$/],
     rules: [
       { test: /\.js$/, loader: 'babel-loader', exclude: /node_modules/,
       query: { compact: false,

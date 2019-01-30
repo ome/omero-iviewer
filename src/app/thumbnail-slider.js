@@ -378,7 +378,7 @@ export default class ThumbnailSlider extends EventSubscriber {
      * If we have the ImageIDs in hand, we can generate thumbnails without
      * having to load them.
      *
-     * @param {list} list of IDs
+     * @param {list} imageIds List of IDs
      * @memberof ThumbnailSlider
      */
     setThumbnailsFromImageIds(imageIds) {
@@ -718,7 +718,7 @@ export default class ThumbnailSlider extends EventSubscriber {
      * Thumbnail scroll handler. Loads any unloaded visible thumbnails
      *
      * @memberof ThumbnailSlider
-     * @param {Object} Scroll event
+     * @param {Object} event Scroll event
      */
     handleScrollEvent(event) {
         // find index of any visible thumbnails that aren't loaded...

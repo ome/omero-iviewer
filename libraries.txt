@@ -2125,7 +2125,7 @@ Managed through webpack
 ├─ open@0.0.5
 │  ├─ licenses: MIT
 │  ├─ repository: https://github.com/pwnall/node-open
-├─ openlayers@4.1.0
+├─ openlayers@5.3.0
 │  ├─ licenses: BSD-2-Clause
 │  ├─ repository: https://github.com/openlayers/openlayers
 ├─ optimist@0.6.1

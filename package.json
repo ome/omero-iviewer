@@ -5,6 +5,7 @@
     "dev": "webpack-dev-server --config webpack.dev.config.js --hot --inline --progress --devtool eval-source-map",
     "debug": "./prepare_build.sh DEV && webpack --config webpack.prod.config.js --progress --devtool source-map && ./deploy_build.sh",
     "prod": "./prepare_build.sh && webpack -p --config webpack.prod.config.js --progress && ./deploy_build.sh",
+    "plugin": "./prepare_build.sh && webpack --config webpack.plugin.config.js --progress && ./deploy_plugin.sh",
     "docs": "./generate_docs.sh"
   },
   "dependencies": {
@@ -29,7 +30,7 @@
     "jquery": "3.3.1",
     "jquery-ui": "1.12.1",
     "jszip": "3.1.5",
-    "ol": "^5.3.0",
+    "ol": "5.3.0",
     "spectrum-colorpicker": "1.8.0",
     "text-encoding": "0.6.4"
   },

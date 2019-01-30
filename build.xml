@@ -1,120 +1,19 @@
-<project name="ol3-viewer" default="build">
+<project name="ol3-viewer" default="prepare-css-prod">
     <description>
         #################################################
-        ####                OL3 VIEWER               ####
+        ####                BUILD CSS                ####
         #################################################
     </description>
 
-    <property name="version.major" value="1" />
-    <property name="version.minor" value="0" />
-    <property name="ol3-version" value="4.6.5" />
-
-    <property name="closure-compiler.jar" value="${basedir}/closure/compiler.jar" />
-    <property name="closure-calcdeps.py" value="${basedir}/closure/calcdeps.py" />
     <property name="node_modules" value="${basedir}/node_modules" />
-    <property name="ol.js" value="${node_modules}/openlayers" />
-    <property name="ol-sources" value="${ol.js}/src" />
-    <property name="ol-patches" value="${ant.project.name}/patches" />
     <property name="karma" value="${node_modules}/.bin/karma" />
     <property name="clean-css" value="${node_modules}/.bin/cleancss" />
 
-    <property name="src" value="${basedir}/${ant.project.name}/src" />
     <property name="build.dir" value="${basedir}/build" />
     <property name="test.build.dir" value="${basedir}/test/build" />
-    <property name="plugin.dir.static" value="${basedir}/plugin/${ant.project.name}/static/${ant.project.name}" />
 
     <property name="dist.css" value="${build.dir}/css" />
     <property name="test.name" value="${test.build.dir}/ol3-viewer-test.js" />
-
-    <property name="outputwrapper" value="
-        (function (root, factory) {
-            var tmp = null;
-            if(typeof module === 'object' &amp;&amp; module.exports) {
-                root = window;
-                tmp =  factory.call(root);
-                module.exports = tmp;
-            } else {
-                tmp = factory.call(root);
-                if (typeof root.ome !== 'object') root.ome = {};
-                root.ome = tmp;
-            }
-        }(this, function () {
-            var OME = {};
-            if (typeof(this) === 'object' &amp;&amp; typeof(this.ome) === 'object') {
-                OME.ome = this.ome;
-                var ome = this.ome;
-            }
-            %output%
-            return OME.ome;
-        }));" />
-
-    <macrodef name="closure-compile">
-        <attribute name="inputfiles" />
-        <attribute name="outputfile" />
-        <attribute name="compilerjarfile" default="${closure-compiler.jar}" />
-        <attribute name="compilationlevel" default="ADVANCED_OPTIMIZATIONS" />
-        <attribute name="outputmode" default="compiled" />
-        <element name="extraflags" optional="yes" />
-        <element name="extrapaths" optional="yes" />
-        <sequential>
-            <exec executable="python" failonerror="true" logError="true">
-                <arg value="${closure-calcdeps.py}" />
-                <arg line='-i "@{inputfiles}"' />
-                <arg line='--output_file "@{outputfile}"' />
-                <arg line='-p "${node_modules}/closure-util"' />
-                <arg line='-p "${ol-sources}"' />
-                <arg line='-p "${ol.js}/build/ol.ext"' />
-                <extrapaths />
-                <arg line="-o @{outputmode}" />
-                <arg line='-c "@{compilerjarfile}"' />
-                <arg line='-f "--compilation_level=@{compilationlevel}"' />
-                <extraflags />
-            </exec>
-        </sequential>
-    </macrodef>
-
-    <target name="clean">
-        <delete dir="${build.dir}" />
-    </target>
-
-    <target name="compile">
-        <mkdir dir="${build.dir}" />
-        <echo message="${src}" />
-        <closure-compile  inputfiles="${src}/ome" outputfile="${dist.name}" compilationlevel="ADVANCED_OPTIMIZATIONS">
-            <extraflags>
-                <arg line='-f "--output_wrapper=${outputwrapper}" -f "--externs=${src}/externs.js"' />
-            </extraflags>
-        </closure-compile>
-    </target>
-
-    <target name="plugin">
-        <delete dir="${plugin.dir.static}/js" />
-        <delete dir="${plugin.dir.static}/css" />
-        <mkdir dir="${plugin.dir.static}/js" />
-        <mkdir dir="${plugin.dir.static}/css" />
-        <copy todir="${plugin.dir.static}/css" overwrite="true">
-            <fileset dir="${basedir}/css"/>
-        </copy>
-        <copy file="${debug.name}" todir="${plugin.dir.static}/js" overwrite="true"/>
-        <copy file="${dist.name}" todir="${plugin.dir.static}/js" overwrite="true"/>
-    </target>
-
-    <target name="copy-to-lib">
-        <copy file="${dist.name}" todir="libs" overwrite="true"/>
-    </target>
-
-    <target name="init">
-        <echo>Fetching openlayers release/sources...</echo>
-        <exec dir="${basedir}" executable="npm">
-            <arg line="install openlayers@${ol3-version}"/>
-        </exec>
-        <echo>Applying patches...</echo>
-        <mkdir dir="${ol-patches}" />
-        <copy todir="${ol-sources}">
-            <fileset dir="${ol-patches}" includes="*.patch"/>
-        </copy>
-        <exec executable="${basedir}/${ant.project.name}/apply_patches.sh" dir="${ol-sources}" failonerror="true" logError="true" />
-    </target>
 
     <target name="clean-css-dir">
         <delete dir="${dist.css}" />
@@ -169,10 +68,11 @@
         <echo>Preparing test build directory ....</echo>
         <delete dir="${test.build.dir}" />
         <mkdir dir="${test.build.dir}" />
+        <!-- TODO - need to build OpenLayers Viewer 'npm run viewer' and copy -->
         <copy file="${debug.name}" tofile="${test.name}" overwrite="true"/>
     </target>
 
-    <target name="unit-tests" depends="build-debug, prepare-unit-tests, unit-tests-only" description="runs unit tests" />
+    <target name="unit-tests" depends="prepare-unit-tests, unit-tests-only" description="runs unit tests" />
 
     <target name="unit-tests-only">
         <echo>Fetching test libraries ....</echo>
@@ -203,11 +103,4 @@
             </condition>
         </fail>
     </target>
-
-    <target name="build" depends="build-all, copy-to-lib" description="builds production and debug version, copying it to omero_iviewer's lib directory" />
-    <target name="build-all" depends="clean, init, compile" description="builds both, production and debug version" />
-    <target name="build-prod" depends="clean, init, compile" description="builds production version" />
-    <target name="build-debug" depends="clean, init" description="builds debug version" />
-    <target name="build-plugin" depends="build-all, plugin" description="builds production version, deploying it into its respective plugin directory" />
-
 </project>

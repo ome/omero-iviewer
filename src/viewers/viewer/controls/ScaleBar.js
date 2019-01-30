@@ -17,7 +17,7 @@
 //
 
 import ScaleLine from 'ol/control/ScaleLine';
-import PluggableMap from 'ol/PluggableMap';
+import OlMap from 'ol/Map';
 import {listen, unlistenByKey} from 'ol/events';
 import {UNITS_LENGTH} from '../globals';
 
@@ -58,7 +58,7 @@ class ScaleBar extends ScaleLine {
         listen(
             this.element, "mousedown",
             function(start) {
-                if (!(this.map_ instanceof PluggableMap)) return;
+                if (!(this.map_ instanceof OlMap)) return;
                 if (this.drag_listener_ !== null) {
                     unlistenByKey(this.drag_listener_);
                     this.drag_listener_ = null;

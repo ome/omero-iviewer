@@ -797,8 +797,8 @@ export default class Context {
      * 'projection', 'model', 'time', 'plane'
      *
      * @memberof Context
-     * @param {number} id the Image ID
-     * @param {settings} Object
+     * @param {number} image_id the Image ID
+     * @param {Object} settings new settings
      */
     setCachedImageSettings(image_id, settings) {
         const old = this.cached_image_settings[image_id] || {};
@@ -811,7 +811,7 @@ export default class Context {
      * 'projection', 'model', 'time', 'plane'
      *
      * @memberof Context
-     * @param {number} id the Image ID
+     * @param {number} image_id the Image ID
      * @return {Object} similar to imgData JSON
      */
     getCachedImageSettings(image_id) {

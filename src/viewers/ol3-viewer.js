@@ -178,7 +178,7 @@ export default class Ol3Viewer extends EventSubscriber {
      *
      * @memberof Ol3Viewer
      * @param {jQuery object} frame that contains viewers
-     * @param {Object} image_config.size of the image we want to open
+     * @param {Object} viewer_size of the image with {width, height}
      * @return {list} of Objects with top and left coordinates
      */
     getInitialViewerPositions(frame, viewer_size) {
@@ -203,7 +203,7 @@ export default class Ol3Viewer extends EventSubscriber {
      *
      * @memberof Ol3Viewer
      * @param {jQuery object} frame that contains viewers
-     * @param {Object} image_config.size of the image we want to open
+     * @param {Object} viewer_size of the image with {width, height}
      * @return {Object} with top and left coordinates
      */
     getNewViewerPosition(frame, viewer_size) {
