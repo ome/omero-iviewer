@@ -38,14 +38,14 @@ which can then be used like any Django plugin.
 Install
 =======
 
-Intructions on how to add the OMERO.iviewer app to your installed OMERO.web apps
+Instructions on how to add the OMERO.iviewer app to your installed OMERO.web apps
 can be found in the `OMERO.iviewer README <plugin/omero_iviewer/README.rst>`_.
 
 Development
 ===========
 
-It is recommended to use the webpack dev-server to build and serve iviewer
-as this will watch for file saves and re-compile.
+It is recommended to use the webpack dev-server to build and serve OMERO.iviewer
+as this will re-compile automatically when files are saved.
 
 To build the bundle and start the webpack dev-server (localhost:8080):
 
@@ -59,7 +59,7 @@ to your ``PYTHONPATH`` and add to ``omero.web.apps``
 
 ::
 
-    $ export PYTHONPATH=$PYTHONPATH:/path/to/omero_iviewer/plugin
+    $ export PYTHONPATH=$PYTHONPATH:/path/to/omero-iviewer/plugin
     $ bin/omero config append omero.web.apps '"omero_iviewer"'
 
 **Notes**:
@@ -138,7 +138,7 @@ ol3-viewer
 
 The OMERO.iviewer's internal image viewer is based on `OpenLayers <https://openlayers.org/>`_,
 
-For details on how to run and test this viewer independently of the iviewer,
+For details on how to run and test this viewer independently of the OMERO.iviewer,
 see https://github.com/ome/omero-iviewer/tree/master/plugin/ol3-viewer
 
 More details

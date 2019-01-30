@@ -3,7 +3,7 @@ ol3-viewer plugin
 
 This plugin allows the running of the OpenLayers-based viewer as a
 stand-alone image viewer, without any Aurelia model / UI components.
-This is primarily for testing purporses (see below).
+This is primarily for testing purposes (see below).
 
 Prerequisite is, of course, an installed and working instance of OMERO.web.
 
