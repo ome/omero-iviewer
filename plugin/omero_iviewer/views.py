@@ -438,7 +438,7 @@ def well_images(request, conn=None, **kwargs):
 
 
 @login_required()
-def get_shapes_by_region(request, image_id, conn=None, **kwargs):
+def shapes_by_region(request, image_id, conn=None, **kwargs):
     """
     Get Shapes by region ?tile=zoom,col,row
 
@@ -453,7 +453,7 @@ def get_shapes_by_region(request, image_id, conn=None, **kwargs):
     and row + col to find the region.
     """
 
-    image = conn.getObject("Image", image_id);
+    image = conn.getObject("Image", image_id)
     # find region from tile
     tile = request.GET.get('tile', None)
 
@@ -486,7 +486,8 @@ def get_shapes_by_region(request, image_id, conn=None, **kwargs):
         """select shape from Shape shape join shape.roi roi
             where roi.image.id = :id and
             shape.x >= %s and shape.x < %s and
-            shape.y >= %s and shape.y < %s""" % (x_min, x_max, y_min, y_max), params)
+            shape.y >= %s and shape.y < %s
+        """ % (x_min, x_max, y_min, y_max), params)
 
     # Points simply used to store ID of e.g. Polygons as text value
     # Try to get the shape IDs:
@@ -509,9 +510,10 @@ def get_shapes_by_region(request, image_id, conn=None, **kwargs):
         for shape in shapes:
             encoder = omero_marshal.get_encoder(shape.__class__)
             if encoder is not None:
-                marshalled.append(encoder.encode(shape));
+                marshalled.append(encoder.encode(shape))
 
     return JsonResponse({"data": marshalled})
+
 
 @login_required()
 def get_intensity(request, conn=None, **kwargs):
