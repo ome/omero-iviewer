@@ -1176,7 +1176,13 @@ class Viewer extends OlObject {
         this.affectImageRender(omeroImage.use_tiled_retrieval_ && key === 'c');
 
         // update regions (if necessary)
-        if (this.getRegionsLayer()) this.getRegions().changed();
+        let regionsSource = this.getRegions();
+        if (regionsSource) {
+            // E.g. calls Regions.renderFeature(feature) to update visibility
+            // of each feature for new theT and theZ
+            // regionsSource.tileCache.expireCache({});
+            regionsSource.refresh();
+        }
     }
 
     /**

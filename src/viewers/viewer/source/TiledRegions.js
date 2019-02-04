@@ -26,6 +26,7 @@ import {isArray,
 import {PLUGIN_PREFIX} from '../globals';
 import OmeJSON from '../format/OmeJSON';
 
+export const ROI_TILE_SIZE = 256;
 
 class OmeVectorTileSource extends VectorTileSource {
 
@@ -33,20 +34,6 @@ class OmeVectorTileSource extends VectorTileSource {
 
         let image_info_ = viewerReference.image_info_;
         let projection = viewerReference.proj_;
-
-        // Load ROIs by tile
-        let tileUrlFunction = (tileCoord) => {
-            let x = tileCoord[1];
-            let y = -tileCoord[2] - 1;
-            var zoom = zoomLevelScaling.length - tileCoord[0] - 1;
-            var tile = + zoom  + ',' + tileCoord[1] + ',' + (-tileCoord[2]-1);
-            if (zoom > 0) {
-                // We only support ROIs at the 100% zoom level
-                return;
-            }
-            let iviewer = viewerReference.getPrefixedURI(PLUGIN_PREFIX);
-            return `${ iviewer }/shapes_by_region/${ image_info_.id }/?tile=${ tile }`;
-        }
 
         var zoomLevelScaling = null;
         var dims = image_info_['size'];
@@ -58,11 +45,11 @@ class OmeVectorTileSource extends VectorTileSource {
         }
         var zoom = zoomLevelScaling ? zoomLevelScaling.length : -1;
         var extent = [0, -dims['height'], dims['width'], 0];
+        var tile_size = image_info_['tile_size']
+        var tile_width = tile_size ? tile_size.width : ROI_TILE_SIZE;
+        var tile_height = tile_size ? tile_size.height : ROI_TILE_SIZE;
         var tgOpts = {
-            tileSize: image_info_['tile_size'] ?
-                [image_info_['tile_size'].width,
-                image_info_['tile_size'].height] :
-                [DEFAULT_TILE_DIMS.width, DEFAULT_TILE_DIMS.height],
+            tileSize: [tile_width, tile_height],
             extent: extent,
             origin: getTopLeft(extent),
             resolutions: zoom > 1 ? zoomLevelScaling : [1],
@@ -70,9 +57,26 @@ class OmeVectorTileSource extends VectorTileSource {
         var tileGrid = new TileGrid(tgOpts);
 
         super({
-            tileUrlFunction: tileUrlFunction,
             tileGrid: tileGrid,
         })
+
+        // Load ROIs by tile
+        this.setTileUrlFunction((tileCoord) => {
+            var viewerT = this.viewer_.getDimensionIndex('t');
+            var viewerZ = this.viewer_.getDimensionIndex('z');
+
+            let x = tileCoord[1];
+            let y = -tileCoord[2] - 1;
+            var zoom = zoomLevelScaling ? zoomLevelScaling.length - tileCoord[0] - 1 : 0;
+            var tile = + zoom  + ',' + tileCoord[1] + ',' + (-tileCoord[2]-1);
+            tile = tile + ',' + tile_width + ',' + tile_height;
+            if (zoom > 0) {
+                // We only support ROIs at the 100% zoom level
+                return;
+            }
+            let iviewer = viewerReference.getPrefixedURI(PLUGIN_PREFIX);
+            return `${ iviewer }/shapes_by_region/${ image_info_.id }/${ viewerZ }/${ viewerT }/?tile=${ tile }`;
+        });
 
         // Format is responsible for creating Features from JSON response shapes
         // It needs reference to viewer/regions because Features need to
