@@ -1178,9 +1178,11 @@ class Viewer extends OlObject {
         // update regions (if necessary)
         let regionsSource = this.getRegions();
         if (regionsSource) {
+            if (regionsSource instanceof TiledRegions) {
+                regionsSource.clear();
+            }
             // E.g. calls Regions.renderFeature(feature) to update visibility
             // of each feature for new theT and theZ
-            // regionsSource.tileCache.expireCache({});
             regionsSource.refresh();
         }
     }
