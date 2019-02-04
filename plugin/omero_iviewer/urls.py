@@ -37,6 +37,7 @@ urlpatterns = patterns(
         name='omero_iviewer_get_intensity'),
     url(r'^shape_stats/?$', views.shape_stats,
         name='omero_iviewer_shape_stats'),
-    url(r'^shapes_by_region/(?P<image_id>[0-9]+)/$', views.shapes_by_region,
+    url(r'^shapes_by_region/(?P<image_id>[0-9]+)/'
+        r'(?P<the_z>[0-9]+)/(?P<the_t>[0-9]+)/$', views.shapes_by_region,
         name='omero_iviewer_shapes_by_region'),
 )

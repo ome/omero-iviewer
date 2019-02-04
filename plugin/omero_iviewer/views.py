@@ -31,7 +31,7 @@ from omeroweb.webgateway.templatetags.common_filters import lengthformat,\
 import json
 import omero_marshal
 import omero
-from omero.rtypes import rint, rlong
+from omero.rtypes import rint, rlong, unwrap
 from omero_sys_ParametersI import ParametersI
 import omero.util.pixelstypetopython as pixelstypetopython
 
@@ -438,7 +438,7 @@ def well_images(request, conn=None, **kwargs):
 
 
 @login_required()
-def shapes_by_region(request, image_id, conn=None, **kwargs):
+def shapes_by_region(request, image_id, the_z, the_t, conn=None, **kwargs):
     """
     Get Shapes by region ?tile=zoom,col,row
 
@@ -458,18 +458,16 @@ def shapes_by_region(request, image_id, conn=None, **kwargs):
     tile = request.GET.get('tile', None)
 
     # Assume fully zoomed in to 100%. TODO: support other zoom levels?
-    zoom_x_y = tile.split(",")
-    if len(zoom_x_y) < 3:
-        return JsonResponse({"error": "Specify tile as ?tile=zoom,col,row"})
-    x = long(zoom_x_y[1])
-    y = long(zoom_x_y[2])
+    zoom_col_row_w_h = tile.split(",")
+    if len(zoom_col_row_w_h) < 5:
+        return JsonResponse({"error": "Specify tile as ?tile=zoom,col,row,w,h"})
+    col = long(zoom_col_row_w_h[1])
+    row = long(zoom_col_row_w_h[2])
+    tile_w = long(zoom_col_row_w_h[3])
+    tile_h = long(zoom_col_row_w_h[4])
 
-    # can we get tile sizes without init rendering engine?
-    image._prepareRenderingEngine()
-    tile_w, tile_h = image._re.getTileSize()
-
-    x_min = x * tile_w
-    y_min = y * tile_h
+    x_min = col * tile_w
+    y_min = row * tile_h
     x_max = x_min + tile_w
     y_max = y_min + tile_h
 
@@ -487,15 +485,20 @@ def shapes_by_region(request, image_id, conn=None, **kwargs):
             where roi.image.id = :id and
             shape.x >= %s and shape.x < %s and
             shape.y >= %s and shape.y < %s
-        """ % (x_min, x_max, y_min, y_max), params)
+            and shape.theZ = %s and (shape.theT = %s or shape.theT is null)
+        """ % (x_min, x_max, y_min, y_max, the_z, the_t), params)
 
     # Points simply used to store ID of e.g. Polygons as text value
     # Try to get the shape IDs:
     shape_ids = []
     for point in points:
         try:
-            shape_ids.append(long(point.getTextValue().val))
-        except ValueError:
+            label = unwrap(point.getTextValue())
+            if label is None:
+                shape_ids.append(point.getId().val)
+            else:
+                shape_ids.append(long(label))
+        except (TypeError, ValueError):
             pass
 
     marshalled = []
