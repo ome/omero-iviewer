@@ -830,7 +830,7 @@ class Viewer extends OlObject {
 
         // Find shape Geometry and centre image
         let geometry;
-        if (typeof centre_on_shape === "object") {
+        if (centre_on_shape === "object" && centre_on_shape != null) {
             let feature = featureFactory(centre_on_shape);
             geometry = feature ? feature.getGeometry() : undefined;
         } else if (typeof centre_on_shape === "string") {

@@ -57,9 +57,8 @@ class OmeJSON extends JSONFeature {
 
             // create features with a Style function that references Regions
             let feature = createFeatureFromShape(shape, this.regions);
-            // IDs are strings. Similar to 'roidId:shapeId' used in other
-            // features. But we don't have ROI ID in hand here
-            feature.setId("" + shape['@id']);
+            // Feature ID is 'roiId:shapeId'
+            feature.setId(shape['roi']['@id'] + ":" + shape['@id']);
             feature['selected'] = true;
             return feature;
         });

@@ -17,11 +17,11 @@
 //
 
 import TileGrid from 'ol/tilegrid/TileGrid.js';
-import VectorTileLayer from 'ol/layer/VectorTile.js';
 import VectorTileSource from 'ol/source/VectorTile.js';
 import {getTopLeft} from 'ol/extent';
 
 import {isArray,
+    featuresAtCoords,
     sendEventNotification} from '../utils/Misc';
 import {PLUGIN_PREFIX} from '../globals';
 import OmeJSON from '../format/OmeJSON';
@@ -102,6 +102,21 @@ class OmeVectorTileSource extends VectorTileSource {
          * @private
          */
         this.viewer_ = viewerReference;
+
+        // Add Select behaviour (single click)
+        let map = this.viewer_.viewer_;
+        map.on('click', (event) => {
+            var features = map.getFeaturesAtPixel(event.pixel);
+            if (!features) {
+              this.viewer_.selectShapes(null, false, true);
+              return;
+            }
+            // Find smallest of features under click pixel
+            let feature = featuresAtCoords(features);
+
+            var fid = feature.getId();
+            this.viewer_.selectShapes([fid], true, true);
+          });
     }
 
     /**
@@ -145,16 +160,15 @@ class OmeVectorTileSource extends VectorTileSource {
 
         if (!isArray(roi_shape_ids)) return;
 
-        // let shape_ids = roi_shape_ids.map(id => id.split(':')[1]);
         let properties = [];
         let values = [];
         roi_shape_ids.forEach(id => {
             properties.push('selected');
             values.push(selected);
             if (selected) {
-                // Store {'roi:shape' : 'shapeId'}
+                // Store {'roi:shape' : true}
                 // Need to keep 'roi:shape' to notify of deselections
-                this.selectedFeatures_[id] = id.split(':')[1];
+                this.selectedFeatures_[id] = true;
             } else if (this.selectedFeatures_[id]) {
                 delete this.selectedFeatures_[id];
             }
@@ -175,8 +189,8 @@ class OmeVectorTileSource extends VectorTileSource {
      * @param {ol.Feature} feature The feature
      */
     isFeatureSelected(feature) {
-        let shapeId = feature.getId();
-        return Object.values(this.selectedFeatures_).indexOf(shapeId) > -1;
+        let roi_shape_id = feature.getId();
+        return this.selectedFeatures_[roi_shape_id];
     }
 }
 
