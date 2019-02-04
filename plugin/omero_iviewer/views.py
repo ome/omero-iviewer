@@ -453,14 +453,13 @@ def shapes_by_region(request, image_id, the_z, the_t, conn=None, **kwargs):
     and row + col to find the region.
     """
 
-    image = conn.getObject("Image", image_id)
     # find region from tile
     tile = request.GET.get('tile', None)
 
     # Assume fully zoomed in to 100%. TODO: support other zoom levels?
     zoom_col_row_w_h = tile.split(",")
     if len(zoom_col_row_w_h) < 5:
-        return JsonResponse({"error": "Specify tile as ?tile=zoom,col,row,w,h"})
+        return JsonResponse({"error": "Specify tile as ?tile=zm,col,row,w,h"})
     col = long(zoom_col_row_w_h[1])
     row = long(zoom_col_row_w_h[2])
     tile_w = long(zoom_col_row_w_h[3])
