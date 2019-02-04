@@ -513,7 +513,10 @@ def shapes_by_region(request, image_id, the_z, the_t, conn=None, **kwargs):
         for shape in shapes:
             encoder = omero_marshal.get_encoder(shape.__class__)
             if encoder is not None:
-                marshalled.append(encoder.encode(shape))
+                m = encoder.encode(shape)
+                # Need to know ROI ID - not supported by omero-marshal
+                m["roi"] = {'@id': shape.roi.id.val}
+                marshalled.append(m)
 
     return JsonResponse({"data": marshalled})
 
