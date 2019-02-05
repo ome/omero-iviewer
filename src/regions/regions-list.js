@@ -24,6 +24,7 @@ import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework'
 import {
     REGIONS_SET_PROPERTY, IMAGE_VIEWER_RESIZE, EventSubscriber
 } from '../events/events';
+import {REGIONS_PAGE_SIZE} from '../utils/constants';
 
 /**
  * Represents the regions list/table in the regions settings/tab
@@ -42,6 +43,12 @@ export default class RegionsList extends EventSubscriber {
     regions_infoChanged(newVal, oldVal) {
         this.waitForRegionsInfoReady();
     }
+
+    /**
+     * Expose this constant to the UI
+     * @type {number}
+     */
+    REGIONS_PAGE_SIZE = REGIONS_PAGE_SIZE;
 
     /**
      * the column showing (only one - mutually exclusive for now)
@@ -237,6 +244,25 @@ export default class RegionsList extends EventSubscriber {
             'max-height', 'calc(100% - ' +
                 ($(".regions-tools").outerHeight() +
                 $("#panel-tabs").outerHeight()) + 'px)');
+    }
+
+    /**
+     * Set the pagination number of the ROI table and reload
+     *
+     * @param {number} zeroBasedPageNumber New page number
+     */
+    setPage(zeroBasedPageNumber=0) {
+        this.regions_info.setPageAndReload(zeroBasedPageNumber);
+    }
+
+    /**
+     * Handle change event for input range slider to choose page
+     *
+     * @param {object} event change event from pagination range input
+     */
+    handlePageRange(event) {
+        let page = parseInt(event.target.value, 10);
+        this.regions_info.setPageAndReload(page);
     }
 
     /**
