@@ -25,7 +25,7 @@ import {
 } from '../events/events';
 import {
     IVIEWER, REGIONS_DRAWING_MODE, REGIONS_MODE, REGIONS_REQUEST_URL,
-    WEB_API_BASE
+    WEB_API_BASE, REGIONS_PAGE_SIZE,
 } from '../utils/constants';
 
 /**
@@ -33,12 +33,6 @@ import {
  */
 @noView
 export default class RegionsInfo  {
-    /**
-     * roi request limit
-     * @memberof RegionsInfo
-     * @type {number}
-     */
-    REQUEST_LIMIT = 5000;
 
     /**
      * true if a backend request is pending
@@ -64,6 +58,13 @@ export default class RegionsInfo  {
     data = new Map();
 
     /**
+     * Current page number of ROIs to support pagination
+     * @memberof RegionsInfo
+     * @type {number}
+     */
+    roi_page_number = 0;
+
+    /**
      * a total shape count (exluding new with deleted!)
      * necessary because the data map still needs to include deleted
      * for history reasons (undo/redo) until we save BUT for the show all toggle
@@ -71,7 +72,7 @@ export default class RegionsInfo  {
      * @memberof RegionsInfo
      * @type {number}
      */
-     number_of_shapes = 0;
+    number_of_shapes = 0;
 
     /**
      * @memberof RegionsInfo
@@ -266,6 +267,28 @@ export default class RegionsInfo  {
     }
 
     /**
+     * Set the pagination number for ROIs and reload.
+     *
+     * @memberof RegionsInfo
+     * @param {number} zeroBasedPageNumber New page number
+     */
+    setPageAndReload(zeroBasedPageNumber) {
+        if (typeof(zeroBasedPageNumber) !== "number" ||
+            zeroBasedPageNumber < 0 ||
+            zeroBasedPageNumber >= this.getPageCount()) return;
+
+        this.roi_page_number = zeroBasedPageNumber;
+        this.requestData(true);
+    }
+
+    /**
+     * Get the number of pages needed to show all paginated ROIs
+     */
+    getPageCount() {
+        return Math.ceil(this.image_info.roi_count/REGIONS_PAGE_SIZE);
+    }
+
+    /**
      * Retrieves the regions information needed via ajax and stores it internally
      *
      * @memberof RegionsInfo
@@ -283,7 +306,8 @@ export default class RegionsInfo  {
             url : this.image_info.context.server +
                   this.image_info.context.getPrefixedURI(WEB_API_BASE) +
                   REGIONS_REQUEST_URL + '/?image=' + this.image_info.image_id +
-                  '&limit=' + this.REQUEST_LIMIT,
+                  '&limit=' + REGIONS_PAGE_SIZE +
+                  '&offset=' + (this.roi_page_number * REGIONS_PAGE_SIZE),
             success : (response) => {
                 if (this.is_pending) this.setData(response.data)
             }, error : (error) => {
