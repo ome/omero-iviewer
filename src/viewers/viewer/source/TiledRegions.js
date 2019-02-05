@@ -89,11 +89,17 @@ class OmeVectorTileSource extends VectorTileSource {
 
         /**
          * Keep track of selected features.
-         * ShapeId: Feature
+         * 'roiIdshapId': True
          *
          * See https://openlayers.org/en/latest/examples/vector-tile-selection.html
          */
         this.selectedFeatures_ = {};
+
+        /**
+         * Keep track of hidden features.
+         * 'roiIdshapId': True
+         */
+        this.hiddenFeatures_ = {};
 
         /**
          * the viewer reference
@@ -191,6 +197,45 @@ class OmeVectorTileSource extends VectorTileSource {
     isFeatureSelected(feature) {
         let roi_shape_id = feature.getId();
         return this.selectedFeatures_[roi_shape_id];
+    }
+
+    /**
+     * Toggles the visibility of the regions.
+     *
+     * @param {boolean} visible visibitily flag (true for visible)
+     * @param {Array<string>} roi_shape_ids a list of string ids of the form: roi_id:shape_id
+     */
+    setRegionsVisibility(visible, roi_shape_ids) {
+        let properties = [];
+        let values = [];
+        roi_shape_ids.forEach(id => {
+            properties.push('visible');
+            values.push(visible);
+            if (!visible) {
+                // Store {'roi:shape' : true}
+                this.hiddenFeatures_[id] = true;
+            } else if (this.hiddenFeatures_[id]) {
+                delete this.hiddenFeatures_[id];
+            }
+        });
+
+        sendEventNotification(
+            this.viewer_, "REGIONS_PROPERTY_CHANGED",
+            {
+                "properties" : properties,
+                "shapes": roi_shape_ids,
+                "values": values
+            }, 25);
+    }
+
+    /**
+     * Return True if this feature is visible
+     *
+     * @param {ol.Feature} feature The feature
+     */
+    isFeatureVisible(feature) {
+        let roi_shape_id = feature.getId();
+        return !this.hiddenFeatures_[roi_shape_id];
     }
 }
 

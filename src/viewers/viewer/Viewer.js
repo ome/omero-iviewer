@@ -777,8 +777,13 @@ class Viewer extends OlObject {
 
             if (!isArray(roi_shape_ids) || roi_shape_ids.length === 0)
                 regionsLayer.setVisible(flag);
-            else
-                this.getRegions().setProperty(roi_shape_ids, "visible", flag);
+            else {
+                this.getRegions().setRegionsVisibility(flag, roi_shape_ids);
+                // force redraw of layer style
+                if (regionsLayer instanceof VectorTile) {
+                    regionsLayer.setStyle(regionsLayer.getStyle());
+                }
+            }
         }
     }
 

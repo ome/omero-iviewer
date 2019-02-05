@@ -679,6 +679,15 @@ class Regions extends Vector {
     }
 
     /**
+     * Return True if this feature is visible
+     *
+     * @param {ol.Feature} feature The feature
+     */
+    isFeatureVisible(feature) {
+        return typeof(feature['visible']) !== 'boolean' || feature['visible'];
+    }
+
+    /**
      * Marks given shapes as selected, clearing any previously selected if clear flag
      * is set. Optionally the view centers on a given shape.
      *
@@ -692,6 +701,16 @@ class Regions extends Vector {
 
         if (typeof clear === 'boolean' && clear) this.select_.clearSelection();
         this.setProperty(roi_shape_ids, "selected", selected);
+    }
+
+    /**
+     * Toggles the visibility of the regions.
+     *
+     * @param {boolean} visible visibitily flag (true for visible)
+     * @param {Array<string>} roi_shape_ids a list of string ids of the form: roi_id:shape_id
+     */
+    setRegionsVisibility(visible, roi_shape_ids) {
+        this.setProperty(roi_shape_ids, "visible", visible);
     }
 
     /**
