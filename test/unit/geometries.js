@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+// Copyright (C) 2017-2019 University of Dundee & Open Microscopy Environment.
 // All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -16,15 +16,22 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+import Ellipse from '../../src/viewers/viewer/geom/Ellipse';
+import Label from '../../src/viewers/viewer/geom/Label';
+import Line from '../../src/viewers/viewer/geom/Line';
+import Point from '../../src/viewers/viewer/geom/Point';
+import Polygon from '../../src/viewers/viewer/geom/Polygon';
+import Rectangle from '../../src/viewers/viewer/geom/Rectangle';
+
 /*
  * Tests utility routines in ome.ol3.utils.Conversion
  */
 describe("Geometries", function() {
 
     it('createEllipse', function() {
-        var ellipse = new ome.ol3.geom.Ellipse(100,100, 20, 40);
+        var ellipse = new Ellipse(100,100, 20, 40);
 
-        assert.instanceOf(ellipse, ome.ol3.geom.Ellipse);
+        assert.instanceOf(ellipse, Ellipse);
         expect(ellipse.getCenter()).to.eql([100, 100]);
         expect(ellipse.getRadius()).to.eql([20, 40]);
 
@@ -34,9 +41,9 @@ describe("Geometries", function() {
     });
 
     it('createRectangle', function() {
-        var rectangle = new ome.ol3.geom.Rectangle(500,400, 100, 200);
+        var rectangle = new Rectangle(500,400, 100, 200);
 
-        assert.instanceOf(rectangle, ome.ol3.geom.Rectangle);
+        assert.instanceOf(rectangle, Rectangle);
         expect(rectangle.getUpperLeftCorner()).to.eql([500, 400]);
 
         // test translation
@@ -51,9 +58,9 @@ describe("Geometries", function() {
     });
 
     it('createLabel', function() {
-        var label = new ome.ol3.geom.Label(500,400, {width: 100, height: 200});
+        var label = new Label(500,400, {width: 100, height: 200});
 
-        assert.instanceOf(label, ome.ol3.geom.Label);
+        assert.instanceOf(label, Label);
         expect(label.getUpperLeftCorner()).to.eql([500, 400]);
         expect(label.getWidth()).to.eql(100);
         expect(label.getHeight()).to.eql(200);
@@ -75,9 +82,9 @@ describe("Geometries", function() {
     });
 
     it('createPolyline', function() {
-        var polyline = new ome.ol3.geom.Line([[0,0], [500,400], [600,300]]);
+        var polyline = new Line([[0,0], [500,400], [600,300]]);
 
-        assert.instanceOf(polyline, ome.ol3.geom.Line);
+        assert.instanceOf(polyline, Line);
         expect(polyline.getFlatCoordinates()).to.eql([0,0,500,400,600,300]);
 
         // test translation
@@ -86,10 +93,9 @@ describe("Geometries", function() {
     });
 
     it('createPolygon', function() {
-        var polygon =
-            new ome.ol3.geom.Polygon([[[250,0], [400,200], [100,200], [250,0]]]);
+        var polygon = new Polygon([[[250,0], [400,200], [100,200], [250,0]]]);
 
-        assert.instanceOf(polygon, ome.ol3.geom.Polygon);
+        assert.instanceOf(polygon, Polygon);
         expect(polygon.getFlatCoordinates()).to.eql(
             [250,0,400,200,100,200,250,0]);
 
@@ -100,9 +106,9 @@ describe("Geometries", function() {
     });
 
     it('createPoint', function() {
-        var point = new ome.ol3.geom.Point([500, 500]);
+        var point = new Point([500, 500]);
 
-        assert.instanceOf(point, ome.ol3.geom.Point);
+        assert.instanceOf(point, Point);
         expect(point.getPointCoordinates()).to.eql([500,500]);
 
         // test translation

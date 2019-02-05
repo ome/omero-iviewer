@@ -16,6 +16,12 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+import Style from 'ol/style/Style';
+import Fill from 'ol/style/Fill';
+import Text from 'ol/style/Text';
+
+import {createFeatureStyle} from '../../src/viewers/viewer/utils/Style';
+
 /*
  * Tests custom geometry classes
  */
@@ -29,11 +35,11 @@ describe("Style", function() {
             "StrokeWidth": { "Value": 5.0, "Unit": "PIXEL" }
         };
 
-        var style = ome.ol3.utils.Style.createFeatureStyle(shape_info);
+        var style = createFeatureStyle(shape_info);
 
-        assert.instanceOf(style, ol.style.Style);
+        assert.instanceOf(style, Style);
         var fill = style.getFill();
-        assert.instanceOf(fill, ol.style.Fill);
+        assert.instanceOf(fill, Fill);
         expect(fill.getColor()).to.eql("rgba(111,222,98,0)");
         var stroke = style.getStroke();
         expect(stroke.getColor()).to.eql("rgba(0,55,20,1)");
@@ -47,11 +53,11 @@ describe("Style", function() {
             "StrokeWidth": { "Value": 1.0, "Unit": "PIXEL" },
             "StrokeColor": 1694433535
         }
-        style = ome.ol3.utils.Style.createFeatureStyle(shape_info, true);
+        style = createFeatureStyle(shape_info, true);
 
-        assert.instanceOf(style, ol.style.Style);
+        assert.instanceOf(style, Style);
         var textStyle = style.getText();
-        assert.instanceOf(textStyle, ol.style.Text);
+        assert.instanceOf(textStyle, Text);
         expect(textStyle.getText()).to.eql("some text");
         var fill = textStyle.getFill();
         expect(fill.getColor()).to.eql("rgba(100,255,0,1)");

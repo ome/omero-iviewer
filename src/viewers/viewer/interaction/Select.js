@@ -94,7 +94,7 @@ class Select extends Interaction {
     /**
      * Clears/unselects all selected features
      */
-    clearSelection = function() {
+    clearSelection() {
         // delegate
         var ids = []
         this.getFeatures().forEach(
@@ -170,7 +170,7 @@ class Select extends Interaction {
      *
      * @return {ol.Collection} the selected features
      */
-    getFeatures = function() {
+    getFeatures() {
         return this.features_;
     }
 

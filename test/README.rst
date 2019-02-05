@@ -2,25 +2,24 @@ Unit tests
 ==========
 
 
-The unit tests make use of the following libraries: mocha, chai, phantom and mocha-phantom
+The unit tests make use of the following libraries: karma, mocha, chai.
 
-`Mocha <https://mochajs.org/>`_ is a js test framework, `Chai <http://chaijs.com/>`_ is an assertion library that helps to test conditions.
+`Karma <https://karma-runner.github.io/>`_ is a test runner,
+`Mocha <https://mochajs.org/>`_ is a js test framework and
+`Chai <http://chaijs.com/>`_ is an assertion library that helps to test conditions.
 
-`Phantom <http://phantomjs.org/>`_ is used for headless website testing.
-IViewer, as a web application, relies on the browser environment,
-e.g. the existence of implementations for: *window*, *location*, *canvas*, *history*, etc.
-Phantom deals with that requirement so that the tests can be run in a shell even.
-For a programmatic way of interacting with a web page using Phantom
-have a look at *unit/debug_phantom.js* or examples from their official site.
-
-Last but not least, `Mocha-Phantom <https://github.com/nathanboktae/mocha-phantomjs>`_ provides a wrapper to, conveniently, define a test suite as a html page
-so that the unit tests can be run in the console (through phantom) as well
-as the browser (without the need for additional code such as *unit/debug_phantom.js*).
-
+Karma uses a `webpack plugin <https://github.com/webpack-contrib/karma-webpack>`_
+to compile the tests with the source code. The resulting files are served to
+a browser client for testing.
+Karma can launch a client such as headless Chrome for testing via the command line,
+or you can point other browsers at the webserver to test on them.
 
 To execute the unit tests run the following command in the console: ::
 
 $ ant unit-tests
 
+This will first install all the dependencies required and is run by the 
+test command in ``plugins/setup.py``. You can also run the tests directly
+once you have the dependencies installed, for example: ::
 
-To run them in the browser open the file *unit/suite.html*.
+$ karma start --single-run --browsers ChromeHeadless

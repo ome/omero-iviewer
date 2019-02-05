@@ -1,7 +1,7 @@
 <project name="ol3-viewer" default="prepare-css-prod">
     <description>
         #################################################
-        ####                BUILD CSS                ####
+        ####                  IVIEWER                ####
         #################################################
     </description>
 
@@ -13,7 +13,8 @@
     <property name="test.build.dir" value="${basedir}/test/build" />
 
     <property name="dist.css" value="${build.dir}/css" />
-    <property name="test.name" value="${test.build.dir}/ol3-viewer-test.js" />
+    <property name="plugin.name" value="ol-viewer.js" />
+    <property name="test.name" value="${test.build.dir}/${plugin.name}" />
 
     <target name="clean-css-dir">
         <delete dir="${dist.css}" />
@@ -64,29 +65,22 @@
         </concat>
     </target>
 
-    <target name="prepare-unit-tests">
-        <echo>Preparing test build directory ....</echo>
-        <delete dir="${test.build.dir}" />
-        <mkdir dir="${test.build.dir}" />
-        <!-- TODO - need to build OpenLayers Viewer 'npm run viewer' and copy -->
-        <copy file="${debug.name}" tofile="${test.name}" overwrite="true"/>
-    </target>
-
-    <target name="unit-tests" depends="prepare-unit-tests, unit-tests-only" description="runs unit tests" />
-
-    <target name="unit-tests-only">
+    <target name="unit-tests">
         <echo>Fetching test libraries ....</echo>
         <exec dir="${basedir}" executable="npm">
             <arg value="install"/>
+            <arg value="webpack"/>
+            <arg value="babel-loader"/>
             <arg value="karma"/>
             <arg value="karma-chrome-launcher"/>
             <arg value="karma-mocha"/>
             <arg value="karma-chai"/>
+            <arg value="karma-webpack"/>
             <arg value="mocha"/>
             <arg value="chai"/>
             <arg value="babel-core@6.26.0"/>
-            <arg value="karma-babel-preprocessor"/>
             <arg value="karma-spec-reporter"/>
+            <arg value="ol@5.3.0"/>
         </exec>
         <echo>Running Test Suite ....</echo>
         <exec dir="${basedir}" resultproperty="result" executable="${karma}" >

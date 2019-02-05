@@ -87,7 +87,7 @@ class Label extends Rectangle {
      * @param {number} rotation the angle of rotation
      * @param {number} scaling the scaling factor
      */
-    modifyOriginalCoordinates = function(rotation, scaling) {
+    modifyOriginalCoordinates(rotation, scaling) {
         if (typeof(rotation) !== 'number') rotation = 0;
         if (typeof(scaling) !== 'number') scaling = 1;
 
