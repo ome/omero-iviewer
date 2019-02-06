@@ -1161,10 +1161,6 @@ export default class Ol3Viewer extends EventSubscriber {
             }
         }
 
-        // update roi count
-        this.image_config.image_info.roi_count =
-            this.image_config.regions_info.data.size;
-
         // clear history
         this.image_config.regions_info.history.resetHistory();
 
