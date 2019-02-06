@@ -214,7 +214,7 @@ export default class ThumbnailSlider extends EventSubscriber {
             // scroll to image thumb
             UI.scrollContainer(
                 'img-thumb-' + this.image_config.image_info.image_id,
-                '.thumbnail-panel');
+                '.thumbnail-scroll-panel');
             // no need to initialize twice
             return;
         }
