@@ -354,6 +354,7 @@ class Regions extends Vector {
             if (!keep_select && this.select_) {
                 // if multiple (box) select was on, we turn it off now
                 this.viewer_.removeInteractionOrControl("boxSelect");
+                this.viewer_.removeInteractionOrControl("doubleClickZoom");
                 this.select_.clearSelection();
                 this.viewer_.viewer_.getInteractions().remove(this.select_);
                 this.select_.dispose();
@@ -378,6 +379,10 @@ class Regions extends Vector {
                     "boxSelect",
                     new BoxSelect(this));
             }
+        }
+
+        var addDoubleClickInteraction = function() {
+            this.viewer_.addInteraction('doubleClickZoom', 'interaction');
         }
 
         if (defaultMode) { // reset all interactions
@@ -423,6 +428,7 @@ class Regions extends Vector {
         if (selectMode) { // remove mutually exclusive interactions
             removeDrawInteractions.call(this);
             addSelectInteraction.call(this);
+            addDoubleClickInteraction.call(this);
             this.present_modes_.push(REGIONS_MODE.SELECT);
         }
     }
