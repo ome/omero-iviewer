@@ -79,6 +79,13 @@ export default class RegionsList extends EventSubscriber {
     regions_ready_observer = null;
 
     /**
+     * Set this while range slider is sliding to show in UI
+     * @memberof RegionsList
+     * @type {number}
+     */
+    temp_sliding_page_number = undefined;
+
+    /**
      * events we subscribe to
      * @memberof RegionsList
      * @type {Array.<string,function>}
@@ -252,6 +259,7 @@ export default class RegionsList extends EventSubscriber {
      * @param {number} zeroBasedPageNumber New page number
      */
     setPage(zeroBasedPageNumber=0) {
+        this.temp_sliding_page_number = undefined;
         this.regions_info.setPageAndReload(zeroBasedPageNumber);
     }
 
@@ -262,7 +270,17 @@ export default class RegionsList extends EventSubscriber {
      */
     handlePageRange(event) {
         let page = parseInt(event.target.value, 10);
-        this.regions_info.setPageAndReload(page);
+        this.setPage(page);
+    }
+
+    /**
+     * Handle slide event for input range slider to choose page
+     *
+     * @param {object} event change event from pagination range input
+     */
+    handlePageRangeSlide(event) {
+        let page = parseInt(event.target.value, 10);
+        this.temp_sliding_page_number = page;
     }
 
     /**

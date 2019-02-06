@@ -275,7 +275,8 @@ export default class RegionsInfo  {
     setPageAndReload(zeroBasedPageNumber) {
         if (typeof(zeroBasedPageNumber) !== "number" ||
             zeroBasedPageNumber < 0 ||
-            zeroBasedPageNumber >= this.getPageCount()) return;
+            zeroBasedPageNumber >= this.getPageCount() ||
+            this.is_pending) return;
 
         this.roi_page_number = zeroBasedPageNumber;
         this.requestData(true);
