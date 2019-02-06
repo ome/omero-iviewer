@@ -31,9 +31,12 @@
         scroll.trigger="handleScrollEvent($event) & debounce:100">
 
         <div>
-            <div repeat.for="thumb of thumbnails" class="thumbnail-wrapper">
+            <!-- Both the div and the img have data-id for drag-n-drop -->
+            <div repeat.for="thumb of thumbnails" class="thumbnail-wrapper"
+                data-id="${thumb.id}"
+                draggable="true" dragstart.delegate="handleDragStart($event)">
               <!-- show placeholder 1 x 1 px png if no thumb.url -->
-              <img id="${'img-thumb-' + thumb.id}"
+              <img id="${'img-thumb-' + thumb.id}" data-id="${thumb.id}"
                 class="${image_config.image_info.image_id === thumb.id ? 'selected' : ''}
                     ${thumb.id ? '' : 'transparent'}"
                 src.bind="thumb.url ? thumb.url + '?version=' + thumb.revision : 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNgYAAAAAMAASsJTYQAAAAASUVORK5CYII='"

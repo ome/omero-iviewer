@@ -780,6 +780,17 @@ export default class ThumbnailSlider extends EventSubscriber {
     }
 
     /**
+     * Handle Drag Start, coming from the thumbnail img itself or the parent div
+     * Both should have the data-id attribute for the image ID.
+     *
+     * @param {Object} event Drag start event
+     */
+    handleDragStart(event) {
+        event.dataTransfer.setData("id", event.target.dataset.id);
+        return true;
+    }
+
+    /**
      * Refresh thumbnail slider contents by reinitialization
      *
      * @memberof ThumbnailSlider

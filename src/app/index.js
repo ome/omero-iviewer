@@ -251,6 +251,27 @@ export class Index  {
     }
 
     /**
+     * Handle dropping of a thumbnail on to the centre panel.
+     * Opens the image in Multi-Display mode
+     *
+     * @param {Object} event Drop event
+     */
+    handleDrop(event) {
+        var image_id = parseInt(event.dataTransfer.getData("id"), 10);
+        this.context.useMDI = true;
+        this.context.addImageConfig(image_id);
+    }
+
+    /**
+     * Simply preventDefault() to allow drop here
+     *
+     * @param {Object} event Dragover event
+     */
+    handleDragover(event) {
+        event.preventDefault();
+    }
+
+    /**
      * Overridden aurelia lifecycle method:
      * called when the view and its elemetns are detached from the PAL
      * (dom abstraction)
