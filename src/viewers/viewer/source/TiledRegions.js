@@ -102,6 +102,14 @@ class OmeVectorTileSource extends VectorTileSource {
         this.hiddenFeatures_ = {};
 
         /**
+         * a flag that tells us if we'd like for the text to be scaled with resolution
+         * changes of the view. Defaults to true.
+         * NB: No setScaleText() function since it's never used
+         * @type {boolean}
+         */
+        this.scale_text_ = true;
+
+        /**
          * the viewer reference
          *
          * @type {Viewer}
