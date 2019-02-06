@@ -21,6 +21,7 @@ import MapEventType from 'ol/MapEventType';
 import Geometry from 'ol/geom/Geometry';
 import GeometryType from 'ol/geom/GeometryType';
 import Polygon from 'ol/geom/Polygon';
+import {fromExtent as polygonFromExtent} from 'ol/geom/Polygon.js';
 import {listen, unlistenByKey} from 'ol/events';
 import Collection from 'ol/Collection';
 import Feature from 'ol/Feature';
@@ -852,7 +853,7 @@ class Viewer extends OlObject {
         var rot = this.viewer_.getView().getRotation();
         if (geometry.getType() === GeometryType.CIRCLE) {
             var ext = geometry.getExtent();
-            geometry = Polygon.fromExtent(ext);
+            geometry = polygonFromExtent(ext);
             geometry.rotate(rot, getCenter(ext));
         }
         var coords = geometry.getFlatCoordinates();
