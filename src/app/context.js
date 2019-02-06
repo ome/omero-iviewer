@@ -672,6 +672,31 @@ export default class Context {
     }
 
     /**
+     * Get the parent e.g. {type:'dataset', id:123} for example used to
+     * load additional thumbnails.
+     */
+    getParentTypeAndId() {
+        let image_config = this.getSelectedImageConfig();
+        // Dataset ID or Well ID or Image ID
+        let parent_id = null;
+        if (this.initial_type === INITIAL_TYPES.DATASET ||
+            this.initial_type === INITIAL_TYPES.WELL) {
+                parent_id = this.initial_ids[0];
+        } else if (this.initial_type === INITIAL_TYPES.IMAGES &&
+            this.initial_ids.length === 1 &&
+            image_config !== null &&
+            typeof image_config.image_info.parent_id === 'number'){
+                parent_id = image_config.image_info.parent_id;
+        }
+        let parent_type = INITIAL_TYPES.NONE;
+        if (parent_id) {
+            parent_type = this.initial_type === INITIAL_TYPES.IMAGES ?
+                    image_config.image_info.parent_type : this.initial_type;
+        }
+        return {type: parent_type, id: parent_id};
+    }
+
+    /**
      * Click Handler for single/double clicks to converge on:
      * Opens images in single and multi viewer mode
      *
@@ -684,20 +709,11 @@ export default class Context {
         let image_config = context.getSelectedImageConfig();
         let navigateToNewImage = () => {
             context.rememberImageConfigChange(image_id);
-            let parent_id =
-                context.initial_type === INITIAL_TYPES.DATASET ||
-                context.initial_type === INITIAL_TYPES.WELL ?
-                    context.initial_ids[0] :
-                        context.initial_type === INITIAL_TYPES.IMAGES &&
-                        context.initial_ids.length === 1 &&
-                        image_config !== null &&
-                        typeof image_config.image_info.parent_id === 'number' ?
-                            image_config.image_info.parent_id : null;
-            let parent_type =
-                parent_id === null ? INITIAL_TYPES.NONE :
-                    context.initial_type === INITIAL_TYPES.IMAGES ?
-                        image_config.image_info.parent_type :
-                        context.initial_type;
+            // Dataset ID or Well ID or Image ID
+            let parent = this.getParentTypeAndId();
+            let parent_id = parent.id;
+            let parent_type = parent.type;
+            console.log(parent_id, parent_type);
             // single click in mdi will need to 'replace' image config
             if (context.useMDI && !is_double_click) {
                     let oldPosition = Object.assign({}, image_config.position);

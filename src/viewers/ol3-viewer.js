@@ -1502,4 +1502,46 @@ export default class Ol3Viewer extends EventSubscriber {
             this.image_config.show_controls = false;
         }
     }
+
+    /**
+     * Handle dropping of a thumbnail on to the centre panel.
+     * Opens the image in Multi-Display mode
+     *
+     * @param {Object} event Drop event
+     */
+    handleDrop(event) {
+        // prevent event bubbling up to parent .frame
+        event.stopPropagation();
+
+        var image_id = parseInt(event.dataTransfer.getData("id"), 10);
+
+        // If we are not in multi-viewer mode, enter multi-viewer mode
+        if (!this.context.useMDI) {
+            // similar behaviour to double-clicking
+            this.context.useMDI = true;
+            this.context.onClicks(image_id, true);
+        } else {
+            // replace this image_config with new one
+            // NB: we don't check for unsaved ROIs before closing old image
+            let parent = this.context.getParentTypeAndId();
+            let oldPosition = Object.assign({}, this.image_config.position);
+            let oldSize = Object.assign({}, this.image_config.size);
+            this.context.removeImageConfig(this.image_config, true);
+            this.context.addImageConfig(image_id, parent.id, parent.type);
+            let selImgConf = this.context.getSelectedImageConfig();
+            if (selImgConf !== null) {
+                selImgConf.position = oldPosition;
+                selImgConf.size = oldSize;
+            }
+        }
+    }
+
+    /**
+     * Simply preventDefault() to allow drop here
+     *
+     * @param {Object} event Dragover event
+     */
+    handleDragover(event) {
+        event.preventDefault();
+    }
 }

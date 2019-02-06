@@ -66,8 +66,9 @@
             <img src="../../css/images/collapse-left.png"/>
         </div>
 
-        <div drop.delegate="handleDrop($event)"
-            dragover.delegate="handleDragover($event)"class="frame col-xs-12">
+        <div class="frame col-xs-12"
+            drop.delegate="handleDrop($event)"
+            dragover.delegate="handleDragover($event)">
             <div class="${context.useMDI && context.image_configs.size > 1 ?
                             'viewer-mdi' : 'viewer'}
                         ${context.useMDI && context.selected_config === id &&
