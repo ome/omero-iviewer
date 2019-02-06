@@ -804,6 +804,7 @@ thumbnail-slider img {
 
 .regions-header {
     position: fixed;
+    width: 330px;
     background-color: #fff;
     height: 40px;
     line-height: 36px;

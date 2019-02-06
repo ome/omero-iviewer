@@ -62,17 +62,15 @@
 
             <regions-edit regions_info.bind="regions_info"></regions-edit>
 
-            <hr show.bind="regions_info !== null && regions_info.ready &&
+            <hr show.bind="regions_info !== null &&
                            regions_info.image_info.can_annotate" />
             <regions-drawing show.bind="regions_info !== null &&
-                                        regions_info.ready &&
                                         regions_info.image_info.can_annotate"
                              regions_info.bind="regions_info">
             </regions-drawing>
             <hr />
         </div>
-        <regions-list show.bind="regions_info.ready"
-                      regions_info.bind="regions_info">
+        <regions-list regions_info.bind="regions_info">
         </regions-list>
         <div class="disabled-color loading-text"
              show.bind="!regions_info.ready">Loading Regions ...</div>
