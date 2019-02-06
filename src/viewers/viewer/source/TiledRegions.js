@@ -154,7 +154,7 @@ class OmeVectorTileSource extends VectorTileSource {
             }
             if (toDeselect.length > 0) {
                 sendEventNotification(
-                    this.viewer_, "REGIONS_PROPERTY_CHANGED",
+                    this.viewer_, "TILED_REGIONS_PROPERTY_CHANGED",
                     {
                         "properties" : properties,
                         "shapes": toDeselect,
@@ -181,7 +181,7 @@ class OmeVectorTileSource extends VectorTileSource {
         });
 
         sendEventNotification(
-            this.viewer_, "REGIONS_PROPERTY_CHANGED",
+            this.viewer_, "TILED_REGIONS_PROPERTY_CHANGED",
             {
                 "properties" : properties,
                 "shapes": roi_shape_ids,
@@ -219,8 +219,9 @@ class OmeVectorTileSource extends VectorTileSource {
             }
         });
 
+        // this isn't currently used but is consistent behaviour
         sendEventNotification(
-            this.viewer_, "REGIONS_PROPERTY_CHANGED",
+            this.viewer_, "TILED_REGIONS_PROPERTY_CHANGED",
             {
                 "properties" : properties,
                 "shapes": roi_shape_ids,
