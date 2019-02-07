@@ -1521,18 +1521,9 @@ export default class Ol3Viewer extends EventSubscriber {
             this.context.useMDI = true;
             this.context.onClicks(image_id, true);
         } else {
+            // similar behaviour to single-click:
             // replace this image_config with new one
-            // NB: we don't check for unsaved ROIs before closing old image
-            let parent = this.context.getParentTypeAndId();
-            let oldPosition = Object.assign({}, this.image_config.position);
-            let oldSize = Object.assign({}, this.image_config.size);
-            this.context.removeImageConfig(this.image_config, true);
-            this.context.addImageConfig(image_id, parent.id, parent.type);
-            let selImgConf = this.context.getSelectedImageConfig();
-            if (selImgConf !== null) {
-                selImgConf.position = oldPosition;
-                selImgConf.size = oldSize;
-            }
+            this.context.onClicks(image_id, false, this.image_config);
         }
     }
 

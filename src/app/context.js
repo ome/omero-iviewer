@@ -704,34 +704,38 @@ export default class Context {
      * @param {number} image_id the image id for the clicked thumbnail
      * @param {boolean} is_double_click true if triggered by a double click
      */
-    onClicks(image_id, is_double_click = false) {
-        let context = this;
-        let image_config = context.getSelectedImageConfig();
+    onClicks(image_id, is_double_click = false, replace_image_config) {
+        let image_config = this.getSelectedImageConfig();
         let navigateToNewImage = () => {
-            context.rememberImageConfigChange(image_id);
+            this.rememberImageConfigChange(image_id);
             // Dataset ID or Well ID or Image ID
             let parent = this.getParentTypeAndId();
             let parent_id = parent.id;
             let parent_type = parent.type;
-            console.log(parent_id, parent_type);
             // single click in mdi will need to 'replace' image config
-            if (context.useMDI && !is_double_click) {
-                    let oldPosition = Object.assign({}, image_config.position);
-                    let oldSize = Object.assign({}, image_config.size);
-                    context.removeImageConfig(image_config, true);
-                    context.addImageConfig(image_id, parent_id, parent_type);
-                    let selImgConf = context.getSelectedImageConfig();
-                    if (selImgConf !== null) {
-                        selImgConf.position = oldPosition;
-                        selImgConf.size = oldSize;
-                    }
-            } else context.addImageConfig(image_id, parent_id, parent_type);
+            if (this.useMDI && !is_double_click && !replace_image_config) {
+                replace_image_config = image_config;
+            }
+            if (replace_image_config) {
+                let oldPosition = Object.assign({}, replace_image_config.position);
+                let oldSize = Object.assign({}, replace_image_config.size);
+                this.removeImageConfig(replace_image_config, true);
+                this.addImageConfig(image_id, parent_id, parent_type);
+                // Get the newly created image config
+                let selImgConf = this.getSelectedImageConfig();
+                if (selImgConf !== null) {
+                    selImgConf.position = oldPosition;
+                    selImgConf.size = oldSize;
+                }
+            } else {
+                this.addImageConfig(image_id, parent_id, parent_type);
+            }
         };
 
-        let modifiedConfs = context.useMDI ?
-            context.findConfigsWithModifiedRegionsForGivenImage(
+        let modifiedConfs = this.useMDI ?
+            this.findConfigsWithModifiedRegionsForGivenImage(
                 image_id) : [];
-        let selImgConf = context.getSelectedImageConfig();
+        let selImgConf = this.getSelectedImageConfig();
         let hasSameImageSelected =
             selImgConf && selImgConf.image_info.image_id === image_id;
         // show dialogues for modified rois
@@ -740,10 +744,10 @@ export default class Context {
             (image_config.regions_info.hasBeenModified() ||
              modifiedConfs.length > 0) &&
              (!is_double_click || (is_double_click && !hasSameImageSelected)) &&
-            !Misc.useJsonp(context.server) &&
+            !Misc.useJsonp(this.server) &&
             image_config.regions_info.image_info.can_annotate) {
                 let modalText =
-                    !context.useMDI ||
+                    !this.useMDI ||
                     image_config.regions_info.hasBeenModified() ?
                         'You have new/deleted/modified ROI(s).<br>' +
                         'Do you want to save your changes?' :
@@ -753,12 +757,12 @@ export default class Context {
                         'inconsistence (and a potential loss ' +
                         'of some of your changes)?';
                 let saveHandler =
-                    !context.useMDI ||
+                    !this.useMDI ||
                     (!is_double_click &&
                      image_config.regions_info.hasBeenModified()) ?
                         () => {
                             let tmpSub =
-                                context.eventbus.subscribe(
+                                this.eventbus.subscribe(
                                     REGIONS_STORED_SHAPES,
                                     (params={}) => {
                                         tmpSub.dispose();
@@ -766,13 +770,13 @@ export default class Context {
                                             navigateToNewImage();
                                 });
                             setTimeout(()=>
-                                context.publish(
+                                this.publish(
                                     REGIONS_STORE_SHAPES,
                                     {config_id : image_config.id,
                                      omit_client_update: true}), 20);
                         } :
                         () => {
-                            context.publish(
+                            this.publish(
                                 REGIONS_STORE_SHAPES,
                                 {config_id :
                                     image_config.regions_info.hasBeenModified() ?
