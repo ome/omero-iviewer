@@ -260,7 +260,18 @@ export default class RegionsList extends EventSubscriber {
      */
     setPage(zeroBasedPageNumber=0) {
         this.temp_sliding_page_number = undefined;
-        this.regions_info.setPageAndReload(zeroBasedPageNumber);
+        if (this.regions_info.is_pending) return;
+
+        if (this.regions_info.hasBeenModified()) {
+            Ui.showModalMessage(
+                "You have unsaved ROI changes. Please Save or Undo " +
+                "before going to next page.",
+                "OK");
+            return false;
+        } else {
+            this.regions_info.setPageAndReload(zeroBasedPageNumber);
+            return true;
+        }
     }
 
     /**
@@ -270,7 +281,11 @@ export default class RegionsList extends EventSubscriber {
      */
     handlePageRange(event) {
         let page = parseInt(event.target.value, 10);
-        this.setPage(page);
+        let changed = this.setPage(page);
+        if (!changed) {
+            // reset slider handle
+            event.target.value = this.regions_info.roi_page_number;
+        }
     }
 
     /**
