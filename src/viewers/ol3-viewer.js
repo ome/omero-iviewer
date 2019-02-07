@@ -1510,6 +1510,7 @@ export default class Ol3Viewer extends EventSubscriber {
      * @param {Object} event Drop event
      */
     handleDrop(event) {
+        document.getElementById(this.image_config.id).classList.remove("drag_enter");
         // prevent event bubbling up to parent .frame
         event.stopPropagation();
 
@@ -1533,6 +1534,21 @@ export default class Ol3Viewer extends EventSubscriber {
      * @param {Object} event Dragover event
      */
     handleDragover(event) {
+        // Need preventDefault() to allow drop action
         event.preventDefault();
+        // Make sure ONLY this viewer has the 'drag_enter' class
+        // We don't use dragenter/leave events as they are too fickle
+        $(".viewer-mdi").removeClass("drag_enter");
+        document.getElementById(this.image_config.id).classList.add("drag_enter");
+    }
+
+    /**
+     * Simply preventDefault() to allow drop here
+     *
+     * @param {Object} event Dragover event
+     */
+    handleDragleave(event) {
+        // We don't use dragenter/leave events as they are too fickle
+        $(".viewer-mdi").removeClass("drag_enter");
     }
 }
