@@ -1099,6 +1099,7 @@ export default class Ol3Viewer extends EventSubscriber {
                 params.omit_client_update) return;
 
         let ids = [];
+        let roi_count_change = 0;
         // we iterate over the ids given and reset states accordingly
         for (let id in params.shapes) {
             let shape = this.image_config.regions_info.getShape(id);
@@ -1113,6 +1114,7 @@ export default class Ol3Viewer extends EventSubscriber {
                 // new ones are stored under their newly created ids
                 let wasNew = typeof shape.is_new === 'boolean' && shape.is_new;
                 if (wasNew) {
+                    roi_count_change++;
                     let newRoi =
                         this.image_config.regions_info.data.get(
                             newRoiAndShapeId.roi_id);
@@ -1153,6 +1155,7 @@ export default class Ol3Viewer extends EventSubscriber {
                             oldRoiAndShapeId.roi_id);
                     // take out of count if not new
                     if (!wasNew) {
+                        roi_count_change--;
                         if (!shape.visible) // if not visible we correct
                             this.image_config.regions_info.visibility_toggles++;
                         this.image_config.regions_info.number_of_shapes--;
@@ -1160,6 +1163,10 @@ export default class Ol3Viewer extends EventSubscriber {
                 }
             }
         }
+
+        // update roi count
+        this.image_config.image_info.roi_count =
+            this.image_config.image_info.roi_count + roi_count_change;
 
         // clear history
         this.image_config.regions_info.history.resetHistory();
