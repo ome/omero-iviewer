@@ -206,6 +206,49 @@ def persist_rois(request, conn=None, **kwargs):
 
     return JsonResponse(ret)
 
+@login_required()
+def rois_by_plane(request, image_id, the_z, the_t, conn=None, **kwargs):
+    """
+    Get ROIs with Shapes where Shapes are on the specified Z and T plane.
+
+    Includes Shapes where Z or T are null.
+    """
+
+    params = omero.sys.ParametersI()
+    params.addId(image_id)
+    filter = omero.sys.Filter()
+    filter.offset = rint(request.GET.get("offset", 0))
+    filter.limit = rint(request.GET.get("limit", 1000))
+    params.theFilter = filter
+    query = """
+        select roi from Roi roi
+        join fetch roi.details.owner as owner
+        join fetch roi.details.creationEvent
+        left outer join fetch roi.shapes as shapes
+        where (shapes.theZ = %s or shapes.theZ is null)
+        and (shapes.theT = %s or shapes.theT is null)
+        and roi.image.id = :id order by roi.id""" % (the_z, the_t)
+
+    query_service = conn.getQueryService()
+    rois = query_service.findAllByQuery(query, params, conn.SERVICE_OPTS)
+
+    marshalled = []
+    for r in rois:
+        encoder = omero_marshal.get_encoder(r.__class__)
+        if encoder is not None:
+            marshalled.append(encoder.encode(r))
+
+    # Modify query to only select count() and NOT paginate
+    query = query.replace("select roi ", "select count(distinct roi) ")
+    query = query.replace("fetch", "")
+    query = query.split("order by")[0]
+    params = omero.sys.ParametersI()
+    params.addId(image_id)
+    result = query_service.projection(query, params, conn.SERVICE_OPTS)
+    meta = {"totalCount": result[0][0].val}
+
+    return JsonResponse({'data': marshalled, 'meta': meta});
+
 
 @login_required()
 def image_data(request, image_id, conn=None, **kwargs):
