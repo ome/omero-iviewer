@@ -17,10 +17,10 @@
 -->
 <template>
     <div class="regions-list">
-        <div if.bind="regions_info.image_info.roi_count > REGIONS_PAGE_SIZE">
+        <div if.bind="regions_info.roi_count_on_current_plane > REGIONS_PAGE_SIZE">
             <div style="display: inline-block; width: 165px; white-space: nowrap;">
                 Showing page: ${temp_sliding_page_number !== undefined ? temp_sliding_page_number + 1 : regions_info.roi_page_number + 1}
-                of ${regions_info.getPageCount()}
+                of ${pageCount}
             </div>
             <div class="glyphicon glyphicon-chevron-left"
                 click.delegate="setPage(regions_info.roi_page_number - 1)">
@@ -28,7 +28,7 @@
            <input disabled.bind="regions_info.is_pending" type="range"
              input.delegate="handlePageRangeSlide($event)"
              change.delegate="handlePageRange($event)"
-            min="0" value="${regions_info.roi_page_number}" max="${regions_info.getPageCount() - 1}"
+            min="0" value="${regions_info.roi_page_number}" max="${pageCount - 1}"
             style="position: relative; top: 2px; width: 100px; display: inline-block"/>
             <div class="glyphicon glyphicon-chevron-right"
                 click.delegate="setPage(regions_info.roi_page_number + 1)">

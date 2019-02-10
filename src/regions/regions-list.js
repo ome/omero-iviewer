@@ -22,7 +22,8 @@ import Misc from '../utils/misc';
 import Ui from '../utils/ui';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {
-    REGIONS_SET_PROPERTY, IMAGE_VIEWER_RESIZE, EventSubscriber
+    REGIONS_SET_PROPERTY, IMAGE_VIEWER_RESIZE, EventSubscriber,
+    IMAGE_DIMENSION_CHANGE
 } from '../events/events';
 import {REGIONS_PAGE_SIZE} from '../utils/constants';
 
@@ -90,8 +91,12 @@ export default class RegionsList extends EventSubscriber {
      * @memberof RegionsList
      * @type {Array.<string,function>}
      */
-    sub_list = [[IMAGE_VIEWER_RESIZE,
-                    (params={}) => setTimeout(() => this.setHeaderWidth(), 50)]];
+    sub_list = [
+        [IMAGE_VIEWER_RESIZE,
+            (params={}) => setTimeout(() => this.setHeaderWidth(), 50)],
+        [IMAGE_DIMENSION_CHANGE,
+            (params={}) => this.changeDimension(params)],
+    ];
 
     /**
      * @constructor
@@ -113,6 +118,15 @@ export default class RegionsList extends EventSubscriber {
      */
     bind() {
         this.waitForRegionsInfoReady();
+    }
+
+    /**
+     * Gets page count for current plane.
+     * Allows view to show page count and automatically binds change in
+     * roi_count_on_current_plane
+     */
+    get pageCount() {
+        return Math.ceil(this.regions_info.roi_count_on_current_plane/REGIONS_PAGE_SIZE)
     }
 
     /**
@@ -271,6 +285,17 @@ export default class RegionsList extends EventSubscriber {
         } else {
             this.regions_info.setPageAndReload(zeroBasedPageNumber);
             return true;
+        }
+    }
+
+    /**
+     * Listen for Z/T changes and re-load ROIs for the new plane.
+     *
+     * @param {Object} params Event params
+     */
+    changeDimension(params) {
+        if (params.dim === "t" || params.dim == "z") {
+            this.regions_info.requestData(true);
         }
     }
 

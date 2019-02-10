@@ -75,6 +75,11 @@ export default class RegionsInfo  {
     number_of_shapes = 0;
 
     /**
+     * When we load ROIs by Z/T plane, we also get the total count
+     */
+    roi_count_on_current_plane = 0;
+
+    /**
      * @memberof RegionsInfo
      * @type {RegionsHistory}
      */
@@ -286,7 +291,7 @@ export default class RegionsInfo  {
      * Get the number of pages needed to show all paginated ROIs
      */
     getPageCount() {
-        return Math.ceil(this.image_info.roi_count/REGIONS_PAGE_SIZE);
+        return Math.ceil(this.roi_count_on_current_plane/REGIONS_PAGE_SIZE);
     }
 
     /**
@@ -305,12 +310,15 @@ export default class RegionsInfo  {
         // send request
         $.ajax({
             url : this.image_info.context.server +
-                  this.image_info.context.getPrefixedURI(WEB_API_BASE) +
-                  REGIONS_REQUEST_URL + '/?image=' + this.image_info.image_id +
-                  '&limit=' + REGIONS_PAGE_SIZE +
+                  this.image_info.context.getPrefixedURI(IVIEWER) +
+                  '/rois_by_plane/' + this.image_info.image_id + '/' +
+                  this.image_info.dimensions.z + '/' +
+                  this.image_info.dimensions.t + '/' +
+                  '?limit=' + REGIONS_PAGE_SIZE +
                   '&offset=' + (this.roi_page_number * REGIONS_PAGE_SIZE),
             success : (response) => {
-                if (this.is_pending) this.setData(response.data)
+                if (this.is_pending) this.setData(response.data);
+                this.roi_count_on_current_plane = response.meta.totalCount;
             }, error : (error) => {
                 this.is_pending = false;
                 console.error("Failed to load Rois: " + error)
