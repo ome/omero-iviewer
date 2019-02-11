@@ -17,6 +17,9 @@
 -->
 <template>
     <div class="regions-list">
+        <div if.bind="regions_info.image_info.roi_count > REGIONS_PAGE_SIZE">
+            Current Z/T plane has ${ regions_info.roi_count_on_current_plane } ROIs
+        </div>
         <div if.bind="regions_info.roi_count_on_current_plane > REGIONS_PAGE_SIZE">
             <div style="display: inline-block; width: 165px; white-space: nowrap;">
                 Showing page: ${temp_sliding_page_number !== undefined ? temp_sliding_page_number + 1 : regions_info.roi_page_number + 1}
