@@ -75,9 +75,7 @@ export class RightHandPanel {
             this.bindingEngine.propertyObserver(
                 this.context, 'selected_config').subscribe(
                     (newValue, oldValue) => {
-                        this.image_config =
-                            this.context.getSelectedImageConfig();
-                        this.makeInitialRoisRequestIfRoisTabIsActive();
+                        this.image_config = this.context.getSelectedImageConfig();
                 });
     }
 
