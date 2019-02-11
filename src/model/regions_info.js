@@ -289,9 +289,54 @@ export default class RegionsInfo  {
 
     /**
      * Get the number of pages needed to show all paginated ROIs
+     * on current plane.
      */
     getPageCount() {
         return Math.ceil(this.roi_count_on_current_plane/REGIONS_PAGE_SIZE);
+    }
+
+    /**
+     * If the total number of ROIs is more than REGIONS_PAGE_SIZE,
+     * we load ROIs by Z/T plane.
+     * If there are still more on a plane than REGIONS_PAGE_SIZE then we
+     * paginate within a plane.
+     */
+    isRoiLoadingPaginatedByPlane() {
+        return this.image_info.roi_count > REGIONS_PAGE_SIZE;
+    }
+
+    /**
+     * Get the URL for loading ROIs.
+     * If isRoiLoadingPaginatedByPlane() then we filter by Z/T plane
+     */
+    getRegionsUrl() {
+        let z_start = this.image_info.dimensions.z;
+        let z_end;
+        if (this.image_info.projection && this.image_info.projection != "normal") {
+            if (this.image_info.projection_opts.start) {
+                z_start = this.image_info.projection_opts.start;
+            }
+            if (this.image_info.projection_opts.end) {
+                z_end = this.image_info.projection_opts.end;
+            }
+        }
+
+        let url = this.image_info.context.server;
+
+        if (this.isRoiLoadingPaginatedByPlane()) {
+            url += this.image_info.context.getPrefixedURI(IVIEWER) +
+                  '/rois_by_plane/' + this.image_info.image_id + '/' +
+                  z_start + (z_end ? '-' + z_end : '') + '/' +
+                  this.image_info.dimensions.t + '/?';
+        } else {
+            url += this.image_info.context.getPrefixedURI(WEB_API_BASE) +
+                REGIONS_REQUEST_URL + '/?image=' + this.image_info.image_id +
+                '&';
+        }
+
+        url += 'limit=' + REGIONS_PAGE_SIZE +
+                '&offset=' + (this.roi_page_number * REGIONS_PAGE_SIZE);
+        return url;
     }
 
     /**
@@ -307,26 +352,9 @@ export default class RegionsInfo  {
         this.resetRegionsInfo();
         this.is_pending = true;
 
-        let z_start = this.image_info.dimensions.z;
-        let z_end;
-        if (this.image_info.projection && this.image_info.projection != "normal") {
-            if (this.image_info.projection_opts.start) {
-                z_start = this.image_info.projection_opts.start;
-            }
-            if (this.image_info.projection_opts.end) {
-                z_end = this.image_info.projection_opts.end;
-            }
-        }
-
         // send request
         $.ajax({
-            url : this.image_info.context.server +
-                  this.image_info.context.getPrefixedURI(IVIEWER) +
-                  '/rois_by_plane/' + this.image_info.image_id + '/' +
-                  z_start + (z_end ? '-' + z_end : '') + '/' +
-                  this.image_info.dimensions.t + '/' +
-                  '?limit=' + REGIONS_PAGE_SIZE +
-                  '&offset=' + (this.roi_page_number * REGIONS_PAGE_SIZE),
+            url : this.getRegionsUrl(),
             success : (response) => {
                 if (this.is_pending) this.setData(response.data);
                 this.roi_count_on_current_plane = response.meta.totalCount;

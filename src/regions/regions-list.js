@@ -292,22 +292,30 @@ export default class RegionsList extends EventSubscriber {
     }
 
     /**
-     * Listen for Z/T changes and re-load ROIs for the new plane.
+     * Listen for Z/T changes and re-load ROIs for the new plane
+     * IF we're filtering ROIs by current plane
      *
      * @param {Object} params Event params
      */
     changeDimension(params) {
+        if (!this.regions_info.isRoiLoadingPaginatedByPlane()) {
+            return;
+        }
         if (params.dim === "t" || params.dim == "z") {
             this.regions_info.requestData(true);
         }
     }
 
     /**
-     * Listen for Z projection changes and re-load ROIs.
+     * Listen for Z projection changes and re-load ROIs
+     * IF we're filtering ROIs by current plane
      *
      * @param {Object} params Event params
      */
     changeImageSettings(params) {
+        if (!this.regions_info.isRoiLoadingPaginatedByPlane()) {
+            return;
+        }
         if (params.projection) {
             this.regions_info.requestData(true);
         }
