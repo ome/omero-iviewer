@@ -206,6 +206,7 @@ def persist_rois(request, conn=None, **kwargs):
 
     return JsonResponse(ret)
 
+
 @login_required()
 def rois_by_plane(request, image_id, the_z, the_t, z_end=None, t_end=None,
                   conn=None, **kwargs):
@@ -275,7 +276,7 @@ def rois_by_plane(request, image_id, the_z, the_t, z_end=None, t_end=None,
         if encoder is not None:
             marshalled.append(encoder.encode(r))
 
-    return JsonResponse({'data': marshalled, 'meta': meta});
+    return JsonResponse({'data': marshalled, 'meta': meta})
 
 
 @login_required()
