@@ -260,10 +260,6 @@ def rois_by_plane(request, image_id, the_z, the_t, z_end=None, t_end=None,
     # are not on the_z or the_t we filtered by above)
     params = omero.sys.ParametersI()
     params.addIds(roi_ids)
-    filter = omero.sys.Filter()
-    filter.offset = rint(request.GET.get("offset", 0))
-    filter.limit = rint(request.GET.get("limit", 1000))
-    params.theFilter = filter
 
     query = """
         select roi from Roi roi
