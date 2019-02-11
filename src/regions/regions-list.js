@@ -22,7 +22,7 @@ import Misc from '../utils/misc';
 import Ui from '../utils/ui';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {
-    REGIONS_SET_PROPERTY, IMAGE_VIEWER_RESIZE, EventSubscriber,
+    REGIONS_SET_PROPERTY, EventSubscriber,
     IMAGE_DIMENSION_CHANGE,
     IMAGE_SETTINGS_CHANGE
 } from '../events/events';
@@ -93,8 +93,6 @@ export default class RegionsList extends EventSubscriber {
      * @type {Array.<string,function>}
      */
     sub_list = [
-        [IMAGE_VIEWER_RESIZE,
-            (params={}) => setTimeout(() => this.setHeaderWidth(), 50)],
         [IMAGE_DIMENSION_CHANGE,
             (params={}) => this.changeDimension(params)],
         [IMAGE_SETTINGS_CHANGE,
@@ -146,7 +144,6 @@ export default class RegionsList extends EventSubscriber {
             this.registerObservers();
             // event subscriptions
             this.subscribe();
-            setTimeout(() => this.setTableHeight(), 50);
         };
 
         // tear down old observers
@@ -174,16 +171,6 @@ export default class RegionsList extends EventSubscriber {
             this.bindingEngine.collectionObserver(
                 this.regions_info.selected_shapes).subscribe(
                     (newValue, oldValue) => this.actUponSelectionChange()));
-        this.observers.push(
-            this.bindingEngine.propertyObserver(
-                this.regions_info, 'number_of_shapes').subscribe(
-                    (newValue, oldValue) =>
-                        setTimeout(() => this.setHeaderWidth(), 50)));
-        this.observers.push(
-            this.bindingEngine.propertyObserver(
-                this.context, 'selected_tab').subscribe(
-                    (newValue, oldValue) =>
-                        setTimeout(() => this.setTableHeight(), 50)));
         this.observers.push(
             this.bindingEngine.propertyObserver(
                 this.regions_info, 'visibility_toggles').subscribe(
@@ -246,23 +233,6 @@ export default class RegionsList extends EventSubscriber {
             $('.regions-list-toggler').removeClass('expand-down');
             $('.regions-list-toggler').addClass('collapse-up');
         }
-    }
-
-    /**
-     * Gives the header the row width to avoid scalebar adjustment nonsense
-     * @memberof RegionsList
-     */
-    setHeaderWidth() {
-        $('.regions-header').width($('.regions-table-first-row').width());
-    }
-
-    /**
-     * Sets the table height
-     * @memberof RegionsList
-     */
-    setTableHeight() {
-        if (!this.context.isRoisTabActive()) return;
-        this.setHeaderWidth();
     }
 
     /**
@@ -496,8 +466,6 @@ export default class RegionsList extends EventSubscriber {
         let roi = this.regions_info.data.get(roi_id);
         if (typeof roi === 'undefined') return;
         roi.show = !roi.show;
-
-        setTimeout(() => this.setHeaderWidth(), 25);
     }
 
     /**
