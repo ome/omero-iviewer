@@ -307,12 +307,23 @@ export default class RegionsInfo  {
         this.resetRegionsInfo();
         this.is_pending = true;
 
+        let z_start = this.image_info.dimensions.z;
+        let z_end;
+        if (this.image_info.projection && this.image_info.projection != "normal") {
+            if (this.image_info.projection_opts.start) {
+                z_start = this.image_info.projection_opts.start;
+            }
+            if (this.image_info.projection_opts.end) {
+                z_end = this.image_info.projection_opts.end;
+            }
+        }
+
         // send request
         $.ajax({
             url : this.image_info.context.server +
                   this.image_info.context.getPrefixedURI(IVIEWER) +
                   '/rois_by_plane/' + this.image_info.image_id + '/' +
-                  this.image_info.dimensions.z + '/' +
+                  z_start + (z_end ? '-' + z_end : '') + '/' +
                   this.image_info.dimensions.t + '/' +
                   '?limit=' + REGIONS_PAGE_SIZE +
                   '&offset=' + (this.roi_page_number * REGIONS_PAGE_SIZE),

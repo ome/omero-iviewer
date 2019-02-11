@@ -23,7 +23,8 @@ import Ui from '../utils/ui';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {
     REGIONS_SET_PROPERTY, IMAGE_VIEWER_RESIZE, EventSubscriber,
-    IMAGE_DIMENSION_CHANGE
+    IMAGE_DIMENSION_CHANGE,
+    IMAGE_SETTINGS_CHANGE
 } from '../events/events';
 import {REGIONS_PAGE_SIZE} from '../utils/constants';
 
@@ -96,6 +97,8 @@ export default class RegionsList extends EventSubscriber {
             (params={}) => setTimeout(() => this.setHeaderWidth(), 50)],
         [IMAGE_DIMENSION_CHANGE,
             (params={}) => this.changeDimension(params)],
+        [IMAGE_SETTINGS_CHANGE,
+            (params={}) => this.changeImageSettings(params)],
     ];
 
     /**
@@ -295,6 +298,17 @@ export default class RegionsList extends EventSubscriber {
      */
     changeDimension(params) {
         if (params.dim === "t" || params.dim == "z") {
+            this.regions_info.requestData(true);
+        }
+    }
+
+    /**
+     * Listen for Z projection changes and re-load ROIs.
+     *
+     * @param {Object} params Event params
+     */
+    changeImageSettings(params) {
+        if (params.projection) {
             this.regions_info.requestData(true);
         }
     }
