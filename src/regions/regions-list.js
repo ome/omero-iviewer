@@ -262,12 +262,7 @@ export default class RegionsList extends EventSubscriber {
      */
     setTableHeight() {
         if (!this.context.isRoisTabActive()) return;
-
         this.setHeaderWidth();
-        $(".regions-table").css(
-            'max-height', 'calc(100% - ' +
-                ($(".regions-tools").outerHeight() +
-                $("#panel-tabs").outerHeight()) + 'px)');
     }
 
     /**
