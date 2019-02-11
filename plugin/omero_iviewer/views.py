@@ -217,11 +217,15 @@ def rois_by_plane(request, image_id, the_z, the_t, z_end=None, t_end=None,
     range (inclusive of z/t_end)
     """
 
-    # First load ALL ROIs (no pagination) filtering by Z/T to get totalCount
+    # First load ROIs filtering Shapes by Z/T
     # NB: IF we tried to load shapes here we'd get None for shapes
     # that weren't on the correct Z/T plane
     params = omero.sys.ParametersI()
     params.addId(image_id)
+    filter = omero.sys.Filter()
+    filter.offset = rint(request.GET.get("offset", 0))
+    filter.limit = rint(request.GET.get("limit", 1000))
+    params.theFilter = filter
 
     where_z = "shapes.theZ = %s or shapes.theZ is null" % the_z
     where_t = "shapes.theT = %s or shapes.theT is null" % the_t
@@ -243,7 +247,16 @@ def rois_by_plane(request, image_id, the_z, the_t, z_end=None, t_end=None,
     rois = query_service.findAllByQuery(query, params, conn.SERVICE_OPTS)
     roi_ids = [roi.id for roi in rois]
 
-    # Now we load ROIs with ALL their shapes loaded (even shapes that
+    # Modify query to only select count() and NOT paginate
+    query = query.replace("distinct(roi)", "count(distinct roi)")
+    query = query.replace("fetch", "")
+    query = query.split("order by")[0]
+    params = omero.sys.ParametersI()
+    params.addId(image_id)
+    result = query_service.projection(query, params, conn.SERVICE_OPTS)
+    meta = {"totalCount": result[0][0].val}
+
+    # Finally we load ROIs by ID with ALL their shapes loaded (even shapes that
     # are not on the_z or the_t we filtered by above)
     params = omero.sys.ParametersI()
     params.addIds(roi_ids)
@@ -265,8 +278,6 @@ def rois_by_plane(request, image_id, the_z, the_t, z_end=None, t_end=None,
         encoder = omero_marshal.get_encoder(r.__class__)
         if encoder is not None:
             marshalled.append(encoder.encode(r))
-
-    meta = {"totalCount": len(roi_ids)}
 
     return JsonResponse({'data': marshalled, 'meta': meta});
 
