@@ -217,10 +217,8 @@ def rois_by_plane(request, image_id, the_z, the_t, z_end=None, t_end=None,
     If z_end or t_end are not None, we filter by any shape within the
     range (inclusive of z/t_end)
     """
+    query_service = conn.getQueryService()
 
-    # First load ROIs filtering Shapes by Z/T
-    # NB: IF we tried to load shapes here we'd get None for shapes
-    # that weren't on the correct Z/T plane
     params = omero.sys.ParametersI()
     params.addId(image_id)
     filter = omero.sys.Filter()
@@ -237,37 +235,29 @@ def rois_by_plane(request, image_id, the_z, the_t, z_end=None, t_end=None,
         where_t = """(shapes.theT >= %s and shapes.theT <= %s)
             or shapes.theT is null""" % (the_t, t_end)
 
-    query = """
+    filter_query = """
         select distinct(roi) from Roi roi
         join roi.shapes as shapes
         where (%s) and (%s)
-        and roi.image.id = :id order by roi.id
+        and roi.image.id = :id
     """ % (where_z, where_t)
 
-    query_service = conn.getQueryService()
-    rois = query_service.findAllByQuery(query, params, conn.SERVICE_OPTS)
-    roi_ids = [roi.id for roi in rois]
-
-    # Modify query to only select count() and NOT paginate
-    query = query.replace("distinct(roi)", "count(distinct roi)")
-    query = query.replace("fetch", "")
-    query = query.split("order by")[0]
     params = omero.sys.ParametersI()
     params.addId(image_id)
-    result = query_service.projection(query, params, conn.SERVICE_OPTS)
-    meta = {"totalCount": result[0][0].val}
+    filter = omero.sys.Filter()
+    filter.offset = rint(request.GET.get("offset", 0))
+    filter.limit = rint(request.GET.get("limit", 1000))
+    params.theFilter = filter
 
-    # Finally we load ROIs by ID with ALL their shapes loaded (even shapes that
-    # are not on the_z or the_t we filtered by above)
-    params = omero.sys.ParametersI()
-    params.addIds(roi_ids)
-
+    # We want to load ALL shapes for the ROIs (omero-marshal fails if
+    # any shapes are None) but we want to filter by Shape so we use an inner
+    # query to get the ROI IDs filtered by Shape.
     query = """
         select roi from Roi roi
         join fetch roi.details.owner join fetch roi.details.creationEvent
         left outer join fetch roi.shapes
-        where roi.id in (:ids)
-    """
+        where roi.id in (%s) order by roi.id
+    """ % (filter_query)
 
     rois = query_service.findAllByQuery(query, params, conn.SERVICE_OPTS)
     marshalled = []
@@ -275,6 +265,13 @@ def rois_by_plane(request, image_id, the_z, the_t, z_end=None, t_end=None,
         encoder = omero_marshal.get_encoder(r.__class__)
         if encoder is not None:
             marshalled.append(encoder.encode(r))
+
+    # Modify query to only select count() and NOT paginate
+    query = filter_query.replace("distinct(roi)", "count(distinct roi)")
+    params = omero.sys.ParametersI()
+    params.addId(image_id)
+    result = query_service.projection(query, params, conn.SERVICE_OPTS)
+    meta = {"totalCount": result[0][0].val}
 
     return JsonResponse({'data': marshalled, 'meta': meta})
 
