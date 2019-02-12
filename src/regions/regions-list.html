@@ -92,7 +92,10 @@
                 </div>
         </div>
 
-        <div class="regions-table">
+        <div class="disabled-color loading-text"
+            show.bind="!regions_info.ready">Loading Regions...</div>
+
+        <div class="regions-table" show.bind="regions_info.ready">
             <template repeat.for="[roi_id, roi] of regions_info.data">
                 <template repeat.for="[shape_id, shape] of roi.shapes">
                     <div if.bind="(roi.shapes.size - roi.deleted) > 1 &&
