@@ -642,24 +642,16 @@ thumbnail-slider img {
     flex: 0 0 auto;
 }
 
-/* Only contains .regions-list2 */
+/* Contains .pagination-controls, .regions-header and .regions-table */
 .regions-list {
     flex: 1 1 auto;
     float: left;
     overflow: hidden;
     width: 100%;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-}
-
-/* Contains .pagination-controls, .regions-header and .regions-table */
-.regions-list2 {
-    position: relative;
     height: 100%;
-    overflow-y: auto;
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
 .pagination-controls {

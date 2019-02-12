@@ -70,10 +70,8 @@
             </regions-drawing>
             <hr />
         </div>
-        <div class="regions-list">
-            <regions-list regions_info.bind="regions_info" class="regions-list2">
-            </regions-list>
-        </div>
+        <regions-list regions_info.bind="regions_info" class="regions-list">
+        </regions-list>
         <div class="disabled-color loading-text"
              show.bind="!regions_info.ready">Loading Regions ...</div>
 
