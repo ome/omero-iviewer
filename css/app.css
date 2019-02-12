@@ -594,12 +594,27 @@ thumbnail-slider img {
     text-align: left;
 }
 
+/* Top-level container for right-hand-panel
+    Contains .nav-tabs (tabs) and .regions-tabs (content) */
 .right-hand-panel {
     width: 350px;
     max-width: 1000px;
     overflow-y: hidden;
     display: flex;
     flex-direction: column;
+}
+
+.nav-tabs {
+    background-color: #f8f8f8;
+    flex: 0 0 auto;
+}
+
+/* Container for each .tab-pane for tab content */
+.regions-tabs {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    position: relative;
+    height: 100%;
 }
 
 .tab-pane {
@@ -611,10 +626,68 @@ thumbnail-slider img {
     position: absolute;
 }
 
-.nav-tabs {
-    background-color: #f8f8f8;
+/* Main ROI tab. Contains .regions-tools and .regions-list */
+.regions-container {
+    height: 100%;
+    width: 100%;
+    min-width: 330px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    position: relative;
+}
+
+.regions-tools {
+    width: 100%;
     flex: 0 0 auto;
 }
+
+/* Only contains .regions-list2 */
+.regions-list {
+    flex: 1 1 auto;
+    float: left;
+    overflow: hidden;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* Contains .pagination-controls, .regions-header and .regions-table */
+.regions-list2 {
+    position: relative;
+    height: 100%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.pagination-controls {
+    flex: 0 0 auto;
+}
+
+.regions-header {
+    position: relative;
+    flex: 0 0 auto;
+    width: 330px;
+    background-color: #fff;
+    height: 40px;
+    line-height: 36px;
+    font-weight: bold;
+    font-size: 13px;
+    border-bottom: solid #ddd 1px;
+    z-index: 1;
+}
+
+.regions-table {
+    flex: 1 1 auto;
+    border-collapse: collapse;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 100%;
+    position: relative;
+}
+
 #settings {
     overflow-y: auto;
     overflow-x: hidden;
@@ -792,67 +865,6 @@ thumbnail-slider img {
 .user-setting img {
     max-width: 100px;
     max-height: 100px;
-}
-
-.regions-tabs {
-    flex: 1 1 auto;
-    overflow-y: auto;
-    position: relative;
-    height: 100%;
-}
-
-.regions-container {
-    height: 100%;
-    width: 100%;
-    min-width: 330px;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    position: relative;
-}
-
-.regions-list {
-    flex: 1 1 auto;
-    float: left;
-    overflow: hidden;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-}
-
-.regions-list2 {
-    position: relative;
-    height: 100%;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-}
-
-.pagination-controls {
-    flex: 0 0 auto;
-}
-
-.regions-header {
-    position: relative;
-    flex: 0 0 auto;
-    width: 330px;
-    background-color: #fff;
-    height: 40px;
-    line-height: 36px;
-    font-weight: bold;
-    font-size: 13px;
-    border-bottom: solid #ddd 1px;
-    z-index: 1;
-}
-
-.regions-table {
-    flex: 1 1 auto;
-    border-collapse: collapse;
-    overflow-y: auto;
-    overflow-x: hidden;
-    height: 100%;
-    position: relative;
 }
 
 .regions-table-row {
@@ -1034,10 +1046,6 @@ thumbnail-slider img {
 }
 .rois-dropdown, .regions-tools {
     float: left;
-}
-.regions-tools {
-    width: 100%;
-    flex: 0 0 auto;
 }
 
 .rois-dropdown>.dropdown-menu>li>a:hover,
