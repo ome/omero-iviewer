@@ -680,6 +680,10 @@ thumbnail-slider img {
     position: relative;
 }
 
+.roi_page_number {
+    width: 30px;
+}
+
 #settings {
     overflow-y: auto;
     overflow-x: hidden;
