@@ -257,33 +257,37 @@ export default class RegionsList extends EventSubscriber {
     }
 
     /**
-     * Listen for Z/T changes and re-load ROIs for the new plane
-     * IF we're filtering ROIs by current plane
+     * Listen for Z/T changes and re-load ROIs for the new plane if needed
      *
      * @param {Object} params Event params
      */
     changeDimension(params) {
-        if (!this.regions_info.isRoiLoadingPaginatedByPlane()) {
-            return;
-        }
         if (params.dim === "t" || params.dim == "z") {
-            this.regions_info.requestData(true);
+            this.requestRoisForNewPlane();
         }
     }
 
     /**
-     * Listen for Z projection changes and re-load ROIs
-     * IF we're filtering ROIs by current plane
-     *
+     * Listen for Z projection changes and re-load ROIs if needed
      * @param {Object} params Event params
      */
     changeImageSettings(params) {
+        if (params.projection) {
+            this.requestRoisForNewPlane();
+        }
+    }
+
+    /**
+     * IF we're filtering ROIs by current plane, reload ROIs after
+     * resetting page to zero
+     */
+    requestRoisForNewPlane() {
         if (!this.regions_info.isRoiLoadingPaginatedByPlane()) {
             return;
         }
-        if (params.projection) {
-            this.regions_info.requestData(true);
-        }
+        // reset page and reload
+        this.regions_info.roi_page_number = 0;
+        this.regions_info.requestData(true);
     }
 
     /**
