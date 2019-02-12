@@ -23,7 +23,11 @@
         <div if.bind="regions_info.roi_count_on_current_plane > REGIONS_PAGE_SIZE"
             class="pagination-controls">
             <div style="display: inline-block; width: 165px; white-space: nowrap;">
-                Showing page: ${temp_sliding_page_number !== undefined ? temp_sliding_page_number + 1 : regions_info.roi_page_number + 1}
+                Showing page:
+                <input class="roi_page_number"
+                    change.delegate="handlePageInput($event)"
+                    value="${temp_sliding_page_number !== undefined ? temp_sliding_page_number + 1 :
+                    regions_info.roi_page_number + 1}" />
                 of ${pageCount}
             </div>
             <div class="glyphicon glyphicon-chevron-left"

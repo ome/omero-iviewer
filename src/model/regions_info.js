@@ -281,7 +281,7 @@ export default class RegionsInfo  {
         if (typeof(zeroBasedPageNumber) !== "number" ||
             zeroBasedPageNumber < 0 ||
             zeroBasedPageNumber >= this.getPageCount() ||
-            this.is_pending) return;
+            this.is_pending) return false;
 
         this.roi_page_number = zeroBasedPageNumber;
         this.requestData(true);

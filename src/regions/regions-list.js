@@ -251,8 +251,7 @@ export default class RegionsList extends EventSubscriber {
                 "OK");
             return false;
         } else {
-            this.regions_info.setPageAndReload(zeroBasedPageNumber);
-            return true;
+            return this.regions_info.setPageAndReload(zeroBasedPageNumber);
         }
     }
 
@@ -301,6 +300,25 @@ export default class RegionsList extends EventSubscriber {
         if (!changed) {
             // reset slider handle
             event.target.value = this.regions_info.roi_page_number;
+        }
+    }
+
+    /**
+     * Handle change event for input range slider to choose page
+     *
+     * @param {object} event change event from pagination range input
+     */
+    handlePageInput(event) {
+        let page = parseInt(event.target.value, 10);
+        if (isNaN(page)) {
+            event.target.value = this.regions_info.roi_page_number + 1;
+            return;
+        }
+        // UI input is 1-based, but we set 0-based
+        let changed = this.setPage(page - 1);
+        if (!changed) {
+            // reset slider handle
+            event.target.value = this.regions_info.roi_page_number + 1;
         }
     }
 
