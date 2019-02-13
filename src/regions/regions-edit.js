@@ -604,8 +604,10 @@ export default class RegionsEdit extends EventSubscriber {
                                 respectiveDimensionInput.prop("disabled", false);
                     }
                     if (showDisabled) {
+                        respectiveDimensionInput.prop('disabled', true);
                         respectiveDimensionInput.attr(
                             "title", PERMISSION_TOOLTIPS.CANNOT_EDIT);
+                        respectiveAttachementLock.addClass("disabled-color");
                         respectiveAttachementLock.attr(
                             "title", PERMISSION_TOOLTIPS.CANNOT_EDIT);
                     }
