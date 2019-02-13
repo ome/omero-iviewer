@@ -24,7 +24,8 @@ import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework'
 import {
     REGIONS_SET_PROPERTY, EventSubscriber,
     IMAGE_DIMENSION_CHANGE,
-    IMAGE_SETTINGS_CHANGE
+    IMAGE_SETTINGS_CHANGE,
+    IMAGE_DIMENSION_PLAY
 } from '../events/events';
 import {REGIONS_PAGE_SIZE} from '../utils/constants';
 
@@ -97,6 +98,8 @@ export default class RegionsList extends EventSubscriber {
             (params={}) => this.changeDimension(params)],
         [IMAGE_SETTINGS_CHANGE,
             (params={}) => this.changeImageSettings(params)],
+        [IMAGE_DIMENSION_PLAY,
+            (params={}) => this.playImageDimension(params)],
     ];
 
     /**
@@ -261,6 +264,15 @@ export default class RegionsList extends EventSubscriber {
      */
     changeDimension(params) {
         if (params.dim === "t" || params.dim == "z") {
+            let image_info = this.regions_info.image_info;
+            let image_config = this.context.getImageConfig(image_info.config_id);
+            let last_plane = image_info.dimensions['max_' + params.dim] - 1;
+            let dim_value = image_info.dimensions[params.dim];
+            // If movie is playing and we're not on the last plane - ignore
+            if (image_config.is_movie_playing && dim_value < last_plane) {
+                this.regions_info.resetRegionsInfo();
+                return;
+            }
             this.requestRoisForNewPlane();
         }
     }
@@ -271,6 +283,16 @@ export default class RegionsList extends EventSubscriber {
      */
     changeImageSettings(params) {
         if (params.projection) {
+            this.requestRoisForNewPlane();
+        }
+    }
+
+    /**
+     * Listen for movie 'stop' re-load ROIs if needed
+     * @param {Object} params Event params
+     */
+    playImageDimension(params) {
+        if (params.stop) {
             this.requestRoisForNewPlane();
         }
     }
