@@ -442,7 +442,9 @@ export default class DimensionSlider {
      * @memberof DimensionSlider
      */
     onArrowClick(step) {
-        if (this.player_info.handle !== null) return;
+        if (this.player_info.handle !== null || !this.checkForUnsavedRoiLoss()) {
+            return;
+        }
         let oldVal = $(this.elSelector).slider('value');
         $(this.elSelector).slider('value',  oldVal + step);
     }
