@@ -346,7 +346,15 @@ export default class RegionsInfo  {
      * @param {boolean} forceUpdate if true we always request up-to-date data
      */
     requestData(forceUpdate = false) {
-        if (this.is_pending || (this.ready && !forceUpdate)) return;
+        if (this.ready && !forceUpdate) return;
+        // if we're busy, but still want to update, remember to try again...
+        // otherwise data can end up out-of-sync with Z/T if loading by plane
+        if (this.is_pending) {
+            if (forceUpdate) {
+                this.try_request_again = true;
+            }
+            return;
+        }
         // reset regions info data and history
         this.ready = false;
         this.resetRegionsInfo();
@@ -356,8 +364,14 @@ export default class RegionsInfo  {
         $.ajax({
             url : this.getRegionsUrl(),
             success : (response) => {
-                if (this.is_pending) this.setData(response.data);
-                this.roi_count_on_current_plane = response.meta.totalCount;
+                if (this.try_request_again) {
+                    this.is_pending = false;
+                    this.try_request_again = false;
+                    this.requestData();
+                } else if (this.is_pending) {
+                    this.setData(response.data);
+                    this.roi_count_on_current_plane = response.meta.totalCount;
+                }
             }, error : (error) => {
                 this.is_pending = false;
                 console.error("Failed to load Rois: " + error)
