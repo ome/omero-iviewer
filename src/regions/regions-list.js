@@ -214,8 +214,7 @@ export default class RegionsList extends EventSubscriber {
          if (idOflastEntry !== lastSelShape.shape_id && !lastCanEdit) return;
 
          Ui.scrollContainer(
-             'roi-' + lastSelShape.shape_id, '.regions-table',
-            $('.regions-header').outerHeight());
+             'roi-' + lastSelShape.shape_id, '.regions-table');
      }
 
     /**
