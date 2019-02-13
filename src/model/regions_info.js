@@ -439,6 +439,7 @@ export default class RegionsInfo  {
             this.data.clear();
         }
         this.number_of_shapes = 0;
+        this.selected_shapes = [];
     }
 
     /**
