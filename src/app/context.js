@@ -24,7 +24,7 @@ import ImageInfo from '../model/image_info';
 import RegionsInfo from '../model/regions_info';
 import {
     IMAGE_SETTINGS_REFRESH, IMAGE_VIEWER_CONTROLS_VISIBILITY,
-    THUMBNAILS_UPDATE
+    SAVE_ACTIVE_IMAGE_SETTINGS, THUMBNAILS_UPDATE
 } from '../events/events';
 import {
     APP_NAME, IMAGE_CONFIG_RELOAD, IVIEWER, INITIAL_TYPES, LUTS_NAMES,
