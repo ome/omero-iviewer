@@ -24,7 +24,7 @@ import ImageInfo from '../model/image_info';
 import RegionsInfo from '../model/regions_info';
 import {
     IMAGE_SETTINGS_REFRESH, IMAGE_VIEWER_CONTROLS_VISIBILITY,
-    SAVE_ACTIVE_IMAGE_SETTINGS, THUMBNAILS_UPDATE
+    THUMBNAILS_UPDATE
 } from '../events/events';
 import {
     APP_NAME, IMAGE_CONFIG_RELOAD, IVIEWER, INITIAL_TYPES, LUTS_NAMES,
@@ -434,6 +434,7 @@ export default class Context {
                 this.initParams[REQUEST_PARAMS.INTERPOLATE].toLowerCase() : 'true';
         this.interpolate = (interpolate === 'true');
         this.version = this.getInitialRequestParam(REQUEST_PARAMS.VERSION);
+        this.roi_page_size = this.initParams[REQUEST_PARAMS.ROI_PAGE_SIZE] || 500;
     }
 
     /**

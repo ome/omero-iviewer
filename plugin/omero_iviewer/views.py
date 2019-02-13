@@ -39,8 +39,13 @@ import omero.util.pixelstypetopython as pixelstypetopython
 from version import __version__
 from omero_version import omero_version
 
+from . import iviewer_settings
+
 WEB_API_VERSION = 0
 MAX_LIMIT = max(1, API_MAX_LIMIT)
+
+ROI_PAGE_SIZE = getattr(iviewer_settings, 'ROI_PAGE_SIZE')
+ROI_PAGE_SIZE = min(MAX_LIMIT, ROI_PAGE_SIZE)
 
 PROJECTIONS = {
     'normal': -1,
@@ -77,6 +82,7 @@ def index(request, iid=None, conn=None, **kwargs):
         'api_base', kwargs={'api_version': WEB_API_VERSION})
     if settings.FORCE_SCRIPT_NAME is not None:
         params['URI_PREFIX'] = settings.FORCE_SCRIPT_NAME
+    params['ROI_PAGE_SIZE'] = ROI_PAGE_SIZE
 
     return render(
         request, 'omero_iviewer/index.html',

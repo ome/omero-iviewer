@@ -27,7 +27,6 @@ import {
     IMAGE_SETTINGS_CHANGE,
     IMAGE_DIMENSION_PLAY
 } from '../events/events';
-import {REGIONS_PAGE_SIZE} from '../utils/constants';
 
 /**
  * Represents the regions list/table in the regions settings/tab
@@ -46,12 +45,6 @@ export default class RegionsList extends EventSubscriber {
     regions_infoChanged(newVal, oldVal) {
         this.waitForRegionsInfoReady();
     }
-
-    /**
-     * Expose this constant to the UI
-     * @type {number}
-     */
-    REGIONS_PAGE_SIZE = REGIONS_PAGE_SIZE;
 
     /**
      * the column showing (only one - mutually exclusive for now)
@@ -130,7 +123,8 @@ export default class RegionsList extends EventSubscriber {
      * roi_count_on_current_plane
      */
     get pageCount() {
-        return Math.ceil(this.regions_info.roi_count_on_current_plane/REGIONS_PAGE_SIZE)
+        return Math.ceil(this.regions_info.roi_count_on_current_plane/
+                            this.regions_info.roi_page_size)
     }
 
     /**

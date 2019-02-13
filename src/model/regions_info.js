@@ -25,7 +25,7 @@ import {
 } from '../events/events';
 import {
     IVIEWER, REGIONS_DRAWING_MODE, REGIONS_MODE, REGIONS_REQUEST_URL,
-    WEB_API_BASE, REGIONS_PAGE_SIZE,
+    WEB_API_BASE,
 } from '../utils/constants';
 
 /**
@@ -56,6 +56,15 @@ export default class RegionsInfo  {
      * @type {Map}
      */
     data = new Map();
+
+    /**
+     * Page size for ROIs to support pagination.
+     * Configured with bin/omero config set omero.web.iviewer.roi_page_size 500
+     *
+     * @memberof RegionsInfo
+     * @type {number}
+     */
+    roi_page_size = 500;
 
     /**
      * Current page number of ROIs to support pagination
@@ -183,6 +192,8 @@ export default class RegionsInfo  {
         this.syncCopiedShapesWithLocalStorage();
         // init default shape colors
         this.resetShapeDefaults();
+
+        this.roi_page_size = this.image_info.context.roi_page_size;
     }
 
     /**
@@ -292,17 +303,17 @@ export default class RegionsInfo  {
      * on current plane.
      */
     getPageCount() {
-        return Math.ceil(this.roi_count_on_current_plane/REGIONS_PAGE_SIZE);
+        return Math.ceil(this.roi_count_on_current_plane/this.roi_page_size);
     }
 
     /**
-     * If the total number of ROIs is more than REGIONS_PAGE_SIZE,
+     * If the total number of ROIs is more than this.roi_page_size,
      * we load ROIs by Z/T plane.
-     * If there are still more on a plane than REGIONS_PAGE_SIZE then we
+     * If there are still more on a plane than this.roi_page_size then we
      * paginate within a plane.
      */
     isRoiLoadingPaginatedByPlane() {
-        return this.image_info.roi_count > REGIONS_PAGE_SIZE;
+        return this.image_info.roi_count > this.roi_page_size;
     }
 
     /**
@@ -334,8 +345,8 @@ export default class RegionsInfo  {
                 '&';
         }
 
-        url += 'limit=' + REGIONS_PAGE_SIZE +
-                '&offset=' + (this.roi_page_number * REGIONS_PAGE_SIZE);
+        url += 'limit=' + this.roi_page_size +
+                '&offset=' + (this.roi_page_number * this.roi_page_size);
         return url;
     }
 

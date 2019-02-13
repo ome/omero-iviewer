@@ -52,12 +52,6 @@ export const DATASETS_REQUEST_URL = "/m/datasets";
 export const REGIONS_REQUEST_URL = "/m/rois";
 
 /**
- * Page size for regions pagination
- * @type {number}
- */
-export const REGIONS_PAGE_SIZE = 500;
-
-/**
  * a convenience string lookup for URI_PREFIX
  * @type {string}
  */
@@ -134,7 +128,8 @@ export const REQUEST_PARAMS = {
     TIME: 'T',
     VERSION: 'VERSION',
     WELL_ID: 'WELL',
-    ZOOM: 'ZM'
+    ZOOM: 'ZM',
+    ROI_PAGE_SIZE: 'ROI_PAGE_SIZE',
 }
 
 /**

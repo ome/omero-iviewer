@@ -16,11 +16,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 <template>
-        <div if.bind="regions_info.image_info.roi_count > REGIONS_PAGE_SIZE"
+        <div if.bind="regions_info.image_info.roi_count > regions_info.roi_page_size"
             class="pagination-controls">
             Current Z/T plane has ${ regions_info.roi_count_on_current_plane } ROIs
         </div>
-        <div if.bind="regions_info.roi_count_on_current_plane > REGIONS_PAGE_SIZE"
+        <div if.bind="regions_info.roi_count_on_current_plane > regions_info.roi_page_size"
             class="pagination-controls">
             <div style="display: inline-block; width: 165px; white-space: nowrap;">
                 Showing page:
