@@ -23,6 +23,7 @@ from django.core.urlresolvers import reverse
 from os.path import splitext
 from struct import unpack
 
+from omeroweb.api.api_settings import API_MAX_LIMIT
 from omeroweb.decorators import login_required
 from omeroweb.webgateway.marshal import imageMarshal
 from omeroweb.webgateway.templatetags.common_filters import lengthformat,\
@@ -39,6 +40,7 @@ from version import __version__
 from omero_version import omero_version
 
 WEB_API_VERSION = 0
+MAX_LIMIT = max(1, API_MAX_LIMIT)
 
 PROJECTIONS = {
     'normal': -1,
@@ -223,7 +225,8 @@ def rois_by_plane(request, image_id, the_z, the_t, z_end=None, t_end=None,
     params.addId(image_id)
     filter = omero.sys.Filter()
     filter.offset = rint(request.GET.get("offset", 0))
-    filter.limit = rint(request.GET.get("limit", 1000))
+    limit = min(MAX_LIMIT, long(request.GET.get("limit", MAX_LIMIT)))
+    filter.limit = rint(limit)
     params.theFilter = filter
 
     where_z = "shapes.theZ = %s or shapes.theZ is null" % the_z
@@ -241,13 +244,6 @@ def rois_by_plane(request, image_id, the_z, the_t, z_end=None, t_end=None,
         where (%s) and (%s)
         and roi.image.id = :id
     """ % (where_z, where_t)
-
-    params = omero.sys.ParametersI()
-    params.addId(image_id)
-    filter = omero.sys.Filter()
-    filter.offset = rint(request.GET.get("offset", 0))
-    filter.limit = rint(request.GET.get("limit", 1000))
-    params.theFilter = filter
 
     # We want to load ALL shapes for the ROIs (omero-marshal fails if
     # any shapes are None) but we want to filter by Shape so we use an inner
