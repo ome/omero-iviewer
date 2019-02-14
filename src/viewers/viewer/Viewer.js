@@ -430,7 +430,7 @@ class Viewer extends OlObject {
         };
 
         // determine the center
-        var imgCenter = [dims['width'] / 2, -dims['height'] / 2];
+        var defaultImgCenter = [dims['width'] / 2, -dims['height'] / 2];
         // pixel size
         var pixelSize =
         typeof this.image_info_['pixel_size'] === "object" &&
@@ -446,37 +446,31 @@ class Viewer extends OlObject {
         });
 
         // we might have some requested defaults
-        var initialTime =
-        this.getInitialRequestParam(REQUEST_PARAMS.TIME);
-        initialTime =
-        initialTime !== null ? (parseInt(initialTime)-1) :
+        var initialTime = this.getInitialRequestParam(REQUEST_PARAMS.TIME);
+        initialTime = initialTime !== null ? (parseInt(initialTime)-1) :
         this.image_info_['rdefs']['defaultT'];
         if (initialTime < 0) initialTime = 0;
         if (initialTime >= dims.t) initialTime =  dims.t-1;
-        var initialPlane =
-        this.getInitialRequestParam(REQUEST_PARAMS.PLANE);
-        initialPlane =
-        initialPlane !== null ? (parseInt(initialPlane)-1) :
+        var initialPlane = this.getInitialRequestParam(REQUEST_PARAMS.PLANE);
+        initialPlane = initialPlane !== null ? (parseInt(initialPlane)-1) :
             this.image_info_['rdefs']['defaultZ'];
         if (initialPlane < 0) initialPlane = 0;
         if (initialPlane >= dims.z) initialPlane =  dims.z-1;
-        var initialCenterX =
-        this.getInitialRequestParam(REQUEST_PARAMS.CENTER_X);
-        var initialCenterY =
-        this.getInitialRequestParam(REQUEST_PARAMS.CENTER_Y);
+        var initialCenterX = this.getInitialRequestParam(REQUEST_PARAMS.CENTER_X);
+        var initialCenterY = this.getInitialRequestParam(REQUEST_PARAMS.CENTER_Y);
+        let imgCenter;
         if (initialCenterX && !isNaN(parseFloat(initialCenterX)) &&
-        initialCenterY && !isNaN(parseFloat(initialCenterY))) {
-        initialCenterX = parseFloat(initialCenterX);
-        initialCenterY = parseFloat(initialCenterY);
-        if (initialCenterY > 0) initialCenterY = -initialCenterY;
-        if (initialCenterX >=0 && initialCenterX <= dims['width'] &&
-            -initialCenterY >=0 && -initialCenterX <= dims['height'])
-        imgCenter = [initialCenterX, initialCenterY];
+                    initialCenterY && !isNaN(parseFloat(initialCenterY))) {
+            initialCenterX = parseFloat(initialCenterX);
+            initialCenterY = parseFloat(initialCenterY);
+            if (initialCenterY > 0) initialCenterY = -initialCenterY;
+            if (initialCenterX >=0 && initialCenterX <= dims['width'] &&
+                    -initialCenterY >=0 && -initialCenterX <= dims['height']) {
+                imgCenter = [initialCenterX, initialCenterY];
+            }
         }
-        var initialChannels =
-        this.getInitialRequestParam(REQUEST_PARAMS.CHANNELS);
-        var initialMaps =
-        this.getInitialRequestParam(REQUEST_PARAMS.MAPS);
+        var initialChannels = this.getInitialRequestParam(REQUEST_PARAMS.CHANNELS);
+        var initialMaps = this.getInitialRequestParam(REQUEST_PARAMS.MAPS);
         initialChannels = parseChannelParameters(initialChannels, initialMaps);
 
         // copy needed channels info
@@ -528,43 +522,45 @@ class Viewer extends OlObject {
         });
         source.changeChannelRange(initialChannels, false);
 
-        var actualZoom = zoom > 1 ? zoomLevelScaling[0] : 1;
-        var initialZoom =
-        this.getInitialRequestParam(REQUEST_PARAMS.ZOOM);
+        var defaultZoom = zoom > 1 ? zoomLevelScaling[0] : 1;
+        var actualZoom;
+        var initialZoom = this.getInitialRequestParam(REQUEST_PARAMS.ZOOM);
         var possibleResolutions = prepareResolutions(zoomLevelScaling);
         if (initialZoom && !isNaN(parseFloat(initialZoom))) {
-        initialZoom = (1 / (parseFloat(initialZoom) / 100));
-        var posLen = possibleResolutions.length;
-        if (posLen > 1) {
-            if (initialZoom >= possibleResolutions[0])
-                actualZoom = possibleResolutions[0];
-            else if (initialZoom <= possibleResolutions[posLen-1])
-                actualZoom = possibleResolutions[posLen-1];
-            else {
-                // find nearest resolution
-                for (var r=0;r<posLen-1;r++) {
-                    if (initialZoom < possibleResolutions[r+1])
-                        continue;
-                    var d1 =
-                        Math.abs(possibleResolutions[r] - initialZoom);
-                    var d2 =
-                        Math.abs(possibleResolutions[r+1] - initialZoom);
-                    if (d1 < d2)
-                        actualZoom = possibleResolutions[r];
-                    else actualZoom = possibleResolutions[r+1];
-                    break;
+            initialZoom = (1 / (parseFloat(initialZoom) / 100));
+            var posLen = possibleResolutions.length;
+            if (posLen > 1) {
+                if (initialZoom >= possibleResolutions[0])
+                    actualZoom = possibleResolutions[0];
+                else if (initialZoom <= possibleResolutions[posLen-1])
+                    actualZoom = possibleResolutions[posLen-1];
+                else {
+                    // find nearest resolution
+                    for (var r=0;r<posLen-1;r++) {
+                        if (initialZoom < possibleResolutions[r+1])
+                            continue;
+                        var d1 =
+                            Math.abs(possibleResolutions[r] - initialZoom);
+                        var d2 =
+                            Math.abs(possibleResolutions[r+1] - initialZoom);
+                        if (d1 < d2)
+                            actualZoom = possibleResolutions[r];
+                        else actualZoom = possibleResolutions[r+1];
+                        break;
+                    }
                 }
+            } else {
+                actualZoom = 1;
             }
-        } else actualZoom = 1;
         }
 
         // we need a View object for the map
         var view = new View({
             projection: proj,
-            center: imgCenter,
+            center: defaultImgCenter,
             extent: [0, -dims['height'], dims['width'], 0],
             resolutions : possibleResolutions,
-            resolution : actualZoom,
+            resolution : defaultZoom,
             maxZoom: possibleResolutions.length-1
         });
 
@@ -625,9 +621,10 @@ class Viewer extends OlObject {
         };
 
         // get cached initial viewer center etc.
-        if (this.image_info_['center'] || this.image_info_['resolution'] || this.image_info_['rotation']) {
-            let center = this.image_info_['center'];
-            let resolution = this.image_info_['resolution'];
+        if (this.image_info_['center'] || imgCenter || this.image_info_['resolution']
+                || this.image_info_['rotation'] || actualZoom) {
+            let center = this.image_info_['center'] || imgCenter;
+            let resolution = this.image_info_['resolution'] || actualZoom;
             let rotation = this.image_info_['rotation'];
             // Need to wait for viewer to be built before this works:
             setTimeout(function() {
