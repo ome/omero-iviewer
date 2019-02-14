@@ -62,13 +62,16 @@ first image, including channels in the form of ``index|start:end$colour``::
 
     ?c=1|100:600$00FF00,-2|0:1500$FF0000      # Channel -2 is off
 
-You can also specify the rendering Model (``?m=g`` for greyscale or ``?m=c``
-for color) and Z-Projection ``?p=intmax`` for Maximum intensity or ``?p=normal``.
+You can also specify the rendering Model (greyscale or colour) and
+Z-Projection (maximum intensity or normal)::
 
-The Z or T plane, X/Y position and zoom can be defined by::
+    ?m=g            # g for greyscale, c for colour
+    ?p=intmax       # intmax for Maximum intensity normal for no projection
+
+The Z and/or T plane, X/Y center position and zoom can be defined by::
 
     ?z=10&t=20          # can use z or t on their own
-    ?x=500&y=400        # need to specify x AND y to centre
+    ?x=500&y=400        # need to specify center with x AND y
     ?zm=100             # percent
 
 
