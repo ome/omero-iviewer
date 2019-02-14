@@ -161,7 +161,10 @@ For more details on testing, see https://github.com/ome/omero-iviewer/tree/maste
 Documentation
 =============
 
-To build the html in build/docs, run:
+A high-level description of the OMERO.iviewer application can be found at
+https://github.com/ome/omero-iviewer/tree/master/docs.
+
+To build the JavaScript code documentation in build/docs, run:
 
 ::
 
