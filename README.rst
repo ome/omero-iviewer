@@ -41,6 +41,37 @@ Install
 Instructions on how to add the OMERO.iviewer app to your installed OMERO.web apps
 can be found in the `OMERO.iviewer README <plugin/omero_iviewer/README.rst>`_.
 
+Supported URLs
+==============
+
+If you've configured OMERO.iviewer as your default viewer (see install) then
+double-clicking an Image in webclient will open iviewer as the webclient viewer,
+passing the current Dataset::
+
+    /webclient/img_detail/1/?dataset=2
+
+You use the webclient's 'Open with...' menu to open multiple selected Images
+or a Dataset or a Well in OMERO.iviewer directly::
+
+    /iviewer/?images=1,2,3
+    /iviewer/?dataset=4
+    /iviewer/?well=5
+
+Other query parameters can be used to set the rendering settings for the
+first image, including channels in the form of ``index|start:end$colour``::
+
+    ?c=1|100:600$00FF00,-2|0:1500$FF0000      # Channel -2 is off
+
+You can also specify the rendering Model (``?m=g`` for greyscale or ``?m=c``
+for color) and Z-Projection ``?p=intmax`` for Maximum intensity or ``?p=normal``.
+
+The Z or T plane, X/Y position and zoom can be defined by::
+
+    ?z=10&t=20          # can use z or t on their own
+    ?x=500&y=400        # need to specify x AND y to centre
+    ?zm=100             # percent
+
+
 Development
 ===========
 
