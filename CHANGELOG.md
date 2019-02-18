@@ -7,6 +7,9 @@ This version includes:
 - drag and drop thumbnails to open image viewers (PR #233)
 - support URL query parameters for x, y and zoom (PR #236)
 - update to use latest version of OpenLayers (PR #218)
+- fix scrolling of thumbnail panel to selected image (PR #234)
+- fix resizing of rectangles after dragging (PR #229)
+- fix double-click zooming when in drawing mode (PR #228)
 
 0.6.0 (November 2018)
 ---------------------
