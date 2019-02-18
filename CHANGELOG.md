@@ -1,3 +1,13 @@
+0.7.0 (February 2019)
+---------------------
+
+This version includes:
+
+- handling large numbers of ROIs on image (#231)
+- drag and drop thumbnails to open image viewers (PR #233)
+- support URL query parameters for x, y and zoom (PR #236)
+- update to use latest version of OpenLayers (PR #218)
+
 0.6.0 (November 2018)
 ---------------------
 
