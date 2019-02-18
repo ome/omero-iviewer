@@ -623,6 +623,7 @@ thumbnail-slider img {
     background-color: #fff;
     overflow-y: auto;
     height: 100%;
+    width: 100%;
     position: absolute;
 }
 
