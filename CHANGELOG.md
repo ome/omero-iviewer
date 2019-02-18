@@ -4,7 +4,7 @@
 This version includes:
 
 - handling large numbers of ROIs on image [#231](https://github.com/ome/omero-iviewer/pull/231)
-- drag and drop thumbnails to open image viewers [#233](https://github.com/ome/omero-iviewer/pull/233)
+- drag and drop thumbnails to open image viewers (not supported on Internet Explorer) [#233](https://github.com/ome/omero-iviewer/pull/233)
 - support URL query parameters for x, y and zoom [#236](https://github.com/ome/omero-iviewer/pull/236)
 - update to use latest version of OpenLayers [#218](https://github.com/ome/omero-iviewer/pull/218)
     - this removes the need for closure compiler in the build
