@@ -738,7 +738,7 @@ export default class Context {
         let selImgConf = this.getSelectedImageConfig();
         let hasSameImageSelected =
             selImgConf && selImgConf.image_info.image_id === image_id;
-        // show dialogues for modified rois
+        // show dialogs for modified rois
         if (image_config &&
             image_config.regions_info &&
             (image_config.regions_info.hasBeenModified() ||
