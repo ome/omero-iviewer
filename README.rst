@@ -41,6 +41,39 @@ Install
 Instructions on how to add the OMERO.iviewer app to your installed OMERO.web apps
 can be found in the `OMERO.iviewer README <plugin/omero_iviewer/README.rst>`_.
 
+Supported URLs
+==============
+
+If you have configured OMERO.iviewer as your default viewer (see install) then
+double-clicking an Image in OMERO.web will open OMERO.iviewer as the OMERO.web viewer, passing the current Dataset if the Image is in a Dataset::
+
+    /webclient/img_detail/1/?dataset=2
+
+You use the OMERO.webclient's 'Open with...' menu to open multiple selected Images
+or a Dataset or a Well in OMERO.iviewer directly::
+
+    /iviewer/?images=1,2,3
+    /iviewer/?dataset=4
+    /iviewer/?well=5
+
+Other query parameters can be used to set the rendering settings for the
+first image, including channels in the form of ``index|start:end$color``::
+
+    ?c=1|100:600$00FF00,-2|0:1500$FF0000      # Channel -2 is off
+
+You can also specify the rendering Model (greyscale or color) and
+Z-Projection (maximum intensity or normal)::
+
+    ?m=g            # g for greyscale, c for color
+    ?p=intmax       # intmax for Maximum intensity projection, normal for no projection
+
+The Z and/or T plane, X/Y center position and zoom can be defined by::
+
+    ?z=10&t=20          # can use z or t on their own
+    ?x=500&y=400        # need to specify center with x AND y
+    ?zm=100             # percent
+
+
 Development
 ===========
 
@@ -127,7 +160,10 @@ For more details on testing, see https://github.com/ome/omero-iviewer/tree/maste
 Documentation
 =============
 
-To build the html in build/docs, run:
+A high-level description of the OMERO.iviewer application can be found at
+https://github.com/ome/omero-iviewer/tree/master/docs.
+
+To build the JavaScript code documentation in build/docs, run:
 
 ::
 
