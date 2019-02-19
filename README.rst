@@ -44,13 +44,12 @@ can be found in the `OMERO.iviewer README <plugin/omero_iviewer/README.rst>`_.
 Supported URLs
 ==============
 
-If you've configured OMERO.iviewer as your default viewer (see install) then
-double-clicking an Image in webclient will open iviewer as the webclient viewer,
-passing the current Dataset::
+If you have configured OMERO.iviewer as your default viewer (see install) then
+double-clicking an Image in OMERO.webclient will open OMERO.iviewer as the OMERO.webclient viewer, passing the current Dataset if the Image is in a Dataset::
 
     /webclient/img_detail/1/?dataset=2
 
-You use the webclient's 'Open with...' menu to open multiple selected Images
+You use the OMERO.webclient's 'Open with...' menu to open multiple selected Images
 or a Dataset or a Well in OMERO.iviewer directly::
 
     /iviewer/?images=1,2,3
@@ -66,7 +65,7 @@ You can also specify the rendering Model (greyscale or color) and
 Z-Projection (maximum intensity or normal)::
 
     ?m=g            # g for greyscale, c for color
-    ?p=intmax       # intmax for Maximum intensity normal for no projection
+    ?p=intmax       # intmax for Maximum intensity projection, normal for no projection
 
 The Z and/or T plane, X/Y center position and zoom can be defined by::
 
