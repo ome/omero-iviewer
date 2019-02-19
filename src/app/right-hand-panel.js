@@ -76,6 +76,8 @@ export class RightHandPanel {
                 this.context, 'selected_config').subscribe(
                     (newValue, oldValue) => {
                         this.image_config = this.context.getSelectedImageConfig();
+                        // In multi-view mode, may need to load ROIs for selected image
+                        this.makeInitialRoisRequestIfRoisTabIsActive();
                 });
     }
 
