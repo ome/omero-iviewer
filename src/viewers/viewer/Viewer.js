@@ -463,11 +463,10 @@ class Viewer extends OlObject {
                     initialCenterY && !isNaN(parseFloat(initialCenterY))) {
             initialCenterX = parseFloat(initialCenterX);
             initialCenterY = parseFloat(initialCenterY);
-            if (initialCenterY > 0) initialCenterY = -initialCenterY;
-            if (initialCenterX >=0 && initialCenterX <= dims['width'] &&
-                    -initialCenterY >=0 && -initialCenterX <= dims['height']) {
-                imgCenter = [initialCenterX, initialCenterY];
-            }
+            // Restrict centre to within image bounds
+            initialCenterX = Math.min(Math.max(0, initialCenterX), dims['width']);
+            initialCenterY = Math.min(Math.max(0, initialCenterY), dims['height']);
+            imgCenter = [initialCenterX, -initialCenterY];
         }
         var initialChannels = this.getInitialRequestParam(REQUEST_PARAMS.CHANNELS);
         var initialMaps = this.getInitialRequestParam(REQUEST_PARAMS.MAPS);
