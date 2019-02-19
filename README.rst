@@ -58,14 +58,14 @@ or a Dataset or a Well in OMERO.iviewer directly::
     /iviewer/?well=5
 
 Other query parameters can be used to set the rendering settings for the
-first image, including channels in the form of ``index|start:end$colour``::
+first image, including channels in the form of ``index|start:end$color``::
 
     ?c=1|100:600$00FF00,-2|0:1500$FF0000      # Channel -2 is off
 
-You can also specify the rendering Model (greyscale or colour) and
+You can also specify the rendering Model (greyscale or color) and
 Z-Projection (maximum intensity or normal)::
 
-    ?m=g            # g for greyscale, c for colour
+    ?m=g            # g for greyscale, c for color
     ?p=intmax       # intmax for Maximum intensity normal for no projection
 
 The Z and/or T plane, X/Y center position and zoom can be defined by::
