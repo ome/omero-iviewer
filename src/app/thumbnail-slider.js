@@ -584,103 +584,6 @@ export default class ThumbnailSlider extends EventSubscriber {
     }
 
     /**
-     * Click Handler for single/double clicks to converge on:
-     * Opens images in single and multi viewer mode
-     *
-     * @memberof ThumbnailSlider
-     * @param {number} image_id the image id for the clicked thumbnail
-     * @param {boolean} is_double_click true if triggered by a double click
-     */
-    onClicks(image_id, is_double_click = false) {
-        let navigateToNewImage = () => {
-            this.context.rememberImageConfigChange(image_id);
-            let parent_id =
-                this.context.initial_type === INITIAL_TYPES.DATASET ||
-                this.context.initial_type === INITIAL_TYPES.WELL ?
-                    this.context.initial_ids[0] :
-                        this.context.initial_type === INITIAL_TYPES.IMAGES &&
-                        this.context.initial_ids.length === 1 &&
-                        this.image_config !== null &&
-                        typeof this.image_config.image_info.parent_id === 'number' ?
-                            this.image_config.image_info.parent_id : null;
-            let parent_type =
-                parent_id === null ? INITIAL_TYPES.NONE :
-                    this.context.initial_type === INITIAL_TYPES.IMAGES ?
-                        this.image_config.image_info.parent_type :
-                        this.context.initial_type;
-            // single click in mdi will need to 'replace' image config
-            if (this.context.useMDI && !is_double_click) {
-                    let oldPosition = Object.assign({}, this.image_config.position);
-                    let oldSize = Object.assign({}, this.image_config.size);
-                    this.context.removeImageConfig(this.image_config, true);
-                    this.context.addImageConfig(image_id, parent_id, parent_type);
-                    let selImgConf = this.context.getSelectedImageConfig();
-                    if (selImgConf !== null) {
-                        selImgConf.position = oldPosition;
-                        selImgConf.size = oldSize;
-                    }
-            } else this.context.addImageConfig(image_id, parent_id, parent_type);
-        };
-
-        let modifiedConfs = this.context.useMDI ?
-            this.context.findConfigsWithModifiedRegionsForGivenImage(
-                image_id) : [];
-        let selImgConf = this.context.getSelectedImageConfig();
-        let hasSameImageSelected =
-            selImgConf && selImgConf.image_info.image_id === image_id;
-        // show dialogues for modified rois
-        if (this.image_config &&
-            this.image_config.regions_info &&
-            (this.image_config.regions_info.hasBeenModified() ||
-             modifiedConfs.length > 0) &&
-             (!is_double_click || (is_double_click && !hasSameImageSelected)) &&
-            !Misc.useJsonp(this.context.server) &&
-            this.image_config.regions_info.image_info.can_annotate) {
-                let modalText =
-                    !this.context.useMDI ||
-                    this.image_config.regions_info.hasBeenModified() ?
-                        'You have new/deleted/modified ROI(s).<br>' +
-                        'Do you want to save your changes?' :
-                        'You have changed ROI(s) on an image ' +
-                        'that\'s been opened multiple times.<br>' +
-                        'Do you want to save now to avoid ' +
-                        'inconsistence (and a potential loss ' +
-                        'of some of your changes)?';
-                let saveHandler =
-                    !this.context.useMDI ||
-                    (!is_double_click &&
-                     this.image_config.regions_info.hasBeenModified()) ?
-                        () => {
-                            let tmpSub =
-                                this.context.eventbus.subscribe(
-                                    REGIONS_STORED_SHAPES,
-                                    (params={}) => {
-                                        tmpSub.dispose();
-                                        if (params.omit_client_update)
-                                            navigateToNewImage();
-                                });
-                            setTimeout(()=>
-                                this.context.publish(
-                                    REGIONS_STORE_SHAPES,
-                                    {config_id : this.image_config.id,
-                                     omit_client_update: true}), 20);
-                        } :
-                        () => {
-                            this.context.publish(
-                                REGIONS_STORE_SHAPES,
-                                {config_id :
-                                    this.image_config.regions_info.hasBeenModified() ?
-                                    this.image_config.id : modifiedConfs[0],
-                                 omit_client_update: false});
-                            navigateToNewImage();
-                        };
-                UI.showConfirmationDialog(
-                    'Save ROIs?', modalText,
-                    saveHandler, () => navigateToNewImage());
-        } else navigateToNewImage();
-    }
-
-    /**
      * hacky solution to allow double - single click distinction
      *
      * @memberof ThumbnailSlider
@@ -691,7 +594,7 @@ export default class ThumbnailSlider extends EventSubscriber {
             clearTimeout(this.click_handle);
             this.click_handle = null;
         }
-        this.click_handle = setTimeout(() => this.onClicks(image_id), 250);
+        this.click_handle = setTimeout(() => this.context.onClicks(image_id), 250);
     }
 
     /**
@@ -709,7 +612,7 @@ export default class ThumbnailSlider extends EventSubscriber {
             this.click_handle = null;
         }
         this.context.useMDI = true;
-        this.onClicks(image_id, true);
+        this.context.onClicks(image_id, true);
 
         return false;
     }
@@ -777,6 +680,17 @@ export default class ThumbnailSlider extends EventSubscriber {
         for (let i=0; i<count; i++) {
             this.thumbnails[i] = {'version': 0, 'title': 'unloaded'};
         }
+    }
+
+    /**
+     * Handle Drag Start, coming from the thumbnail img itself or the parent div
+     * Both should have the data-id attribute for the image ID.
+     *
+     * @param {Object} event Drag start event
+     */
+    handleDragStart(event) {
+        event.dataTransfer.setData("id", event.target.dataset.id);
+        return true;
     }
 
     /**

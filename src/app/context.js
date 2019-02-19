@@ -18,13 +18,17 @@
 import {noView} from 'aurelia-framework';
 import {EventAggregator} from 'aurelia-event-aggregator';
 import Misc from '../utils/misc';
+import UI from '../utils/ui';
 import OpenWith from '../utils/openwith';
 import ImageConfig from '../model/image_config';
 import ImageInfo from '../model/image_info';
 import RegionsInfo from '../model/regions_info';
 import {
-    IMAGE_SETTINGS_REFRESH, IMAGE_VIEWER_CONTROLS_VISIBILITY,
-    SAVE_ACTIVE_IMAGE_SETTINGS, THUMBNAILS_UPDATE
+    IMAGE_SETTINGS_REFRESH,
+    IMAGE_VIEWER_CONTROLS_VISIBILITY,
+    THUMBNAILS_UPDATE,
+    REGIONS_STORE_SHAPES,
+    REGIONS_STORED_SHAPES
 } from '../events/events';
 import {
     APP_NAME, IMAGE_CONFIG_RELOAD, IVIEWER, INITIAL_TYPES, LUTS_NAMES,
@@ -665,6 +669,125 @@ export default class Context {
         this.selectConfig(image_config.id);
         // Call bind() to initialize image data loading
         image_config.bind();
+    }
+
+    /**
+     * Get the parent e.g. {type:'dataset', id:123} for example used to
+     * load additional thumbnails.
+     */
+    getParentTypeAndId() {
+        let image_config = this.getSelectedImageConfig();
+        // Dataset ID or Well ID or Image ID
+        let parent_id = null;
+        if (this.initial_type === INITIAL_TYPES.DATASET ||
+            this.initial_type === INITIAL_TYPES.WELL) {
+                parent_id = this.initial_ids[0];
+        } else if (this.initial_type === INITIAL_TYPES.IMAGES &&
+            this.initial_ids.length === 1 &&
+            image_config !== null &&
+            typeof image_config.image_info.parent_id === 'number'){
+                parent_id = image_config.image_info.parent_id;
+        }
+        let parent_type = INITIAL_TYPES.NONE;
+        if (parent_id) {
+            parent_type = this.initial_type === INITIAL_TYPES.IMAGES ?
+                    image_config.image_info.parent_type : this.initial_type;
+        }
+        return {type: parent_type, id: parent_id};
+    }
+
+    /**
+     * Click Handler for single/double clicks to converge on:
+     * Opens images in single and multi viewer mode
+     *
+     * @memberof ThumbnailSlider
+     * @param {number} image_id the image id for the clicked thumbnail
+     * @param {boolean} is_double_click true if triggered by a double click
+     */
+    onClicks(image_id, is_double_click = false, replace_image_config) {
+        let image_config = this.getSelectedImageConfig();
+        let navigateToNewImage = () => {
+            this.rememberImageConfigChange(image_id);
+            // Dataset ID or Well ID or Image ID
+            let parent = this.getParentTypeAndId();
+            let parent_id = parent.id;
+            let parent_type = parent.type;
+            // single click in mdi will need to 'replace' image config
+            if (this.useMDI && !is_double_click && !replace_image_config) {
+                replace_image_config = image_config;
+            }
+            if (replace_image_config) {
+                let oldPosition = Object.assign({}, replace_image_config.position);
+                let oldSize = Object.assign({}, replace_image_config.size);
+                this.removeImageConfig(replace_image_config, true);
+                this.addImageConfig(image_id, parent_id, parent_type);
+                // Get the newly created image config
+                let selImgConf = this.getSelectedImageConfig();
+                if (selImgConf !== null) {
+                    selImgConf.position = oldPosition;
+                    selImgConf.size = oldSize;
+                }
+            } else {
+                this.addImageConfig(image_id, parent_id, parent_type);
+            }
+        };
+
+        let modifiedConfs = this.useMDI ?
+            this.findConfigsWithModifiedRegionsForGivenImage(
+                image_id) : [];
+        let selImgConf = this.getSelectedImageConfig();
+        let hasSameImageSelected =
+            selImgConf && selImgConf.image_info.image_id === image_id;
+        // show dialogs for modified rois
+        if (image_config &&
+            image_config.regions_info &&
+            (image_config.regions_info.hasBeenModified() ||
+             modifiedConfs.length > 0) &&
+             (!is_double_click || (is_double_click && !hasSameImageSelected)) &&
+            !Misc.useJsonp(this.server) &&
+            image_config.regions_info.image_info.can_annotate) {
+                let modalText =
+                    !this.useMDI ||
+                    image_config.regions_info.hasBeenModified() ?
+                        'You have new/deleted/modified ROI(s).<br>' +
+                        'Do you want to save your changes?' :
+                        'You have changed ROI(s) on an image ' +
+                        'that\'s been opened multiple times.<br>' +
+                        'Do you want to save now to avoid ' +
+                        'inconsistence (and a potential loss ' +
+                        'of some of your changes)?';
+                let saveHandler =
+                    !this.useMDI ||
+                    (!is_double_click &&
+                     image_config.regions_info.hasBeenModified()) ?
+                        () => {
+                            let tmpSub =
+                                this.eventbus.subscribe(
+                                    REGIONS_STORED_SHAPES,
+                                    (params={}) => {
+                                        tmpSub.dispose();
+                                        if (params.omit_client_update)
+                                            navigateToNewImage();
+                                });
+                            setTimeout(()=>
+                                this.publish(
+                                    REGIONS_STORE_SHAPES,
+                                    {config_id : image_config.id,
+                                     omit_client_update: true}), 20);
+                        } :
+                        () => {
+                            this.publish(
+                                REGIONS_STORE_SHAPES,
+                                {config_id :
+                                    image_config.regions_info.hasBeenModified() ?
+                                    image_config.id : modifiedConfs[0],
+                                 omit_client_update: false});
+                            navigateToNewImage();
+                        };
+                UI.showConfirmationDialog(
+                    'Save ROIs?', modalText,
+                    saveHandler, () => navigateToNewImage());
+        } else navigateToNewImage();
     }
 
     /**
