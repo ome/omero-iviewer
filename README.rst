@@ -45,7 +45,7 @@ Supported URLs
 ==============
 
 If you have configured OMERO.iviewer as your default viewer (see install) then
-double-clicking an Image in OMERO.webclient will open OMERO.iviewer as the OMERO.webclient viewer, passing the current Dataset if the Image is in a Dataset::
+double-clicking an Image in OMERO.web will open OMERO.iviewer as the OMERO.web viewer, passing the current Dataset if the Image is in a Dataset::
 
     /webclient/img_detail/1/?dataset=2
 
