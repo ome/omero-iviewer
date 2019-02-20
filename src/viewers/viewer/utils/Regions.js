@@ -378,6 +378,38 @@ export const getRandomCoordinateWithinExtent = function(extent) {
 }
 
 /**
+ * Create a new Feature from shape JSON object and apply Style function
+ * to set style based on Regions object (and linked viewer) state.
+ *
+ * @param {object} shape  JSON shape object
+ * @param {object} regions  regions.Regions or regions.TiledRegions instance
+ * @return {ol.Feature} new Feature
+ */
+export const createFeatureFromShape = function(shape, regions) {
+    // create the feature via the factory
+    var actualFeature = featureFactory(shape);
+    if (!(actualFeature instanceof Feature)) {
+        console.error(
+            "Failed to create " + shapeType +
+            "(" + combinedId + ") from json!");
+        return;
+    }
+
+    /*
+     * To adjust the text style to custom rotation and scale schanges
+     * we override the style information with something more flexible,
+     * namely a styling function returning the style.
+     */
+    var rot = regions.viewer_.viewer_.getView().getRotation();
+    if (actualFeature.getGeometry() instanceof Label &&
+        rot !== 0 && !regions.rotate_text_)
+            actualFeature.getGeometry().rotate(-rot);
+    updateStyleFunction(actualFeature, regions, true);
+
+    return actualFeature;
+}
+
+/**
  * Takes the regions info and converts it into open layers objects that can be
  * displayed and worked with on top of a vector layer.
  *
@@ -430,25 +462,11 @@ export const createFeaturesFromRegionsResponse =
 
                 try {
                     // create the feature via the factory
-                    var actualFeature = featureFactory(shape);
-                    if (!(actualFeature instanceof Feature)) {
-                        console.error(
-                            "Failed to create " + shapeType +
-                            "(" + combinedId + ") from json!");
+                    let actualFeature = createFeatureFromShape(shape, regions);
+                    if (!actualFeature) {
                         continue;
                     }
                     actualFeature.setId(combinedId);
-
-                    /*
-                     * To adjust the text style to custom rotation and scale schanges
-                     * we override the style information with something more flexible,
-                     * namely a styling function returning the style.
-                     */
-                    var rot = regions.viewer_.viewer_.getView().getRotation();
-                    if (actualFeature.getGeometry() instanceof Label &&
-                        rot !== 0 && !regions.rotate_text_)
-                            actualFeature.getGeometry().rotate(-rot);
-                    updateStyleFunction(actualFeature, regions, true);
 
                     // set attachments
                     actualFeature['TheT'] = shapeTindex;

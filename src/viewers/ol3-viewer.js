@@ -914,6 +914,12 @@ export default class Ol3Viewer extends EventSubscriber {
             !this.image_config.regions_info.ready ||
             !Misc.isArray(this.image_config.regions_info.tmp_data)) return;
 
+        // If ROI count is greater than 1 page (we don't have all ROIs in hand)
+        // then we add Tiled Regions
+        if (this.image_config.image_info.roi_count > this.image_config.context.roi_page_size) {
+            this.viewer.addTiledRegions();
+        }
+
         this.viewer.addRegions(this.image_config.regions_info.tmp_data);
         this.changeRegionsModes(
             { modes: this.image_config.regions_info.regions_modes});

@@ -27,6 +27,7 @@ import Feature from 'ol/Feature';
 import Projection from 'ol/proj/Projection';
 import Tile from 'ol/layer/Tile';
 import Vector from 'ol/layer/Vector';
+import VectorTile from 'ol/layer/VectorTile';
 import View from 'ol/View';
 import OlMap from 'ol/Map';
 import {intersects, getCenter} from 'ol/extent';
@@ -66,6 +67,7 @@ import {integrateStyleIntoJsonObject,
     LOOKUP} from './utils/Conversion';
 import OmeroImage from './source/Image';
 import Regions from './source/Regions';
+import TiledRegions from './source/TiledRegions';
 import Mask from './geom/Mask';
 
 /**
@@ -437,7 +439,7 @@ class Viewer extends OlObject {
             this.image_info_['pixel_size']['x'] : null;
 
         // instantiate a pixel projection for omero data
-        var proj = new Projection({
+        this.proj_ = new Projection({
             code: 'OMERO',
             units: 'pixels',
             extent: [0, 0, dims['width'], dims['height']],
@@ -559,7 +561,7 @@ class Viewer extends OlObject {
 
         // we need a View object for the map
         var view = new View({
-            projection: proj,
+            projection: this.proj_,
             center: imgCenter,
             extent: [0, -dims['height'], dims['width'], 0],
             resolutions : possibleResolutions,
@@ -735,7 +737,7 @@ class Viewer extends OlObject {
 
         // add a vector layer with the regions
         if (this.regions_) {
-            this.viewer_.addLayer(new Vector({source : this.regions_}));
+            this.viewer_.addLayer(new Vector({source : this.regions_, name: 'Regions'}));
             // enable roi selection by default,
             // as well as modify and translate
             this.regions_.setModes(
@@ -743,6 +745,19 @@ class Viewer extends OlObject {
                 REGIONS_MODE['MODIFY'],
                 REGIONS_MODE['TRANSLATE']]);
         }
+    }
+
+    /**
+     * Adds a VectorTile layer to load Shapes by tile.
+     * Shapes cannot be modified or translated.
+     */
+    addTiledRegions() {
+        this.viewer_.addLayer(
+            new VectorTile({
+                source: new TiledRegions(this),
+                name: 'TiledRegions',
+            })
+        );
     }
 
     /**
@@ -791,8 +806,7 @@ class Viewer extends OlObject {
      * @param {boolean} clear flag whether we should clear existing selection beforehand
      * @param {string|null} center the id of the shape to center on or null
      */
-    selectShapes(
-        roi_shape_ids, selected, clear, center) {
+    selectShapes(roi_shape_ids, selected, clear, center) {
         // without a regions layer there will be no select of regions ...
         var regions = this.getRegions();
         if (regions === null || regions.select_ === null) return;
@@ -1232,7 +1246,10 @@ class Viewer extends OlObject {
             this.viewer_.getLayers().getLength() < 2) // unfathomable event of layer missing...
             return null;
 
-        return this.viewer_.getLayers().item(this.viewer_.getLayers().getLength()-1);
+        // Get the 'Regions' layer by name
+        let layers = this.viewer_.getLayers().getArray().filter(
+            layer => layer.get('name') === 'Regions');
+        return layers.length > 0 ? layers[0] : null;
     }
 
     /**
