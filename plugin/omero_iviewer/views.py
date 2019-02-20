@@ -32,7 +32,7 @@ from omeroweb.webgateway.templatetags.common_filters import lengthformat,\
 import json
 import omero_marshal
 import omero
-from omero.rtypes import rint, rlong
+from omero.rtypes import rint, rlong, unwrap
 from omero_sys_ParametersI import ParametersI
 import omero.util.pixelstypetopython as pixelstypetopython
 
@@ -276,6 +276,88 @@ def rois_by_plane(request, image_id, the_z, the_t, z_end=None, t_end=None,
     meta = {"totalCount": result[0][0].val}
 
     return JsonResponse({'data': marshalled, 'meta': meta})
+
+
+@login_required()
+def shapes_by_region(request, image_id, the_z, the_t, conn=None, **kwargs):
+    """
+    Get Shapes by region ?tile=zoom,col,row
+    NB: This is a hack that returns shapes (e.g. Polygons) within an image
+    region defined by ?tile=zoom,col,row.
+    This hack relies on a previous script that has created a Point shape at the
+    centre of each Polygon, with the Point label set to the ID of the Polygon.
+    This allows us to find all the points within a region, get the text value
+    (Polygon ID) from each one and use this to retrieve the Polygons
+    or other shapes.
+    Currently we only support zoom of 100% and use the default tile size
+    and row + col to find the region.
+    """
+
+    # find region from tile
+    tile = request.GET.get('tile', None)
+
+    # Assume fully zoomed in to 100%. TODO: support other zoom levels?
+    zoom_col_row_w_h = tile.split(",")
+    if len(zoom_col_row_w_h) < 5:
+        return JsonResponse({"error": "Specify tile as ?tile=zm,col,row,w,h"})
+    col = long(zoom_col_row_w_h[1])
+    row = long(zoom_col_row_w_h[2])
+    tile_w = long(zoom_col_row_w_h[3])
+    tile_h = long(zoom_col_row_w_h[4])
+
+    x_min = col * tile_w
+    y_min = row * tile_h
+    x_max = x_min + tile_w
+    y_max = y_min + tile_h
+
+    # Query for Points on the Image, within this bounding box...
+    params = ParametersI()
+    params.addId(image_id)
+    filter = omero.sys.Filter()
+    filter.offset = rint(0)
+    filter.limit = rint(500)
+    params.theFilter = filter
+    # NB: we use min/max in string query since there is no param.addDouble(d)
+    query_service = conn.getQueryService()
+    points = query_service.findAllByQuery(
+        """select shape from Shape shape join shape.roi roi
+            where roi.image.id = :id and
+            shape.x >= %s and shape.x < %s and
+            shape.y >= %s and shape.y < %s
+            and shape.theZ = %s and (shape.theT = %s or shape.theT is null)
+        """ % (x_min, x_max, y_min, y_max, the_z, the_t), params)
+
+    # Points simply used to store ID of e.g. Polygons as text value
+    # Try to get the shape IDs:
+    shape_ids = []
+    for point in points:
+        try:
+            label = unwrap(point.getTextValue())
+            if label is None:
+                shape_ids.append(point.getId().val)
+            else:
+                shape_ids.append(long(label))
+        except (TypeError, ValueError):
+            pass
+
+    marshalled = []
+    if len(shape_ids) > 0:
+
+        # Now get the shapes by ID
+        params = ParametersI()
+        params.addIds(shape_ids)
+        shapes = query_service.findAllByQuery(
+            "select shape from Shape shape where shape.id in (:ids)", params)
+
+        for shape in shapes:
+            encoder = omero_marshal.get_encoder(shape.__class__)
+            if encoder is not None:
+                m = encoder.encode(shape)
+                # Need to know ROI ID - not supported by omero-marshal
+                m["roi"] = {'@id': shape.roi.id.val}
+                marshalled.append(m)
+
+    return JsonResponse({"data": marshalled})
 
 
 @login_required()
