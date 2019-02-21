@@ -26,6 +26,7 @@ import {shiftKeyOnly,
     click} from 'ol/events/condition';
 import Regions from '../source/Regions';
 import {isArray,
+    sendEventNotification,
     featuresAtCoords} from '../utils/Misc';
 
 /**
@@ -117,15 +118,34 @@ class Select extends Interaction {
             return true;
         }
 
+        if (!shiftKeyOnly(mapBrowserEvent)) {
+            this.clearSelection();
+        }
+
         var selected = this.featuresAtCoords_(mapBrowserEvent.pixel);
+
+        // If we didn't click on any Shapes on the Vector Regions layer...
+        if (selected === null) {
+            // Try TiledRegions features...
+            let map = this.regions_.viewer_.viewer_
+            var tiledFeatures = map.getFeaturesAtPixel(mapBrowserEvent.pixel);
+            // get the 'top' or smallest feature under click
+            let clickedFeature = featuresAtCoords(tiledFeatures);
+
+            // This will load the correct page of ROIs into Vector Regions layer
+            sendEventNotification(
+                this.regions_.viewer_, "TILED_REGIONS_PROPERTY_CHANGED",
+                {
+                    "properties" : ['selected'],
+                    "shapes": [clickedFeature.getId()],
+                    "values": [true],
+                }, 25);
+            return
+        }
 
         var oldSelectedFlag =
             selected && typeof selected['selected'] === 'boolean' ?
                 selected['selected'] : false;
-        if (selected === null || !shiftKeyOnly(mapBrowserEvent)) {
-            this.clearSelection();
-            if (selected === null) return;
-        }
         this.regions_.setProperty([selected.getId()], "selected", !oldSelectedFlag);
 
         return pointerMove(mapBrowserEvent);

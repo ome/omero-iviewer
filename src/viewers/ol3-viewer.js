@@ -39,6 +39,7 @@ import {
     REGIONS_CHANGE_MODES, REGIONS_COPY_SHAPES, REGIONS_DRAW_SHAPE,
     REGIONS_GENERATE_SHAPES, REGIONS_HISTORY_ACTION, REGIONS_HISTORY_ENTRY,
     REGIONS_MODIFY_SHAPES, REGIONS_PROPERTY_CHANGED, REGIONS_SET_PROPERTY,
+    TILED_REGIONS_PROPERTY_CHANGED,
     REGIONS_SHOW_COMMENTS, REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES,
     VIEWER_IMAGE_SETTINGS, VIEWER_PROJECTIONS_SYNC, VIEWER_SET_SYNC_GROUP,
     EventSubscriber
@@ -114,6 +115,8 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.changeImageSettings(params)],
         [REGIONS_PROPERTY_CHANGED,
             (params={}) => this.getRegionsPropertyChange(params)],
+        [TILED_REGIONS_PROPERTY_CHANGED,
+            (params={}) => this.getTiledRegionsPropertyChange(params)],
         [REGIONS_SET_PROPERTY,
             (params={}) => this.setRegionsProperty(params)],
         [VIEWER_IMAGE_SETTINGS,
@@ -636,6 +639,32 @@ export default class Ol3Viewer extends EventSubscriber {
             Ui.adjustSideBarsOnWindowResize();
 
         this.viewer.redraw(params.delay);
+    }
+
+    /**
+     * Handles regions property changes (e.g. selection) received from the
+     * TiledRegions layer/source of the viewer, where we may not have the ROI
+     * in hand on the current page. If we don't then this will load the
+     * correct page for the first ROI.
+     *
+     * @param {Object} params the event notification parameters
+     */
+    getTiledRegionsPropertyChange(params = {}) {
+        let shape = params.shapes ? params.shapes[0] : undefined;
+        if (!shape) return;
+
+        // check if we have actually loaded the shape...
+        let shape_info = this.image_config.regions_info.getShape(shape);
+        // If we have shape on the current page of ROIs, carry on as normal
+        if (shape_info) {
+            this.getRegionsPropertyChange(params);
+        } else {
+            // Otherwise, load the page the ROI is on:
+            // TODO: we need a callback or to remember property change to apply
+            // it once the ROIs have loaded.
+            let roi_id = parseInt(shape.split(':')[0]);
+            this.image_config.regions_info.loadRoisPageContainingRoi(roi_id);
+        }
     }
 
     /**

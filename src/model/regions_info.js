@@ -299,6 +299,19 @@ export default class RegionsInfo  {
     }
 
     /**
+     * Find the page that the specified ROI is on and load this page
+     *
+     * @memberof RegionsInfo
+     * @param {number} roi_id
+     */
+    loadRoisPageContainingRoi(roi_id) {
+        if (!this.all_roi_ids || typeof(roi_id) !== "number") return;
+
+        let page = parseInt(this.all_roi_ids.indexOf(roi_id)/this.roi_page_size);
+        this.setPageAndReload(page);
+    }
+
+    /**
      * Get the number of pages needed to show all paginated ROIs
      * on current plane.
      */
@@ -386,6 +399,32 @@ export default class RegionsInfo  {
             }, error : (error) => {
                 this.is_pending = false;
                 console.error("Failed to load Rois: " + error)
+            }
+        });
+
+        // If we don't have all ROI IDs in hand yet, load them for page indexing
+        this.requestAllRoiIdsForPageIndex();
+
+    }
+
+    /**
+     * Load all the ROI IDs for the image so that we can look up which page
+     * a particular ROI is on.
+     */
+    requestAllRoiIdsForPageIndex() {
+        // Only needed if we're paginating.
+        // TODO: *Actually* only needed if a single plane has > roi_page_size
+        if (!this.isRoiLoadingPaginatedByPlane()) return;
+        // check if already loaded
+        if (this.all_roi_ids) return;
+        $.ajax({
+            url : this.image_info.context.server +
+                  this.image_info.context.getPrefixedURI(IVIEWER) +
+                  '/all_roi_ids/' + this.image_info.image_id + '/',
+            success : (response) => {
+                this.all_roi_ids = response.data;
+            }, error : (error) => {
+                console.error("Failed to load AllRoiIdsForPageIndex: " + error)
             }
         });
     }
