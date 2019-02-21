@@ -361,6 +361,21 @@ def shapes_by_region(request, image_id, the_z, the_t, conn=None, **kwargs):
 
 
 @login_required()
+def all_roi_ids(request, image_id, conn=None, **kwargs):
+    """
+    Return all the ROI IDs for an Image, sorted by ID.
+    This allows iviewer to know which page of ROIs a particular ROI is on.
+    """
+    qs = conn.getQueryService()
+    params = omero.sys.ParametersI()
+    params.addId(image_id)
+    query = """select roi.id from Roi roi where roi.image.id = :id
+        order by roi.id"""
+    iids = [i[0].val for i in qs.projection(query, params)]
+    return JsonResponse({"data": iids})
+
+
+@login_required()
 def image_data(request, image_id, conn=None, **kwargs):
 
     image = conn.getObject("Image", image_id)

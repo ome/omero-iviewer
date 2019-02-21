@@ -45,4 +45,6 @@ urlpatterns = patterns(
     url(r'^shapes_by_region/(?P<image_id>[0-9]+)/'
         r'(?P<the_z>[0-9]+)/(?P<the_t>[0-9]+)/$', views.shapes_by_region,
         name='omero_iviewer_shapes_by_region'),
+    url(r'^all_roi_ids/(?P<image_id>[0-9]+)/$', views.all_roi_ids,
+        name='omero_iviewer_all_roi_ids'),
 )
