@@ -300,6 +300,7 @@ def shapes_by_region(request, image_id, the_z, the_t, conn=None, **kwargs):
     zoom_col_row_w_h = tile.split(",")
     if len(zoom_col_row_w_h) < 5:
         return JsonResponse({"error": "Specify tile as ?tile=zm,col,row,w,h"})
+    zoom_level = long(zoom_col_row_w_h[0])
     col = long(zoom_col_row_w_h[1])
     row = long(zoom_col_row_w_h[2])
     tile_w = long(zoom_col_row_w_h[3])
@@ -310,22 +311,74 @@ def shapes_by_region(request, image_id, the_z, the_t, conn=None, **kwargs):
     x_max = x_min + tile_w
     y_max = y_min + tile_h
 
+    # If zoomed out from 100%, find the scale from zoom level...
+    if zoom_level > 0:
+        image = conn.getObject("image", image_id)
+        scale_levels = image.getZoomLevelScaling()
+        if scale_levels is not None and scale_levels.get(zoom_level) is not None:
+            # Convert from tile to original image coordinates by scaling
+            scale = scale_levels[zoom_level]
+            x_min = float(x_min) / scale
+            y_min = float(y_min) / scale
+            x_max = float(x_max) / scale
+            y_max = float(y_max) / scale
+
     # Query for Points on the Image, within this bounding box...
+    # NB: we use min/max in string query since there is no param.addDouble(d)
+    query = """select shape from Shape shape join shape.roi roi
+                where roi.image.id = :id and
+                shape.x >= %s and shape.x < %s and
+                shape.y >= %s and shape.y < %s
+                and (shape.theZ = %s or shape.theZ is null)
+                and (shape.theT = %s or shape.theT is null)
+            """ % (x_min, x_max, y_min, y_max, the_z, the_t)
+
     params = ParametersI()
     params.addId(image_id)
+    query_service = conn.getQueryService()
+
+    # If we're zoomed out from 100%, don't get the actual shapes, but instead
+    # we just want to count the shapes and return a single Label with the count
+    if zoom_level > 0:
+        # We want Shape counts within the region:
+        query = query.replace("select shape", "select count(distinct shape)")
+        result = query_service.projection(query, params, conn.SERVICE_OPTS)
+        shape_count = result[0][0].val
+        data = []
+        if shape_count > 0:
+            # Add Label to display shape_count in centre of region
+            data.append({
+                "roi": {'@id': 0},
+                "FontStyle": "normal",
+                "FontFamily": "sans-serif",
+                "StrokeWidth": {
+                    "Symbol": "pixel",
+                    "Value": 1,
+                    "@type": "TBD#LengthI",
+                    "Unit": "PIXEL"
+                },
+                "FontSize": {
+                    "Symbol": "pt",
+                    "Value": 20,
+                    "@type": "TBD#LengthI",
+                    "Unit": "POINT"
+                },
+                "FillColor": -65281,
+                "Text": "%s" % shape_count,
+                "Y": (y_min + y_max) / 2,
+                "X": (x_min + x_max) / 2,
+                "StrokeColor": -65281,
+                "@id": 0,
+                "@type": "http://www.openmicroscopy.org/Schemas/OME/2016-06#Label",
+            })
+        return JsonResponse({"data": data})
+
+    # Limit in case too many, but we don't support pagination within a tile
     filter = omero.sys.Filter()
     filter.offset = rint(0)
-    filter.limit = rint(500)
+    filter.limit = rint(1000)
     params.theFilter = filter
-    # NB: we use min/max in string query since there is no param.addDouble(d)
-    query_service = conn.getQueryService()
-    points = query_service.findAllByQuery(
-        """select shape from Shape shape join shape.roi roi
-            where roi.image.id = :id and
-            shape.x >= %s and shape.x < %s and
-            shape.y >= %s and shape.y < %s
-            and shape.theZ = %s and (shape.theT = %s or shape.theT is null)
-        """ % (x_min, x_max, y_min, y_max, the_z, the_t), params)
+    points = query_service.findAllByQuery(query, params, conn.SERVICE_OPTS)
 
     # Points simply used to store ID of e.g. Polygons as text value
     # Try to get the shape IDs:

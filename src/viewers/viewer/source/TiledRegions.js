@@ -70,10 +70,6 @@ class OmeVectorTileSource extends VectorTileSource {
             var zoom = zoomLevelScaling ? zoomLevelScaling.length - tileCoord[0] - 1 : 0;
             var tile = + zoom  + ',' + tileCoord[1] + ',' + (-tileCoord[2]-1);
             tile = tile + ',' + tile_width + ',' + tile_height;
-            if (zoom > 0) {
-                // We only support ROIs at the 100% zoom level
-                return;
-            }
             let iviewer = viewerReference.getPrefixedURI(PLUGIN_PREFIX);
             return `${ iviewer }/shapes_by_region/${ image_info_.id }/${ viewerZ }/${ viewerT }/?tile=${ tile }`;
         });
@@ -107,7 +103,7 @@ class OmeVectorTileSource extends VectorTileSource {
          * NB: No setScaleText() function since it's never used
          * @type {boolean}
          */
-        this.scale_text_ = true;
+        this.scale_text_ = false;
 
         /**
          * the viewer reference
