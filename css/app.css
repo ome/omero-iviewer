@@ -508,6 +508,10 @@ a.ui-button:active,
     z-index: 0;
 }
 
+.viewer-mdi.drag_enter {
+    border-style: dashed;
+}
+
 .show-zSlider .viewer {
     padding-left: 35px;
 }

@@ -493,8 +493,8 @@ const handleDragEvent_ = function(mapBrowserEvent) {
                 if (dragVertexIndex > 2) dragVertexIndex++;
                 var oppVertexIndex = (dragVertexIndex + 2)  % 5;
                 this.oppVertBeingDragged = [
-                    geometry.initial_coords_[oppVertexIndex*2],
-                    geometry.initial_coords_[oppVertexIndex*2+1]
+                    coordinates[0][oppVertexIndex][0],
+                    coordinates[0][oppVertexIndex][1]
                 ];
             }
 
