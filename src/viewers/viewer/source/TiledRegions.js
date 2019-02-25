@@ -123,62 +123,6 @@ class OmeVectorTileSource extends VectorTileSource {
     }
 
     /**
-     * Marks given shapes as selected, clearing any previously selected if
-     * clear flag is set.
-     *
-     * @param {Array<string>} roi_shape_ids list in roi_id:shape_id notation
-     * @param {boolean} selected flag whether we should (de)select the rois
-     * @param {boolean} clear flag whether we should clear existing selection beforehand
-     */
-    selectShapes(roi_shape_ids, selected, clear) {
-
-        if (clear) {
-            let toDeselect = [];
-            let properties = [];
-            let values = [];
-            for (let id in this.selectedFeatures_) {
-                toDeselect.push(id);
-                properties.push('selected');
-                values.push(false);
-            }
-            if (toDeselect.length > 0) {
-                sendEventNotification(
-                    this.viewer_, "TILED_REGIONS_PROPERTY_CHANGED",
-                    {
-                        "properties" : properties,
-                        "shapes": toDeselect,
-                        "values": values,
-                    }, 0);
-            }
-            this.selectedFeatures_ = {};
-        }
-
-        if (!isArray(roi_shape_ids)) return;
-
-        let properties = [];
-        let values = [];
-        roi_shape_ids.forEach(id => {
-            properties.push('selected');
-            values.push(selected);
-            if (selected) {
-                // Store {'roi:shape' : true}
-                // Need to keep 'roi:shape' to notify of deselections
-                this.selectedFeatures_[id] = true;
-            } else if (this.selectedFeatures_[id]) {
-                delete this.selectedFeatures_[id];
-            }
-        });
-
-        sendEventNotification(
-            this.viewer_, "TILED_REGIONS_PROPERTY_CHANGED",
-            {
-                "properties" : properties,
-                "shapes": roi_shape_ids,
-                "values": values
-            }, 25);
-    }
-
-    /**
      * Return True if this feature is selected
      *
      * @param {ol.Feature} feature The feature
@@ -190,6 +134,8 @@ class OmeVectorTileSource extends VectorTileSource {
 
     /**
      * Toggles the visibility of the regions.
+     * Used to hide a TiledRegion feature when that feature is selected and
+     * converted into a new Vector Regions feature.
      *
      * @param {boolean} visible visibitily flag (true for visible)
      * @param {Array<string>} roi_shape_ids a list of string ids of the form: roi_id:shape_id
@@ -207,15 +153,6 @@ class OmeVectorTileSource extends VectorTileSource {
                 delete this.hiddenFeatures_[id];
             }
         });
-
-        // this isn't currently used but is consistent behaviour
-        sendEventNotification(
-            this.viewer_, "TILED_REGIONS_PROPERTY_CHANGED",
-            {
-                "properties" : properties,
-                "shapes": roi_shape_ids,
-                "values": values
-            }, 25);
     }
 
     /**
