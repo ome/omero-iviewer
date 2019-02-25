@@ -112,22 +112,6 @@ class OmeVectorTileSource extends VectorTileSource {
          * @private
          */
         this.viewer_ = viewerReference;
-
-        // Add Select behaviour (single click)
-        let map = this.viewer_.viewer_;
-        // map.on('click', (event) => {
-        //     var features = map.getFeaturesAtPixel(event.pixel);
-        //     console.log("click features", features);
-        //     if (!features) {
-        //       this.viewer_.selectShapes(null, false, true);
-        //       return;
-        //     }
-        //     // Find smallest of features under click pixel
-        //     let feature = featuresAtCoords(features);
-
-        //     var fid = feature.getId();
-        //     this.viewer_.selectShapes([fid], true, true);
-        //   });
     }
 
     /**
@@ -210,7 +194,7 @@ class OmeVectorTileSource extends VectorTileSource {
      * @param {boolean} visible visibitily flag (true for visible)
      * @param {Array<string>} roi_shape_ids a list of string ids of the form: roi_id:shape_id
      */
-    setRegionsVisibility(visible, roi_shape_ids) {
+    setRegionsVisibility(roi_shape_ids, visible) {
         let properties = [];
         let values = [];
         roi_shape_ids.forEach(id => {

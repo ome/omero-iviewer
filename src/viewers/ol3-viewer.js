@@ -933,6 +933,10 @@ export default class Ol3Viewer extends EventSubscriber {
 
     /**
      * Initializes the ol3 regions layer
+     * If image_config.regions_info.tmp_data is an array of ROIs, these
+     * will be populated as Vector features on the image. Otherwise
+     * the Vector layer and Regions source will be empty but available for
+     * drawing new shapes or editing shapes selected from the TiledRegions layer.
      *
      * @memberof Ol3Viewer
      */
@@ -940,8 +944,7 @@ export default class Ol3Viewer extends EventSubscriber {
         if (this.viewer === null ||
             this.image_config === null ||
             this.image_config.regions_info === null ||
-            !this.image_config.regions_info.ready ||
-            !Misc.isArray(this.image_config.regions_info.tmp_data)) return;
+            !this.image_config.regions_info.ready) return;
 
         // If ROI count is greater than 1 page (we don't have all ROIs in hand)
         // then we add Tiled Regions
@@ -949,7 +952,7 @@ export default class Ol3Viewer extends EventSubscriber {
             this.viewer.addTiledRegions();
         }
 
-        this.viewer.addRegions(this.image_config.regions_info.tmp_data);
+        this.viewer.addRegions(this.image_config.regions_info.tmp_data || []);
         this.changeRegionsModes(
             { modes: this.image_config.regions_info.regions_modes});
         this.viewer.showShapeComments(

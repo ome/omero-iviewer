@@ -26,6 +26,7 @@ import Modify from '../interaction/Modify';
 import Translate from '../interaction/Translate';
 import {calculateLengthAndArea,
     createFeaturesFromRegionsResponse} from '../utils/Regions';
+import {updateStyleFunction} from '../utils/Style';
 import {isArray,
     getCookie,
     sendEventNotification} from '../utils/Misc';
@@ -508,6 +509,25 @@ class Regions extends Vector {
     };
 
     /**
+     * Creates (clones) the given features and adds them to this layer,
+     * setting the Style function to reference this Regions instance.
+     * Used when we have features loaded by the TiledRegions layer and then
+     * we want to add them to this Vector layer for editing.
+     *
+     * @param {Array of ol.Feature} features Features to add
+     */
+    addFeaturesFromFeatures(features) {
+        features = features.map((f) => {
+            let feature = f.clone();
+            feature.setId(f.getId());
+            feature.type = f.type;
+            updateStyleFunction(feature, this, true);
+            return feature;
+        });
+        this.addFeatures(features);
+    }
+
+    /**
      * This method decides whether a feature is being rendered or not
      * using the following criteria
      * - visibility
@@ -655,6 +675,25 @@ class Regions extends Vector {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Return True if this feature is selected
+     *
+     * @param {ol.Feature} feature The feature
+     */
+    isFeatureSelected(feature) {
+        return feature['selected']
+    }
+
+    /**
+     * Return True if this feature is visible
+     *
+     * @param {ol.Feature} feature The feature
+     */
+    isFeatureVisible(feature) {
+        console.log("Regions isFeatureVisible", feature.getId());
+        return typeof(feature['visible']) !== 'boolean' || feature['visible'];
     }
 
     /**

@@ -1245,10 +1245,37 @@ class Viewer extends OlObject {
         if (!(this.viewer_ instanceof OlMap) || // mandatory viewer presence check
             this.viewer_.getLayers().getLength() < 2) // unfathomable event of layer missing...
             return null;
+        return this.getLayerByName('Regions');
+    }
 
+    /**
+     * Get the Tiled Regions Layer
+     */
+    getTiledRegionsLayer() {
+        return this.getLayerByName('TiledRegions');
+    }
+
+    /**
+     * Force a redraw of the TiledRegions layer, e.g. to be used after
+     * changing the style of features on the layer.
+     */
+    redrawTiledRegions() {
+        let regionsLayer = this.getTiledRegionsLayer();
+        if (regionsLayer) {
+            // force redraw of layer style
+            regionsLayer.setStyle(regionsLayer.getStyle());
+        }
+    }
+
+    /**
+     * Get layer from viewer, identified by name.
+     *
+     * @param {string} name
+     */
+    getLayerByName(name) {
         // Get the 'Regions' layer by name
         let layers = this.viewer_.getLayers().getArray().filter(
-            layer => layer.get('name') === 'Regions');
+            layer => layer.get('name') === name);
         return layers.length > 0 ? layers[0] : null;
     }
 
@@ -1278,6 +1305,14 @@ class Viewer extends OlObject {
         if (regionsLayer) return regionsLayer.getSource();
 
         return null;
+    }
+
+    /**
+     * Get the Tiled Regions source.
+     */
+    getTiledRegions() {
+        let tiledRegionsLayer = this.getTiledRegionsLayer()
+        if (tiledRegionsLayer) return tiledRegionsLayer.getSource();
     }
 
     /**

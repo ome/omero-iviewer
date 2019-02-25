@@ -384,6 +384,14 @@ export default class RegionsInfo  {
         this.resetRegionsInfo();
         this.is_pending = true;
 
+        // if lots of ROIs on a single plane, don't load ROIs (use tiled regions)
+        if (this.isRoiLoadingPaginatedByPlane() &&
+            this.image_info.dimensions.max_t === 1 && this.image_info.dimensions.max_z === 1) {
+                this.ready = true;
+                this.is_pending = false;
+                return;
+            }
+
         // send request
         $.ajax({
             url : this.getRegionsUrl(),

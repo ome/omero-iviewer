@@ -122,31 +122,32 @@ class Select extends Interaction {
             this.clearSelection();
         }
 
+        // Try to get feature from Vector Regions layer...
         var selected = this.featuresAtCoords_(mapBrowserEvent.pixel);
-
+        var shapeId;
         // If we didn't click on any Shapes on the Vector Regions layer...
-        if (selected === null) {
+        if (selected === null && this.regions_.viewer_.getTiledRegions()) {
             // Try TiledRegions features...
             let map = this.regions_.viewer_.viewer_
             var tiledFeatures = map.getFeaturesAtPixel(mapBrowserEvent.pixel);
             // get the 'top' or smallest feature under click
             let clickedFeature = featuresAtCoords(tiledFeatures);
 
-            // This will load the correct page of ROIs into Vector Regions layer
-            sendEventNotification(
-                this.regions_.viewer_, "TILED_REGIONS_PROPERTY_CHANGED",
-                {
-                    "properties" : ['selected'],
-                    "shapes": [clickedFeature.getId()],
-                    "values": [true],
-                }, 25);
-            return
+            if (clickedFeature) {
+                this.regions_.addFeaturesFromFeatures([clickedFeature]);
+                shapeId = clickedFeature.getId();
+
+                // Hide the shape in TileRegions layer
+                this.regions_.viewer_.getTiledRegions().setRegionsVisibility([shapeId], false);
+                this.regions_.viewer_.redrawTiledRegions();
+            }
+        } else {
+            shapeId = selected.getId();
         }
 
-        var oldSelectedFlag =
-            selected && typeof selected['selected'] === 'boolean' ?
-                selected['selected'] : false;
-        this.regions_.setProperty([selected.getId()], "selected", !oldSelectedFlag);
+        if (shapeId) {
+            this.regions_.setProperty([shapeId], "selected", true);
+        }
 
         return pointerMove(mapBrowserEvent);
     };

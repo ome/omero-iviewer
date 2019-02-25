@@ -247,6 +247,14 @@ export const updateStyleFunction =
             }
 
             var regions = feature['regions'];
+
+            // We should ONLY need this for TiledRegions, since for Vector Regions
+            // the Regions.renderFeature(f) will return false if feature isn't
+            // visible so we won't ever get to this point for hidden features
+            if (!regions.isFeatureVisible(feature)) {
+                return new Style({renderer: () => {}});
+            }
+
             var geom = feature.getGeometry();
             // find present flags for scaling/rotating text
             var scale_text = regions.scale_text_;
