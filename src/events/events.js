@@ -54,6 +54,8 @@ export const REGIONS_CHANGE_MODES = "REGIONS_CHANGE_MODES";
 export const REGIONS_SHOW_COMMENTS = "REGIONS_SHOW_COMMENTS";
 /** whenever shapes ought to be generated */
 export const REGIONS_GENERATE_SHAPES = "REGIONS_GENERATE_SHAPES";
+/** whenever shape selected from TiledRegions to create new shape on Regions layer */
+export const REGIONS_GENERATE_SHAPES_FROM_TILED = "REGIONS_GENERATE_SHAPES_FROM_TILED";
 /** whenever shapes are stored */
 export const REGIONS_STORE_SHAPES = "REGIONS_STORE_SHAPES";
 /** after modified/new/deleted shapes were stored */

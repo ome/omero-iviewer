@@ -675,8 +675,8 @@ export default class RegionsEdit extends EventSubscriber {
      * @memberof RegionsEdit
      */
     adjustStrokeEdit(canDo=false, showDisabled=true) {
-        let type =
-            this.last_selected ? this.last_selected.type.toLowerCase() : null;
+        let type = (this.last_selected && this.last_selected.type) ?
+                this.last_selected.type.toLowerCase() : null;
 
         let strokeOptions =
             this.getColorPickerOptions(false, this.last_selected);

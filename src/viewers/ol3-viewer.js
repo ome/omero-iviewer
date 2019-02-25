@@ -40,6 +40,7 @@ import {
     REGIONS_GENERATE_SHAPES, REGIONS_HISTORY_ACTION, REGIONS_HISTORY_ENTRY,
     REGIONS_MODIFY_SHAPES, REGIONS_PROPERTY_CHANGED, REGIONS_SET_PROPERTY,
     TILED_REGIONS_PROPERTY_CHANGED,
+    REGIONS_GENERATE_SHAPES_FROM_TILED,
     REGIONS_SHOW_COMMENTS, REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES,
     VIEWER_IMAGE_SETTINGS, VIEWER_PROJECTIONS_SYNC, VIEWER_SET_SYNC_GROUP,
     EventSubscriber
@@ -150,7 +151,10 @@ export default class Ol3Viewer extends EventSubscriber {
         [VIEWER_SET_SYNC_GROUP,
             (params={}) => this.setSyncGroup(params)],
         [IMAGE_SETTINGS_REFRESH,
-            (params={}) => this.refreshImageSettings(params)]];
+            (params={}) => this.refreshImageSettings(params)],
+        [REGIONS_GENERATE_SHAPES_FROM_TILED,
+            (params={}) => this.generateShapesFromTiled(params)],
+    ];
 
     /**
      * @constructor
@@ -750,6 +754,29 @@ export default class Ol3Viewer extends EventSubscriber {
         else if (prop === 'state')
             this.deleteShapes(params);
      }
+
+    /**
+     * When we want to edit Shapes loaded on the Tiled Regions layer, we
+     * first add them to the Vector Regions layer
+     *
+     * @param {Object} params Event params, should include shapes
+     */
+    generateShapesFromTiled(params = {}) {
+        params.shapes.forEach(shape => {
+            let roiId = parseInt(shape['oldId'].split(':')[0]);
+            shape.is_new = false;
+            shape.visible = true;
+            shape.selected = false;
+            shape.deleted = false;
+            shape.modified = false;
+            this.image_config.regions_info.number_of_shapes++;
+            let shapes = new Map();
+            shapes.set(shape['@id'], shape);
+            this.image_config.regions_info.data.set(roiId, {
+                shapes, show: true, deleted: 0
+            });
+        });
+    }
 
      /**
       * Generates shape for both, pasting and propagation

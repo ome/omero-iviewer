@@ -16,6 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+import Collection from 'ol/Collection';
 import Vector from 'ol/source/Vector';
 import Feature from 'ol/Feature';
 import Viewer from '../Viewer';
@@ -31,6 +32,7 @@ import {isArray,
     getCookie,
     sendEventNotification} from '../utils/Misc';
 import {sendRequest} from '../utils/Net';
+import {toJsonObject} from '../utils/Conversion';
 import {PROJECTION,
     PLUGIN_PREFIX,
     WEB_API_BASE,
@@ -527,10 +529,32 @@ class Regions extends Vector {
             let feature = f.clone();
             feature.setId(f.getId());
             feature.type = f.type;
+            feature.state = REGIONS_STATE.ADDED;
+            feature.TheT = f.TheT;
+            feature.TheZ = f.TheZ;
+            feature.TheC = f.TheC;
+            this.getLengthAndAreaForShape(feature);
             updateStyleFunction(feature, this, true);
             return feature;
         });
+
         this.addFeatures(features);
+
+        // Send notification to show in table
+        var newRegionsObject = toJsonObject(new Collection(features), false);
+        if (typeof newRegionsObject !== 'object' ||
+            !isArray(newRegionsObject['new']) ||
+            newRegionsObject['new'].length === 0) return;
+        // Since toJsonObject is for saving to server, it ignores various attributes
+        // e.g. TheC: -1 etc if < 0, so we do it manually here
+        ['TheZ', 'TheT', 'TheC', 'type'].forEach(attr => {
+            newRegionsObject['new'][0][attr] = features[0][attr];
+        });
+        newRegionsObject['new'][0].type = features[0].type;  // e.g. 'line'
+
+        var opts = {"shapes": newRegionsObject['new']};
+        sendEventNotification(
+            this.viewer_, "REGIONS_GENERATE_SHAPES_FROM_TILED", opts, 0);
     }
 
     /**
@@ -698,7 +722,6 @@ class Regions extends Vector {
      * @param {ol.Feature} feature The feature
      */
     isFeatureVisible(feature) {
-        console.log("Regions isFeatureVisible", feature.getId());
         return typeof(feature['visible']) !== 'boolean' || feature['visible'];
     }
 
