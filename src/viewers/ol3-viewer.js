@@ -769,7 +769,10 @@ export default class Ol3Viewer extends EventSubscriber {
             shape.selected = false;
             shape.deleted = false;
             shape.modified = false;
+            // Add helper attributes like 'shape_id' and 'type'
+            Converters.amendShapeDefinition(shape);
             this.image_config.regions_info.number_of_shapes++;
+            // TODO: If ROI already exists in regions_info.data, add shapes to it
             let shapes = new Map();
             shapes.set(shape['@id'], shape);
             this.image_config.regions_info.data.set(roiId, {

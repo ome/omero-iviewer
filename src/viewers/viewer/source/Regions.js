@@ -32,7 +32,7 @@ import {isArray,
     getCookie,
     sendEventNotification} from '../utils/Misc';
 import {sendRequest} from '../utils/Net';
-import {toJsonObject} from '../utils/Conversion';
+import {featureToJsonObject} from '../utils/Conversion';
 import {PROJECTION,
     PLUGIN_PREFIX,
     WEB_API_BASE,
@@ -529,7 +529,6 @@ class Regions extends Vector {
             let feature = f.clone();
             feature.setId(f.getId());
             feature.type = f.type;
-            feature.state = REGIONS_STATE.ADDED;
             feature.TheT = f.TheT;
             feature.TheZ = f.TheZ;
             feature.TheC = f.TheC;
@@ -540,19 +539,14 @@ class Regions extends Vector {
 
         this.addFeatures(features);
 
-        // Send notification to show in table
-        var newRegionsObject = toJsonObject(new Collection(features), false);
-        if (typeof newRegionsObject !== 'object' ||
-            !isArray(newRegionsObject['new']) ||
-            newRegionsObject['new'].length === 0) return;
-        // Since toJsonObject is for saving to server, it ignores various attributes
-        // e.g. TheC: -1 etc if < 0, so we do it manually here
-        ['TheZ', 'TheT', 'TheC', 'type'].forEach(attr => {
-            newRegionsObject['new'][0][attr] = features[0][attr];
+        // Send notification to show shapes in table
+        let shapes = features.map(feature => {
+            let shape = featureToJsonObject(feature);
+            // roi_id:shape_id to keep track of ROI ID
+            shape.oldId = feature.getId();
+            return shape;
         });
-        newRegionsObject['new'][0].type = features[0].type;  // e.g. 'line'
-
-        var opts = {"shapes": newRegionsObject['new']};
+        var opts = {"shapes": shapes};
         sendEventNotification(
             this.viewer_, "REGIONS_GENERATE_SHAPES_FROM_TILED", opts, 0);
     }
