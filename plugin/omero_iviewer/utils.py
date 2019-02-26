@@ -28,7 +28,7 @@ def get_version(version=None):
     res = '.'.join(str(x) for x in version[:parts])
     if len(version) > 3:
         res = "%s%s" % (res, version[3])
-    return str(res)
+    return str(res)+get_rc_version()
 
 
 def get_full_version(value=None):
@@ -39,4 +39,15 @@ def get_full_version(value=None):
 
     if value is None:
         from version import VERSION as value  # noqa
+    return value
+
+
+def get_rc_version(value=None):
+
+    """
+    Returns a tuple of the iviewer version.
+    """
+
+    if value is None:
+        from version import RC as value  # noqa
     return value
