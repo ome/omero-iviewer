@@ -134,12 +134,14 @@ class Select extends Interaction {
             let clickedFeature = featuresAtCoords(tiledFeatures);
 
             if (clickedFeature) {
-                this.regions_.addFeaturesFromFeatures([clickedFeature]);
                 shapeId = clickedFeature.getId();
-
-                // Hide the shape in TileRegions layer
-                this.regions_.viewer_.getTiledRegions().setRegionsVisibility([shapeId], false);
-                this.regions_.viewer_.redrawTiledRegions();
+                // Ignore cluster 'roi count' labels from zoomed-out levels
+                if (shapeId != '0:0') {
+                    this.regions_.addFeaturesFromFeatures([clickedFeature]);
+                    // Hide the shape in TileRegions layer
+                    this.regions_.viewer_.getTiledRegions().setRegionsVisibility([shapeId], false);
+                    this.regions_.viewer_.redrawTiledRegions();
+                }
             }
         } else {
             shapeId = selected.getId();
