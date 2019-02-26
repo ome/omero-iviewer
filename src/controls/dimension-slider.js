@@ -19,6 +19,7 @@
 import Context from '../app/context';
 import {inject,customElement, bindable, BindingEngine} from 'aurelia-framework';
 import Misc from '../utils/misc';
+import Ui from '../utils/ui';
 import {UNTILED_RETRIEVAL_LIMIT} from '../viewers/viewer/globals';
 import {slider} from 'jquery-ui/ui/widgets/slider';
 import {PROJECTION} from '../utils/constants';
@@ -332,6 +333,13 @@ export default class DimensionSlider {
             options.change =
                 (event, ui) => {
                     if (event.originalEvent) {
+                        if (!this.checkForUnsavedRoiLoss()) {
+                            // reset the slider position
+                            $(this.elSelector).slider(
+                                {values: [imgInf.projection_opts.start,
+                                          imgInf.projection_opts.end]});
+                            return;
+                        }
                         this.add_projection_history = true;
                         imgInf.projection_opts.synced = false;
                         this.changeProjection(ui.values);
@@ -344,8 +352,15 @@ export default class DimensionSlider {
         } else {
             options.value = imgInf.dimensions[this.dim];
             options.change =
-                (event, ui) => this.onChange(ui.value,
-                                    event.originalEvent ? true : false);
+                (event, ui) => {
+                    // If slider event from user, check for unsaved ROIs
+                    if (event.originalEvent && !this.checkForUnsavedRoiLoss()) {
+                        // reset the slider position
+                        $(this.elSelector).slider({value: imgInf.dimensions[this.dim]});
+                        return;
+                    }
+                    this.onChange(ui.value, event.originalEvent ? true : false);
+                }
         }
 
         $(this.elSelector).slider(options);
@@ -427,7 +442,9 @@ export default class DimensionSlider {
      * @memberof DimensionSlider
      */
     onArrowClick(step) {
-        if (this.player_info.handle !== null) return;
+        if (this.player_info.handle !== null || !this.checkForUnsavedRoiLoss()) {
+            return;
+        }
         let oldVal = $(this.elSelector).slider('value');
         $(this.elSelector).slider('value',  oldVal + step);
     }
@@ -452,6 +469,9 @@ export default class DimensionSlider {
     toggleProjection() {
         if (this.getZProjectionDisabled(this.player_info.handle,
                                         this.player_info.forwards)) {
+            return;
+        }
+        if (!this.checkForUnsavedRoiLoss()) {
             return;
         }
 
@@ -488,5 +508,24 @@ export default class DimensionSlider {
     getZProjectionDisabled(handle, forwards) {
         let dims = this.image_config.image_info.dimensions;
         return (handle !== null && forwards || (dims.max_x * dims.max_y) > UNTILED_RETRIEVAL_LIMIT);
+    }
+
+    /**
+     * Any change in Z/T or projection will cause ROIs to reload if we are
+     * paginating ROIs by Z/T plane.
+     * Returns true if we are paginating ROIs by plane AND we have unsaved
+     * changes to ROIs.
+     */
+    checkForUnsavedRoiLoss() {
+        if (this.image_config.regions_info.isRoiLoadingPaginatedByPlane() &&
+                this.image_config.regions_info.hasBeenModified()) {
+            Ui.showModalMessage(
+                "You have unsaved ROI changes. Please Save or Undo " +
+                "before moving to a new plane.",
+                "OK");
+            return false;
+        } else {
+            return true;
+        }
     }
 }

@@ -23,6 +23,7 @@ from django.core.urlresolvers import reverse
 from os.path import splitext
 from struct import unpack
 
+from omeroweb.api.api_settings import API_MAX_LIMIT
 from omeroweb.decorators import login_required
 from omeroweb.webgateway.marshal import imageMarshal
 from omeroweb.webgateway.templatetags.common_filters import lengthformat,\
@@ -38,7 +39,13 @@ import omero.util.pixelstypetopython as pixelstypetopython
 from version import __version__
 from omero_version import omero_version
 
+from . import iviewer_settings
+
 WEB_API_VERSION = 0
+MAX_LIMIT = max(1, API_MAX_LIMIT)
+
+ROI_PAGE_SIZE = getattr(iviewer_settings, 'ROI_PAGE_SIZE')
+ROI_PAGE_SIZE = min(MAX_LIMIT, ROI_PAGE_SIZE)
 
 PROJECTIONS = {
     'normal': -1,
@@ -75,6 +82,7 @@ def index(request, iid=None, conn=None, **kwargs):
         'api_base', kwargs={'api_version': WEB_API_VERSION})
     if settings.FORCE_SCRIPT_NAME is not None:
         params['URI_PREFIX'] = settings.FORCE_SCRIPT_NAME
+    params['ROI_PAGE_SIZE'] = ROI_PAGE_SIZE
 
     return render(
         request, 'omero_iviewer/index.html',
@@ -205,6 +213,69 @@ def persist_rois(request, conn=None, **kwargs):
         ret['errors'] = errors
 
     return JsonResponse(ret)
+
+
+@login_required()
+def rois_by_plane(request, image_id, the_z, the_t, z_end=None, t_end=None,
+                  conn=None, **kwargs):
+    """
+    Get ROIs with all Shapes where any Shapes are on the given Z and T plane.
+
+    Includes Shapes where Z or T are null.
+    If z_end or t_end are not None, we filter by any shape within the
+    range (inclusive of z/t_end)
+    """
+    query_service = conn.getQueryService()
+
+    params = omero.sys.ParametersI()
+    params.addId(image_id)
+    filter = omero.sys.Filter()
+    filter.offset = rint(request.GET.get("offset", 0))
+    limit = min(MAX_LIMIT, long(request.GET.get("limit", MAX_LIMIT)))
+    filter.limit = rint(limit)
+    params.theFilter = filter
+
+    where_z = "shapes.theZ = %s or shapes.theZ is null" % the_z
+    where_t = "shapes.theT = %s or shapes.theT is null" % the_t
+    if z_end is not None:
+        where_z = """(shapes.theZ >= %s and shapes.theZ <= %s)
+            or shapes.theZ is null""" % (the_z, z_end)
+    if t_end is not None:
+        where_t = """(shapes.theT >= %s and shapes.theT <= %s)
+            or shapes.theT is null""" % (the_t, t_end)
+
+    filter_query = """
+        select distinct(roi) from Roi roi
+        join roi.shapes as shapes
+        where (%s) and (%s)
+        and roi.image.id = :id
+    """ % (where_z, where_t)
+
+    # We want to load ALL shapes for the ROIs (omero-marshal fails if
+    # any shapes are None) but we want to filter by Shape so we use an inner
+    # query to get the ROI IDs filtered by Shape.
+    query = """
+        select roi from Roi roi
+        join fetch roi.details.owner join fetch roi.details.creationEvent
+        left outer join fetch roi.shapes
+        where roi.id in (%s) order by roi.id
+    """ % (filter_query)
+
+    rois = query_service.findAllByQuery(query, params, conn.SERVICE_OPTS)
+    marshalled = []
+    for r in rois:
+        encoder = omero_marshal.get_encoder(r.__class__)
+        if encoder is not None:
+            marshalled.append(encoder.encode(r))
+
+    # Modify query to only select count() and NOT paginate
+    query = filter_query.replace("distinct(roi)", "count(distinct roi)")
+    params = omero.sys.ParametersI()
+    params.addId(image_id)
+    result = query_service.projection(query, params, conn.SERVICE_OPTS)
+    meta = {"totalCount": result[0][0].val}
+
+    return JsonResponse({'data': marshalled, 'meta': meta})
 
 
 @login_required()

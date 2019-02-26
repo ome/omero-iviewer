@@ -281,6 +281,9 @@ export default class RegionsDrawing extends EventSubscriber {
      * @param {number} index the index matching an entry in the supported_shapes array
      */
     onDrawShape(index) {
+        if (this.regions_info.is_pending) {
+            return;
+        }
         // combined abort (index = -1) and bounds check
         let abort = false;
         if (index < 0 || index >= this.supported_shapes.length) {

@@ -128,7 +128,8 @@ export const REQUEST_PARAMS = {
     TIME: 'T',
     VERSION: 'VERSION',
     WELL_ID: 'WELL',
-    ZOOM: 'ZM'
+    ZOOM: 'ZM',
+    ROI_PAGE_SIZE: 'ROI_PAGE_SIZE',
 }
 
 /**

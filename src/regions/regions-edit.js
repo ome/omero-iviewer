@@ -604,8 +604,10 @@ export default class RegionsEdit extends EventSubscriber {
                                 respectiveDimensionInput.prop("disabled", false);
                     }
                     if (showDisabled) {
+                        respectiveDimensionInput.prop('disabled', true);
                         respectiveDimensionInput.attr(
                             "title", PERMISSION_TOOLTIPS.CANNOT_EDIT);
+                        respectiveAttachementLock.addClass("disabled-color");
                         respectiveAttachementLock.attr(
                             "title", PERMISSION_TOOLTIPS.CANNOT_EDIT);
                     }
@@ -825,6 +827,11 @@ export default class RegionsEdit extends EventSubscriber {
                 (this.regions_info.selected_shapes.length >= 1 && !canEdit);
         let showDeleteDisabled =
                 (this.regions_info.selected_shapes.length >= 1 && !canDelete);
+
+        if (this.regions_info.is_pending) {
+            showEditDisabled = true;
+            showDeleteDisabled = true;
+        }
 
         // break up adjustment into individual sections
         this.adjustCommentEdit(canEdit, showEditDisabled);

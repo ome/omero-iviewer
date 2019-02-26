@@ -438,6 +438,7 @@ export default class Context {
                 this.initParams[REQUEST_PARAMS.INTERPOLATE].toLowerCase() : 'true';
         this.interpolate = (interpolate === 'true');
         this.version = this.getInitialRequestParam(REQUEST_PARAMS.VERSION);
+        this.roi_page_size = this.initParams[REQUEST_PARAMS.ROI_PAGE_SIZE] || 500;
     }
 
     /**

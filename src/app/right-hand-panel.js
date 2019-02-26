@@ -75,8 +75,9 @@ export class RightHandPanel {
             this.bindingEngine.propertyObserver(
                 this.context, 'selected_config').subscribe(
                     (newValue, oldValue) => {
-                        this.image_config =
-                            this.context.getSelectedImageConfig();
+                        this.image_config = this.context.getSelectedImageConfig();
+                        // If multi-view mode (image data is already loaded),
+                        // may need to load ROIs for selected image.
                         this.makeInitialRoisRequestIfRoisTabIsActive();
                 });
     }
@@ -113,13 +114,18 @@ export class RightHandPanel {
 
     /**
      * Requests rois if tab is active and rois have not yet been requested
+     * and image_info is ready.
      *
      * @memberof RightHandPanel
      */
     makeInitialRoisRequestIfRoisTabIsActive() {
-        // we don't allow an active regions tab if we are in spit view
         if (this.context.isRoisTabActive()) {
+            // If image_info is not yet ready (still loading) then ROIs will be
+            // requested when image_info is loaded. We don't want to load ROIs
+            // before image_info since we won't know image_info.roi_count
+            // (don't know if we need to paginate ROIs)
             if (this.image_config === null ||
+                !this.image_config.image_info.ready ||
                 this.image_config.regions_info === null) return;
 
             this.image_config.regions_info.requestData();

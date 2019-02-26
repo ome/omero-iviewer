@@ -598,20 +598,96 @@ thumbnail-slider img {
     text-align: left;
 }
 
+/* Top-level container for right-hand-panel
+    Contains .nav-tabs (tabs) and .regions-tabs (content) */
 .right-hand-panel {
     width: 350px;
     max-width: 1000px;
     overflow-y: hidden;
-}
-
-.tab-pane {
-    padding: 10px;
-    background-color: #fff;
+    display: flex;
+    flex-direction: column;
 }
 
 .nav-tabs {
     background-color: #f8f8f8;
+    flex: 0 0 auto;
 }
+
+/* Container for each .tab-pane for tab content */
+.regions-tabs {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    position: relative;
+    height: 100%;
+}
+
+.tab-pane {
+    padding: 10px;
+    padding-bottom: 0;
+    background-color: #fff;
+    overflow-y: auto;
+    height: 100%;
+    width: 100%;
+    position: absolute;
+}
+
+/* Main ROI tab. Contains .regions-tools and .regions-list */
+.regions-container {
+    height: 100%;
+    width: 100%;
+    min-width: 330px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    position: relative;
+}
+
+.regions-tools {
+    width: 100%;
+    flex: 0 0 auto;
+}
+
+/* Contains .pagination-controls, .regions-header and .regions-table */
+.regions-list {
+    flex: 1 1 auto;
+    float: left;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.pagination-controls {
+    flex: 0 0 auto;
+}
+
+.regions-header {
+    position: relative;
+    flex: 0 0 auto;
+    background-color: #fff;
+    height: 40px;
+    line-height: 36px;
+    font-weight: bold;
+    font-size: 13px;
+    border-bottom: solid #ddd 1px;
+    z-index: 1;
+}
+
+.regions-table {
+    flex: 1 1 auto;
+    border-collapse: collapse;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 100%;
+    position: relative;
+}
+
+.roi_page_number {
+    width: 30px;
+}
+
 #settings {
     overflow-y: auto;
     overflow-x: hidden;
@@ -791,50 +867,13 @@ thumbnail-slider img {
     max-height: 100px;
 }
 
-.regions-tabs, .regions-tabs .tab-pane, .regions-container {
-    height: 100%;
-}
-.regions-container {
-    width: 100%;
-    min-width: 330px;
-}
-
-.regions-list {
-    float: left;
-    overflow: hidden;
-    width: 100%;
-    height: 100%;
-}
-
-.regions-header {
-    position: fixed;
-    background-color: #fff;
-    height: 40px;
-    line-height: 36px;
-    font-weight: bold;
-    font-size: 13px;
-    border-bottom: solid #ddd 1px;
-    z-index: 1;
-}
-
-.regions-table {
-    border-collapse: collapse;
-    overflow-y: auto;
-    overflow-x: hidden;
-    height: 100%;
-    position: relative;
-}
-
-.regions-table .regions-table-first-row {
-    line-height: 36px;
-    height: 40px;
-}
-
 .regions-table-row {
     float: left;
     line-height: 25px;
     height: 25px;
-    width: 100%;
+    min-width: 100%;
+    display: flex;
+    flex-direction: row;
 }
 .regions-table-row * {
     height: 100%;
@@ -855,6 +894,7 @@ thumbnail-slider img {
     border-width: 0px 1px 0px 1px;
     font-size: 13px;
     overflow: hidden;
+    flex: 0 0 auto;
 }
 .loading-text {
     float: left;
@@ -865,34 +905,29 @@ thumbnail-slider img {
 }
 
 .roi-toggle {
-    min-width: 5%;
-    max-width: 5%;
+    width: 17px;
+}
+.shape-show {
+    width: 49px;
 }
 .shape-z, .shape-t, .shape-c {
-    min-width: 8%;
-    max-width: 8%;
+    width: 27px;
 }
 .shape-type {
-    min-width: 9%;
-    max-width: 9%;
+    width: 27px;
     background-repeat: no-repeat;
     background-position: center;
 }
 .shape-comment {
-    min-width: 47%;
-    max-width: 47%;
+    flex: 1 1 auto;
 }
 .shape-area {
-    min-width: 20%;
-    max-width: 20%;
+    width: 64px;
+    flex: 0 0 auto;
 }
 .shape-length {
-    min-width: 25%;
-    max-width: 25%;
-}
-.shape-show {
-    min-width: 15%;
-    max-width: 15%;
+    width: 80px;
+    flex: 0 0 auto;
 }
 
 .rectangle-icon {
@@ -1009,9 +1044,6 @@ thumbnail-slider img {
 }
 .rois-dropdown, .regions-tools {
     float: left;
-}
-.regions-tools {
-    width: 100%;
 }
 
 .rois-dropdown>.dropdown-menu>li>a:hover,

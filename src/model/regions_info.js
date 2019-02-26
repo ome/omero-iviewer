@@ -25,7 +25,7 @@ import {
 } from '../events/events';
 import {
     IVIEWER, REGIONS_DRAWING_MODE, REGIONS_MODE, REGIONS_REQUEST_URL,
-    WEB_API_BASE
+    WEB_API_BASE,
 } from '../utils/constants';
 
 /**
@@ -33,12 +33,6 @@ import {
  */
 @noView
 export default class RegionsInfo  {
-    /**
-     * roi request limit
-     * @memberof RegionsInfo
-     * @type {number}
-     */
-    REQUEST_LIMIT = 5000;
 
     /**
      * true if a backend request is pending
@@ -64,6 +58,22 @@ export default class RegionsInfo  {
     data = new Map();
 
     /**
+     * Page size for ROIs to support pagination.
+     * Configured with bin/omero config set omero.web.iviewer.roi_page_size 500
+     *
+     * @memberof RegionsInfo
+     * @type {number}
+     */
+    roi_page_size = 500;
+
+    /**
+     * Current page number of ROIs to support pagination
+     * @memberof RegionsInfo
+     * @type {number}
+     */
+    roi_page_number = 0;
+
+    /**
      * a total shape count (exluding new with deleted!)
      * necessary because the data map still needs to include deleted
      * for history reasons (undo/redo) until we save BUT for the show all toggle
@@ -71,7 +81,12 @@ export default class RegionsInfo  {
      * @memberof RegionsInfo
      * @type {number}
      */
-     number_of_shapes = 0;
+    number_of_shapes = 0;
+
+    /**
+     * When we load ROIs by Z/T plane, we also get the total count
+     */
+    roi_count_on_current_plane = 0;
 
     /**
      * @memberof RegionsInfo
@@ -177,6 +192,8 @@ export default class RegionsInfo  {
         this.syncCopiedShapesWithLocalStorage();
         // init default shape colors
         this.resetShapeDefaults();
+
+        this.roi_page_size = this.image_info.context.roi_page_size;
     }
 
     /**
@@ -266,13 +283,89 @@ export default class RegionsInfo  {
     }
 
     /**
+     * Set the pagination number for ROIs and reload.
+     *
+     * @memberof RegionsInfo
+     * @param {number} zeroBasedPageNumber New page number
+     */
+    setPageAndReload(zeroBasedPageNumber) {
+        if (typeof(zeroBasedPageNumber) !== "number" ||
+            zeroBasedPageNumber < 0 ||
+            zeroBasedPageNumber >= this.getPageCount() ||
+            this.is_pending) return false;
+
+        this.roi_page_number = zeroBasedPageNumber;
+        this.requestData(true);
+    }
+
+    /**
+     * Get the number of pages needed to show all paginated ROIs
+     * on current plane.
+     */
+    getPageCount() {
+        return Math.ceil(this.roi_count_on_current_plane/this.roi_page_size);
+    }
+
+    /**
+     * If the total number of ROIs is more than this.roi_page_size,
+     * we load ROIs by Z/T plane.
+     * If there are still more on a plane than this.roi_page_size then we
+     * paginate within a plane.
+     */
+    isRoiLoadingPaginatedByPlane() {
+        return this.image_info.roi_count > this.roi_page_size;
+    }
+
+    /**
+     * Get the URL for loading ROIs.
+     * If isRoiLoadingPaginatedByPlane() then we filter by Z/T plane
+     */
+    getRegionsUrl() {
+        let z_start = this.image_info.dimensions.z;
+        let z_end;
+        if (this.image_info.projection && this.image_info.projection != "normal") {
+            if (this.image_info.projection_opts.start) {
+                z_start = this.image_info.projection_opts.start;
+            }
+            if (this.image_info.projection_opts.end) {
+                z_end = this.image_info.projection_opts.end;
+            }
+        }
+
+        let url = this.image_info.context.server;
+
+        if (this.isRoiLoadingPaginatedByPlane()) {
+            url += this.image_info.context.getPrefixedURI(IVIEWER) +
+                  '/rois_by_plane/' + this.image_info.image_id + '/' +
+                  z_start + (z_end ? '-' + z_end : '') + '/' +
+                  this.image_info.dimensions.t + '/?';
+        } else {
+            url += this.image_info.context.getPrefixedURI(WEB_API_BASE) +
+                REGIONS_REQUEST_URL + '/?image=' + this.image_info.image_id +
+                '&';
+        }
+
+        url += 'limit=' + this.roi_page_size +
+                '&offset=' + (this.roi_page_number * this.roi_page_size);
+        return url;
+    }
+
+    /**
      * Retrieves the regions information needed via ajax and stores it internally
      *
      * @memberof RegionsInfo
      * @param {boolean} forceUpdate if true we always request up-to-date data
      */
     requestData(forceUpdate = false) {
-        if (this.is_pending || (this.ready && !forceUpdate)) return;
+        if (this.ready && !forceUpdate) return;
+        // if we're busy, but still want to update, remember to try again...
+        // otherwise data can end up out-of-sync with Z/T if loading by plane
+        if (this.is_pending) {
+            if (forceUpdate) {
+                this.try_request_again = true;
+            }
+            return;
+        }
         // reset regions info data and history
         this.ready = false;
         this.resetRegionsInfo();
@@ -280,12 +373,16 @@ export default class RegionsInfo  {
 
         // send request
         $.ajax({
-            url : this.image_info.context.server +
-                  this.image_info.context.getPrefixedURI(WEB_API_BASE) +
-                  REGIONS_REQUEST_URL + '/?image=' + this.image_info.image_id +
-                  '&limit=' + this.REQUEST_LIMIT,
+            url : this.getRegionsUrl(),
             success : (response) => {
-                if (this.is_pending) this.setData(response.data)
+                if (this.try_request_again) {
+                    this.is_pending = false;
+                    this.try_request_again = false;
+                    this.requestData();
+                } else if (this.is_pending) {
+                    this.setData(response.data);
+                    this.roi_count_on_current_plane = response.meta.totalCount;
+                }
             }, error : (error) => {
                 this.is_pending = false;
                 console.error("Failed to load Rois: " + error)
@@ -347,7 +444,6 @@ export default class RegionsInfo  {
                 }
             }
             this.number_of_shapes = count;
-            this.image_info.roi_count = this.data.size;
             this.tmp_data = data;
         } catch(err) {
             console.error("Failed to sync Rois: " + err);
@@ -368,6 +464,7 @@ export default class RegionsInfo  {
             this.data.clear();
         }
         this.number_of_shapes = 0;
+        this.selected_shapes = [];
     }
 
     /**
