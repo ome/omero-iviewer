@@ -235,6 +235,11 @@ export const updateStyleFunction =
 
         // replace style function
         feature.setStyle(function(featureToStyle, actual_resolution) {
+            if (regions_reference instanceof TiledRegions) {
+                // Tiled Regions need to have more dynamic resolution info
+                actual_resolution = regions_reference.viewer_.viewer_.getView().getResolution();
+            }
+
             // fetch view via regions reference
             var regions = feature['regions'];
             if (!(regions instanceof Regions || regions instanceof TiledRegions))
@@ -257,7 +262,7 @@ export const updateStyleFunction =
 
             var geom = feature.getGeometry();
             // find present flags for scaling/rotating text
-            var scale_text = regions.scale_text_;
+            var scale_text = regions.getScaleText(feature);
             var rotate_text = regions.rotate_text_;
             // get present rotation
             var rotation = viewRef.getRotation();

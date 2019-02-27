@@ -489,6 +489,15 @@ class Regions extends Vector {
     }
 
     /**
+     * Gets the scale text flag
+     *
+     * @param {ol.Feature} feature In case behaviour is feature dependent (not used)
+     */
+    getScaleText(feature) {
+        return this.scale_text_;
+    }
+
+    /**
      * Sets the rotate text flag
      *
      * @param {boolean} rotateText a flag whether text should be rotated along with the view

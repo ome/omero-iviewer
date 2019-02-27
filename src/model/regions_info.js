@@ -330,6 +330,18 @@ export default class RegionsInfo  {
     }
 
     /**
+     * If the total number of ROIs is more than this.roi_page_size,
+     * AND we have a single-plane image,
+     * then we load ROIs by Tile onto the image instead of loading them
+     * into the ROI table first.
+     */
+    isRoiLoadingByTile() {
+        return (this.isRoiLoadingPaginatedByPlane() &&
+            this.image_info.dimensions.max_t === 1 &&
+            this.image_info.dimensions.max_z === 1);
+    }
+
+    /**
      * Get the URL for loading ROIs.
      * If isRoiLoadingPaginatedByPlane() then we filter by Z/T plane
      */
@@ -385,12 +397,11 @@ export default class RegionsInfo  {
         this.is_pending = true;
 
         // if lots of ROIs on a single plane, don't load ROIs (use tiled regions)
-        if (this.isRoiLoadingPaginatedByPlane() &&
-            this.image_info.dimensions.max_t === 1 && this.image_info.dimensions.max_z === 1) {
-                this.ready = true;
-                this.is_pending = false;
-                return;
-            }
+        if (this.isRoiLoadingByTile()) {
+            this.ready = true;
+            this.is_pending = false;
+            return;
+        }
 
         // send request
         $.ajax({

@@ -787,10 +787,17 @@ class Viewer extends OlObject {
      */
     showShapeComments(flag) {
         // without a regions layer there will be no regions to hide...
-        var regions = this.getRegions();
-        if (regions && typeof flag === 'boolean') {
-            regions.show_comments_ = flag;
-            regions.changed();
+        if (typeof flag === 'boolean') {
+            var regions = this.getRegions();
+            if (regions) {
+                regions.show_comments_ = flag;
+                regions.changed();
+            }
+            var tiledRegions = this.getTiledRegions();
+            if (tiledRegions) {
+                tiledRegions.show_comments_ = flag;
+                this.redrawTiledRegions();
+            }
         }
     }
 
@@ -1991,6 +1998,16 @@ class Viewer extends OlObject {
 
         zoomDisplay[0].value =
             Math.round((1 / this.viewer_.getView().getResolution()) * 100);
+
+        // When zooming is done, we may need to force redraw of TiledRegions
+        // to update label sizes...
+        if (this.redrawTimeout) {
+            clearTimeout(this.redrawTimeout);
+        }
+        this.redrawTimeout = setTimeout(() => {
+            this.redrawTiledRegions();
+            this.redrawTimeout = undefined;
+        }, 500);
     }
 
     /**

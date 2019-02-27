@@ -28,7 +28,7 @@ import OmeJSON from '../format/OmeJSON';
 
 export const ROI_TILE_SIZE = 256;
 
-class OmeVectorTileSource extends VectorTileSource {
+class TiledRegions extends VectorTileSource {
 
     constructor(viewerReference) {
 
@@ -84,14 +84,6 @@ class OmeVectorTileSource extends VectorTileSource {
         this.format_ = omeFormat;
 
         /**
-         * Keep track of selected features.
-         * 'roiIdshapId': True
-         *
-         * See https://openlayers.org/en/latest/examples/vector-tile-selection.html
-         */
-        this.selectedFeatures_ = {};
-
-        /**
          * Keep track of hidden features.
          * 'roiIdshapId': True
          */
@@ -103,7 +95,15 @@ class OmeVectorTileSource extends VectorTileSource {
          * NB: No setScaleText() function since it's never used
          * @type {boolean}
          */
-        this.scale_text_ = false;
+        this.scale_text_ = true;
+
+        /**
+         * this flag determines whether text is displayed for shapes other than labels
+         * Defauls to false
+         * @type {boolean}
+         * @private
+         */
+        this.show_comments_ = false;
 
         /**
          * the viewer reference
@@ -123,13 +123,15 @@ class OmeVectorTileSource extends VectorTileSource {
     }
 
     /**
-     * Return True if this feature is selected
+     * Gets the scale text flag
+     * Will return false for clustering roi count labels
      *
-     * @param {ol.Feature} feature The feature
+     * @param {ol.Feature} feature Behaviour may be feature dependent
      */
-    isFeatureSelected(feature) {
-        let roi_shape_id = feature.getId();
-        return this.selectedFeatures_[roi_shape_id];
+    getScaleText(feature) {
+        // We don't scale clustering roi_count labels
+        if (feature.getId() === "0:0") return false;
+        return this.scale_text_;
     }
 
     /**
@@ -166,4 +168,4 @@ class OmeVectorTileSource extends VectorTileSource {
     }
 }
 
-export default OmeVectorTileSource;
+export default TiledRegions;

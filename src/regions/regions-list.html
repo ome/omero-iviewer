@@ -18,7 +18,12 @@
 <template>
         <div if.bind="regions_info.image_info.roi_count > regions_info.roi_page_size"
             class="pagination-controls">
-            Current Z/T plane has ${ regions_info.roi_count_on_current_plane } ROIs
+            <span if.bind="regions_info.isRoiLoadingByTile()">
+                Click ROIs on the image to show below
+            </span>
+            <span if.bind="!regions_info.isRoiLoadingByTile()">
+                Current Z/T plane has ${ regions_info.roi_count_on_current_plane } ROIs
+            </span>
         </div>
         <div if.bind="regions_info.roi_count_on_current_plane > regions_info.roi_page_size"
             class="pagination-controls">
