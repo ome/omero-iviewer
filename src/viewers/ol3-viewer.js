@@ -1405,30 +1405,55 @@ export default class Ol3Viewer extends EventSubscriber {
     linkViewport(params={}) {
         if (params.config_id !== this.image_config.id  ||
             this.viewer === null) return;
+
+        // Get current search params and add/override with others
+        let search = new Map();
+        if (window.location.search.length > 0) {
+            let values = window.location.search.substr(1)
+                .split('&')
+                .map(kv => kv.split('='))
+                .map(kv => [kv[0].toLowerCase(), kv[1]]);
+            search = new Map(values);
+        }
+
         let view = this.viewer.viewer_.getView();
+        let image_info = this.image_config.image_info;
         let args = [];
         let center = view.getCenter();
-        args.push(REQUEST_PARAMS.CENTER_X + '=' + center[0]);
-        args.push(REQUEST_PARAMS.CENTER_Y + '=' + (-center[1]));
-        args.push(REQUEST_PARAMS.ZOOM + '=' + parseInt(100 / view.getResolution()));
+        args.push([REQUEST_PARAMS.CENTER_X, parseInt(center[0])]);
+        args.push([REQUEST_PARAMS.CENTER_Y, (-parseInt(center[1]))]);
+        args.push([REQUEST_PARAMS.ZOOM, parseInt(100 / view.getResolution())]);
 
-        let channels = this.image_config.image_info.channels;
+        let channels = image_info.channels;
         let chs = channels.map(
             (ch, i) => {
                 let w = ch.window;
                 return `${ ch.active ? '' : '-'}${i+1}|${w.start}:${w.end}$${ ch.color }`
             }
         )
-        args.push(REQUEST_PARAMS.CHANNELS + '=' + chs.join(","));
+        args.push([REQUEST_PARAMS.CHANNELS, chs.join(",")]);
+        args.push([REQUEST_PARAMS.MODEL, image_info.model.toLowerCase()[0]]);
 
         let maps = channels.map(ch => ({inverted:{enabled:ch.inverted}}));
-        args.push(REQUEST_PARAMS.MAPS + '=' + JSON.stringify(maps));
+        args.push([REQUEST_PARAMS.MAPS, JSON.stringify(maps)]);
 
-        let url = window.location.href;
-        let hasSearch = url.indexOf('?') > 0;
-        url += (hasSearch ? '&' : '?') + args.join('&');
+        // Build the URL
+        let url = window.location.origin + window.location.pathname;
+        args.forEach(kv => {
+            search.set(kv[0].toLowerCase(), kv[1]);
+        });
+        let values = [];
+        for (var [key, value] of search) {
+            values.push(`${ key }=${ value }`);
+        }
+        url += '?' + values.join('&');
 
-        Ui.showModalMessage(url, 'Close');
+        let html = `<p>Copy Viewport URL</p>
+            <input id='viewport_url' style='font-size: 12px; width: 100%;' value='${ url }' />`;
+        Ui.showModalMessage(html, 'Close');
+        let viewport_url = document.getElementById('viewport_url');
+        viewport_url.focus();
+        viewport_url.select();
     }
 
     /**
