@@ -19,6 +19,7 @@
     <require from="./regions-list"></require>
     <require from="./regions-drawing"></require>
     <require from="./regions-edit"></require>
+    <require from="./regions-planes"></require>
 
     <div class="regions-container">
         <div class="regions-tools">
@@ -70,7 +71,25 @@
             </regions-drawing>
             <hr />
         </div>
-        <regions-list regions_info.bind="regions_info" class="regions-list">
-        </regions-list>
+        <ul id="regions-tabs" class="nav nav-tabs small-tabs" role="tablist">
+            <li class="${selected_roi_tab === ROI_TABS.ROI_TABLE ? 'active' : ''}">
+                <a href="#${ ROI_TABS.ROI_TABLE }" role="tab">ROIs</a>
+            </li>
+            <li class="${selected_roi_tab === ROI_TABS.ROI_PLANE_GRID ? 'active' : ''}">
+                <a href="#${ ROI_TABS.ROI_PLANE_GRID }" role="tab">Planes</a>
+            </li>
+        </ul>
+        <div id="regions-tabs-content" class="tab-content">
+            <div id="roi-table"
+                class="tab-pane ${selected_roi_tab === ROI_TABS.ROI_TABLE ? 'active' : ''}">
+                <regions-list regions_info.bind="regions_info" class="regions-list">
+                </regions-list>
+            </div>
+            <div id="roi-plane-grid" role="tabpanel"
+                class="tab-pane ${selected_roi_tab === ROI_TABS.ROI_PLANE_GRID ? 'active' : ''}">
+                <regions-planes regions_info.bind="regions_info" selected_roi_tab.bind="selected_roi_tab">
+                </regions-planes>
+            </div>
+        </div>
     </div>
 </template>

@@ -51,6 +51,21 @@ export default class Regions {
     ];
 
     /**
+     * IDs of the tabs within the ROI panel
+     * @type {Object}
+     */
+    ROI_TABS = {
+        ROI_PLANE_GRID: "ROI_PLANE_GRID",
+        ROI_TABLE: "ROI_TABLE",
+    }
+
+    /**
+     * Currently selected tab within the ROI panel. One of the ROI_TABS options.
+     * @type {String}
+     */
+    selected_roi_tab = this.ROI_TABS.ROI_TABLE;
+
+    /**
      * @constructor
      * @param {Context} context the application context (injected)
      */
@@ -66,6 +81,11 @@ export default class Regions {
      */
     attached() {
         Ui.registerKeyHandlers(this.context, this.key_actions, TABS.ROIS, this);
+
+        $("#regions-tabs").find("a").click((e) => {
+            e.preventDefault();
+            this.selected_roi_tab = e.currentTarget.hash.substring(1);
+        });
     }
 
     /**
