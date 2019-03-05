@@ -720,6 +720,44 @@ thumbnail-slider img {
     width: 100%;
 }
 
+/* Grid to show Shape counts per plane */
+.grid_table>div {
+    display: inline-block;
+    border-top: solid grey 1px;
+    border-bottom: solid grey 1px;
+    margin-bottom: 8px;
+}
+
+.grid_table>div:first-child {
+    border-left: solid grey 1px;
+}
+
+.grid_table>div:last-child {
+    border-right: solid grey 1px;
+}
+
+.grid_cell {
+    width: 15px;
+    height: 15px;
+    border: solid white 1px;
+    text-align: center;
+    overflow: visible;
+}
+
+.y_axis, .x_axis {
+    font-size: 10px;
+    border-color: transparent;
+}
+.x_axis {
+    color: white;
+}
+.col:nth-of-type(5n+1) .x_axis {
+    color: black;
+}
+.col:nth-of-type(2) .x_axis {
+    color: black;
+}
+
 .left-hand-panel-hidden {
     margin-left: -5px;
     padding-left: 5px;

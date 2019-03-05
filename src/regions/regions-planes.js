@@ -18,6 +18,7 @@
 
 // js
 import Context from '../app/context';
+import { IVIEWER, ROI_TABS } from '../utils/constants';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 
 /**
@@ -34,6 +35,9 @@ export default class RegionsPlanes {
      */
     @bindable regions_info = null;
 
+    /**
+     * The current ROI sub-tab selected by the parent regions component
+     */
     @bindable selected_roi_tab = null;
 
     /**
@@ -46,7 +50,19 @@ export default class RegionsPlanes {
     /**
      * 2D array of [z][t] shapes counts
      */
-    plane_shape_counts;
+    plane_shape_counts = null;
+
+    /**
+     * Max number of shapes on a single plane
+     * @type {Number}
+     */
+    max_shape_count = 0;
+
+    /**
+     * Flag to indicate when we are loading data
+     * @type {Boolean}
+     */
+    is_pending = false;
 
     /**
      * @constructor
@@ -58,18 +74,36 @@ export default class RegionsPlanes {
         this.bindingEngine = bindingEngine;
     }
 
-    requestData() {
-        if (typeof refresh !== 'boolean') refresh = false;
-        this.ready = false;
+    requestData(refresh=false) {
+        if (this.plane_shape_counts != null && !refresh) {
+            // Data already loaded
+            return;
+        }
+        this.is_pending = true;
 
         $.ajax({
             url :
                 this.context.server + this.context.getPrefixedURI(IVIEWER) +
                 "/plane_shape_counts/" + this.regions_info.image_info.image_id + '/',
             success : (response) => {
-                console.log('response', response);
+                this.is_pending = false;
+                let shape_counts = [];
+                let max_count = 1;
+                // switch 2D array [z][t] to [t][z] to aid layout
+                for (let t=0; t<response.data[0].length; t++) {
+                    let t_counts = [];
+                    for (let z=0; z<response.data.length; z++) {
+                        let value = response.data[z][t];
+                        max_count = Math.max(max_count, value);
+                        t_counts.push(value);
+                    }
+                    shape_counts.push(t_counts);
+                }
+                this.plane_shape_counts = shape_counts;
+                this.max_shape_count = max_count;
             },
             error : (error, textStatus) => {
+                this.is_pending = false;
                 if (typeof error.responseText === 'string') {
                     console.error(error.responseText);
                 }
@@ -84,9 +118,28 @@ export default class RegionsPlanes {
       *
       * @memberof RegionsDrawing
       */
-     bind() {
+    bind() {
         this.registerObservers();
-     }
+    }
+
+    /**
+     * Simple copy and reverse of Array
+     * @param {Array} arr
+     */
+    reverse(arr) {
+        if (!arr) return [];
+        return arr.slice().reverse();
+    }
+
+    /**
+     * Return a css color to represent the given number as proportion of
+     * this.max_shape_count.
+     *
+     * @param {Number} count
+     */
+    getColor(count) {
+        return `rgb(0,0,${ (count * 255 / this.max_shape_count) })`;
+    }
 
     /**
      * Registers observers to react to drawing mode & shape_defaults changes
@@ -97,7 +150,9 @@ export default class RegionsPlanes {
         this.observers.push(
             this.bindingEngine.propertyObserver(this, "selected_roi_tab")
                 .subscribe((newValue, oldValue) => {
-                    console.log('selected_tab', newValue, oldValue)
+                    if (newValue === ROI_TABS.ROI_PLANE_GRID) {
+                        this.requestData();
+                    }
                 }
             )
         );

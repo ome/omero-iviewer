@@ -20,9 +20,8 @@
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import Ui from '../utils/ui';
-import {TABS} from '../utils/constants';
+import {TABS, ROI_TABS} from '../utils/constants';
 import {REGIONS_STORE_SHAPES, REGIONS_SHOW_COMMENTS} from '../events/events';
-import {PROJECTION} from '../utils/constants';
 import {inject, customElement, bindable} from 'aurelia-framework';
 
 /**
@@ -51,19 +50,15 @@ export default class Regions {
     ];
 
     /**
-     * IDs of the tabs within the ROI panel
-     * @type {Object}
+     * Make this available to the template
      */
-    ROI_TABS = {
-        ROI_PLANE_GRID: "ROI_PLANE_GRID",
-        ROI_TABLE: "ROI_TABLE",
-    }
+    ROI_TABS = ROI_TABS;
 
     /**
      * Currently selected tab within the ROI panel. One of the ROI_TABS options.
      * @type {String}
      */
-    selected_roi_tab = this.ROI_TABS.ROI_TABLE;
+    selected_roi_tab = ROI_TABS.ROI_TABLE;
 
     /**
      * @constructor

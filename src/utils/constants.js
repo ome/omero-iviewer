@@ -252,6 +252,15 @@ export const TABS = {
 }
 
 /**
+ * IDs of the tabs within the ROI panel
+ * @type {Object}
+ */
+export const ROI_TABS = {
+    ROI_PLANE_GRID: "ROI_PLANE_GRID",
+    ROI_TABLE: "ROI_TABLE",
+}
+
+/**
  * the possible intial types the viewer was openend with
  * @type {Object}
  */
