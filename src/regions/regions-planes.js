@@ -57,7 +57,6 @@ export default class RegionsPlanes {
      * @param {String} oldVal
      */
     selected_roi_tabChanged(newVal, oldVal) {
-        console.log('selected_roi_tabChanged');
         if (this.selected_roi_tab === ROI_TABS.ROI_PLANE_GRID) {
             this.requestData();
         }
@@ -80,6 +79,12 @@ export default class RegionsPlanes {
      * @type {Number}
      */
     max_shape_count = 0;
+
+    /**
+     * Min number of shapes on a single plane
+     * @type {Number}
+     */
+    min_shape_count = 0;
 
     /**
      * Flag to indicate when we are loading data
@@ -112,11 +117,13 @@ export default class RegionsPlanes {
                 this.is_pending = false;
                 let shape_counts = [];
                 let max_count = 1;
+                let min_count = Infinity;
                 // switch 2D array [z][t] to [t][z] to aid layout
                 for (let t=0; t<response.data[0].length; t++) {
                     let t_counts = [];
                     for (let z=0; z<response.data.length; z++) {
                         let value = response.data[z][t];
+                        min_count = Math.min(min_count, value);
                         max_count = Math.max(max_count, value);
                         t_counts.push(value);
                     }
@@ -124,6 +131,7 @@ export default class RegionsPlanes {
                 }
                 this.plane_shape_counts = shape_counts;
                 this.max_shape_count = max_count;
+                this.min_shape_count = min_count;
             },
             error : (error, textStatus) => {
                 this.is_pending = false;
@@ -153,6 +161,12 @@ export default class RegionsPlanes {
         if (count === 0) {
             return '#ddd';
         }
-        return `hsl(229, ${ (count * 100 / this.max_shape_count) }%, 50%)`
+        let percent = (count - this.min_shape_count) * 100 / 
+            (this.max_shape_count - this.min_shape_count);
+        if (this.min_shape_count === this.max_shape_count) {
+            percent = 100;
+        }
+        // return `hsl(229, ${ percent }%, 50%)`
+        return `rgba(2, 141, 255, ${ (percent / 80) + 0.2 })`
     }
 }
