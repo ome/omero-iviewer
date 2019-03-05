@@ -18,7 +18,7 @@
 <template>
     <div show.bind="is_pending">Loading data...</div>
 
-    <div class="grid_table">
+    <div show.bind="!is_pending" class="grid_table">
         <div class="col">
             <div repeat.for="z of plane_shape_counts[0]" class="grid_cell y_axis">
                 ${plane_shape_counts[0].length - $index}

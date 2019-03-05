@@ -749,7 +749,7 @@ thumbnail-slider img {
     border-color: transparent;
 }
 .x_axis {
-    color: white;
+    color: transparent;
 }
 .col:nth-of-type(5n+1) .x_axis {
     color: black;

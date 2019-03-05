@@ -36,9 +36,32 @@ export default class RegionsPlanes {
     @bindable regions_info = null;
 
     /**
+     * When the regions_info changes, force load/refresh data
+     * @param {RegionsInfo} newVal
+     * @param {RegionsInfo} oldVal
+     */
+    regions_infoChanged(newVal, oldVal) {
+        if (this.selected_roi_tab === ROI_TABS.ROI_PLANE_GRID) {
+            this.requestData(true);
+        }
+    }
+
+    /**
      * The current ROI sub-tab selected by the parent regions component
      */
     @bindable selected_roi_tab = null;
+
+    /**
+     * When the selected_roi_tab changes, load data (if not already loaded)
+     * @param {String} newVal
+     * @param {String} oldVal
+     */
+    selected_roi_tabChanged(newVal, oldVal) {
+        console.log('selected_roi_tabChanged');
+        if (this.selected_roi_tab === ROI_TABS.ROI_PLANE_GRID) {
+            this.requestData();
+        }
+    }
 
     /**
      * the list of property observers
@@ -111,17 +134,6 @@ export default class RegionsPlanes {
         });
     }
 
-     /**
-      * Overridden aurelia lifecycle method:
-      * called whenever the view is bound within aurelia
-      * in other words an 'init' hook that happens before 'attached'
-      *
-      * @memberof RegionsDrawing
-      */
-    bind() {
-        this.registerObservers();
-    }
-
     /**
      * Simple copy and reverse of Array
      * @param {Array} arr
@@ -138,41 +150,9 @@ export default class RegionsPlanes {
      * @param {Number} count
      */
     getColor(count) {
-        return `rgb(0,0,${ (count * 255 / this.max_shape_count) })`;
-    }
-
-    /**
-     * Registers observers to react to drawing mode & shape_defaults changes
-     *
-     * @memberof RegionsDrawing
-     */
-    registerObservers() {
-        this.observers.push(
-            this.bindingEngine.propertyObserver(this, "selected_roi_tab")
-                .subscribe((newValue, oldValue) => {
-                    if (newValue === ROI_TABS.ROI_PLANE_GRID) {
-                        this.requestData();
-                    }
-                }
-            )
-        );
-    }
-
-    /**
-     * Unregisters the the observers (property and regions info ready)
-     */
-    unregisterObservers() {
-        this.observers.forEach((o) => {if (o) o.dispose();});
-        this.observers = [];
-    }
-
-    /**
-     * Overridden aurelia lifecycle method:
-     * called whenever the view is unbound within aurelia
-     * in other words a 'destruction' hook that happens after 'detached'
-     */
-    unbind() {
-        // this.unsubscribe();
-        this.unregisterObservers();
+        if (count === 0) {
+            return '#ddd';
+        }
+        return `hsl(229, ${ (count * 100 / this.max_shape_count) }%, 50%)`
     }
 }

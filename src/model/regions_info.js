@@ -58,6 +58,11 @@ export default class RegionsInfo  {
     data = new Map();
 
     /**
+     * 2D array of [t][z] shapes counts
+     */
+    plane_shape_counts = null;
+
+    /**
      * Page size for ROIs to support pagination.
      * Configured with bin/omero config set omero.web.iviewer.roi_page_size 500
      *
