@@ -166,7 +166,14 @@ export default class RegionsPlanes {
         if (this.min_shape_count === this.max_shape_count) {
             percent = 100;
         }
+
+        // Various color ranges
         // return `hsl(229, ${ percent }%, 50%)`
-        return `rgba(2, 141, 255, ${ (percent / 80) + 0.2 })`
+        // return `rgba(2, 141, 255, ${ (percent / 80) + 0.2 })`
+
+        // Pick one of 5 colors
+        let index = Math.round(percent/25);
+        let colors = ['#dee7cc', '#c6e48b', '#7bc96f', '#239a3b', '#196127'];
+        return colors[index];
     }
 }
