@@ -18,6 +18,7 @@
 
 import {computedFrom} from 'aurelia-framework';
 import Context from '../app/context';
+import Ui from '../utils/ui';
 import { IVIEWER, ROI_TABS,
     PROJECTION} from '../utils/constants';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
@@ -183,6 +184,9 @@ export default class RegionsPlanes {
      * @param {Number} tIndex clicked T-index
      */
     handleGridClick(event, zIndex, tIndex) {
+        if (!this.checkForUnsavedRoiLoss()) {
+            return;
+        }
         zIndex = parseInt(zIndex);
         tIndex = parseInt(tIndex);
         // T-index doesn't support projection - simply select it
@@ -214,6 +218,25 @@ export default class RegionsPlanes {
                     zIndex, this.regions_info.image_info.dimensions.z
                 )
             }
+        }
+    }
+
+    /**
+     * Any change in Z/T or projection will cause ROIs to reload if we are
+     * paginating ROIs by Z/T plane.
+     * Returns true if we are paginating ROIs by plane AND we have unsaved
+     * changes to ROIs.
+     */
+    checkForUnsavedRoiLoss() {
+        if (this.regions_info.isRoiLoadingPaginatedByPlane() &&
+                this.regions_info.hasBeenModified()) {
+            Ui.showModalMessage(
+                "You have unsaved ROI changes. Please Save or Undo " +
+                "before moving to a new plane.",
+                "OK");
+            return false;
+        } else {
+            return true;
         }
     }
 
