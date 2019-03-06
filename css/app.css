@@ -726,6 +726,7 @@ thumbnail-slider img {
     border-top: solid grey 1px;
     border-bottom: solid grey 1px;
     margin-bottom: 8px;
+    background-color: #f0f0f0;
 }
 
 .grid_table>div:first-child {
@@ -751,11 +752,18 @@ thumbnail-slider img {
 .x_axis {
     color: transparent;
 }
-.col:nth-of-type(5n+1) .x_axis {
-    color: black;
-}
+
+/* Show the first '1' x_axis label... */
 .col:nth-of-type(2) .x_axis {
     color: black;
+    z-index: 10;
+    position: relative;
+}
+/* ...and every 5th label */
+.col:nth-of-type(5n+1) .x_axis {
+    color: black;
+    z-index: 10;
+    position: relative;
 }
 
 .left-hand-panel-hidden {
