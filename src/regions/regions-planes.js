@@ -16,9 +16,10 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-// js
+import {computedFrom} from 'aurelia-framework';
 import Context from '../app/context';
-import { IVIEWER, ROI_TABS } from '../utils/constants';
+import { IVIEWER, ROI_TABS,
+    PROJECTION} from '../utils/constants';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 
 /**
@@ -175,5 +176,63 @@ export default class RegionsPlanes {
         let index = Math.round(percent/25);
         let colors = ['#dee7cc', '#c6e48b', '#7bc96f', '#239a3b', '#196127'];
         return colors[index];
+    }
+
+    /**
+     * Handle clicking on a grid Cell - select the corresponding T and Z index/range
+     *
+     * @param {Event} event
+     * @param {Number} zIndex clicked Z-index
+     * @param {Number} tIndex clicked T-index
+     */
+    handleGridClick(event, zIndex, tIndex) {
+        this.regions_info.image_info.dimensions['t'] = tIndex;
+        if (!event.shiftKey) {
+            // select single Z/T plane (no projection)
+            this.regions_info.image_info.projection = PROJECTION.NORMAL;
+            this.regions_info.image_info.dimensions['z'] = zIndex;
+        } else {
+            // select range...
+            // If projection enabled, extend the range
+            if (this.regions_info.image_info.projection === PROJECTION.INTMAX) {
+                this.regions_info.image_info.projection_opts.start = Math.min(
+                    zIndex, this.regions_info.image_info.projection_opts.start
+                )
+                this.regions_info.image_info.projection_opts.end = Math.max(
+                    zIndex, this.regions_info.image_info.projection_opts.end
+                )
+            } else {
+                // If projection not enabled, select range from current Z
+                this.regions_info.image_info.projection = PROJECTION.INTMAX;
+                this.regions_info.image_info.projection_opts.start = Math.min(
+                    zIndex, this.regions_info.image_info.dimensions.z
+                )
+                this.regions_info.image_info.projection_opts.end = Math.max(
+                    zIndex, this.regions_info.image_info.dimensions.z
+                )
+            }
+        }
+    }
+
+    /**
+     * Allow template to know which Z-planes are selected, depending on
+     * Z-projection or Z-index.
+     */
+    @computedFrom('regions_info.image_info.dimensions.z',
+                'regions_info.image_info.projection',
+                'regions_info.image_info.projection_opts.start',
+                'regions_info.image_info.projection_opts.end')
+    get selectedZ() {
+        let imgInf = this.regions_info.image_info;
+        let zPlanes = [];
+        if (imgInf.projection === PROJECTION.INTMAX) {
+            let opts = imgInf.projection_opts;
+            for(let z=opts.start; z<=opts.end; z++) {
+                zPlanes.push(z);
+            }
+        } else {
+            zPlanes.push(imgInf.dimensions.z);
+        }
+        return zPlanes;
     }
 }

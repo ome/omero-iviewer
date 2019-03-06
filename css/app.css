@@ -744,6 +744,9 @@ thumbnail-slider img {
     text-align: center;
     overflow: visible;
 }
+.grid_cell.selected {
+    border: solid rgb(90, 135, 248) 3px;
+}
 
 .y_axis, .x_axis {
     font-size: 10px;

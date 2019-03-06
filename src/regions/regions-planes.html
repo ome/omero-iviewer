@@ -38,10 +38,14 @@
             <div class="grid_cell x_axis">
                 T:
             </div>
-        </div><div repeat.for="z_row of plane_shape_counts" class="col">
-            <div repeat.for="value of reverse(z_row)" class="grid_cell"
-                style="background: ${ getColor(value) }"
-                title="${value} Shapes">
+        </div><div repeat.for="t_col of plane_shape_counts" class="col"
+                ref="t_index" t-index="${ $index }">
+            <div repeat.for="zt_value of reverse(t_col)"
+                class="grid_cell ${t_index.tIndex == regions_info.image_info.dimensions.t && selectedZ.indexOf(t_col.length - $index - 1) > -1 ? 'selected' : ''}"
+                ref="z_index" z-index="${ t_col.length - $index - 1 }"
+                style="background: ${ getColor(zt_value) }"
+                title="${zt_value} Shapes T: ${t_index.tIndex + 1}"
+                click.delegate="handleGridClick($event, z_index.zIndex, t_index.tIndex)">
             </div>
             <div class="grid_cell x_axis">
                 ${$index + 1}
