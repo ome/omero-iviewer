@@ -168,13 +168,10 @@ export default class RegionsPlanes {
             percent = 100;
         }
 
-        // Various color ranges
-        // return `hsl(229, ${ percent }%, 50%)`
-        // return `rgba(2, 141, 255, ${ (percent / 80) + 0.2 })`
-
         // Pick one of 5 colors
         let index = Math.round(percent/25);
-        let colors = ['#dee7cc', '#c6e48b', '#7bc96f', '#239a3b', '#196127'];
+        let colors = ['rgb(212, 222, 223)', 'rgb(178, 189, 193)', 'rgb(149, 153, 164)',
+                    'rgb(90, 89, 109)', 'rgb(20, 18, 30)']
         return colors[index];
     }
 
@@ -186,9 +183,13 @@ export default class RegionsPlanes {
      * @param {Number} tIndex clicked T-index
      */
     handleGridClick(event, zIndex, tIndex) {
+        zIndex = parseInt(zIndex);
+        tIndex = parseInt(tIndex);
+        // T-index doesn't support projection - simply select it
         this.regions_info.image_info.dimensions['t'] = tIndex;
+        // Support Shift-click to select Z-range (projection)
         if (!event.shiftKey) {
-            // select single Z/T plane (no projection)
+            // select single Z plane (no projection)
             this.regions_info.image_info.projection = PROJECTION.NORMAL;
             this.regions_info.image_info.dimensions['z'] = zIndex;
         } else {
