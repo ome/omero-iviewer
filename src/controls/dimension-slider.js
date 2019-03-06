@@ -223,18 +223,28 @@ export default class DimensionSlider {
                                      dim: this.dim,
                                      value: [newValue]});
                         }));
-        this.observers.push(
-            this.bindingEngine.propertyObserver(
-                this.image_config.image_info, 'projection')
-                    .subscribe(
-                        (newValue, oldValue) => this.initSlider(true)));
-        this.observers.push(
-            this.bindingEngine.propertyObserver(
-                this.image_config.image_info, 'projection_opts')
-                    .subscribe(
-                        (newValue, oldValue) =>
-                            this.changeProjection(
-                                [newValue.start, newValue.end], false)));
+        // Only need to listen for projection changes if we are Z-slider
+        if (this.dim === 'z') {
+            this.observers.push(
+                this.bindingEngine.propertyObserver(
+                    this.image_config.image_info, 'projection')
+                        .subscribe(
+                            (newValue, oldValue) => this.initSlider(true)));
+            this.observers.push(
+                this.bindingEngine.propertyObserver(
+                    this.image_config.image_info.projection_opts, 'start')
+                        .subscribe(
+                            (newValue, oldValue) => {
+                                this.changeProjection(
+                                    [newValue, this.image_config.image_info.projection_opts.end], false)}));
+            this.observers.push(
+                this.bindingEngine.propertyObserver(
+                    this.image_config.image_info.projection_opts, 'end')
+                        .subscribe(
+                            (newValue, oldValue) => {
+                                this.changeProjection(
+                                    [this.image_config.image_info.projection_opts.start, newValue], false)}));
+        }
     }
 
     /**

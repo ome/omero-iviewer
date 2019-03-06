@@ -193,14 +193,16 @@ export default class RegionsPlanes {
             this.regions_info.image_info.dimensions['z'] = zIndex;
         } else {
             // select range...
-            // If projection enabled, extend the range
+            // If projection enabled, update start/end (whichever is closest to zIndex)
             if (this.regions_info.image_info.projection === PROJECTION.INTMAX) {
-                this.regions_info.image_info.projection_opts.start = Math.min(
-                    zIndex, this.regions_info.image_info.projection_opts.start
-                )
-                this.regions_info.image_info.projection_opts.end = Math.max(
-                    zIndex, this.regions_info.image_info.projection_opts.end
-                )
+                let start = this.regions_info.image_info.projection_opts.start;
+                let end = this.regions_info.image_info.projection_opts.end;
+                let midPoint = (start + end)/2;
+                if (zIndex < midPoint) {
+                    this.regions_info.image_info.projection_opts.start = zIndex;
+                } else {
+                    this.regions_info.image_info.projection_opts.end = zIndex;
+                }
             } else {
                 // If projection not enabled, select range from current Z
                 this.regions_info.image_info.projection = PROJECTION.INTMAX;
