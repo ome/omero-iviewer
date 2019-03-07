@@ -381,3 +381,44 @@
     padding-left: 5px;
     padding-right: 5px;
 }
+
+.hover-popup {
+    position: absolute;
+    background-color: white;
+    -webkit-filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+    filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid #cccccc;
+    bottom: 12px;
+    left: -50px;
+    white-space: nowrap;
+    /* min-width: 280px; */
+  }
+  .hover-popup:after, .hover-popup:before {
+    top: 100%;
+    border: solid transparent;
+    content: " ";
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
+  }
+  .hover-popup:after {
+    border-top-color: white;
+    border-width: 10px;
+    left: 48px;
+    margin-left: -10px;
+  }
+  .hover-popup:before {
+    border-top-color: #cccccc;
+    border-width: 11px;
+    left: 48px;
+    margin-left: -11px;
+  }
+
+  .ol-overlay-container {
+    width: 10px;
+    height: 10px;
+    /* border: 2px solid green; */
+  }

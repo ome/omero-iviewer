@@ -212,6 +212,15 @@ class Line extends LineString {
     getLength() {
         return getLength(this);
     }
+
+    displayCoords() {
+        let coords = this.getLineCoordinates();
+        coords = coords.map(c => c.toFixed(1));
+        return [['x1', coords[0]],
+                ['y1', -coords[1]],
+                ['x2', coords[2]],
+                ['y2', -coords[3]]];
+    }
 }
 
 export default Line;

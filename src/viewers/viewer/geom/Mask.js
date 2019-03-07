@@ -175,6 +175,14 @@ class Mask extends Point {
         var point = this.getPointCoordinates();
         return new Rectangle(point[0], point[1], this.size_[0], this.size_[1]);
     }
+
+    displayCoords() {
+        var point = this.getPointCoordinates();
+        return [['x', point[0].toFixed(1)],
+                ['y', point[1].toFixed(1)],
+                ['width', this.size_[0].toFixed(1)],
+                ['height', this.size_[1].toFixed(1)]];
+    }
 }
 
 export default Mask;

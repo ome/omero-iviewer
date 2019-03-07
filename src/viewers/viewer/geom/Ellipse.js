@@ -224,6 +224,13 @@ class Ellipse extends Polygon {
         return new Ellipse(
             this.cx_, this.cy_, this.rx_, this.ry_, this.getTransform());
     }
+
+    displayCoords() {
+        return [['x', this.cx_.toFixed(1)],
+                ['y', -this.cy_.toFixed(1)],
+                ['rx', this.rx_.toFixed(1)],
+                ['ry', this.ry_.toFixed(1)]];
+    }
 }
 
 /**

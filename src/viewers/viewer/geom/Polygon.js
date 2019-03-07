@@ -134,6 +134,11 @@ class Polygon extends OlPolygon {
     getLength() {
         return getLength(this);
     }
+
+    displayCoords() {
+        let coords = this.getInvertedCoordinates();
+        return [['points', coords.map(c => c.toFixed(1)).join(', ')]];
+    }
 }
 
 export default Polygon;

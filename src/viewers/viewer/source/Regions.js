@@ -21,6 +21,7 @@ import Feature from 'ol/Feature';
 import Viewer from '../Viewer';
 import Draw from '../interaction/Draw';
 import Select from '../interaction/Select';
+import Hover from '../interaction/Hover';
 import BoxSelect from '../interaction/BoxSelect';
 import Modify from '../interaction/Modify';
 import Translate from '../interaction/Translate';
@@ -351,15 +352,22 @@ class Regions extends Vector {
                 this.translate_ = null;
             }
 
-            if (!keep_select && this.select_) {
+            if (!keep_select) {
                 // if multiple (box) select was on, we turn it off now
                 this.viewer_.removeInteractionOrControl("boxSelect");
                 this.viewer_.removeInteractionOrControl("doubleClickZoom");
-                this.select_.clearSelection();
-                this.viewer_.viewer_.getInteractions().remove(this.select_);
-                this.select_.dispose();
+                if (this.select_) {
+                    this.select_.clearSelection();
+                    this.viewer_.viewer_.getInteractions().remove(this.select_);
+                    this.select_.dispose();
+                    this.select_ = null;
+                }
+                if (this.hover_) {
+                    this.viewer_.viewer_.getInteractions().remove(this.hover_);
+                    this.hover_.dispose();
+                    this.hover_ = null;
+                }
                 this.changed();
-                this.select_ = null;
             }
         }
 
@@ -374,6 +382,8 @@ class Regions extends Vector {
             if (this.select_ === null) {
                 this.select_ = new Select(this);
                 this.viewer_.viewer_.addInteraction(this.select_);
+                this.hover_ = new Hover(this);
+                this.viewer_.viewer_.addInteraction(this.hover_);
                 // we also add muliple (box) select by default
                 this.viewer_.addInteraction(
                     "boxSelect",
