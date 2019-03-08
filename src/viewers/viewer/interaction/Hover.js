@@ -66,10 +66,18 @@ class Hover extends Pointer {
     handleMoveEvent(mapBrowserEvent) {
         const map = mapBrowserEvent.map;
         let hits = [];
+        // First check for features under mouse pointer (0 tolerance)
         map.forEachFeatureAtPixel(mapBrowserEvent.pixel,
             (feature) => hits.push(feature),
-            {hitTolerance: 5}
+            {hitTolerance: 0}
         );
+        // If nothing found, check wider
+        if (hits.length == 0) {
+            map.forEachFeatureAtPixel(mapBrowserEvent.pixel,
+                (feature) => hits.push(feature),
+                {hitTolerance: 5}
+            );
+        }
         let hit = featuresAtCoords(hits);
         this.overlay.setPosition(undefined);
         if (hit) {
