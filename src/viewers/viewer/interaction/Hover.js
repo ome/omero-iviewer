@@ -51,6 +51,7 @@ class Hover extends Pointer {
 
         this.overlay = new Overlay({
             element: this.tooltip,
+            insertFirst: false,   // show over other controls
             autoPan: false,
           });
 
@@ -80,7 +81,10 @@ class Hover extends Pointer {
         }
         let hit = featuresAtCoords(hits);
         this.overlay.setPosition(undefined);
-        if (hit) {
+        // If the event has come via the ShapeEditPopup or the shape is
+        // selected then we ignore it.
+        let isOverShapeEditPopup = mapBrowserEvent.originalEvent.isOverShapeEditPopup;
+        if (hit && !hit['selected'] && !isOverShapeEditPopup) {
             let coords = mapBrowserEvent.coordinate;
             let textStyle = hit['oldText'];
             if (textStyle && textStyle.getText() && textStyle.getText().length > 0) {

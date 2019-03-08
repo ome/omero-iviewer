@@ -401,7 +401,7 @@
     left: -100px;
     width: 200px;
   }
-  .hover-popup:after, .hover-popup:before {
+.hover-popup:after, .hover-popup:before {
     top: 100%;
     border: solid transparent;
     content: " ";
@@ -409,22 +409,75 @@
     width: 0;
     position: absolute;
     pointer-events: none;
-  }
-  .hover-popup:after {
+}
+.hover-popup:after {
     border-top-color: white;
     border-width: 10px;
     left: 100px;
     margin-left: -10px;
-  }
-  .hover-popup:before {
+}
+.hover-popup:before {
     border-top-color: #cccccc;
     border-width: 11px;
     left: 100px;
     margin-left: -11px;
-  }
+}
 
-  .ol-overlay-container {
-    width: 10px;
-    height: 10px;
-    /* border: 2px solid green; */
+.ol-overlay-container {
+    width: 1px;
+    height: 1px;
+}
+
+.hover-popup>div {
+    position: relative;
+    background-color: white;
+    -webkit-filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+    filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid #cccccc;
+    bottom: -1px;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+/* Dialog for Editing shape text */
+.shape-edit-popup {
+    position: absolute;
+    bottom: 12px;
+    left: -100px;
+    width: 200px;
   }
+.shape-edit-popup:after, .shape-edit-popup:before {
+    top: 100%;
+    border: solid transparent;
+    content: " ";
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
+}
+.shape-edit-popup:after {
+    border-top-color: white;
+    border-width: 10px;
+    left: 100px;
+    margin-left: -10px;
+}
+.shape-edit-popup:before {
+    border-top-color: rgba(0,153,255,1);
+    border-width: 11px;
+    left: 100px;
+    margin-left: -11px;
+}
+.shape-edit-popup>div {
+    position: relative;
+    background-color: white;
+    -webkit-filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+    filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(0,153,255,1);
+    bottom: -1px;
+    margin-left:auto;
+    margin-right:auto;
+}
