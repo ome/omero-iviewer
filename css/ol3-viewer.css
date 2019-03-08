@@ -382,18 +382,24 @@
     padding-right: 5px;
 }
 
-.hover-popup {
-    position: absolute;
+.hover-popup>div {
+    position: relative;
     background-color: white;
     -webkit-filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
     filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
     padding: 5px;
     border-radius: 5px;
     border: 1px solid #cccccc;
+    bottom: -1px;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+.hover-popup {
+    position: absolute;
     bottom: 12px;
-    left: -50px;
-    white-space: nowrap;
-    /* min-width: 280px; */
+    left: -100px;
+    width: 200px;
   }
   .hover-popup:after, .hover-popup:before {
     top: 100%;
@@ -407,13 +413,13 @@
   .hover-popup:after {
     border-top-color: white;
     border-width: 10px;
-    left: 48px;
+    left: 100px;
     margin-left: -10px;
   }
   .hover-popup:before {
     border-top-color: #cccccc;
     border-width: 11px;
-    left: 48px;
+    left: 100px;
     margin-left: -11px;
   }
 

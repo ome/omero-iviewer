@@ -55,9 +55,14 @@ class Hover extends Pointer {
           });
 
         this.map.addOverlay(this.overlay);
-
     };
 
+    /**
+     * Handle mouse moving on the image. If it moves over a feature and the
+     * feature has some text to display, we show a popup.
+     *
+     * @param {Object} mapBrowserEvent
+     */
     handleMoveEvent(mapBrowserEvent) {
         const map = mapBrowserEvent.map;
         let hits = [];
@@ -66,64 +71,25 @@ class Hover extends Pointer {
             {hitTolerance: 5}
         );
         let hit = featuresAtCoords(hits);
+        this.overlay.setPosition(undefined);
         if (hit) {
             let coords = mapBrowserEvent.coordinate;
-            this.overlay.setPosition([coords[0], coords[1] + 20]);
-            this.overlay.changed();
-            let html = 'ID: ' + hit.getId();
             let textStyle = hit['oldText'];
-            let geom = hit.getGeometry();
-            if (geom && geom.displayCoords) {
-                html += '<br>' + geom.displayCoords().map(kv => `<b>${kv[0]}</b>: ${kv[1]}`).join(', ');
+            if (textStyle && textStyle.getText() && textStyle.getText().length > 0) {
+                let text = textStyle.getText();
+                let width = Math.min(Math.max(100, text.length * 8), 250);
+                this.tooltip.innerHTML = `<div style='width: ${width}px'>
+                                            ${ textStyle.getText() }
+                                        </div>`;
+                this.overlay.setPosition([coords[0], coords[1] + 20]);
             }
-            if (textStyle && textStyle.getText()) {
-                html += '<br>' + textStyle.getText();
-            }
-            this.tooltip.innerHTML = html;
-        } else {
-            this.overlay.setPosition(undefined);
         }
     }
 
     /**
-     * Tests to see if the given coordinates intersects any of our features.
-     * @param {Array.<number>} pixel pixel coordinate to test for intersection.
-     * @param {number} tolerance a pixel tolerance/buffer
-     * @param {boolean} use_already_selected will only consider already selected
-     * @return {ol.Feature} Returns the feature found at the specified pixel
-     *                      coordinates.
-     */
-    featuresAtCoords_(pixel, tolerance, use_already_selected) {
-        if (!isArray(pixel) || pixel.length !== 2) return;
-
-        if (typeof tolerance !== 'number') tolerance = 5; // 5 pixel buffer
-        if (typeof use_already_selected !== 'boolean') use_already_selected = false;
-        var v = this.regions_.viewer_.viewer_;
-        var min = v.getCoordinateFromPixel(
-                    [pixel[0]-tolerance, pixel[1]+tolerance]);
-        var max = v.getCoordinateFromPixel(
-                [pixel[0]+tolerance, pixel[1]-tolerance]);
-        var extent = [min[0], min[1], max[0], max[1]];
-        var hits = [];
-
-        var alreadySelected = this.features_.getArray();
-        this.regions_.forEachFeatureInExtent(
-            extent, function(feat) {
-                if (feat.getGeometry().intersectsExtent(extent)) {
-                    if (!use_already_selected ||
-                        (use_already_selected &&
-                            includes(alreadySelected, feat))) hits.push(feat);
-                }
-            });
-
-        return featuresAtCoords(hits);
-    };
-
-    /**
-     * a sort of destructor
+     * a sort of destructor - remove the overlay from the map
      */
     disposeInternal() {
-        // this.regions_ = null;
         this.overlay.setPosition(undefined);
         this.map.removeOverlay(this.overlay);
         this.map = null;
