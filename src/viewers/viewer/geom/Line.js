@@ -213,7 +213,11 @@ class Line extends LineString {
         return getLength(this);
     }
 
-    displayCoords() {
+    /**
+     * For displaying coords, this returns a list of [name, value] pairs
+     * @return {List} 2D list of 'name', vaule pairs.
+     */
+    getDisplayCoords() {
         let coords = this.getLineCoordinates();
         coords = coords.map(c => c.toFixed(1));
         return [['x1', coords[0]],

@@ -470,6 +470,7 @@
     margin-left: -11px;
 }
 .shape-edit-popup>div {
+    width: 330px;
     position: relative;
     background-color: white;
     -webkit-filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
@@ -478,6 +479,8 @@
     border-radius: 10px;
     border: 1px solid rgba(0,153,255,1);
     bottom: -1px;
-    margin-left:auto;
-    margin-right:auto;
+}
+
+#shape-popup-edit-text {
+    width: 100%;
 }

@@ -135,7 +135,9 @@ class Select extends Interaction {
         }
         this.regions_.setProperty([selected.getId()], "selected", !oldSelectedFlag);
 
-        this.shapeEditPopup.showPopupForShape(selected);
+        if (!oldSelectedFlag){
+            this.shapeEditPopup.showPopupForShape(selected);
+        }
 
         return pointerMove(mapBrowserEvent);
     };

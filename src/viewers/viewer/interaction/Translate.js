@@ -102,6 +102,15 @@ class Translate extends OlTranslate {
             this,
             TRANSLATING,
             function(event) {
+                // If dragging a single shape, update the ShapeEditPopup
+                if (event.features.getArray().length == 1) {
+                    let geometry = event.features.getArray()[0].getGeometry();
+                    this.regions_.viewer_.viewer_.getOverlays().forEach(o => {
+                        if (o.updatePopupCoordinates) {
+                            o.updatePopupCoordinates(geometry);
+                        }
+                    });
+                }
                 // start the history for the translate
                 // if we haven't done so already
                 if (this.hist_id_ >= 0 ||

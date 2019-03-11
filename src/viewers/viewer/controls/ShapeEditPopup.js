@@ -20,7 +20,7 @@
 import Pointer from 'ol/interaction/Pointer';
 import Overlay from 'ol/Overlay.js';
 import {getTopLeft, getTopRight} from 'ol/extent';
-import {featuresAtCoords} from '../utils/Misc';
+import {sendEventNotification} from '../utils/Misc';
 
 /**
  * @classdesc
@@ -43,11 +43,17 @@ class ShapeEditPopup extends Overlay {
         if (!popup) {
             popup = document.createElement('div');
             popup.className = 'shape-edit-popup';
-            popup.innerHTML = '<div>Edit Me</div>';
+            popup.innerHTML = `<div>
+                <input id='shape-popup-edit-text'
+                    placeholder='Edit shape comment'
+                    value=''/>
+                <div id='shape-popup-coords'></div>
+                </div>`;
             // add flag to the event so that the Hover interaction can ignore it
             popup.onpointermove = function(e) {
                 e.isOverShapeEditPopup = true;
             };
+
         }
 
         super({
@@ -59,12 +65,18 @@ class ShapeEditPopup extends Overlay {
             }
         });
 
+        // TODO: Don't need to store all of these!
         this.popup = popup;
+        this.regions = regions_reference;
+        this.viewer_ = regions_reference.viewer_;
         this.map = regions_reference.viewer_.viewer_;
         this.map.addOverlay(this);
+        this.bindListeners();
     };
 
     showPopupForShape(feature) {
+        // Hide any current Hover popup
+        this.map.getOverlays().forEach(o => o.setPosition(undefined));
 
         let geom = feature.getGeometry();
         let extent = geom.getExtent();
@@ -77,16 +89,67 @@ class ShapeEditPopup extends Overlay {
             text = textStyle.getText();
         }
 
-        this.popup.innerHTML = `<div style='width: 300px'>
-                                    <input value='${ text }'/>
-                                    </div>`;
+        // so we know which shape we're editing...
+        this.shapeId = feature.getId();
+
+        let coordsText = '';
+        if (geom.getDisplayCoords) {
+            coordsText = geom.getDisplayCoords()
+                .map(kv => `<b>${ kv[0] }</b>:
+                ${ kv[1].length > 50 ? (kv[1].substr(0, 50) + '...') : kv[1] }`)
+            .join(', ');
+        }
+        document.getElementById('shape-popup-edit-text').value = text;
+        document.getElementById('shape-popup-coords').innerHTML = coordsText;
         this.setPosition([midX, y]);
+    }
+
+    /**
+     * When dragging (translating) or modifying we want to update the display
+     * and position of the popup.
+     *
+     * @param {ol.Geometry} geom The shape geometry we're editing
+     */
+    updatePopupCoordinates(geom) {
+        let extent = geom.getExtent();
+        let midX = (getTopLeft(extent)[0] + getTopRight(extent)[0]) / 2;
+        let y = getTopLeft(extent)[1];
+
+        let coordsText = '';
+        if (geom.getDisplayCoords) {
+            coordsText = geom.getDisplayCoords()
+                .map(kv => `<b>${ kv[0] }</b>:
+                    ${ kv[1].length > 50 ? (kv[1].substr(0, 50) + '...') : kv[1] }`)
+                .join(', ');
+        }
+        document.getElementById('shape-popup-coords').innerHTML = coordsText;
+        this.setPosition([midX, y]);
+    }
+
+    // TODO: Needs more work to notify Aurelia UI of changes
+    bindListeners() {
+        document.getElementById('shape-popup-edit-text').onkeyup = (event) => {
+            let value = event.target.value;
+            // this.viewer.modifyRegionsStyle({Text: value}, [this.shapeId]);
+            // this.regions.setProperty([this.shapeId], 'oldText', value);
+
+            sendEventNotification(
+                this.viewer_, "REGIONS_MODIFY_SHAPES", {
+                    shapes: [this.shapeId],
+                    definition: {Text: value},
+                }, 25);
+        }
+    }
+
+    unbindListeners() {
+        // TODO: remove all listeners added above
     }
 
     /**
      * a sort of destructor - remove the overlay from the map
      */
     disposeInternal() {
+        this.unbindListeners();
         this.setPosition(undefined);
         this.map.removeOverlay(this);
         this.map = null;

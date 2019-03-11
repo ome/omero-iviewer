@@ -225,7 +225,11 @@ class Ellipse extends Polygon {
             this.cx_, this.cy_, this.rx_, this.ry_, this.getTransform());
     }
 
-    displayCoords() {
+    /**
+     * For displaying coords, this returns a list of [name, value] pairs
+     * @return {List} 2D list of 'name', vaule pairs.
+     */
+    getDisplayCoords() {
         return [['x', this.cx_.toFixed(1)],
                 ['y', -this.cy_.toFixed(1)],
                 ['rx', this.rx_.toFixed(1)],
