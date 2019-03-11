@@ -25,7 +25,6 @@ import {shiftKeyOnly,
     pointerMove,
     click} from 'ol/events/condition';
 import Regions from '../source/Regions';
-import ShapeEditPopup from '../controls/ShapeEditPopup';
 import {isArray,
     featuresAtCoords} from '../utils/Misc';
 
@@ -90,11 +89,6 @@ class Select extends Interaction {
          * @type {ol.interaction.SelectFilterFunction}
          */
         this.filter_ = TRUE;
-
-        /**
-         * Overlay to show a popup for editing shapes
-         */
-        this.shapeEditPopup = new ShapeEditPopup(regions_reference);
     };
 
     /**
@@ -124,7 +118,11 @@ class Select extends Interaction {
         }
 
         var selected = this.featuresAtCoords_(mapBrowserEvent.pixel);
-        this.shapeEditPopup.setPosition(undefined);
+
+        // Hide the ShapeEditPopup
+        this.regions_.viewer_.viewer_.getOverlays().forEach(o => {
+            o.setPosition(undefined);
+        });
 
         var oldSelectedFlag =
             selected && typeof selected['selected'] === 'boolean' ?
@@ -136,7 +134,12 @@ class Select extends Interaction {
         this.regions_.setProperty([selected.getId()], "selected", !oldSelectedFlag);
 
         if (!oldSelectedFlag){
-            this.shapeEditPopup.showPopupForShape(selected);
+            // Show the ShapeEditPopup
+            this.regions_.viewer_.viewer_.getOverlays().forEach(o => {
+                if (o.showPopupForShape) {
+                    o.showPopupForShape(selected);
+                }
+            });
         }
 
         return pointerMove(mapBrowserEvent);
@@ -213,7 +216,6 @@ class Select extends Interaction {
      */
     disposeInternal() {
         this.regions_ = null;
-        this.shapeEditPopup.dispose();
     }
 }
 

@@ -66,6 +66,44 @@ const DrawEventType = {
 };
 
 /**
+ * Extend the ol.Draw class so we can handle start and move events and
+ * display the ShapeEditPopup overlay
+ */
+class DrawWithPopup extends OlDraw {
+
+    /**
+     * Override to refresh the ShapeEditPopup when we start drawing
+     * @param {Object} event
+     */
+    startDrawing_(event) {
+        let result = super.startDrawing_(event);
+        if (this.sketchFeature_) {
+            event.map.getOverlays().forEach(o => {
+                if (o.showPopupForShape) {
+                    o.showPopupForShape(this.sketchFeature_);
+                }
+            });
+        }
+        return result;
+    }
+
+    /**
+     * Override to update the ShapeEditPopup as it's being created
+     * @param {Object} event
+     */
+    handlePointerMove_(event) {
+        if (this.sketchFeature_) {
+            event.map.getOverlays().forEach(o => {
+                if (o.updatePopupCoordinates) {
+                    o.updatePopupCoordinates(this.sketchFeature_.getGeometry());
+                }
+            });
+        }
+        return super.handlePointerMove_(event);
+    }
+}
+
+/**
  * @classdesc
  * Encapsulates the drawing logic. This 'interaction' differs from others
  * in that it does not extend its openlayers parent but rather wraps it
@@ -232,7 +270,7 @@ class Draw {
         // create a new draw interaction removing possible existing ones first
         if (this.ol_draw_)
             this.regions_.viewer_.viewer_.removeInteraction(this.ol_draw_);
-        this.ol_draw_ = new OlDraw({
+        this.ol_draw_ = new DrawWithPopup({
             style: this.default_style_function_,
             type: ol_shape,
             condition: function(e) {

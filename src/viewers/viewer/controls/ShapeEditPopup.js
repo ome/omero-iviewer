@@ -16,8 +16,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-// import Feature from 'ol/Feature';
-import Pointer from 'ol/interaction/Pointer';
 import Overlay from 'ol/Overlay.js';
 import {getTopLeft, getTopRight} from 'ol/extent';
 import {sendEventNotification} from '../utils/Misc';
@@ -70,6 +68,7 @@ class ShapeEditPopup extends Overlay {
         this.regions = regions_reference;
         this.viewer_ = regions_reference.viewer_;
         this.map = regions_reference.viewer_.viewer_;
+        // Need to add to map before we can bindListeners() to DOM elements
         this.map.addOverlay(this);
         this.bindListeners();
     };

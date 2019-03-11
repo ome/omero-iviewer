@@ -34,6 +34,7 @@ import {intersects, getCenter} from 'ol/extent';
 import {noModifierKeys, primaryAction} from 'ol/events/condition';
 
 import Draw from './interaction/Draw';
+import ShapeEditPopup from './controls/ShapeEditPopup';
 import {checkAndSanitizeServerAddress,
     isSameOrigin,
     sendRequest,
@@ -740,6 +741,9 @@ class Viewer extends OlObject {
                 REGIONS_MODE['MODIFY'],
                 REGIONS_MODE['TRANSLATE']]);
         }
+
+        //Overlay to show a popup for editing shapes (adds itself to map)
+        new ShapeEditPopup(this.regions_);
     }
 
     /**
