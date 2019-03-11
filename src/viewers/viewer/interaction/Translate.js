@@ -220,42 +220,6 @@ class Translate extends OlTranslate {
     };
 
     /**
-     * @param {ol.MapBrowserPointerEvent} event Event.
-     * @this {ol.interaction.Translate}
-     * @private
-     */
-    handleDragEvent_(event) {
-        if (this.lastCoordinate_) {
-            var newCoordinate = event.coordinate;
-            var deltaX = newCoordinate[0] - this.lastCoordinate_[0];
-            var deltaY = newCoordinate[1] - this.lastCoordinate_[1];
-
-            var features = this.features_ || new Collection([this.lastFeature_]);
-            var filteredFeatures = new Collection();
-
-            var featuresArray = features.getArray();
-            for (var x=0;x<featuresArray.length;x++) {
-                var feature = featuresArray[x];
-                if (feature.getGeometry() instanceof Mask ||
-                    (typeof feature['permissions'] === 'object' &&
-                    feature['permissions'] !== null &&
-                    typeof feature['permissions']['canEdit'] === 'boolean' &&
-                    !feature['permissions']['canEdit'])) continue;
-                var geom = feature.getGeometry();
-                geom.translate(deltaX, deltaY);
-                feature.setGeometry(geom);
-                filteredFeatures.push(feature);
-            }
-
-            this.lastCoordinate_ = newCoordinate;
-            this.dispatchEvent(
-                new TranslateEvent(
-                    'translating', filteredFeatures,
-                    newCoordinate));
-        }
-    };
-
-    /**
      * Tests to see if the given coordinates intersects any of our features
      * as well as a permissions check
      * @param {ol.Coordinate} coord coordinate to test for intersection.
