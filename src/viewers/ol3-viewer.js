@@ -694,6 +694,15 @@ export default class Ol3Viewer extends EventSubscriber {
                             refOrCopy.Area = measurements[0].Area;
                             refOrCopy.Length = measurements[0].Length;
                     }
+
+                    // If we've modified Text, apply to shape to display in table
+                    let feature = this.viewer.getRegions().getFeatureById(shape);
+                    if (feature && feature['oldText']) {
+                        let textStyle = feature['oldText'];
+                        if (textStyle.getText()) {
+                            refOrCopy.Text = textStyle.getText();
+                        }
+                    }
                 }
             }
      }
