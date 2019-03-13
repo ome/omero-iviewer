@@ -1532,6 +1532,16 @@ class Viewer extends OlObject {
         modifyStyles(
             shape_info, this.regions_,
             this.getFeatureCollection(ids), callback);
+
+        // Update any popup that might be showing shape Text
+        if (shape_info.hasOwnProperty('Text')) {
+            // Update the ShapeEditPopup
+            this.viewer_.getOverlays().forEach(o => {
+                if (o.updatePopupText) {
+                    o.updatePopupText(ids);
+                }
+            });
+        }
     }
 
     /**

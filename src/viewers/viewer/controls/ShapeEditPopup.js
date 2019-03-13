@@ -73,6 +73,12 @@ class ShapeEditPopup extends Overlay {
         this.bindListeners();
     };
 
+    /**
+     * Shows the popup Overlay above the Feature with text & coordinates
+     * from the feature.
+     *
+     * @param {ol.Feature} feature
+     */
     showPopupForShape(feature) {
         // Hide any current Hover popup
         this.map.getOverlays().forEach(o => o.setPosition(undefined));
@@ -87,7 +93,6 @@ class ShapeEditPopup extends Overlay {
         if (textStyle && textStyle.getText() && textStyle.getText().length > 0) {
             text = textStyle.getText();
         }
-        this.currentText = text.length > 0 ? text : undefined;
 
         // so we know which shape we're editing...
         this.shapeId = feature.getId();
@@ -102,6 +107,27 @@ class ShapeEditPopup extends Overlay {
         document.getElementById('shape-popup-edit-text').value = text;
         document.getElementById('shape-popup-coords').innerHTML = coordsText;
         this.setPosition([midX, y]);
+    }
+
+    /**
+     * Updates the Text input value in the Popup if current shapeId is in
+     * the list of shape_ids (but doesn't show the popup
+     * if it's not already visible);
+     *
+     * @param {Array} shape_ids List of ['roi:shape'] ids
+     */
+    updatePopupText(shape_ids) {
+        if (this.shapeId && shape_ids.indexOf(this.shapeId) > -1) {
+            let feature = this.regions.getFeatureById(this.shapeId);
+            if (feature) {
+                let textStyle = feature['oldText'];
+                let text = "";
+                if (textStyle && textStyle.getText() && textStyle.getText().length > 0) {
+                    text = textStyle.getText();
+                }
+                document.getElementById('shape-popup-edit-text').value = text;
+            }
+        }
     }
 
     /**
