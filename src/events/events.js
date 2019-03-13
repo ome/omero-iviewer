@@ -34,6 +34,8 @@ export const IMAGE_SETTINGS_CHANGE = "IMAGE_SETTINGS_CHANGE";
 export const VIEWER_PROJECTIONS_SYNC = "VIEWER_PROJECTIONS_SYNC";
 /** whenever an image dimension (c,t,z) changes */
 export const IMAGE_DIMENSION_CHANGE = "IMAGE_DIMENSION_CHANGE";
+/** whenever shape Comment change comes from the Image viewer */
+export const IMAGE_COMMENT_CHANGE = "IMAGE_COMMENT_CHANGE";
 /** whenever the dimension play should be started/stopped */
 export const IMAGE_DIMENSION_PLAY = "IMAGE_DIMENSION_PLAY";
 /** whenever the viewport canvas data should be captured */

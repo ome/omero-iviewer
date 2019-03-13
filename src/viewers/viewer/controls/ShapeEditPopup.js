@@ -130,20 +130,16 @@ class ShapeEditPopup extends Overlay {
     bindListeners() {
         document.getElementById('shape-popup-edit-text').onkeyup = (event) => {
             let value = event.target.value;
-            // this.viewer.modifyRegionsStyle({Text: value}, [this.shapeId]);
-            // this.regions.setProperty([this.shapeId], 'oldText', value);
+
+            // Handled by Right panel UI, regions-edit.js
             sendEventNotification(
                 this.viewer_,
-                "REGIONS_HISTORY_ENTRY",
-                {oldText: this.currentText,
-                 newText: value,
-                    shape_ids: [this.shapeId]});
-
-            sendEventNotification(
-                this.viewer_, "REGIONS_MODIFY_SHAPES", {
+                "IMAGE_COMMENT_CHANGE",
+                {
                     shapes: [this.shapeId],
-                    definition: {Text: value},
-                }, 25);
+                    Text: value,
+                }
+            );
         }
     }
 

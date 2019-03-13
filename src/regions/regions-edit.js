@@ -27,6 +27,7 @@ import {
 } from '../utils/constants';
 import {
     IMAGE_DIMENSION_CHANGE, REGIONS_MODIFY_SHAPES, REGIONS_SET_PROPERTY,
+    IMAGE_COMMENT_CHANGE,
     EventSubscriber
 } from '../events/events';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
@@ -69,7 +70,9 @@ export default class RegionsEdit extends EventSubscriber {
      * @memberof RegionsEdit
      * @type {Array.<string,function>}
      */
-    sub_list = [[IMAGE_DIMENSION_CHANGE, () => this.adjustEditWidgets()]];
+    sub_list = [[IMAGE_DIMENSION_CHANGE, () => this.adjustEditWidgets()],
+                [IMAGE_COMMENT_CHANGE,
+                    (params={}) => this.handleImageCommentChange(params)]];
 
     /**
      * @memberof RegionsEdit
@@ -292,6 +295,14 @@ export default class RegionsEdit extends EventSubscriber {
                 ['FontSize', 'FontStyle', 'FontFamily'],
                 [Object.assign({}, deltaProps.FontSize),
                  deltaProps.FontStyle, deltaProps.FontFamily]));
+    }
+
+    /**
+     * Handles shape Comment changes from the ol-viewer ShapeEditPopup.
+     * Here, we can add to history with callbacks to update right panel UI.
+     */
+    handleImageCommentChange(params) {
+        this.onCommentChange(params.Text, this.last_selected);
     }
 
     /**
