@@ -1216,15 +1216,30 @@ export default class Ol3Viewer extends EventSubscriber {
      */
     addHistoryEntry(params) {
         // the event doesn't concern us or we don't have a numeric history id
-        if (params.config_id !== this.image_config.id ||
-            typeof params.hist_id !== 'number') return;
+        if (params.config_id !== this.image_config.id) return;
 
         // we record the ol3 history id from a geometry modification/translation
         let history = this.image_config.regions_info.history;
-        history.addHistory(
-            history.getHistoryId(),
-            history.action.OL_ACTION,
-            {hist_id : params.hist_id, shape_ids: params.shape_ids});
+
+        // Handle Text edited (e.g. by ShapeEditPopup)...
+        if (params.newText) {
+            history.addHistory(
+                history.getHistoryId(),
+                history.action.PROPERTIES,
+                {diffs: ['Text', 'modified'],
+                 modifies_attachment: false,
+                 new_vals: [params.newText, true],
+                 old_vals: [params.oldText, false],
+                 shape_id: params.shape_ids[0]});
+        } else {
+            // Handle geometry (the actual old/new values are stored within the
+            // separate Regions history)
+            if (typeof params.hist_id !== 'number') return;
+            history.addHistory(
+                history.getHistoryId(),
+                history.action.OL_ACTION,
+                {hist_id : params.hist_id, shape_ids: params.shape_ids});
+        }
     }
 
     /**

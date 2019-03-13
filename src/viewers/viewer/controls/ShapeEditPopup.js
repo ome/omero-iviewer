@@ -87,6 +87,7 @@ class ShapeEditPopup extends Overlay {
         if (textStyle && textStyle.getText() && textStyle.getText().length > 0) {
             text = textStyle.getText();
         }
+        this.currentText = text.length > 0 ? text : undefined;
 
         // so we know which shape we're editing...
         this.shapeId = feature.getId();
@@ -131,6 +132,12 @@ class ShapeEditPopup extends Overlay {
             let value = event.target.value;
             // this.viewer.modifyRegionsStyle({Text: value}, [this.shapeId]);
             // this.regions.setProperty([this.shapeId], 'oldText', value);
+            sendEventNotification(
+                this.viewer_,
+                "REGIONS_HISTORY_ENTRY",
+                {oldText: this.currentText,
+                 newText: value,
+                    shape_ids: [this.shapeId]});
 
             sendEventNotification(
                 this.viewer_, "REGIONS_MODIFY_SHAPES", {
