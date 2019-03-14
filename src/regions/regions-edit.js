@@ -302,7 +302,11 @@ export default class RegionsEdit extends EventSubscriber {
      * Here, we can add to history with callbacks to update right panel UI.
      */
     handleImageCommentChange(params) {
-        this.onCommentChange(params.Text, this.last_selected);
+        if (!params.shapeId) return;
+        let shape = this.regions_info.getShape(params.shapeId);
+        if (shape) {
+            this.onCommentChange(params.Text, shape);
+        }
     }
 
     /**
@@ -321,7 +325,9 @@ export default class RegionsEdit extends EventSubscriber {
 
         this.modifyShapes(
             deltaProps,
-            this.createUpdateHandler(['Text'], [comment]));
+            this.createUpdateHandler(['Text'], [comment]),
+            false,
+            shape.oldId);
     }
 
     /**
@@ -400,23 +406,30 @@ export default class RegionsEdit extends EventSubscriber {
     }
 
     /**
-     * Notifies the viewer to change the shaape according to the new shape
-     * definition
+     * Notifies the viewer to change the currently selected shapes (by default)
+     * according to the new shape definition
      *
      * @param {Object} shape_definition the object definition incl. attributes
      *                                  to be changed
      * @param {function} callback a callback function on success
      * @param {boolean} modifies_attachment does definition alter z/t attachment
+     * @param {Object} current_shape Option to specify a particular shape to edit
+     *                  Other
      * @memberof RegionsEdit
      */
-    modifyShapes(shape_definition, callback = null, modifies_attachment = false) {
+    modifyShapes(shape_definition, callback = null, modifies_attachment = false,
+            current_shape) {
         if (typeof shape_definition !== 'object' ||
                 shape_definition === null) return;
 
+        let shapes = this.regions_info.selected_shapes;
+        if (current_shape) {
+            shapes = [current_shape];
+        }
         this.context.publish(
            REGIONS_MODIFY_SHAPES, {
                config_id: this.regions_info.image_info.config_id,
-               shapes: this.regions_info.selected_shapes,
+               shapes: shapes,
                modifies_attachment: modifies_attachment,
                definition: shape_definition,
                 callback: callback});

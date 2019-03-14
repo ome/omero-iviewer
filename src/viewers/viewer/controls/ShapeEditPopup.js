@@ -116,17 +116,9 @@ class ShapeEditPopup extends Overlay {
      *
      * @param {Array} shape_ids List of ['roi:shape'] ids
      */
-    updatePopupText(shape_ids) {
+    updatePopupText(shape_ids, text) {
         if (this.shapeId && shape_ids.indexOf(this.shapeId) > -1) {
-            let feature = this.regions.getFeatureById(this.shapeId);
-            if (feature) {
-                let textStyle = feature['oldText'];
-                let text = "";
-                if (textStyle && textStyle.getText() && textStyle.getText().length > 0) {
-                    text = textStyle.getText();
-                }
-                document.getElementById('shape-popup-edit-text').value = text;
-            }
+            document.getElementById('shape-popup-edit-text').value = text;
         }
     }
 
@@ -166,7 +158,7 @@ class ShapeEditPopup extends Overlay {
                 this.viewer_,
                 "IMAGE_COMMENT_CHANGE",
                 {
-                    shapes: [this.shapeId],
+                    shapeId: this.shapeId,
                     Text: value,
                 }
             );

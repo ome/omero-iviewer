@@ -1538,7 +1538,7 @@ class Viewer extends OlObject {
             // Update the ShapeEditPopup
             this.viewer_.getOverlays().forEach(o => {
                 if (o.updatePopupText) {
-                    o.updatePopupText(ids);
+                    o.updatePopupText(ids, shape_info.Text);
                 }
             });
         }
