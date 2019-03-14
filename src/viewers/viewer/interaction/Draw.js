@@ -73,11 +73,6 @@ const DrawEventType = {
 class DrawWithPopup extends OlDraw {
 
     /**
-     * The ol.Map. We need this for finishDrawing.
-     */
-    map;
-
-    /**
      * Override to refresh the ShapeEditPopup when we start drawing
      *
      * @param {Object} event
