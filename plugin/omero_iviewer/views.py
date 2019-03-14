@@ -278,6 +278,7 @@ def rois_by_plane(request, image_id, the_z, the_t, z_end=None, t_end=None,
 
     return JsonResponse({'data': marshalled, 'meta': meta})
 
+
 @login_required()
 def plane_shape_counts(request, image_id, conn=None, **kwargs):
     """
@@ -342,6 +343,7 @@ def plane_shape_counts(request, image_id, conn=None, **kwargs):
                 counts[the_z][the_t] += count
 
     return JsonResponse({'data': counts})
+
 
 @login_required()
 def image_data(request, image_id, conn=None, **kwargs):
