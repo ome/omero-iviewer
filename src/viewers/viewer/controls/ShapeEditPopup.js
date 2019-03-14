@@ -152,11 +152,15 @@ class ShapeEditPopup extends Overlay {
         this.setPosition([midX, y]);
     }
 
-    // TODO: Needs more work to notify Aurelia UI of changes
+    /**
+     * Add Listeners for events.
+     */
     bindListeners() {
         document.getElementById('shape-popup-edit-text').onkeyup = (event) => {
-            let value = event.target.value;
+            // Ignore all keys except the Return key to save
+            if (event.which !== 13) return;
 
+            let value = event.target.value;
             // Handled by Right panel UI, regions-edit.js
             sendEventNotification(
                 this.viewer_,
@@ -169,8 +173,11 @@ class ShapeEditPopup extends Overlay {
         }
     }
 
+    /**
+     * Removes listeners added above
+     */
     unbindListeners() {
-        // TODO: remove all listeners added above
+        document.getElementById('shape-popup-edit-text').onkeyup = null;
     }
 
     /**
