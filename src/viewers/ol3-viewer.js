@@ -1434,7 +1434,10 @@ export default class Ol3Viewer extends EventSubscriber {
         args.push([REQUEST_PARAMS.CHANNELS, chs.join(",")]);
         args.push([REQUEST_PARAMS.MODEL, image_info.model.toLowerCase()[0]]);
 
-        let maps = channels.map(ch => ({inverted:{enabled:ch.inverted}}));
+        let maps = channels.map(ch => ({
+            inverted: {enabled:ch.inverted},
+            quantization: {family: ch.family, coefficient: ch.coefficient}
+        }));
         args.push([REQUEST_PARAMS.MAPS, JSON.stringify(maps)]);
 
         // Build the URL
