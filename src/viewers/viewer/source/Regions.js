@@ -192,6 +192,11 @@ class Regions extends Vector {
         this.history_id_ = 0;
 
         /**
+         * ID of shape we are hovering over, or null if none.
+         */
+        this.hoverId = null;
+
+        /**
          * The initialization function performs the following steps:
          * 1. Make an ajax request for the regions data as json and store it internally
          * 2. Convert the json response into open layers objects
@@ -671,6 +676,23 @@ class Regions extends Vector {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Sets the ID of a shape that we are hovering over, to update it's style
+     *
+     * @param {string} shapeId shapeId 'roi:shape'
+     */
+    setHoverId(shapeId) {
+        this.hoverId = shapeId;
+        this.changed();
+    }
+
+    /**
+     * Gets the current ID of a shape we are hovering over or null.
+     */
+    getHoverId() {
+        return this.hoverId;
     }
 
     /**

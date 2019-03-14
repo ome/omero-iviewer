@@ -47,6 +47,7 @@ class Hover extends Pointer {
             this.tooltip.className = 'hover-popup';
         }
 
+        this.regions_ = regions_reference;
         this.map = regions_reference.viewer_.viewer_;
 
         this.overlay = new Overlay({
@@ -94,6 +95,16 @@ class Hover extends Pointer {
                                             ${ textStyle.getText() }
                                         </div>`;
                 this.overlay.setPosition([coords[0], coords[1] + 20]);
+            }
+            // hover effect
+            let shapeId = hit.getId();
+            // if change in hover
+            if (this.regions_.getHoverId() != shapeId) {
+                this.regions_.setHoverId(shapeId);
+            }
+        } else {
+            if (this.regions_.getHoverId()) {
+                this.regions_.setHoverId(null);
             }
         }
     }
