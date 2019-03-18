@@ -18,6 +18,7 @@
 
 import Vector from 'ol/source/Vector';
 import Feature from 'ol/Feature';
+import Geometry from 'ol/geom/Geometry';
 import Viewer from '../Viewer';
 import Draw from '../interaction/Draw';
 import Select from '../interaction/Select';
@@ -878,12 +879,12 @@ class Regions extends Vector {
     /**
      * Returns the area and length values for a given shape
      *
-     * @param {ol.Feature} feature the ol3 feature representing the shape
+     * @param {ol.Feature or ol.geom.Geometry} feature the ol3 feature representing the shape
      * @param {boolean} recalculate flag: if true we redo the measurement (default: false)
      * @return {Object|null} an object containing shape id, area and length or null
      */
     getLengthAndAreaForShape(feature, recalculate) {
-            if (!(feature instanceof Feature)) return null;
+            if (!(feature instanceof Feature || feature instanceof Geometry)) return null;
 
             if (typeof recalculate !== 'boolean') recalculate = false;
 
