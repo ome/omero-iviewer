@@ -263,7 +263,8 @@ export default class RegionsList extends EventSubscriber {
             let last_plane = image_info.dimensions['max_' + params.dim] - 1;
             let dim_value = image_info.dimensions[params.dim];
             // If movie is playing and we're not on the last plane - ignore
-            if (image_config.is_movie_playing && dim_value < last_plane) {
+            if (image_config.is_movie_playing && dim_value < last_plane &&
+                    this.regions_info.isRoiLoadingPaginatedByPlane()) {
                 this.regions_info.resetRegionsInfo();
                 return;
             }

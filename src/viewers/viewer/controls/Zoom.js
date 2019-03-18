@@ -178,8 +178,6 @@ class Zoom extends Control {
                 var view = map ? map.getView() : null;
                 if (view === null) return;
                 view.setResolution(1);
-                var ext = view.getProjection().getExtent();
-                view.setCenter([(ext[2]-ext[0])/2, -(ext[3]-ext[1])/2]);
             }, this);
 
         return oneToOneElement;

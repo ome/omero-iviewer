@@ -416,7 +416,7 @@ export default class ThumbnailSlider extends EventSubscriber {
         }
         if (unloaded.length > 0) {
             thumb_start_index = unloaded[0];
-            thumb_end_index = unloaded[unloaded.length-1];
+            thumb_end_index = unloaded[unloaded.length-1] + 1;
             this.requestMoreThumbnails(init, refresh, thumb_start_index, thumb_end_index);
         }
     }
