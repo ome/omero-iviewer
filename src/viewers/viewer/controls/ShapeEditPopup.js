@@ -83,11 +83,6 @@ class ShapeEditPopup extends Overlay {
         // Hide any current Hover popup
         this.map.getOverlays().forEach(o => o.setPosition(undefined));
 
-        let geom = feature.getGeometry();
-        let extent = geom.getExtent();
-        let midX = (getTopLeft(extent)[0] + getTopRight(extent)[0]) / 2;
-        let y = getTopLeft(extent)[1];
-
         let textStyle = feature['oldText'];
         let text = "";
         if (textStyle && textStyle.getText() && textStyle.getText().length > 0) {
@@ -97,19 +92,11 @@ class ShapeEditPopup extends Overlay {
         // so we know which shape we're editing...
         this.shapeId = feature.getId();
 
-        let coordsText = '';
-        if (geom.getDisplayCoords) {
-            coordsText = geom.getDisplayCoords()
-                .map(kv => `<b>${ kv[0] }</b>:
-                ${ kv[1].length > 50 ? (kv[1].substr(0, 50) + '...') : kv[1] }`)
-            .join(', ');
-        }
         document.getElementById('shape-popup-edit-text').value = text;
-        document.getElementById('shape-popup-coords').innerHTML = coordsText;
 
         // show if feature is visible
         if (this.regions.renderFeature(feature)) {
-            this.setPosition([midX, y]);
+            this.updatePopupCoordinates(feature.getGeometry());
         }
     }
 
