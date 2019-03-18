@@ -158,6 +158,14 @@ class ShapeEditPopup extends Overlay {
                     ${ kv[1].length > 50 ? (kv[1].substr(0, 50) + '...') : kv[1] }`)
                 .join(', ');
         }
+
+        let areaLength = this.regions.getLengthAndAreaForShape(geom);
+        let unit = this.regions.viewer_.image_info_['pixel_size']['symbol_x'] || 'px';
+        ['Area', 'Length'].forEach(dim => {
+            if (areaLength.hasOwnProperty(dim)) {
+                coordsText += `<br/><b> ${ dim }</b>: ${ areaLength[dim] } ${ unit }${ dim == 'Area' ? '&#178;' : ''}`;
+            }
+        })
         document.getElementById('shape-popup-coords').innerHTML = coordsText;
         this.setPosition([midX, y]);
     }
