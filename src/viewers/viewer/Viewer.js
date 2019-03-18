@@ -1142,6 +1142,13 @@ class Viewer extends OlObject {
 
         // update regions (if necessary)
         if (this.getRegionsLayer()) this.getRegions().changed();
+
+        // update popup (hide it if shape no longer visible)
+        this.viewer_.getOverlays().forEach(o => {
+            if (o.updatePopupVisibility) {
+                o.updatePopupVisibility();
+            }
+        });
     }
 
     /**

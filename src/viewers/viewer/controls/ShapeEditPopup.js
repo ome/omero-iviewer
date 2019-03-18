@@ -106,7 +106,11 @@ class ShapeEditPopup extends Overlay {
         }
         document.getElementById('shape-popup-edit-text').value = text;
         document.getElementById('shape-popup-coords').innerHTML = coordsText;
-        this.setPosition([midX, y]);
+
+        // show if feature is visible
+        if (this.regions.renderFeature(feature)) {
+            this.setPosition([midX, y]);
+        }
     }
 
     /**
@@ -119,6 +123,33 @@ class ShapeEditPopup extends Overlay {
     updatePopupText(shape_ids, text) {
         if (this.shapeId && shape_ids.indexOf(this.shapeId) > -1) {
             document.getElementById('shape-popup-edit-text').value = text;
+        }
+    }
+
+    /**
+     * Update visibility of Popup, according to the current shapeId;
+     */
+    updatePopupVisibility() {
+        if (this.shapeId) {
+            let feature = this.regions.getFeatureById(this.shapeId);
+            if (feature && this.regions.renderFeature(feature)) {
+                this.updatePopupCoordinates(feature.getGeometry());
+            } else {
+                this.setPosition(undefined);
+            }
+        }
+    }
+
+    /**
+     * Hides the popup and clears the shapeId.
+     * If shapeId is specified, only hide if this matches current shapeId.
+     *
+     * @param {string} shapeId Optional: in the form of 'roi:shape' ID
+     */
+    hideShapeEditPopup(shapeId) {
+        if (shapeId === this.shapeId || shapeId === undefined) {
+            this.shapeId = undefined;
+            this.setPosition(undefined);
         }
     }
 
