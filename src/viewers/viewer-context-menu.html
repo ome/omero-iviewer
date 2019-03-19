@@ -18,6 +18,10 @@
 
 <template>
     <ul class="viewer-context-menu dropdown-menu" role="menu"">
+        <li title="Toggle the showing of a popup above selected ROIs">
+            <a click.delegate="enableShapePopup()" tabindex="-1" href="#">
+                ${ shape_popup_enabled ? "Disable" : "Enable" } ROI Popup</a>
+        </li>
         <li show.bind="image_config.regions_info.ready"
             class="${image_config.image_info.can_annotate &&
                      image_config.regions_info.copied_shapes.length > 0 ?

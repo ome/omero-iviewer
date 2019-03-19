@@ -169,7 +169,10 @@ class ShapeEditPopup extends Overlay {
             }
         })
         document.getElementById('shape-popup-coords').innerHTML = coordsText;
-        this.setPosition([midX, y]);
+
+        if (this.regions.enable_shape_popup) {
+            this.setPosition([midX, y]);
+        }
     }
 
     /**

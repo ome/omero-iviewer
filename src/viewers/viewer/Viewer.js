@@ -784,6 +784,18 @@ class Viewer extends OlObject {
     }
 
     /**
+     * Enable or disable the showing of a Popup to edit selected shapes.
+     *
+     * @param {boolean} flag
+     */
+    enableShapePopup(flag) {
+        var regions = this.getRegions();
+        if (regions) {
+            regions.enable_shape_popup = flag;
+        }
+    }
+
+    /**
      * Marks given shapes as selected, clearing any previously selected if clear flag
      * is set. Optionally the view centers on a given shape.
      *

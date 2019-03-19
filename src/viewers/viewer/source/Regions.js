@@ -114,6 +114,13 @@ class Regions extends Vector {
         this.show_comments_ = false;
 
         /**
+         * this flag determines whether ShapeEditPopup is shown on selected shape
+         * Defauls to true
+         * @type {boolean}
+         */
+        this.enable_shape_popup = true;
+
+        /**
          * the associated regions information
          * as retrieved from the omero server
          * @type {Object}
