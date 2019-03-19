@@ -41,12 +41,14 @@ class ShapeEditPopup extends Overlay {
         if (!popup) {
             popup = document.createElement('div');
             popup.className = 'shape-edit-popup';
-            popup.innerHTML = `<div>
+            popup.innerHTML = `
+            <div>
                 <input id='shape-popup-edit-text'
                     placeholder='Edit shape comment'
                     value=''/>
                 <div id='shape-popup-coords'></div>
-                </div>`;
+                <a href="#" id="shape-edit-popup-closer" class="shape-edit-popup-closer"></a>
+            </div>`;
             // add flag to the event so that the Hover interaction can ignore it
             popup.onpointermove = function(e) {
                 e.isOverShapeEditPopup = true;
@@ -189,6 +191,11 @@ class ShapeEditPopup extends Overlay {
                 }
             );
         }
+        document.getElementById('shape-edit-popup-closer').onclick = (event) => {
+            this.setPosition(undefined);
+            event.target.blur();
+            return false;
+        };
     }
 
     /**
@@ -196,6 +203,7 @@ class ShapeEditPopup extends Overlay {
      */
     unbindListeners() {
         document.getElementById('shape-popup-edit-text').onkeyup = null;
+        document.getElementById('shape-edit-popup-closer').onclick = null;
     }
 
     /**

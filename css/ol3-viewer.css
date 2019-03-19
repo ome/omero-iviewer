@@ -476,6 +476,7 @@
     -webkit-filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
     filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
     padding: 10px;
+    padding-right: 25px;
     border-radius: 10px;
     border: 1px solid rgba(0,153,255,1);
     bottom: -1px;
@@ -483,4 +484,14 @@
 
 #shape-popup-edit-text {
     width: 100%;
+}
+
+.shape-edit-popup-closer {
+    text-decoration: none;
+    position: absolute;
+    top: 2px;
+    right: 8px;
+}
+.shape-edit-popup-closer:after {
+    content: "✖";
 }
