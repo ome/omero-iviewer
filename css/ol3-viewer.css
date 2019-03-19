@@ -423,11 +423,6 @@
     margin-left: -11px;
 }
 
-.ol-overlay-container {
-    width: 1px;
-    height: 1px;
-}
-
 .hover-popup>div {
     position: relative;
     background-color: white;
