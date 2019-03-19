@@ -222,7 +222,7 @@ export const PROJECTION = {
  */
 export const UNITS_LENGTH = [
     { unit: 'angstrom',
-      threshold: 0.1, multiplier: 10000, symbol: '\u212B'},
+      threshold: 0.01, multiplier: 10000, symbol: '\u212B'},
     { unit: 'nanometer',
       threshold: 1, multiplier: 1000, symbol: 'nm'},
     { unit: 'micron',
@@ -232,7 +232,9 @@ export const UNITS_LENGTH = [
     { unit: 'centimeter',
       threshold: 1000000, multiplier: 0.0001, symbol: 'cm'},
     { unit: 'meter',
-      threshold: 100000000, multiplier: 0.000001, symbol: 'm'}
+      threshold: 1000000000, multiplier: 0.000001, symbol: 'm'},
+    { unit: 'kilometer',
+      threshold: Infinity, multiplier: 0.000000001, symbol: 'km'},
  ];
 
 /**
