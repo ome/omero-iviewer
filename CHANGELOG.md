@@ -1,3 +1,21 @@
+0.7.0a3 (March 2019)
+--------------------
+
+This version includes:
+
+- fix thumbnails loading [#246](https://github.com/ome/omero-iviewer/pull/246)
+- do not change the centre of the viewport when using 1:1 [#247](https://github.com/ome/omero-iviewer/pull/247)
+- fix loading of ROIs when playing movie [#249](https://github.com/ome/omero-iviewer/pull/249)
+- fix permissions issue when loading pixels intensity [#250](https://github.com/ome/omero-iviewer/pull/250) 
+
+
+0.7.0a2 (February 2019)
+-----------------------
+
+This version includes:
+
+- fix issue when deploying to PyPi using Travis CI
+
 0.7.0a1 (February 2019)
 -----------------------
 
