@@ -29,5 +29,9 @@
             <a click.delegate="captureViewport()"
                tabindex="-1" href="#">Save Viewport as PNG</a>
         </li>
+        <li class="${image_config.image_info.ready ? '' : 'disabled-color'}">
+            <a click.delegate="linkToViewport()"
+               tabindex="-1" href="#">Get Link to Viewport</a>
+        </li>
     </ul>
 </template>
