@@ -345,7 +345,9 @@ export class Header {
                         }, {});
         coordHeaders = coordHeaders.filter(attr => shapeAttrs[attr]);
 
-        // Add to other column names
+        // Export Comment / Text for all shapes
+        coordHeaders.unshift("Text");
+        // Add coords to other column names
         header = header.concat(coordHeaders);
 
         // Start csv text with column headers...
