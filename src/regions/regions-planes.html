@@ -44,7 +44,7 @@
                 class="grid_cell ${t_index.tIndex == regions_info.image_info.dimensions.t && selectedZ.indexOf(t_col.length - $index - 1) > -1 ? 'selected' : ''}"
                 ref="z_index" z-index="${ t_col.length - $index - 1 }"
                 style="background: ${ getColor(zt_value) }"
-                title="${zt_value} Shapes T: ${t_index.tIndex + 1}"
+                title="${zt_value} Shapes T: ${ toInt(t_index.tIndex) + 1}, Z: ${ t_col.length - $index }"
                 click.delegate="handleGridClick($event, z_index.zIndex, t_index.tIndex)">
             </div>
             <div class="grid_cell x_axis">

@@ -261,4 +261,13 @@ export default class RegionsPlanes {
         }
         return zPlanes;
     }
+
+    /**
+     * Allow template to use parseInt.
+     *
+     * @param {String} number
+     */
+    toInt(number) {
+        return parseInt(number)
+    }
 }
