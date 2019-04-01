@@ -22,6 +22,13 @@ import {listen, unlistenByKey} from 'ol/events';
 import {UNITS_LENGTH} from '../globals';
 
 /**
+ * For a given pixel unit, e.g. microns, we want the scalebar to be one of
+ * these lengths.
+ */
+const SNAP_TO_LENGTHS = [1, 2, 5, 10, 20, 50,
+                         100, 200, 500, 1000, 2000, 5000, 10000];
+
+/**
  * @classdesc
  * Extends the built ScaleLine
  */
@@ -116,11 +123,10 @@ class ScaleBar extends ScaleLine {
         }
 
         // Find a length value BIGGER than our min target length
-        let snapToLengths = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000];
         var value = 0;
         let pixels = 0;
-        for (let snap=0; snap<snapToLengths.length; snap++) {
-            value = snapToLengths[snap];
+        for (let snap=0; snap<SNAP_TO_LENGTHS.length; snap++) {
+            value = SNAP_TO_LENGTHS[snap];
             if (value >= scaleBarLengthInUnits) {
                 pixels = this.bar_min_width_ * value / scaleBarLengthInUnits;
                 break;
