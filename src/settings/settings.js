@@ -409,6 +409,8 @@ export default class Settings extends EventSubscriber {
             };
             params.success =
                 (response) => {
+                    // Clear any cached settings; Newly saved settings are used
+                    this.context.clearCachedImageSettings();
                     let thumbIds = [imgInf.image_id];
                     if (typeof response === 'object' && response !== null &&
                         Misc.isArray(response.True))

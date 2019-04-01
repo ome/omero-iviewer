@@ -945,6 +945,15 @@ export default class Context {
     }
 
     /**
+     * Clears cache of image settings for all images
+     *
+     * @memberof Context
+     */
+    clearCachedImageSettings() {
+        this.cached_image_settings = {};
+    }
+
+    /**
      * Convenience or short hand way of publishing via the internal eventbus.
      * It will just delegate whatever you hand it as arguments
      *
