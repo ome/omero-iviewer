@@ -324,14 +324,38 @@ export class Header {
             'points', 'min', 'max', 'sum', 'mean', 'std_dev'
         ]
 
-        let csv = "";
-        for (let i=0;i<header.length;i++) {
-            if (i !== 0) csv += ',';
-            csv += Misc.quoteCsvCellValue(header[i]);
+        // Find which of these columns we need for the shape types we have...
+        let coordHeaders = ["X", "Y", "Width", "Height", "RadiusX", "RadiusY",
+                            "X1", "Y1", "X2", "Y2", "Points"];
+        let coordAttrs = {
+            "polygon": ["Points"],
+            "polyline": ["Points"],
+            "line": ["X1", "Y1", "X2", "Y2"],
+            "rectangle": ["X", "Y", "Width", "Height"],
+            "ellipse": ["X", "Y", "RadiusX", "RadiusY"],
+            "label": ["X", "Y"],
+            "point": ["X", "Y"],
         }
+        let shapeAttrs = ids.map(id => regInf.getShape(id).type)
+                        .reduce((prev, shapeType) => {
+                            if (coordAttrs[shapeType]) {
+                                coordAttrs[shapeType].forEach(t => prev[t] = true);
+                            }
+                            return prev;
+                        }, {});
+        coordHeaders = coordHeaders.filter(attr => shapeAttrs[attr]);
+
+        // Export Comment / Text for all shapes
+        coordHeaders.unshift("Text");
+        // Add coords to other column names
+        header = header.concat(coordHeaders);
+
+        // Start csv text with column headers...
+        let csv = header.map(h => Misc.quoteCsvCellValue(h)).join(",");
         csv += CSV_LINE_BREAK;
 
-        for (let i in ids) {
+        // add rows...
+        for (let i=0; i<ids.length; i++) {
             let id = ids[i];
             let shape = regInf.getShape(id);
             if (shape === null) continue;
@@ -348,7 +372,9 @@ export class Header {
             let csvMeasure = "," +
                 (shape.Area < 0 ? '' : shape.Area) + "," +
                 (shape.Length < 0 ? '' : shape.Length) + ",";
-            let emptyRow = ",,,,," + CSV_LINE_BREAK;
+            // Quote to escape commas in Points string
+            let csvCoords = coordHeaders.map(attr => shape[attr] != undefined ? `"${ shape[attr] }"` : '').join(",");
+            let emptyRow = ",,,,,";
             if (typeof shape.stats === 'object' &&
                 shape.stats !== null &&
                 active.length !== 0) {
@@ -365,10 +391,14 @@ export class Header {
                                 stat.points + "," + stat.min + "," +
                                 stat.max + "," + stat.sum + "," +
                                 stat.mean + "," + stat.std_dev +
+                                "," + csvCoords +
                                 CSV_LINE_BREAK;
                          }
                      }
-            } else csv += csvCommonInfo + csvMeasure + emptyRow;
+            } else {
+                csv += csvCommonInfo + csvMeasure + emptyRow +
+                        "," + csvCoords + CSV_LINE_BREAK;
+            }
         }
         let data = null;
         let encErr = true;
