@@ -179,21 +179,29 @@ class ShapeEditPopup extends Overlay {
      * Add Listeners for events.
      */
     bindListeners() {
-        document.getElementById('shape-popup-edit-text').onkeyup = (event) => {
-            // Ignore all keys except the Return key to save
-            if (event.which !== 13) return;
+        let textInput = document.getElementById('shape-popup-edit-text');
+        let inputTimeout;
+        textInput.onkeyup = (event) => {
 
-            let value = event.target.value;
-            // Handled by Right panel UI, regions-edit.js
-            sendEventNotification(
-                this.viewer_,
-                "IMAGE_COMMENT_CHANGE",
-                {
-                    shapeId: this.shapeId,
-                    Text: value,
-                }
-            );
+            // Use a de-bounce to automatically save when user stops typing
+            if (inputTimeout) {
+                clearTimeout(inputTimeout);
+                inputTimeout = undefined;
+            }
+            inputTimeout = setTimeout(() => {
+                let value = event.target.value;
+                // Handled by Right panel UI, regions-edit.js
+                sendEventNotification(
+                    this.viewer_,
+                    "IMAGE_COMMENT_CHANGE",
+                    {
+                        shapeId: this.shapeId,
+                        Text: value,
+                    }
+                );
+            }, 500);
         }
+
         document.getElementById('shape-edit-popup-closer').onclick = (event) => {
             this.setPosition(undefined);
             event.target.blur();
