@@ -111,7 +111,7 @@ class BirdsEye extends Control {
         * @type {Array.<number>}
         * @private
         */
-        this.thumbnail_size_ = [150, 100];
+        this.thumbnail_size_ = [96, 96];
         var fullSidesRatio = this.full_image_size_[0] / this.full_image_size_[1];
         var tmp = [
             this.thumbnail_size_[0],
@@ -314,9 +314,7 @@ class BirdsEye extends Control {
         var map = this.getMap();
         var rev = new Date().getTime();
         if (map) rev += "-" + getTargetId(map.getTargetElement());
-
-        return this.thumbnail_url_ + "/" + this.thumbnail_size_[0] +
-            "/" + this.thumbnail_size_[1] + "/?rev=" + rev;
+        return this.thumbnail_url_ + "/?rev=" + rev;
     }
 
     /**
