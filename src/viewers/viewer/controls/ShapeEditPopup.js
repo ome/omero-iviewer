@@ -17,8 +17,11 @@
 //
 
 import Overlay from 'ol/Overlay.js';
+import Text from 'ol/style/Text';
+import Style from 'ol/style/Style';
 import {getTopLeft, getTopRight} from 'ol/extent';
-import {sendEventNotification} from '../utils/Misc';
+import {isArray,
+        sendEventNotification} from '../utils/Misc';
 
 /**
  * @classdesc
@@ -84,9 +87,18 @@ class ShapeEditPopup extends Overlay {
     showPopupForShape(feature) {
         // Hide any current Hover popup
         this.map.getOverlays().forEach(o => o.setPosition(undefined));
-
-        let textStyle = feature['oldText'];
         let text = "";
+
+        let style = feature.getStyle();
+        if (typeof(style) === 'function') style = style(1);
+        // we can have an array of styles (due to arrows)
+        if (isArray(style))
+            style = style[0];
+        let textStyle = style instanceof Style ? style.getText() : null;
+        // For non-labels (not showing text) we need to use 'oldText'
+        if (textStyle === null && feature['oldText'] instanceof Text) {
+            textStyle = feature['oldText'];
+        }
         if (textStyle && textStyle.getText() && textStyle.getText().length > 0) {
             text = textStyle.getText();
         }
