@@ -220,10 +220,20 @@ class Line extends LineString {
     getDisplayCoords() {
         let coords = this.getLineCoordinates();
         coords = coords.map(c => c.toFixed(1));
-        return [['x1', coords[0]],
+        // A Line has 4 coordinates
+        if (coords.length == 4) {
+            return [['x1', coords[0]],
                 ['y1', -coords[1]],
                 ['x2', coords[2]],
                 ['y2', -coords[3]]];
+        } else {
+            // PolyLine has more 'points'
+            // For even numbers, group 'x,y'...
+            let xy = coords.map((value, index, arr) => {
+                return index % 2 === 0 ? `${ value },${ -arr[index + 1] }` : null;
+            }).filter(v => v);   // remove odd numbers
+            return [['points', xy.join(" ")]];
+        }
     }
 }
 
