@@ -19,7 +19,7 @@ from omero_iviewer.utils import get_version
 
 
 VERSION = (0, 7, 0)
-RC = "a3"
+RC = "a4"
 
 
 __version__ = get_version(VERSION)
