@@ -1,3 +1,13 @@
+0.7.0a4 (April 2019)
+--------------------
+
+This version includes:
+
+- export of ROI coordinates along with pixel intensities [#257](https://github.com/ome/omero-iviewer/pull/257)
+- scalebar displays more user-friendly lengths [#253](https://github.com/ome/omero-iviewer/pull/253)
+- link to current viewport available via context menu [#240](https://github.com/ome/omero-iviewer/pull/240)
+- fix caching of image settings on Save to All [#255](https://github.com/ome/omero-iviewer/pull/255)
+
 0.7.0a3 (March 2019)
 --------------------
 
