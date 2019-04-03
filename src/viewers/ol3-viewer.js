@@ -867,6 +867,14 @@ export default class Ol3Viewer extends EventSubscriber {
             this.viewer.selectShapes(
                 params.shapes, params.value, params.clear,
                 params.center ? shapeSelection : null);
+            // If we've just selected a bunch of shapes, hide the ShapeEditPopup
+            if (params.shapes.length > 1) {
+                this.viewer.viewer_.getOverlays().forEach(o => {
+                    if (o.hideShapeEditPopup) {
+                        o.hideShapeEditPopup();
+                    }
+                });
+            }
         }, delay);
       }
 
