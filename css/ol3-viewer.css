@@ -477,8 +477,11 @@
     bottom: -1px;
 }
 
-#shape-popup-edit-text {
+.shape-edit-popup input {
     width: 100%;
+}
+.shape-edit-popup input:read-only {
+    border-color: transparent;
 }
 
 .shape-edit-popup-closer {

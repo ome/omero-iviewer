@@ -49,7 +49,8 @@ class ShapeEditPopup extends Overlay {
                 <input id='shape-popup-edit-text'
                     placeholder='Edit shape comment'
                     value=''/>
-                <div id='shape-popup-coords'></div>
+                <div><input readonly id='shape-popup-coords'/></div>
+                <div><input readonly id='shape-popup-area'/></div>
                 <a href="#" id="shape-edit-popup-closer" class="shape-edit-popup-closer"></a>
             </div>`;
             // add flag to the event so that the Hover interaction can ignore it
@@ -168,19 +169,20 @@ class ShapeEditPopup extends Overlay {
         let coordsText = '';
         if (geom.getDisplayCoords) {
             coordsText = geom.getDisplayCoords()
-                .map(kv => `<b>${ kv[0] }</b>:
-                    ${ kv[1].length > 50 ? (kv[1].substr(0, 50) + '...') : kv[1] }`)
+                .map(kv => `${ kv[0] }: ${ kv[1] }`)
                 .join(', ');
         }
 
+        let areaText = "";
         let areaLength = this.regions.getLengthAndAreaForShape(geom);
         let unit = this.regions.viewer_.image_info_['pixel_size']['symbol_x'] || 'px';
         ['Area', 'Length'].forEach(dim => {
             if (areaLength.hasOwnProperty(dim)) {
-                coordsText += `<br/><b> ${ dim }</b>: ${ areaLength[dim] } ${ unit }${ dim == 'Area' ? '&#178;' : ''}`;
+                areaText += `${ dim }: ${ areaLength[dim] } ${ unit }${ dim == 'Area' ? '²' : ''}`;
             }
         })
-        document.getElementById('shape-popup-coords').innerHTML = coordsText;
+        document.getElementById('shape-popup-coords').value = coordsText;
+        document.getElementById('shape-popup-area').value = areaText;
 
         if (this.regions.enable_shape_popup) {
             this.setPosition([midX, y]);
