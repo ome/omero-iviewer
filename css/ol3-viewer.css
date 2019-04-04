@@ -36,6 +36,9 @@
     cursor: pointer;
     z-index: 2;
 }
+.ol-control.ol-scale-line {
+    border-radius: 0;
+}
 .ol-scale-line-inner {
     border-bottom: 6px solid #000;
     color: #333;
