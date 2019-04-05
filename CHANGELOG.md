@@ -1,44 +1,24 @@
-0.7.0a4 (April 2019)
---------------------
+0.7.0 (April 2019)
+------------------
 
 This version includes:
 
 - export of ROI coordinates along with pixel intensities [#257](https://github.com/ome/omero-iviewer/pull/257)
-- scalebar displays more user-friendly lengths [#253](https://github.com/ome/omero-iviewer/pull/253)
+- modify scalebar to display user-friendly lengths [#253](https://github.com/ome/omero-iviewer/pull/253)
 - link to current viewport available via context menu [#240](https://github.com/ome/omero-iviewer/pull/240)
 - fix caching of image settings on Save to All [#255](https://github.com/ome/omero-iviewer/pull/255)
-
-0.7.0a3 (March 2019)
---------------------
-
-This version includes:
-
 - fix thumbnails loading [#246](https://github.com/ome/omero-iviewer/pull/246)
 - do not change the centre of the viewport when using 1:1 [#247](https://github.com/ome/omero-iviewer/pull/247)
 - fix loading of ROIs when playing movie [#249](https://github.com/ome/omero-iviewer/pull/249)
-- fix permissions issue when loading pixels intensity [#250](https://github.com/ome/omero-iviewer/pull/250) 
-
-
-0.7.0a2 (February 2019)
------------------------
-
-This version includes:
-
-- fix issue when deploying to PyPi using Travis CI
-
-0.7.0a1 (February 2019)
------------------------
-
-This version includes:
-
-- handling large numbers of ROIs on image [#231](https://github.com/ome/omero-iviewer/pull/231)
+- fix permissions issue when loading pixels intensity [#250](https://github.com/ome/omero-iviewer/pull/250)
+- handle large numbers of ROIs on image [#231](https://github.com/ome/omero-iviewer/pull/231)
 - drag and drop thumbnails to open image viewers (not supported on Internet Explorer) [#233](https://github.com/ome/omero-iviewer/pull/233)
 - support URL query parameters for x, y and zoom [#236](https://github.com/ome/omero-iviewer/pull/236)
-- update to use version 5.3.0 of OpenLayers [#218](https://github.com/ome/omero-iviewer/pull/218)
-    - this removes the need for closure compiler in the build
 - fix scrolling of thumbnail panel to selected image [#234](https://github.com/ome/omero-iviewer/pull/234)
 - fix resizing of rectangles after dragging [#229](https://github.com/ome/omero-iviewer/pull/229)
 - fix double-click zooming when in drawing mode [#228](https://github.com/ome/omero-iviewer/pull/228)
+- update to use version 5.3.0 of OpenLayers [#218](https://github.com/ome/omero-iviewer/pull/218)
+    - this removes the need for closure compiler in the build
 
 0.6.0 (November 2018)
 ---------------------
