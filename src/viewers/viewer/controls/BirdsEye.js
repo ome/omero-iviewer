@@ -111,7 +111,7 @@ class BirdsEye extends Control {
         * @type {Array.<number>}
         * @private
         */
-        this.thumbnail_size_ = [96, 96];
+        this.thumbnail_size_ = [150, 100];
         var fullSidesRatio = this.full_image_size_[0] / this.full_image_size_[1];
         var tmp = [
             this.thumbnail_size_[0],
