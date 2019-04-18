@@ -217,6 +217,16 @@ class Ellipse extends Polygon {
     }
 
     /**
+     * Returns the Area as Pi * rx * ry instead of relying on Polygon superclass
+     * method which is less accurate.
+     *
+     * @return {number} the area of the ellipse
+     */
+    getArea() {
+        return Math.PI * this.rx_ * this.ry_;
+    }
+
+    /**
      * Make a complete copy of the geometry.
      * @return {Ellipse} Clone.
      */
