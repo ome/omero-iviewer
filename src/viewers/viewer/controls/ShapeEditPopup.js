@@ -20,6 +20,7 @@ import Overlay from 'ol/Overlay.js';
 import Text from 'ol/style/Text';
 import Style from 'ol/style/Style';
 import {getTopLeft, getTopRight} from 'ol/extent';
+import Line from '../geom/Line';
 import {isArray,
         sendEventNotification} from '../utils/Misc';
 
@@ -163,8 +164,18 @@ class ShapeEditPopup extends Overlay {
      */
     updatePopupCoordinates(geom) {
         let extent = geom.getExtent();
-        let midX = (getTopLeft(extent)[0] + getTopRight(extent)[0]) / 2;
+        let x = (getTopLeft(extent)[0] + getTopRight(extent)[0]) / 2;
         let y = getTopLeft(extent)[1];
+
+        // If it's a Line, popup is on upper end of the line
+        if (geom instanceof Line) {
+            let coords = geom.getLineCoordinates();
+            if (coords[1] < coords[3]) {
+                x = coords[2];
+            } else if (coords[1] > coords[3]) {
+                x = coords[0]
+            };
+        }
 
         let coordsText = '';
         if (geom.getDisplayCoords) {
@@ -185,7 +196,7 @@ class ShapeEditPopup extends Overlay {
         document.getElementById('shape-popup-area').value = areaText;
 
         if (this.regions.enable_shape_popup) {
-            this.setPosition([midX, y]);
+            this.setPosition([x, y]);
         }
     }
 
