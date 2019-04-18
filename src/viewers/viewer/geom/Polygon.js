@@ -144,7 +144,7 @@ class Polygon extends OlPolygon {
         // Expect only 1 set of coords
         if (coords.length !== 1) return [];
         coords = coords[0];
-        return [['points', coords.map(c => `${ c[0].toFixed(1) },${ -c[1].toFixed(1) }`).join(' ')]];
+        return [['Points', coords.map(c => `${ c[0].toFixed(1) },${ -c[1].toFixed(1) }`).join(' ')]];
     }
 }
 

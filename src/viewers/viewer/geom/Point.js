@@ -122,8 +122,8 @@ class Point extends Circle {
      */
     getDisplayCoords() {
         var point = this.getPointCoordinates();
-        return [['x', point[0].toFixed(1)],
-                ['y', -point[1].toFixed(1)]];
+        return [['X', point[0].toFixed(1)],
+                ['Y', -point[1].toFixed(1)]];
     }
 }
 

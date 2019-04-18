@@ -247,7 +247,7 @@ class Rectangle extends Polygon {
         let y = (-topLeft[1]).toFixed(1);
         let w = this.getWidth().toFixed(1);
         let h = this.getHeight().toFixed(1);
-        return [['x', x], ['y', y], ['width', w], ['height', h]];
+        return [['X', x], ['Y', y], ['Width', w], ['Height', h]];
     }
 }
 

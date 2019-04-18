@@ -182,10 +182,10 @@ class Mask extends Point {
      */
     getDisplayCoords() {
         var point = this.getPointCoordinates();
-        return [['x', point[0].toFixed(1)],
-                ['y', point[1].toFixed(1)],
-                ['width', this.size_[0].toFixed(1)],
-                ['height', this.size_[1].toFixed(1)]];
+        return [['X', point[0].toFixed(1)],
+                ['Y', point[1].toFixed(1)],
+                ['Width', this.size_[0].toFixed(1)],
+                ['Height', this.size_[1].toFixed(1)]];
     }
 }
 

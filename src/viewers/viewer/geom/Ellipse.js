@@ -230,10 +230,10 @@ class Ellipse extends Polygon {
      * @return {List} 2D list of 'name', vaule pairs.
      */
     getDisplayCoords() {
-        return [['x', this.cx_.toFixed(1)],
-                ['y', -this.cy_.toFixed(1)],
-                ['rx', this.rx_.toFixed(1)],
-                ['ry', this.ry_.toFixed(1)]];
+        return [['X', this.cx_.toFixed(1)],
+                ['Y', -this.cy_.toFixed(1)],
+                ['RadiusX', this.rx_.toFixed(1)],
+                ['RadiusY', this.ry_.toFixed(1)]];
     }
 }
 

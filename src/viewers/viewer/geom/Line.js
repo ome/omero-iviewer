@@ -222,10 +222,10 @@ class Line extends LineString {
         coords = coords.map(c => c.toFixed(1));
         // A Line has 4 coordinates
         if (coords.length == 4) {
-            return [['x1', coords[0]],
-                ['y1', -coords[1]],
-                ['x2', coords[2]],
-                ['y2', -coords[3]]];
+            return [['X1', coords[0]],
+                ['Y1', -coords[1]],
+                ['X2', coords[2]],
+                ['Y2', -coords[3]]];
         } else {
             // PolyLine has more 'points'
             // For even numbers, group 'x,y'...
