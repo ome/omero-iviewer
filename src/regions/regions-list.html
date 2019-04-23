@@ -16,6 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 <template>
+    <require from="./sort"></require>
         <div if.bind="regions_info.image_info.roi_count > regions_info.roi_page_size"
             class="pagination-controls">
             Current Z/T plane has ${ regions_info.roi_count_on_current_plane } ROIs
@@ -100,7 +101,7 @@
             show.bind="!regions_info.ready">Loading Regions...</div>
 
         <div class="regions-table" show.bind="regions_info.ready">
-            <template repeat.for="[roi_id, roi] of regions_info.data">
+            <template repeat.for="[roi_id, roi] of regions_info.data | sort">
                 <template repeat.for="[shape_id, shape] of roi.shapes">
                     <div if.bind="(roi.shapes.size - roi.deleted) > 1 &&
                                    roi.shapes.size > 1 && $first"
