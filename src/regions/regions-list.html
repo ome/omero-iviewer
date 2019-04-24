@@ -79,10 +79,13 @@
                         show.bind="regions_info.number_of_shapes > 0">Show</label>
             </div>
             <div class="regions-table-col shape-type">&nbsp;</div>
-            <div class="regions-table-col shape-z">Z</div>
-            <div class="regions-table-col shape-t">T</div>
+            <div class="regions-table-col shape-z ${sortCss(sortBy, sortAscending, 'theZ')}"
+                click.delegate="sort('theZ')">Z</div>
+            <div class="regions-table-col shape-t ${sortCss(sortBy, sortAscending, 'theT')}"
+                click.delegate="sort('theT')">T</div>
             <div class="regions-table-col shape-c">C</div>
-            <div class="regions-table-col shape-comment"
+            <div class="regions-table-col shape-comment ${sortCss(sortBy, sortAscending, 'shapeText')}"
+                    click.delegate="sort('shapeText')"
                     show.bind="active_column === 'comments'">Comment
                 </div>
             <div class="regions-table-col shape-area"
@@ -101,7 +104,7 @@
             show.bind="!regions_info.ready">Loading Regions...</div>
 
         <div class="regions-table" show.bind="regions_info.ready">
-            <template repeat.for="[roi_id, roi] of regions_info.data | sort">
+            <template repeat.for="[roi_id, roi] of regions_info.data | sort:sortBy:sortAscending">
                 <template repeat.for="[shape_id, shape] of roi.shapes">
                     <div if.bind="(roi.shapes.size - roi.deleted) > 1 &&
                                    roi.shapes.size > 1 && $first"

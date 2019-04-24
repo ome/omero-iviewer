@@ -20,7 +20,11 @@
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import Ui from '../utils/ui';
-import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
+import {inject,
+    customElement,
+    computedFrom,
+    bindable,
+    BindingEngine} from 'aurelia-framework';
 import {
     REGIONS_SET_PROPERTY, EventSubscriber,
     IMAGE_DIMENSION_CHANGE,
@@ -45,6 +49,9 @@ export default class RegionsList extends EventSubscriber {
     regions_infoChanged(newVal, oldVal) {
         this.waitForRegionsInfoReady();
     }
+
+    sortBy = "id";
+    sortAscending = true;
 
     /**
      * the column showing (only one - mutually exclusive for now)
@@ -115,6 +122,17 @@ export default class RegionsList extends EventSubscriber {
      */
     bind() {
         this.waitForRegionsInfoReady();
+    }
+
+    sort(value) {
+        console.log('click Sort', value);
+        this.sortAscending = this.sortBy === value ? !this.sortAscending : true;
+        this.sortBy = value;
+    }
+
+    sortCss(sortBy, sortAscending, attrName) {
+        if (attrName !== sortBy) return 'sortable';
+        return sortAscending ? 'sortable asc' : 'sortable desc';
     }
 
     /**

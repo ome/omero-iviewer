@@ -896,6 +896,15 @@ thumbnail-slider img {
     overflow: hidden;
     flex: 0 0 auto;
 }
+.regions-table-col.sortable {
+    background: url('images/sortable.png') no-repeat scroll center right;
+}
+.regions-table-col.sortable.asc {
+    background-image: url('images/sorted-asc.png')
+}
+.regions-table-col.sortable.desc {
+    background-image: url('images/sorted-desc.png')
+}
 .loading-text {
     float: left;
     position: relative;
@@ -920,6 +929,7 @@ thumbnail-slider img {
 }
 .shape-comment {
     flex: 1 1 auto;
+    padding-right: 8px;
 }
 .shape-area {
     width: 64px;
