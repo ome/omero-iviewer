@@ -58,4 +58,4 @@ OMERO.iviewer is released under the AGPL.
 Copyright
 ---------
 
-2017-2018, The Open Microscopy Environment
+2017-2019, The Open Microscopy Environment
