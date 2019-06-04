@@ -408,6 +408,7 @@ export default class RegionsInfo  {
             for (let r in data) {
                 let shapes = new Map();
                 let roi = data[r];
+                let name = data[r]['Name'] || '';
                 // add shapes
                 if (Misc.isArray(roi.shapes) && roi.shapes.length > 0) {
                     let roiId = roi['@id'];
@@ -437,6 +438,7 @@ export default class RegionsInfo  {
                         count++;
                     }
                     this.data.set(roiId, {
+                        name: name,
                         shapes: shapes,
                         show: false,
                         deleted: 0
