@@ -1,3 +1,11 @@
+0.7.1 (June 2019)
+-----------------
+
+This version includes:
+
+- removal of rounded corners from the scalebar [#261](https://github.com/ome/omero-iviewer/pull/261)
+- display of ROI names in the Comment column when applicable [#268](https://github.com/ome/omero-iviewer/pull/268)
+
 0.7.0 (April 2019)
 ------------------
 
