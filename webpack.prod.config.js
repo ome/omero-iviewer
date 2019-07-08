@@ -1,8 +1,6 @@
 const path = require('path');
 const {AureliaPlugin} = require('aurelia-webpack-plugin');
 const ProvidePlugin = require('webpack/lib/ProvidePlugin');
-const CommonsChunkPlugin = require('webpack/lib/optimize/CommonsChunkPlugin');
-const pkg = require('./package.json');
 
 module.exports = {
   entry: {
@@ -13,18 +11,16 @@ module.exports = {
     path: path.join(__dirname, 'build'),
     filename: "[name].js"
   },
+  optimization: {
+    splitChunks: {
+      chunks: "all"
+    },
+  },
   plugins: [
     new AureliaPlugin({
         aureliaApp: undefined,
         aureliaConfig: "basic",
-        features: {svg: false}}),
-    new CommonsChunkPlugin({
-        names: ['deps']
-    }),
-    new CommonsChunkPlugin({
-        names: ['manifest'],
-        filename: 'init.js',
-        minChunks: Infinity
+        features: {svg: false}
     }),
     new ProvidePlugin({
       Promise: 'bluebird',
