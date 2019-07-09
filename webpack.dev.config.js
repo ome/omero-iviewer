@@ -34,6 +34,7 @@ module.exports = {
   },
   module: {
     rules: [
+      { test: /\.js$/, loader: 'babel-loader'},
       { test: /[\/\\]node_modules[\/\\]bluebird[\/\\].+\.js$/, loader: 'expose-loader?Promise' },
       { test: require.resolve('jquery'), loader: 'expose-loader?$!expose-loader?jQuery' },
       { test: /\.(png|gif|jpg|jpeg)$/, loader: 'file-loader?name=css/images/[name].[ext]' },
