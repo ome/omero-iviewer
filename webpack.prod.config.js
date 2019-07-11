@@ -22,6 +22,9 @@ module.exports = {
       }
     },
   },
+  performance: {
+    hints: false
+  },
   plugins: [
     new AureliaPlugin({
         aureliaApp: undefined,

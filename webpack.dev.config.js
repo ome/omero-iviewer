@@ -13,6 +13,9 @@ module.exports = {
     path: path.join(__dirname, 'build'),
     filename: 'bundle.js'
   },
+  performance: {
+    hints: false
+  },
   plugins: [
     new AureliaPlugin({
       aureliaApp: undefined,
