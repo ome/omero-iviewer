@@ -98,8 +98,8 @@ export default class Ui {
      * @static
      */
     static unbindCollapseHandlers() {
-        $('.left-split img').unbind("mousedown click");
-        $('.right-split img').unbind("mousedown click");
+        $('.collapse-left').unbind("mousedown click");
+        $('.collapse-right').unbind("mousedown click");
     }
 
     /**
@@ -111,12 +111,12 @@ export default class Ui {
      */
     static bindCollapseHandlers(eventbus, uri_prefix) {
         if (typeof uri_prefix !== 'string') uri_prefix = '';
-        $('.left-split img, .right-split img').mousedown(
+        $('.collapse-left, .collapse-right').mousedown(
             (e) => {e.preventDefault(); e.stopPropagation();});
 
-        $('.left-split img, .right-split img').click((e) => {
+        $('.collapse-left, .collapse-right').click((e) => {
             let leftSplit =
-                $(e.currentTarget).parent().hasClass("left-split");
+                $(e.currentTarget).hasClass("collapse-left");
             let el = leftSplit ? $('.thumbnail-panel') : $('.right-hand-panel');
 
             let minWidth = leftSplit ? 20 : 50;
@@ -194,7 +194,7 @@ export default class Ui {
         let toleranceWidth = 0, origin=null;
         if (width > 0) {
             toleranceWidth = $(window).width() - otherSideBar.width() - 200;
-            origin = $('.left-split img');
+            origin = $('.collapse-left');
             if (width > toleranceWidth)
                 origin.trigger('click', {currentTarget: origin});
         }
@@ -203,7 +203,7 @@ export default class Ui {
         sideBar = $('.right-hand-panel');
         width = sideBar.width();
         toleranceWidth = $(window).width() - 200;
-        origin = $('.right-split img');
+        origin = $('.collapse-right');
         if (width > toleranceWidth) {
             if (toleranceWidth < 50)
                 origin.trigger('click', {currentTarget: origin});
