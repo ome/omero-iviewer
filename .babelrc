@@ -3,11 +3,7 @@
     [
         "@babel/preset-env",
         {
-        "targets": {
-            "browsers": [
-              "last 2 versions"
-            ]
-        },
+        "targets": "> 0.25%, not dead",
         "modules": false // Needed for tree shaking to work.
         }
     ],
