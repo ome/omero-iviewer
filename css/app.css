@@ -755,6 +755,9 @@ thumbnail-slider img {
 .x_axis {
     color: transparent;
 }
+.y_axis {
+    width: 25px
+}
 
 /* Show the first '1' x_axis label... */
 .col:nth-of-type(2) .x_axis {
