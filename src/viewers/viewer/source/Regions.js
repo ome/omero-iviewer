@@ -687,7 +687,7 @@ class Regions extends Vector {
     }
 
     /**
-     * Sets the ID of a shape that we are hovering over, to update it's style
+     * Sets the ID of a shape that we are hovering over, to update its style
      *
      * @param {string} shapeId shapeId 'roi:shape'
      */
