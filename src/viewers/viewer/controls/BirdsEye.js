@@ -314,9 +314,7 @@ class BirdsEye extends Control {
         var map = this.getMap();
         var rev = new Date().getTime();
         if (map) rev += "-" + getTargetId(map.getTargetElement());
-
-        return this.thumbnail_url_ + "/" + this.thumbnail_size_[0] +
-            "/" + this.thumbnail_size_[1] + "/?rev=" + rev;
+        return this.thumbnail_url_ + "/?rev=" + rev;
     }
 
     /**
