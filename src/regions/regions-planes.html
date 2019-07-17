@@ -30,25 +30,55 @@
         <span>${max_shape_count}</span>
     </div>
 
-    <div show.bind="!is_pending" class="grid_table">
-        <div class="col">
-            <div repeat.for="z of plane_shape_counts[0]" class="grid_cell y_axis">
-                ${plane_shape_counts[0].length - $index}
+    <div show.bind="!is_pending">
+        <!-- If sizeT > 1 we have outer loop through T and inner loop through Z -->
+        <!-- We wrap T into multiple tables of 20 columns -->
+        <div if.bind="plane_shape_counts.length>1" class="grid_table" repeat.for="i of ceil(plane_shape_counts.length/20)">
+            <!-- Each table has a Y axis showing Z index -->
+            <div class="col">
+                <div repeat.for="z of plane_shape_counts[0]" class="grid_cell y_axis">
+                    ${plane_shape_counts[0].length - $index}
+                </div>
+                <div class="grid_cell x_axis">
+                    T:
+                </div>
+            <!-- Then we iterate through T... -->
+            </div><div repeat.for="t_col of slice(plane_shape_counts, i*20, (i+1)*20)" class="col"
+                    ref="t_index" t-index="${ (i*20) + $index }">
+                <!-- go through Z -->
+                <div repeat.for="zt_value of reverse(t_col)"
+                    class="grid_cell ${t_index.tIndex == regions_info.image_info.dimensions.t && selectedZ.indexOf(t_col.length - $index - 1) > -1 ? 'selected' : ''}"
+                    ref="z_index" z-index="${ t_col.length - $index - 1 }"
+                    css="background: ${ getColor(zt_value) }"
+                    title="${zt_value} Shapes T: ${ toInt(t_index.tIndex) + 1}, Z: ${ t_col.length - $index }"
+                    click.delegate="handleGridClick($event, z_index.zIndex, t_index.tIndex)">
+                </div>
+                <!-- show T index -->
+                <div class="grid_cell x_axis">
+                    ${toInt(t_index.tIndex) + 1}
+                </div>
             </div>
-            <div class="grid_cell x_axis">
-                T:
-            </div>
-        </div><div repeat.for="t_col of plane_shape_counts" class="col"
-                ref="t_index" t-index="${ $index }">
-            <div repeat.for="zt_value of reverse(t_col)"
-                class="grid_cell ${t_index.tIndex == regions_info.image_info.dimensions.t && selectedZ.indexOf(t_col.length - $index - 1) > -1 ? 'selected' : ''}"
-                ref="z_index" z-index="${ t_col.length - $index - 1 }"
-                css="background: ${ getColor(zt_value) }"
-                title="${zt_value} Shapes T: ${ toInt(t_index.tIndex) + 1}, Z: ${ t_col.length - $index }"
-                click.delegate="handleGridClick($event, z_index.zIndex, t_index.tIndex)">
-            </div>
-            <div class="grid_cell x_axis">
-                ${$index + 1}
+        </div>
+
+        <!-- Alternative layout if single T-index -->
+        <div if.bind="plane_shape_counts.length===1" class="grid_table" repeat.for="i of ceil(plane_shape_counts[0].length/20)">
+            <div class="col">
+                <div class="grid_cell y_axis">
+                </div>
+                <div class="grid_cell x_axis">
+                    Z:
+                </div>
+            </div><div repeat.for="zt_value of slice(plane_shape_counts[0], i*20, (i+1)*20)" class="col"
+                    ref="z_index" z-index="${ (i*20) + $index }">
+                <div
+                    class="grid_cell ${selectedZ.indexOf((i*20) + $index) > -1 ? 'selected' : ''}"
+                    css="background: ${ getColor(zt_value) }"
+                    title="${zt_value} Shapes"
+                    click.delegate="handleGridClick($event, z_index.zIndex, 0)">
+                </div>
+                <div class="grid_cell x_axis">
+                    ${toInt(z_index.zIndex) + 1}
+                </div>
             </div>
         </div>
     </div>

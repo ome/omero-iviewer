@@ -270,4 +270,22 @@ export default class RegionsPlanes {
     toInt(number) {
         return parseInt(number)
     }
+
+    /**
+     * Allow template to use slice.
+     *
+     * @param {String} number
+     */
+    slice(list, start, end) {
+        return list.slice(start, end);
+    }
+
+    /**
+     * Allow template to use Math.ceil.
+     *
+     * @param {String} number
+     */
+    ceil(x) {
+        return Math.ceil(x);
+    }
 }

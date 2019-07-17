@@ -737,9 +737,14 @@ thumbnail-slider img {
     border-right: solid grey 1px;
 }
 
+.grid_table>div:last-child .x_axis{
+    width: 20px;
+    text-align: left;
+}
+
 .grid_cell {
-    width: 15px;
-    height: 15px;
+    width: 14px;
+    height: 14px;
     border: solid white 1px;
     text-align: center;
     overflow: visible;
