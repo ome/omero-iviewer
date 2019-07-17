@@ -171,7 +171,6 @@ export default class RegionsPlanes {
 
         // Pick one of 5 colors
         let index = Math.round(percent/25);
-        console.log('getColor', count, this.min_shape_count, this.max_shape_count, percent, index);
         let colors = ['rgb(212, 222, 223)', 'rgb(178, 189, 193)', 'rgb(149, 153, 164)',
                     'rgb(90, 89, 109)', 'rgb(20, 18, 30)']
         return colors[index];

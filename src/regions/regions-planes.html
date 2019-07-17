@@ -23,7 +23,7 @@
         <div class="grid_table" style="display: inline-block; position: relative; top: 4px">
             <div repeat.for="i of 5" class="col" style="margin-bottom: 0">
                 <div class="grid_cell" title="${ min_shape_count + (i * (max_shape_count - min_shape_count) /4) }"
-                    style="background: ${ getColor(min_shape_count + (i * (max_shape_count - min_shape_count) /4)) }">
+                    css="background: ${ getColor(min_shape_count + (i * (max_shape_count - min_shape_count) /4)) }">
                 </div>
             </div>
         </div>
@@ -43,7 +43,7 @@
             <div repeat.for="zt_value of reverse(t_col)"
                 class="grid_cell ${t_index.tIndex == regions_info.image_info.dimensions.t && selectedZ.indexOf(t_col.length - $index - 1) > -1 ? 'selected' : ''}"
                 ref="z_index" z-index="${ t_col.length - $index - 1 }"
-                style="background: ${ getColor(zt_value) }"
+                css="background: ${ getColor(zt_value) }"
                 title="${zt_value} Shapes T: ${ toInt(t_index.tIndex) + 1}, Z: ${ t_col.length - $index }"
                 click.delegate="handleGridClick($event, z_index.zIndex, t_index.tIndex)">
             </div>
