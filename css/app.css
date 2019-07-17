@@ -748,6 +748,7 @@ thumbnail-slider img {
     border: solid white 1px;
     text-align: center;
     overflow: visible;
+    user-select: none;
 }
 .grid_cell.selected {
     border: solid rgb(90, 135, 248) 3px;
