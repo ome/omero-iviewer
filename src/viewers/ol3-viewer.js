@@ -29,13 +29,14 @@ import {draggable} from 'jquery-ui/ui/widgets/draggable';
 import {resizable} from 'jquery-ui/ui/widgets/resizable';
 import {
     IMAGE_CONFIG_RELOAD, IVIEWER, PLUGIN_PREFIX, PROJECTION,
-    REGIONS_DRAWING_MODE, RENDER_STATUS, VIEWER_ELEMENT_PREFIX, WEBCLIENT
+    REGIONS_DRAWING_MODE, RENDER_STATUS, VIEWER_ELEMENT_PREFIX,
+    REQUEST_PARAMS
 } from '../utils/constants';
 import {
     IMAGE_CANVAS_DATA, IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY,
     IMAGE_INTENSITY_QUERYING, IMAGE_SETTINGS_CHANGE, IMAGE_SETTINGS_REFRESH,
     IMAGE_VIEWER_CONTROLS_VISIBILITY, IMAGE_VIEWER_INTERACTION,
-    IMAGE_VIEWER_RESIZE, IMAGE_VIEWPORT_CAPTURE,
+    IMAGE_VIEWER_RESIZE, IMAGE_VIEWPORT_CAPTURE, IMAGE_VIEWPORT_LINK,
     REGIONS_CHANGE_MODES, REGIONS_COPY_SHAPES, REGIONS_DRAW_SHAPE,
     REGIONS_GENERATE_SHAPES, REGIONS_HISTORY_ACTION, REGIONS_HISTORY_ENTRY,
     REGIONS_MODIFY_SHAPES, REGIONS_PROPERTY_CHANGED, REGIONS_SET_PROPERTY,
@@ -145,6 +146,8 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.showComments(params)],
         [IMAGE_VIEWPORT_CAPTURE,
             (params={}) => this.captureViewport(params)],
+        [IMAGE_VIEWPORT_LINK,
+            (params={}) => this.linkViewport(params)],
         [IMAGE_CANVAS_DATA,
             (params={}) => this.saveCanvasData(params)],
         [VIEWER_SET_SYNC_GROUP,
@@ -1420,6 +1423,68 @@ export default class Ol3Viewer extends EventSubscriber {
         if (allConfigs)
             params.zip_entry = this.image_config.image_info.image_name;
         this.viewer.sendCanvasContent(params);
+    }
+
+    /**
+     * Shows a dialog with a URL to link to current viewport and rendering settings
+     *
+     * @param {Object} params the event notification parameters. Need config_id
+     */
+    linkViewport(params={}) {
+        if (params.config_id !== this.image_config.id  ||
+            this.viewer === null) return;
+
+        // Get current search params and add/override with others
+        let search = new Map();
+        if (window.location.search.length > 0) {
+            let values = window.location.search.substr(1)
+                .split('&')
+                .map(kv => kv.split('='))
+                .map(kv => [kv[0].toLowerCase(), kv[1]]);
+            search = new Map(values);
+        }
+
+        let view = this.viewer.viewer_.getView();
+        let image_info = this.image_config.image_info;
+        let args = [];
+        let center = view.getCenter();
+        args.push([REQUEST_PARAMS.CENTER_X, parseInt(center[0])]);
+        args.push([REQUEST_PARAMS.CENTER_Y, (-parseInt(center[1]))]);
+        args.push([REQUEST_PARAMS.ZOOM, parseInt(100 / view.getResolution())]);
+
+        let channels = image_info.channels;
+        let chs = channels.map(
+            (ch, i) => {
+                let w = ch.window;
+                return `${ ch.active ? '' : '-'}${i+1}|${w.start}:${w.end}$${ ch.color }`
+            }
+        )
+        args.push([REQUEST_PARAMS.CHANNELS, chs.join(",")]);
+        args.push([REQUEST_PARAMS.MODEL, image_info.model.toLowerCase()[0]]);
+
+        let maps = channels.map(ch => ({
+            inverted: {enabled:ch.inverted},
+            quantization: {family: ch.family, coefficient: ch.coefficient}
+        }));
+        args.push([REQUEST_PARAMS.MAPS, JSON.stringify(maps)]);
+
+        // Build the URL
+        let url = window.location.origin + window.location.pathname;
+        args.forEach(kv => {
+            search.set(kv[0].toLowerCase(), kv[1]);
+        });
+        let values = [];
+        for (var [key, value] of search) {
+            values.push(`${ key }=${ value }`);
+        }
+        url += '?' + values.join('&');
+
+        let html = `<p>Copy Viewport URL</p>
+            <input id='viewport_url' style='font-size: 12px; width: 100%;' value='${ url }' />`;
+        Ui.showModalMessage(html, 'Close');
+        let viewport_url = document.getElementById('viewport_url');
+        viewport_url.focus();
+        viewport_url.select();
     }
 
     /**

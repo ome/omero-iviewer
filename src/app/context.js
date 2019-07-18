@@ -945,6 +945,25 @@ export default class Context {
     }
 
     /**
+     * Clears cache of image settings, specified by ID.
+     * If imageIds is not defined, this clears ALL cached images settings.
+     *
+     * @param {Array.<number>} imageIds the IDs of Images to clear from cache
+     * @memberof Context
+     */
+    clearCachedImageSettings(imageIds) {
+        if (Misc.isArray(imageIds)) {
+            imageIds.forEach(image_id => {
+                if (this.cached_image_settings[image_id]) {
+                    delete this.cached_image_settings[image_id];
+                }
+            });
+        } else {
+            this.cached_image_settings = {};
+        }
+    }
+
+    /**
      * Convenience or short hand way of publishing via the internal eventbus.
      * It will just delegate whatever you hand it as arguments
      *

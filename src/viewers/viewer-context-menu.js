@@ -19,7 +19,8 @@
 // dependencies
 import Context from '../app/context';
 import {inject, customElement, BindingEngine, bindable} from 'aurelia-framework';
-import {IMAGE_VIEWPORT_CAPTURE} from '../events/events';
+import {IMAGE_VIEWPORT_CAPTURE,
+    IMAGE_VIEWPORT_LINK} from '../events/events';
 import { VIEWER_ELEMENT_PREFIX } from '../utils/constants';
 
 /**
@@ -216,6 +217,15 @@ export default class ViewerContextMenu {
     captureViewport() {
         this.context.eventbus.publish(
             IMAGE_VIEWPORT_CAPTURE, {"config_id": this.image_config.id});
+    }
+
+    /**
+     * Sends event to show link to current viewport
+     */
+    linkToViewport() {
+        this.hideContextMenu();
+        this.context.eventbus.publish(
+            IMAGE_VIEWPORT_LINK, {"config_id": this.image_config.id});
     }
 
 }

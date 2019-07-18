@@ -13,6 +13,9 @@ module.exports = {
     path: path.join(__dirname, 'build'),
     filename: 'bundle.js'
   },
+  performance: {
+    hints: false
+  },
   plugins: [
     new AureliaPlugin({
       aureliaApp: undefined,
@@ -34,15 +37,7 @@ module.exports = {
   },
   module: {
     rules: [
-      { test: /\.js$/, loader: 'babel-loader', exclude: /node_modules/,
-      query: { compact: false,
-               presets: [[ 'env', {
-                   "loose": true,
-                   "uglify": process.env.NODE_ENV === 'production',
-                   "modules": false,
-                   "useBuiltIns": true } ]],
-               plugins: ['transform-decorators-legacy',
-                         'transform-class-properties'] } },
+      { test: /\.js$/, loader: 'babel-loader'},
       { test: /[\/\\]node_modules[\/\\]bluebird[\/\\].+\.js$/, loader: 'expose-loader?Promise' },
       { test: require.resolve('jquery'), loader: 'expose-loader?$!expose-loader?jQuery' },
       { test: /\.(png|gif|jpg|jpeg)$/, loader: 'file-loader?name=css/images/[name].[ext]' },

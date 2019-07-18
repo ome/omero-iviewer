@@ -22,6 +22,13 @@ import {listen, unlistenByKey} from 'ol/events';
 import {UNITS_LENGTH} from '../globals';
 
 /**
+ * For a given pixel unit, e.g. microns, we want the scalebar to be one of
+ * these lengths.
+ */
+const SNAP_TO_LENGTHS = [1, 2, 5, 10, 20, 50,
+                         100, 200, 500, 1000, 2000, 5000, 10000];
+
+/**
  * @classdesc
  * Extends the built ScaleLine
  */
@@ -36,11 +43,11 @@ class ScaleBar extends ScaleLine {
         super(opt_options);
 
         /**
-         * default scale bar width in pixels
+         * minimum scale bar width in pixels
          * @type {number}
          * @private
          */
-        this.bar_width_ = 100;
+        this.bar_min_width_ = 100;
 
         /**
          * the scalebar 'drag' listener
@@ -102,7 +109,9 @@ class ScaleBar extends ScaleLine {
 
         var micronsPerPixel = viewState.projection.getMetersPerUnit();
         var resolution = viewState.resolution;
-        var scaleBarLengthInUnits = micronsPerPixel * this.bar_width_ * resolution;
+
+        // first find the Units and Length for min-length scalebar
+        var scaleBarLengthInUnits = micronsPerPixel * this.bar_min_width_ * resolution;
         var symbol = '\u00B5m';
         for (var u=0;u<UNITS_LENGTH.length;u++) {
             var unit = UNITS_LENGTH[u];
@@ -113,16 +122,20 @@ class ScaleBar extends ScaleLine {
             }
         }
 
-        var html = scaleBarLengthInUnits.toFixed(2) + ' ' + symbol;
-        if (this.renderedHTML_ !== html) {
-            this.innerElement_.innerHTML = html;
-            this.renderedHTML_ = html;
+        // Find a length value BIGGER than our min target length
+        var value = 0;
+        let pixels = 0;
+        for (let snap=0; snap<SNAP_TO_LENGTHS.length; snap++) {
+            value = SNAP_TO_LENGTHS[snap];
+            if (value >= scaleBarLengthInUnits) {
+                pixels = this.bar_min_width_ * value / scaleBarLengthInUnits;
+                break;
+            }
         }
 
-        if (this.renderedWidth_ != this.bar_width_) {
-            this.innerElement_.style.width = this.bar_width_ + 'px';
-            this.renderedWidth_ = this.bar_width_;
-        }
+        var html = value + ' ' + symbol;
+        this.innerElement_.innerHTML = html;
+        this.innerElement_.style.width = pixels + 'px';
 
         if (!this.renderedVisible_) {
             this.element.style.display = '';

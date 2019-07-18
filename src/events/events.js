@@ -40,6 +40,8 @@ export const IMAGE_COMMENT_CHANGE = "IMAGE_COMMENT_CHANGE";
 export const IMAGE_DIMENSION_PLAY = "IMAGE_DIMENSION_PLAY";
 /** whenever the viewport canvas data should be captured */
 export const IMAGE_VIEWPORT_CAPTURE = "IMAGE_VIEWPORT_CAPTURE";
+/** whenever we want a link to current viewport */
+export const IMAGE_VIEWPORT_LINK = "IMAGE_VIEWPORT_LINK";
 /** to set rois/shape properties such as visibility and selection */
 export const REGIONS_SET_PROPERTY = "REGIONS_SET_PROPERTY";
 /** whenever a region property change is received, e.g. selection, modification */

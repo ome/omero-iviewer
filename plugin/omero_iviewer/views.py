@@ -557,7 +557,7 @@ def get_intensity(request, conn=None, **kwargs):
     raw_pixel_store = None
     try:
         raw_pixel_store = conn.createRawPixelsStore()
-        raw_pixel_store.setPixelsId(img.getPixelsId(), True)
+        raw_pixel_store.setPixelsId(img.getPixelsId(), True, conn.SERVICE_OPTS)
         pixels_type = img.getPrimaryPixels().getPixelsType().getValue()
 
         # determine query extent
@@ -586,7 +586,8 @@ def get_intensity(request, conn=None, **kwargs):
         # contained in extent with getTile (extent width x height)
         for chan in channels:
             point_data = raw_pixel_store.getTile(
-                z, chan, t, x_offset, y_offset, width, height)
+                z, chan, t, x_offset, y_offset, width, height,
+                conn.SERVICE_OPTS)
             unpacked_point_data = unpack(conversion, point_data)
             i = 0
             for row in range(extent[1], extent[3]):

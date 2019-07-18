@@ -1,6 +1,4 @@
 const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const {AureliaPlugin} = require('aurelia-webpack-plugin');
 const ProvidePlugin = require('webpack/lib/ProvidePlugin');
 
 module.exports = {
@@ -25,15 +23,7 @@ module.exports = {
   },
   module: {
     rules: [
-      { test: /\.js$/, loader: 'babel-loader', exclude: /node_modules/,
-      query: { compact: false,
-               presets: [[ 'env', {
-                   "loose": true,
-                   "uglify": process.env.NODE_ENV === 'production',
-                   "modules": false,
-                   "useBuiltIns": true } ]],
-               plugins: ['transform-decorators-legacy',
-                         'transform-class-properties'] } },
+      { test: /\.js$/, loader: 'babel-loader'},
       { test: /[\/\\]node_modules[\/\\]bluebird[\/\\].+\.js$/, loader: 'expose-loader?Promise' },
     ]
   },
