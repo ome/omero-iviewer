@@ -414,7 +414,6 @@ export default class RegionsEdit extends EventSubscriber {
      * @param {function} callback a callback function on success
      * @param {boolean} modifies_attachment does definition alter z/t attachment
      * @param {Object} current_shape Option to specify a particular shape to edit
-     *                  Other
      * @memberof RegionsEdit
      */
     modifyShapes(shape_definition, callback = null, modifies_attachment = false,
