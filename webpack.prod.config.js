@@ -1,8 +1,6 @@
 const path = require('path');
 const {AureliaPlugin} = require('aurelia-webpack-plugin');
 const ProvidePlugin = require('webpack/lib/ProvidePlugin');
-const CommonsChunkPlugin = require('webpack/lib/optimize/CommonsChunkPlugin');
-const pkg = require('./package.json');
 
 module.exports = {
   entry: {
@@ -13,18 +11,25 @@ module.exports = {
     path: path.join(__dirname, 'build'),
     filename: "[name].js"
   },
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        commons: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all'
+        }
+      }
+    },
+  },
+  performance: {
+    hints: false
+  },
   plugins: [
     new AureliaPlugin({
         aureliaApp: undefined,
         aureliaConfig: "basic",
-        features: {svg: false}}),
-    new CommonsChunkPlugin({
-        names: ['deps']
-    }),
-    new CommonsChunkPlugin({
-        names: ['manifest'],
-        filename: 'init.js',
-        minChunks: Infinity
+        features: {svg: false}
     }),
     new ProvidePlugin({
       Promise: 'bluebird',
@@ -38,21 +43,12 @@ module.exports = {
   },
   module: {
     rules: [
-        { test: /\.js$/, exclude: /node_modules/, use: [{
-            loader: 'babel-loader',
-            query: { compact: false,
-                   presets: [[ 'env', {
-                       "loose": true,
-                       "uglify": process.env.NODE_ENV === 'production',
-                       "modules": false,
-                       "useBuiltIns": true } ]],
-                   plugins: ['transform-decorators-legacy',
-                             'transform-class-properties'] } },
-            {loader: 'webpack-conditional-loader'}]},
+        { test: /\.js$/, loader: 'babel-loader'},
         { test: /[\/\\]node_modules[\/\\]bluebird[\/\\].+\.js$/, loader: 'expose-loader?Promise' },
         { test: require.resolve('jquery'), loader: 'expose-loader?$!expose-loader?jQuery' },
         { test: /\.(png|gif|jpg|jpeg)$/, loader: 'file-loader?name=css/images/[name].[ext]' },
         { test: /\.(woff|woff2)$/, loader: 'file-loader?name=css/fonts/[name].[ext]' },
+        { test: /\.css?$/, loader: 'file-loader?name=css/[name].[ext]' },
         { test: /\.html$/, loader: 'html-loader' }
     ]
   }

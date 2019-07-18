@@ -476,20 +476,21 @@ a.ui-button:active,
     background: url('images/drag_handle.png') no-repeat scroll center center #e7e7e7;
 }
 
-.left-split img {
-    background-color:  #FFFFFF;
+.collapse-left, .collapse-right {
     position: absolute;
     left: 0px;
     bottom: 5px;
     cursor: pointer;
+    width: 5px;
+    height: 13px;
 }
 
-.right-split img {
-    background-color: #FFFFFF;
-    position: absolute;
-    left: 0px;
-    bottom: 5px;
-    cursor: pointer;
+.collapse-left {
+    background: url('images/collapse-left.png') no-repeat scroll center center #fff;
+}
+
+.collapse-right {
+    background: url('images/collapse-right.png') no-repeat scroll center center #fff;
 }
 
 .viewer {
