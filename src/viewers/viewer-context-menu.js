@@ -178,7 +178,7 @@ export default class ViewerContextMenu {
     }
 
     /**
-     * Toggle the showing of the Shape Edit Popup over selected shapes
+     * Enable the showing of the Shape Edit Popup over selected shapes
      *
      * @memberof ViewerContextMenu
      */
@@ -190,7 +190,7 @@ export default class ViewerContextMenu {
         this.shape_popup_enabled = !this.shape_popup_enabled;
         this.context.eventbus.publish("ENABLE_SHAPE_POPUP",{
             config_id: this.image_config.id,
-            enable: this.shape_popup_enabled,
+            enable: true,
         });
         return false;
     }

@@ -23,6 +23,7 @@ import {getTopLeft, getTopRight} from 'ol/extent';
 import Line from '../geom/Line';
 import {isArray,
         sendEventNotification} from '../utils/Misc';
+import Ui from '../../../utils/ui';
 
 /**
  * @classdesc
@@ -230,6 +231,15 @@ class ShapeEditPopup extends Overlay {
         document.getElementById('shape-edit-popup-closer').onclick = (event) => {
             this.setPosition(undefined);
             event.target.blur();
+
+            Ui.showModalMessage(`<p>ROI popups disabled.</p>
+            <p>To re-enable popups, use right-click menu</p>`, "OK");
+
+            sendEventNotification(
+                this.viewer_,
+                "ENABLE_SHAPE_POPUP",
+                {enable: false}
+            );
             return false;
         };
     }
