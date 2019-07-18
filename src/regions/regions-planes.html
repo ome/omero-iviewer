@@ -33,7 +33,7 @@
     <div show.bind="!is_pending">
         <!-- If sizeT > 1 we have outer loop through T and inner loop through Z -->
         <!-- We wrap T into multiple tables of 20 columns -->
-        <div if.bind="plane_shape_counts.length>1" class="grid_table" repeat.for="i of ceil(plane_shape_counts.length/20)">
+        <div if.bind="plane_shape_counts.length>1" class="grid_table pointer" repeat.for="i of ceil(plane_shape_counts.length/20)">
             <!-- Each table has a Y axis showing Z index -->
             <div class="col">
                 <div repeat.for="z of plane_shape_counts[0]" class="grid_cell y_axis">
@@ -61,7 +61,7 @@
         </div>
 
         <!-- Alternative layout if single T-index -->
-        <div if.bind="plane_shape_counts.length===1" class="grid_table" repeat.for="i of ceil(plane_shape_counts[0].length/20)">
+        <div if.bind="plane_shape_counts.length===1" class="grid_table pointer" repeat.for="i of ceil(plane_shape_counts[0].length/20)">
             <div class="col">
                 <div class="grid_cell y_axis">
                 </div>

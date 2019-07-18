@@ -753,10 +753,14 @@ thumbnail-slider img {
 .grid_cell.selected {
     border: solid rgb(90, 135, 248) 3px;
 }
+.pointer .grid_cell {
+    cursor: pointer;
+}
 
 .y_axis, .x_axis {
     font-size: 10px;
     border-color: transparent;
+    cursor: default !important;
 }
 .x_axis {
     color: transparent;
