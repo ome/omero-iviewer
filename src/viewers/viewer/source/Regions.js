@@ -548,6 +548,7 @@ class Regions extends Vector {
      * @return {boolean} true if the feature fulfills the criteria to be rendered
      */
     renderFeature(feature) {
+        if (!this.viewer_) return false;
         var projection =  this.viewer_.getImage().image_projection_;
 
         var visible =
