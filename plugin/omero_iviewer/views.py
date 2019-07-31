@@ -482,7 +482,8 @@ def well_images(request, conn=None, **kwargs):
         # get total count first
         count = query_service.projection(
             "select count(distinct ws.id) from WellSample ws " +
-            "where ws.well.id = :well_id", params, )
+            "where ws.well.id = :well_id", params,
+            conn.SERVICE_OPTS)
         results = {"data": [], "meta": {"totalCount": count[0][0].val}}
 
         # set offset and limit
@@ -494,7 +495,8 @@ def well_images(request, conn=None, **kwargs):
         # fire off query
         images = query_service.findAllByQuery(
             "select ws.image from WellSample ws " +
-            "where ws.well.id = :well_id order by well_index", params)
+            "where ws.well.id = :well_id order by well_index", params,
+            conn.SERVICE_OPTS)
 
         # we need only image id and name for our purposes
         for img in images:
