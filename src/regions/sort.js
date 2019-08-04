@@ -4,6 +4,9 @@ export class SortValueConverter {
 
     // toView(arr, prop, ascending) {
     toView(rois, sortBy, sortAscending) {
+        if (!rois) {
+            return new Map();
+        }
         // Convert Map to an Array of objects...
         let ids = Array.from(rois.keys());
         // Add id to each object so we know it after sorting
