@@ -792,6 +792,15 @@ class Viewer extends OlObject {
         var regions = this.getRegions();
         if (regions) {
             regions.enable_shape_popup = flag;
+
+            // If enabling, try to show popup
+            if (flag) {
+                this.viewer_.getOverlays().forEach(o => {
+                    if (o.updatePopupVisibility) {
+                        o.updatePopupVisibility();
+                    }
+                });
+            }
         }
     }
 
