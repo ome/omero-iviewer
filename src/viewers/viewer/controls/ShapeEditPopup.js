@@ -233,7 +233,7 @@ class ShapeEditPopup extends Overlay {
             event.target.blur();
 
             Ui.showModalMessage(`<p>ROI popups disabled.</p>
-            <p>To re-enable popups, use right-click menu</p>`, "OK");
+            <p>To re-enable popups, right-click on the image and use the context menu.</p>`, "OK");
 
             sendEventNotification(
                 this.viewer_,
