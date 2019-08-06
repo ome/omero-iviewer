@@ -918,13 +918,13 @@ thumbnail-slider img {
     width: 17px;
 }
 .shape-show {
-    width: 49px;
+    width: 37px;
 }
 .shape-z, .shape-t, .shape-c {
     width: 27px;
 }
 .shape-type {
-    width: 27px;
+    width: 23px;
     background-repeat: no-repeat;
     background-position: center;
 }
@@ -933,11 +933,11 @@ thumbnail-slider img {
     padding-right: 8px;
 }
 .shape-area {
-    width: 66px;
+    width: 77px;
     flex: 0 0 auto;
 }
 .shape-length {
-    width: 80px;
+    width: 84px;
     flex: 0 0 auto;
 }
 
