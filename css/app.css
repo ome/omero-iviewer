@@ -897,6 +897,7 @@ thumbnail-slider img {
     flex: 0 0 auto;
 }
 .regions-table-col.sortable {
+    cursor: pointer;
     background: url('images/sortable.png') no-repeat scroll center right;
 }
 .regions-table-col.sortable.asc {
