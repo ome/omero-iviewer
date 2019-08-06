@@ -37,7 +37,9 @@ export class SortValueConverter {
                 val = shape[attrName];
                 break;
             }
-            return val === undefined ? -1 : val;
+            // Often -1 is used as a placeholder
+            if (val === -1) return undefined;
+            return val;
         }
 
         if (sortBy === 'shapeText') {
@@ -46,11 +48,18 @@ export class SortValueConverter {
             getAttr = getNumberAttr('TheZ');
         } else if (sortBy === 'theT') {
             getAttr = getNumberAttr('TheT');
+        } else if (sortBy === 'area') {
+            getAttr = getNumberAttr('Area')
+        } else if (sortBy === 'length') {
+            getAttr = getNumberAttr('Length')
         }
 
         let sorted = roiList.sort((a, b) => {
             let aValue = getAttr(a);
             let bValue = getAttr(b);
+            // items with no value should go last
+            if (!aValue && aValue !== 0) return sortAscending ? 1 : -1;
+            if (!bValue && bValue !== 0) return sortAscending ? -1 : 1;
             if (aValue > bValue) return sortAscending ? 1 : -1;
             if (aValue < bValue) return sortAscending ? -1 : 1;
             return 0;
