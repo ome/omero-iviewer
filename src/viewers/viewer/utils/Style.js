@@ -314,6 +314,11 @@ export const updateStyleFunction =
             selectionStyle.setWidth(3);
             if (selected) {
                 oldStyle.stroke_ = selectionStyle;
+            } else if (regions.getHoverId() == feature.getId()) {
+                oldStyle.stroke_ = new Stroke({
+                    color: oldStrokeStyle.getColor(),
+                    width: oldStrokeStyle.getWidth() + 2,
+                });
             } else if (feature['oldStrokeStyle']) {
                 // restore old style
                 var w = feature['oldStrokeStyle']['width'];

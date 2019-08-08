@@ -16,6 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+import PluggableMap from 'ol/PluggableMap';
 import Feature from 'ol/Feature';
 import Text from 'ol/style/Text';
 import Stroke from 'ol/style/Stroke';
@@ -64,6 +65,69 @@ const DrawEventType = {
      */
     DRAWEND: 'drawend'
 };
+
+/**
+ * Extend the ol.Draw class so we can handle start, move and finish events and
+ * display the ShapeEditPopup overlay
+ */
+class DrawWithPopup extends OlDraw {
+
+    /**
+     * Override to refresh the ShapeEditPopup when we start drawing
+     *
+     * @param {Object} event
+     */
+    startDrawing_(event) {
+        // Save the map reference for finishDrawing()
+        this.map = event.map;
+        let result = super.startDrawing_(event);
+        if (this.sketchFeature_) {
+            event.map.getOverlays().forEach(o => {
+                if (o.showPopupForShape) {
+                    o.showPopupForShape(this.sketchFeature_);
+                }
+            });
+        }
+        return result;
+    }
+
+    /**
+     * Override to update the ShapeEditPopup as the shape is being created
+     * NB: Popup won't have any shapeId or text at this point - Just updates
+     * the currently visible popup.
+     *
+     * @param {Object} event
+     */
+    handlePointerMove_(event) {
+        if (this.sketchFeature_) {
+            event.map.getOverlays().forEach(o => {
+                if (o.updatePopupCoordinates) {
+                    o.updatePopupCoordinates(this.sketchFeature_.getGeometry());
+                }
+            });
+        }
+        return super.handlePointerMove_(event);
+    }
+
+    /**
+     * Override to update the shapeId of the Popup dialog so we can use
+     * it to edit shape Label etc.
+     */
+    finishDrawing() {
+        let feature = this.sketchFeature_;
+        // Calling the super.finishDrawing() sets the shape ID...
+        let result = super.finishDrawing();
+        // ...allowing us to update the Popup's shapeId
+        if (this.map instanceof PluggableMap && feature) {
+            this.map.getOverlays().forEach(o => {
+                if (o.showPopupForShape) {
+                    o.showPopupForShape(feature);
+                }
+            });
+        }
+        return result;
+    }
+}
 
 /**
  * @classdesc
@@ -232,7 +296,7 @@ class Draw {
         // create a new draw interaction removing possible existing ones first
         if (this.ol_draw_)
             this.regions_.viewer_.viewer_.removeInteraction(this.ol_draw_);
-        this.ol_draw_ = new OlDraw({
+        this.ol_draw_ = new DrawWithPopup({
             style: this.default_style_function_,
             type: ol_shape,
             condition: function(e) {

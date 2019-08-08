@@ -236,6 +236,19 @@ class Rectangle extends Polygon {
     getLength() {
         return getLength(this);
     }
+
+    /**
+     * For displaying coords, this returns a list of [name, value] pairs
+     * @return {List} 2D list of 'name', vaule pairs.
+     */
+    getDisplayCoords() {
+        var topLeft = this.getUpperLeftCorner();
+        let x = topLeft[0].toFixed(1);
+        let y = (-topLeft[1]).toFixed(1);
+        let w = this.getWidth().toFixed(1);
+        let h = this.getHeight().toFixed(1);
+        return [['X', x], ['Y', y], ['Width', w], ['Height', h]];
+    }
 }
 
 export default Rectangle;

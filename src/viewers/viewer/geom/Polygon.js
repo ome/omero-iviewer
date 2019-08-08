@@ -134,6 +134,18 @@ class Polygon extends OlPolygon {
     getLength() {
         return getLength(this);
     }
+
+    /**
+     * For displaying coords, this returns a list of [name, value] pairs
+     * @return {List} 2D list of 'name', vaule pairs.
+     */
+    getDisplayCoords() {
+        let coords = this.getInvertedCoordinates();
+        // Expect only 1 set of coords
+        if (coords.length !== 1) return [];
+        coords = coords[0];
+        return [['Points', coords.map(c => `${ c[0].toFixed(1) },${ -c[1].toFixed(1) }`).join(' ')]];
+    }
 }
 
 export default Polygon;

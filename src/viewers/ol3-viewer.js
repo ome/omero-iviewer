@@ -42,6 +42,7 @@ import {
     REGIONS_MODIFY_SHAPES, REGIONS_PROPERTY_CHANGED, REGIONS_SET_PROPERTY,
     REGIONS_SHOW_COMMENTS, REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES,
     VIEWER_IMAGE_SETTINGS, VIEWER_PROJECTIONS_SYNC, VIEWER_SET_SYNC_GROUP,
+    ENABLE_SHAPE_POPUP,
     EventSubscriber
 } from '../events/events';
 
@@ -101,6 +102,8 @@ export default class Ol3Viewer extends EventSubscriber {
      * @type {Array.<string,function>}
      */
     sub_list = [
+        [ENABLE_SHAPE_POPUP,
+            (params={}) => this.enableShapePopup(params)],
         [IMAGE_VIEWER_INTERACTION,
             (params={}) => this.handleViewerInteraction(params)],
         [IMAGE_VIEWER_CONTROLS_VISIBILITY,
@@ -867,6 +870,14 @@ export default class Ol3Viewer extends EventSubscriber {
             this.viewer.selectShapes(
                 params.shapes, params.value, params.clear,
                 params.center ? shapeSelection : null);
+            // If we've just selected a bunch of shapes, hide the ShapeEditPopup
+            if (params.shapes.length > 1) {
+                this.viewer.viewer_.getOverlays().forEach(o => {
+                    if (o.hideShapeEditPopup) {
+                        o.hideShapeEditPopup();
+                    }
+                });
+            }
         }, delay);
       }
 
@@ -1198,6 +1209,18 @@ export default class Ol3Viewer extends EventSubscriber {
             this.viewer === null) return;
 
         this.viewer.showShapeComments(params.value);
+    }
+
+    /**
+     * Enables/diables the showing of a popup to edit selected shape
+     *
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     */
+    enableShapePopup(params = {}) {
+        if (params.config_id !== this.image_config.id ||
+            this.viewer === null) return;
+        this.viewer.enableShapePopup(params.enable);
     }
 
     /**

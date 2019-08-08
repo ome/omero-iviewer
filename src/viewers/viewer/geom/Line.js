@@ -212,6 +212,29 @@ class Line extends LineString {
     getLength() {
         return getLength(this);
     }
+
+    /**
+     * For displaying coords, this returns a list of [name, value] pairs
+     * @return {List} 2D list of 'name', vaule pairs.
+     */
+    getDisplayCoords() {
+        let coords = this.getLineCoordinates();
+        coords = coords.map(c => c.toFixed(1));
+        // A Line has 4 coordinates
+        if (coords.length == 4) {
+            return [['X1', coords[0]],
+                ['Y1', -coords[1]],
+                ['X2', coords[2]],
+                ['Y2', -coords[3]]];
+        } else {
+            // PolyLine has more 'points'
+            // For even numbers, group 'x,y'...
+            let xy = coords.map((value, index, arr) => {
+                return index % 2 === 0 ? `${ value },${ -arr[index + 1] }` : null;
+            }).filter(v => v);   // remove odd numbers
+            return [['points', xy.join(" ")]];
+        }
+    }
 }
 
 export default Line;

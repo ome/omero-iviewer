@@ -34,6 +34,7 @@ import {intersects, getCenter} from 'ol/extent';
 import {noModifierKeys, primaryAction} from 'ol/events/condition';
 
 import Draw from './interaction/Draw';
+import ShapeEditPopup from './controls/ShapeEditPopup';
 import {checkAndSanitizeServerAddress,
     isSameOrigin,
     sendRequest,
@@ -740,6 +741,9 @@ class Viewer extends OlObject {
                 REGIONS_MODE['MODIFY'],
                 REGIONS_MODE['TRANSLATE']]);
         }
+
+        //Overlay to show a popup for editing shapes (adds itself to map)
+        new ShapeEditPopup(this.regions_);
     }
 
     /**
@@ -776,6 +780,27 @@ class Viewer extends OlObject {
         if (regions && typeof flag === 'boolean') {
             regions.show_comments_ = flag;
             regions.changed();
+        }
+    }
+
+    /**
+     * Enable or disable the showing of a Popup to edit selected shapes.
+     *
+     * @param {boolean} flag
+     */
+    enableShapePopup(flag) {
+        var regions = this.getRegions();
+        if (regions) {
+            regions.enable_shape_popup = flag;
+
+            // If enabling, try to show popup
+            if (flag) {
+                this.viewer_.getOverlays().forEach(o => {
+                    if (o.updatePopupVisibility) {
+                        o.updatePopupVisibility();
+                    }
+                });
+            }
         }
     }
 
@@ -1138,6 +1163,13 @@ class Viewer extends OlObject {
 
         // update regions (if necessary)
         if (this.getRegionsLayer()) this.getRegions().changed();
+
+        // update popup (hide it if shape no longer visible)
+        this.viewer_.getOverlays().forEach(o => {
+            if (o.updatePopupVisibility) {
+                o.updatePopupVisibility();
+            }
+        });
     }
 
     /**
@@ -1528,6 +1560,16 @@ class Viewer extends OlObject {
         modifyStyles(
             shape_info, this.regions_,
             this.getFeatureCollection(ids), callback);
+
+        // Update any popup that might be showing shape Text
+        if (shape_info.hasOwnProperty('Text')) {
+            // Update the ShapeEditPopup
+            this.viewer_.getOverlays().forEach(o => {
+                if (o.updatePopupText) {
+                    o.updatePopupText(ids, shape_info.Text);
+                }
+            });
+        }
     }
 
     /**

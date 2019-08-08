@@ -234,6 +234,17 @@ class Ellipse extends Polygon {
         return new Ellipse(
             this.cx_, this.cy_, this.rx_, this.ry_, this.getTransform());
     }
+
+    /**
+     * For displaying coords, this returns a list of [name, value] pairs
+     * @return {List} 2D list of 'name', vaule pairs.
+     */
+    getDisplayCoords() {
+        return [['X', this.cx_.toFixed(1)],
+                ['Y', -this.cy_.toFixed(1)],
+                ['RadiusX', this.rx_.toFixed(1)],
+                ['RadiusY', this.ry_.toFixed(1)]];
+    }
 }
 
 /**

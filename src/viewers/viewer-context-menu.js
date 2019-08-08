@@ -67,6 +67,12 @@ export default class ViewerContextMenu {
     image_config = null;
 
     /**
+     * Flag to allow toggling of shape popup.
+     * NB: We don't have access to the Viewer Regions to know the acual value.
+     */
+    shape_popup_enabled = true;
+
+    /**
      * @constructor
      * @param {Context} context the application context (injected)
      * @param {Element} element the associated dom element (injected)
@@ -170,6 +176,24 @@ export default class ViewerContextMenu {
             event.preventDefault();
             return false;
         });
+    }
+
+    /**
+     * Enable the showing of the Shape Edit Popup over selected shapes
+     *
+     * @memberof ViewerContextMenu
+     */
+    enableShapePopup() {
+        this.hideContextMenu();
+        if (!this.image_config.regions_info.ready) {
+            return false;
+        }
+        this.shape_popup_enabled = !this.shape_popup_enabled;
+        this.context.eventbus.publish("ENABLE_SHAPE_POPUP",{
+            config_id: this.image_config.id,
+            enable: true,
+        });
+        return false;
     }
 
     /**

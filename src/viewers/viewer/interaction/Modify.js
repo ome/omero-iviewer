@@ -538,7 +538,15 @@ const handleDragEvent_ = function(mapBrowserEvent) {
                 vertex;
             segment[index] = vertex;
         }
+
         this.setGeometryCoordinates_(geometry, coordinates);
+
+        // Update the ShapeEditPopup
+        this.regions_.viewer_.viewer_.getOverlays().forEach(o => {
+            if (o.updatePopupCoordinates) {
+                o.updatePopupCoordinates(geometry);
+            }
+        });
     }
     this.createOrUpdateVertexFeature_(vertex);
 };

@@ -115,6 +115,16 @@ class Point extends Circle {
         return new Point(
             this.getPointCoordinates(), this.getTransform());
     }
+
+    /**
+     * For displaying coords, this returns a list of [name, value] pairs
+     * @return {List} 2D list of 'name', vaule pairs.
+     */
+    getDisplayCoords() {
+        var point = this.getPointCoordinates();
+        return [['X', point[0].toFixed(1)],
+                ['Y', -point[1].toFixed(1)]];
+    }
 }
 
 export default Point;

@@ -102,6 +102,15 @@ class Translate extends OlTranslate {
             this,
             TRANSLATING,
             function(event) {
+                // If dragging a single shape, update the ShapeEditPopup
+                if (event.features.getArray().length == 1) {
+                    let geometry = event.features.getArray()[0].getGeometry();
+                    this.regions_.viewer_.viewer_.getOverlays().forEach(o => {
+                        if (o.updatePopupCoordinates) {
+                            o.updatePopupCoordinates(geometry);
+                        }
+                    });
+                }
                 // start the history for the translate
                 // if we haven't done so already
                 if (this.hist_id_ >= 0 ||
@@ -208,42 +217,6 @@ class Translate extends OlTranslate {
             return true;
         }
         return false;
-    };
-
-    /**
-     * @param {ol.MapBrowserPointerEvent} event Event.
-     * @this {ol.interaction.Translate}
-     * @private
-     */
-    handleDragEvent_(event) {
-        if (this.lastCoordinate_) {
-            var newCoordinate = event.coordinate;
-            var deltaX = newCoordinate[0] - this.lastCoordinate_[0];
-            var deltaY = newCoordinate[1] - this.lastCoordinate_[1];
-
-            var features = this.features_ || new Collection([this.lastFeature_]);
-            var filteredFeatures = new Collection();
-
-            var featuresArray = features.getArray();
-            for (var x=0;x<featuresArray.length;x++) {
-                var feature = featuresArray[x];
-                if (feature.getGeometry() instanceof Mask ||
-                    (typeof feature['permissions'] === 'object' &&
-                    feature['permissions'] !== null &&
-                    typeof feature['permissions']['canEdit'] === 'boolean' &&
-                    !feature['permissions']['canEdit'])) continue;
-                var geom = feature.getGeometry();
-                geom.translate(deltaX, deltaY);
-                feature.setGeometry(geom);
-                filteredFeatures.push(feature);
-            }
-
-            this.lastCoordinate_ = newCoordinate;
-            this.dispatchEvent(
-                new TranslateEvent(
-                    'translating', filteredFeatures,
-                    newCoordinate));
-        }
     };
 
     /**

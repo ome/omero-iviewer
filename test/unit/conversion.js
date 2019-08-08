@@ -22,6 +22,8 @@ import Fill from 'ol/style/Fill';
 import Stroke from 'ol/style/Stroke';
 import Style from 'ol/style/Style';
 import Text from 'ol/style/Text';
+// Needed if viewer code imports any Aurelia code with @decorators etc
+import 'reflect-metadata';
 import Ellipse from '../../src/viewers/viewer/geom/Ellipse';
 import Label from '../../src/viewers/viewer/geom/Label';
 import Line from '../../src/viewers/viewer/geom/Line';

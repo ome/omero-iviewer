@@ -18,9 +18,11 @@
 
 import Vector from 'ol/source/Vector';
 import Feature from 'ol/Feature';
+import Geometry from 'ol/geom/Geometry';
 import Viewer from '../Viewer';
 import Draw from '../interaction/Draw';
 import Select from '../interaction/Select';
+import Hover from '../interaction/Hover';
 import BoxSelect from '../interaction/BoxSelect';
 import Modify from '../interaction/Modify';
 import Translate from '../interaction/Translate';
@@ -112,6 +114,13 @@ class Regions extends Vector {
         this.show_comments_ = false;
 
         /**
+         * this flag determines whether ShapeEditPopup is shown on selected shape
+         * Defauls to true
+         * @type {boolean}
+         */
+        this.enable_shape_popup = true;
+
+        /**
          * the associated regions information
          * as retrieved from the omero server
          * @type {Object}
@@ -189,6 +198,11 @@ class Regions extends Vector {
          * @private
          */
         this.history_id_ = 0;
+
+        /**
+         * ID of shape we are hovering over, or null if none.
+         */
+        this.hoverId = null;
 
         /**
          * The initialization function performs the following steps:
@@ -351,15 +365,22 @@ class Regions extends Vector {
                 this.translate_ = null;
             }
 
-            if (!keep_select && this.select_) {
+            if (!keep_select) {
                 // if multiple (box) select was on, we turn it off now
                 this.viewer_.removeInteractionOrControl("boxSelect");
                 this.viewer_.removeInteractionOrControl("doubleClickZoom");
-                this.select_.clearSelection();
-                this.viewer_.viewer_.getInteractions().remove(this.select_);
-                this.select_.dispose();
+                if (this.select_) {
+                    this.select_.clearSelection();
+                    this.viewer_.viewer_.getInteractions().remove(this.select_);
+                    this.select_.dispose();
+                    this.select_ = null;
+                }
+                if (this.hover_) {
+                    this.viewer_.viewer_.getInteractions().remove(this.hover_);
+                    this.hover_.dispose();
+                    this.hover_ = null;
+                }
                 this.changed();
-                this.select_ = null;
             }
         }
 
@@ -374,6 +395,8 @@ class Regions extends Vector {
             if (this.select_ === null) {
                 this.select_ = new Select(this);
                 this.viewer_.viewer_.addInteraction(this.select_);
+                this.hover_ = new Hover(this);
+                this.viewer_.viewer_.addInteraction(this.hover_);
                 // we also add muliple (box) select by default
                 this.viewer_.addInteraction(
                     "boxSelect",
@@ -525,6 +548,7 @@ class Regions extends Vector {
      * @return {boolean} true if the feature fulfills the criteria to be rendered
      */
     renderFeature(feature) {
+        if (!this.viewer_) return false;
         var projection =  this.viewer_.getImage().image_projection_;
 
         var visible =
@@ -661,6 +685,23 @@ class Regions extends Vector {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Sets the ID of a shape that we are hovering over, to update its style
+     *
+     * @param {string} shapeId shapeId 'roi:shape'
+     */
+    setHoverId(shapeId) {
+        this.hoverId = shapeId;
+        this.changed();
+    }
+
+    /**
+     * Gets the current ID of a shape we are hovering over or null.
+     */
+    getHoverId() {
+        return this.hoverId;
     }
 
     /**
@@ -846,12 +887,12 @@ class Regions extends Vector {
     /**
      * Returns the area and length values for a given shape
      *
-     * @param {ol.Feature} feature the ol3 feature representing the shape
+     * @param {ol.Feature or ol.geom.Geometry} feature the ol3 feature representing the shape
      * @param {boolean} recalculate flag: if true we redo the measurement (default: false)
      * @return {Object|null} an object containing shape id, area and length or null
      */
     getLengthAndAreaForShape(feature, recalculate) {
-            if (!(feature instanceof Feature)) return null;
+            if (!(feature instanceof Feature || feature instanceof Geometry)) return null;
 
             if (typeof recalculate !== 'boolean') recalculate = false;
 

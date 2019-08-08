@@ -507,7 +507,7 @@ export const createFeaturesFromRegionsResponse =
  * Uses the respective ol3 code to get the length and area of a geometry
  *
  * @static
- * @param {Feature} feature the feature containing the geometry
+ * @param {Feature or Geometry} feature the feature containing the geometry
  * @param {boolean} recalculate flag: if true we redo the measurement (default: false)
  * @param {number} pixel_size the pixel_size
  * @param {string} pixel_symbol the pixel_symbol
@@ -517,7 +517,7 @@ export const calculateLengthAndArea =
     function(feature, recalculate, pixel_size, pixel_symbol) {
         if (typeof pixel_size !== 'number') pixel_size = 1;
 
-        var geom = feature.getGeometry();
+        var geom = feature.getGeometry ? feature.getGeometry() : feature;
         // we represent points as circles
         var hasArea =
             !(geom instanceof Circle) &&
@@ -546,20 +546,30 @@ export const calculateLengthAndArea =
             return Number(Math.round(value +'e3') + 'e-3');
         };
 
-        // we recalculate regardless if we don't have a length/area yet
-        if (typeof feature['Area'] !== 'number' || recalculate)
-            feature['Area'] = hasArea ?
-                roundAfterThreeDecimals(
-                    geom.getArea() * (pixel_size * pixel_size)) : -1;
-        if (typeof feature['Length'] !== 'number' || recalculate)
-            feature['Length'] = hasLength ?
-                roundAfterThreeDecimals(geom.getLength() * pixel_size) : -1;
-
-        return {
-            'id' : feature.getId(),
-            'Area': feature['Area'],
-            'Length': feature['Length']
-        };
+        if (feature instanceof Feature) {
+            // we recalculate regardless if we don't have a length/area yet
+            if (typeof feature['Area'] !== 'number' || recalculate)
+                feature['Area'] = hasArea ?
+                    roundAfterThreeDecimals(
+                        geom.getArea() * (pixel_size * pixel_size)) : -1;
+            if (typeof feature['Length'] !== 'number' || recalculate)
+                feature['Length'] = hasLength ?
+                    roundAfterThreeDecimals(geom.getLength() * pixel_size) : -1;
+            return {
+                'id' : feature.getId(),
+                'Area': feature['Area'],
+                'Length': feature['Length']
+            };
+        } else {
+            let rv = {};
+            if (hasLength) {
+                rv.Length = roundAfterThreeDecimals(geom.getLength() * pixel_size);
+            }
+            if (hasArea) {
+                rv.Area = roundAfterThreeDecimals(geom.getArea() * (pixel_size * pixel_size))
+            }
+            return rv;
+        }
 }
 
 /**
