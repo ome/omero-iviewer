@@ -125,7 +125,6 @@ export default class RegionsList extends EventSubscriber {
     }
 
     sort(value) {
-        console.log('click Sort', value);
         this.sortAscending = this.sortBy === value ? !this.sortAscending : true;
         this.sortBy = value;
     }
