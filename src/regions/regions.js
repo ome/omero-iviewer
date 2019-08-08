@@ -20,9 +20,8 @@
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import Ui from '../utils/ui';
-import {TABS} from '../utils/constants';
+import {TABS, ROI_TABS} from '../utils/constants';
 import {REGIONS_STORE_SHAPES, REGIONS_SHOW_COMMENTS} from '../events/events';
-import {PROJECTION} from '../utils/constants';
 import {inject, customElement, bindable} from 'aurelia-framework';
 
 /**
@@ -51,6 +50,17 @@ export default class Regions {
     ];
 
     /**
+     * Make this available to the template
+     */
+    ROI_TABS = ROI_TABS;
+
+    /**
+     * Currently selected tab within the ROI panel. One of the ROI_TABS options.
+     * @type {String}
+     */
+    selected_roi_tab = ROI_TABS.ROI_TABLE;
+
+    /**
      * @constructor
      * @param {Context} context the application context (injected)
      */
@@ -66,6 +76,11 @@ export default class Regions {
      */
     attached() {
         Ui.registerKeyHandlers(this.context, this.key_actions, TABS.ROIS, this);
+
+        $("#regions-tabs").find("a").click((e) => {
+            e.preventDefault();
+            this.selected_roi_tab = e.currentTarget.hash.substring(1);
+        });
     }
 
     /**

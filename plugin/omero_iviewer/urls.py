@@ -42,4 +42,6 @@ urlpatterns = patterns(
         r'(?P<the_z>[0-9]+)(?:-(?P<z_end>[0-9]+))?/'
         r'(?P<the_t>[0-9:]+)(?:-(?P<t_end>[0-9]+))?/$',
         views.rois_by_plane, name='omero_iviewer_rois_by_plane'),
+    url(r'^plane_shape_counts/(?P<image_id>[0-9]+)/$',
+        views.plane_shape_counts, name='omero_iviewer_plane_shape_counts'),
 )

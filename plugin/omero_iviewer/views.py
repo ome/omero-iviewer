@@ -21,6 +21,7 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 
 from os.path import splitext
+from collections import defaultdict
 from struct import unpack
 
 from omeroweb.api.api_settings import API_MAX_LIMIT
@@ -32,7 +33,7 @@ from omeroweb.webgateway.templatetags.common_filters import lengthformat,\
 import json
 import omero_marshal
 import omero
-from omero.rtypes import rint, rlong
+from omero.rtypes import rint, rlong, unwrap
 from omero_sys_ParametersI import ParametersI
 import omero.util.pixelstypetopython as pixelstypetopython
 
@@ -276,6 +277,72 @@ def rois_by_plane(request, image_id, the_z, the_t, z_end=None, t_end=None,
     meta = {"totalCount": result[0][0].val}
 
     return JsonResponse({'data': marshalled, 'meta': meta})
+
+
+@login_required()
+def plane_shape_counts(request, image_id, conn=None, **kwargs):
+    """
+    Get the number of shapes that will be visible on each plane.
+
+    Shapes that have theZ or theT unset will show up on all planes.
+    """
+
+    image = conn.getObject("Image", image_id)
+    if image is None:
+        return JsonResponse({"error": "Image not found"}, status=404)
+
+    query_service = conn.getQueryService()
+    params = omero.sys.ParametersI()
+    params.addId(image_id)
+    counts = []
+
+    # Attempt to load counts for each Z/T index.
+    # Unfortunately this is too slow. Use alternative approach (see below)
+    # query = """
+    #     select count(distinct shape) from Shape shape
+    #     join shape.roi as roi
+    #     where (shape.theZ = %s or shape.theZ is null)
+    #     and (shape.theT = %s or shape.theT is null)
+    #     and roi.image.id = :id
+    # """
+    # for z in range(image.getSizeZ()):
+    #     t_counts = []
+    #     for t in range(image.getSizeT()):
+    #         result = query_service.projection(query % (z, t), params,
+    #                                           conn.SERVICE_OPTS)
+    #         t_counts.append(result[0][0].val)
+    #     counts.append(t_counts)
+
+    size_t = image.getSizeT()
+    size_z = image.getSizeZ()
+    counts = [[0] * size_t for z in range(size_z)]
+
+    query = """
+        select shape.theZ, shape.theT from Shape shape
+        join shape.roi as roi where roi.image.id = :id
+    """
+    # key is 'z:t' for unattached shapes, e.g. {'none:5':3}
+    unattached_counts = defaultdict(int)
+    result = query_service.projection(query, params, conn.SERVICE_OPTS)
+    for shape in result:
+        z = unwrap(shape[0])
+        t = unwrap(shape[1])
+        if z is not None and t is not None:
+            counts[z][t] += 1
+        else:
+            key = "%s:%s" % (z, t)
+            unattached_counts[key] += 1
+
+    for key, count in unattached_counts.items():
+        z = key.split(':')[0]
+        t = key.split(':')[1]
+        z_range = range(size_z) if z == 'None' else [int(z)]
+        t_range = range(size_t) if t == 'None' else [int(t)]
+        for the_z in z_range:
+            for the_t in t_range:
+                counts[the_z][the_t] += count
+
+    return JsonResponse({'data': counts})
 
 
 @login_required()

@@ -609,9 +609,13 @@ thumbnail-slider img {
     flex-direction: column;
 }
 
-.nav-tabs {
+#panel-tabs {
     background-color: #f8f8f8;
     flex: 0 0 auto;
+}
+
+.small-tabs>li>a {
+    padding: 7px 10px;
 }
 
 /* Container for each .tab-pane for tab content */
@@ -632,7 +636,12 @@ thumbnail-slider img {
     position: absolute;
 }
 
-/* Main ROI tab. Contains .regions-tools and .regions-list */
+#regions-tabs-content .tab-pane {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+/* Main ROI tab. Contains .regions-tools #regions-tabs and #regions-tabs-content */
 .regions-container {
     height: 100%;
     width: 100%;
@@ -646,6 +655,17 @@ thumbnail-slider img {
 .regions-tools {
     width: 100%;
     flex: 0 0 auto;
+}
+
+#regions-tabs {
+    flex: 0 0 auto;
+}
+
+/* Sub ROI tabs-container. Contains .regions-list and */
+#regions-tabs-content {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    position: relative;
 }
 
 /* Contains .pagination-controls, .regions-header and .regions-table */
@@ -699,6 +719,68 @@ thumbnail-slider img {
     margin-left: 0px;
     margin-right: 0px;
     width: 100%;
+}
+
+/* Grid to show Shape counts per plane */
+.grid_table>div {
+    display: inline-block;
+    border-top: solid grey 1px;
+    border-bottom: solid grey 1px;
+    margin-bottom: 8px;
+    background-color: #f0f0f0;
+}
+
+.grid_table>div:first-child {
+    border-left: solid grey 1px;
+}
+
+.grid_table>div:last-child {
+    border-right: solid grey 1px;
+}
+
+.grid_table>div:last-child .x_axis{
+    width: 20px;
+    text-align: left;
+}
+
+.grid_cell {
+    width: 14px;
+    height: 14px;
+    border: solid white 1px;
+    text-align: center;
+    overflow: visible;
+    user-select: none;
+}
+.grid_cell.selected {
+    border: solid rgb(90, 135, 248) 3px;
+}
+.pointer .grid_cell {
+    cursor: pointer;
+}
+
+.y_axis, .x_axis {
+    font-size: 10px;
+    border-color: transparent;
+    cursor: default !important;
+}
+.x_axis {
+    color: transparent;
+}
+.y_axis {
+    width: 25px
+}
+
+/* Show the first '1' x_axis label... */
+.col:nth-of-type(2) .x_axis {
+    color: black;
+    z-index: 10;
+    position: relative;
+}
+/* ...and every 5th label */
+.col:nth-of-type(5n+1) .x_axis {
+    color: black;
+    z-index: 10;
+    position: relative;
 }
 
 .left-hand-panel-hidden {
