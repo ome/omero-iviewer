@@ -893,6 +893,7 @@ class Regions extends Vector {
      */
     getLengthAndAreaForShape(feature, recalculate) {
             if (!(feature instanceof Feature || feature instanceof Geometry)) return null;
+            if (!this.viewer_) return null;
 
             if (typeof recalculate !== 'boolean') recalculate = false;
 
