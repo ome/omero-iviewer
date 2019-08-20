@@ -187,12 +187,14 @@ class ShapeEditPopup extends Overlay {
 
         let areaText = "";
         let areaLength = this.regions.getLengthAndAreaForShape(geom);
-        let unit = this.regions.viewer_.image_info_['pixel_size']['symbol_x'] || 'px';
-        ['Area', 'Length'].forEach(dim => {
-            if (areaLength.hasOwnProperty(dim)) {
-                areaText += `${ dim }: ${ areaLength[dim] } ${ unit }${ dim == 'Area' ? '²' : ''}`;
-            }
-        })
+        if (this.regions.viewer_ && areaLength) {
+            let unit = this.regions.viewer_.image_info_['pixel_size']['symbol_x'] || 'px';
+            ['Area', 'Length'].forEach(dim => {
+                if (areaLength.hasOwnProperty(dim)) {
+                    areaText += `${ dim }: ${ areaLength[dim] } ${ unit }${ dim == 'Area' ? '²' : ''}`;
+                }
+            })
+        }
         document.getElementById('shape-popup-coords').value = coordsText;
         document.getElementById('shape-popup-area').value = areaText;
 
