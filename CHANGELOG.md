@@ -1,3 +1,15 @@
+
+0.8.0 (August 2019)
+-------------------
+
+This version includes:
+
+- show a grid indicating the number of ROIs on each Z/T plane [#245](https://github.com/ome/omero-iviewer/pull/245)
+- show Shape info in a popup on the image [#248](https://github.com/ome/omero-iviewer/pull/248)
+- improve accuracy of Ellipse area calculation [#263](https://github.com/ome/omero-iviewer/pull/263)
+- support sorting of ROIs in the table [#264](https://github.com/ome/omero-iviewer/pull/264)
+- fix opening of Images in a Well when not in your default group [#271](https://github.com/ome/omero-iviewer/pull/271)
+
 0.7.1 (June 2019)
 -----------------
 
