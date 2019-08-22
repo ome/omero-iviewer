@@ -845,11 +845,14 @@ export default class Context {
      * @param {number} id the ImageConfig id
      */
     selectConfig(id=null) {
-        if (typeof id !== 'number' || id < 0 ||
-            !(this.image_configs.get(id) instanceof ImageConfig) ||
-            this.selected_config === id) return;
-
-        this.selected_config = id;
+        if (typeof id === 'number' && id > 0 &&
+            (this.image_configs.get(id) instanceof ImageConfig) &&
+            this.selected_config !== id) {
+          this.selected_config = id;
+        }
+        // NB: return true so that the event bubbles.
+        // see https://github.com/ome/omero-iviewer/issues/274
+        return true;
     }
 
     /**
