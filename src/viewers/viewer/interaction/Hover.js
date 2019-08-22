@@ -41,11 +41,8 @@ class Hover extends Pointer {
 
         var els = document.querySelectorAll(
             '.hover-popup');
-        this.tooltip = els && els.length > 0 ? els[0] : null;
-        if (!this.tooltip) {
-            this.tooltip = document.createElement('div');
-            this.tooltip.className = 'hover-popup';
-        }
+        this.tooltip = document.createElement('div');
+        this.tooltip.className = 'hover-popup';
 
         this.regions_ = regions_reference;
         this.map = regions_reference.viewer_.viewer_;

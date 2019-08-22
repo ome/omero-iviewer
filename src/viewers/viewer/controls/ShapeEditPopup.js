@@ -42,25 +42,21 @@ class ShapeEditPopup extends Overlay {
     constructor(regions_reference) {
 
         var els = document.querySelectorAll('.shape-edit-popup');
-        let popup = els && els.length > 0 ? els[0] : null;
-        if (!popup) {
-            popup = document.createElement('div');
-            popup.className = 'shape-edit-popup';
-            popup.innerHTML = `
-            <div>
-                <input id='shape-popup-edit-text'
-                    placeholder='Edit shape comment'
-                    value=''/>
-                <div><input readonly id='shape-popup-coords'/></div>
-                <div><input readonly id='shape-popup-area'/></div>
-                <a href="#" id="shape-edit-popup-closer" class="shape-edit-popup-closer"></a>
-            </div>`;
-            // add flag to the event so that the Hover interaction can ignore it
-            popup.onpointermove = function(e) {
-                e.isOverShapeEditPopup = true;
-            };
-
-        }
+        let popup = document.createElement('div');
+        popup.className = 'shape-edit-popup';
+        popup.innerHTML = `
+        <div>
+            <input class='shape-popup-edit-text'
+                placeholder='Edit shape comment'
+                value=''/>
+            <div><input readonly class='shape-popup-coords'/></div>
+            <div><input readonly class='shape-popup-area'/></div>
+            <a href="#" class="shape-edit-popup-closer" class="shape-edit-popup-closer"></a>
+        </div>`;
+        // add flag to the event so that the Hover interaction can ignore it
+        popup.onpointermove = function(e) {
+            e.isOverShapeEditPopup = true;
+        };
 
         super({
             element: popup,
@@ -75,6 +71,11 @@ class ShapeEditPopup extends Overlay {
         this.map = regions_reference.viewer_.viewer_;
         // Need to add to map before we can bindListeners() to DOM elements
         this.map.addOverlay(this);
+
+        this.textInput = this.popup.querySelectorAll('.shape-popup-edit-text')[0];
+        this.coordsInput = this.popup.querySelectorAll('.shape-popup-coords')[0];
+        this.areaInput = this.popup.querySelectorAll('.shape-popup-area')[0];
+        this.popupCloser = this.popup.querySelectorAll('.shape-edit-popup-closer')[0];
         this.bindListeners();
     };
 
@@ -106,7 +107,7 @@ class ShapeEditPopup extends Overlay {
         // so we know which shape we're editing...
         this.shapeId = feature.getId();
 
-        document.getElementById('shape-popup-edit-text').value = text;
+        this.textInput.value = text;
 
         // show if feature is visible
         if (this.regions.renderFeature(feature)) {
@@ -123,7 +124,7 @@ class ShapeEditPopup extends Overlay {
      */
     updatePopupText(shape_ids, text) {
         if (this.shapeId && shape_ids.indexOf(this.shapeId) > -1) {
-            document.getElementById('shape-popup-edit-text').value = text;
+            this.textInput.value = text;
         }
     }
 
@@ -192,8 +193,8 @@ class ShapeEditPopup extends Overlay {
                 }
             })
         }
-        document.getElementById('shape-popup-coords').value = coordsText;
-        document.getElementById('shape-popup-area').value = areaText;
+        this.coordsInput.value = coordsText;
+        this.areaInput.value = areaText;
 
         if (this.regions.enable_shape_popup) {
             this.setPosition([x, y]);
@@ -204,9 +205,8 @@ class ShapeEditPopup extends Overlay {
      * Add Listeners for events.
      */
     bindListeners() {
-        let textInput = document.getElementById('shape-popup-edit-text');
         let inputTimeout;
-        textInput.onkeyup = (event) => {
+        this.textInput.onkeyup = (event) => {
 
             // Use a de-bounce to automatically save when user stops typing
             if (inputTimeout) {
@@ -227,7 +227,7 @@ class ShapeEditPopup extends Overlay {
             }, 500);
         }
 
-        document.getElementById('shape-edit-popup-closer').onclick = (event) => {
+        this.popupCloser.onclick = (event) => {
             this.setPosition(undefined);
             event.target.blur();
 
@@ -247,8 +247,8 @@ class ShapeEditPopup extends Overlay {
      * Removes listeners added above
      */
     unbindListeners() {
-        document.getElementById('shape-popup-edit-text').onkeyup = null;
-        document.getElementById('shape-edit-popup-closer').onclick = null;
+        this.textInput.onkeyup = null;
+        this.popupCloser.onclick = null;
     }
 
     /**
