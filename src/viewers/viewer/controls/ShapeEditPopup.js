@@ -65,10 +65,7 @@ class ShapeEditPopup extends Overlay {
         super({
             element: popup,
             insertFirst: false,
-            autoPan: true,
-            autoPanAnimation: {
-                duration: 250
-            }
+            autoPan: false,
         });
 
         // TODO: Don't need to store all of these!
