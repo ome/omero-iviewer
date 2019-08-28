@@ -382,7 +382,7 @@ export class Header {
                         let stat = shape.stats[s];
                         if (active.indexOf(stat.index) !== -1) {
                             if (stat.points === 0) {
-                                csv += csvCommonInfo + "," + emptyRow;
+                                csv += csvCommonInfo + "," + emptyRow + CSV_LINE_BREAK;
                                 break;
                             }
                             csv += csvCommonInfo +
