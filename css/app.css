@@ -966,6 +966,10 @@ thumbnail-slider img {
     -webkit-user-select: none;
 }
 
+.regions-table-row input[type='checkbox'] {
+    margin: 0;
+}
+
 .regions-table-col {
     float: left;
     min-width: 10px;
