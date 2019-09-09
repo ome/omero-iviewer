@@ -118,6 +118,14 @@ export default class RegionsInfo  {
     visibility_toggles = 0;
 
     /**
+     * the balance of individual shape show vs hide toggles
+     * for all ROIs. {roi_id: count}
+     * @memberof RegionsInfo
+     * @type {Object}
+     */
+    roi_visibility_toggles = {};
+
+    /**
      * the copied shapes
      * (which uses also local storage -if supported)
      * @memberof RegionsInfo
@@ -257,11 +265,14 @@ export default class RegionsInfo  {
 
         // if the shape shape has a property of that given name
         // set its new value
-        if (typeof shape[property] !== 'undefined') shape[property] = value;
+        if (typeof shape[property] !== 'undefined') {
+            shape[property] = value;
+        }
         // modify the selected set for actions that influence it
         if ((property === 'selected' || property === 'visible') && value) {
-            if (property === 'visible') this.visibility_toggles++;
-            else {
+            if (property === 'visible') {
+                this.updateRoiVisibilityToggles(id, 1);
+            } else {
                 this.data.get(ids.roi_id).show = true;
                 let i = this.selected_shapes.indexOf(id);
                 if (i === -1) this.selected_shapes.push(id);
@@ -270,21 +281,50 @@ export default class RegionsInfo  {
                     (property === 'visible' && !value) ||
                     (property === 'deleted' && value)) {
             let i = this.selected_shapes.indexOf(id);
-            if (i !== -1) this.selected_shapes.splice(i, 1);
+            if (i !== -1) {
+                this.selected_shapes.splice(i, 1);
+            }
             shape.selected = false;
             if (property === 'deleted' &&
                 typeof shape.is_new === 'boolean' && shape.is_new) {
                     roi.deleted++;
                     this.number_of_shapes--;
-                    if (!shape.visible) this.visibility_toggles++;
-            } else if (property === 'visible') this.visibility_toggles--;
+                    if (!shape.visible) {
+                        this.updateRoiVisibilityToggles(id, 1);
+                    }
+            } else if (property === 'visible') {
+                this.updateRoiVisibilityToggles(id, -1);
+            }
         } else if (property === 'deleted' &&
                     typeof shape.is_new === 'boolean' && shape.is_new &&
                     !value) {
                         roi.deleted--;
                         this.number_of_shapes++;
-                        if (!shape.visible) this.visibility_toggles--;
+                        if (!shape.visible) {
+                            this.updateRoiVisibilityToggles(id, -1);
+                        }
         }
+    }
+
+    /**
+     * We track how many shapes aren't visible to check the
+     * 'Show All' checkbox when they are all shown (toggle count ==0);
+     * We also do this for each ROI since each ROI also has a
+     * 'Show All' checkbox 
+     *
+     * @memberof RegionsInfo
+     * @param {string} id a shape id in format roi:shape-id
+     * @param {number} increment update counts by this number 
+     */
+    updateRoiVisibilityToggles(shape_id, increment) {
+        // Update total count
+        this.visibility_toggles += increment;
+        // Update count for each ROI
+        let roi_id = shape_id.split(':')[0];
+        if (this.roi_visibility_toggles[roi_id] === undefined) {
+            this.roi_visibility_toggles[roi_id] = 0;
+        }
+        this.roi_visibility_toggles[roi_id] += increment;
     }
 
     /**
