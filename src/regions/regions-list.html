@@ -124,7 +124,7 @@
                          </div>
                          <div class="regions-table-col shape-show">
                              <input type="checkbox"
-                                 title="Show/Hide shapes" checked.one-way="regions_info.roi_visibility_toggles[roi_id] === 0"
+                                 title="Show/Hide shapes" checked.one-way="regions_info.roi_visibility_toggles[roi_id] === undefined || regions_info.roi_visibility_toggles[roi_id] === 0"
                                  change.delegate="toggleRoiVisibility(roi_id, $event)"/>
                          </div>
                          <div class="regions-table-col shape-type">
