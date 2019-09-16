@@ -491,6 +491,35 @@ export default class RegionsList extends EventSubscriber {
     }
 
     /**
+     * ROI visibility toggler
+     * Toggles the visibility of ALL shapes in the ROI
+     *
+     * @param {number} roi_id the roi id
+     * @param {Object} event the mouse event object
+     * @memberof RegionsList
+     */
+    toggleRoiVisibility(roi_id, event) {
+        event.stopPropagation();
+        event.preventDefault();
+        let visible = event.target.checked;
+        let roi = this.regions_info.data.get(roi_id);
+        let shape_ids = [];
+        roi.shapes.forEach((s) => {
+            if (s.visible !== visible) {
+                shape_ids.push(s.shape_id);
+            }
+        });
+        if (shape_ids.length == 0) return;
+        this.context.publish(
+            REGIONS_SET_PROPERTY, {
+                config_id: this.regions_info.image_info.config_id,
+                property : "visible",
+                shapes : shape_ids,
+                value : visible});
+        return false;
+    }
+
+    /**
      * shape visibility toggler
      *
      * @param {number} id the shape id
