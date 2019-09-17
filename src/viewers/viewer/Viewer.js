@@ -2302,7 +2302,7 @@ class Viewer extends OlObject {
             }
         };
 
-        ret = [];
+        var ret = [];
         for (var r in rois)
             if (rois[r]['shapes'].length > 0) ret.push(rois[r]);
         return ret;
