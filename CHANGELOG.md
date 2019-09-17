@@ -4,11 +4,11 @@
 
 This version includes:
 
-- Fix multi-viewer sync buttons [#275](https://github.com/ome/omero-iviewer/pull/275)
-- Disable panning of viewer when popup is shown on a Shape [#276](https://github.com/ome/omero-iviewer/pull/276)
-- Fix formatting of CSV when exporting Shapes outside the image [#277](https://github.com/ome/omero-iviewer/pull/277)
-- Show or hide all Shapes within an ROI [#278](https://github.com/ome/omero-iviewer/pull/278)
-- Fix UI update when saving ROIs in multi-viewer mode [#279](https://github.com/ome/omero-iviewer/pull/279)
+- fix multi-viewer sync buttons [#275](https://github.com/ome/omero-iviewer/pull/275)
+- disable panning of viewer when popup is shown on a Shape [#276](https://github.com/ome/omero-iviewer/pull/276)
+- fix formatting of CSV when exporting Shapes outside the image [#277](https://github.com/ome/omero-iviewer/pull/277)
+- show or hide all Shapes within an ROI [#278](https://github.com/ome/omero-iviewer/pull/278)
+- fix UI update when saving ROIs in multi-viewer mode [#279](https://github.com/ome/omero-iviewer/pull/279)
 
 0.8.0 (August 2019)
 -------------------
