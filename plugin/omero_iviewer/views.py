@@ -500,8 +500,8 @@ def save_projection(request, conn=None, **kwargs):
 
         # set image decription
         details = []
-        details.append("Original Image: " + img.getName())
-        details.append("Original Image ID: " + image_id)
+        details.append("Image's name:" + img.getName())
+        details.append("Image:" + image_id)
         details.append("Projection Type: " + proj_type)
         details.append(
             "z-sections: " + str(int(start)+1) + "-" + str(int(end)+1))
