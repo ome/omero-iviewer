@@ -15,14 +15,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from django.conf.urls import patterns
 from django.conf.urls import url
 
 import views
 
-urlpatterns = patterns(
-
-    'django.views.generic.simple',
+urlpatterns = [
     # general entry point for iviewer app
     url(r'^$', views.index, name='omero_iviewer_index'),
     url(r'^persist_rois/?$', views.persist_rois,
@@ -44,4 +41,4 @@ urlpatterns = patterns(
         views.rois_by_plane, name='omero_iviewer_rois_by_plane'),
     url(r'^plane_shape_counts/(?P<image_id>[0-9]+)/$',
         views.plane_shape_counts, name='omero_iviewer_plane_shape_counts'),
-)
+]
