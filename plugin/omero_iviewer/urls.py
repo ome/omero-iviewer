@@ -24,7 +24,7 @@ urlpatterns = patterns(
 
     'django.views.generic.simple',
     # general entry point for iviewer app
-    url(r'^/?$', views.index, name='omero_iviewer_index'),
+    url(r'^$', views.index, name='omero_iviewer_index'),
     url(r'^persist_rois/?$', views.persist_rois,
         name='omero_iviewer_persist_rois'),
     url(r'^image_data/(?P<image_id>[0-9]+)/$', views.image_data,
