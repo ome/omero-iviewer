@@ -37,7 +37,7 @@ from omero.rtypes import rint, rlong, unwrap
 from omero_sys_ParametersI import ParametersI
 import omero.util.pixelstypetopython as pixelstypetopython
 
-from version import __version__
+from .version import __version__
 from omero_version import omero_version
 
 from . import iviewer_settings

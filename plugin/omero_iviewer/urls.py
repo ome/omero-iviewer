@@ -17,7 +17,7 @@
 
 from django.conf.urls import url
 
-import views
+from omero_iviewer import views
 
 urlpatterns = [
     # general entry point for iviewer app
