@@ -38,7 +38,7 @@ def get_full_version(value=None):
     """
 
     if value is None:
-        from version import VERSION as value  # noqa
+        from .version import VERSION as value  # noqa
     return value
 
 
@@ -49,5 +49,5 @@ def get_rc_version(value=None):
     """
 
     if value is None:
-        from version import RC as value  # noqa
+        from .version import RC as value  # noqa
     return value

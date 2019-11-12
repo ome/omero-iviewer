@@ -37,7 +37,7 @@ from omero.rtypes import rint, rlong, unwrap
 from omero_sys_ParametersI import ParametersI
 import omero.util.pixelstypetopython as pixelstypetopython
 
-from version import __version__
+from .version import __version__
 from omero_version import omero_version
 
 from . import iviewer_settings
@@ -174,7 +174,7 @@ def persist_rois(request, conn=None, **kwargs):
     # delete entire (empty) rois
     try:
         empty_rois = rois.get('empty_rois', {})
-        empty_rois_ids = [long(k) for k in list(empty_rois.keys())]
+        empty_rois_ids = [int(k) for k in list(empty_rois.keys())]
         if (len(empty_rois_ids) > 0):
             conn.deleteObjects("Roi", empty_rois_ids, wait=True)
         # set ids after successful deletion,
@@ -194,7 +194,7 @@ def persist_rois(request, conn=None, **kwargs):
             rois_to_be_updated = []
             for d in deleted_rois_ids:
                 r = rois_service.findByRoi(
-                    long(d), None, conn.SERVICE_OPTS).rois[0]
+                    int(d), None, conn.SERVICE_OPTS).rois[0]
                 for s in r.copyShapes():
                     roi_shape_id = str(d) + ':' + str(s.getId().getValue())
                     if roi_shape_id in deleted[d]:
@@ -232,7 +232,7 @@ def rois_by_plane(request, image_id, the_z, the_t, z_end=None, t_end=None,
     params.addId(image_id)
     filter = omero.sys.Filter()
     filter.offset = rint(request.GET.get("offset", 0))
-    limit = min(MAX_LIMIT, long(request.GET.get("limit", MAX_LIMIT)))
+    limit = min(MAX_LIMIT, int(request.GET.get("limit", MAX_LIMIT)))
     filter.limit = rint(limit)
     params.theFilter = filter
 
@@ -523,7 +523,7 @@ def save_projection(request, conn=None, **kwargs):
             conn.SERVICE_OPTS.setOmeroGroup(
                 conn.getGroupFromContext().getId())
             link = omero.model.DatasetImageLinkI()
-            link.parent = omero.model.DatasetI(long(dataset_id), False)
+            link.parent = omero.model.DatasetI(int(dataset_id), False)
             link.child = omero.model.ImageI(new_image_id, False)
             upd_svc.saveObject(link, conn.SERVICE_OPTS)
     except Exception as save_projection_exception:
@@ -544,7 +544,7 @@ def well_images(request, conn=None, **kwargs):
 
         # set well id
         params = ParametersI()
-        params.add("well_id", rlong(long(well_id)))
+        params.add("well_id", rlong(int(well_id)))
 
         # get total count first
         count = query_service.projection(
@@ -691,7 +691,7 @@ def shape_stats(request, conn=None, **kwargs):
     channels = []
     try:
         ids = [
-            long(id.split(':')[1]) if ':' in id else long(id)
+            int(id.split(':')[1]) if ':' in id else int(id)
             for id in ids.split(',') if id != ''
         ]
         z, t = int(z), int(t)
