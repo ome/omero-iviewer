@@ -423,31 +423,31 @@ def image_data(request, image_id, conn=None, **kwargs):
 
 
 def format_value_with_units(value):
-        """
-        Formats the response for methods above.
-        Returns [value, unitSymbol]
-        If the unit is MICROMETER or s in database (default), we
-        convert to more appropriate units & value
-        """
-        if value is None:
-            return (None, "")
-        length = value.getValue()
-        unit = value.getUnit()
-        if unit == "MICROMETER":
-            unit = lengthunit(length)
-            length = lengthformat(length)
-        elif unit == "MILLISECOND":
-            length = length/1000.0
-            unit = value.getSymbol()
-        elif unit == "MINUTE":
-            length = 60*length
-            unit = value.getSymbol()
-        elif unit == "HOUR":
-            length = 3600*length
-            unit = value.getSymbol()
-        else:
-            unit = value.getSymbol()
-        return (length, unit)
+    """
+    Formats the response for methods above.
+    Returns [value, unitSymbol]
+    If the unit is MICROMETER or s in database (default), we
+    convert to more appropriate units & value
+    """
+    if value is None:
+        return (None, "")
+    length = value.getValue()
+    unit = value.getUnit()
+    if unit == "MICROMETER":
+        unit = lengthunit(length)
+        length = lengthformat(length)
+    elif unit == "MILLISECOND":
+        length = length/1000.0
+        unit = value.getSymbol()
+    elif unit == "MINUTE":
+        length = 60*length
+        unit = value.getSymbol()
+    elif unit == "HOUR":
+        length = 3600*length
+        unit = value.getSymbol()
+    else:
+        unit = value.getSymbol()
+    return (length, unit)
 
 
 @login_required()
@@ -588,8 +588,8 @@ def get_intensity(request, conn=None, **kwargs):
     # checks
     if image_id is None or x is None or y is None or cs is None \
             or z is None or t is None:
-                return JsonResponse(
-                    {"error": "Mandatory params are: image, x, y, c, z and t"})
+        return JsonResponse(
+            {"error": "Mandatory params are: image, x, y, c, z and t"})
 
     # retrieve image object
     img = conn.getObject("Image", image_id, opts=conn.SERVICE_OPTS)
