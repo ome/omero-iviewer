@@ -8,7 +8,7 @@ Also see `SUPPORT.md <https://github.com/ome/omero-iviewer/blob/master/SUPPORT.m
 Requirements
 ============
 
-* OMERO 5.4.0 or newer.
+* OMERO 5.6.0 or newer.
 
 Build
 =====
@@ -93,7 +93,7 @@ to your ``PYTHONPATH`` and add to ``omero.web.apps``
 ::
 
     $ export PYTHONPATH=$PYTHONPATH:/path/to/omero-iviewer/plugin
-    $ bin/omero config append omero.web.apps '"omero_iviewer"'
+    $ omero config append omero.web.apps '"omero_iviewer"'
 
 **Notes**:
 
