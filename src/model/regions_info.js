@@ -64,7 +64,7 @@ export default class RegionsInfo  {
 
     /**
      * Page size for ROIs to support pagination.
-     * Configured with bin/omero config set omero.web.iviewer.roi_page_size 500
+     * Configured with omero config set omero.web.iviewer.roi_page_size 500
      *
      * @memberof RegionsInfo
      * @type {number}

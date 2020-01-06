@@ -13,7 +13,7 @@ An OMERO.web app for visualizing images in OMERO.
 Requirements
 ============
 
-* OMERO 5.4.0 or newer.
+* OMERO 5.6.0 or newer.
 
 
 Installing from PyPI
@@ -31,19 +31,19 @@ Add iviewer custom app to your installed web apps:
 
 ::
 
-    $ bin/omero config append omero.web.apps '"omero_iviewer"'
+    $ omero config append omero.web.apps '"omero_iviewer"'
 
 To replace the default omero.web viewer:
 
 ::
 
-    $ bin/omero config set omero.web.viewer.view omero_iviewer.views.index
+    $ omero config set omero.web.viewer.view omero_iviewer.views.index
 
 To enable the "open with" feature:
 
 ::
 
-    $ bin/omero config append omero.web.open_with '["omero_iviewer", "omero_iviewer_index",
+    $ omero config append omero.web.open_with '["omero_iviewer", "omero_iviewer_index",
       {"supported_objects":["images", "dataset", "well"],
        "script_url": "omero_iviewer/openwith.js", "label": "OMERO.iviewer"}]'
 
@@ -58,4 +58,4 @@ OMERO.iviewer is released under the AGPL.
 Copyright
 ---------
 
-2017-2019, The Open Microscopy Environment
+2017-2020, The Open Microscopy Environment
