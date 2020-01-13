@@ -1,4 +1,9 @@
 
+0.9.0 (January 2020)
+--------------------
+
+This version drops support for Python 2.
+
 0.8.1 (September 2019)
 ----------------------
 
