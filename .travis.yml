@@ -8,6 +8,10 @@ python:
 services:
   - docker
 
+addons:
+  apt:
+    packages:
+      ant
 
 before_install:
   - git clone git://github.com/openmicroscopy/omero-test-infra .omero
