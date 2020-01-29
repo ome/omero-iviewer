@@ -407,37 +407,6 @@ export const sendSameOrigin = function(
 }
 
 /**
- * Redirects to another domain for login to then be redirected and able
- * to make more requests cross-domain with a working session
- *
- * @private
- * @static
- * @function
- * @param {Object} server the server info as an object
- */
-export const makeCrossDomainLoginRedirect = function(server) {
-    if (typeof(server) !== 'object' || typeof(server['full']) !== 'string')
-        return;
-
-    // that's where we'd like to come back to after redirect
-    var oldHref = window.location.href;
-    // check if out old href had a query string in it, then we need to append our
-    // own flag to be returned to us
-    var appendFlagWithAmpersand = false;
-    if (oldHref.indexOf("?") !== -1)
-        appendFlagWithAmpersand = true;
-
-    var newLocation =
-        server['full'] + "/webclient/login/?url=" + oldHref;
-    // we append the flag to know that we have been there
-    if (appendFlagWithAmpersand)
-        newLocation += "&";
-    else newLocation += "?";
-
-    window.location.href = newLocation + "haveMadeCrossOriginLogin_";
-}
-
-/**
  * Sends an ajax request using jsonp - useded internally!
  *<p>NOTE: Use [sendRequest]{@link utils#sendRequest} instead!</p
  *

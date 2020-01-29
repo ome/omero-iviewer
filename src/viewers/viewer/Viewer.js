@@ -36,9 +36,7 @@ import {noModifierKeys, primaryAction} from 'ol/events/condition';
 import Draw from './interaction/Draw';
 import ShapeEditPopup from './controls/ShapeEditPopup';
 import {checkAndSanitizeServerAddress,
-    isSameOrigin,
-    sendRequest,
-    makeCrossDomainLoginRedirect} from './utils/Net';
+    sendRequest} from './utils/Net';
 import {generateRegions} from './utils/Regions';
 import {modifyStyles,
     updateStyleFunction} from './utils/Style';
@@ -185,20 +183,6 @@ class Viewer extends OlObject {
          * @private
          */
         this.sync_group_ = null;
-
-        /**
-         * a flag that's only relevant if the server is not same orgin.
-         * then we have to go different ways to redirect the user to the server login.
-         * this flag reminds us if we've done so or still need to do so, i.e. if we
-         * have a supposed session or not.
-         *
-         * @type {boolean}
-         * @private
-         */
-        this.haveMadeCrossOriginLogin_ = isSameOrigin(this.server_) ? true : false;
-        if (!this.haveMadeCrossOriginLogin_ &&
-            window['location']['href'].indexOf("haveMadeCrossOriginLogin_") !== -1)
-            this.haveMadeCrossOriginLogin_ = true;
 
         /**
          * the id of the element serving as the container for the viewer
@@ -364,11 +348,7 @@ class Viewer extends OlObject {
         };
 
         // execute initialization function
-        // for cross domain we check whether we need to have a login made, otherwise
-        // we redirect to there ...
-        if (isSameOrigin(this.server_) || this.haveMadeCrossOriginLogin_) {
-            this.initialize_();
-        } else makeCrossDomainLoginRedirect(this.server_);
+        this.initialize_();
     }
 
     /**
