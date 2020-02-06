@@ -1366,10 +1366,15 @@ export default class Ol3Viewer extends EventSubscriber {
         var max_dim = dims['max_' + dim]-1;
         var pres_dim = dims[dim];
 
-        // we can go no further
-        if (max_dim === 0 ||
-             (forwards && pres_dim >= max_dim) ||
-             (!forwards && pres_dim <= min_dim)) return;
+        if (max_dim === 0) return
+
+        // if already at end, play from start
+        if (forwards && pres_dim >= max_dim) {
+            dims[dim] = 0;
+        }
+        if (!forwards && pres_dim <= min_dim) {
+            dims[dim] = max_dim;
+        }
 
         this.player_info.dim = dim;
         this.player_info.forwards = forwards;
