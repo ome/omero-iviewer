@@ -38,21 +38,7 @@ require('../css/app.css');
 Bluebird.config({ warnings: { wForgottenReturn: false } });
 window['encoding-indexes'] = {"windows-1252": WINDOWS_1252};
 
-/* IMPORTANT:
- * we have to set the public path here to include any potential prefix
- * has to happen before the bootstrap!
- */
 let req = window.INITIAL_REQUEST_PARAMS || {};
-let is_dev_server = false;
-// #if process.env.NODE_ENV === 'dev-server'
-is_dev_server = true;
-// #endif
-if (!is_dev_server) {
-    let prefix =
-        typeof req[URI_PREFIX] === 'string' ?
-            Misc.prepareURI(req[URI_PREFIX]) : "";
-    __webpack_public_path__ = prefix + '/static/' + PLUGIN_NAME + '/';
-}
 
 /**
  * IViewer bootstrap function
@@ -62,7 +48,6 @@ if (!is_dev_server) {
 bootstrap(function(aurelia) {
     aurelia.use.basicConfiguration();
     let ctx = new Context(aurelia.container.get(EventAggregator), req);
-    if (is_dev_server) ctx.is_dev_server = true;
     aurelia.container.registerInstance(Context,ctx);
 
     aurelia.start().then(
