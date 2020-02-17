@@ -71,6 +71,7 @@ import {isArray} from '../utils/Misc';
  *
  */
 const OmeroImage = function(options) {
+    console.log("OmeroImage tile init...")
     var opts = options || {};
 
     /**
@@ -290,6 +291,7 @@ const OmeroImage = function(options) {
      */
     this.tileUrlFunction_  =
         function tileUrlFunction(tileCoord, pixelRatio, projection) {
+            console.log(' - tileUrlFunction...', tileCoord)
             if (!tileCoord) return undefined;
 
             var url =

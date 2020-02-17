@@ -2204,7 +2204,8 @@ class Viewer extends OlObject {
             // if we didn't get a flag we clear the cache for tiled sources only
             if (typeof clearCache !== 'boolean')
                 clearCache = imageSource.use_tiled_retrieval_;
-
+            console.log('Viewer.affectImageRender() clearCache', clearCache);
+            console.timeStamp('Viewer.affectImageRender()');
             if (clearCache) {
                 var renderer = this.viewer_.getRenderer(imageLayer);
                 var imageCanvas = renderer.getLayerRenderer(imageLayer).getImage();

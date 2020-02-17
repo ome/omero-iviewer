@@ -512,6 +512,7 @@ export default class Ol3Viewer extends EventSubscriber {
             params.value.length === 0) return;
 
         if (params.config_id === this.image_config.id) {
+            console.timeStamp('ol3-viewer changeDimension()');
             this.viewer.setDimensionIndex(params.dim, params.value);
 
             // cache the Z/T change to the context
