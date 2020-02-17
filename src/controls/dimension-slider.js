@@ -63,6 +63,14 @@ export default class DimensionSlider {
     @bindable dim = 't';
 
     /**
+     * number of active channels, since we disallow projection for big
+     * images if too many channels are active
+     * @memberof DimensionSlider
+     * @type {number}
+     */
+    @bindable active_channel_count = 0;
+
+    /**
      * the info needed for the play loop (bound via template)
      * @memberof DimensionSlider
      * @type {number}
@@ -245,6 +253,25 @@ export default class DimensionSlider {
                                 this.changeProjection(
                                     [this.image_config.image_info.projection_opts.start, newValue], false)}));
         }
+
+        let info = this.image_config.image_info;
+        for (let i=0; i<info.channels.length; i++) {
+            let ch = info.channels[i];
+            let ch_obs = this.bindingEngine.propertyObserver(
+                ch, 'active').subscribe(
+                    (newValue, oldValue) => {
+                        // when channel turns on/off, check whether we should disable/enable projection
+                        this.active_channel_count = this.image_config.image_info.channels
+                            .filter(c => c.active).length;
+                        if (info.projection === PROJECTION.INTMAX &&
+                            this.getZProjectionDisabled(this.player_info.handle,
+                                this.player_info.forwards, this.active_channel_count)) {
+                                    this.toggleProjection();
+                        }
+                    }
+                );
+            this.observers.push(ch_obs);
+        }
     }
 
     /**
@@ -373,6 +400,8 @@ export default class DimensionSlider {
                 }
         }
 
+        this.active_channel_count = this.image_config.image_info.channels.filter(c => c.active).length;
+
         $(this.elSelector).slider(options);
         $(this.element).show();
         this.changeProjection(options.values, toggle);
@@ -477,15 +506,17 @@ export default class DimensionSlider {
      * @memberof DimensionSlider
      */
     toggleProjection() {
-        if (this.getZProjectionDisabled(this.player_info.handle,
-                                        this.player_info.forwards)) {
+        let imgInf = this.image_config.image_info;
+
+        if (imgInf.projection === PROJECTION.NORMAL &&
+                this.getZProjectionDisabled(this.player_info.handle,
+                    this.player_info.forwards, this.active_channel_count)) {
             return;
         }
         if (!this.checkForUnsavedRoiLoss()) {
             return;
         }
 
-        let imgInf = this.image_config.image_info;
         imgInf.projection_opts.start = 0;
         let diff = 0;
         imgInf.projection_opts.end = imgInf.dimensions['max_' + this.dim] - 1;
@@ -515,13 +546,11 @@ export default class DimensionSlider {
      *
      * @memberof DimensionSlider
      */
-    getZProjectionDisabled(handle, forwards) {
+    getZProjectionDisabled(handle, forwards, active_channel_count) {
         let dims = this.image_config.image_info.dimensions;
         let tiled = (dims.max_x * dims.max_y) > UNTILED_RETRIEVAL_LIMIT;
 
         var bytes_per_pixel = Math.ceil(Math.log2(this.image_config.image_info.range[1]) / 8.0);
-        var active_channel_count = this.image_config.image_info.channels
-            .filter(function(x) { return x.active }).length;
 
         let stack_size = dims.max_x * dims.max_y * dims.max_z * bytes_per_pixel * active_channel_count;
         let proj_limit = 256 * 1024 * 1024;
