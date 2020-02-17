@@ -16,6 +16,13 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#mycanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: none;
+}
+
 /** BOOTSTRAP adjustments START **/
 html, body, .frame, .center, ol3-viewer {
     height: 100%;

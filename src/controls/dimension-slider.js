@@ -331,6 +331,9 @@ export default class DimensionSlider {
                     sliderValueSpan.css({left: percent + "%"})
                 }
                 sliderValueSpan.show();
+
+                // apply the new value
+                this.onChange(newDimVal, true);
             },
             stop: (event, ui) => {
                 let sliderValueSpan = $(this.elSelector + ' .slider-value');

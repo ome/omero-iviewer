@@ -237,6 +237,52 @@ const OmeroImage = function(options) {
      */
     this.render_watch_ = null;
 
+    var imgCache = {};
+
+    var canvas = document.getElementById("mycanvas");
+    if (!canvas) {
+        console.log("creating canvas...")
+        canvas = document.createElement("canvas");
+        canvas.id = "mycanvas";
+        document.body.appendChild(canvas);
+    }
+    canvas.width = (opts.width || "512") + "";
+    canvas.height = (opts.height || "512") + "";
+
+    // this.getImage().addEventListener("load", function() {
+    //     var ctx = canvas.getContext('2d');
+
+    //     // Use canvas to convert image to data URL: 'data:image...'
+    //     // and add to cache
+    //     ctx.drawImage(imgElement, 0, 0);
+    //     var myImage = canvas.toDataURL();
+    //     console.log('load - to cache', myImage.length);
+    //     imgCache[src] = myImage;
+    // });
+
+    this.tileLoadFunction_ = function(imageTile, src) {
+        console.timeStamp('tileLoadFunction',imageTile, src);
+        console.trace('tileLoadFunction');
+        var imgElement = this.getImage();
+        
+        if (imgCache[src]) {
+            src = imgCache[src];
+        } else {
+            imgElement.addEventListener("load", function() {
+                var ctx = canvas.getContext('2d');
+
+                // Use canvas to convert image to data URL: 'data:image...'
+                // and add to cache
+                ctx.drawImage(imgElement, 0, 0);
+                var myImage = canvas.toDataURL();
+                console.log('load - to cache', myImage.length);
+                imgCache[src] = myImage;
+            });
+        }
+        console.timeStamp('Set img src', src.length);
+        imgElement.src = src;
+    }
+
     /**
      * our custom tile url function
      * @type {function}
@@ -341,7 +387,8 @@ const OmeroImage = function(options) {
         crossOrigin: opts.crossOrigin,
         tileClass:  ImageTile,
         tileGrid: tileGrid,
-        tileUrlFunction: this.tileUrlFunction_
+        tileUrlFunction: this.tileUrlFunction_,
+        tileLoadFunction: this.tileLoadFunction_,
     });
 };
 inherits(OmeroImage, TileImage);
