@@ -36,8 +36,8 @@
                     image_config.image_info.dimensions[dim]+1}
         </span>
         <span class="dim-projection
-                     ${getZProjectionDisabled(player_info.handle, player_info.forwards, active_channel_count) ? 'disabled-color' : ''}"
-              title="${getZProjectionDisabled(player_info.handle, player_info.forwards, active_channel_count) ? 'Projection disabled' :
+                     ${getZProjectionDisabled(player_info.handle, player_info.forwards) ? 'disabled-color' : ''}"
+              title="${getZProjectionDisabled(player_info.handle, player_info.forwards) ? 'Projection disabled' :
                             image_config.image_info.projection === INTMAX ?
                                 'Turn off projection' : 'Turn on projection'}"
               css="${image_config.image_info.projection === INTMAX ?
