@@ -518,12 +518,9 @@ export default class DimensionSlider {
     getZProjectionDisabled(handle, forwards) {
         let dims = this.image_config.image_info.dimensions;
         let tiled = (dims.max_x * dims.max_y) > UNTILED_RETRIEVAL_LIMIT;
-
-        var bytes_per_pixel = Math.ceil(Math.log2(this.image_config.image_info.range[1]) / 8.0);
-        var active_channel_count = this.image_config.image_info.channels
-            .filter(function(x) { return x.active }).length;
-
-        let stack_size = dims.max_x * dims.max_y * dims.max_z * bytes_per_pixel * active_channel_count;
+        let bytes_per_pixel = Math.ceil(Math.log2(this.image_config.image_info.range[1]) / 8.0);
+        let size_c = this.image_config.image_info.channels.length;
+        let stack_size = dims.max_x * dims.max_y * dims.max_z * bytes_per_pixel * size_c;
         let proj_limit = 256 * 1024 * 1024;
 
         return (handle !== null && forwards || tiled || stack_size > proj_limit);
