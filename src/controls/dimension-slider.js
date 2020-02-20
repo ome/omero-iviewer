@@ -521,7 +521,7 @@ export default class DimensionSlider {
         let bytes_per_pixel = Math.ceil(Math.log2(this.image_config.image_info.range[1]) / 8.0);
         let size_c = this.image_config.image_info.channels.length;
         let stack_size = dims.max_x * dims.max_y * dims.max_z * bytes_per_pixel * size_c;
-        let proj_limit = 256 * 1024 * 1024;
+        let proj_limit = this.context.max_projection_bytes;
 
         return (handle !== null && forwards || tiled || stack_size > proj_limit);
     }
