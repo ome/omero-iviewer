@@ -47,6 +47,7 @@ MAX_LIMIT = max(1, API_MAX_LIMIT)
 
 ROI_PAGE_SIZE = getattr(iviewer_settings, 'ROI_PAGE_SIZE')
 ROI_PAGE_SIZE = min(MAX_LIMIT, ROI_PAGE_SIZE)
+MAX_PROJECTION_BYTES = getattr(iviewer_settings, 'MAX_PROJECTION_BYTES')
 
 PROJECTIONS = {
     'normal': -1,
@@ -84,6 +85,7 @@ def index(request, iid=None, conn=None, **kwargs):
     if settings.FORCE_SCRIPT_NAME is not None:
         params['URI_PREFIX'] = settings.FORCE_SCRIPT_NAME
     params['ROI_PAGE_SIZE'] = ROI_PAGE_SIZE
+    params['MAX_PROJECTION_BYTES'] = MAX_PROJECTION_BYTES
 
     return render(
         request, 'omero_iviewer/index.html',

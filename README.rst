@@ -41,6 +41,20 @@ Install
 Instructions on how to add the OMERO.iviewer app to your installed OMERO.web apps
 can be found in the `OMERO.iviewer README <plugin/omero_iviewer/README.rst>`_.
 
+Settings
+========
+
+OMERO.iviewer limits the size of Z-projections to reduce load on the server.
+The limit is defined as the number of bytes of raw pixel data in a Z-stack and
+is equivalent to 1024 * 1024 * 256 bytes.
+For example, an 8-bit image (1 byte per pixel) of size 1024 * 1024 * 256 is
+equal to the default threshold. To double the limit, use::
+
+    $ omero config set omero.web.iviewer.max_projection_bytes 536870912
+
+NB: Z-projection is not supported for tiled images in OMERO
+(Images larger than 2000 * 2000 pixels per plane are tiled in iviewer).
+
 Supported URLs
 ==============
 
