@@ -1,4 +1,11 @@
 
+0.9.1 (February 2020)
+---------------------
+
+- fix cross origin login fix [#302](https://github.com/ome/omero-iviewer/pull/302)
+- play movie from end [#303](https://github.com/ome/omero-iviewer/pull/303)
+- confine projection [#305](https://github.com/ome/omero-iviewer/pull/305)
+
 0.9.0 (January 2020)
 --------------------
 
