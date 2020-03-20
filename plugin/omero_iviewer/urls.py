@@ -26,6 +26,9 @@ urlpatterns = [
         name='omero_iviewer_persist_rois'),
     url(r'^image_data/(?P<image_id>[0-9]+)/$', views.image_data,
         name='omero_iviewer_image_data'),
+    # load image_data for image linked to an ROI
+    url(r'^roi/(?P<roi_id>[0-9]+)/image_data/$', views.roi_image_data,
+        name='omero_iviewer_roi_image_data'),
     url(r'^save_projection/?$', views.save_projection,
         name='omero_iviewer_save_projection'),
     url(r'^well_images/?$', views.well_images,
