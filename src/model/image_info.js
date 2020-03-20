@@ -240,14 +240,16 @@ export default class ImageInfo {
      * @constructor
      * @param {Context} context the application context
      * @param {number} config_id the config id we belong to
-     * @param {number} image_id the image id to be queried
+     * @param {number} obj_id the object id to be queried
+     * @param {number} obj_type the type of obj. e.g. INITIAL_TYPES.IMAGES or ROIS
      * @param {number} parent_id an optional parent id
-     * @param {number} parent_type an optional parent type (e.g. dataset or well)
+     * @param {number} parent_type an optional parent type (e.g. INITIAL_TYPES.DATASET or WELL)
      */
-    constructor(context, config_id, image_id, parent_id, parent_type) {
+    constructor(context, config_id, obj_id, obj_type, parent_id, parent_type) {
         this.context = context;
         this.config_id = config_id;
-        this.image_id = image_id;
+        this.image_id = obj_type == INITIAL_TYPES.IMAGES ? obj_id : undefined;
+        this.roi_id = obj_type == INITIAL_TYPES.ROIS ? obj_id : undefined;
         if (typeof parent_id === 'number') {
             this.parent_id = parent_id;
             if (typeof parent_type === 'number' &&
@@ -289,11 +291,20 @@ export default class ImageInfo {
         if (typeof refresh !== 'boolean') refresh = false;
         this.ready = false;
 
+        // if we have ROI id instead of Image id, use diff
+        let url = this.context.server + this.context.getPrefixedURI(IVIEWER);
+        if (!this.image_id && this.roi_id) {
+            url += "/roi/" + this.roi_id + '/image_data/';
+        } else {
+            url += "/image_data/" + this.image_id + '/';
+        }
         $.ajax({
-            url :
-                this.context.server + this.context.getPrefixedURI(IVIEWER) +
-                "/image_data/" + this.image_id + '/',
+            url,
             success : (response) => {
+                if (!this.image_id) {
+                    this.image_id = response.id;
+                }
+
                 // read initial request params
                 this.initializeImageInfo(response, refresh);
 

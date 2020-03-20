@@ -349,40 +349,49 @@ export default class Context {
      * @memberof Context
      */
     openWithInitialParams() {
-        // do we have any image ids?
-        let initial_image_ids =
-            typeof this.initParams[REQUEST_PARAMS.IMAGES] !== 'undefined' ?
-                this.initParams[REQUEST_PARAMS.IMAGES] : null;
-        if (initial_image_ids) {
-            let tokens = initial_image_ids.split(',');
-            for (let t in tokens) {
-                let parsedToken = parseInt(tokens[t]);
-                if (typeof parsedToken === 'number' &&
-                    !isNaN(parsedToken)) this.initial_ids.push(parsedToken);
-            }
+        console.log('openWithInitialParams()', this.initParams);
+        // do we have any image ids or roi ids?
+        let initial_ids;
+        let initial_type;   // INITIAL_TYPES int
+        if (this.initParams[REQUEST_PARAMS.IMAGES]) {
+            initial_ids = this.initParams[REQUEST_PARAMS.IMAGES];
+            initial_type = INITIAL_TYPES.IMAGES;
+        } else if (this.initParams[REQUEST_PARAMS.ROIS]) {
+            initial_ids = this.initParams[REQUEST_PARAMS.ROIS];
+            initial_type = INITIAL_TYPES.ROIS;
+        }
+        if (initial_ids) {
+            this.initial_ids = initial_ids.split(',')
+                .map(id => parseInt(id))
+                .filter(id => !isNaN(id))
+
             if (this.initial_ids.length > 0)
-                this.initial_type = INITIAL_TYPES.IMAGES;
+                this.initial_type = initial_type;
         }
 
-        // do we have a dataset id
+        // do we have a dataset id?
         let initial_dataset_id =
             parseInt(this.getInitialRequestParam(REQUEST_PARAMS.DATASET_ID));
         if (typeof initial_dataset_id !== 'number' || isNaN(initial_dataset_id))
             initial_dataset_id = null;
-        // do we have a well id
+        // do we have a well id?
         let initial_well_id =
             parseInt(this.getInitialRequestParam(REQUEST_PARAMS.WELL_ID));
         if (typeof initial_well_id !== 'number' || isNaN(initial_well_id))
             initial_well_id = null;
 
-        // add image config if we have image ids
-        if (this.initial_type === INITIAL_TYPES.IMAGES) {
+        // add image config if we have image ids OR roi ids
+        if ([INITIAL_TYPES.IMAGES, INITIAL_TYPES.ROIS].indexOf(this.initial_type) > -1) {
             let parent_id = initial_dataset_id || initial_well_id;
-            let parent_type =
-                parent_id !== null ?
-                    initial_dataset_id !== null ?
-                        INITIAL_TYPES.DATASET : INITIAL_TYPES.WELL : null;
-            this.addImageConfig(this.initial_ids[0], parent_id, parent_type);
+            let parent_type;
+            if (parent_id) {
+                if (initial_dataset_id !== null) {
+                    parent_type = INITIAL_TYPES.DATASET;
+                } else {
+                    parent_type = INITIAL_TYPES.WELL
+                }
+            }
+            this.addImageConfig(this.initial_ids[0], this.initial_type, parent_id, parent_type);
         } else {
             // we could either have a well or just a dataset
             if (initial_well_id) { // well takes precedence
@@ -649,8 +658,8 @@ export default class Context {
      * @param {number} parent_id an optional parent id
      * @param {number} parent_type an optional parent type  (e.g. dataset or well)
      */
-    addImageConfig(image_id, parent_id, parent_type) {
-        if (typeof image_id !== 'number' || image_id < 0) return;
+    addImageConfig(obj_id, obj_type, parent_id, parent_type) {
+        if (typeof obj_id !== 'number' || obj_id < 0) return;
 
         // we do not keep the other configs around unless we are in MDI mode.
         if (!this.useMDI) {
@@ -666,7 +675,7 @@ export default class Context {
         }
 
         let image_config =
-            new ImageConfig(this, image_id, parent_id, parent_type);
+            new ImageConfig(this, obj_id, obj_type, parent_id, parent_type);
         // store the image config in the map and make it the selected one
         this.image_configs.set(image_config.id, image_config);
         this.selectConfig(image_config.id);
