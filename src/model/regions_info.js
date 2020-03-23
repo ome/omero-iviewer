@@ -197,8 +197,9 @@ export default class RegionsInfo  {
      * @constructor
      * @param {ImageInfo} image_info the associated image
      */
-    constructor(image_info) {
+    constructor(image_info, roi_id) {
         this.image_info = image_info;
+        this.initial_roi_id = roi_id;
         // we want history
         this.history = new RegionsHistory(this);
         // sync copied shapes with localStorage

@@ -249,7 +249,7 @@ export default class ImageInfo {
         this.context = context;
         this.config_id = config_id;
         this.image_id = obj_type == INITIAL_TYPES.IMAGES ? obj_id : undefined;
-        this.roi_id = obj_type == INITIAL_TYPES.ROIS ? obj_id : undefined;
+        this.initial_roi_id = obj_type == INITIAL_TYPES.ROIS ? obj_id : undefined;
         if (typeof parent_id === 'number') {
             this.parent_id = parent_id;
             if (typeof parent_type === 'number' &&
@@ -293,8 +293,8 @@ export default class ImageInfo {
 
         // if we have ROI id instead of Image id, use diff
         let url = this.context.server + this.context.getPrefixedURI(IVIEWER);
-        if (!this.image_id && this.roi_id) {
-            url += "/roi/" + this.roi_id + '/image_data/';
+        if (!this.image_id && this.initial_roi_id) {
+            url += "/roi/" + this.initial_roi_id + '/image_data/';
         } else {
             url += "/image_data/" + this.image_id + '/';
         }
