@@ -279,7 +279,7 @@ export default class Context {
                     }
                 }
                 if (openImageConfig)
-                    this.addImageConfig(e.state.image_id, e.state.parent_id);
+                    this.addImageConfig(e.state.image_id, INITIAL_TYPES.IMAGES, e.state.parent_id);
             };
         }
     }
@@ -349,7 +349,6 @@ export default class Context {
      * @memberof Context
      */
     openWithInitialParams() {
-        console.log('openWithInitialParams()', this.initParams);
         // do we have any image ids or roi ids?
         let initial_ids;
         let initial_type;   // INITIAL_TYPES int
@@ -654,7 +653,8 @@ export default class Context {
      * Creates and adds an ImageConfig instance by handing it an id of an image
      * stored on the server, as well as making it the selected/active image config.
      *
-     * @param {number} image_id the image id
+     * @param {number} obj_id the image or roi id
+     * @param {number} obj_type e.g. INITIAL_TYPES.IMAGES or ROIS
      * @param {number} parent_id an optional parent id
      * @param {number} parent_type an optional parent type  (e.g. dataset or well)
      */
@@ -713,13 +713,13 @@ export default class Context {
      * Opens images in single and multi viewer mode
      *
      * @memberof ThumbnailSlider
-     * @param {number} image_id the image id for the clicked thumbnail
+     * @param {number} obj_id the image or roi id for the clicked thumbnail
      * @param {boolean} is_double_click true if triggered by a double click
      */
-    onClicks(image_id, is_double_click = false, replace_image_config) {
+    onClicks(obj_id, thumb_type, is_double_click = false, replace_image_config) {
         let image_config = this.getSelectedImageConfig();
         let navigateToNewImage = () => {
-            this.rememberImageConfigChange(image_id);
+            this.rememberImageConfigChange(obj_id);
             // Dataset ID or Well ID or Image ID
             let parent = this.getParentTypeAndId();
             let parent_id = parent.id;
@@ -728,11 +728,12 @@ export default class Context {
             if (this.useMDI && !is_double_click && !replace_image_config) {
                 replace_image_config = image_config;
             }
+            let initial_type = thumb_type == 'image' ? INITIAL_TYPES.IMAGES : INITIAL_TYPES.ROIS;
             if (replace_image_config) {
                 let oldPosition = Object.assign({}, replace_image_config.position);
                 let oldSize = Object.assign({}, replace_image_config.size);
                 this.removeImageConfig(replace_image_config, true);
-                this.addImageConfig(image_id, parent_id, parent_type);
+                this.addImageConfig(obj_id, initial_type, parent_id, parent_type);
                 // Get the newly created image config
                 let selImgConf = this.getSelectedImageConfig();
                 if (selImgConf !== null) {
@@ -740,16 +741,17 @@ export default class Context {
                     selImgConf.size = oldSize;
                 }
             } else {
-                this.addImageConfig(image_id, parent_id, parent_type);
+                this.addImageConfig(obj_id, initial_type, parent_id, parent_type);
             }
         };
 
         let modifiedConfs = this.useMDI ?
             this.findConfigsWithModifiedRegionsForGivenImage(
-                image_id) : [];
+                obj_id) : [];
         let selImgConf = this.getSelectedImageConfig();
         let hasSameImageSelected =
-            selImgConf && selImgConf.image_info.image_id === image_id;
+            selImgConf && (thumb_type == 'image' && selImgConf.image_info.image_id === obj_id ||
+                thumb_type == 'roi' && selImgConf.image_info.initial_roi_id === obj_id);
         // show dialogs for modified rois
         if (image_config &&
             image_config.regions_info &&
