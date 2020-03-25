@@ -44,4 +44,7 @@ urlpatterns = [
         views.rois_by_plane, name='omero_iviewer_rois_by_plane'),
     url(r'^plane_shape_counts/(?P<image_id>[0-9]+)/$',
         views.plane_shape_counts, name='omero_iviewer_plane_shape_counts'),
+    # Find the index of an ROI within all ROIs for the Image (for pagination)
+    url(r'^roi/(?P<roi_id>[0-9]+)/page_data/$',
+        views.roi_page_data, name='omero_iviewer_roi_page_data'),
 ]

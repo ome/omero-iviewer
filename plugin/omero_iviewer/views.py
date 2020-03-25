@@ -347,6 +347,32 @@ def plane_shape_counts(request, image_id, conn=None, **kwargs):
     return JsonResponse({'data': counts})
 
 @login_required()
+def roi_page_data(request, roi_id, conn=None, **kwargs):
+    """
+    Get info for loading the correct 'page' of ROIs
+
+    Returns {image: {'id': 1}, roi_index: 123, roi_count: 3456}
+    """
+    roi = conn.getQueryService().get('Roi', int(roi_id))
+    image_id = roi.image.id.val
+
+    qs = conn.getQueryService()
+    params = omero.sys.ParametersI()
+
+    params.addId(image_id)
+    query = "select roi.id from Roi roi where roi.image.id = :id"
+    ids = [i[0].val for i in qs.projection(query, params, conn.SERVICE_OPTS)]
+    ids.sort()
+    index = ids.index(int(roi_id))
+    rsp = {
+        'image': {'id': image_id},
+        'roi_index': index,
+        'roi_count': len(ids)
+    }
+    return JsonResponse(rsp)
+
+
+@login_required()
 def roi_image_data(request, roi_id, conn=None, **kwargs):
     """ Get image_data for image linked to ROI """
     roi = conn.getQueryService().get('Roi', int(roi_id))
