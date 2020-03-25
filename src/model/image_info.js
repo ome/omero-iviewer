@@ -291,7 +291,7 @@ export default class ImageInfo {
         if (typeof refresh !== 'boolean') refresh = false;
         this.ready = false;
 
-        // if we have ROI id instead of Image id, use diff
+        // if we have ROI id instead of Image id, use that to load image_data
         let url = this.context.server + this.context.getPrefixedURI(IVIEWER);
         if (!this.image_id && this.initial_roi_id) {
             url += "/roi/" + this.initial_roi_id + '/image_data/';
@@ -320,8 +320,13 @@ export default class ImageInfo {
                 this.requestImgRDef();
                 // request regions data if rois tab showing
                 let conf = this.context.getImageConfig(this.config_id);
-                if (this.context.isRoisTabActive())
-                    conf.regions_info.requestData();
+                if (this.context.isRoisTabActive()) {
+                    if (this.initial_roi_id) {
+                        conf.regions_info.setPageByRoiAndReload(this.initial_roi_id);
+                    } else {
+                        conf.regions_info.requestData();
+                    }
+                }
             },
             error : (error, textStatus) => {
                 this.ready = false;

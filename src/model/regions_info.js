@@ -345,6 +345,33 @@ export default class RegionsInfo  {
     }
 
     /**
+     * Load ROIs, setting page based on ROI ID
+     *
+     * @memberof RegionsInfo
+     * @param {number} roiId   ROI id
+     */
+    setPageByRoiAndReload(roiId) {
+        // If ROI count is less than page size, simply load...
+        if (!this.isRoiLoadingPaginatedByPlane()) {
+            this.requestData();
+        } else {
+            // Otherwise, need to find page number...
+            let url = this.image_info.context.getPrefixedURI(IVIEWER)
+                        + `/roi/${ roiId }/page_data/`;
+            $.ajax({url,
+                success : (response) => {
+                    const page = parseInt(response.roi_index / this.roi_page_size);
+                    this.roi_page_number = page;
+                    this.requestData(true);
+                }, error : (error) => {
+                    this.is_pending = false;
+                    console.error("Failed to load Rois: " + error)
+                }
+            });
+        }
+    }
+
+    /**
      * Get the number of pages needed to show all paginated ROIs
      * on current plane.
      */
