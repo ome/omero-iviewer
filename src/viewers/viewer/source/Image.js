@@ -271,6 +271,7 @@ const OmeroImage = function(options) {
             // maps parameter (incl. inverted)
             var maps = [];
             // add channel param
+            return url;
             url += 'c=';
             var channelsLength = this.channels_info_.length;
             for (var c=0; c<channelsLength;c++) {
