@@ -300,8 +300,7 @@ export default class ThumbnailSlider extends EventSubscriber {
                 // we are a list of images or rois
                 this.setThumbnailsFromIds(this.context.initial_ids, thumbType);
             } else {
-                this.gatherThumbnailMetaInfo(
-                        this.image_config.image_info.image_id);
+                this.gatherThumbnailMetaInfo();
             }
         } else if (this.context.initial_type === INITIAL_TYPES.DATASET ||
                     this.context.initial_type === INITIAL_TYPES.WELL) {
@@ -316,13 +315,18 @@ export default class ThumbnailSlider extends EventSubscriber {
      * (e.g. open with) or for images whose parent is a well this method finds
      * the parent id
      *
-     * @param {number} image_id the id of the image in the dataset
      * @memberof ThumbnailSlider
      */
-    gatherThumbnailMetaInfo(image_id) {
-        let url =
-            this.context.server + this.webclient_prefix + "/api/paths_to_object/?" +
-            "image=" + image_id + "&page_size=" + this.thumbnails_request_size;
+    gatherThumbnailMetaInfo() {
+
+        let url = this.context.server + this.webclient_prefix + "/api/paths_to_object/";
+
+        if (this.context.initial_type === INITIAL_TYPES.IMAGES) {
+            url += "?image=" + this.context.initial_ids[0];
+        } else if (this.context.initial_type === INITIAL_TYPES.ROIS) {
+            url += "?roi=" + this.context.initial_ids[0];
+        }
+        url += "&page_size=" + this.thumbnails_request_size;
 
         $.ajax(
             {url : url,
@@ -348,7 +352,6 @@ export default class ThumbnailSlider extends EventSubscriber {
                     let parents = containers.filter(c => c.type === 'well' || (c.type === 'dataset' && c.id === pid));
                     return parents.length > 0 ? parents[0] : null;
                 }).filter(parent => parent);
-
                 let parent = matching_parents.length ? matching_parents[0] : null
                 let imgInf = this.image_config.image_info;
 
