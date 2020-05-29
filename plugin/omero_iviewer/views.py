@@ -346,6 +346,7 @@ def plane_shape_counts(request, image_id, conn=None, **kwargs):
 
     return JsonResponse({'data': counts})
 
+
 @login_required()
 def roi_page_data(request, roi_id, conn=None, **kwargs):
     """
@@ -378,6 +379,7 @@ def roi_image_data(request, roi_id, conn=None, **kwargs):
     roi = conn.getQueryService().get('Roi', int(roi_id))
     image_id = roi.image.id.val
     return image_data(request, image_id, conn=None, **kwargs)
+
 
 @login_required()
 def image_data(request, image_id, conn=None, **kwargs):
