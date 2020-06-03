@@ -358,6 +358,7 @@ export default class ThumbnailSlider extends EventSubscriber {
                 if (parent) {
                     if (parent.type === 'dataset') {
                         imgInf.parent_type = INITIAL_TYPES.DATASET
+                        imgInf.parent_id = parent.id;
                     } else if (parent.type === 'well') {
                         imgInf.parent_type = INITIAL_TYPES.WELL;
                         imgInf.parent_id = parent.id;
@@ -438,15 +439,15 @@ export default class ThumbnailSlider extends EventSubscriber {
      */
     requestMoreThumbnails(init = false, refresh = false,
                           thumb_start_index = 0, thumb_end_index) {
+        let init_type = this.context.initial_type;
         let parent_id =
-            this.context.initial_type === INITIAL_TYPES.DATASET ||
-            this.context.initial_type === INITIAL_TYPES.WELL ?
+            init_type === INITIAL_TYPES.DATASET ||
+            init_type === INITIAL_TYPES.WELL ?
                 this.context.initial_ids[0] :
                 this.image_config.image_info.parent_id;
         let parent_type =
-            this.context.initial_type === INITIAL_TYPES.IMAGES ?
-                this.image_config.image_info.parent_type :
-                this.context.initial_type;
+            (init_type === INITIAL_TYPES.IMAGES || init_type === INITIAL_TYPES.ROIS) ?
+                this.image_config.image_info.parent_type : init_type;
 
         let offset = parseInt(thumb_start_index / this.thumbnails_request_size) * this.thumbnails_request_size;
         let limit = this.thumbnails_request_size;
@@ -458,8 +459,8 @@ export default class ThumbnailSlider extends EventSubscriber {
 
 
         let url = this.context.server;
-        if (this.context.initial_type === INITIAL_TYPES.DATASET ||
-            (this.context.initial_type === INITIAL_TYPES.IMAGES &&
+        if (init_type === INITIAL_TYPES.DATASET ||
+            ((init_type === INITIAL_TYPES.IMAGES || init_type === INITIAL_TYPES.ROIS) &&
             parent_type === INITIAL_TYPES.DATASET)) {
                 url += this.web_api_base + DATASETS_REQUEST_URL +
                     '/' + parent_id + '/images/?';
