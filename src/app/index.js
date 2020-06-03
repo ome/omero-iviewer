@@ -258,9 +258,10 @@ export class Index  {
      */
     handleDrop(event) {
         var image_id = parseInt(event.dataTransfer.getData("id"), 10);
+        var thumb_type = event.dataTransfer.getData("thumb_type");
         this.context.useMDI = true;
         // similar behaviour to double-clicking
-        this.context.onClicks(image_id, true);
+        this.context.onClicks(image_id, thumb_type, true);
     }
 
     /**

@@ -34,7 +34,7 @@
             <!-- Both the div and the img have data-id for drag-n-drop -->
             <div repeat.for="thumb of thumbnails" class="thumbnail-wrapper"
                 data-id="${thumb.id}"
-                draggable="true" dragstart.delegate="handleDragStart($event)">
+                draggable="true" dragstart.delegate="handleDragStart($event, thumb.type)">
               <!-- show placeholder 1 x 1 px png if no thumb.url -->
               <img id="${'img-thumb-' + thumb.id}" data-id="${thumb.id}"
                 class="${image_config.image_info.image_id === thumb.id ? 'selected' : ''}

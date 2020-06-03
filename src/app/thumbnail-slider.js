@@ -236,7 +236,7 @@ export default class ThumbnailSlider extends EventSubscriber {
         };
 
         // we don't have a dataset id
-        if (this.context.initial_type === INITIAL_TYPES.IMAGES &&
+        if ((this.context.initial_type === INITIAL_TYPES.IMAGES || this.context.initial_type === INITIAL_TYPES.ROIS) &&
             this.context.initial_ids.length === 1 &&
             this.image_config.image_info.parent_id !== 'number') {
             // have we had all the data already
@@ -703,8 +703,9 @@ export default class ThumbnailSlider extends EventSubscriber {
      *
      * @param {Object} event Drag start event
      */
-    handleDragStart(event) {
+    handleDragStart(event, thumb_type) {
         event.dataTransfer.setData("id", event.target.dataset.id);
+        event.dataTransfer.setData("thumb_type", thumb_type);
         return true;
     }
 

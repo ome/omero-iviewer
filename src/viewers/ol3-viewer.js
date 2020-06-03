@@ -1627,17 +1627,19 @@ export default class Ol3Viewer extends EventSubscriber {
         // prevent event bubbling up to parent .frame
         event.stopPropagation();
 
+        // need to know if we dropped an ROI thumbnail or Image thumbnail
         var image_id = parseInt(event.dataTransfer.getData("id"), 10);
+        var thumb_type = event.dataTransfer.getData("thumb_type");
 
         // If we are not in multi-viewer mode, enter multi-viewer mode
         if (!this.context.useMDI) {
             // similar behaviour to double-clicking
             this.context.useMDI = true;
-            this.context.onClicks(image_id, true);
+            this.context.onClicks(image_id, thumb_type, true);
         } else {
             // similar behaviour to single-click:
             // replace this image_config with new one
-            this.context.onClicks(image_id, false, this.image_config);
+            this.context.onClicks(image_id, thumb_type, false, this.image_config);
         }
     }
 

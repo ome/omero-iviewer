@@ -622,7 +622,7 @@ export default class Context {
             }
         } else {
             // 'standard' url
-            if (this.initial_type === INITIAL_TYPES.IMAGES) {
+            if (this.initial_type === INITIAL_TYPES.IMAGES || this.initial_type === INITIAL_TYPES.ROIS) {
                 if (this.initial_ids.length > 1)
                     newPath += window.location.search;
                 else {

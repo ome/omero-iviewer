@@ -307,14 +307,12 @@ export default class ImageInfo {
 
                 // read initial request params
                 this.initializeImageInfo(response, refresh);
-                console.log('response.meta.datasetId;', response.meta.datasetId);
                 // check for a parent id (if not well)
                 if (this.context.initial_type !== INITIAL_TYPES.WELL &&
                     typeof this.parent_id !== 'number') {
                     if (typeof response.meta === 'object' &&
                             typeof response.meta.datasetId === 'number')
                         this.parent_id = response.meta.datasetId;
-                    console.log('image_info this.parent_id', this.parent_id);
                 }
 
                 // fetch copied img RDef
