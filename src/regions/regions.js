@@ -20,7 +20,7 @@
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import Ui from '../utils/ui';
-import {TABS, ROI_TABS} from '../utils/constants';
+import {TABS, ROI_TABS, IVIEWER} from '../utils/constants';
 import {REGIONS_STORE_SHAPES, REGIONS_SHOW_COMMENTS} from '../events/events';
 import {inject, customElement, bindable} from 'aurelia-framework';
 
@@ -59,6 +59,8 @@ export default class Regions {
      * @type {String}
      */
     selected_roi_tab = ROI_TABS.ROI_TABLE;
+
+    show_roi_link = false;
 
     /**
      * @constructor
@@ -152,5 +154,19 @@ export default class Regions {
         if (!this.regions_info.ready) return;
 
         this.regions_info.history.redoHistory();
+    }
+
+    /**
+     * Handles Click on ROI link button
+     *
+     * @memberof Regions
+     */
+    toggleShowRoiLink() {
+        this.show_roi_link = !this.show_roi_link;
+    }
+
+    getShapesLink(shapes) {
+        console.log('getShapesLink', shapes.length);
+        return 'url?shapes=' + shapes.map(s => s.split(':')[0]).join(',');
     }
 }
