@@ -64,7 +64,7 @@
                     disabled.bind="!(regions_info.selected_shapes &&
                         regions_info.selected_shapes.length > 0)"
                     class="btn btn-link btn-sm"
-                    style="margin-left: 5px"
+                    style="margin-left: 5px; outline: none;"
                     title="Link to selected ROI${ regions_info.selected_shapes.length === 1 ? '' : 's'}"
                     click.delegate="toggleShowRoiLink()">
                     <span class="glyphicon glyphicon-link" aria-hidden="true"></span>
@@ -72,14 +72,11 @@
             </div>
 
             <div show.bind="show_roi_link"
+                mouseout.delegate="toggleShowRoiLink()"
                 style="position: absolute; border: solid #ddd 1px; border-radius: 3px; padding: 5px; top: 35px;
                     right: 5px; z-index: 10; background: #f8f8f8; width: 300px; box-shadow: 2px 2px 5px #ccc;">
-                <input />
-                ${ regions_info.selected_shapes.length }
-                ${ getShapesLink(regions_info.selected_shapes) }
-                <div>
-                    <span repeat.for="shape of regions_info.selected_shapes">${shape.split(':')[0]},</span>
-                </div>
+                <!-- NB: we pass shapes.length to function to ensure update https://discourse.aurelia.io/t/array-map-and-join-in-template/3550/4 -->
+                <input id="roi_link_input" style="width:100%" value="${ getRoisLink(regions_info.selected_shapes, regions_info.selected_shapes.length) }"/>
             </div>
 
             <regions-edit regions_info.bind="regions_info"></regions-edit>

@@ -163,10 +163,20 @@ export default class Regions {
      */
     toggleShowRoiLink() {
         this.show_roi_link = !this.show_roi_link;
+        if (this.show_roi_link) {
+            setTimeout(() => {document.getElementById('roi_link_input').select()}, 0);
+        }
     }
 
-    getShapesLink(shapes) {
-        console.log('getShapesLink', shapes.length);
-        return 'url?shapes=' + shapes.map(s => s.split(':')[0]).join(',');
+    /**
+     * Used by template to provide link to currently selected ROIs
+     *
+     * @param {Array} shapes from regions_info.selected_shapes 'roi:shape' IDs
+     * @memberof Regions
+     */
+    getRoisLink(shapes) {
+        return window.location.origin + this.context.getPrefixedURI(IVIEWER) + '?rois=' + shapes
+            .map(s => s.split(':')[0])
+            .join(',');
     }
 }
