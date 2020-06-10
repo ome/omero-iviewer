@@ -175,8 +175,12 @@ export default class Regions {
      * @memberof Regions
      */
     getRoisLink(shapes) {
-        return window.location.origin + this.context.getPrefixedURI(IVIEWER) + '?rois=' + shapes
-            .map(s => s.split(':')[0])
-            .join(',');
+        // Only take first ROI:shape
+        let roiId = shapes[0].split(':')[0];
+        // If unsaved, will have negative IDs. Return message instead
+        if (roiId < 0) {
+            return "Can't link to unsaved ROIs";
+        }
+        return window.location.origin + this.context.getPrefixedURI(IVIEWER) + '?rois=' + roiId;
     }
 }

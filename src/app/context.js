@@ -356,7 +356,8 @@ export default class Context {
             initial_ids = this.initParams[REQUEST_PARAMS.IMAGES];
             initial_type = INITIAL_TYPES.IMAGES;
         } else if (this.initParams[REQUEST_PARAMS.ROIS]) {
-            initial_ids = this.initParams[REQUEST_PARAMS.ROIS];
+            // Only support ONE ROI ID.
+            initial_ids = this.initParams[REQUEST_PARAMS.ROIS].split(',')[0];
             initial_type = INITIAL_TYPES.ROIS;
         }
         if (initial_ids) {
@@ -716,7 +717,7 @@ export default class Context {
      * @param {number} obj_id the image or roi id for the clicked thumbnail
      * @param {boolean} is_double_click true if triggered by a double click
      */
-    onClicks(obj_id, thumb_type, is_double_click = false, replace_image_config) {
+    onClicks(obj_id, is_double_click = false, replace_image_config) {
         let image_config = this.getSelectedImageConfig();
         let navigateToNewImage = () => {
             this.rememberImageConfigChange(obj_id);
@@ -728,7 +729,7 @@ export default class Context {
             if (this.useMDI && !is_double_click && !replace_image_config) {
                 replace_image_config = image_config;
             }
-            let initial_type = thumb_type == 'image' ? INITIAL_TYPES.IMAGES : INITIAL_TYPES.ROIS;
+            let initial_type = INITIAL_TYPES.IMAGES;
             if (replace_image_config) {
                 let oldPosition = Object.assign({}, replace_image_config.position);
                 let oldSize = Object.assign({}, replace_image_config.size);
@@ -750,8 +751,7 @@ export default class Context {
                 obj_id) : [];
         let selImgConf = this.getSelectedImageConfig();
         let hasSameImageSelected =
-            selImgConf && (thumb_type == 'image' && selImgConf.image_info.image_id === obj_id ||
-                thumb_type == 'roi' && selImgConf.image_info.initial_roi_id === obj_id);
+            selImgConf && selImgConf.image_info.image_id === image_id;
         // show dialogs for modified rois
         if (image_config &&
             image_config.regions_info &&

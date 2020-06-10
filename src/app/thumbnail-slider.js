@@ -297,8 +297,8 @@ export default class ThumbnailSlider extends EventSubscriber {
             this.context.initial_type === INITIAL_TYPES.ROIS) {
                 let thumbType = this.context.initial_type === INITIAL_TYPES.IMAGES ? 'image' : 'roi';
             if (this.context.initial_ids.length > 1) {
-                // we are a list of images or rois
-                this.setThumbnailsFromIds(this.context.initial_ids, thumbType);
+                // we are a list of images
+                this.setThumbnailsFromIds(this.context.initial_ids);
             } else {
                 this.gatherThumbnailMetaInfo();
             }
@@ -388,13 +388,13 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @param {list} imageIds List of IDs
      * @memberof ThumbnailSlider
      */
-    setThumbnailsFromIds(obj_ids, thumb_type) {
+    setThumbnailsFromIds(obj_ids) {
         this.setThumbnailsCount(obj_ids.length);
         let to_add = obj_ids.map(id => ({
             '@id': id,
-            Name: thumb_type + ': ' + id,
+            Name: 'Image: ' + id
         }));
-        this.addThumbnails(to_add, 0, thumb_type);
+        this.addThumbnails(to_add, 0);
     }
 
     /**
@@ -530,16 +530,11 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @param {number} start_index Index to start replacing
      * @memberof ThumbnailSlider
      */
-    addThumbnails(thumbnails, start_index, thumb_type='image') {
+    addThumbnails(thumbnails, start_index) {
         // if we are remote we include the server
         let thumbPrefix =
-            (this.context.server !== "" ? this.context.server + "/" : "");
-
-        if (thumb_type === 'image') {
-            thumbPrefix += this.webclient_prefix + "/render_thumbnail/";
-        } else if (thumb_type === 'roi') {
-            thumbPrefix += this.webgateway_prefix + "/render_roi_thumbnail/";
-        }
+            (this.context.server !== "" ? this.context.server + "/" : "") +
+            this.webclient_prefix + "/render_thumbnail/";
 
         let new_index = 0;
         this.thumbnails = this.thumbnails.map((thumb, idx) => {
@@ -548,7 +543,6 @@ export default class ThumbnailSlider extends EventSubscriber {
                 new_index++;
                 return {
                     id: t['@id'],
-                    type: thumb_type,
                     url: thumbPrefix + t['@id'] + "/",
                     title: typeof t.Name === 'string' ? t.Name : t['@id'],
                     revision : 0
@@ -600,15 +594,14 @@ export default class ThumbnailSlider extends EventSubscriber {
      * hacky solution to allow double - single click distinction
      *
      * @memberof ThumbnailSlider
-     * @param {number} obj_id the id for the clicked image or roi thumbnail
-     * @param {string} thumb_type e.g. 'image' or 'roi'
+     * @param {number} image_id the id for the clicked image thumbnail
      */
-    onClick(obj_id, thumb_type) {
+    onClick(image_id) {
         if (this.click_handle) {
             clearTimeout(this.click_handle);
             this.click_handle = null;
         }
-        this.click_handle = setTimeout(() => this.context.onClicks(obj_id, thumb_type), 250);
+        this.click_handle = setTimeout(() => this.context.onClicks(image_id), 250);
     }
 
     /**
@@ -616,10 +609,9 @@ export default class ThumbnailSlider extends EventSubscriber {
      *
      * @memberof ThumbnailSlider
      * @param {number} image_id the image id for the clicked thumbnail
-     * @param {string} thumb_type e.g. 'image' or 'roi'
      * @param {Object} event the mouse click event
      */
-    onDoubleClick(obj_id, thumb_type, event) {
+    onDoubleClick(image_id, event) {
         event.stopPropagation();
 
         if (this.click_handle) {
@@ -627,7 +619,7 @@ export default class ThumbnailSlider extends EventSubscriber {
             this.click_handle = null;
         }
         this.context.useMDI = true;
-        this.context.onClicks(obj_id, thumb_type, true);
+        this.context.onClicks(image_id, true);
 
         return false;
     }
@@ -703,9 +695,8 @@ export default class ThumbnailSlider extends EventSubscriber {
      *
      * @param {Object} event Drag start event
      */
-    handleDragStart(event, thumb_type) {
+    handleDragStart(event) {
         event.dataTransfer.setData("id", event.target.dataset.id);
-        event.dataTransfer.setData("thumb_type", thumb_type);
         return true;
     }
 

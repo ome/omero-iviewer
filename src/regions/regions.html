@@ -62,7 +62,7 @@
                 <button type="button"
                     show.bind="regions_info.ready"
                     disabled.bind="!(regions_info.selected_shapes &&
-                        regions_info.selected_shapes.length > 0)"
+                        regions_info.selected_shapes.length === 1)"
                     class="btn btn-link btn-sm"
                     style="margin-left: 5px; outline: none;"
                     title="Link to selected ROI${ regions_info.selected_shapes.length === 1 ? '' : 's'}"
