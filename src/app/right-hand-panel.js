@@ -112,7 +112,7 @@ export class RightHandPanel {
         });
 
         // If ROI ID is set, show ROIs tab:
-        if (this.image_config.image_info && this.image_config.image_info.initial_roi_id) {
+        if (this.image_config && this.image_config.image_info && this.image_config.image_info.initial_roi_id) {
             // This will trigger image_info to load ROIs once image data is loaded
             this.context.selected_tab = TABS.ROIS;
         }
