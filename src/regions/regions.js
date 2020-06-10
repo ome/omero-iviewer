@@ -175,6 +175,9 @@ export default class Regions {
      * @memberof Regions
      */
     getRoisLink(shapes) {
+        if (shapes.length === 0) {
+            return "No shapes selected";
+        }
         // Only take first ROI:shape
         let roiId = shapes[0].split(':')[0];
         // If unsaved, will have negative IDs. Return message instead
