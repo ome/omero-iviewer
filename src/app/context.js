@@ -751,7 +751,7 @@ export default class Context {
                 obj_id) : [];
         let selImgConf = this.getSelectedImageConfig();
         let hasSameImageSelected =
-            selImgConf && selImgConf.image_info.image_id === image_id;
+            selImgConf && selImgConf.image_info.image_id === obj_id;
         // show dialogs for modified rois
         if (image_config &&
             image_config.regions_info &&

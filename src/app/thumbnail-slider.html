@@ -42,8 +42,8 @@
                 src.bind="thumb.url ? thumb.url + '?version=' + thumb.revision : 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNgYAAAAAMAASsJTYQAAAAASUVORK5CYII='"
                 title="${thumb.title}"
                 alt=""
-                click.delegate="onClick(thumb.id, thumb.type)"
-                dblclick.delegate="onDoubleClick(thumb.id, thumb.type, $event)"/>
+                click.delegate="onClick(thumb.id)"
+                dblclick.delegate="onDoubleClick(thumb.id, $event)"/>
             </div>
         </div>
 
