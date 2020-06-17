@@ -250,6 +250,7 @@ export default class ImageInfo {
         this.config_id = config_id;
         this.image_id = obj_type == INITIAL_TYPES.IMAGES ? obj_id : undefined;
         this.initial_roi_id = obj_type == INITIAL_TYPES.ROIS ? obj_id : undefined;
+        this.initial_shape_id = obj_type == INITIAL_TYPES.SHAPES ? obj_id : undefined;
         if (typeof parent_id === 'number') {
             this.parent_id = parent_id;
             if (typeof parent_type === 'number' &&
@@ -295,6 +296,8 @@ export default class ImageInfo {
         let url = this.context.server + this.context.getPrefixedURI(IVIEWER);
         if (!this.image_id && this.initial_roi_id) {
             url += "/roi/" + this.initial_roi_id + '/image_data/';
+        } else if (!this.image_id && this.initial_shape_id) {
+            url += "/shape/" + this.initial_shape_id + '/image_data/';
         } else {
             url += "/image_data/" + this.image_id + '/';
         }
@@ -322,6 +325,8 @@ export default class ImageInfo {
                 if (this.context.isRoisTabActive()) {
                     if (this.initial_roi_id) {
                         conf.regions_info.setPageByRoiAndReload(this.initial_roi_id);
+                    } else if (this.initial_shape_id) {
+                        conf.regions_info.setPageByRoiAndReload(null, this.initial_shape_id);
                     } else {
                         conf.regions_info.requestData();
                     }

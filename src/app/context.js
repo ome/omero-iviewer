@@ -364,7 +364,7 @@ export default class Context {
             initial_ids = this.initParams[REQUEST_PARAMS.ROI];
             initial_type = INITIAL_TYPES.ROIS;
         } else if (this.initParams[REQUEST_PARAMS.SHAPE]) {
-            initial_ids = this.initParams[REQUEST_PARAMS.ROI];
+            initial_ids = this.initParams[REQUEST_PARAMS.SHAPE];
             initial_type = INITIAL_TYPES.SHAPES;
         }
         if (initial_ids) {
@@ -630,15 +630,19 @@ export default class Context {
             }
         } else {
             // 'standard' url
-            if (this.initial_type === INITIAL_TYPES.IMAGES || this.initial_type === INITIAL_TYPES.ROIS) {
+            if (this.initial_type === INITIAL_TYPES.IMAGES || this.initial_type === INITIAL_TYPES.ROIS
+                    || this.initial_type === INITIAL_TYPES.SHAPES) {
                 if (this.initial_ids.length > 1)
+                    // e.g. ?images=1,2 - Don't update URL
                     newPath += window.location.search;
                 else {
+                    // e.g. ?images=1 - update to ?images=2&dataset=1
                     parent_id = selConf.image_info.parent_id;
                     newPath +=
                         '?images=' + image_id + '&' + parentTypeString + "=" + parent_id;
                 }
             } else {
+                // e.g. ?dataset=1 - Don't update URL
                 parent_id = this.initial_ids[0];
                 newPath += "?" + parentTypeString + "=" + parent_id;
             }

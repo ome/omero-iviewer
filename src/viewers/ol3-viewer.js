@@ -953,14 +953,28 @@ export default class Ol3Viewer extends EventSubscriber {
             }
         };
         // If we have initial_roi_id for this viewer, select it...
-        if (this.image_config.image_info.initial_roi_id) {
-            let roi_id = this.image_config.image_info.initial_roi_id;
+        let roi_id;
+        let shape_id;
+        if (this.image_config.image_info.initial_shape_id) {
+            shape_id = this.image_config.image_info.initial_shape_id;
+            roi_id = this.image_config.regions_info.getRoiFromShapeId(shape_id);
+        } else if (this.image_config.image_info.initial_roi_id) {
+            roi_id = this.image_config.image_info.initial_roi_id;
+        }
+        if (roi_id) {
             let roi = this.image_config.regions_info.data.get(roi_id);
-            // select all shapes in ROI
+            let shape_ids;
+            if (shape_id) {
+                shape_ids = [`${roi_id}:${shape_id}`];
+            } else {
+                // select all shapes in ROI
+                shape_ids = [...roi.shapes.keys()].map(s_id => `${roi.id}:${s_id}`)
+            }
+            // select shapes...
             this.changeShapeSelection({
                 config_id: this.image_config.id,
                 property: "selected",
-                shapes: [...roi.shapes.keys()].map(s_id => `${roi.id}:${s_id}`),
+                shapes: shape_ids,
                 clear: true,
                 value: true,
                 center: true,

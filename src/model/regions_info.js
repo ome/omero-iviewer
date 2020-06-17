@@ -344,19 +344,24 @@ export default class RegionsInfo  {
     }
 
     /**
-     * Load ROIs, setting page based on ROI ID
+     * Load ROIs, setting page based on ROI ID OR Shape ID
      *
      * @memberof RegionsInfo
      * @param {number} roiId   ROI id
+     * @param {number} shapeId   OR use Shape id
      */
-    setPageByRoiAndReload(roiId) {
+    setPageByRoiAndReload(roiId, shapeId) {
         // If ROI count is less than page size, simply load...
         if (!this.isRoiLoadingPaginatedByPlane()) {
             this.requestData();
         } else {
             // Otherwise, need to find page number...
-            let url = this.image_info.context.getPrefixedURI(IVIEWER)
-                        + `/roi/${ roiId }/page_data/`;
+            let url = this.image_info.context.getPrefixedURI(IVIEWER);
+            if (shapeId) {
+                url += `/shape/${ shapeId }/page_data/`;
+            } else {
+                url += `/roi/${ roiId }/page_data/`;
+            }
             $.ajax({url,
                 success : (response) => {
                     const page = parseInt(response.roi_index / this.roi_page_size);
@@ -650,6 +655,29 @@ export default class RegionsInfo  {
         let shape = roi.shapes.get(ids.shape_id);
         return (typeof shape !== 'undefined') ? shape : null;
     }
+
+
+    /**
+     * Looks up shape by ID e.g. 1
+     *
+     * @memberof RegionsInfo
+     * @param {number} id the shape.id
+     * @return {Object|null} the shape object or null if none was found
+     */
+    getRoiFromShapeId(id) {
+        if (this.data === null) return null;
+
+        let roi_id;
+        this.data.forEach((roi, roiId) => {
+            roi.shapes.forEach((s, sh_id) => {
+                if (s['@id'] == id) {
+                    roi_id = roiId;
+                };
+            });
+        });
+        return roi_id;
+    }
+
 
     /**
      * Any shape modification, addition or deletion results in a history entry.
