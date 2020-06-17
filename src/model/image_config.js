@@ -120,8 +120,7 @@ export default class ImageConfig extends History {
         this.image_info =
             new ImageInfo(
                 this.context, this.id, obj_id, obj_type, parent_id, parent_type);
-        let roi_id = (obj_type == INITIAL_TYPES.ROIS) ? obj_id : undefined;
-        this.regions_info = new RegionsInfo(this.image_info, roi_id);
+        this.regions_info = new RegionsInfo(this.image_info);
     }
 
     /**

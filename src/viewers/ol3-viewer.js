@@ -953,8 +953,8 @@ export default class Ol3Viewer extends EventSubscriber {
             }
         };
         // If we have initial_roi_id for this viewer, select it...
-        if (this.image_config.regions_info.initial_roi_id) {
-            let roi_id = this.image_config.regions_info.initial_roi_id;
+        if (this.image_config.image_info.initial_roi_id) {
+            let roi_id = this.image_config.image_info.initial_roi_id;
             let roi = this.image_config.regions_info.data.get(roi_id);
             // select all shapes in ROI
             this.changeShapeSelection({
