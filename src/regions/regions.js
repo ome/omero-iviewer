@@ -179,11 +179,11 @@ export default class Regions {
             return "No shapes selected";
         }
         // Only take first ROI:shape
-        let roiId = shapes[0].split(':')[0];
+        let shapeId = shapes[0].split(':')[1];
         // If unsaved, will have negative IDs. Return message instead
-        if (roiId < 0) {
+        if (shapeId < 0) {
             return "Can't link to unsaved ROIs";
         }
-        return window.location.origin + this.context.getPrefixedURI(IVIEWER) + '?roi=' + roiId;
+        return window.location.origin + this.context.getPrefixedURI(IVIEWER) + '?shape=' + shapeId;
     }
 }
