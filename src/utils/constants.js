@@ -120,6 +120,7 @@ export const REQUEST_PARAMS = {
     INTERPOLATE: 'INTERPOLATE',
     IMAGES: 'IMAGES',
     ROIS: 'ROIS',
+    ROI: 'ROI',
     MAPS: 'MAPS',
     MODEL: 'M',
     OMERO_VERSION: 'OMERO_VERSION',

@@ -175,7 +175,7 @@ export default class Regions {
      * @memberof Regions
      */
     getRoisLink(shapes) {
-        if (shapes.length === 0) {
+        if (!shapes || shapes.length === 0) {
             return "No shapes selected";
         }
         // Only take first ROI:shape
@@ -184,6 +184,6 @@ export default class Regions {
         if (roiId < 0) {
             return "Can't link to unsaved ROIs";
         }
-        return window.location.origin + this.context.getPrefixedURI(IVIEWER) + '?rois=' + roiId;
+        return window.location.origin + this.context.getPrefixedURI(IVIEWER) + '?roi=' + roiId;
     }
 }

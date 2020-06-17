@@ -356,8 +356,12 @@ export default class Context {
             initial_ids = this.initParams[REQUEST_PARAMS.IMAGES];
             initial_type = INITIAL_TYPES.IMAGES;
         } else if (this.initParams[REQUEST_PARAMS.ROIS]) {
-            // Only support ONE ROI ID.
+            // Only support ONE ROI ID. e.g. ?rois=1
             initial_ids = this.initParams[REQUEST_PARAMS.ROIS].split(',')[0];
+            initial_type = INITIAL_TYPES.ROIS;
+        } else if (this.initParams[REQUEST_PARAMS.ROI]) {
+            // also support ?roi=1
+            initial_ids = this.initParams[REQUEST_PARAMS.ROI];
             initial_type = INITIAL_TYPES.ROIS;
         }
         if (initial_ids) {
