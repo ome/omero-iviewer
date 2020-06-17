@@ -121,6 +121,7 @@ export const REQUEST_PARAMS = {
     IMAGES: 'IMAGES',
     ROIS: 'ROIS',
     ROI: 'ROI',
+    SHAPE: 'SHAPE',
     MAPS: 'MAPS',
     MODEL: 'M',
     OMERO_VERSION: 'OMERO_VERSION',
@@ -273,6 +274,7 @@ export const INITIAL_TYPES = {
     DATASET: 2,
     WELL: 3,
     ROIS: 4,
+    SHAPES: 5,
 }
 
 /**

@@ -363,6 +363,9 @@ export default class Context {
             // also support ?roi=1
             initial_ids = this.initParams[REQUEST_PARAMS.ROI];
             initial_type = INITIAL_TYPES.ROIS;
+        } else if (this.initParams[REQUEST_PARAMS.SHAPE]) {
+            initial_ids = this.initParams[REQUEST_PARAMS.ROI];
+            initial_type = INITIAL_TYPES.SHAPES;
         }
         if (initial_ids) {
             this.initial_ids = initial_ids.split(',')
@@ -384,8 +387,8 @@ export default class Context {
         if (typeof initial_well_id !== 'number' || isNaN(initial_well_id))
             initial_well_id = null;
 
-        // add image config if we have image ids OR roi ids
-        if ([INITIAL_TYPES.IMAGES, INITIAL_TYPES.ROIS].indexOf(this.initial_type) > -1) {
+        // add image config if we have image ids OR roi id OR shape id
+        if ([INITIAL_TYPES.IMAGES, INITIAL_TYPES.ROIS, INITIAL_TYPES.SHAPES].indexOf(this.initial_type) > -1) {
             let parent_id = initial_dataset_id || initial_well_id;
             let parent_type;
             if (parent_id) {

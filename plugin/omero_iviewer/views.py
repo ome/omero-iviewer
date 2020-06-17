@@ -16,7 +16,7 @@
 #
 
 from django.shortcuts import render
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 from django.conf import settings
 from django.core.urlresolvers import reverse
 
@@ -347,16 +347,36 @@ def plane_shape_counts(request, image_id, conn=None, **kwargs):
     return JsonResponse({'data': counts})
 
 
+def get_image_id_for_shape(conn, shape_id):
+    """Returns (roi_id, image_id) tuple for shape"""
+    params = omero.sys.ParametersI()
+    params.addId(shape_id)
+    query = """select roi from Roi roi
+        left outer join roi.shapes as shape
+        where shape.id=:id"""
+    query_service = conn.getQueryService()
+    result = query_service.findByQuery(query, params, conn.SERVICE_OPTS)
+    if result:
+        return (result.id.val, result.image.id.val)
+    return (None, None)
+
+
 @login_required()
-def roi_page_data(request, roi_id, conn=None, **kwargs):
+def roi_page_data(request, obj_type, obj_id, conn=None, **kwargs):
     """
     Get info for loading the correct 'page' of ROIs
 
     Returns {image: {'id': 1}, roi_index: 123, roi_count: 3456}
     """
-    roi = conn.getQueryService().get('Roi', int(roi_id))
-    image_id = roi.image.id.val
-
+    image_id = None
+    if obj_type == 'roi':
+        roi_id = int(obj_id)
+        roi = conn.getQueryService().get('Roi', roi_id)
+        image_id = roi.image.id.val
+    elif obj_type == 'shape':
+        roi_id, image_id = get_image_id_for_shape(conn, obj_id)
+    if image_id is None:
+        raise Http404(f'Could not find {obj_type}: {obj_id}')
     qs = conn.getQueryService()
     params = omero.sys.ParametersI()
 
@@ -364,9 +384,10 @@ def roi_page_data(request, roi_id, conn=None, **kwargs):
     query = "select roi.id from Roi roi where roi.image.id = :id"
     ids = [i[0].val for i in qs.projection(query, params, conn.SERVICE_OPTS)]
     ids.sort()
-    index = ids.index(int(roi_id))
+    index = ids.index(roi_id)
     rsp = {
         'image': {'id': image_id},
+        'roi': {'id': roi_id},
         'roi_index': index,
         'roi_count': len(ids)
     }
@@ -374,10 +395,17 @@ def roi_page_data(request, roi_id, conn=None, **kwargs):
 
 
 @login_required()
-def roi_image_data(request, roi_id, conn=None, **kwargs):
+def roi_image_data(request, obj_type, obj_id, conn=None, **kwargs):
     """ Get image_data for image linked to ROI """
-    roi = conn.getQueryService().get('Roi', int(roi_id))
-    image_id = roi.image.id.val
+    image_id = None
+    if obj_type == 'roi':
+        roi = conn.getQueryService().get('Roi', int(obj_id))
+        if roi:
+            image_id = roi.image.id.val
+    elif obj_type == 'shape':
+        roi_id, image_id = get_image_id_for_shape(conn, obj_id)
+    if image_id is None:
+        raise Http404(f'Could not find {obj_type}: {obj_id}')
     return image_data(request, image_id, conn=None, **kwargs)
 
 
