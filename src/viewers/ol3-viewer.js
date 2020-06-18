@@ -967,8 +967,8 @@ export default class Ol3Viewer extends EventSubscriber {
             if (shape_id) {
                 shape_ids = [`${roi_id}:${shape_id}`];
             } else {
-                // select all shapes in ROI
-                shape_ids = [...roi.shapes.keys()].map(s_id => `${roi.id}:${s_id}`)
+                // select first shape in ROI
+                shape_ids = [`${roi.id}:${roi.shapes.keys().next().value}`];
             }
             // select shapes...
             this.changeShapeSelection({
