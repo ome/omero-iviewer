@@ -463,16 +463,16 @@ export default class ThumbnailSlider extends EventSubscriber {
 
 
         let url = this.context.server;
+        let child_is_image = (init_type === INITIAL_TYPES.IMAGES || init_type === INITIAL_TYPES.ROIS ||
+                init_type === INITIAL_TYPES.SHAPES);
         if (init_type === INITIAL_TYPES.DATASET ||
-            ((init_type === INITIAL_TYPES.IMAGES || init_type === INITIAL_TYPES.ROIS || init_type === INITIAL_TYPES.SHAPES) &&
-            parent_type === INITIAL_TYPES.DATASET)) {
+            (child_is_image && parent_type === INITIAL_TYPES.DATASET)) {
                 url += this.web_api_base + DATASETS_REQUEST_URL +
                     '/' + parent_id + '/images/?';
         } else if (this.context.initial_type === INITIAL_TYPES.WELL ||
-                    (this.context.initial_type === INITIAL_TYPES.IMAGES &&
-                    parent_type === INITIAL_TYPES.WELL)) {
-                        url += this.context.getPrefixedURI(IVIEWER) +
-                            "/well_images/?id=" + parent_id + "&";
+            (child_is_image && parent_type === INITIAL_TYPES.WELL)) {
+                url += (this.context.getPrefixedURI(IVIEWER) +
+                        "/well_images/?id=" + parent_id + "&");
         }
         url += 'offset=' + offset + '&limit=' + limit;
 
