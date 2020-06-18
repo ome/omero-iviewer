@@ -236,7 +236,9 @@ export default class ThumbnailSlider extends EventSubscriber {
         };
 
         // we don't have a dataset id
-        if ((this.context.initial_type === INITIAL_TYPES.IMAGES || this.context.initial_type === INITIAL_TYPES.ROIS) &&
+        if ((this.context.initial_type === INITIAL_TYPES.IMAGES ||
+                this.context.initial_type === INITIAL_TYPES.ROIS ||
+                this.context.initial_type === INITIAL_TYPES.SHAPES) &&
             this.context.initial_ids.length === 1 &&
             this.image_config.image_info.parent_id !== 'number') {
             // have we had all the data already
@@ -294,8 +296,8 @@ export default class ThumbnailSlider extends EventSubscriber {
     initializeThumbnails(refresh = false) {
         // standard case: we are an image
         if (this.context.initial_type === INITIAL_TYPES.IMAGES ||
-            this.context.initial_type === INITIAL_TYPES.ROIS) {
-                let thumbType = this.context.initial_type === INITIAL_TYPES.IMAGES ? 'image' : 'roi';
+            this.context.initial_type === INITIAL_TYPES.ROIS ||
+            this.context.initial_type === INITIAL_TYPES.SHAPES) {
             if (this.context.initial_ids.length > 1) {
                 // we are a list of images
                 this.setThumbnailsFromIds(this.context.initial_ids);
@@ -325,6 +327,8 @@ export default class ThumbnailSlider extends EventSubscriber {
             url += "?image=" + this.context.initial_ids[0];
         } else if (this.context.initial_type === INITIAL_TYPES.ROIS) {
             url += "?roi=" + this.context.initial_ids[0];
+        } else if (this.context.initial_type === INITIAL_TYPES.SHAPES) {
+            url += "?shape=" + this.context.initial_ids[0];
         }
         url += "&page_size=" + this.thumbnails_request_size;
 
@@ -446,7 +450,7 @@ export default class ThumbnailSlider extends EventSubscriber {
                 this.context.initial_ids[0] :
                 this.image_config.image_info.parent_id;
         let parent_type =
-            (init_type === INITIAL_TYPES.IMAGES || init_type === INITIAL_TYPES.ROIS) ?
+            (init_type === INITIAL_TYPES.IMAGES || init_type === INITIAL_TYPES.ROIS || init_type === INITIAL_TYPES.SHAPES) ?
                 this.image_config.image_info.parent_type : init_type;
 
         let offset = parseInt(thumb_start_index / this.thumbnails_request_size) * this.thumbnails_request_size;
@@ -460,7 +464,7 @@ export default class ThumbnailSlider extends EventSubscriber {
 
         let url = this.context.server;
         if (init_type === INITIAL_TYPES.DATASET ||
-            ((init_type === INITIAL_TYPES.IMAGES || init_type === INITIAL_TYPES.ROIS) &&
+            ((init_type === INITIAL_TYPES.IMAGES || init_type === INITIAL_TYPES.ROIS || init_type === INITIAL_TYPES.SHAPES) &&
             parent_type === INITIAL_TYPES.DATASET)) {
                 url += this.web_api_base + DATASETS_REQUEST_URL +
                     '/' + parent_id + '/images/?';
