@@ -119,7 +119,6 @@ export const REQUEST_PARAMS = {
     DATASET_ID: 'DATASET',
     INTERPOLATE: 'INTERPOLATE',
     IMAGES: 'IMAGES',
-    ROIS: 'ROIS',
     ROI: 'ROI',
     SHAPE: 'SHAPE',
     MAPS: 'MAPS',
