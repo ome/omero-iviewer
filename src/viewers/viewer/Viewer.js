@@ -535,9 +535,10 @@ class Viewer extends OlObject {
         }
 
         let highestRes = possibleResolutions[possibleResolutions.length-1];
-        // For Big images, allow zooming in further (from 160% up to 322%)
+        // For Big images, allow zooming in further (from 161% to > 600%)
         if (highestRes > 0.5) {
             possibleResolutions.push(highestRes/2);
+            possibleResolutions.push(highestRes/4);
         }
         // we need a View object for the map
         var view = new View({
