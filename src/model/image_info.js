@@ -21,7 +21,7 @@ import Misc from '../utils/misc';
 import Ui from '../utils/ui';
 import {
     APP_TITLE, CHANNEL_SETTINGS_MODE, INITIAL_TYPES, IVIEWER,
-    PROJECTION, REQUEST_PARAMS, WEBGATEWAY
+    PROJECTION, REQUEST_PARAMS, WEBCLIENT, WEBGATEWAY
 } from '../utils/constants';
 import { IMAGE_SETTINGS_REFRESH } from '../events/events';
 
@@ -237,6 +237,13 @@ export default class ImageInfo {
     model = "color";
 
     /**
+     * URL to open the image in the main client
+     * @memberof ImageInfo
+     * @type {string}
+     */
+    web_url = null;
+
+    /**
      * @constructor
      * @param {Context} context the application context
      * @param {number} config_id the config id we belong to
@@ -255,6 +262,9 @@ export default class ImageInfo {
                 parent_type <= INITIAL_TYPES.WELL)
                     this.parent_type = parent_type;
         }
+        this.web_url = this.context.server +
+        this.context.getPrefixedURI(WEBCLIENT) +
+        '/?show=image-' + this.image_id;
     }
 
     /**

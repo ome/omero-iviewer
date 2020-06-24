@@ -40,7 +40,12 @@
     <table show.bind="image_info.ready" class="table table-condensed">
         <tr>
             <td class="col-sm-6 text-weight-bold">Image ID:</td>
-            <td class="col-sm-6">${image_info.image_id}</td>
+            <td class="col-sm-6">
+                <a href="${image_info.web_url}"
+                   title="Show ${image_info.short_image_name} in webclient"
+                   target="_blank">${image_info.image_id}
+                </a>
+            </td>
         </tr>
         <tr show.bind="parent_info !== null">
             <td class="col-sm-6 text-weight-bold">${parent_info.title}:</td>
