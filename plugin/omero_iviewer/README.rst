@@ -50,6 +50,13 @@ To enable the "open with" feature:
 Now restart OMERO.web as normal.
 
 
+Usage
+=====
+
+A guide to using OMERO.iviewer can be found on
+https://omero-guides.readthedocs.io/en/latest/iviewer/docs/iviewer.html
+
+
 License
 -------
 

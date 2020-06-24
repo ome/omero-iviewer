@@ -41,6 +41,12 @@ Install
 Instructions on how to add the OMERO.iviewer app to your installed OMERO.web apps
 can be found in the `OMERO.iviewer README <plugin/omero_iviewer/README.rst>`_.
 
+Usage
+=====
+
+A guide to using OMERO.iviewer can be found on
+https://omero-guides.readthedocs.io/en/latest/iviewer/docs/iviewer.html
+
 Settings
 ========
 
