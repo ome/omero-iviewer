@@ -45,7 +45,7 @@ Usage
 =====
 
 A guide to using OMERO.iviewer can be found on
-https://omero-guides.readthedocs.io/en/latest/iviewer/docs/iviewer.html
+https://omero-guides.readthedocs.io/en/latest/iviewer/docs/index.html
 
 Settings
 ========
