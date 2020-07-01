@@ -802,9 +802,21 @@ class Viewer extends OlObject {
         if (typeof clear === 'boolean' && clear) regions.select_.clearSelection();
         regions.setProperty(roi_shape_ids, "selected", selected);
 
-        if (typeof center === 'string' &&
-            typeof regions.idIndex_[center] === 'object')
-                this.centerOnGeometry(regions.idIndex_[center].getGeometry());
+        if (typeof center === 'string' && typeof regions.idIndex_[center] === 'object') {
+            let geom = regions.idIndex_[center].getGeometry();
+            let extent = geom.getExtent();
+            // extent is [x, -y, x2, -y2]
+            let width = extent[2] - extent[0];
+            let height = extent[3] - extent[1];
+            let length = Math.max(width, height);
+            // Zoom till shape is 300px on screen (or until we reach 100%)
+            let target_res = Math.max(length / 300, 1);
+            // Don't zoom out from current resolution
+            var res = this.viewer_.getView().getResolution();
+            target_res = Math.min(target_res, res);
+            let forceCentre = true;
+            this.centerOnGeometry(geom, target_res, forceCentre);
+        }
     }
 
     /**
@@ -829,18 +841,15 @@ class Viewer extends OlObject {
 
     /**
      * Centers view on the middle of a geometry
+     * unless geometry is already in viewport,
      * optionally zooming in on a given resolution
      *
      * @param {ol.geom.Geometry} geometry the geometry
      * @param {number=} resolution the resolution to zoom in on
+     * @param {bool} forceCentre if true, ALWAYS centre
      */
-    centerOnGeometry(geometry, resolution) {
+    centerOnGeometry(geometry, resolution, forceCentre) {
         if (!(geometry instanceof Geometry)) return;
-
-        // only center if we don't intersect the viewport
-        if (intersects(
-                geometry.getExtent(),
-                this.viewer_.getView().calculateExtent())) return;
 
         // use given resolution for zoom
         if (typeof resolution === 'number' && !isNaN(resolution)) {
@@ -849,6 +858,11 @@ class Viewer extends OlObject {
             if (typeof constrainedResolution === 'number')
                 this.viewer_.getView().setResolution(constrainedResolution);
         }
+
+        // only center if we don't intersect the viewport after zooming
+        if (intersects(
+            geometry.getExtent(),
+            this.viewer_.getView().calculateExtent()) && (!forceCentre)) return;
 
         // center (taking into account potential rotation)
         var rot = this.viewer_.getView().getRotation();
