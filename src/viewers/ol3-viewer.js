@@ -823,8 +823,8 @@ export default class Ol3Viewer extends EventSubscriber {
 
 
         // switch to plane/time/channel that shape to be selected is on
-        // for deselect the last selected shape is chosen (if exists)
         let shapeSelection = params.shapes[params.shapes.length-1];
+        // for de-selecting (value is false) the last selected shape is chosen (if exists)
         if (!params.value) {
             let numberOfSelectedShapes =
                 this.image_config.regions_info.selected_shapes.length;
@@ -832,13 +832,18 @@ export default class Ol3Viewer extends EventSubscriber {
                 let lastSelected =
                     this.image_config.regions_info.selected_shapes[
                         numberOfSelectedShapes-1];
+                // if last-selected is not being de-selected, select it 
                 if (lastSelected !== shapeSelection) {
                     shapeSelection = lastSelected;
                 } else if (numberOfSelectedShapes > 1) {
+                    // or previous shape...
                     shapeSelection =
                         this.image_config.regions_info.selected_shapes[
                             numberOfSelectedShapes-2];
-                } else shapeSelection = null;
+                } else {
+                    // or nothing
+                    shapeSelection = null;
+                }
             } else shapeSelection = null;
         }
         let delay = 0;
@@ -869,7 +874,7 @@ export default class Ol3Viewer extends EventSubscriber {
             this.abortDrawing();
             this.viewer.selectShapes(
                 params.shapes, params.value, params.clear,
-                params.center ? shapeSelection : null);
+                params.center ? shapeSelection : null, params.zoomToShape);
             // If we've just selected a bunch of shapes, hide the ShapeEditPopup
             if (params.shapes.length > 1) {
                 this.viewer.viewer_.getOverlays().forEach(o => {
@@ -978,6 +983,7 @@ export default class Ol3Viewer extends EventSubscriber {
                 clear: true,
                 value: true,
                 center: true,
+                zoomToShape: true,
             });
         }
 

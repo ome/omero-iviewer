@@ -791,10 +791,10 @@ class Viewer extends OlObject {
      * @param {Array<string>} roi_shape_ids list in roi_id:shape_id notation
      * @param {boolean} selected flag whether we should (de)select the rois
      * @param {boolean} clear flag whether we should clear existing selection beforehand
-     * @param {string|null} center the id of the shape to center on or null
+     * @param {string|null} panToShape the id of the shape to pan into view or null
+     * @param {boolean} zoomToShape if true (and panToShape is specified) zoom it into view
      */
-    selectShapes(
-        roi_shape_ids, selected, clear, center) {
+    selectShapes(roi_shape_ids, selected, clear, panToShape, zoomToShape) {
         // without a regions layer there will be no select of regions ...
         var regions = this.getRegions();
         if (regions === null || regions.select_ === null) return;
@@ -802,19 +802,22 @@ class Viewer extends OlObject {
         if (typeof clear === 'boolean' && clear) regions.select_.clearSelection();
         regions.setProperty(roi_shape_ids, "selected", selected);
 
-        if (typeof center === 'string' && typeof regions.idIndex_[center] === 'object') {
-            let geom = regions.idIndex_[center].getGeometry();
-            let extent = geom.getExtent();
-            // extent is [x, -y, x2, -y2]
-            let width = extent[2] - extent[0];
-            let height = extent[3] - extent[1];
-            let length = Math.max(width, height);
-            // Zoom till shape is 300px on screen (or until we reach 100%)
-            let target_res = Math.max(length / 300, 1);
-            // Don't zoom out from current resolution
-            var res = this.viewer_.getView().getResolution();
-            target_res = Math.min(target_res, res);
-            let forceCentre = true;
+        if (typeof regions.idIndex_[panToShape] === 'object') {
+            let geom = regions.idIndex_[panToShape].getGeometry();
+            let target_res;
+            if (zoomToShape) {
+                let extent = geom.getExtent();
+                // extent is [x, -y, x2, -y2]
+                let width = extent[2] - extent[0];
+                let height = extent[3] - extent[1];
+                let length = Math.max(width, height);
+                // Zoom till shape is 300px on screen (or until we reach 100%)
+                target_res = Math.max(length / 300, 1);
+                // Don't zoom out from current resolution
+                var res = this.viewer_.getView().getResolution();
+                target_res = Math.min(target_res, res);
+            }
+            let forceCentre = zoomToShape;
             this.centerOnGeometry(geom, target_res, forceCentre);
         }
     }
