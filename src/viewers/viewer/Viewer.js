@@ -805,6 +805,7 @@ class Viewer extends OlObject {
         if (typeof regions.idIndex_[panToShape] === 'object') {
             let geom = regions.idIndex_[panToShape].getGeometry();
             let target_res;
+            let forceCentre = false;
             if (zoomToShape) {
                 let extent = geom.getExtent();
                 // extent is [x, -y, x2, -y2]
@@ -815,9 +816,12 @@ class Viewer extends OlObject {
                 target_res = Math.max(length / 300, 1);
                 // Don't zoom out from current resolution
                 var res = this.viewer_.getView().getResolution();
+                // If we zoom in, make sure we centre on shape
+                if (target_res > res) {
+                    forceCentre = true;
+                }
                 target_res = Math.min(target_res, res);
             }
-            let forceCentre = zoomToShape;
             this.centerOnGeometry(geom, target_res, forceCentre);
         }
     }
