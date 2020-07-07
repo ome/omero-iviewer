@@ -817,7 +817,7 @@ class Viewer extends OlObject {
                 // Don't zoom out from current resolution
                 var res = this.viewer_.getView().getResolution();
                 // If we zoom in, make sure we centre on shape
-                if (target_res > res) {
+                if (target_res < res) {
                     forceCentre = true;
                 }
                 target_res = Math.min(target_res, res);
