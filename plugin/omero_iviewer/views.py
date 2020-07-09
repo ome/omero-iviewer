@@ -36,6 +36,7 @@ import omero
 from omero.rtypes import rint, rlong, unwrap
 from omero_sys_ParametersI import ParametersI
 import omero.util.pixelstypetopython as pixelstypetopython
+from omeroweb.webclient.show import get_image_roi_id_for_shape
 
 from .version import __version__
 from omero_version import omero_version
@@ -347,20 +348,6 @@ def plane_shape_counts(request, image_id, conn=None, **kwargs):
     return JsonResponse({'data': counts})
 
 
-def get_image_id_for_shape(conn, shape_id):
-    """Returns (roi_id, image_id) tuple for shape"""
-    params = omero.sys.ParametersI()
-    params.addId(shape_id)
-    query = """select roi from Roi roi
-        left outer join roi.shapes as shape
-        where shape.id=:id"""
-    query_service = conn.getQueryService()
-    result = query_service.findByQuery(query, params, conn.SERVICE_OPTS)
-    if result:
-        return (result.id.val, result.image.id.val)
-    return (None, None)
-
-
 @login_required()
 def roi_page_data(request, obj_type, obj_id, conn=None, **kwargs):
     """
@@ -374,7 +361,7 @@ def roi_page_data(request, obj_type, obj_id, conn=None, **kwargs):
         roi = conn.getQueryService().get('Roi', roi_id)
         image_id = roi.image.id.val
     elif obj_type == 'shape':
-        roi_id, image_id = get_image_id_for_shape(conn, obj_id)
+        image_id, roi_id = get_image_roi_id_for_shape(conn, obj_id)
     if image_id is None:
         raise Http404(f'Could not find {obj_type}: {obj_id}')
     qs = conn.getQueryService()
@@ -403,7 +390,7 @@ def roi_image_data(request, obj_type, obj_id, conn=None, **kwargs):
         if roi:
             image_id = roi.image.id.val
     elif obj_type == 'shape':
-        roi_id, image_id = get_image_id_for_shape(conn, obj_id)
+        image_id, roi_id = get_image_roi_id_for_shape(conn, obj_id)
     if image_id is None:
         raise Http404(f'Could not find {obj_type}: {obj_id}')
     return image_data(request, image_id, conn=None, **kwargs)
