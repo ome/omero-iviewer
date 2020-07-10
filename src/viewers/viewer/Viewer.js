@@ -797,10 +797,10 @@ class Viewer extends OlObject {
      * @param {Array<string>} roi_shape_ids list in roi_id:shape_id notation
      * @param {boolean} selected flag whether we should (de)select the rois
      * @param {boolean} clear flag whether we should clear existing selection beforehand
-     * @param {string|null} center the id of the shape to center on or null
+     * @param {string|null} panToShape the id of the shape to pan into view or null
+     * @param {boolean} zoomToShape if true (and panToShape is specified) zoom it into view
      */
-    selectShapes(
-        roi_shape_ids, selected, clear, center) {
+    selectShapes(roi_shape_ids, selected, clear, panToShape, zoomToShape) {
         // without a regions layer there will be no select of regions ...
         var regions = this.getRegions();
         if (regions === null || regions.select_ === null) return;
@@ -808,9 +808,28 @@ class Viewer extends OlObject {
         if (typeof clear === 'boolean' && clear) regions.select_.clearSelection();
         regions.setProperty(roi_shape_ids, "selected", selected);
 
-        if (typeof center === 'string' &&
-            typeof regions.idIndex_[center] === 'object')
-                this.centerOnGeometry(regions.idIndex_[center].getGeometry());
+        if (typeof regions.idIndex_[panToShape] === 'object') {
+            let geom = regions.idIndex_[panToShape].getGeometry();
+            let target_res;
+            let forceCentre = false;
+            if (zoomToShape) {
+                let extent = geom.getExtent();
+                // extent is [x, -y, x2, -y2]
+                let width = extent[2] - extent[0];
+                let height = extent[3] - extent[1];
+                let length = Math.max(width, height);
+                // Zoom till shape is 300px on screen (or until we reach 100%)
+                target_res = Math.max(length / 300, 1);
+                // Don't zoom out from current resolution
+                var res = this.viewer_.getView().getResolution();
+                // If we zoom in, make sure we centre on shape
+                if (target_res < res) {
+                    forceCentre = true;
+                }
+                target_res = Math.min(target_res, res);
+            }
+            this.centerOnGeometry(geom, target_res, forceCentre);
+        }
     }
 
     /**
@@ -835,18 +854,15 @@ class Viewer extends OlObject {
 
     /**
      * Centers view on the middle of a geometry
+     * unless geometry is already in viewport,
      * optionally zooming in on a given resolution
      *
      * @param {ol.geom.Geometry} geometry the geometry
      * @param {number=} resolution the resolution to zoom in on
+     * @param {bool} forceCentre if true, ALWAYS centre
      */
-    centerOnGeometry(geometry, resolution) {
+    centerOnGeometry(geometry, resolution, forceCentre) {
         if (!(geometry instanceof Geometry)) return;
-
-        // only center if we don't intersect the viewport
-        if (intersects(
-                geometry.getExtent(),
-                this.viewer_.getView().calculateExtent())) return;
 
         // use given resolution for zoom
         if (typeof resolution === 'number' && !isNaN(resolution)) {
@@ -855,6 +871,11 @@ class Viewer extends OlObject {
             if (typeof constrainedResolution === 'number')
                 this.viewer_.getView().setResolution(constrainedResolution);
         }
+
+        // only center if we don't intersect the viewport after zooming
+        if (intersects(
+            geometry.getExtent(),
+            this.viewer_.getView().calculateExtent()) && (!forceCentre)) return;
 
         // center (taking into account potential rotation)
         var rot = this.viewer_.getView().getRotation();

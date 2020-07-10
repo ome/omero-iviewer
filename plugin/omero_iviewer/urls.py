@@ -26,6 +26,9 @@ urlpatterns = [
         name='omero_iviewer_persist_rois'),
     url(r'^image_data/(?P<image_id>[0-9]+)/$', views.image_data,
         name='omero_iviewer_image_data'),
+    # load image_data for image linked to an ROI or Shape
+    url(r'^(?P<obj_type>(roi|shape))/(?P<obj_id>[0-9]+)/image_data/$',
+        views.roi_image_data, name='omero_iviewer_roi_image_data'),
     url(r'^save_projection/?$', views.save_projection,
         name='omero_iviewer_save_projection'),
     url(r'^well_images/?$', views.well_images,
@@ -41,4 +44,7 @@ urlpatterns = [
         views.rois_by_plane, name='omero_iviewer_rois_by_plane'),
     url(r'^plane_shape_counts/(?P<image_id>[0-9]+)/$',
         views.plane_shape_counts, name='omero_iviewer_plane_shape_counts'),
+    # Find the index of an ROI within all ROIs for the Image (for pagination)
+    url(r'^(?P<obj_type>(roi|shape))/(?P<obj_id>[0-9]+)/page_data/$',
+        views.roi_page_data, name='omero_iviewer_roi_page_data'),
 ]

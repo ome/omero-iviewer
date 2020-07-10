@@ -119,6 +119,8 @@ export const REQUEST_PARAMS = {
     DATASET_ID: 'DATASET',
     INTERPOLATE: 'INTERPOLATE',
     IMAGES: 'IMAGES',
+    ROI: 'ROI',
+    SHAPE: 'SHAPE',
     MAPS: 'MAPS',
     MODEL: 'M',
     OMERO_VERSION: 'OMERO_VERSION',
@@ -269,7 +271,9 @@ export const INITIAL_TYPES = {
     NONE: 0,
     IMAGES: 1,
     DATASET: 2,
-    WELL: 3
+    WELL: 3,
+    ROIS: 4,
+    SHAPES: 5,
 }
 
 /**

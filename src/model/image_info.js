@@ -247,14 +247,17 @@ export default class ImageInfo {
      * @constructor
      * @param {Context} context the application context
      * @param {number} config_id the config id we belong to
-     * @param {number} image_id the image id to be queried
+     * @param {number} obj_id the object id to be queried
+     * @param {number} obj_type the type of obj. e.g. INITIAL_TYPES.IMAGES or ROIS
      * @param {number} parent_id an optional parent id
-     * @param {number} parent_type an optional parent type (e.g. dataset or well)
+     * @param {number} parent_type an optional parent type (e.g. INITIAL_TYPES.DATASET or WELL)
      */
-    constructor(context, config_id, image_id, parent_id, parent_type) {
+    constructor(context, config_id, obj_id, obj_type, parent_id, parent_type) {
         this.context = context;
         this.config_id = config_id;
-        this.image_id = image_id;
+        this.image_id = obj_type == INITIAL_TYPES.IMAGES ? obj_id : undefined;
+        this.initial_roi_id = obj_type == INITIAL_TYPES.ROIS ? obj_id : undefined;
+        this.initial_shape_id = obj_type == INITIAL_TYPES.SHAPES ? obj_id : undefined;
         if (typeof parent_id === 'number') {
             this.parent_id = parent_id;
             if (typeof parent_type === 'number' &&
@@ -299,14 +302,24 @@ export default class ImageInfo {
         if (typeof refresh !== 'boolean') refresh = false;
         this.ready = false;
 
+        // if we have ROI id instead of Image id, use that to load image_data
+        let url = this.context.server + this.context.getPrefixedURI(IVIEWER);
+        if (!this.image_id && this.initial_roi_id) {
+            url += "/roi/" + this.initial_roi_id + '/image_data/';
+        } else if (!this.image_id && this.initial_shape_id) {
+            url += "/shape/" + this.initial_shape_id + '/image_data/';
+        } else {
+            url += "/image_data/" + this.image_id + '/';
+        }
         $.ajax({
-            url :
-                this.context.server + this.context.getPrefixedURI(IVIEWER) +
-                "/image_data/" + this.image_id + '/',
+            url,
             success : (response) => {
+                if (!this.image_id) {
+                    this.image_id = response.id;
+                }
+
                 // read initial request params
                 this.initializeImageInfo(response, refresh);
-
                 // check for a parent id (if not well)
                 if (this.context.initial_type !== INITIAL_TYPES.WELL &&
                     typeof this.parent_id !== 'number') {
@@ -319,8 +332,15 @@ export default class ImageInfo {
                 this.requestImgRDef();
                 // request regions data if rois tab showing
                 let conf = this.context.getImageConfig(this.config_id);
-                if (this.context.isRoisTabActive())
-                    conf.regions_info.requestData();
+                if (this.context.isRoisTabActive()) {
+                    if (this.initial_roi_id) {
+                        conf.regions_info.setPageByRoiAndReload(this.initial_roi_id);
+                    } else if (this.initial_shape_id) {
+                        conf.regions_info.setPageByRoiAndReload(null, this.initial_shape_id);
+                    } else {
+                        conf.regions_info.requestData();
+                    }
+                }
             },
             error : (error, textStatus) => {
                 this.ready = false;

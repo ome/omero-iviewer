@@ -279,7 +279,7 @@ export default class Context {
                     }
                 }
                 if (openImageConfig)
-                    this.addImageConfig(e.state.image_id, e.state.parent_id);
+                    this.addImageConfig(e.state.image_id, INITIAL_TYPES.IMAGES, e.state.parent_id);
             };
         }
     }
@@ -349,40 +349,52 @@ export default class Context {
      * @memberof Context
      */
     openWithInitialParams() {
-        // do we have any image ids?
-        let initial_image_ids =
-            typeof this.initParams[REQUEST_PARAMS.IMAGES] !== 'undefined' ?
-                this.initParams[REQUEST_PARAMS.IMAGES] : null;
-        if (initial_image_ids) {
-            let tokens = initial_image_ids.split(',');
-            for (let t in tokens) {
-                let parsedToken = parseInt(tokens[t]);
-                if (typeof parsedToken === 'number' &&
-                    !isNaN(parsedToken)) this.initial_ids.push(parsedToken);
-            }
+        // do we have any image ids or roi ids?
+        let initial_ids;
+        let initial_type;   // INITIAL_TYPES int
+        if (this.initParams[REQUEST_PARAMS.IMAGES]) {
+            initial_ids = this.initParams[REQUEST_PARAMS.IMAGES];
+            initial_type = INITIAL_TYPES.IMAGES;
+        } else if (this.initParams[REQUEST_PARAMS.ROI]) {
+            // also support ?roi=1
+            initial_ids = this.initParams[REQUEST_PARAMS.ROI];
+            initial_type = INITIAL_TYPES.ROIS;
+        } else if (this.initParams[REQUEST_PARAMS.SHAPE]) {
+            initial_ids = this.initParams[REQUEST_PARAMS.SHAPE];
+            initial_type = INITIAL_TYPES.SHAPES;
+        }
+        if (initial_ids) {
+            this.initial_ids = initial_ids.split(',')
+                .map(id => parseInt(id))
+                .filter(id => !isNaN(id))
+
             if (this.initial_ids.length > 0)
-                this.initial_type = INITIAL_TYPES.IMAGES;
+                this.initial_type = initial_type;
         }
 
-        // do we have a dataset id
+        // do we have a dataset id?
         let initial_dataset_id =
             parseInt(this.getInitialRequestParam(REQUEST_PARAMS.DATASET_ID));
         if (typeof initial_dataset_id !== 'number' || isNaN(initial_dataset_id))
             initial_dataset_id = null;
-        // do we have a well id
+        // do we have a well id?
         let initial_well_id =
             parseInt(this.getInitialRequestParam(REQUEST_PARAMS.WELL_ID));
         if (typeof initial_well_id !== 'number' || isNaN(initial_well_id))
             initial_well_id = null;
 
-        // add image config if we have image ids
-        if (this.initial_type === INITIAL_TYPES.IMAGES) {
+        // add image config if we have image ids OR roi id OR shape id
+        if ([INITIAL_TYPES.IMAGES, INITIAL_TYPES.ROIS, INITIAL_TYPES.SHAPES].indexOf(this.initial_type) > -1) {
             let parent_id = initial_dataset_id || initial_well_id;
-            let parent_type =
-                parent_id !== null ?
-                    initial_dataset_id !== null ?
-                        INITIAL_TYPES.DATASET : INITIAL_TYPES.WELL : null;
-            this.addImageConfig(this.initial_ids[0], parent_id, parent_type);
+            let parent_type;
+            if (parent_id) {
+                if (initial_dataset_id !== null) {
+                    parent_type = INITIAL_TYPES.DATASET;
+                } else {
+                    parent_type = INITIAL_TYPES.WELL
+                }
+            }
+            this.addImageConfig(this.initial_ids[0], this.initial_type, parent_id, parent_type);
         } else {
             // we could either have a well or just a dataset
             if (initial_well_id) { // well takes precedence
@@ -614,15 +626,19 @@ export default class Context {
             }
         } else {
             // 'standard' url
-            if (this.initial_type === INITIAL_TYPES.IMAGES) {
+            if (this.initial_type === INITIAL_TYPES.IMAGES || this.initial_type === INITIAL_TYPES.ROIS
+                    || this.initial_type === INITIAL_TYPES.SHAPES) {
                 if (this.initial_ids.length > 1)
+                    // e.g. ?images=1,2 - Don't update URL
                     newPath += window.location.search;
                 else {
+                    // e.g. ?images=1 - update to ?images=2&dataset=1
                     parent_id = selConf.image_info.parent_id;
                     newPath +=
                         '?images=' + image_id + '&' + parentTypeString + "=" + parent_id;
                 }
             } else {
+                // e.g. ?dataset=1 - Don't update URL
                 parent_id = this.initial_ids[0];
                 newPath += "?" + parentTypeString + "=" + parent_id;
             }
@@ -645,12 +661,13 @@ export default class Context {
      * Creates and adds an ImageConfig instance by handing it an id of an image
      * stored on the server, as well as making it the selected/active image config.
      *
-     * @param {number} image_id the image id
+     * @param {number} obj_id the image or roi id
+     * @param {number} obj_type e.g. INITIAL_TYPES.IMAGES or ROIS
      * @param {number} parent_id an optional parent id
      * @param {number} parent_type an optional parent type  (e.g. dataset or well)
      */
-    addImageConfig(image_id, parent_id, parent_type) {
-        if (typeof image_id !== 'number' || image_id < 0) return;
+    addImageConfig(obj_id, obj_type, parent_id, parent_type) {
+        if (typeof obj_id !== 'number' || obj_id < 0) return;
 
         // we do not keep the other configs around unless we are in MDI mode.
         if (!this.useMDI) {
@@ -666,7 +683,7 @@ export default class Context {
         }
 
         let image_config =
-            new ImageConfig(this, image_id, parent_id, parent_type);
+            new ImageConfig(this, obj_id, obj_type, parent_id, parent_type);
         // store the image config in the map and make it the selected one
         this.image_configs.set(image_config.id, image_config);
         this.selectConfig(image_config.id);
@@ -704,13 +721,13 @@ export default class Context {
      * Opens images in single and multi viewer mode
      *
      * @memberof ThumbnailSlider
-     * @param {number} image_id the image id for the clicked thumbnail
+     * @param {number} obj_id the image or roi id for the clicked thumbnail
      * @param {boolean} is_double_click true if triggered by a double click
      */
-    onClicks(image_id, is_double_click = false, replace_image_config) {
+    onClicks(obj_id, is_double_click = false, replace_image_config) {
         let image_config = this.getSelectedImageConfig();
         let navigateToNewImage = () => {
-            this.rememberImageConfigChange(image_id);
+            this.rememberImageConfigChange(obj_id);
             // Dataset ID or Well ID or Image ID
             let parent = this.getParentTypeAndId();
             let parent_id = parent.id;
@@ -719,11 +736,12 @@ export default class Context {
             if (this.useMDI && !is_double_click && !replace_image_config) {
                 replace_image_config = image_config;
             }
+            let initial_type = INITIAL_TYPES.IMAGES;
             if (replace_image_config) {
                 let oldPosition = Object.assign({}, replace_image_config.position);
                 let oldSize = Object.assign({}, replace_image_config.size);
                 this.removeImageConfig(replace_image_config, true);
-                this.addImageConfig(image_id, parent_id, parent_type);
+                this.addImageConfig(obj_id, initial_type, parent_id, parent_type);
                 // Get the newly created image config
                 let selImgConf = this.getSelectedImageConfig();
                 if (selImgConf !== null) {
@@ -731,16 +749,16 @@ export default class Context {
                     selImgConf.size = oldSize;
                 }
             } else {
-                this.addImageConfig(image_id, parent_id, parent_type);
+                this.addImageConfig(obj_id, initial_type, parent_id, parent_type);
             }
         };
 
         let modifiedConfs = this.useMDI ?
             this.findConfigsWithModifiedRegionsForGivenImage(
-                image_id) : [];
+                obj_id) : [];
         let selImgConf = this.getSelectedImageConfig();
         let hasSameImageSelected =
-            selImgConf && selImgConf.image_info.image_id === image_id;
+            selImgConf && selImgConf.image_info.image_id === obj_id;
         // show dialogs for modified rois
         if (image_config &&
             image_config.regions_info &&
