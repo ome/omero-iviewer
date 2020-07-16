@@ -5,6 +5,7 @@
 - support linking to ROI or Shape [#311](https://github.com/ome/omero-iviewer/pull/311)
 - allow higher zoom levels for big Images [#325](https://github.com/ome/omero-iviewer/pull/325)
 - link to Image in webclient [#328](https://github.com/ome/omero-iviewer/pull/328)
+- this release requires an update to omero-web 5.7.0
 
 0.9.1 (February 2020)
 ---------------------
