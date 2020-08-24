@@ -851,17 +851,26 @@ export default class Ol3Viewer extends EventSubscriber {
             let viewerT = this.viewer.getDimensionIndex('t');
             let viewerZ = this.viewer.getDimensionIndex('z');
             let viewerC = this.viewer.getDimensionIndex('c');
+            // Update this.image_config.image_info to load a new Z/T plane...
             let shape =
                 this.image_config.regions_info.getShape(shapeSelection);
+            let correctPlane = true;
             let shapeT = typeof shape.TheT === 'number' ? shape.TheT : -1;
             if (shapeT !== -1 && shapeT !== viewerT) {
                 this.image_config.image_info.dimensions.t = shapeT;
+                correctPlane = false;
                 delay += 25;
             }
             let shapeZ = typeof shape.TheZ === 'number' ? shape.TheZ : -1;
             if (shapeZ !== -1 && shapeZ !== viewerZ) {
                 this.image_config.image_info.dimensions.z = shapeZ;
+                correctPlane = false;
                 delay += 25;
+            }
+            if (correctPlane) {
+                // remove initial_shape_id, so we don't get directed to shape again when browsing
+                // a new plane, (when ROIs are loaded and initRegions() is called again)
+                this.image_config.image_info.initial_shape_id = undefined;
             }
             let shapeC = typeof shape.TheC === 'number' ? shape.TheC : -1;
             if (shapeC !== -1 && viewerC.indexOf(shapeC) === -1) {
