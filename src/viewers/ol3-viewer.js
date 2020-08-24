@@ -871,6 +871,9 @@ export default class Ol3Viewer extends EventSubscriber {
                 // remove initial_shape_id, so we don't get directed to shape again when browsing
                 // a new plane, (when ROIs are loaded and initRegions() is called again)
                 this.image_config.image_info.initial_shape_id = undefined;
+            } else {
+                // browsing to new plane - this will select Shape when ROIs load
+                this.image_config.image_info.initial_shape_id = shape['@id'];
             }
             let shapeC = typeof shape.TheC === 'number' ? shape.TheC : -1;
             if (shapeC !== -1 && viewerC.indexOf(shapeC) === -1) {
