@@ -366,6 +366,13 @@ export default class RegionsInfo  {
                 success : (response) => {
                     const page = parseInt(response.roi_index / this.roi_page_size);
                     this.roi_page_number = page;
+                    // This will update the viewer (change listeners)
+                    if (response.theZ != undefined) {
+                        this.image_info.dimensions.z = response.theZ;
+                    }
+                    if (response.theT != undefined) {
+                        this.image_info.dimensions.t = response.theT;
+                    }
                     this.requestData(true);
                 }, error : (error) => {
                     this.is_pending = false;
