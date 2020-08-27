@@ -364,6 +364,11 @@ a.ui-button:active,
     background: #c5c5c5;
 }
 
+.time-slider .ui-slider-range,
+.plane-slider .ui-slider-range {
+    background: #144773;
+}
+
 .plane-slider .ui-slider {
     height: 100%;
     width: 9px;
