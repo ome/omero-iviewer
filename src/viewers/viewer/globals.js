@@ -108,7 +108,7 @@ export const PREFIXED_URIS = [
  * @const
  * @type {number}
  */
-export const UNTILED_RETRIEVAL_LIMIT = 4000000;
+export const UNTILED_RETRIEVAL_LIMIT = 2048 * 2048;
 
 /**
  * the default tile dimensions

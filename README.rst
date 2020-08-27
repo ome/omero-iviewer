@@ -59,7 +59,7 @@ equal to the default threshold. To double the limit, use::
     $ omero config set omero.web.iviewer.max_projection_bytes 536870912
 
 NB: Z-projection is not supported for tiled images in OMERO
-(Images larger than 2000 * 2000 pixels per plane are tiled in iviewer).
+(Images larger than 2048 * 2048 pixels per plane are tiled in iviewer).
 
 Supported URLs
 ==============
