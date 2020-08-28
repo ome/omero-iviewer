@@ -86,7 +86,12 @@ def index(request, iid=None, conn=None, **kwargs):
     if settings.FORCE_SCRIPT_NAME is not None:
         params['URI_PREFIX'] = settings.FORCE_SCRIPT_NAME
     params['ROI_PAGE_SIZE'] = ROI_PAGE_SIZE
-    params['MAX_PROJECTION_BYTES'] = MAX_PROJECTION_BYTES
+
+    max_bytes = server_settings.get('omero.pixeldata.max_projection_bytes')
+    if max_bytes is None or (
+            MAX_PROJECTION_BYTES > 0 and MAX_PROJECTION_BYTES < max_bytes):
+        max_bytes = MAX_PROJECTION_BYTES
+    params['MAX_PROJECTION_BYTES'] = max_bytes
 
     return render(
         request, 'omero_iviewer/index.html',

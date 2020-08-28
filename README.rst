@@ -50,13 +50,19 @@ https://omero-guides.readthedocs.io/en/latest/iviewer/docs/index.html
 Settings
 ========
 
-OMERO.iviewer limits the size of Z-projections to reduce load on the server.
+OMERO limits the size of Z-projections to reduce load on the server.
 The limit is defined as the number of bytes of raw pixel data in a Z-stack and
-is equivalent to 1024 * 1024 * 256 bytes.
-For example, an 8-bit image (1 byte per pixel) of size 1024 * 1024 * 256 is
-equal to the default threshold. To double the limit, use::
+the OMERO.server default is equivalent to 1024 * 1024 * 256 bytes.
+For example, a single-channel 8-bit image (1 byte per pixel) of XYZ size
+1024 * 1024 * 256 is equal to the default threshold.
 
-    $ omero config set omero.web.iviewer.max_projection_bytes 536870912
+To double the limit, use::
+
+    $ omero config set omero.pixeldata.max_projection_bytes 536870912
+
+If you wish to set a threshold for iviewer that is *lower* than for the server:
+
+    $ omero config set omero.web.iviewer.max_projection_bytes 268435456
 
 NB: Z-projection is not supported for tiled images in OMERO
 (Images larger than 2048 * 2048 pixels per plane are tiled in iviewer).
