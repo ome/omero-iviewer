@@ -87,10 +87,14 @@ def index(request, iid=None, conn=None, **kwargs):
         params['URI_PREFIX'] = settings.FORCE_SCRIPT_NAME
     params['ROI_PAGE_SIZE'] = ROI_PAGE_SIZE
 
-    max_bytes = server_settings.get('omero.pixeldata.max_projection_bytes')
-    if max_bytes is None or (
-            MAX_PROJECTION_BYTES > 0 and MAX_PROJECTION_BYTES < max_bytes):
+    c = conn.getConfigService()
+    max_bytes = c.getConfigValue('omero.pixeldata.max_projection_bytes')
+    # check if MAX_PROJECTION_BYTES should override server setting
+    if max_bytes is None or len(max_bytes) == 0 or (
+            MAX_PROJECTION_BYTES > 0 and MAX_PROJECTION_BYTES < int(max_bytes)):
         max_bytes = MAX_PROJECTION_BYTES
+    else:
+        max_bytes = int(max_bytes)
     params['MAX_PROJECTION_BYTES'] = max_bytes
 
     return render(
