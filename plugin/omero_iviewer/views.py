@@ -91,7 +91,8 @@ def index(request, iid=None, conn=None, **kwargs):
     max_bytes = c.getConfigValue('omero.pixeldata.max_projection_bytes')
     # check if MAX_PROJECTION_BYTES should override server setting
     if max_bytes is None or len(max_bytes) == 0 or (
-            MAX_PROJECTION_BYTES > 0 and MAX_PROJECTION_BYTES < int(max_bytes)):
+            MAX_PROJECTION_BYTES > 0 and
+            MAX_PROJECTION_BYTES < int(max_bytes)):
         max_bytes = MAX_PROJECTION_BYTES
     else:
         max_bytes = int(max_bytes)
