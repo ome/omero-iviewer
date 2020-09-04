@@ -425,7 +425,6 @@ def roi_page_data(request, obj_type, obj_id, conn=None, **kwargs):
             params.addId(image_id)
             result = qs.projection(query, params, conn.SERVICE_OPTS)
             for roi in result:
-                print(unwrap(roi[0]))
                 ids.append(unwrap(roi[0]))
     if image_id is None:
         raise Http404(f'Could not find {obj_type}: {obj_id}')
