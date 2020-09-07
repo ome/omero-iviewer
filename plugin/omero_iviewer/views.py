@@ -33,7 +33,7 @@ from omeroweb.webgateway.templatetags.common_filters import lengthformat,\
 import json
 import omero_marshal
 import omero
-from omero.rtypes import rint, rlong, unwrap
+from omero.rtypes import rint, rlong, unwrap, wrap
 from omero_sys_ParametersI import ParametersI
 import omero.util.pixelstypetopython as pixelstypetopython
 from omeroweb.webclient.show import get_image_roi_id_for_shape
@@ -219,8 +219,8 @@ def persist_rois(request, conn=None, **kwargs):
     return JsonResponse(ret)
 
 
-def get_query_for_rois_by_plane(the_z=None, the_t=None, z_end=None,
-                                t_end=None, load_shapes=False):
+def get_query_for_rois_by_plane(the_z=None, the_t=None,
+                                z_end=None, t_end=None):
 
     clauses = ['roi.image.id = :id']
     if the_z is not None:
@@ -237,23 +237,31 @@ def get_query_for_rois_by_plane(the_z=None, the_t=None, z_end=None,
         clauses.append(where_t)
 
     query = """
-        select distinct(roi.id) from Roi roi
-        join roi.shapes as shapes
+        select roi from Roi roi
+        join fetch roi.shapes as shapes
         where %s
     """ % ' and '.join(clauses)
 
-    if load_shapes:
-        # If we want to load ALL shapes for the ROIs (omero-marshal fails if
-        # any shapes are None) we use the query above to get ROI IDs, then
-        # load all ROIs with Shapes
-        query = """
-            select roi from Roi roi
-            join fetch roi.details.owner join fetch roi.details.creationEvent
-            left outer join fetch roi.shapes
-            where roi.id in (%s) order by roi.id
-        """ % (query)
-
     return query
+
+
+def get_shape_counts(conn, roi_ids):
+    """
+    Count shapes for the specified ROI IDs.
+
+    @param conn:        BlitzGateway
+    @param roi_ids:     List of ROI IDs
+    @return             A dict of roi_id: shape_count
+    """
+    params = ParametersI()
+    params.add('ids', wrap([rlong(id) for id in roi_ids]))
+    query = ("select shape.roi.id, count(shape.id) from Shape shape"
+             " where shape.roi.id in (:ids) group by shape.roi.id")
+    result = conn.getQueryService().projection(query, params, conn.SERVICE_OPTS)
+    counts = {}
+    for d in result:
+        counts[d[0].val] = unwrap(d[1])
+    return counts
 
 
 @login_required()
@@ -276,8 +284,7 @@ def rois_by_plane(request, image_id, the_z, the_t, z_end=None, t_end=None,
     filter.limit = rint(limit)
     params.theFilter = filter
 
-    query = get_query_for_rois_by_plane(the_z, the_t, z_end, t_end,
-                                        load_shapes=True)
+    query = get_query_for_rois_by_plane(the_z, the_t, z_end, t_end)
     rois = query_service.findAllByQuery(query, params, conn.SERVICE_OPTS)
     marshalled = []
     for r in rois:
@@ -285,9 +292,18 @@ def rois_by_plane(request, image_id, the_z, the_t, z_end=None, t_end=None,
         if encoder is not None:
             marshalled.append(encoder.encode(r))
 
+    roi_ids = [r.id.val for r in rois]
+    roi_counts = get_shape_counts(conn, roi_ids)
+    print ('roi_counts', roi_counts)
+
+    for roi in marshalled:
+        if roi['@id'] in roi_counts:
+            roi['shape_count'] = roi_counts[roi['@id']]
+
     # Modify query to only select count() and NOT paginate
     query = get_query_for_rois_by_plane(the_z, the_t, z_end, t_end)
-    query = query.replace("distinct(roi.id)", "count(distinct roi.id)")
+    query = query.replace("select roi", "select count(distinct roi.id)")
+    query = query.replace(" fetch", "")
     params = omero.sys.ParametersI()
     params.addId(image_id)
     result = query_service.projection(query, params, conn.SERVICE_OPTS)
@@ -425,7 +441,7 @@ def roi_page_data(request, obj_type, obj_id, conn=None, **kwargs):
             params.addId(image_id)
             result = qs.projection(query, params, conn.SERVICE_OPTS)
             for roi in result:
-                ids.append(unwrap(roi[0]))
+                ids.append(unwrap(roi[0]).id.val)
     if image_id is None:
         raise Http404(f'Could not find {obj_type}: {obj_id}')
 

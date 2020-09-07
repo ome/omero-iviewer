@@ -106,10 +106,13 @@
             show.bind="!regions_info.ready">Loading Regions...</div>
 
         <div class="regions-table" show.bind="regions_info.ready">
+            <!-- For each ROI... -->
             <template repeat.for="[roi_id, roi] of regions_info.data | sort:sortBy:sortAscending">
+                <!-- For each Shape... -->
                 <template repeat.for="[shape_id, shape] of roi.shapes">
-                    <div if.bind="(roi.shapes.size - roi.deleted) > 1 &&
-                                   roi.shapes.size > 1 && $first"
+                    <!-- IF ROI has more than 1 shape, show ROI before $first shape -->
+                    <div if.bind="(roi.shape_count - roi.deleted) > 1 &&
+                                   roi.shape_count > 1 && $first"
                         id="${'roi-' + roi_id}"
                         title="${(shape_id > 0 ? 'ROI: ' + roi_id + ', Shape: ' + shape_id : 'Unsaved') +
                                     (shape.owner ? '\nOwner: ' + shape.owner : '')}"
@@ -128,7 +131,7 @@
                                  change.delegate="toggleRoiVisibility(roi_id, $event)"/>
                          </div>
                          <div class="regions-table-col shape-type">
-                             (${(roi.shapes.size - roi.deleted)})
+                             (${(roi.shape_count - roi.deleted)})
                          </div>
                         <div class="regions-table-col shape-z"></div>
                         <div class="regions-table-col shape-t"></div>
@@ -139,8 +142,9 @@
                         <div class="regions-table-col shape-area"></div>
                         <div class="regions-table-col shape-length"></div>
                     </div>
+                    <!-- Show all shapes... -->
                     <div if.bind="!(shape.deleted && shape.is_new) &&
-                                   !(roi.shapes.size > 1 && !roi.show)"
+                                   !(roi.shape_count > 1 && !roi.show)"
                         title="${(shape_id > 0 ? 'ROI: ' + roi_id + ', Shape: ' + shape_id : 'Unsaved') +
                                     (shape.owner ? '\nOwner: ' + shape.owner : '') +
                                     (shape.type === 'mask' ? '\nMasks cannot be edited' : '')}"

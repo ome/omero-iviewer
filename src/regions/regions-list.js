@@ -175,6 +175,12 @@ export default class RegionsList extends EventSubscriber {
                         (newValue, oldValue) => onceReady());
     }
 
+    handleRoiShow(newValue, oldValue, roi_id) {
+        if (newValue) {
+            this.regions_info.requestShapesForRoi(roi_id);
+        }
+    }
+
     /**
      * Registers property observers
      *
@@ -191,6 +197,13 @@ export default class RegionsList extends EventSubscriber {
                     (newValue, oldValue) =>
                         $('#shapes_visibility_toggler').prop(
                             'checked', newValue === 0)));
+        // observe 'show' on every ROI
+        this.regions_info.data.forEach((roi, roi_id) => {
+            this.observers.push(this.bindingEngine.propertyObserver(roi, 'show').subscribe(
+                (newValue, oldValue) => {
+                    this.handleRoiShow(newValue, oldValue, roi_id);
+                }));
+        });
     }
 
     /**
