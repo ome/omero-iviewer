@@ -257,7 +257,8 @@ def get_shape_counts(conn, roi_ids):
     params.add('ids', wrap([rlong(id) for id in roi_ids]))
     query = ("select shape.roi.id, count(shape.id) from Shape shape"
              " where shape.roi.id in (:ids) group by shape.roi.id")
-    result = conn.getQueryService().projection(query, params, conn.SERVICE_OPTS)
+    result = conn.getQueryService().projection(query, params,
+                                               conn.SERVICE_OPTS)
     counts = {}
     for d in result:
         counts[d[0].val] = unwrap(d[1])
@@ -294,7 +295,6 @@ def rois_by_plane(request, image_id, the_z, the_t, z_end=None, t_end=None,
 
     roi_ids = [r.id.val for r in rois]
     roi_counts = get_shape_counts(conn, roi_ids)
-    print ('roi_counts', roi_counts)
 
     for roi in marshalled:
         if roi['@id'] in roi_counts:
