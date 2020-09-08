@@ -219,6 +219,43 @@ def persist_rois(request, conn=None, **kwargs):
     return JsonResponse(ret)
 
 
+def get_query_for_rois_by_plane(the_z=None, the_t=None, z_end=None,
+                                t_end=None, load_shapes=False):
+
+    clauses = ['roi.image.id = :id']
+    if the_z is not None:
+        where_z = "(shapes.theZ = %s or shapes.theZ is null)" % the_z
+        if z_end is not None:
+            where_z = """((shapes.theZ >= %s and shapes.theZ <= %s)
+                or shapes.theZ is null)""" % (the_z, z_end)
+        clauses.append(where_z)
+    if the_t is not None:
+        where_t = "(shapes.theT = %s or shapes.theT is null)" % the_t
+        if t_end is not None:
+            where_t = """((shapes.theT >= %s and shapes.theT <= %s)
+                or shapes.theT is null)""" % (the_t, t_end)
+        clauses.append(where_t)
+
+    query = """
+        select distinct(roi.id) from Roi roi
+        join roi.shapes as shapes
+        where %s
+    """ % ' and '.join(clauses)
+
+    if load_shapes:
+        # If we want to load ALL shapes for the ROIs (omero-marshal fails if
+        # any shapes are None) we use the query above to get ROI IDs, then
+        # load all ROIs with Shapes
+        query = """
+            select roi from Roi roi
+            join fetch roi.details.owner join fetch roi.details.creationEvent
+            left outer join fetch roi.shapes
+            where roi.id in (%s) order by roi.id
+        """ % (query)
+
+    return query
+
+
 @login_required()
 def rois_by_plane(request, image_id, the_z, the_t, z_end=None, t_end=None,
                   conn=None, **kwargs):
@@ -239,32 +276,8 @@ def rois_by_plane(request, image_id, the_z, the_t, z_end=None, t_end=None,
     filter.limit = rint(limit)
     params.theFilter = filter
 
-    where_z = "shapes.theZ = %s or shapes.theZ is null" % the_z
-    where_t = "shapes.theT = %s or shapes.theT is null" % the_t
-    if z_end is not None:
-        where_z = """(shapes.theZ >= %s and shapes.theZ <= %s)
-            or shapes.theZ is null""" % (the_z, z_end)
-    if t_end is not None:
-        where_t = """(shapes.theT >= %s and shapes.theT <= %s)
-            or shapes.theT is null""" % (the_t, t_end)
-
-    filter_query = """
-        select distinct(roi) from Roi roi
-        join roi.shapes as shapes
-        where (%s) and (%s)
-        and roi.image.id = :id
-    """ % (where_z, where_t)
-
-    # We want to load ALL shapes for the ROIs (omero-marshal fails if
-    # any shapes are None) but we want to filter by Shape so we use an inner
-    # query to get the ROI IDs filtered by Shape.
-    query = """
-        select roi from Roi roi
-        join fetch roi.details.owner join fetch roi.details.creationEvent
-        left outer join fetch roi.shapes
-        where roi.id in (%s) order by roi.id
-    """ % (filter_query)
-
+    query = get_query_for_rois_by_plane(the_z, the_t, z_end, t_end,
+                                        load_shapes=True)
     rois = query_service.findAllByQuery(query, params, conn.SERVICE_OPTS)
     marshalled = []
     for r in rois:
@@ -273,7 +286,8 @@ def rois_by_plane(request, image_id, the_z, the_t, z_end=None, t_end=None,
             marshalled.append(encoder.encode(r))
 
     # Modify query to only select count() and NOT paginate
-    query = filter_query.replace("distinct(roi)", "count(distinct roi)")
+    query = get_query_for_rois_by_plane(the_z, the_t, z_end, t_end)
+    query = query.replace("distinct(roi.id)", "count(distinct roi.id)")
     params = omero.sys.ParametersI()
     params.addId(image_id)
     result = query_service.projection(query, params, conn.SERVICE_OPTS)
@@ -348,6 +362,35 @@ def plane_shape_counts(request, image_id, conn=None, **kwargs):
     return JsonResponse({'data': counts})
 
 
+def get_shape_info(conn, shape_id):
+    """Returns dict of roi_id, image_id, theZ, theT from a shape ID."""
+    params = omero.sys.ParametersI()
+    params.addId(shape_id)
+
+    query = """
+        select roi.id,
+               image.id,
+               shape.theZ,
+               shape.theT
+        from Shape shape
+        join shape.roi roi
+        join roi.image image
+        where shape.id=:id"""
+
+    shapes = conn.getQueryService().projection(query, params,
+                                               conn.SERVICE_OPTS)
+    rsp = None
+    if len(shapes) > 0:
+        s = unwrap(shapes[0])
+        rsp = {
+            'roi_id': s[0],
+            'image_id': s[1],
+            'theZ': s[2],
+            'theT': s[3],
+        }
+    return rsp
+
+
 @login_required()
 def roi_page_data(request, obj_type, obj_id, conn=None, **kwargs):
     """
@@ -355,21 +398,37 @@ def roi_page_data(request, obj_type, obj_id, conn=None, **kwargs):
 
     Returns {image: {'id': 1}, roi_index: 123, roi_count: 3456}
     """
+    qs = conn.getQueryService()
     image_id = None
+    roi_id = None
+    shape_info = None
+    ids = []
     if obj_type == 'roi':
         roi_id = int(obj_id)
-        roi = conn.getQueryService().get('Roi', roi_id)
+        roi = qs.get('Roi', roi_id)
         image_id = roi.image.id.val
+        params = omero.sys.ParametersI()
+
+        params.addId(image_id)
+        query = "select roi.id from Roi roi where roi.image.id = :id"
+        ids = [i[0].val for i in qs.projection(query, params,
+                                               conn.SERVICE_OPTS)]
     elif obj_type == 'shape':
-        image_id, roi_id = get_image_roi_id_for_shape(conn, obj_id)
+        shape_info = get_shape_info(conn, obj_id)
+        if shape_info is not None:
+            image_id = shape_info.get('image_id')
+            roi_id = shape_info.get('roi_id')
+            the_z = shape_info.get('theZ')
+            the_t = shape_info.get('theT')
+            query = get_query_for_rois_by_plane(the_z, the_t)
+            params = omero.sys.ParametersI()
+            params.addId(image_id)
+            result = qs.projection(query, params, conn.SERVICE_OPTS)
+            for roi in result:
+                ids.append(unwrap(roi[0]))
     if image_id is None:
         raise Http404(f'Could not find {obj_type}: {obj_id}')
-    qs = conn.getQueryService()
-    params = omero.sys.ParametersI()
 
-    params.addId(image_id)
-    query = "select roi.id from Roi roi where roi.image.id = :id"
-    ids = [i[0].val for i in qs.projection(query, params, conn.SERVICE_OPTS)]
     ids.sort()
     index = ids.index(roi_id)
     rsp = {
@@ -378,6 +437,9 @@ def roi_page_data(request, obj_type, obj_id, conn=None, **kwargs):
         'roi_index': index,
         'roi_count': len(ids)
     }
+    if shape_info is not None:
+        rsp['theT'] = shape_info.get('theT')
+        rsp['theZ'] = shape_info.get('theZ')
     return JsonResponse(rsp)
 
 
