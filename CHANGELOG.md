@@ -1,3 +1,11 @@
+0.10.1 (August 2020)
+--------------------
+
+- Bug fix: handle of non-default units for image timestamps [#343](https://github.com/ome/omero-iviewer/pull/343)
+- Add link to the how-to guide in Help menu [#336](https://github.com/ome/omero-iviewer/pull/336) [#344](https://github.com/ome/omero-iviewer/pull/344)
+- Fix copyright range in Help menu [#339](https://github.com/ome/omero-iviewer/pull/339)
+- Improve console debugging for karma test server [#334](https://github.com/ome/omero-iviewer/pull/334)
+
 0.10.0 (July 2020)
 ------------------
 

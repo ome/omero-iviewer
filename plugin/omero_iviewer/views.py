@@ -561,7 +561,7 @@ def format_value_with_units(value):
     if value is None:
         return (None, "")
     length = value.getValue()
-    unit = value.getUnit()
+    unit = str(value.getUnit())
     if unit == "MICROMETER":
         unit = lengthunit(length)
         length = lengthformat(length)
