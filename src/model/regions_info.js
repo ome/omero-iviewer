@@ -16,7 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-import {noView} from 'aurelia-framework';
+import { noView, observable } from 'aurelia-framework';
 import RegionsHistory from './regions_history';
 import Misc from '../utils/misc';
 import {Converters} from '../utils/converters';
@@ -27,6 +27,84 @@ import {
     IVIEWER, REGIONS_DRAWING_MODE, REGIONS_MODE, REGIONS_REQUEST_URL,
     WEB_API_BASE,
 } from '../utils/constants';
+
+class Region {
+    @observable show = false;
+    deleted = 0;
+    name = '';
+    shapes = new Map();
+    shape_count = 0;
+    shapes_loaded = true;
+    roi_id;
+
+    constructor(roi, api_url) {
+        this.roi_id = roi['@id'];
+        this.name = roi['Name'] || '';
+        this.shapes = this.createShapesFromJson(roi);
+        this.shape_count = roi.shape_count !== undefined ? roi.shape_count : shapes.size;
+        this.api_url = api_url;
+        this.shapes_loaded = this.shape_count === this.shapes.size;
+    }
+
+    showChanged(new_value) {
+        if (!new_value || this.shapes_loaded) {
+            return;
+        }
+        this.requestShapes()
+    }
+
+    requestShapes() {
+        let url = this.api_url + REGIONS_REQUEST_URL + '/' + this.roi_id + '/';
+
+        $.ajax({
+            url,
+            success: (response) => {
+                this.shapes = this.createShapesFromJson(response.data);
+                this.shapes_loaded = true;
+            }, error: (error) => {
+                console.error("Failed to load Shapes for ROI: " + error)
+            }
+        });
+    }
+
+    createShapesFromJson(roi) {
+        // some shapes might already be loaded and selected
+        let selected_shapes = [];
+        if (this.shapes.values()) {
+            selected_shapes = [...this.shapes.values()].filter(s => s.selected).map(s => s.shape_id);
+        }
+
+        let shapes = new Map();
+        if (Misc.isArray(roi.shapes) && roi.shapes.length > 0) {
+            let roiId = roi['@id'];
+            roi.shapes.sort(function (s1, s2) {
+                var z1 = parseInt(s1['TheZ']);
+                var z2 = parseInt(s2['TheZ']);
+                var t1 = parseInt(s1['TheT']);
+                var t2 = parseInt(s2['TheT']);
+                if (z1 === z2) {
+                    return (t1 < t2) ? -1 : (t1 > t2) ? 1 : 0;
+                }
+                return (z1 < z2) ? -1 : 1;
+            });
+            for (let s in roi.shapes) {
+                let shape = roi.shapes[s];
+                let newShape =
+                    Converters.amendShapeDefinition(
+                        Object.assign({}, shape));
+                let shapeId = newShape['@id']
+                newShape.shape_id = "" + roiId + ":" + shapeId;
+                // we add some flags we are going to need
+                newShape.selected = selected_shapes.includes(newShape.shape_id);
+                newShape.visible = true;
+                newShape.deleted = false;
+                newShape.modified = false;
+                shapes.set(shapeId, newShape);
+            }
+        }
+        return shapes;
+    }
+}
 
 /**
  * Holds region information
@@ -486,27 +564,15 @@ export default class RegionsInfo  {
 
         // reset regions info data and history
         this.resetRegionsInfo();
+        let api_url = this.image_info.context.server + this.image_info.context.getPrefixedURI(WEB_API_BASE);
 
         try {
             let count = 0;
             for (let r in data) {
                 let roi = data[r];
-                let name = data[r]['Name'] || '';
                 // add shapes
                 if (Misc.isArray(roi.shapes) && roi.shapes.length > 0) {
-                    let shapes = this.createShapesFromJson(roi);
-                    let shapes_loaded = true;
-                    if (roi.shape_count && roi.shape_count != shapes.size) {
-                        shapes_loaded = false;
-                    }
-                    let newRoi = {
-                        name: name,
-                        shapes: shapes,
-                        shapes_loaded: shapes_loaded,
-                        show: false,
-                        deleted: 0,
-                        shape_count: roi.shape_count !== undefined ? roi.shape_count : shapes.size,
-                    }
+                    let newRoi = new Region(roi, api_url);
                     this.data.set(roi['@id'], newRoi);
                 }
             }
@@ -516,59 +582,6 @@ export default class RegionsInfo  {
             console.error("Failed to sync Rois: " + err);
         }
         this.ready = true;
-    }
-
-    createShapesFromJson(roi) {
-        let shapes = new Map();
-        if (Misc.isArray(roi.shapes) && roi.shapes.length > 0) {
-            let roiId = roi['@id'];
-            roi.shapes.sort(function (s1, s2) {
-                var z1 = parseInt(s1['TheZ']);
-                var z2 = parseInt(s2['TheZ']);
-                var t1 = parseInt(s1['TheT']);
-                var t2 = parseInt(s2['TheT']);
-                if (z1 === z2) {
-                    return (t1 < t2) ? -1 : (t1 > t2) ? 1 : 0;
-                }
-                return (z1 < z2) ? -1 : 1;
-            });
-            for (let s in roi.shapes) {
-                let shape = roi.shapes[s];
-                let newShape =
-                    Converters.amendShapeDefinition(
-                        Object.assign({}, shape));
-                let shapeId = newShape['@id']
-                newShape.shape_id = "" + roiId + ":" + shapeId;
-                // we add some flags we are going to need
-                newShape.visible = true;
-                newShape.selected = this.selected_shapes.includes(newShape.shape_id);
-                newShape.deleted = false;
-                newShape.modified = false;
-                shapes.set(shapeId, newShape);
-            }
-        }
-        return shapes;
-    }
-
-    requestShapesForRoi(roi_id) {
-        let roi = this.data.get(roi_id);
-        if (roi.shapes_loaded) {
-            return;
-        }
-        let url = this.image_info.context.server +
-            this.image_info.context.getPrefixedURI(WEB_API_BASE) +
-            REGIONS_REQUEST_URL + '/' + roi_id + '/';
-
-        $.ajax({
-            url,
-            success: (response) => {
-                let roi = this.data.get(roi_id);
-                roi.shapes = this.createShapesFromJson(response.data);
-                roi.shapes_loaded = true;
-            }, error: (error) => {
-                console.error("Failed to load Shapes for ROI: " + error)
-            }
-        });
     }
 
     /**
