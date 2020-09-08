@@ -41,7 +41,7 @@ class Region {
         this.roi_id = roi['@id'];
         this.name = roi['Name'] || '';
         this.shapes = this.createShapesFromJson(roi);
-        this.shape_count = roi.shape_count !== undefined ? roi.shape_count : shapes.size;
+        this.shape_count = roi.shape_count !== undefined ? roi.shape_count : this.shapes.size;
         this.api_url = api_url;
         this.shapes_loaded = this.shape_count === this.shapes.size;
     }
