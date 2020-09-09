@@ -224,7 +224,7 @@ class Regions extends Vector {
                 // store response internally to be able to work with it later
                 scope.regions_info_ = data;
                 scope.new_unsaved_shapes_ = {}; // reset
-                var regionsAsFeatures = createFeaturesFromRegionsResponse(scope);
+                var regionsAsFeatures = createFeaturesFromRegionsResponse(scope, data);
                 if (isArray(regionsAsFeatures) &&
                     regionsAsFeatures.length > 0)
                         scope.addFeatures(regionsAsFeatures);
@@ -493,6 +493,17 @@ class Regions extends Vector {
         var regionsAsFeatures = createFeaturesFromRegionsResponse(this, true);
         if (!isArray(regionsAsFeatures)) regionsAsFeatures = [];
         if (regionsAsFeatures.length > 0) this.addFeatures(regionsAsFeatures);
+    }
+
+    /**
+     * Adds ROI shapes as features onto an existing regions layer
+     * rois_json is a list of rois like [ {'@id':1, 'shapes':[]}, ...]
+     *
+     * @param {Array<Object>} data the ROI JSON data
+     */
+    addFeaturesFromRegionsResponse(rois_json) {
+        var features = createFeaturesFromRegionsResponse(this, rois_json, true);
+        this.addFeatures(features);
     }
 
     /**

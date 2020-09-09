@@ -644,7 +644,7 @@ class Viewer extends OlObject {
         if (typeof(postSuccessHook) === 'function')
         postSuccessHook.call(this);
 
-        if (this.tried_regions) this.addRegions();
+        if (this.tried_regions_) this.addRegions();
 
         if (this.eventbus_) {
         // an endMove listener to publish move events
@@ -731,6 +731,17 @@ class Viewer extends OlObject {
         //Overlay to show a popup for editing shapes (adds itself to map)
         new ShapeEditPopup(this.regions_);
     }
+
+    /**
+     * Adds ROI shapes as features onto an existing regions layer
+     *
+     * @param {Array<Object>} data the ROI JSON data
+     */
+    addMoreRegions(data) {
+        if (!this.regions_ instanceof Regions) return;
+        this.regions_.addFeaturesFromRegionsResponse(data);
+    }
+
 
     /**
      * Toggles the visibility of the regions/layer.

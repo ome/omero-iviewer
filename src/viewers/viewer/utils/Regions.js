@@ -387,28 +387,28 @@ export const getRandomCoordinateWithinExtent = function(extent) {
  * @private
  * @static
  * @param {source.Regions} regions an instance of the Regions
+ * @param {Array.<Object>} data the list of Regions JSON objects
  * @param {boolean=} include_new_features should new, unsaved features be included?
  * @return {Array.<Feature>|null} an array of converted shapes or null
  */
-export const createFeaturesFromRegionsResponse =
-    function(regions, include_new_features) {
-        if (!(regions instanceof Regions) ||
-            !isArray(regions.regions_info_)) return null;
+export const createFeaturesFromRegionsResponse = function(regions, data, include_new_features) {
+
+        if (!(regions instanceof Regions) || !isArray(data)) return null;
 
         var ret = [];
-        for (var roi in regions.regions_info_) {
+        for (var roi in data) {
             // we gotta have an id and shapes, otherwise no features...
-            if (typeof(regions.regions_info_[roi]['@id']) !== 'number' ||
-                !isArray(regions.regions_info_[roi]['shapes']))
+            if (typeof(data[roi]['@id']) !== 'number' ||
+                !isArray(data[roi]['shapes']))
                     continue;
 
-            var roiId = regions.regions_info_[roi]['@id'];
+            var roiId = data[roi]['@id'];
             // each 'level', roi or shape gets the state info property 'DEFAULT' assigned
-            regions.regions_info_[roi]['state'] = REGIONS_STATE.DEFAULT;
+            data[roi]['state'] = REGIONS_STATE.DEFAULT;
 
             // descend deeper into shapes for rois
-            for (var s in regions.regions_info_[roi]['shapes']) {
-                var shape = regions.regions_info_[roi]['shapes'][s];
+            for (var s in data[roi]['shapes']) {
+                var shape = data[roi]['shapes'][s];
                 // id, TheT and TheZ have to be present
                 if (typeof(shape['@id']) !== 'number') continue;
 
