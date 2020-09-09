@@ -122,7 +122,7 @@
                             <div title="Click to show/hide shapes"
                                  style="cursor: pointer"
                                  click.delegate="expandOrCollapseRoi(roi_id, $event)">
-                                 ${roi.show ? '&#9660;' : '&#9658;'}
+                                 ${roi.expanded ? '&#9660;' : '&#9658;'}
                              </div>
                          </div>
                          <div class="regions-table-col shape-show">
@@ -144,7 +144,7 @@
                     </div>
                     <!-- Show all shapes... -->
                     <div if.bind="!(shape.deleted && shape.is_new) &&
-                                   !(roi.shape_count > 1 && !roi.show)"
+                                   !(roi.shape_count > 1 && !roi.expanded)"
                         title="${(shape_id > 0 ? 'ROI: ' + roi_id + ', Shape: ' + shape_id : 'Unsaved') +
                                     (shape.owner ? '\nOwner: ' + shape.owner : '') +
                                     (shape.type === 'mask' ? '\nMasks cannot be edited' : '')}"

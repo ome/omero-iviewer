@@ -232,7 +232,7 @@ export default class RegionsList extends EventSubscriber {
      }
 
     /**
-     * Hide/Shows tegions table
+     * Hide/Shows regions table
      *
      * @memberof RegionsList
      */
@@ -549,7 +549,7 @@ export default class RegionsList extends EventSubscriber {
 
         let roi = this.regions_info.data.get(roi_id);
         if (typeof roi === 'undefined') return;
-        roi.show = !roi.show;
+        roi.expanded = !roi.expanded;
     }
 
     /**
@@ -559,18 +559,18 @@ export default class RegionsList extends EventSubscriber {
      * @memberof RegionsList
      */
     toggleAllShapesVisibility(event) {
-        // IMPORTANT (and enforced through a template show.bind as well):
+        // IMPORTANT (and enforced through a template expanded.bind as well):
         // we cannot have the initial state altered, the method of toggle diffs
         // won't work any more.
         event.stopPropagation();
-        let show = event.target.checked;
+        let expanded = event.target.checked;
         if (this.regions_info.number_of_shapes === 0) return;
         let ids = [];
         this.regions_info.data.forEach(
             (roi) =>
                 roi.shapes.forEach(
                     (shape) => {
-                        if (shape.visible !== show &&
+                        if (shape.visible !== expanded &&
                             !(shape.deleted &&
                             typeof shape.is_new === 'boolean' && shape.is_new))
                                 ids.push(shape.shape_id);
@@ -580,7 +580,7 @@ export default class RegionsList extends EventSubscriber {
            REGIONS_SET_PROPERTY, {
                config_id: this.regions_info.image_info.config_id,
                property : "visible",
-               shapes : ids, value : show});
+                shapes: ids, value: expanded});
     }
 
     /**

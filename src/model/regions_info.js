@@ -29,7 +29,8 @@ import {
 } from '../utils/constants';
 
 class Region {
-    @observable show = false;
+    // observe when ROI is expanded in table
+    @observable expanded = false;
     deleted = 0;
     name = '';
     shapes = new Map();
@@ -46,7 +47,8 @@ class Region {
         this.shapes_loaded = this.shape_count === this.shapes.size;
     }
 
-    showChanged(new_value) {
+    // Called by @observable when expanded changes
+    expandedChanged(new_value) {
         if (!new_value || this.shapes_loaded) {
             return;
         }
@@ -351,7 +353,7 @@ export default class RegionsInfo  {
             if (property === 'visible') {
                 this.updateRoiVisibilityToggles(id, 1);
             } else {
-                this.data.get(ids.roi_id).show = true;
+                this.data.get(ids.roi_id).expanded = true;
                 let i = this.selected_shapes.indexOf(id);
                 if (i === -1) this.selected_shapes.push(id);
             }
