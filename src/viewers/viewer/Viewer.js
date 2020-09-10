@@ -1166,7 +1166,7 @@ class Viewer extends OlObject {
                 return;
         }
 
-        // now call setter
+        // now call setter on source/Image. e.g setTime(), setPlane(), setChannels()
         var setter = "set" + dimLookup['method'];
         try {
             omeroImage[setter](key !== 'c' ? values[0] : values);

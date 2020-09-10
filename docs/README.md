@@ -147,9 +147,17 @@ settings to provide tile URLs.
 Regions (ROIs)
 ==============
 
+<img src="https://github.com/ome/omero-iviewer/blob/master/docs/iviewer_roi_classes.png?raw=true">
+
+Loading ROIs
+------------
+
 When we select the ROIs tab in the ``right-hand-panel`` component, this calls
 ``this.image_config.regions_info.requestData()`` which makes the AJAX call to
-load ROIs. When ready, the ``ol3-viewer`` calls ``this.viewer.addRegions(data)``.
+load ROIs. If `isRoisTabActive()` when the Image data is loaded above (because
+the user has the ROIs tab open, or URL has ?shape=1 or ?roi=2) then this will
+also call ``regions_info.requestData()``.
+When ready, the ``ol3-viewer`` calls ``this.viewer.addRegions(data)``.
 This adds a Vector layer to the OpenLayers Map:
 
     // src/viewers/viewer/Viewer.js
@@ -166,6 +174,28 @@ This adds a Vector layer to the OpenLayers Map:
         // enable roi selection by default, as well as modify and translate
         this.regions_.setModes([SELECT, MODIFY, TRANSLATE]);
     }
+
+Pagination of ROIs & Shapes
+---------------------------
+
+If the number of ROIs on the image is greater than ``ROI_PAGE_SIZE`` (default setting is 500)
+then we only load ROIs that have a Shape on the current Z/T plane.
+ROIs will also be paginated within each plane if over 500 ROIs per plane.
+ROIs will only have loaded the Shapes on the current plane. Other Shapes in the ROI won't
+be loaded, but the shape_count is still displayed on the regions-list.
+When a user expends the ROI in the table (or a Shape is selected by clicking on the image or
+via URL ?shape=1) then `roi.expanded` is set to `true`. This is `@observed` by the
+Region and this calls `requestShapes()` to load the Shapes for this ROI and sets the
+`roi.shapes` Map and sets `roi.shapes_loaded` to `true`.
+The `regions-list` table automatically displays the `roi.shapes` and the `ol3-viewer` observes
+the `roi.shapes_loaded`, so that it can call `this.viewer.addMoreRegions(data)` so that the
+OpenLayers also has the newly-loaded shapes (although they will initially be hidden on a different Z/T plane).
+In fact, we only see these shapes while a movie is playing through Z or T.
+When the movie stops, or the user simply chooses a different Z/T plane via the sliders, we
+reload all the ROIs for the new plane.
+
+Drawing ROIs
+------------
 
 When a drawing tool such as Rectangle is selected, the ol3-viewer calls
 ``this.viewer.drawShape(params)``:
