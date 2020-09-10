@@ -1,5 +1,5 @@
 
-<img src="https://raw.githubusercontent.com/will-moore/omero-iviewer/intro_docs/docs/iviewer_classes.png">
+<img src="https://github.com/ome/omero-iviewer/blob/master/docs/iviewer_classes.png?raw=true">
 
 This class diagram shows some of the major iviewer classes and some key attributes and relationships.
 
