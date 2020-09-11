@@ -282,7 +282,6 @@ export default class RegionsList extends EventSubscriber {
             // If movie is playing and we're not on the last plane - ignore
             if (image_config.is_movie_playing && dim_value < last_plane &&
                     this.regions_info.isRoiLoadingPaginatedByPlane()) {
-                // this.regions_info.resetRegionsInfo();
                 return;
             }
             this.requestRoisForNewPlane();

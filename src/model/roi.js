@@ -65,8 +65,10 @@ export default class Roi {
     createShapesFromJson(roi) {
         // some shapes might already be loaded and selected
         let selected_shapes = [];
+        let hidden_shapes = [];
         if (this.shapes.values()) {
             selected_shapes = [...this.shapes.values()].filter(s => s.selected).map(s => s.shape_id);
+            hidden_shapes = [...this.shapes.values()].filter(s => !s.visible).map(s => s.shape_id);
         }
 
         let shapes = new Map();
@@ -91,7 +93,7 @@ export default class Roi {
                 newShape.shape_id = "" + roiId + ":" + shapeId;
                 // we add some flags we are going to need
                 newShape.selected = selected_shapes.includes(newShape.shape_id);
-                newShape.visible = true;
+                newShape.visible = !hidden_shapes.includes(newShape.shape_id);
                 newShape.deleted = false;
                 newShape.modified = false;
                 shapes.set(shapeId, newShape);
