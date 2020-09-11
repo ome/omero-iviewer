@@ -809,39 +809,35 @@ export default class Ol3Viewer extends EventSubscriber {
               !Misc.isArray(params.shapes) ||
               params.shapes.length === 0) return;
 
+        let viewerT = this.viewer.getDimensionIndex('t');
+        let viewerZ = this.viewer.getDimensionIndex('z');
+        let viewerC = this.viewer.getDimensionIndex('c');
 
-        // switch to plane/time/channel that shape to be selected is on
-        let shapeSelection = params.shapes[params.shapes.length-1];
-        // for de-selecting (value is false) the last selected shape is chosen (if exists)
+        let selectedIds = params.shapes;
+        // for de-selecting (value is false) selectedIds will be
+        // currently-selected shapes WITHOUT any we're deselecting...
         if (!params.value) {
-            let numberOfSelectedShapes =
-                this.image_config.regions_info.selected_shapes.length;
-            if (numberOfSelectedShapes > 0) {
-                let lastSelected =
-                    this.image_config.regions_info.selected_shapes[
-                        numberOfSelectedShapes-1];
-                // if last-selected is not being de-selected, select it 
-                if (lastSelected !== shapeSelection) {
-                    shapeSelection = lastSelected;
-                } else if (numberOfSelectedShapes > 1) {
-                    // or previous shape...
-                    shapeSelection =
-                        this.image_config.regions_info.selected_shapes[
-                            numberOfSelectedShapes-2];
-                } else {
-                    // or nothing
-                    shapeSelection = null;
-                }
-            } else shapeSelection = null;
+            selectedIds = this.image_config.regions_info.selected_shapes.filter(shapeId => {
+                return !params.shapes.includes(shapeId);
+            });
         }
+        // Selecting - prefer to stay on current Z/T plane if we can
+        let idsOnCurrentPlane = selectedIds.filter(shapeId => {
+            let shape = this.image_config.regions_info.getShape(shapeId);
+            return ((shape.TheT === -1 || shape.TheT === viewerT) &&
+                (shape.TheZ === -1 || shape.TheZ === viewerZ))
+        });
+        let shapeSelection;
+        if (idsOnCurrentPlane.length > 0) {
+            shapeSelection = idsOnCurrentPlane[0];
+        } else if (selectedIds.length > 0) {
+            shapeSelection = selectedIds[0];
+        }
+
         let delay = 0;
         if (shapeSelection) {
-            let viewerT = this.viewer.getDimensionIndex('t');
-            let viewerZ = this.viewer.getDimensionIndex('z');
-            let viewerC = this.viewer.getDimensionIndex('c');
             // Update this.image_config.image_info to load a new Z/T plane...
-            let shape =
-                this.image_config.regions_info.getShape(shapeSelection);
+            let shape = this.image_config.regions_info.getShape(shapeSelection);
             let correctPlane = true;
             let shapeT = typeof shape.TheT === 'number' ? shape.TheT : -1;
             if (shapeT !== -1 && shapeT !== viewerT) {
