@@ -253,13 +253,15 @@ def get_shape_counts(conn, roi_ids):
     @param roi_ids:     List of ROI IDs
     @return             A dict of roi_id: shape_count
     """
+    counts = {}
+    if len(roi_ids) == 0:
+        return counts
     params = ParametersI()
     params.add('ids', wrap([rlong(id) for id in roi_ids]))
     query = ("select shape.roi.id, count(shape.id) from Shape shape"
              " where shape.roi.id in (:ids) group by shape.roi.id")
     result = conn.getQueryService().projection(query, params,
                                                conn.SERVICE_OPTS)
-    counts = {}
     for d in result:
         counts[d[0].val] = unwrap(d[1])
     return counts
