@@ -154,10 +154,16 @@ Loading ROIs
 
 When we select the ROIs tab in the ``right-hand-panel`` component, this calls
 ``this.image_config.regions_info.requestData()`` which makes the AJAX call to
-load ROIs. If `isRoisTabActive()` when the Image data is loaded above (because
-the user has the ROIs tab open, or URL has ?shape=1 or ?roi=2) then this will
-also call ``regions_info.requestData()``.
-When ready, the ``ol3-viewer`` calls ``this.viewer.addRegions(data)``.
+load ROIs. If `context.isRoisTabActive()` when the Image data is loaded by
+`image_info` above (because the user has the ROIs tab open, or URL has ?shape=1 or ?roi=2)
+then this will also call ``regions_info.requestData()``.
+
+When `requestData()` loads, it calls ``regions_info.setData()``, which creates 
+new `model.roi` class for each ROI and adds to the `regions_info.data` Map, then
+sets `this.ready = true`.
+The ``ol3-viewer`` observes this and calls ``this.viewer.addRegions(data)``.
+This `data` is the temporarily cached JSON data from the server, not the ROIs Map.
+
 This adds a Vector layer to the OpenLayers Map:
 
     // src/viewers/viewer/Viewer.js
@@ -167,13 +173,23 @@ This adds a Vector layer to the OpenLayers Map:
 
     addRegions(data) {
 
-        // Regions constructor creates ol.Features from JSON data
-        this.regions_ = new Regions(this, {data: data});
-        this.viewer_.addLayer(new Vector({source : this.regions_}));
+        if (this.regions_ instanceof Regions) {
+            this.regions_.initialize_(this.regions_, data);
+        } else {
+            var options = {};
+            if (data) options['data'] = data;
+            // Regions constructor creates ol.Features from JSON data
+            this.regions_ = new Regions(this, options);
+        }
 
         // enable roi selection by default, as well as modify and translate
         this.regions_.setModes([SELECT, MODIFY, TRANSLATE]);
     }
+
+We now have 2 representations of the ROIs: ``model.regions_info.data`` Map of Roi
+objects containing Shapes, and the Open Layer Features on the source Regions layer
+of the viewer. These are kept in-sync via events posted on the event bus, such as
+selection, deletion, editing and visibility (e.g. Z/T index change).
 
 Pagination of ROIs & Shapes
 ---------------------------
@@ -182,17 +198,44 @@ If the number of ROIs on the image is greater than ``ROI_PAGE_SIZE`` (default se
 then we only load ROIs that have a Shape on the current Z/T plane.
 ROIs will also be paginated within each plane if over 500 ROIs per plane.
 ROIs will only have loaded the Shapes on the current plane. Other Shapes in the ROI won't
-be loaded, but the shape_count is still displayed on the regions-list.
+be loaded, but the shape_count is still displayed on the `regions-list` table.
 When a user expends the ROI in the table (or a Shape is selected by clicking on the image or
 via URL ?shape=1) then `roi.expanded` is set to `true`. This is `@observed` by the
-Region and this calls `requestShapes()` to load the Shapes for this ROI and sets the
+Roi object and this calls `roi.requestShapes()` to load the Shapes for this ROI and sets the
 `roi.shapes` Map and sets `roi.shapes_loaded` to `true`.
 The `regions-list` table automatically displays the `roi.shapes` and the `ol3-viewer` observes
 the `roi.shapes_loaded`, so that it can call `this.viewer.addMoreRegions(data)` so that the
 OpenLayers also has the newly-loaded shapes (although they will initially be hidden on a different Z/T plane).
-In fact, we only see these shapes while a movie is playing through Z or T.
+However, these Shapes (Features) are important since they are used for sync of selection state (see below)
+so if they are not created in the viewer, then clicking an ROI in the table won't select all the shapes.
+We only see these shapes in the viewer while a movie is playing through Z or T (we show pre-loaded shapes but
+don't load more shapes while movie is playing).
+
 When the movie stops, or the user simply chooses a different Z/T plane via the sliders, we
-reload all the ROIs for the new plane.
+load all the ROIs and Shapes for the new plane using `regions_info.requestData()` as above
+and ADD them to the `regions_info.data` Map, creating new ROIs if
+they didn't exist yet, or adding Shapes to those ROIs that were already loaded (but without all their Shapes).
+The `ol3-viewer` must observe the `regions_info.data` Map, so that when new ROIs are added, it
+can also observe their `roi.shapes_loaded` attribute as above.
+
+Shapes for the new Z/T plane are added to the viewer by calling the `Viewer.addRegions(data)`
+again as above. This creates additional Features on the existing Regions layer.
+NB: This currently results in duplicates!
+
+Changing Z/T index
+------------------
+
+The `image_info.dimensions.z` or `t` index can be updated directly via the `dimension-slider`s
+UI component or via the `ol3-viewer` when a movie is playing in `playDimension()` or a shape
+is selected in `changeShapeSelection()`. The change in `image_info.dimensions.z` or `t` is
+observed by the `dimension-slider`, which publishes `IMAGE_DIMENSION_CHANGE` event.
+This triggers the `regions-list` to `requestRoisForNewPlane()` (if ROIs paginated and movie not
+playing), and triggers `ol3-viewer` to call `viewer.setDimensionIndex(dim, value)`.
+
+This calls `source/Image.setPlane() or setTime()` to update the pixel data and calls
+`source/Regions.changed()` to re-render the Shapes (Features). Each Feature will call
+`Regions.renderFeature(f)` which returns `true/false` to show or hide each `Shape`
+according to the current Z/T and `shape.visible` flag. 
 
 Drawing ROIs
 ------------
