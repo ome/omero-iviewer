@@ -496,13 +496,14 @@ export default class RegionsInfo  {
                 let roi = data[r];
                 // add new ROIs OR add Shapes to existing ROIs
                 if (Misc.isArray(roi.shapes) && roi.shapes.length > 0) {
-                    let oldRoi = this.data.get(roi['@id'])
-                    if (oldRoi) {
-                        oldRoi.addShapesFromJson(roi);
+                    let roiObj = this.data.get(roi['@id'])
+                    if (roiObj) {
+                        roiObj.addShapesFromJson(roi);
                     } else {
-                        let newRoi = new Roi(roi, api_url);
-                        this.data.set(roi['@id'], newRoi);
+                        roiObj = new Roi(roi, api_url);
+                        this.data.set(roi['@id'], roiObj);
                     }
+                    count += roiObj.shape_count;
                 }
             }
             this.number_of_shapes = count;
