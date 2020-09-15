@@ -204,72 +204,71 @@ class Regions extends Vector {
          */
         this.hoverId = null;
 
-        /**
-         * The initialization function performs the following steps:
-         * 1. Make an ajax request for the regions data as json and store it internally
-         * 2. Convert the json response into open layers objects
-         *    (ol.Feature and ol.geom.Geometry) and add them to its internal collection
-         * 3. Instantiate a regions layer (ol.vector.Regions) and add it to the map
-         *
-         * Note: if data is provided step is skipped
-         *
-         * @function
-         * @param {Object} scope the java script context
-         * @private
-         */
-        this.initialize_ = function(scope, data) {
+        // execute initialization function
+        this.initialize_(opts.data);
+    }
 
-            // initialize features helper function
-            var init0 = function(data) {
-                // store response internally to be able to work with it later
-                scope.regions_info_ = data;
-                scope.new_unsaved_shapes_ = {}; // reset
-                var regionsAsFeatures = createFeaturesFromRegionsResponse(scope, data);
-                if (isArray(regionsAsFeatures) &&
-                    regionsAsFeatures.length > 0)
-                        scope.addFeatures(regionsAsFeatures);
-            }
+    /**
+     * The initialization function performs the following steps:
+     * 1. Make an ajax request for the regions data as json and store it internally
+     * 2. Convert the json response into open layers objects
+     *    (ol.Feature and ol.geom.Geometry) and add them to its internal collection
+     * 3. Instantiate a regions layer (ol.vector.Regions) and add it to the map
+     *
+     * Note: if data is provided step is skipped
+     *
+     * @function
+     * @private
+     */
+    initialize_(data) {
 
-            // we use provided data if there
-            if (isArray(data)) {
-                init0(data);
-                return;
-            }
+        // initialize features helper function
+        var init0 = function (data) {
+            // store response internally to be able to work with it later
+            this.regions_info_ = data;
+            this.new_unsaved_shapes_ = {}; // reset
+            var regionsAsFeatures = createFeaturesFromRegionsResponse(this, data);
+            if (isArray(regionsAsFeatures) &&
+                regionsAsFeatures.length > 0)
+                this.addFeatures(regionsAsFeatures);
+        }.bind(this);
 
-            // define request settings
-            var reqParams = {
-                "server" : scope.viewer_.getServer(),
-                "uri" : scope.viewer_.getPrefixedURI(WEB_API_BASE) +
-                        REGIONS_REQUEST_URL +
-                        '/?image=' + scope.viewer_.getId(),
-                "success" : function(response) {
-                    if (typeof(response) === 'string') {
-                        try {
-                            response = JSON.parse(response);
-                        } catch(parseError) {
-                            console.error("Failed to parse json response!");
-                        }
+        // we use provided data if there
+        if (isArray(data)) {
+            init0(data);
+            return;
+        }
+
+        // define request settings
+        var reqParams = {
+            "server": this.viewer_.getServer(),
+            "uri": this.viewer_.getPrefixedURI(WEB_API_BASE) +
+                REGIONS_REQUEST_URL +
+                '/?image=' + scope.viewer_.getId(),
+            "success": function (response) {
+                if (typeof (response) === 'string') {
+                    try {
+                        response = JSON.parse(response);
+                    } catch (parseError) {
+                        console.error("Failed to parse json response!");
                     }
-                    if (typeof(response) !== 'object' || response === null) {
-                        console.error("Regions Request did not receive proper response!");
-                        return;
-                    }
-                    // delegate
-                    init0(response.data);
-                }, "error" : function(error) {
-                        console.error("Error retrieving regions info for id: " +
-                        scope.viewer_.getId() +
-                        ((error && error.length > 0) ? ("\\n" + error) : ""));
                 }
-            };
-
-            // send request
-            sendRequest(reqParams);
+                if (typeof (response) !== 'object' || response === null) {
+                    console.error("Regions Request did not receive proper response!");
+                    return;
+                }
+                // delegate
+                init0(response.data);
+            }, "error": function (error) {
+                console.error("Error retrieving regions info for id: " +
+                    this.viewer_.getId() +
+                    ((error && error.length > 0) ? ("\\n" + error) : ""));
+            }
         };
 
-        // execute initialization function
-        this.initialize_(this, opts.data);
-    }
+        // send request
+        sendRequest(reqParams);
+    };
 
 
     /**
@@ -485,7 +484,7 @@ class Regions extends Vector {
 
         this.clear();
         if (makeServerRequest) {
-            this.initialize_(this); // simply reinitialize
+            this.initialize_(); // simply reinitialize
             return;
         }
 

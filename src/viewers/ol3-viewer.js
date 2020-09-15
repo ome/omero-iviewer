@@ -343,7 +343,7 @@ export default class Ol3Viewer extends EventSubscriber {
                     this.image_config.regions_info, 'ready').subscribe(
                         (newValue, oldValue) => {
                             if (this.viewer === null) return;
-                            this.viewer.removeRegions();
+                            // We don't do this.viewer.removeRegions() now - not needed?
                             if (newValue) {
                                 this.initRegions();
                                 delete this.image_config.regions_info.tmp_data;
@@ -935,30 +935,19 @@ export default class Ol3Viewer extends EventSubscriber {
         this.viewer.showShapeComments(
             this.image_config.regions_info.show_comments);
 
-        // Listen for loading of shapes (if roi.shapes_loaded is false)
+        // Observe for loading of shapes (if roi.shapes_loaded is false)
         // Used when we don't initially load all Shapes for an ROI (only those on the current plane)
         this.image_config.regions_info.data.forEach((roi, roi_id) => {
             if (roi.shapes_loaded) return;
-            this.observers.push(this.bindingEngine.propertyObserver(roi, 'shapes_loaded').subscribe(
-                (newValue, oldValue) => {
-                    // When shapes are loaded (and have been parsed into shapes Map on roi)...
-                    let r = this.image_config.regions_info.data.get(roi_id);
-                    // ...we want to get data like the /api/ JSON data to pass to Viewer
-                    let roi_data = [{
-                        '@id': roi_id,
-                        // need a list of Shapes with permissions...
-                        // Fake minimal permissions to allow the shape to be shown.
-                        // These shapes are only shown transiently while movie is playing.
-                        // When movie stops, the ALL the shapes are reloaded for the new Z/T plane.
-                        'shapes': [...r.shapes.values()].map(s => {
-                            s['omero:details'] = {
-                                'permissions': {"isUserRead": true}};
-                            return s;
-                        }),
-                    }];
-                    this.viewer.addMoreRegions(roi_data);
-                }));
+            this.observeRoiShapesLoaded(roi_id);
         });
+
+        // Also add the same observer to any new ROIs that get added to regions_info.data
+        this.observers.push(
+            this.bindingEngine.collectionObserver(this.image_config.regions_info.data).subscribe(
+                (splice) => {splice.forEach(added => this.observeRoiShapesLoaded(added.key))}
+            )
+        );
 
         let updateMeasurements = () => {
             if (this.viewer === null) return;
@@ -1009,6 +998,30 @@ export default class Ol3Viewer extends EventSubscriber {
         }
 
         setTimeout(updateMeasurements, 50);
+    }
+
+    observeRoiShapesLoaded(roi_id) {
+        let roi = this.image_config.regions_info.data.get(roi_id);
+        this.observers.push(this.bindingEngine.propertyObserver(roi, 'shapes_loaded').subscribe(
+            (newValue, oldValue) => {
+                // When shapes are loaded (and have been parsed into shapes Map on roi)...
+                let r = this.image_config.regions_info.data.get(roi_id);
+                // ...we want to get data like the /api/ JSON data to pass to Viewer
+                let roi_data = [{
+                    '@id': roi_id,
+                    // need a list of Shapes with permissions...
+                    // Fake minimal permissions to allow the shape to be shown.
+                    // These shapes are only shown transiently while movie is playing.
+                    // When movie stops, the ALL the shapes are reloaded for the new Z/T plane.
+                    'shapes': [...r.shapes.values()].map(s => {
+                        s['omero:details'] = {
+                            'permissions': { "isUserRead": true }
+                        };
+                        return s;
+                    }),
+                }];
+                this.viewer.addMoreRegions(roi_data);
+            }));
     }
 
     /**

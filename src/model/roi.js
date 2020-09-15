@@ -62,6 +62,14 @@ export default class Roi {
         });
     }
 
+    addShapesFromJson(roi) {
+        let newShapesMap = this.createShapesFromJson(roi);
+        for (let [key, value] of newShapesMap) {
+            // Add new shapes alongside existing shapes
+            this.shapes.set(key, value)
+        }
+    }
+
     createShapesFromJson(roi) {
         // some shapes might already be loaded and selected
         let selected_shapes = [];

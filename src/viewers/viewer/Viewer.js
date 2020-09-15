@@ -710,12 +710,15 @@ class Viewer extends OlObject {
         }
         this.tried_regions_ = false;
         this.tried_regions_data_ = null;
-        if (this.regions_ instanceof Regions) return;
-
-        var options = {};
-        if (data) options['data'] = data;
-        // Regions constructor creates ol.Features from JSON data
-        this.regions_ = new Regions(this, options);
+        if (this.regions_ instanceof Regions) {
+            // Layer already exists - creates ol.Features from JSON data
+            this.regions_.initialize_(data);
+        } else {
+            var options = {};
+            if (data) options['data'] = data;
+            // Regions constructor also calls regions_.initialize_(data);
+            this.regions_ = new Regions(this, options);
+        }
 
         // add a vector layer with the regions
         if (this.regions_) {

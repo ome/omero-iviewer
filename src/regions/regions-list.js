@@ -135,6 +135,14 @@ export default class RegionsList extends EventSubscriber {
     }
 
     /**
+     * This function can be called from the template with rois.size as an
+     * argument so that the template responds when ROIs are added to the Map.
+     */
+    getRois() {
+        return this.regions_info.data;
+    }
+
+    /**
      * Gets page count for current plane.
      * Allows view to show page count and automatically binds change in
      * roi_count_on_current_plane

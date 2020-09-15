@@ -107,7 +107,7 @@
 
         <div class="regions-table" show.bind="regions_info.ready">
             <!-- For each ROI... -->
-            <template repeat.for="[roi_id, roi] of regions_info.data | sort:sortBy:sortAscending">
+            <template repeat.for="[roi_id, roi] of getRois(regions_info.data.size) | sort:sortBy:sortAscending">
                 <!-- For each Shape... -->
                 <template repeat.for="[shape_id, shape] of roi.shapes">
                     <!-- IF ROI has more than 1 shape, show ROI before $first shape -->

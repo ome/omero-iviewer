@@ -452,8 +452,9 @@ export default class RegionsInfo  {
             return;
         }
         // reset regions info data and history
+        // TODO: confirm we don't need: this.resetRegionsInfo();
+        // Do we need ready = false?
         this.ready = false;
-        this.resetRegionsInfo();
         this.is_pending = true;
 
         // send request
@@ -486,17 +487,22 @@ export default class RegionsInfo  {
         if (!Misc.isArray(data)) return;
 
         // reset regions info data and history
-        this.resetRegionsInfo();
+        // this.resetRegionsInfo();
         let api_url = this.image_info.context.server + this.image_info.context.getPrefixedURI(WEB_API_BASE);
 
         try {
             let count = 0;
             for (let r in data) {
                 let roi = data[r];
-                // add shapes
+                // add new ROIs OR add Shapes to existing ROIs
                 if (Misc.isArray(roi.shapes) && roi.shapes.length > 0) {
-                    let newRoi = new Roi(roi, api_url);
-                    this.data.set(roi['@id'], newRoi);
+                    let oldRoi = this.data.get(roi['@id'])
+                    if (oldRoi) {
+                        oldRoi.addShapesFromJson(roi);
+                    } else {
+                        let newRoi = new Roi(roi, api_url);
+                        this.data.set(roi['@id'], newRoi);
+                    }
                 }
             }
             this.number_of_shapes = count;
