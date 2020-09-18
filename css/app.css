@@ -366,7 +366,12 @@ a.ui-button:active,
 
 .time-slider .ui-slider-range,
 .plane-slider .ui-slider-range {
-    background: #144773;
+    background: #333333;
+}
+
+.time-slider .ui-slider-handle,
+.plane-slider .ui-slider-handle {
+    border: 1px solid #333333;
 }
 
 .plane-slider .ui-slider {
