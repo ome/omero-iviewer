@@ -228,9 +228,10 @@ class Regions extends Vector {
             this.regions_info_ = data;
             this.new_unsaved_shapes_ = {}; // reset
             var regionsAsFeatures = createFeaturesFromRegionsResponse(this, data);
-            if (isArray(regionsAsFeatures) &&
-                regionsAsFeatures.length > 0)
+            if (isArray(regionsAsFeatures) && regionsAsFeatures.length > 0) {
+                // This will not duplicate since this.idIndex_ uses f._id (shape_id) as key
                 this.addFeatures(regionsAsFeatures);
+            }
         }.bind(this);
 
         // we use provided data if there
