@@ -135,6 +135,14 @@ export default class RegionsInfo  {
     copied_shapes = [];
 
     /**
+     * URLs that we've loaded ROIs from. Don't try to load again.
+     * Store the ROI count for that plane
+     * @memberof RegionsInfo
+     * @type {Object}
+     */
+    cachedUrlRoiCounts = {};
+
+    /**
      * the image dimensions for the copied shapes
      * (which uses also local storage -if supported)
      * @memberof RegionsInfo
@@ -451,15 +459,20 @@ export default class RegionsInfo  {
             }
             return;
         }
-        // reset regions info data and history
-        // TODO: confirm we don't need: this.resetRegionsInfo();
+
+        // If we've already loaded ROIs from this URL...
+        let url = this.getRegionsUrl();
+        if (this.cachedUrlRoiCounts[url] !== undefined) {
+            this.roi_count_on_current_plane = this.cachedUrlRoiCounts[url];
+            return;
+        }
         // Do we need ready = false?
         this.ready = false;
         this.is_pending = true;
 
         // send request
         $.ajax({
-            url : this.getRegionsUrl(),
+            url,
             success : (response) => {
                 if (this.try_request_again) {
                     this.is_pending = false;
@@ -468,6 +481,7 @@ export default class RegionsInfo  {
                 } else if (this.is_pending) {
                     this.setData(response.data);
                     this.roi_count_on_current_plane = response.meta.totalCount;
+                    this.cachedUrlRoiCounts[url] = response.meta.totalCount
                 }
             }, error : (error) => {
                 this.is_pending = false;
