@@ -78,6 +78,7 @@ export default class Roi {
             selected_shapes = [...this.shapes.values()].filter(s => s.selected).map(s => s.shape_id);
             hidden_shapes = [...this.shapes.values()].filter(s => !s.visible).map(s => s.shape_id);
         }
+        let all_shapes_hidden = this.shapes.size > 0 && (this.shapes.size === hidden_shapes.length);
 
         let shapes = new Map();
         if (roi.shapes && roi.shapes.length > 0) {
@@ -101,7 +102,7 @@ export default class Roi {
                 newShape.shape_id = "" + roiId + ":" + shapeId;
                 // we add some flags we are going to need
                 newShape.selected = selected_shapes.includes(newShape.shape_id);
-                newShape.visible = !hidden_shapes.includes(newShape.shape_id);
+                newShape.visible = !(all_shapes_hidden || hidden_shapes.includes(newShape.shape_id));
                 newShape.deleted = false;
                 newShape.modified = false;
                 shapes.set(shapeId, newShape);
