@@ -220,7 +220,16 @@ def persist_rois(request, conn=None, **kwargs):
 
 
 def get_query_for_rois_by_plane(the_z=None, the_t=None,
-                                z_end=None, t_end=None):
+                                z_end=None, t_end=None, count=False):
+    """
+    Returns iQuery string to query for ROIs with shapes by Z or T index
+
+    If z_end or t_end are also given, find Shapes within that range.
+    Shapes where Z is null are considered to exist on all Z planes.
+    Shapes where T is null are considered to exist on all T planes.
+
+    If count is true, query is for counting ROIs by plane
+    """
 
     clauses = ['roi.image.id = :id']
     if the_z is not None:
@@ -242,6 +251,9 @@ def get_query_for_rois_by_plane(the_z=None, the_t=None,
         where %s
     """ % ' and '.join(clauses)
 
+    if count:
+        query = query.replace("select roi", "select count(distinct roi.id)")
+        query = query.replace(" fetch", "")
     return query
 
 
@@ -303,9 +315,7 @@ def rois_by_plane(request, image_id, the_z, the_t, z_end=None, t_end=None,
             roi['shape_count'] = roi_counts[roi['@id']]
 
     # Modify query to only select count() and NOT paginate
-    query = get_query_for_rois_by_plane(the_z, the_t, z_end, t_end)
-    query = query.replace("select roi", "select count(distinct roi.id)")
-    query = query.replace(" fetch", "")
+    query = get_query_for_rois_by_plane(the_z, the_t, z_end, t_end, count=True)
     params = omero.sys.ParametersI()
     params.addId(image_id)
     result = query_service.projection(query, params, conn.SERVICE_OPTS)
