@@ -340,6 +340,7 @@ export default class DimensionSlider {
         };
 
         if (this.dim === 'z' && imgInf.projection === PROJECTION.INTMAX) {
+            options.range = true;
             options.change =
                 (event, ui) => {
                     if (event.originalEvent) {
