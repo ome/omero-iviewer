@@ -88,10 +88,13 @@ export default class Roi {
                 var z2 = parseInt(s2['TheZ']);
                 var t1 = parseInt(s1['TheT']);
                 var t2 = parseInt(s2['TheT']);
-                if (z1 === z2) {
-                    return (t1 < t2) ? -1 : (t1 > t2) ? 1 : 0;
+                // If both have T null, or both T are equall
+                if ((isNaN(t1) && isNaN(t2)) || t1 === t2) {
+                    // sort by Z
+                    return (z1 < z2) ? -1 : (z1 > z2) ? 1 : 0;
                 }
-                return (z1 < z2) ? -1 : 1;
+                // otherwise sort by T
+                return (t1 < t2) ? -1 : 1;
             });
             for (let s in roi.shapes) {
                 let shape = roi.shapes[s];
