@@ -1,3 +1,9 @@
+.. image:: https://github.com/ome/omero-iviewer/workflows/OMERO/badge.svg
+    :target: https://github.com/ome/omero-iviewer/actions
+
+.. image:: https://badge.fury.io/py/omero-iviewer.svg
+    :target: https://badge.fury.io/py/omero-iviewer
+
 OMERO.iviewer
 =============
 
