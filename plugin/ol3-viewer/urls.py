@@ -15,9 +15,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from django.urls import patterns
+
 from django.urls import path
-from django.views.generic import TemplateView
 
 import views
 
@@ -25,6 +24,8 @@ urlpatterns = [
     path(r"<int:iid>/", views.index, name="ol3-viewer-index"),
     path(r"plugin/<int:iid>/", views.plugin, name="ol3-viewer-plugin"),
     path(
-        r"plugin-debug/<int:iid>/", views.plugin_debug, name="ol3-viewer-plugin-debug"
+        r"plugin-debug/<int:iid>/",
+        views.plugin_debug,
+        name="ol3-viewer-plugin-debug"
     ),
 ]

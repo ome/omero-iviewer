@@ -22,9 +22,13 @@ from omero_iviewer import views
 urlpatterns = [
     # general entry point for iviewer app
     path(r"", views.index, name="omero_iviewer_index"),
-    path(r"persist_rois/", views.persist_rois, name="omero_iviewer_persist_rois"),
+    path(r"persist_rois/",
+         views.persist_rois,
+         name="omero_iviewer_persist_rois"),
     path(
-        r"image_data/<int:image_id>/", views.image_data, name="omero_iviewer_image_data"
+        r"image_data/<int:image_id>/",
+        views.image_data,
+        name="omero_iviewer_image_data"
     ),
     # load image_data for image linked to an ROI or Shape
     re_path(
@@ -33,11 +37,19 @@ urlpatterns = [
         name="omero_iviewer_roi_image_data",
     ),
     path(
-        r"save_projection/", views.save_projection, name="omero_iviewer_save_projection"
+        r"save_projection/",
+        views.save_projection,
+        name="omero_iviewer_save_projection"
     ),
-    path(r"well_images/", views.well_images, name="omero_iviewer_well_images"),
-    path(r"get_intensity/", views.get_intensity, name="omero_iviewer_get_intensity"),
-    path(r"shape_stats/", views.shape_stats, name="omero_iviewer_shape_stats"),
+    path(r"well_images/",
+         views.well_images,
+         name="omero_iviewer_well_images"),
+    path(r"get_intensity/",
+         views.get_intensity,
+         name="omero_iviewer_get_intensity"),
+    path(r"shape_stats/",
+         views.shape_stats,
+         name="omero_iviewer_shape_stats"),
     # optional z or t range e.g. iid/0-10/2-5/
     re_path(
         r"^rois_by_plane/(?P<image_id>[0-9]+)/"
