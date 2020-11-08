@@ -22,11 +22,9 @@ from django.views.generic import TemplateView
 import views
 
 urlpatterns = [
-    path(r'<int:iid>/', views.index,
-       name='ol3-viewer-index'),
-    path(r'plugin/<int:iid>/', views.plugin,
-       name='ol3-viewer-plugin'),
-    path(r'plugin-debug/<int:iid>/',
-       views.plugin_debug, name='ol3-viewer-plugin-debug')
+    path(r"<int:iid>/", views.index, name="ol3-viewer-index"),
+    path(r"plugin/<int:iid>/", views.plugin, name="ol3-viewer-plugin"),
+    path(
+        r"plugin-debug/<int:iid>/", views.plugin_debug, name="ol3-viewer-plugin-debug"
+    ),
 ]
-
