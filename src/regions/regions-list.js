@@ -139,7 +139,7 @@ export default class RegionsList extends EventSubscriber {
      * argument so that the template responds when ROIs are added to the Map.
      */
     getRois() {
-        return this.regions_info.data;
+        return this.regions_info ? this.regions_info.data : undefined;
     }
 
     /**
