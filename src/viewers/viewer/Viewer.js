@@ -380,8 +380,15 @@ class Viewer extends OlObject {
         var dims = this.image_info_['size'];
         if (this.image_info_['zoomLevelScaling']) {
             var tmp = [];
-            for (var r in this.image_info_['zoomLevelScaling'])
-                tmp.push(1 / this.image_info_['zoomLevelScaling'][r]);
+            for (var r in this.image_info_['zoomLevelScaling']) {
+                var scale = 1 / this.image_info_['zoomLevelScaling'][r];
+                if (scale <= tmp[tmp.length - 1]) {
+                    // "Resolutions must be in descending order"
+                    // https://github.com/ome/omero-iviewer/issues/358
+                    break;
+                }
+                tmp.push(scale);
+            }
             zoomLevelScaling = tmp.reverse();
         }
         var zoom = zoomLevelScaling ? zoomLevelScaling.length : -1;
