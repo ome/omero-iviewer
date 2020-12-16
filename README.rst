@@ -73,7 +73,7 @@ Known issues
 For images with many channels (greater than approximately 30 channels), saving
 of rendering settings fails due to the length of the request string. See
 `#321 <https://github.com/ome/omero-iviewer/issues/321>`_. A work-around is to
-configure nginx to allow longer request strings. For example, to double the
+configure gunicorn to allow longer request strings. For example, to double the
 allowed limit::
 
     omero config set omero.web.wsgi_args ' --limit-request-line 8192'
