@@ -1,3 +1,11 @@
+0.10.2 (February 2021)
+----------------------
+
+- Fix license file [https://github.com/ome/omero-iviewer/pull/363](https://github.com/ome/omero-iviewer/pull/363)
+- Validate zoomLevelScaling [https://github.com/ome/omero-iviewer/pull/359](https://github.com/ome/omero-iviewer/pull/359)
+- Add request limit as a known issue with nginx config [https://github.com/ome/omero-iviewer/pull/361](https://github.com/ome/omero-iviewer/pull/361)
+- Make projection slider range clearer [https://github.com/ome/omero-iviewer/pull/348](https://github.com/ome/omero-iviewer/pull/348)
+
 0.10.1 (August 2020)
 --------------------
 
