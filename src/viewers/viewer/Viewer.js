@@ -381,6 +381,7 @@ class Viewer extends OlObject {
         if (this.image_info_['zoomLevelScaling']) {
             var tmp = [];
             for (var r in this.image_info_['zoomLevelScaling']) {
+                // Data from server. Don't need to check for zero division
                 var scale = 1 / this.image_info_['zoomLevelScaling'][r];
                 if (scale <= tmp[tmp.length - 1]) {
                     // "Resolutions must be in descending order"
