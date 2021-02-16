@@ -27,10 +27,13 @@ IVIEWER_SETTINGS_MAPPING = {
 
     "omero.web.iviewer.max_projection_bytes":
         ["MAX_PROJECTION_BYTES",
-         1024 * 1024 * 256,
+         -1,
          int,
          ("Maximum bytes of raw pixel data allowed for Z-projection. "
-          "Above this threshold, Z-projection is disabled")],
+          "Above this threshold, Z-projection is disabled. "
+          "If unset, the server setting of "
+          "omero.pixeldata.max_projection_bytes will be used or "
+          "the lower value if both are set.")],
 
     "omero.web.iviewer.roi_page_size":
         ["ROI_PAGE_SIZE",
