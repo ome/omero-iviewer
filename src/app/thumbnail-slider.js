@@ -592,6 +592,7 @@ export default class ThumbnailSlider extends EventSubscriber {
         $('.frame').addClass('left-hand-panel-hidden');
         $('.frame').css('margin-left', '');
         $('.frame').css('padding-left', '');
+        this.context.eventbus.publish(IMAGE_VIEWER_RESIZE, { config_id: -1 });
     }
 
     /**
