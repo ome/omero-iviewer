@@ -23,15 +23,15 @@
    Test saving ROIs
 """
 
-# from omero.testlib import ITest
 from django.core.urlresolvers import reverse
 
 from omeroweb.testlib import IWebTest, get_json, \
     post_json, put_json, delete_json
 
-from omero.model import ImageI, RoiI, PointI, ProjectI, ScreenI
+from omero.model import ImageI, RoiI, PointI
 from omero.rtypes import rdouble, rlist, rstring, unwrap
-from omero.gateway import BlitzGateway
+from omero.gateway import BlitzGateway, TagAnnotationWrapper
+from omero_marshal import get_encoder, get_decoder
 
 import pytest
 
@@ -62,11 +62,69 @@ class TestRois(IWebTest):
         point = PointI()
         point.x = rdouble(1)
         point.y = rdouble(2)
-        roi.addShape(point)
-        roi = conn.getUpdateService().saveAndReturnObject(roi)
 
+        encoder = get_encoder(point.__class__)
+        point_json = encoder.encode(point)
+        unsaved_id = "-1:-1"
+        point_json['oldId'] = unsaved_id
+        persist_url = reverse('omero_iviewer_persist_rois')
+        data = {
+            'imageId': image.id.val,
+            'rois': {
+                'count': 1,
+                'new': [point_json]
+            }
+        }
+        rsp = post_json(django_client, persist_url, data)
+        print('rsp', rsp)
+        # {"ids": {"-1:-1": "225504:416603"}}
+        assert "ids" in rsp
+        new_ids = rsp["ids"].values()
+        assert len(new_ids) == 1
+        new_id = rsp["ids"][unsaved_id]
+        roi_id = int(new_id.split(':')[0])
+        shape_id = int(new_id.split(':')[1])
+
+        # Add Tag to ROI and Shape
+        tag = TagAnnotationWrapper(conn)
+        tag.setValue("ROI/Shape Tag")
+        tag.save()
+        roi = conn.getObject("Roi", roi_id)
+        roi.linkAnnotation(tag)
+        shape = conn.getObject("Shape", shape_id)
+        shape.linkAnnotation(tag)
+        # check...
+        assert len(list(conn.getAnnotationLinks(
+            "Shape", parent_ids=[shape_id]))) == 1
+
+        # Load Shape
         rois_url = reverse('api_rois', kwargs={'api_version': 0})
         rois_url += '?image=%s' % image.id.val
         rsp = get_json(django_client, rois_url)
-        print('rsp', rsp)
         assert len(rsp['data']) == 1
+
+        # Edit Shape
+        point_json = rsp['data'][0]['shapes'][0]
+        point_json["X"] = 100
+        point_json["Y"] = 200
+        # iviewer wants to know ROI:Shape ID
+        point_json["oldId"] = new_id
+        # Unload details
+        del point_json["omero:details"]
+        data = {
+            'imageId': image.id.val,
+            'rois': {
+                'count': 1,
+                'modified': [point_json]
+            }
+        }
+        rsp = post_json(django_client, persist_url, data)
+        # IDs shouldn't have changed, e.g. {"ids": {"225504:416603": "225504:416603"}}
+        print('post rsp', rsp)
+        assert rsp["ids"][new_id] == new_id
+
+        # Check annotations not lost
+        roi = conn.getObject("Roi", roi_id)
+        assert len(list(roi.listAnnotations())) == 1
+        assert len(list(conn.getAnnotationLinks(
+            "Shape", parent_ids=[shape_id]))) == 1
