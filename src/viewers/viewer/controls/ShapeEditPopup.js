@@ -196,7 +196,7 @@ class ShapeEditPopup extends Overlay {
         this.coordsInput.value = coordsText;
         this.areaInput.value = areaText;
 
-        if (this.regions.enable_shape_popup) {
+        if (this.regions.viewer_.enable_shape_popup) {
             this.setPosition([x, y]);
         }
     }

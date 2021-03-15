@@ -208,6 +208,13 @@ class Viewer extends OlObject {
         this.regions_ = null;
 
         /**
+         * this flag determines whether ShapeEditPopup is shown on selected shape
+         * Defauls to true
+         * @type {boolean}
+         */
+        this.enable_shape_popup = true;
+
+        /**
          * the 'viewer state', i.e. the controls and interactions that were added
          * the items in the map have the following layout
          * <pre>
@@ -783,18 +790,15 @@ class Viewer extends OlObject {
      * @param {boolean} flag
      */
     enableShapePopup(flag) {
-        var regions = this.getRegions();
-        if (regions) {
-            regions.enable_shape_popup = flag;
+        this.enable_shape_popup = flag;
 
-            // If enabling, try to show popup
-            if (flag) {
-                this.viewer_.getOverlays().forEach(o => {
-                    if (o.updatePopupVisibility) {
-                        o.updatePopupVisibility();
-                    }
-                });
-            }
+        // If enabling, try to show popup
+        if (flag) {
+            this.viewer_.getOverlays().forEach(o => {
+                if (o.updatePopupVisibility) {
+                    o.updatePopupVisibility();
+                }
+            });
         }
     }
 
