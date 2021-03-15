@@ -503,31 +503,7 @@ def image_data(request, image_id, conn=None, **kwargs):
             rv['pixel_size']['unit_z'] = value[0]
             rv['pixel_size']['symbol_z'] = value[1]
 
-        size_t = image.getSizeT()
-        time_list = []
         delta_t_unit_symbol = None
-        if size_t > 1:
-            params = omero.sys.ParametersI()
-            params.addLong('pid', image.getPixelsId())
-            z = 0
-            c = 0
-            query = "from PlaneInfo as Info where"\
-                " Info.theZ=%s and Info.theC=%s and pixels.id=:pid" % (z, c)
-            info_list = conn.getQueryService().findAllByQuery(
-                query, params, conn.SERVICE_OPTS)
-            timemap = {}
-            for info in info_list:
-                t_index = info.theT.getValue()
-                if info.deltaT is not None:
-                    value = format_value_with_units(info.deltaT)
-                    timemap[t_index] = value[0]
-                    if delta_t_unit_symbol is None:
-                        delta_t_unit_symbol = value[1]
-            for t in range(image.getSizeT()):
-                if t in timemap:
-                    time_list.append(timemap[t])
-
-        rv['delta_t'] = time_list
         rv['delta_t_unit_symbol'] = delta_t_unit_symbol
         df = "%Y-%m-%d %H:%M:%S"
         rv['import_date'] = image.creationEventDate().strftime(df)
@@ -543,6 +519,46 @@ def image_data(request, image_id, conn=None, **kwargs):
         return JsonResponse(rv)
     except Exception as image_data_retrieval_exception:
         return JsonResponse({'error': repr(image_data_retrieval_exception)})
+
+
+@login_required()
+def delta_t_data(request, image_id, conn=None, **kwargs):
+
+    image = conn.getObject("Image", image_id)
+
+    rv = {}
+
+    import time
+    time.sleep(10)
+
+    size_t = image.getSizeT()
+    time_list = []
+    delta_t_unit_symbol = None
+    if size_t > 1:
+        params = omero.sys.ParametersI()
+        params.addLong('pid', image.getPixelsId())
+        z = 0
+        c = 0
+        query = "from PlaneInfo as Info where"\
+            " Info.theZ=%s and Info.theC=%s and pixels.id=:pid" % (z, c)
+        info_list = conn.getQueryService().findAllByQuery(
+            query, params, conn.SERVICE_OPTS)
+        timemap = {}
+        for info in info_list:
+            t_index = info.theT.getValue()
+            if info.deltaT is not None:
+                value = format_value_with_units(info.deltaT)
+                timemap[t_index] = value[0]
+                if delta_t_unit_symbol is None:
+                    delta_t_unit_symbol = value[1]
+        for t in range(image.getSizeT()):
+            if t in timemap:
+                time_list.append(timemap[t])
+
+    rv['delta_t'] = time_list
+    rv['delta_t_unit_symbol'] = delta_t_unit_symbol
+    rv['image_id'] = image_id
+    return JsonResponse(rv)
 
 
 def format_value_with_units(value):

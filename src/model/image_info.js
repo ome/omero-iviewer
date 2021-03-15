@@ -395,7 +395,6 @@ export default class ImageInfo {
         this.import_date = response.import_date;
         if (typeof response.acquisition_date === 'string')
             this.acquisition_date = response.acquisition_date;
-        this.setFormattedDeltaT(response);
         this.roi_count = response.roi_count;
         if (typeof response.meta.datasetName === 'string')
             this.dataset_name = response.meta.datasetName;
@@ -417,6 +416,8 @@ export default class ImageInfo {
             this.context.publish(
                 IMAGE_SETTINGS_REFRESH, { config_id : this.config_id});
         }
+        // Finally, load delta_t data
+        this.requestDeltaT();
     }
 
     /**
@@ -621,6 +622,22 @@ export default class ImageInfo {
             default: m = 'color';
         }
         return m;
+    }
+
+    /**
+     * Loads and the Image delta_t timestamp data
+     */
+    requestDeltaT() {
+        if (this.dimensions.max_t <= 1) return;
+        let url = this.context.server + this.context.getPrefixedURI(IVIEWER);
+        url += "/image_data/" + this.image_id + '/delta_t/';
+        $.ajax({
+            url,
+            success: (response) => {
+                console.log('response this.image_id', this.image_id, response.image_id);
+                this.setFormattedDeltaT(response)
+            }
+        });
     }
 
     /**
