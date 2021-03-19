@@ -436,12 +436,12 @@ class Viewer extends OlObject {
 
         // we might have some requested defaults
         var initialTime = this.getInitialRequestParam(REQUEST_PARAMS.TIME);
-        initialTime = initialTime !== null ? (parseInt(initialTime)-1) :
+        initialTime = initialTime !== null ? (parseInt(initialTime)) :
         this.image_info_['rdefs']['defaultT'];
         if (initialTime < 0) initialTime = 0;
         if (initialTime >= dims.t) initialTime =  dims.t-1;
         var initialPlane = this.getInitialRequestParam(REQUEST_PARAMS.PLANE);
-        initialPlane = initialPlane !== null ? (parseInt(initialPlane)-1) :
+        initialPlane = initialPlane !== null ? (parseInt(initialPlane)) :
             this.image_info_['rdefs']['defaultZ'];
         if (initialPlane < 0) initialPlane = 0;
         if (initialPlane >= dims.z) initialPlane =  dims.z-1;

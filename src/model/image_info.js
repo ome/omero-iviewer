@@ -541,10 +541,10 @@ export default class ImageInfo {
         // initialize dimensions (incl. initial params)
         this.dimensions = {
             t: initialTime !== null ?
-                (parseInt(initialTime)-1) : response.rdefs.defaultT,
+                (parseInt(initialTime)) : response.rdefs.defaultT,
             max_t : response.size.t,
             z: initialPlane !== null ?
-                (parseInt(initialPlane)-1) : response.rdefs.defaultZ,
+                (parseInt(initialPlane)) : response.rdefs.defaultZ,
             max_z : response.size.z,
             max_x : response.size.width,
             max_y : response.size.height,
