@@ -1501,6 +1501,7 @@ export default class Ol3Viewer extends EventSubscriber {
         let args = [];
         let center = view.getCenter();
         args.push([REQUEST_PARAMS.PLANE, image_info.dimensions.z]);
+        args.push([REQUEST_PARAMS.TIME, image_info.dimensions.t]);
         args.push([REQUEST_PARAMS.CENTER_X, parseInt(center[0])]);
         args.push([REQUEST_PARAMS.CENTER_Y, (-parseInt(center[1]))]);
         args.push([REQUEST_PARAMS.ZOOM, parseInt(100 / view.getResolution())]);
