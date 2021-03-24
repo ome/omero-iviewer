@@ -280,30 +280,31 @@ a.ui-button:active,
 }
 
 .time-slider {
-    left: 90px;
-    right: 55px;
+    left: 0;
     z-index: 3;
+    display: flex;
+    right: 0;
 }
 .show-zSlider .time-slider {
-    left: 125px;
+    left: 35px;
 }
 
 .plane-slider span, .time-slider span {
-    position: absolute;
     font-size: 18px;
 }
 
-.plane-slider.glyphicon, .time-slider .glyphicon {
+.plane-slider.glyphicon {
     position: absolute;
 }
 
 .plane-slider span {
+    position: absolute;
     left: 0;
     width: 35px;
     text-align: center;
 }
 .time-slider span {
-    top: 6px;
+    margin: 6px;
 }
 
 .plane-slider .glyphicon {
@@ -311,6 +312,7 @@ a.ui-button:active,
 }
 .time-slider .glyphicon {
     top: 11px;
+    margin: 0 6px;
 }
 
 .plane-slider .dim-label {
@@ -328,13 +330,11 @@ a.ui-button:active,
     left: -55px;
     color: #999;
     text-align: right;
-    width: 30px;
 }
 
 .time-slider .dim-size {
     right: -55px;
     color: #999;
-    width: 30px;
 }
 .plane-slider .dim-size {
     top: -45px;
@@ -380,7 +380,7 @@ a.ui-button:active,
     margin-left: 12px;
 }
 .time-slider .ui-slider {
-    width: 100%;
+    flex-grow: 1;
     height: 9px;
     margin-top: 14px;
 }
@@ -390,7 +390,7 @@ a.ui-button:active,
     width: 19px;
 }
 .time-slider .ui-slider-handle {
-    top: -0.45em;
+    top: -14px;
     height: 19px;
 }
 
@@ -399,19 +399,16 @@ a.ui-button:active,
     top: auto;
 }
 .time-slider .glyphicon-chevron-left {
-    left: -20px;
+    /* left: -20px; */
 }
 
 .plane-slider .glyphicon-chevron-up {
     top: -20px;
 }
 .time-slider .glyphicon-chevron-right {
-    right: -20px;
+    /* right: -20px; */
 }
 
-.time-slider .glyphicon-play, .time-slider .glyphicon-stop {
-    left: -70px;
-}
 .plane-slider .glyphicon-play, .plane-slider .glyphicon-stop {
     bottom: -85px;
     top: auto;
@@ -427,10 +424,11 @@ a.ui-button:active,
     top: -50px;
 }
 
-
+.plane-slider .dim-arrows {
+    position: absolute;
+}
 .dim-arrows {
     cursor: pointer;
-    position: absolute;
 }
 .dim-arrow-up {
     background-image: url('images/arrow-up.png');
