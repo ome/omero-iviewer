@@ -528,9 +528,6 @@ def delta_t_data(request, image_id, conn=None, **kwargs):
 
     rv = {}
 
-    import time
-    time.sleep(10)
-
     size_t = image.getSizeT()
     time_list = []
     delta_t_unit_symbol = None
