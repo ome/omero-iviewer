@@ -1,3 +1,12 @@
+0.11.0 (June 2021)
+------------------
+
+- Delay the loading of the timestamp metadata [https://github.com/ome/omero-iviewer/pull/373](https://github.com/ome/omero-iviewer/pull/373)
+- Restore app compatibility with OMERO.server 5.6.0 [https://github.com/ome/omero-iviewer/pull/377](https://github.com/ome/omero-iviewer/pull/377)
+- Bug fix: preserve Shape popup state when reloading regions of interest [https://github.com/ome/omero-iviewer/pull/374](https://github.com/ome/omero-iviewer/pull/374)
+- Symlink AGPL license to the root of the source code repository [https://github.com/ome/omero-iviewer/pull/363](https://github.com/ome/omero-iviewer/pull/363)
+- Update dependencies (lodash, elliptic) [https://github.com/ome/omero-iviewer/pull/370](https://github.com/ome/omero-iviewer/pull/370) [https://github.com/ome/omero-iviewer/pull/382](https://github.com/ome/omero-iviewer/pull/382)
+
 0.10.2 (February 2021)
 ----------------------
 
