@@ -88,14 +88,21 @@ def index(request, iid=None, conn=None, **kwargs):
     params['ROI_PAGE_SIZE'] = ROI_PAGE_SIZE
 
     c = conn.getConfigService()
-    max_bytes = c.getConfigValue('omero.pixeldata.max_projection_bytes')
-    # check if MAX_PROJECTION_BYTES should override server setting
-    if max_bytes is None or len(max_bytes) == 0 or (
-            MAX_PROJECTION_BYTES > 0 and
-            MAX_PROJECTION_BYTES < int(max_bytes)):
-        max_bytes = MAX_PROJECTION_BYTES
-    else:
-        max_bytes = int(max_bytes)
+    max_bytes = None
+    try:
+        max_bytes = c.getConfigValue('omero.pixeldata.max_projection_bytes')
+        # check if MAX_PROJECTION_BYTES should override server setting
+        if max_bytes is None or len(max_bytes) == 0 or (
+                MAX_PROJECTION_BYTES > 0 and
+                MAX_PROJECTION_BYTES < int(max_bytes)):
+            max_bytes = MAX_PROJECTION_BYTES
+        else:
+            max_bytes = int(max_bytes)
+    except omero.SecurityViolation:
+        # config setting not supported in OMERO before 5.6.1
+        if MAX_PROJECTION_BYTES > 0:
+            max_bytes = MAX_PROJECTION_BYTES
+
     params['MAX_PROJECTION_BYTES'] = max_bytes
 
     return render(
