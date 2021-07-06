@@ -665,19 +665,26 @@ export default class ImageInfo {
                 t = -t;
             }
             if (t !== 0) deltaTisAllZeros = false;
+            // days
+            let days = parseInt(t / (24 * 3600 * precision));
+            t -= (days * 24 * 3600 * precision);
             // hrs
             let hours = parseInt(t / (3600 * precision));
-            deltaTformatted += ("00" + hours).slice(-2) + ":";
             t -= (hours * 3600 * precision);
             // minutes
             let mins =  parseInt(t / (60 * precision));
-            deltaTformatted += ("00" + mins).slice(-2) + ":";
             t -= (mins * (60 * precision));
             // seconds
             let secs = parseInt(t / precision);
-            deltaTformatted += ("00" + secs).slice(-2) + ".";
             // milliseconds
             let millis = t - (secs * precision);
+
+            if (days != 0) {
+                deltaTformatted += days + " days "
+            }
+            deltaTformatted += ("00" + hours).slice(-2) + ":";
+            deltaTformatted += ("00" + mins).slice(-2) + ":";
+            deltaTformatted += ("00" + secs).slice(-2) + ".";
             deltaTformatted += ("000" + millis).slice(-3);
             this.image_delta_t.push(deltaTformatted);
         });
