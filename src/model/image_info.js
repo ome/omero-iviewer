@@ -693,11 +693,15 @@ export default class ImageInfo {
         function pad(value, length=2) {
             return ("000" + value).slice(-length);
         }
+
+        function s(value) {
+            return value == 1 ? "" : "s";
+        }
         if (days != 0) {
-            deltaTformatted += (verbose ? (days + " days ") : (pad(days) + " "));
+            deltaTformatted += (verbose ? (days + ` day${s(days)} `) : (pad(days) + " "));
         }
         if (verbose) {
-            deltaTformatted += `${hours} hours ${mins} minutes ${secs}.${pad(millis, 3)} seconds`
+            deltaTformatted += `${hours} hour${s(hours)} ${mins} minute${s(mins)} ${secs}.${pad(millis, 3)} seconds`
         } else {
             deltaTformatted += `${pad(hours)}:${pad(mins)}:${pad(secs)}.${pad(millis, 3)}`
         }
