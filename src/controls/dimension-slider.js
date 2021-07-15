@@ -322,7 +322,7 @@ export default class DimensionSlider {
                     this.dim.toUpperCase() + ":" + (newDimVal+1);
                 if (this.dim === 't' && imgInf.image_delta_t.length > 0 &&
                     newDimVal < imgInf.image_delta_t.length)
-                        sliderTip += " [" + imgInf.image_delta_t[newDimVal] + "]";
+                    sliderTip += " [" + imgInf.formatDeltaT(imgInf.image_delta_t[newDimVal]) + "]";
                 sliderValueSpan.text(sliderTip);
                 let percent = (ui.value / (imgInf.dimensions['max_' + this.dim] - 1)) * 100;
                 if (this.dim === 'z') {

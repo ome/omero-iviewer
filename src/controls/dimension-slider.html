@@ -80,11 +80,9 @@
             ${image_config.image_info.dimensions['max_' + dim]}
         </span>
         <span show.bind="image_config.image_info.image_delta_t.length > 0"
-              class="timestamp">
-            ${image_config.image_info.dimensions[dim] &lt;
-                image_config.image_info.image_delta_t.length ?
-                    image_config.image_info.image_delta_t[
-                        image_config.image_info.dimensions[dim]] : '&nbsp;'}
+            title="${image_config.image_info.formatDeltaT(image_config.image_info.image_delta_t[image_config.image_info.dimensions[dim]], true)}"
+            class="timestamp">
+            ${image_config.image_info.formatDeltaT(image_config.image_info.image_delta_t[image_config.image_info.dimensions[dim]])}
         </span>
     </template>
 </template>

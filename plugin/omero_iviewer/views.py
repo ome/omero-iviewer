@@ -494,19 +494,19 @@ def image_data(request, image_id, conn=None, **kwargs):
         px = image.getPrimaryPixels().getPhysicalSizeX()
         if (px is not None):
             size = image.getPixelSizeX(True)
-            value = format_value_with_units(size)
+            value = format_pixel_size_with_units(size)
             rv['pixel_size']['unit_x'] = value[0]
             rv['pixel_size']['symbol_x'] = value[1]
         py = image.getPrimaryPixels().getPhysicalSizeY()
         if (py is not None):
             size = image.getPixelSizeY(True)
-            value = format_value_with_units(size)
+            value = format_pixel_size_with_units(size)
             rv['pixel_size']['unit_y'] = value[0]
             rv['pixel_size']['symbol_y'] = value[1]
         pz = image.getPrimaryPixels().getPhysicalSizeZ()
         if (pz is not None):
             size = image.getPixelSizeZ(True)
-            value = format_value_with_units(size)
+            value = format_pixel_size_with_units(size)
             rv['pixel_size']['unit_z'] = value[0]
             rv['pixel_size']['symbol_z'] = value[1]
 
@@ -551,10 +551,11 @@ def delta_t_data(request, image_id, conn=None, **kwargs):
         for info in info_list:
             t_index = info.theT.getValue()
             if info.deltaT is not None:
-                value = format_value_with_units(info.deltaT)
-                timemap[t_index] = value[0]
+                secs = get_converted_value(info.deltaT, "SECOND")
+                timemap[t_index] = secs
                 if delta_t_unit_symbol is None:
-                    delta_t_unit_symbol = value[1]
+                    # Get unit symbol for first info only
+                    delta_t_unit_symbol = info.deltaT.getSymbol()
         for t in range(image.getSizeT()):
             if t in timemap:
                 time_list.append(timemap[t])
@@ -565,7 +566,20 @@ def delta_t_data(request, image_id, conn=None, **kwargs):
     return JsonResponse(rv)
 
 
-def format_value_with_units(value):
+def get_converted_value(obj, units):
+    """
+    Convert the length or time object to units and return value
+
+    @param obj      value object
+    @param units    string, e.g. "SECOND"
+    """
+    unitClass = obj.getUnit().__class__
+    unitEnum = getattr(unitClass, str(units))
+    obj = obj.__class__(obj, unitEnum)
+    return obj.getValue()
+
+
+def format_pixel_size_with_units(value):
     """
     Formats the response for methods above.
     Returns [value, unitSymbol]
@@ -579,15 +593,6 @@ def format_value_with_units(value):
     if unit == "MICROMETER":
         unit = lengthunit(length)
         length = lengthformat(length)
-    elif unit == "MILLISECOND":
-        length = length/1000.0
-        unit = value.getSymbol()
-    elif unit == "MINUTE":
-        length = 60*length
-        unit = value.getSymbol()
-    elif unit == "HOUR":
-        length = 3600*length
-        unit = value.getSymbol()
     else:
         unit = value.getSymbol()
     return (length, unit)
