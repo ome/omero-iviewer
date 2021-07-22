@@ -18,8 +18,8 @@
 from omero_iviewer.utils import get_version
 
 
-VERSION = (0, 11, 1)
-RC = ""
+VERSION = (0, 11, 2)
+RC = "dev0"
 
 
 __version__ = get_version(VERSION)
