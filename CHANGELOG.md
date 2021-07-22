@@ -1,3 +1,8 @@
+0.11.1 (July 2021)
+------------------
+
+- Improve support for units [#386](https://github.com/ome/omero-iviewer/pull/386)
+
 0.11.0 (June 2021)
 ------------------
 
