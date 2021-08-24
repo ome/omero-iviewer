@@ -25,15 +25,15 @@
 
 from django.core.urlresolvers import reverse
 
-from omeroweb.testlib import IWebTest, get_json, \
-    post_json, put_json, delete_json
+from omeroweb.testlib import IWebTest, get_json, post_json
 
 from omero.model import ImageI, RoiI, PointI
-from omero.rtypes import rdouble, rlist, rstring, unwrap
+from omero.rtypes import rdouble, rstring
 from omero.gateway import BlitzGateway, TagAnnotationWrapper
-from omero_marshal import get_encoder, get_decoder
+from omero_marshal import get_encoder
 
 import pytest
+
 
 class TestRois(IWebTest):
     """Tests querying & saving ROIs"""
@@ -47,7 +47,7 @@ class TestRois(IWebTest):
         # Refresh the session context
         gateway.getEventContext()
         return gateway
-    
+
     @pytest.fixture()
     def django_client(self, conn):
         user_name = conn.getUser().getName()
@@ -119,7 +119,8 @@ class TestRois(IWebTest):
             }
         }
         rsp = post_json(django_client, persist_url, data)
-        # IDs shouldn't have changed, e.g. {"ids": {"225504:416603": "225504:416603"}}
+        # IDs shouldn't have changed, e.g.
+        # {"ids": {"225504:416603": "225504:416603"}}
         print('post rsp', rsp)
         assert rsp["ids"][new_id] == new_id
 
