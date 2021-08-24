@@ -1,11 +1,25 @@
+0.11.1 (July 2021)
+------------------
+
+- Improve support for units [#386](https://github.com/ome/omero-iviewer/pull/386)
+
+0.11.0 (June 2021)
+------------------
+
+- Delay the loading of the timestamp metadata [#373](https://github.com/ome/omero-iviewer/pull/373)
+- Restore app compatibility with OMERO.server 5.6.0 [#377](https://github.com/ome/omero-iviewer/pull/377)
+- Bug fix: preserve Shape popup state when reloading regions of interest [#374](https://github.com/ome/omero-iviewer/pull/374)
+- Symlink AGPL license to the root of the source code repository [#363](https://github.com/ome/omero-iviewer/pull/363)
+- Update dependencies (lodash, elliptic) [#370](https://github.com/ome/omero-iviewer/pull/370) [#382](https://github.com/ome/omero-iviewer/pull/382)
+
 0.10.2 (February 2021)
 ----------------------
 
-- Resize viewer when thumbnail panel hidden [https://github.com/ome/omero-iviewer/pull/368](https://github.com/ome/omero-iviewer/pull/368)
-- Validate zoomLevelScaling [https://github.com/ome/omero-iviewer/pull/359](https://github.com/ome/omero-iviewer/pull/359)
-- Add request limit as a known issue with nginx config [https://github.com/ome/omero-iviewer/pull/361](https://github.com/ome/omero-iviewer/pull/361)
-- Make projection slider range clearer [https://github.com/ome/omero-iviewer/pull/348](https://github.com/ome/omero-iviewer/pull/348)
-- Tiling threshold max projection bytes [https://github.com/ome/omero-iviewer/pull/349](https://github.com/ome/omero-iviewer/pull/349)
+- Resize viewer when thumbnail panel hidden [#368](https://github.com/ome/omero-iviewer/pull/368)
+- Validate zoomLevelScaling [#359](https://github.com/ome/omero-iviewer/pull/359)
+- Add request limit as a known issue with nginx config [#361](https://github.com/ome/omero-iviewer/pull/361)
+- Make projection slider range clearer [#348](https://github.com/ome/omero-iviewer/pull/348)
+- Tiling threshold max projection bytes [#349](https://github.com/ome/omero-iviewer/pull/349)
 
 0.10.1 (August 2020)
 --------------------

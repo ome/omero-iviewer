@@ -395,7 +395,6 @@ export default class ImageInfo {
         this.import_date = response.import_date;
         if (typeof response.acquisition_date === 'string')
             this.acquisition_date = response.acquisition_date;
-        this.setFormattedDeltaT(response);
         this.roi_count = response.roi_count;
         if (typeof response.meta.datasetName === 'string')
             this.dataset_name = response.meta.datasetName;
@@ -417,6 +416,8 @@ export default class ImageInfo {
             this.context.publish(
                 IMAGE_SETTINGS_REFRESH, { config_id : this.config_id});
         }
+        // Finally, load delta_t data
+        this.requestDeltaT();
     }
 
     /**
@@ -624,52 +625,88 @@ export default class ImageInfo {
     }
 
     /**
+     * Loads and the Image delta_t timestamp data
+     */
+    requestDeltaT() {
+        if (this.dimensions.max_t <= 1) return;
+        let url = this.context.server + this.context.getPrefixedURI(IVIEWER);
+        url += "/image_data/" + this.image_id + '/delta_t/';
+        $.ajax({
+            url,
+            success: (response) => {
+                console.log('response this.image_id', this.image_id, response.image_id);
+                this.setFormattedDeltaT(response)
+            }
+        });
+    }
+
+    /**
      * Sets image_delta_t member from response
-     * after formatting it to hours:minutes:seconds:milliseconds
      *
      * @private
      * @param {Object} response the response object
      * @memberof ImageInfo
      */
     setFormattedDeltaT(response) {
+
+        this.image_delta_t = response.delta_t
+
+        // original units
+        this.image_delta_t_unit = response.delta_t_unit_symbol;
+    }
+
+    /**
+     * Formats delta-T to 'dd hh:mm:ss:milliseconds'
+     *
+     * @param {Number} t            time in seconds
+     * @param {Boolean} verbose     if true, use e.g. '10 days 01 hours minutes seconds'
+     * @memberof ImageInfo
+     */
+    formatDeltaT(t, verbose=false) {
         // avoid further IEEE inaccuracies for remainders
         // by using multiplier and rounding to integer (at ms effectively)
         const precision = 1000;
 
-        let deltaTisAllZeros = true;
-        response.delta_t.map((t) => {
-            t = Math.round(t * precision);
-            let deltaTformatted = "";
+        t = Math.round(t * precision);
+        let deltaTformatted = "";
 
-            // put minus in front
-            let isNegative = t < 0;
-            if (isNegative) {
-                deltaTformatted += "-";
-                t = -t;
-            }
-            if (t !== 0) deltaTisAllZeros = false;
-            // hrs
-            let hours = parseInt(t / (3600 * precision));
-            deltaTformatted += ("00" + hours).slice(-2) + ":";
-            t -= (hours * 3600 * precision);
-            // minutes
-            let mins =  parseInt(t / (60 * precision));
-            deltaTformatted += ("00" + mins).slice(-2) + ":";
-            t -= (mins * (60 * precision));
-            // seconds
-            let secs = parseInt(t / precision);
-            deltaTformatted += ("00" + secs).slice(-2) + ".";
-            // milliseconds
-            let millis = t - (secs * precision);
-            deltaTformatted += ("000" + millis).slice(-3);
-            this.image_delta_t.push(deltaTformatted);
-        });
+        // put minus in front
+        let isNegative = t < 0;
+        if (isNegative) {
+            deltaTformatted += "-";
+            t = -t;
+        }
+        // days
+        let days = parseInt(t / (24 * 3600 * precision));
+        t -= (days * 24 * 3600 * precision);
+        // hrs
+        let hours = parseInt(t / (3600 * precision));
+        t -= (hours * 3600 * precision);
+        // minutes
+        let mins =  parseInt(t / (60 * precision));
+        t -= (mins * (60 * precision));
+        // seconds
+        let secs = parseInt(t / precision);
+        // milliseconds
+        let millis = t - (secs * precision);
 
-        // we reset to deltaT to [] if all zeros
-        if (deltaTisAllZeros) this.image_delta_t = [];
-        // original units
-        this.image_delta_t_unit = response.delta_t_unit_symbol;
-    }
+        function pad(value, length=2) {
+            return ("000" + value).slice(-length);
+        }
+
+        function s(value) {
+            return value == 1 ? "" : "s";
+        }
+        if (days != 0) {
+            deltaTformatted += (verbose ? (days + ` day${s(days)} `) : (pad(days) + " "));
+        }
+        if (verbose) {
+            deltaTformatted += `${hours} hour${s(hours)} ${mins} minute${s(mins)} ${secs}.${pad(millis, 3)} seconds`
+        } else {
+            deltaTformatted += `${pad(hours)}:${pad(mins)}:${pad(secs)}.${pad(millis, 3)}`
+        }
+        return deltaTformatted;
+    };
 
     /**
      * Retrieves the copied rendering settings
