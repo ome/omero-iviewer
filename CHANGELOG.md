@@ -1,3 +1,8 @@
+0.11.2 (March 2022)
+-------------------
+
+- Pin omero-web version to 5.14.0 [#403](https://github.com/ome/omero-iviewer/pull/403)
+
 0.11.1 (July 2021)
 ------------------
 
