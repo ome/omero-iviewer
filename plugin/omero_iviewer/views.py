@@ -18,7 +18,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse, Http404
 from django.conf import settings
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from os.path import splitext
 from collections import defaultdict

@@ -23,7 +23,7 @@
    Test saving ROIs
 """
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from omeroweb.testlib import IWebTest, get_json, post_json
 
