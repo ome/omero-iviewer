@@ -118,7 +118,7 @@ setup(name="omero-iviewer",
       url="https://github.com/ome/omero-iviewer/",
       download_url='https://github.com/ome/omero-iviewer/archive/v%s.tar.gz' % version,  # NOQA
       keywords=['OMERO.web', 'plugin'],
-      install_requires=['omero-web>=5.7.0,<5.14.0'],
+      install_requires=['omero-web>=5.7.0'],
       python_requires='>=3',
       include_package_data=True,
       zip_safe=False,
