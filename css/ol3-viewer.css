@@ -490,9 +490,6 @@
 .shape-edit-popup-closer {
     text-decoration: none;
     position: absolute;
-    top: 2px;
+    top: 0;
     right: 8px;
-}
-.shape-edit-popup-closer:after {
-    content: "✖";
 }

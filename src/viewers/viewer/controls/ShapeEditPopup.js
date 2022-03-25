@@ -51,7 +51,7 @@ class ShapeEditPopup extends Overlay {
                 value=''/>
             <div><input readonly class='shape-popup-coords'/></div>
             <div><input readonly class='shape-popup-area'/></div>
-            <a href="#" class="shape-edit-popup-closer" class="shape-edit-popup-closer"></a>
+            <a href="#" class="shape-edit-popup-closer" class="shape-edit-popup-closer">&times;</a>
         </div>`;
         // add flag to the event so that the Hover interaction can ignore it
         popup.onpointermove = function(e) {
