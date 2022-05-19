@@ -21,7 +21,11 @@ Installing from PyPI
 
 This section assumes that an OMERO.web is already installed.
 
-Install the app using `pip <https://pip.pypa.io/en/stable/>`_:
+Install the app using `pip <https://pip.pypa.io/en/stable/>`_.
+
+NB: You need to ensure that you are running `pip` from the python environment
+where `omero-web` is installed. Depending on your install, you may need to
+call `pip` with `/path/to/venv3/bin/pip install ...`:
 
 ::
 
