@@ -40,6 +40,28 @@ IVIEWER_SETTINGS_MAPPING = {
          500,
          int,
          "Page size for ROI pagination."],
+    
+    "omero.web.iviewer.color_palette":
+        ["COLOR_PALETTE",
+         "[]",
+         json.loads,
+         ("Set of predefined color options for drawing rois"
+          "Accepts most ways to define a color"
+         "ex: ['rgb(0,0,0)'],['#000000'],['rgba(0,0,0,0)']...")],
+    
+    "omero.web.iviewer.palette_labels":
+        ["PALETTE_LABELS",
+         "[]",
+         json.loads,
+         ("Text to be displayed below each palette option"
+          "['Hypercellular'],['Necrotic']...")],
+    
+    "omero.web.iviewer.show_palette_only":
+        ["SHOW_PALETTE_ONLY",
+         False,
+         bool,
+         ("Disables spectrum color picker. Forces users to use preset options"
+          "Must define a color palette for this setting to work.")],
 }
 
 process_custom_settings(sys.modules[__name__], 'IVIEWER_SETTINGS_MAPPING')
