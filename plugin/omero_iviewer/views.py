@@ -49,6 +49,9 @@ MAX_LIMIT = max(1, API_MAX_LIMIT)
 ROI_PAGE_SIZE = getattr(iviewer_settings, 'ROI_PAGE_SIZE')
 ROI_PAGE_SIZE = min(MAX_LIMIT, ROI_PAGE_SIZE)
 MAX_PROJECTION_BYTES = getattr(iviewer_settings, 'MAX_PROJECTION_BYTES')
+COLOR_PALETTE = getattr(iviewer_settings, 'COLOR_PALETTE')
+PALETTE_LABELS = getattr(iviewer_settings, 'PALETTE_LABELS')
+SHOW_PALETTE_ONLY = getattr(iviewer_settings, 'SHOW_PALETTE_ONLY')
 
 PROJECTIONS = {
     'normal': -1,
@@ -104,7 +107,11 @@ def index(request, iid=None, conn=None, **kwargs):
             max_bytes = MAX_PROJECTION_BYTES
 
     params['MAX_PROJECTION_BYTES'] = max_bytes
-
+    
+    params['COLOR_PALETTE'] = COLOR_PALETTE
+    params['PALETTE_LABELS'] = PALETTE_LABELS
+    params['SHOW_PALETTE_ONLY'] = SHOW_PALETTE_ONLY
+    
     return render(
         request, 'omero_iviewer/index.html',
         {'params': params, 'iviewer_url_suffix': u"?_iviewer-%s" % __version__}
