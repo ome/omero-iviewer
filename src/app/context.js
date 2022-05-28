@@ -451,8 +451,10 @@ export default class Context {
         this.interpolate = (interpolate === 'true');
         this.version = this.getInitialRequestParam(REQUEST_PARAMS.VERSION);
         this.roi_page_size = this.initParams[REQUEST_PARAMS.ROI_PAGE_SIZE] || 500;
-        this.max_projection_bytes = parseInt(this.initParams[REQUEST_PARAMS.MAX_PROJECTION_BYTES], 10)
-                                    || (1024 * 1024 * 256);
+        this.max_projection_bytes = parseInt(this.initParams[REQUEST_PARAMS.MAX_PROJECTION_BYTES], 10) || (1024 * 1024 * 256);
+        this.color_palette = this.initParams[REQUEST_PARAMS.COLOR_PALETTE] || [];
+        this.palette_labels = this.initParams[REQUEST_PARAMS.PALETTE_LABELS] || [];
+        this.show_palette_only = this.initParams[REQUEST_PARAMS.SHOW_PALETTE_ONLY] || false
     }
 
     /**
