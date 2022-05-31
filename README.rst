@@ -73,6 +73,16 @@ If you wish to set a threshold for iviewer that is *lower* than for the server:
 NB: Z-projection is not supported for tiled images in OMERO
 (Images larger than 2048 * 2048 pixels per plane are tiled in iviewer).
 
+OMERO uses Spectrum Color Picker for selecting ROI colors. 
+Surround color values with quotes and brackets, and seperate values with commas.
+To define a color palette use::
+    
+    $ omero config set omero.web.iviewer.color_palette '["rgb(0,0,0)"],["#000000"]'
+  
+To hide the default spectrum color picker use (ONLY WORKS WITH DEFINED PALETTE)::
+    
+    $ omero config set omero.web.iviewer.show_palette_only true
+
 Known issues
 ============
 
