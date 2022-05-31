@@ -899,7 +899,6 @@ export default class RegionsEdit extends EventSubscriber {
                 (color) => this.onColorChange(color.toRgbString(), fill, shape);
         else options.change =
             (color) => this.setDrawColors(color.toRgbString(), fill);
-        console.log(options)
         return options;
     }
 
