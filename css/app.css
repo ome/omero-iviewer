@@ -127,26 +127,21 @@ a.ui-button:active,
 .color-spectrum-container {
     background-color: #f8f8f8;
     position: absolute!important;
-    width: 195px;
-    height: 270px;
     top: 125px!important;
     left: 10px!important;
     line-height: 30px;
+    padding: 5px;
 }
 .color-spectrum-container .sp-picker-container {
     padding: 4px;
     width: 184px;
 }
 .color-spectrum-container .sp-input-container {
-    width: 135px;
-}
-.color-spectrum-container .sp-thumb {
-    width: 42px;
+    width: 130px;
 }
 .color-spectrum-container span {
     width: 21px;
 }
-
 .color-spectrum-container span {
     background-image: none;
 }
@@ -154,6 +149,15 @@ a.ui-button:active,
     background-image: none;
     height: 20px;
     top: 25px;
+}
+.sp-picker-container, .sp-palette-container {
+    margin-bottom: 5px!important;
+    padding-bottom: 0!important;
+}
+.sp-thumb-el, .sp-thumb-inner {
+    width:48px!important;
+    min-height:24px;
+    
 }
 /** SPECTRUM colorpicker adjustments END **/
 

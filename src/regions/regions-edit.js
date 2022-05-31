@@ -889,18 +889,17 @@ export default class RegionsEdit extends EventSubscriber {
                 $(this.element).find('.shape-fill-color') :
                 $(this.element).find('.shape-stroke-color')
         };
-        if (this.context.color_palette != []) {
+        if (this.context.color_palette.length > 0) {
             options.palette = this.context.color_palette;
+            options.showPalette = true
             options.showPaletteOnly = this.context.show_palette_only;
-            if (this.context.palette_label != [])
-                options.labels = this.context.palette_labels;
         }
         if (shape)
             options.change =
                 (color) => this.onColorChange(color.toRgbString(), fill, shape);
         else options.change =
             (color) => this.setDrawColors(color.toRgbString(), fill);
-
+        console.log(options)
         return options;
     }
 

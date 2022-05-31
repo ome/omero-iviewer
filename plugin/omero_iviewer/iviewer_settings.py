@@ -19,6 +19,7 @@
 
 """Settings for the OMERO.iviewer app."""
 
+from array import array
 import sys
 from omeroweb.settings import process_custom_settings, report_settings
 
@@ -43,19 +44,12 @@ IVIEWER_SETTINGS_MAPPING = {
     
     "omero.web.iviewer.color_palette":
         ["COLOR_PALETTE",
-         "[]",
-         json.loads,
+         [],
+         array,
          ("Set of predefined color options for drawing rois"
           "Accepts most ways to define a color"
          "ex: ['rgb(0,0,0)'],['#000000'],['rgba(0,0,0,0)']...")],
-    
-    "omero.web.iviewer.palette_labels":
-        ["PALETTE_LABELS",
-         "[]",
-         json.loads,
-         ("Text to be displayed below each palette option"
-          "['Hypercellular'],['Necrotic']...")],
-    
+
     "omero.web.iviewer.show_palette_only":
         ["SHOW_PALETTE_ONLY",
          False,
