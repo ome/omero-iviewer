@@ -48,7 +48,7 @@ IVIEWER_SETTINGS_MAPPING = {
          array,
          ("Set of predefined color options for drawing rois"
           "Accepts most ways to define a color"
-         "ex: ['rgb(0,0,0)'],['#000000'],['rgba(0,0,0,0)']...")],
+          "ex: ['rgb(0,0,0)'],['#000000'],['rgba(0,0,0,0)']...")],
 
     "omero.web.iviewer.show_palette_only":
         ["SHOW_PALETTE_ONLY",
