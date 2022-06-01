@@ -106,10 +106,10 @@ def index(request, iid=None, conn=None, **kwargs):
             max_bytes = MAX_PROJECTION_BYTES
 
     params['MAX_PROJECTION_BYTES'] = max_bytes
-    
+
     params['COLOR_PALETTE'] = COLOR_PALETTE
     params['SHOW_PALETTE_ONLY'] = SHOW_PALETTE_ONLY
-    
+
     return render(
         request, 'omero_iviewer/index.html',
         {'params': params, 'iviewer_url_suffix': u"?_iviewer-%s" % __version__}
