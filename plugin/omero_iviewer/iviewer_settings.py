@@ -44,7 +44,7 @@ IVIEWER_SETTINGS_MAPPING = {
 
     "omero.web.iviewer.color_palette":
         ["COLOR_PALETTE",
-         [],
+         "[]",
          array,
          ("Set of predefined color options for drawing rois"
           "Accepts most ways to define a color"
