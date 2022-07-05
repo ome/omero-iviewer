@@ -428,7 +428,7 @@ export default class Context {
      * @memberof Context
      */
     processInitialParameters() {
-        let server = this.initParams[REQUEST_PARAMS.SERVER];
+        let server = this.initParams[REQUEST_PARAMS.HOST];
         if (typeof server !== 'string' || server.length === 0) server = "";
         else {
             // check for localhost and if we need to prefix for requests
@@ -443,7 +443,7 @@ export default class Context {
                 server = "http://" + server;
         }
         this.server = server;
-        delete this.initParams[REQUEST_PARAMS.SERVER];
+        delete this.initParams[REQUEST_PARAMS.HOST];
 
         let interpolate =
             typeof this.initParams[REQUEST_PARAMS.INTERPOLATE] === 'string' ?
