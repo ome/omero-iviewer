@@ -205,7 +205,10 @@ export default class RegionsInfo  {
         this.syncCopiedShapesWithLocalStorage();
         // init default shape colors
         this.resetShapeDefaults();
-
+        //if they set a color palette, set the first one as default stroke color
+        if(this.image_info.context.color_palette.length > 0){
+            this.shape_defaults['StrokeColor'] = Converters.rgbaToSignedInteger(this.image_info.context.color_palette[0][0])
+        }
         this.roi_page_size = this.image_info.context.roi_page_size;
     }
 
