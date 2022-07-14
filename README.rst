@@ -74,14 +74,14 @@ NB: Z-projection is not supported for tiled images in OMERO
 (Images larger than 2048 * 2048 pixels per plane are tiled in iviewer).
 
 OMERO uses Spectrum Color Picker for selecting ROI colors. 
-Wrap color values in quotes, seperate values with commas, and mark rows with brackets. 
+Define rows with brackets, and use commas to seperate values. 
 You can only view the first item of each row without enabling show_palette_only.
 To define a color palette use::
     
-    $ omero config set omero.web.iviewer.color_palette '["rgb(0,0,0)","blue"],["#000000"]'
+    $ omero config set omero.web.iviewer.color_palette [rgb(0,0,0),blue],[#000000]
   
 Hides the default color picker.
-You must define a palette and each row should have no more than 4 colors::
+You must define a palette and each row can display 4 colors::
     
     $ omero config set omero.web.iviewer.show_palette_only true
 

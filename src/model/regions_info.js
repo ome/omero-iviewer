@@ -728,7 +728,7 @@ export default class RegionsInfo  {
      * @memberof RegionsInfo
      */
     resetShapeDefaults() {
-        if(this.image_info.context.color_palette.length > 0){
+        if(Array.isArray(this.image_info.context.color_palette)){
             this.shape_defaults['StrokeColor'] = Converters.rgbaToSignedInteger(this.image_info.context.color_palette[0][0])
         } else { 
             this.shape_defaults['StrokeColor'] = -65281;
