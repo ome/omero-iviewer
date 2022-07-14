@@ -19,7 +19,7 @@
 
 """Settings for the OMERO.iviewer app."""
 
-import json
+
 import sys
 from omeroweb.settings import process_custom_settings, report_settings
 
@@ -44,11 +44,11 @@ IVIEWER_SETTINGS_MAPPING = {
     
     "omero.web.iviewer.color_palette":
         ["COLOR_PALETTE",
-         "[]",
-         json.load,
+         '',
+         str,
          ("Set of predefined color options for drawing rois"
           "Accepts most ways to define a color"
-          "ex: ['rgb(0,0,0)'],['#000000'],['rgba(0,0,0,0)']...")],
+          "ex: '[['rgb(0,0,0)','rgba(0,0,0,0)'],['#000000']...]'")],
 
     "omero.web.iviewer.show_palette_only":
         ["SHOW_PALETTE_ONLY",

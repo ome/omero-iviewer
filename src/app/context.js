@@ -454,7 +454,7 @@ export default class Context {
         this.max_projection_bytes = parseInt(this.initParams[REQUEST_PARAMS.MAX_PROJECTION_BYTES], 10)
                                     || (1024 * 1024 * 256);
         this.max_projection_bytes = parseInt(this.initParams[REQUEST_PARAMS.MAX_PROJECTION_BYTES], 10) || (1024 * 1024 * 256);
-        this.color_palette  = JSON.parse(this.initParams[REQUEST_PARAMS.COLOR_PALETTE]) || ""
+        this.color_palette = this.initParams[REQUEST_PARAMS.COLOR_PALETTE]
         this.show_palette_only = this.initParams[REQUEST_PARAMS.SHOW_PALETTE_ONLY] || false
     }
 
