@@ -889,9 +889,8 @@ export default class RegionsEdit extends EventSubscriber {
                 $(this.element).find('.shape-fill-color') :
                 $(this.element).find('.shape-stroke-color')
         };
-        console.log(this.context)
-        if (Array.isArray(this.context.color_palette)) {
-            options.palette = this.context.color_palette;
+        if (Array.isArray(this.context.roi_color_palette)) {
+            options.palette = this.context.roi_color_palette;
             options.showPalette = true;
             options.showPaletteOnly = this.context.show_palette_only;
         }
