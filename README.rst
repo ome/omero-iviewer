@@ -74,7 +74,7 @@ NB: Z-projection is not supported for tiled images in OMERO
 (Images larger than 2048 * 2048 pixels per plane are tiled in iviewer).
 
 OMERO uses Spectrum Color Picker for selecting ROI colors. 
-Allows you to specify a grid of colors for users to choose for ROIs.
+roi_color_palette allows you to specify a grid of colors for users to choose for ROIs.
 Define rows with brackets, and use commas to seperate values. 
 You can only view the first item of each row without enabling show_palette_only.
 To define a color palette use::
