@@ -205,7 +205,6 @@ export default class RegionsInfo  {
         this.syncCopiedShapesWithLocalStorage();
         // init default shape colors
         this.resetShapeDefaults();
-        //if they set a color palette, set the first one as default stroke color
         this.roi_page_size = this.image_info.context.roi_page_size;
     }
 
@@ -728,8 +727,9 @@ export default class RegionsInfo  {
      * @memberof RegionsInfo
      */
     resetShapeDefaults() {
+        //if they set a color palette, set the first one as default stroke color
         if(Array.isArray(this.image_info.context.color_palette)){
-            this.shape_defaults['StrokeColor'] = Converters.rgbaToSignedInteger(this.image_info.context.color_palette[0][0])
+            this.shape_defaults['StrokeColor'] = Converters.rgbaToSignedInteger(this.image_info.context.roi_color_palette[0][0])
         } else { 
             this.shape_defaults['StrokeColor'] = -65281;
         }
