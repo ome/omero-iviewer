@@ -41,8 +41,8 @@ IVIEWER_SETTINGS_MAPPING = {
          int,
          "Page size for ROI pagination."],
 
-    "omero.web.iviewer.color_palette":
-        ["COLOR_PALETTE",
+    "omero.web.iviewer.roi_color_palette":
+        ["ROI_COLOR_PALETTE",
          '',
          str,
          ("Set of predefined color options for drawing rois"
