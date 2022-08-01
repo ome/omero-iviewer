@@ -458,7 +458,7 @@ export default class Context {
         if (userPalette != '') { 
             let arr = userPalette.match(/\[[^\[\]]*\]/g)
             this.roi_color_palette = []; let i = 0
-            arr.forEach(arr => {this.roi_color_palette[i] = arr.match(/[A-Za-z#][A-Za-z0-9]*(\(.*\))?/g); i++})
+            arr.forEach(arr => {this.roi_color_palette[i] = arr.match(/[A-Za-z#][A-Za-z0-9]*(\([^A-Za-z]*\))?/g); i++})
         }
         this.show_palette_only = (this.initParams[REQUEST_PARAMS.SHOW_PALETTE_ONLY] != 'False') || false
     }
