@@ -728,7 +728,6 @@ export default class RegionsInfo  {
      */
     resetShapeDefaults() {
         //if they set a color palette, set the first one as default stroke color
-        console.log(this.image_info.context.roi_color_palette)
         if(Array.isArray(this.image_info.context.roi_color_palette)){
             this.shape_defaults['StrokeColor'] = Converters.rgbaToSignedInteger(this.image_info.context.roi_color_palette[0][0])
         } else { 
