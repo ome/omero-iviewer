@@ -75,13 +75,13 @@ NB: Z-projection is not supported for tiled images in OMERO
 
 OMERO uses Spectrum Color Picker for selecting ROI colors. 
 The roi_color_palette option allows you to specify a grid of colors for users to choose for ROIs.
-Define rows with brackets, and use commas to seperate values. 
-You can only view the first item of each row without enabling show_palette_only.
+Define rows with brackets, and use commas to separate values. By default, only the first color of each row is shown. 
+A full grid is shown when the default color picker is hidden (see below)
 To define a color palette use::
     
     $ omero config set omero.web.iviewer.roi_color_palette "[rgb(0,255,0)],[darkred,red,pink],[#0000FF]"
   
-Hides the default color picker.
+To hide the default color picker (and show a grid for the color palette), set show_palette_only to true
 You must define a palette and each row can display 4 colors::
     
     $ omero config set omero.web.iviewer.show_palette_only true
