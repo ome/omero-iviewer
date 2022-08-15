@@ -132,7 +132,7 @@ export const REQUEST_PARAMS = {
     OMERO_VERSION: 'OMERO_VERSION',
     PLANE: 'Z',
     PROJECTION: 'P',
-    SERVER: 'SERVER',
+    HOST: 'HOST',
     TIME: 'T',
     ZOOM: 'ZM'
 };
