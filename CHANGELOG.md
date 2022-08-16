@@ -1,7 +1,13 @@
+0.12.0 (August 2022)
+--------------------
+
+- Add support for ROI color-picker palette (Thanks to [Michael Barrett](https://github.com/barrettMCW)) ([#415](https://github.com/ome/omero-iviewer/pull/415))
+- Rename ?server query parameter to ?host ([#414](https://github.com/ome/omero-iviewer/pull/414))
+
 0.11.3 (March 2022)
 ------------------
 
-- Make app compatible with Django 1.11.x and 3.2.x ([#456](https://github.com/ome/omero-iviewer/pull/399))
+- Make app compatible with Django 1.11.x and 3.2.x ([#399](https://github.com/ome/omero-iviewer/pull/399))
 
 0.11.2 (March 2022)
 -------------------
