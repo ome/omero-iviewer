@@ -1,7 +1,7 @@
 0.12.0 (August 2022)
 --------------------
 
-- Add support for ROI color-picker palette (Thanks to Michael Barrett) ([#415](https://github.com/ome/omero-iviewer/pull/415))
+- Add support for ROI color-picker palette (Thanks to [Michael Barrett](https://github.com/barrettMCW)) ([#415](https://github.com/ome/omero-iviewer/pull/415))
 - Rename ?server query parameter to ?host ([#414](https://github.com/ome/omero-iviewer/pull/414))
 
 0.11.3 (March 2022)
