@@ -40,6 +40,21 @@ IVIEWER_SETTINGS_MAPPING = {
          500,
          int,
          "Page size for ROI pagination."],
+
+    "omero.web.iviewer.roi_color_palette":
+        ["ROI_COLOR_PALETTE",
+         '',
+         str,
+         ("Set of predefined color options for drawing rois"
+          "Define rows with brackets, and seperate values with commas"
+          "ex: [rgb(0,0,0),rgba(0,0,0,0)],[#000000]...")],
+
+    "omero.web.iviewer.show_palette_only":
+        ["SHOW_PALETTE_ONLY",
+         False,
+         bool,
+         ("Disables spectrum color picker. Forces users to use preset options"
+          "Must define a color palette for this setting to work.")],
 }
 
 process_custom_settings(sys.modules[__name__], 'IVIEWER_SETTINGS_MAPPING')
