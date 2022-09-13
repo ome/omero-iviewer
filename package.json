@@ -13,7 +13,7 @@
     "aurelia-event-aggregator": "1.0.3",
     "aurelia-fetch-client": "1.8.2",
     "aurelia-framework": "1.2.0",
-    "aurelia-history-browser": "1.0.0",
+    "aurelia-history-browser": "1.4.0",
     "aurelia-loader-webpack": "2.1.0",
     "aurelia-logging-console": "1.0.0",
     "aurelia-pal-browser": "1.2.1",
