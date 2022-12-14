@@ -673,7 +673,7 @@ class Viewer extends OlObject {
         }
 
         // add mirror if requested
-        if(this.getInitialRequestParam(REQUEST_PARAMS.ENABLE_MIRROR) == true){
+        if(this.getInitialRequestParam(REQUEST_PARAMS.ENABLE_MIRROR) == 'True'){
             this.viewer_.addControl(new Mirror(this.viewer_))
         }
     }
