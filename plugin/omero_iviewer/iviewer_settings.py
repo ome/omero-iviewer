@@ -59,7 +59,7 @@ IVIEWER_SETTINGS_MAPPING = {
     "omero.web.iviewer.enable_mirror":
         ["ENABLE_MIRROR",
          False,
-         bool
+         bool,
          ("Enables buttons to mirror X or Y axis.")]
 }
 
