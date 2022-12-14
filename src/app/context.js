@@ -461,6 +461,7 @@ export default class Context {
             arr.forEach(arr => {this.roi_color_palette[i] = arr.match(/[A-Za-z#][A-Za-z0-9]*(\([^A-Za-z]*\))?/g); i++})
         }
         this.show_palette_only = (this.initParams[REQUEST_PARAMS.SHOW_PALETTE_ONLY] != 'False') || false
+        this.enable_mirror = (this.initParams[REQUEST_PARAMS.ENABLE_MIRROR] != 'False') || false 
     }
 
     /**

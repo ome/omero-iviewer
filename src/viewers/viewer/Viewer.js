@@ -45,7 +45,6 @@ import {AVAILABLE_VIEWER_INTERACTIONS,
     AVAILABLE_VIEWER_CONTROLS,
     WEBGATEWAY,
     PLUGIN_PREFIX,
-    REQUEST_PARAMS,
     DEFAULT_TILE_DIMS,
     REGIONS_MODE,
     REGIONS_STATE,
@@ -67,6 +66,8 @@ import {integrateStyleIntoJsonObject,
 import OmeroImage from './source/Image';
 import Regions from './source/Regions';
 import Mask from './geom/Mask';
+import Mirror from './controls/Mirror';
+import { REQUEST_PARAMS } from '../../utils/constants';
 
 /**
  * @classdesc
@@ -669,6 +670,12 @@ class Viewer extends OlObject {
                 function(event) {
                     notifyAboutViewerInteraction(this);
                 }, this);
+        }
+
+        // add mirror if requested
+        console.log(this.getInitialRequestParam(REQUEST_PARAMS.ENABLE_MIRROR))
+        if(this.getInitialRequestParam(REQUEST_PARAMS.ENABLE_MIRROR) == true){
+            this.viewer_.addControl(new Mirror(this.viewer_))
         }
     }
 

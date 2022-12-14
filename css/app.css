@@ -1527,3 +1527,20 @@ thumbnail-slider img {
     max-width: 125px;
     padding: 10px;
 }
+
+/* Mirror Buttons */
+.ol-flip {
+    top: 3em;
+    left: .5em;
+}
+
+.glyphicon.ol-flip-button {
+    font-size: 15px;
+    background-color: #fff;
+    font-size: 13px;
+    top: 0px;
+    height: 30px;
+    min-width: 30px;
+    padding: 0px;
+    font-weight: bold;
+}
