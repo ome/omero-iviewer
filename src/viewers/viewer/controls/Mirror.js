@@ -54,9 +54,7 @@ export class Mirror extends Control {
         this.view.constrainCenter = (center) => {
             let curCenter = this.view.getCenter()
             if (this.view.flipX) {
-                console.log(center, curCenter)
                 center[0] = curCenter[0]-(center[0]-curCenter[0])
-                console.log(center, curCenter)
             }
             if (this.view.flipY) center[1] = curCenter[1]-(center[1]-curCenter[1])
             return this.view.constrainCenter_(center)

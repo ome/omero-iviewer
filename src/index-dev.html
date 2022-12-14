@@ -36,7 +36,7 @@
                 'ROI_PAGE_SIZE': '500',
                 'MAX_PROJECTION_BYTES': "268435456", // 1024 * 1024 * 256
                 'IMAGES': "2",   // "4420" // "73537",
-                'ROI_COLOR_PALETTE': '["rgb(0,255,0)","blue","blue","pink","blue"],["rgb(255,255,255)"]',
+                //'ROI_COLOR_PALETTE': '["rgb(0,255,0)","blue","blue","pink","blue"],["rgb(255,255,255)"]',
                 'ENABLE_MIRROR': true
                 //'SHOW_PALETTE_ONLY': true,
                 // 'DATASET': "1",
@@ -50,7 +50,7 @@
             if (this.readyState == 4 && this.status == 200) {
                 if (xhttp.responseText !== 'OK') {
                     window.location.replace(
-                        'http://localhost:2000/webclient/login?url=http://localhost:2000');
+                        'http://localhost:8080/webclient/login?url=http://localhost:8080/');
                 }
                 return;
             } else if (this.readyState == 4) {
