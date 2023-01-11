@@ -581,6 +581,7 @@ class Viewer extends OlObject {
         controls.push(defaultConts[contr]['ref']);
         this.viewerState_[contr] = defaultConts[contr];
         }
+    
 
         // finally construct the open layers map object
         this.viewer_ = new OlMap({
@@ -600,6 +601,12 @@ class Viewer extends OlObject {
             'collapsed': !source.use_tiled_retrieval_
         };
         this.addControl('birdseye', birdsEyeOptions);
+
+        // add mirror if requested
+        if(this.getInitialRequestParam(REQUEST_PARAMS.ENABLE_MIRROR) == 'True'){
+            this.addControl('mirror')
+        }
+        
         // tweak source element for fullscreen to include dim sliders (iviewer only)
         var targetId = this.getTargetId();
         var viewerFrame = targetId ? document.getElementById(targetId) : null;

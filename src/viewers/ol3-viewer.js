@@ -480,7 +480,7 @@ export default class Ol3Viewer extends EventSubscriber {
                      container: this.container
                  });
         delete this.image_config.image_info.tmp_data;
-
+        
         // hide controls for mdi when more than 1 image configs
         if (this.context.useMDI && this.context.image_configs.size > 1)
             this.toggleControlsVisibility({
@@ -591,7 +591,7 @@ export default class Ol3Viewer extends EventSubscriber {
     refreshImageSettings(params = {}) {
         if (this.viewer === null || this.image_config === null ||
             this.image_config.id !== params.config_id) return;
-
+        
         this.viewer.refreshBirdsEye(500);
         this.saveImageSettings(params);
     }

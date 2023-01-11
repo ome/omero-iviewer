@@ -2,7 +2,6 @@ import {listen} from 'ol/events';
 import EventType from 'ol/events/EventType';
 import Control from 'ol/control/Control';
 import {CLASS_UNSELECTABLE, CLASS_CONTROL } from 'ol/css';
-import MapBrowserPointerEvent from 'ol/MapBrowserPointerEvent';
 
 export class Mirror extends Control {
     /**
@@ -10,7 +9,7 @@ export class Mirror extends Control {
      * @param {ol.Map=} map openlayers map.
      * @param {ol.control.FlipOptions=} opt_options options. (className, target)
      */
-     constructor(map,opt_options) {
+     constructor(opt_options) {
         var options = opt_options ? opt_options : {};
 
         var element = document.createElement('div');
@@ -31,8 +30,11 @@ export class Mirror extends Control {
          * @private
          */
         this.ref_ = null
-        
-        this.setMap(map)
+
+        /**
+         * @type {View}
+         */
+        this.view = null
 
         var cssClasses =
             this.class_name_ + ' ' + CLASS_UNSELECTABLE + ' ' +
@@ -44,7 +46,30 @@ export class Mirror extends Control {
         buttonGroup.appendChild(this.addFlipButton(false));
         buttonGroup.appendChild(this.addFlipButton(true));
         element.appendChild(buttonGroup);
+    }
 
+    /**
+     * Adds both, flip vertical and horizontal buttons
+     * @param {boolean} flip_vertical the vertical flip button is added if true, otherwise horizontal
+     * @private
+     */
+     addFlipButton(flip_vertical) {
+        if (typeof flip_vertical !== 'boolean') flip_vertical = false;
+
+        var title = 'Flip ' + (flip_vertical ? 'vertical' : 'horizontal');
+        var element = document.createElement('button');
+        element.className =
+            this.class_name_ + (flip_vertical ? '-vertical glyphicon-resize-vertical' : '-horizontal glyphicon-resize-horizontal') +
+            " btn btn-default glyphicon ol-flip-button";
+        element.setAttribute('type', 'button');
+        element.title = title;
+
+        listen(element, EventType.CLICK, this.handleClick_, this);
+
+        return element;
+    }
+
+    init(){
         this.view = this.getMap().getView()
 
         this.view.flipX = false
@@ -78,29 +103,9 @@ export class Mirror extends Control {
             return [x,y]
         }
     }
-
-    /**
-     * Adds both, flip vertical and horizontal buttons
-     * @param {boolean} flip_vertical the vertical flip button is added if true, otherwise horizontal
-     * @private
-     */
-     addFlipButton(flip_vertical) {
-        if (typeof flip_vertical !== 'boolean') flip_vertical = false;
-
-        var title = 'Flip ' + (flip_vertical ? 'vertical' : 'horizontal');
-        var element = document.createElement('button');
-        element.className =
-            this.class_name_ + (flip_vertical ? '-vertical glyphicon-resize-vertical' : '-horizontal glyphicon-resize-horizontal') +
-            " btn btn-default glyphicon ol-flip-button";
-        element.setAttribute('type', 'button');
-        element.title = title;
-
-        listen(element, EventType.CLICK, this.handleClick_, this);
-
-        return element;
-    }
   
     handleClick_(event) {
+        if(this.view == null) this.init()
         // 0 axis if vertical ( flip y over x axis )
         // 1 axis if hortizontal ( flip x over y axis )
         event.preventDefault();
