@@ -45,6 +45,7 @@ import {
     ENABLE_SHAPE_POPUP,
     EventSubscriber
 } from '../events/events';
+import Mirror from './viewer/controls/Mirror';
 
 
 /**
@@ -486,8 +487,10 @@ export default class Ol3Viewer extends EventSubscriber {
             this.toggleControlsVisibility({
                 config_id: this.image_config.id, flag: false
             });
-        // only the first request should be affected
+        // only the first request should be affected, besides mirror controls
+        let mirrorEnabled = this.context.getInitialRequestParam(REQUEST_PARAMS.ENABLE_MIRROR)
         this.context.resetInitParams();
+        this.context.initParams[REQUEST_PARAMS.ENABLE_MIRROR] = mirrorEnabled
         // use existing interpolation setting
         this.viewer.enableSmoothing(this.context.interpolate);
         // zoom to fit
@@ -591,7 +594,7 @@ export default class Ol3Viewer extends EventSubscriber {
     refreshImageSettings(params = {}) {
         if (this.viewer === null || this.image_config === null ||
             this.image_config.id !== params.config_id) return;
-        
+
         this.viewer.refreshBirdsEye(500);
         this.saveImageSettings(params);
     }
