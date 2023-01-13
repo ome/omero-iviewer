@@ -87,11 +87,11 @@ class Regions extends Vector {
 
         /**
          * a flag that tells us if we'd like for the text to be scaled with resolution
-         * changes of the view. Defaults to true
+         * changes of the view. Defaults to false
          * @type {boolean}
          * @private
          */
-        this.scale_text_ = true;
+        this.scale_text_ = false;
         if (typeof(opts['scaleText']) === 'boolean')
             this.scale_text_ = opts['scaleText'];
 
