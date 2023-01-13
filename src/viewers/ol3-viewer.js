@@ -1477,6 +1477,9 @@ export default class Ol3Viewer extends EventSubscriber {
         if (!allConfigs && params.config_id !== this.image_config.id) return;
         if (allConfigs)
             params.zip_entry = this.image_config.image_info.image_name;
+        let view =this.viewer.viewer_.getView()
+        params.flipX = view.flipX
+        params.flipY = view.flipY
         this.viewer.sendCanvasContent(params);
     }
 

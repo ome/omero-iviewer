@@ -2135,8 +2135,20 @@ class Viewer extends OlObject {
                     omeroImage.un('tileloadstart', tileLoadStart);
                     omeroImage.un('tileloadend', tileLoadEnd, event.context);
                     omeroImage.un('tileloaderror', tileLoadEnd, event.context);
-
-                    sendNotification(event.context.canvas);
+                    let canvas = document.createElement('canvas')
+                    let ctx = canvas.getContext('2d')
+                    canvas.width = event.context.canvas.width
+                    canvas.height = event.context.canvas.height
+                    if (params.flipX){
+                        ctx.translate(canvas.width, 0);
+                        ctx.scale(-1, 1);
+                    }
+                    if(params.flipY){
+                        ctx.translate(0, canvas.height)
+                        ctx.scale(1, -1)
+                    }
+                    ctx.drawImage(event.context.canvas, 0, 0);
+                    sendNotification(canvas);
                 }
             }, 50);
         });
