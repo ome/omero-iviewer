@@ -2,6 +2,7 @@ import {listen} from 'ol/events';
 import EventType from 'ol/events/EventType';
 import Control from 'ol/control/Control';
 import {CLASS_UNSELECTABLE, CLASS_CONTROL } from 'ol/css';
+import { rotate } from 'ol/coordinate';
 
 export class Mirror extends Control {
     /**
@@ -80,13 +81,19 @@ export class Mirror extends Control {
                 return
             }
         })
+
         this.view.constrainCenter_ = this.view.constrainCenter
         this.view.constrainCenter = (center) => {
             let curCenter = this.view.getCenter()
-            if (this.view.flipX) {
-                center[0] = curCenter[0]-(center[0]-curCenter[0])
+            let rotation = this.view.getRotation()
+            // if there is rotation we need to undo it, mirror coords and then rerotate it
+            if (rotation != 0) {
+                rotate(center, Math.PI*2 - rotation)
+                rotate(curCenter, Math.PI*2 - rotation)
             }
+            if (this.view.flipX) center[0] = curCenter[0]-(center[0]-curCenter[0])
             if (this.view.flipY) center[1] = curCenter[1]-(center[1]-curCenter[1])
+            if (rotation != 0) rotate(center, rotation)
             return this.view.constrainCenter_(center)
         }
 
