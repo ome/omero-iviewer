@@ -74,7 +74,12 @@ export class Mirror extends Control {
 
         this.view.flipX = false
         this.view.flipY = false
-
+        this.getMap().getControls().getArray().forEach((control)=>{
+            if ('birds_eye_' in control){
+                this.birdseye = control
+                return
+            }
+        })
         this.view.constrainCenter_ = this.view.constrainCenter
         this.view.constrainCenter = (center) => {
             let curCenter = this.view.getCenter()
@@ -117,7 +122,6 @@ export class Mirror extends Control {
         if (axis == 0) { 
             transform="scaleY(-1)"
             this.view.flipY=!(this.view.flipY)
-
         } else {
             transform="scaleX(-1)"
             this.view.flipX=!(this.view.flipX)
@@ -127,6 +131,9 @@ export class Mirror extends Control {
         viewport.style.transform = viewport.style.transform.includes(transform) ?
             viewport.style.transform.replace(transform, "") : 
             viewport.style.transform + transform
+        this.birdseye.controlDiv_.style.transform = this.birdseye.controlDiv_.style.transform.includes(transform) ?
+            this.birdseye.controlDiv_.style.transform.replace(transform, "") : 
+            this.birdseye.controlDiv_.style.transform + transform
         return true
     }
 
