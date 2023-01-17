@@ -7,8 +7,7 @@ import { rotate } from 'ol/coordinate';
 export class Mirror extends Control {
     /**
      * @constructor
-     * @param {ol.Map=} map openlayers map.
-     * @param {ol.control.FlipOptions=} opt_options options. (className, target)
+     * @param {ol.control.MirrorOptions=} opt_options options. (className, target)
      */
      constructor(opt_options) {
         var options = opt_options ? opt_options : {};
@@ -37,16 +36,38 @@ export class Mirror extends Control {
          */
         this.view = null
 
+        /**
+         * @type {boolean}
+         * Sets default x inversion
+         */
+        this.flipX = 
+            typeof options.flipX == "boolean" ? options.flipX : false
+
+        /**
+         * @type {boolean}
+         * Sets default y inversion
+         */
+        this.flipY = 
+            typeof options.flipY == "boolean" ? options.flipY : false
+
         var cssClasses =
             this.class_name_ + ' ' + CLASS_UNSELECTABLE + ' ' +
                 CLASS_CONTROL;
 
+        // create button elements
         element.className = cssClasses;
         var buttonGroup = document.createElement('div');
         buttonGroup.className = "btn-group btn-group-sm ol-flip-buttons";
         buttonGroup.appendChild(this.addFlipButton(false));
         buttonGroup.appendChild(this.addFlipButton(true));
         element.appendChild(buttonGroup);
+
+        // need a map to finish intitialization
+        this.setMap_ = this.setMap
+        this.setMap = (map) => {
+            this.setMap_(map)
+            if (map != null) this.init()
+        }
     }
 
     /**
@@ -73,8 +94,6 @@ export class Mirror extends Control {
     init(){
         this.view = this.getMap().getView()
 
-        this.view.flipX = false
-        this.view.flipY = false
         this.getMap().getControls().getArray().forEach((control)=>{
             if ('birds_eye_' in control){
                 this.birdseye = control
@@ -91,8 +110,8 @@ export class Mirror extends Control {
                 rotate(center, Math.PI*2 - rotation)
                 rotate(curCenter, Math.PI*2 - rotation)
             }
-            if (this.view.flipX) center[0] = curCenter[0]-(center[0]-curCenter[0])
-            if (this.view.flipY) center[1] = curCenter[1]-(center[1]-curCenter[1])
+            if (this.view.values_.flipX) center[0] = curCenter[0]-(center[0]-curCenter[0])
+            if (this.view.values_.flipY) center[1] = curCenter[1]-(center[1]-curCenter[1])
             if (rotation != 0) rotate(center, rotation)
             return this.view.constrainCenter_(center)
         }
@@ -114,24 +133,20 @@ export class Mirror extends Control {
 
             return [x,y]
         }
+        if (this.flipX) this.flip(1)
+        if (this.flipY) this.flip(0)
     }
-  
-    handleClick_(event) {
-        if(this.view == null) this.init()
-        // 0 axis if vertical ( flip y over x axis )
-        // 1 axis if hortizontal ( flip x over y axis )
-        event.preventDefault();
+
+    // set desired transform and record in view
+    flip(axis) {
         var viewport = this.getMap().getViewport().children[0] // (mirror just tiles)
-        var axis = event.target.className.indexOf("ol-flip-vertical") !== -1 ? 0 : 1;
-        
-        // set desired transform and record in view
         let transform;
         if (axis == 0) { 
             transform="scaleY(-1)"
-            this.view.flipY=!(this.view.flipY)
+            this.view.setProperties({flipY:!(this.view.values_.flipY)})
         } else {
             transform="scaleX(-1)"
-            this.view.flipX=!(this.view.flipX)
+            this.view.setProperties({flipX:!(this.view.values_.flipX)})
         }
 
         // if it is already mirrored remove mirror, otherwise add mirror
@@ -141,6 +156,15 @@ export class Mirror extends Control {
         this.birdseye.controlDiv_.style.transform = this.birdseye.controlDiv_.style.transform.includes(transform) ?
             this.birdseye.controlDiv_.style.transform.replace(transform, "") : 
             this.birdseye.controlDiv_.style.transform + transform
+    }
+  
+    handleClick_(event) {
+        // 0 axis if vertical ( flip y over x axis )
+        // 1 axis if hortizontal ( flip x over y axis )
+        event.preventDefault();
+        var axis = event.target.className.indexOf("ol-flip-vertical") !== -1 ? 0 : 1;
+        
+        this.flip(axis)
         return true
     }
 

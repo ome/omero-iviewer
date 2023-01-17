@@ -433,6 +433,9 @@ export default class ImageInfo {
 
             let history = [];
 
+            if (cached.flipX !== undefined) response.flipX = cached.flipX
+            if (cached.flipY !== undefined) response.flipY = cached.flipY
+
             // JSON response object is passed to the ol3-viewer via tmp_data, so we need to update
             if (cached.center) {
                 response.center = cached.center;
@@ -475,7 +478,7 @@ export default class ImageInfo {
             response.rdefs.model = this.model;
 
             conf.addHistory(history);
-
+            
             // Update the channels by 'pasting'
             // This adds to history separately from addHistory() above for all other settings.
             if (cached.channels) {

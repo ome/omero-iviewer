@@ -468,7 +468,11 @@ class Viewer extends OlObject {
         var initialChannels = this.getInitialRequestParam(REQUEST_PARAMS.CHANNELS);
         var initialMaps = this.getInitialRequestParam(REQUEST_PARAMS.MAPS);
         initialChannels = parseChannelParameters(initialChannels, initialMaps);
-
+        var enableMirror = this.getInitialRequestParam(REQUEST_PARAMS.ENABLE_MIRROR);
+        if (enableMirror == 'True'){
+            var initialFlipX = this.getInitialRequestParam(REQUEST_PARAMS.FLIP_X);
+            var initialFlipY = this.getInitialRequestParam(REQUEST_PARAMS.FLIP_Y);
+        }
         // copy needed channels info
         var channels = [];
         this.image_info_['channels'].forEach(function(oldC, c) {
@@ -603,8 +607,15 @@ class Viewer extends OlObject {
         this.addControl('birdseye', birdsEyeOptions);
 
         // add mirror if requested
-        if(this.getInitialRequestParam(REQUEST_PARAMS.ENABLE_MIRROR) == 'True'){
-            this.addControl('mirror')
+        if(enableMirror == 'True'){
+            view.setProperties({flipX: false, flipY: false})
+            // use cached mirror settings if available
+            if (this.image_info_['flipX']) initialFlipX = this.image_info_['flipX']
+            if (this.image_info_['flipY']) initialFlipY = this.image_info_['flipY']
+            this.addControl('mirror', {
+                flipX: initialFlipX,
+                flipY: initialFlipY
+            })
         }
         
         // tweak source element for fullscreen to include dim sliders (iviewer only)
@@ -623,7 +634,7 @@ class Viewer extends OlObject {
         // enable intensity control
         this.toggleIntensityControl(true);
 
-        // helper to broadcast a viewer interaction (zoom and drag)
+        // helper to broadcast a viewer interaction (zoom, drag, and flip)
         var notifyAboutViewerInteraction = function(viewer) {
             sendEventNotification(
                 viewer, "IMAGE_VIEWER_INTERACTION", viewer.getViewParameters());
@@ -659,7 +670,20 @@ class Viewer extends OlObject {
                     if (regions) regions.changed();
                     if (this.eventbus_) notifyAboutViewerInteraction(this);
                 }, this);
-
+                
+        this.onViewFlipXListener =
+            listen( // register a resolution handler for zoom display
+                this.viewer_.getView(), "change:flipX",
+                function(event) {
+                    if (this.eventbus_) notifyAboutViewerInteraction(this);
+                }, this);
+        this.onViewFlipYListener =
+            listen( // register a resolution handler for zoom display
+                this.viewer_.getView(), "change:flipY",
+                function(event) {
+                    if (this.eventbus_) notifyAboutViewerInteraction(this);
+                }, this);
+                
         // this is for work that needs to be done after,
         // e.g we have just switched images
         // because of the asynchronious nature of the initialization
@@ -679,10 +703,6 @@ class Viewer extends OlObject {
                 }, this);
         }
 
-        // add mirror if requested
-        if(this.getInitialRequestParam(REQUEST_PARAMS.ENABLE_MIRROR) == 'True'){
-            this.viewer_.addControl(new Mirror(this.viewer_))
-        }
     }
 
     /**
@@ -2217,6 +2237,9 @@ class Viewer extends OlObject {
                     this.viewer_.getView().setRotation(rotation);
             }
 
+            if (typeof flipX === 'boolean' ) this.viewer_.getView().flipX = flipX
+            if (typeof flipY === 'boolean') this.viewer_.getView().flipY = flipY
+
             this.viewer_.renderSync();
         } catch(just_in_case) {}
         this.prevent_event_notification_ = false;
@@ -2278,15 +2301,19 @@ class Viewer extends OlObject {
      */
     getViewParameters() {
         if (this.viewer_ === null || this.getImage() === null) return null;
+        var viewProps = this.viewer_.getView().getProperties()
+        console.log(viewProps)
         return {
             "z": this.getDimensionIndex('z'),
             "t": this.getDimensionIndex('t'),
             "c": this.getDimensionIndex('c'),
             "w": this.getImage().getWidth(),
             "h": this.getImage().getHeight(),
-            "center": this.viewer_.getView().getCenter().slice(),
-            "resolution": this.viewer_.getView().getResolution(),
-            "rotation": this.viewer_.getView().getRotation()
+            "center": viewProps["center"].slice(),
+            "resolution": viewProps["resolution"],
+            "rotation": viewProps["rotation"],
+            "flipX": viewProps["flipX"],
+            "flipY": viewProps["flipY"]
         };
     }
 

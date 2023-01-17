@@ -166,8 +166,8 @@ class ShapeEditPopup extends Overlay {
         let view = this.map.getView()
 
         // gotta get opposite coord depending on mirror
-        let x = view.flipX ? (getBottomLeft(extent)[0] + getBottomRight(extent)[0]) / 2 : (getTopLeft(extent)[0] + getTopRight(extent)[0]) / 2;
-        let y = view.flipY ? getBottomLeft(extent)[1] : getTopLeft(extent)[1];
+        let x = view.values_.flipX ? (getBottomLeft(extent)[0] + getBottomRight(extent)[0]) / 2 : (getTopLeft(extent)[0] + getTopRight(extent)[0]) / 2;
+        let y = view.values_.flipY ? getBottomLeft(extent)[1] : getTopLeft(extent)[1];
 
         // If it's a Line, popup is on upper end of the line
         if (geom instanceof Line) {
@@ -204,8 +204,8 @@ class ShapeEditPopup extends Overlay {
 
             // unfortunately need to convert to pixel and back
             let pixels = this.map.getPixelFromCoordinate([x,y])
-            if (view.flipX) pixels[0]=viewportPosition.width-pixels[0]
-            if (view.flipY) pixels[1]=viewportPosition.height-pixels[1]
+            if (view.values_.flipX) pixels[0]=viewportPosition.width-pixels[0]
+            if (view.values_.flipY) pixels[1]=viewportPosition.height-pixels[1]
             let coord = this.map.getCoordinateFromPixel(pixels)
 
             this.setPosition(coord);
