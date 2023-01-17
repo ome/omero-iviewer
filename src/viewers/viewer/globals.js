@@ -135,7 +135,9 @@ export const REQUEST_PARAMS = {
     PROJECTION: 'P',
     HOST: 'HOST',
     TIME: 'T',
-    ZOOM: 'ZM'
+    ZOOM: 'ZM',
+    FLIP_X: 'FX',
+    FLIP_Y: 'FY'
 };
 
 /**

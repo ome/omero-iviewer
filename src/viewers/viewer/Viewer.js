@@ -683,7 +683,7 @@ class Viewer extends OlObject {
                 function(event) {
                     if (this.eventbus_) notifyAboutViewerInteraction(this);
                 }, this);
-                
+
         // this is for work that needs to be done after,
         // e.g we have just switched images
         // because of the asynchronious nature of the initialization

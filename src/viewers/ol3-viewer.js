@@ -1503,6 +1503,7 @@ export default class Ol3Viewer extends EventSubscriber {
         }
 
         let view = this.viewer.viewer_.getView();
+        let viewProps = view.getProperties()
         let image_info = this.image_config.image_info;
         let args = [];
         let center = view.getCenter();
@@ -1525,6 +1526,9 @@ export default class Ol3Viewer extends EventSubscriber {
             quantization: {family: ch.family, coefficient: ch.coefficient}
         }));
         args.push([REQUEST_PARAMS.MAPS, JSON.stringify(maps)]);
+
+        args.push([REQUEST_PARAMS.FLIP_X, viewProps['flipX']])
+        args.push([REQUEST_PARAMS.FLIP_Y, viewProps['flipY']])
 
         // Build the URL
         let url = window.location.origin + window.location.pathname;
