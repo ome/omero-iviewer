@@ -468,11 +468,8 @@ class Viewer extends OlObject {
         var initialChannels = this.getInitialRequestParam(REQUEST_PARAMS.CHANNELS);
         var initialMaps = this.getInitialRequestParam(REQUEST_PARAMS.MAPS);
         initialChannels = parseChannelParameters(initialChannels, initialMaps);
-        var enableMirror = this.getInitialRequestParam(REQUEST_PARAMS.ENABLE_MIRROR);
-        if (enableMirror == 'True'){
-            var initialFlipX = this.getInitialRequestParam(REQUEST_PARAMS.FLIP_X);
-            var initialFlipY = this.getInitialRequestParam(REQUEST_PARAMS.FLIP_Y);
-        }
+        var enableMirror = this.getInitialRequestParam(REQUEST_PARAMS.ENABLE_MIRROR) === 'True';
+
         // copy needed channels info
         var channels = [];
         this.image_info_['channels'].forEach(function(oldC, c) {
@@ -607,7 +604,9 @@ class Viewer extends OlObject {
         this.addControl('birdseye', birdsEyeOptions);
 
         // add mirror if requested
-        if(enableMirror == 'True'){
+        if(enableMirror){
+            var initialFlipX = this.getInitialRequestParam(REQUEST_PARAMS.FLIP_X) === 'true';
+            var initialFlipY = this.getInitialRequestParam(REQUEST_PARAMS.FLIP_Y) === 'true'
             view.setProperties({flipX: false, flipY: false})
             // use cached mirror settings if available
             if (this.image_info_['flipX']) initialFlipX = this.image_info_['flipX']
