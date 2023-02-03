@@ -118,6 +118,8 @@ class Viewer extends OlObject {
 
         var opts = options || {};
 
+        this.scaleText = opts.scaleText;
+
         /**
          * the image id
          *
@@ -729,6 +731,9 @@ class Viewer extends OlObject {
 
         var options = {};
         if (data) options['data'] = data;
+        if (this.scaleText) {
+            options['scaleText'] = true;
+        }
         // Regions constructor creates ol.Features from JSON data
         this.regions_ = new Regions(this, options);
 

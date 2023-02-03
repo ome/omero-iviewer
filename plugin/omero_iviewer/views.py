@@ -46,6 +46,7 @@ from . import iviewer_settings
 WEB_API_VERSION = 0
 MAX_LIMIT = max(1, API_MAX_LIMIT)
 
+SCALE_TEXT = getattr(iviewer_settings, 'SCALE_TEXT')
 ROI_PAGE_SIZE = getattr(iviewer_settings, 'ROI_PAGE_SIZE')
 ROI_PAGE_SIZE = min(MAX_LIMIT, ROI_PAGE_SIZE)
 MAX_PROJECTION_BYTES = getattr(iviewer_settings, 'MAX_PROJECTION_BYTES')
@@ -105,6 +106,7 @@ def index(request, iid=None, conn=None, **kwargs):
         if MAX_PROJECTION_BYTES > 0:
             max_bytes = MAX_PROJECTION_BYTES
 
+    params['SCALE_TEXT'] = SCALE_TEXT
     params['MAX_PROJECTION_BYTES'] = max_bytes
     params['ROI_COLOR_PALETTE'] = ROI_COLOR_PALETTE
     params['SHOW_PALETTE_ONLY'] = SHOW_PALETTE_ONLY

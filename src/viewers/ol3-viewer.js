@@ -468,6 +468,7 @@ export default class Ol3Viewer extends EventSubscriber {
         // tweak initParams for ol3viewer to reflect iviewer app name
         let ol3initParams = Object.assign({}, this.context.initParams);
         ol3initParams[PLUGIN_PREFIX] = this.context.getPrefixedURI(IVIEWER);
+        let scaleText = this.context.getInitialRequestParam("SCALE_TEXT") === "True";
 
         // create viewer instance
         this.viewer =
@@ -477,7 +478,8 @@ export default class Ol3Viewer extends EventSubscriber {
                      server : this.context.server,
                      data: this.image_config.image_info.tmp_data,
                      initParams :  ol3initParams,
-                     container: this.container
+                     container: this.container,
+                     scaleText,
                  });
         delete this.image_config.image_info.tmp_data;
 

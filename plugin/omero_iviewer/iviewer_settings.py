@@ -25,6 +25,14 @@ from omeroweb.settings import process_custom_settings, report_settings
 # load settings
 IVIEWER_SETTINGS_MAPPING = {
 
+    "omero.web.iviewer.scale_text":
+        ["SCALE_TEXT",
+         True,
+         str,
+         # NB: use str() here because bool("False") is True!
+         # whereas str() allows setting this to "False"
+         ("Scale ROI text labels when zooming")],
+
     "omero.web.iviewer.max_projection_bytes":
         ["MAX_PROJECTION_BYTES",
          -1,
