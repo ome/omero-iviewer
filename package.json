@@ -62,8 +62,8 @@
     "reflect-metadata": "^0.1.13",
     "style-loader": "0.23.1",
     "url-loader": "2.0.1",
-    "webpack": "^4.35.2",
-    "webpack-cli": "^3.3.5",
+    "webpack": "4.41.2",
+    "webpack-cli": "4.10.0",
     "webpack-conditional-loader": "1.0.12",
     "webpack-dev-server": "3.11.3"
   }
