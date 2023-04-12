@@ -4,6 +4,7 @@ const {AureliaPlugin} = require('aurelia-webpack-plugin');
 const ProvidePlugin = require('webpack/lib/ProvidePlugin');
 
 module.exports = {
+  mode: "development",
   entry: {
     main: [
       './src/main'
@@ -37,31 +38,33 @@ module.exports = {
   },
   module: {
     rules: [
-      { test: /\.js$/, loader: 'babel-loader'},
-      { test: /[\/\\]node_modules[\/\\]bluebird[\/\\].+\.js$/, loader: 'expose-loader?Promise' },
-      { test: require.resolve('jquery'), loader: 'expose-loader?$!expose-loader?jQuery' },
-      { test: /\.(png|gif|jpg|jpeg)$/, loader: 'file-loader?name=css/images/[name].[ext]' },
-      { test: /\.(woff|woff2)$/, loader: 'file-loader?name=css/fonts/[name].[ext]' },
-      { test: /\.css?$/, loader: 'file-loader?name=css/[name].[ext]' },
-      { test: /\.html$/, loader: 'html-loader' }
+      { test: /\.js$/, use: {loader: 'babel-loader'}},
+      { test: require.resolve('jquery'), use: {
+        loader: 'expose-loader',
+        options: {exposes: ["$", "jQuery"]}
+      }},
+      { test: /\.(png|gif|jpg|jpeg)$/, use: {loader: 'file-loader?name=css/images/[name].[ext]' }},
+      { test: /\.(woff|woff2)$/, use: {loader: 'file-loader?name=css/fonts/[name].[ext]' }},
+      { test: /\.css?$/, use: {loader: 'file-loader?name=css/[name].[ext]' }},
+      { test: /\.html$/, use: {loader: 'html-loader' }}
     ]
   },
   devServer: {
     port: 8080,
     proxy: {
-        '/iviewer/**': {
+        '/iviewer': {
             target: 'http://localhost:4080'
         },
-        '/api/**': {
+        '/api': {
             target: 'http://localhost:4080'
         },
-        '/webgateway/**': {
+        '/webgateway': {
             target: 'http://localhost:4080'
         },
-        '/webclient/**': {
+        '/webclient': {
             target: 'http://localhost:4080'
         },
-        '/static/**': {
+        '/static': {
             target: 'http://localhost:4080'
         }
     }

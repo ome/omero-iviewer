@@ -1,0 +1,103 @@
+Metadata-Version: 2.1
+Name: llab-omero-iviewer
+Version: 0.11.4.dev0
+Summary: A Python plugin for OMERO.web on Athena
+Home-page: https://github.com/barrettMCW/omero-iviewerLLAB/
+Download-URL: https://github.com/barrettMCW/omero-iviewerLLAB/archive/v0.11.4dev0.tar.gz
+Author: The Open Microscopy Team
+Author-email: ome-devel@lists.openmicroscopy.org.uk
+License: AGPL-3.0
+Keywords: OMERO.web,plugin
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Environment :: Web Environment
+Classifier: Framework :: Django
+Classifier: Intended Audience :: End Users/Desktop
+Classifier: Intended Audience :: Science/Research
+Classifier: Natural Language :: English
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: JavaScript
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Internet :: WWW/HTTP
+Classifier: Topic :: Internet :: WWW/HTTP :: Dynamic Content
+Classifier: Topic :: Internet :: WWW/HTTP :: WSGI
+Classifier: Topic :: Scientific/Engineering :: Visualization
+Classifier: Topic :: Software Development :: Libraries :: Application Frameworks
+Classifier: Topic :: Text Processing :: Markup :: HTML
+Requires-Python: >=3
+License-File: LICENSE
+
+.. image:: https://travis-ci.org/ome/omero-iviewer.svg?branch=master
+    :target: https://travis-ci.org/ome/omero-iviewer
+
+.. image:: https://badge.fury.io/py/omero-iviewer.svg
+    :target: https://badge.fury.io/py/omero-iviewer
+
+OMERO.iviewer
+=============
+
+An OMERO.web app for visualizing images in OMERO.
+
+
+Requirements
+============
+
+* OMERO 5.6.0 or newer.
+
+
+Installing from PyPI
+====================
+
+This section assumes that an OMERO.web is already installed.
+
+Install the app using `pip <https://pip.pypa.io/en/stable/>`_:
+
+NB: You need to ensure that you are running ``pip`` from the python environment
+where ``omero-web`` is installed. Depending on your install, you may need to
+call ``pip`` with, for example: ``/path/to/venv/bin/pip install ...``
+
+::
+
+    $ pip install -U omero-iviewer
+
+Add iviewer custom app to your installed web apps:
+
+::
+
+    $ omero config append omero.web.apps '"omero_iviewer"'
+
+To replace the default omero.web viewer:
+
+::
+
+    $ omero config set omero.web.viewer.view omero_iviewer.views.index
+
+To enable the "open with" feature:
+
+::
+
+    $ omero config append omero.web.open_with '["omero_iviewer", "omero_iviewer_index",
+      {"supported_objects":["images", "dataset", "well"],
+       "script_url": "omero_iviewer/openwith.js", "label": "OMERO.iviewer"}]'
+
+Now restart OMERO.web as normal.
+
+
+Usage
+=====
+
+A guide to using OMERO.iviewer can be found on
+https://omero-guides.readthedocs.io/en/latest/iviewer/docs/iviewer.html
+
+
+License
+-------
+
+OMERO.iviewer is released under the AGPL.
+
+Copyright
+---------
+
+2017-2022, The Open Microscopy Environment
+
+
