@@ -22,8 +22,9 @@ import views
 
 urlpatterns = patterns('django.views.generic.simple',
                        re_path(r'^(?P<iid>[0-9]+)?/?$', views.index,
-                           name='ol3-viewer-index'),
+                               name='ol3-viewer-index'),
                        re_path(r'^plugin/(?P<iid>[0-9]+)?/?$', views.plugin,
-                           name='ol3-viewer-plugin'),
+                               name='ol3-viewer-plugin'),
                        re_path(r'^plugin-debug/(?P<iid>[0-9]+)?/?$',
-                           views.plugin_debug, name='ol3-viewer-plugin-debug'))
+                               views.plugin_debug,
+                               name='ol3-viewer-plugin-debug'))
