@@ -16,31 +16,6 @@ Requirements
 
 * OMERO 5.6.0 or newer.
 
-Build
-=====
-
-In order to build you need:
-
-* ``nodejs`` version 6.x
-* ``npm`` version equal or greater to 3.0!
-* ``apache ant``
-
-To build an uncompressed version, run:
-
-::
-
-    $ npm run debug
-
-
-To build an uglified version, run:
-
-::
-
-    $ npm run prod
-
-All builds will build into the build directory and deploy to the plugin directory
-which can then be used like any Django plugin.
-
 Install
 =======
 
@@ -137,28 +112,78 @@ The Z and/or T plane, X/Y center position and zoom can be defined by::
 Development
 ===========
 
-It is recommended to use the webpack dev-server to build and serve OMERO.iviewer
+In order to run and build you need:
+
+* ``nodejs`` version at least 10.13.0 - https://nodejs.org/en/download
+* ``apache ant`` for css compiling and tests
+
+To install node dependencies and build the JavaScript bundle:
+
+::
+
+    $ cd omero-iviewer
+    $ npm install
+
+    # uncompressed build
+    $ npm run debug
+
+    # OR compressed for production
+    $ npm run prod
+
+
+You will usually want to have OMERO-iviewer installed on a local omero-web server,
+to test the JavaScript built above. NB: first uninstall iviewer if already installed,
+then:
+
+::
+
+    $ cd plugin
+    $ pip install -e .
+
+    # config
+    $ omero config append omero.web.apps '"omero_iviewer"'
+    $ omero config set omero.web.viewer.view omero_iviewer.views.index
+
+Now you can open Images from the webclient as normal.
+
+
+For iterative development, it is recommended to use the webpack dev-server to build and serve OMERO.iviewer
 as this will re-compile automatically when files are saved.
 
-To build the bundle and start the webpack dev-server (localhost:8080):
+The dev build of iviewer will attempt to connect to a local OMERO server at http://127.0.0.1:4080.
+The web server at this location will need to have CORS enabled and you should
+login to the webclient there.
+
+The iviewer will try to open an Image or other data from your local server, using IDs specified
+in `index-dev.html <src/index-dev.html>`_:
+
+.. code-block:: html
+
+    <html>
+        <head>
+            <link rel="stylesheet" type="text/css" href="build/css/all.min.css" />
+
+            <script type="text/javascript">
+                // modify according to your needs
+                // in particular: choose an existing id !
+                window.INITIAL_REQUEST_PARAMS = {
+                        'VERSION': "DEV_SERVER",
+                        'WEB_API_BASE': 'api/v0/',
+                        'IMAGES': "12345",
+                        // 'DATASET': "1",
+                        //'WELL': "1"
+                };
+            </script>
+    ...
+
+Edit the `IMAGES` ID in that file and save, then start the dev server:
 
 ::
 
     $ npm run dev
 
-You will also need an OMERO.web install with ``omero_iviewer`` installed.
-To add your project to your local OMERO.web install, add the project
-to your ``PYTHONPATH`` and add to ``omero.web.apps``
 
-::
-
-    $ export PYTHONPATH=$PYTHONPATH:/path/to/omero-iviewer/plugin
-    $ omero config append omero.web.apps '"omero_iviewer"'
-
-**Notes**:
-
-The webpack dev-server config expects a local OMERO server at http://localhost (default port 80).
-Should the server instance use a different port you will need to modify all
+To connect to an omero-web server at a different URL or port, you will need to modify all
 proxy target entries in `webpack.dev.config.js <webpack.dev.config.js>`_:
 
 .. code-block::
@@ -182,29 +207,6 @@ you will need to change its port property in `webpack.dev.config.js <webpack.dev
     devServer: {
         port: your_port
     }
-
-
-The initial data type (e.g. image, dataset, well) and its respective ID can be set/changed
-in `index-dev.html <src/index-dev.html>`_:
-
-.. code-block:: html
-
-    <html>
-        <head>
-            <link rel="stylesheet" type="text/css" href="build/css/all.min.css" />
-
-            <script type="text/javascript">
-                // modify according to your needs
-                // in particular: choose an existing id !
-                window.INITIAL_REQUEST_PARAMS = {
-                        'VERSION': "DEV_SERVER",
-                        'WEB_API_BASE': 'api/v0/',
-                        //'IMAGES': "1",
-                        'DATASET': "1",
-                        //'WELL': "1"
-                };
-            </script>
-    ...
 
 Testing
 =======
