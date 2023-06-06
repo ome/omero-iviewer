@@ -35,6 +35,7 @@ import ScaleBar from './controls/ScaleBar';
 import IntensityDisplay from './controls/IntensityDisplay';
 import RotateInteraction from './interaction/Rotate';
 import BoxSelect from './interaction/BoxSelect';
+import Mirror from './controls/Mirror';
 
 /**
  * Default lineCap setting for default stroke
@@ -134,7 +135,9 @@ export const REQUEST_PARAMS = {
     PROJECTION: 'P',
     HOST: 'HOST',
     TIME: 'T',
-    ZOOM: 'ZM'
+    ZOOM: 'ZM',
+    FLIP_X: 'FX',
+    FLIP_Y: 'FY'
 };
 
 /**
@@ -315,6 +318,12 @@ export const AVAILABLE_VIEWER_CONTROLS = {
         "options": {},
         "defaults": true,
         "enabled": false,
+        "links" : []},
+    "mirror" :
+        {"clazz" : Mirror,
+        "options": {},
+        "defaults": true,
+        "enabled" : false,
         "links" : []}
 };
 

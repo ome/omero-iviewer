@@ -53,8 +53,14 @@ IVIEWER_SETTINGS_MAPPING = {
         ["SHOW_PALETTE_ONLY",
          False,
          bool,
-         ("Disables spectrum color picker. Forces users to use preset options"
+         ("Disables spectrum color picker. Forces users to use preset options."
           "Must define a color palette for this setting to work.")],
+
+    "omero.web.iviewer.enable_mirror":
+        ["ENABLE_MIRROR",
+         False,
+         bool,
+         ("Enables buttons to mirror X or Y axis.")]
 }
 
 process_custom_settings(sys.modules[__name__], 'IVIEWER_SETTINGS_MAPPING')

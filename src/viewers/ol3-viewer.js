@@ -45,6 +45,7 @@ import {
     ENABLE_SHAPE_POPUP,
     EventSubscriber
 } from '../events/events';
+import Mirror from './viewer/controls/Mirror';
 
 
 /**
@@ -480,14 +481,16 @@ export default class Ol3Viewer extends EventSubscriber {
                      container: this.container
                  });
         delete this.image_config.image_info.tmp_data;
-
+        
         // hide controls for mdi when more than 1 image configs
         if (this.context.useMDI && this.context.image_configs.size > 1)
             this.toggleControlsVisibility({
                 config_id: this.image_config.id, flag: false
             });
-        // only the first request should be affected
+        // only the first request should be affected, besides mirror controls
+        let mirrorEnabled = this.context.getInitialRequestParam(REQUEST_PARAMS.ENABLE_MIRROR)
         this.context.resetInitParams();
+        this.context.initParams[REQUEST_PARAMS.ENABLE_MIRROR] = mirrorEnabled
         // use existing interpolation setting
         this.viewer.enableSmoothing(this.context.interpolate);
         // zoom to fit
@@ -1474,6 +1477,9 @@ export default class Ol3Viewer extends EventSubscriber {
         if (!allConfigs && params.config_id !== this.image_config.id) return;
         if (allConfigs)
             params.zip_entry = this.image_config.image_info.image_name;
+        let view =this.viewer.viewer_.getView()
+        params.flipX = view.values_.flipX
+        params.flipY = view.values_.flipY
         this.viewer.sendCanvasContent(params);
     }
 
@@ -1497,6 +1503,7 @@ export default class Ol3Viewer extends EventSubscriber {
         }
 
         let view = this.viewer.viewer_.getView();
+        let viewProps = view.getProperties()
         let image_info = this.image_config.image_info;
         let args = [];
         let center = view.getCenter();
@@ -1519,6 +1526,9 @@ export default class Ol3Viewer extends EventSubscriber {
             quantization: {family: ch.family, coefficient: ch.coefficient}
         }));
         args.push([REQUEST_PARAMS.MAPS, JSON.stringify(maps)]);
+
+        args.push([REQUEST_PARAMS.FLIP_X, viewProps['flipX']])
+        args.push([REQUEST_PARAMS.FLIP_Y, viewProps['flipY']])
 
         // Build the URL
         let url = window.location.origin + window.location.pathname;
@@ -1592,6 +1602,8 @@ export default class Ol3Viewer extends EventSubscriber {
                 center: [...params.center],
                 resolution: params.resolution,
                 rotation: params.rotation,
+                flipX: params.flipX,
+                flipY: params.flipY
             }
             this.context.setCachedImageSettings(imageId, toCache);
         } else {
