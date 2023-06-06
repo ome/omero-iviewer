@@ -19,7 +19,7 @@
 import Overlay from 'ol/Overlay.js';
 import Text from 'ol/style/Text';
 import Style from 'ol/style/Style';
-import {getTopLeft, getTopRight} from 'ol/extent';
+import {getBottomLeft, getBottomRight, getTopLeft, getTopRight} from 'ol/extent';
 import Line from '../geom/Line';
 import {isArray,
         sendEventNotification} from '../utils/Misc';
@@ -163,8 +163,11 @@ class ShapeEditPopup extends Overlay {
      */
     updatePopupCoordinates(geom) {
         let extent = geom.getExtent();
-        let x = (getTopLeft(extent)[0] + getTopRight(extent)[0]) / 2;
-        let y = getTopLeft(extent)[1];
+        let view = this.map.getView()
+
+        // gotta get opposite coord depending on mirror
+        let x = view.values_.flipX ? (getBottomLeft(extent)[0] + getBottomRight(extent)[0]) / 2 : (getTopLeft(extent)[0] + getTopRight(extent)[0]) / 2;
+        let y = view.values_.flipY ? getBottomLeft(extent)[1] : getTopLeft(extent)[1];
 
         // If it's a Line, popup is on upper end of the line
         if (geom instanceof Line) {
@@ -195,9 +198,17 @@ class ShapeEditPopup extends Overlay {
         }
         this.coordsInput.value = coordsText;
         this.areaInput.value = areaText;
-
+        
         if (this.regions.viewer_.enable_shape_popup) {
-            this.setPosition([x, y]);
+            let viewportPosition = this.map.getViewport().getBoundingClientRect()
+
+            // unfortunately need to convert to pixel and back
+            let pixels = this.map.getPixelFromCoordinate([x,y])
+            if (view.values_.flipX) pixels[0]=viewportPosition.width-pixels[0]
+            if (view.values_.flipY) pixels[1]=viewportPosition.height-pixels[1]
+            let coord = this.map.getCoordinateFromPixel(pixels)
+
+            this.setPosition(coord);
         }
     }
 
