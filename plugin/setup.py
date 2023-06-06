@@ -89,8 +89,7 @@ cmdclass['test'] = Test
 version = get_version()
 
 setup(name="omero-iviewer",
-      packages=find_packages(exclude=['ez_setup', 'ol3-viewer',
-                                      '__pycache__']),
+      packages=find_packages(exclude=['ez_setup', 'ol3-viewer']),
       version=version,
       description="A Python plugin for OMERO.web",
       long_description=read('omero_iviewer/README.rst'),
@@ -122,7 +121,6 @@ setup(name="omero-iviewer",
       install_requires=['omero-web>=5.7.0'],
       python_requires='>=3',
       include_package_data=True,
-      exclude_package_data={"omero_iviewer": ["__pycache__"]},
       zip_safe=False,
       cmdclass=cmdclass,
       )
