@@ -16,14 +16,15 @@
 #
 
 from django.conf.urls import patterns
-from django.conf.urls import url
+from django.urls import re_path
 
 import views
 
 urlpatterns = patterns('django.views.generic.simple',
-                       url(r'^(?P<iid>[0-9]+)?/?$', views.index,
-                           name='ol3-viewer-index'),
-                       url(r'^plugin/(?P<iid>[0-9]+)?/?$', views.plugin,
-                           name='ol3-viewer-plugin'),
-                       url(r'^plugin-debug/(?P<iid>[0-9]+)?/?$',
-                           views.plugin_debug, name='ol3-viewer-plugin-debug'))
+                       re_path(r'^(?P<iid>[0-9]+)?/?$', views.index,
+                               name='ol3-viewer-index'),
+                       re_path(r'^plugin/(?P<iid>[0-9]+)?/?$', views.plugin,
+                               name='ol3-viewer-plugin'),
+                       re_path(r'^plugin-debug/(?P<iid>[0-9]+)?/?$',
+                               views.plugin_debug,
+                               name='ol3-viewer-plugin-debug'))
