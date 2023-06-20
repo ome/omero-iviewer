@@ -136,8 +136,8 @@ To install node dependencies and build the JavaScript bundle:
     $ npm run prod
 
 
-You will usually want to have OMERO-iviewer installed on a local omero-web server,
-to test the JavaScript built above. NB: first uninstall iviewer if already installed,
+You will usually want to have OMERO.iviewer installed on a local omero-web server,
+to test the JavaScript built above. NB: first uninstall OMERO.iviewer if already installed,
 then:
 
 ::
@@ -155,11 +155,11 @@ Now you can open Images from the webclient as normal.
 For iterative development, it is recommended to use the webpack dev-server to build and serve OMERO.iviewer
 as this will re-compile automatically when files are saved.
 
-The dev build of iviewer will attempt to connect to a local OMERO server at http://127.0.0.1:4080.
+The dev build of OMERO.iviewer will attempt to connect to a local OMERO server at http://127.0.0.1:4080.
 The web server at this location will need to have CORS enabled and you should
 login to the webclient there.
 
-The iviewer will try to open an Image or other data from your local server, using IDs specified
+The OMERO.iviewer will try to open an Image or other data from your local server, using IDs specified
 in `index-dev.html <src/index-dev.html>`_:
 
 .. code-block:: html
