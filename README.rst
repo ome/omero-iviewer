@@ -211,6 +211,18 @@ in `index-dev.html <src/index-dev.html>`_:
             </script>
     ...
 
+Release process
+===============
+
+ - Checkout `master` branch locally and rebase to `origin/master`.
+ - Update changelog if not already done.
+ - Update the version in `plugin/omero_iviewer/version.py`, using `RC = ""` for releases.
+ - Commit the change to version number.
+ - Check that you can sign commits with gpg: `$ echo "test" | gpg --clearsign`
+ - Add a signed Tag: `$ git tag -s v0.12.0 -m "v0.12.0"`
+ - Revert the `RC = "dev"` in `plugin/omero_iviewer/version.py` and commit `git commit -m "add dev"`.
+ - Push the branch and tags to github: `git push origin master v0.12.0`
+
 Testing
 =======
 
