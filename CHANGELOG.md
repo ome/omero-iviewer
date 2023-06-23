@@ -1,3 +1,11 @@
+0.13.0 (June 2022)
+------------------
+
+- Add support for "mirroring" (flipping of image in X and Y axes - Thanks to [Michael Barrett](https://github.com/barrettMCW)) ([#439](https://github.com/ome/omero-iviewer/pull/439))
+- Make app compatible with Django 4.0.x ([#451](https://github.com/ome/omero-iviewer/pull/451))
+- Upgrade Aurelia framework ([#422](https://github.com/ome/omero-iviewer/pull/422))
+- Upgrade many dependencies, including webpack 5 ([#450](https://github.com/ome/omero-iviewer/pull/450))
+
 0.12.0 (August 2022)
 --------------------
 
