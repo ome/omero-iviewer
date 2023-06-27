@@ -182,12 +182,13 @@ const OmeroImage = function(options) {
     /**
      * should we use tiled retrieval methods?
      * for now use them only for truly tiled/pyramidal sources
-     * and images that exceed {@link UNTILED_RETRIEVAL_LIMIT}
+     * and single-T images that exceed {@link UNTILED_RETRIEVAL_LIMIT}
+     * (Want to avoid async tile loading while movie is playing)
      * @type {boolean}
      * @private
      */
     this.use_tiled_retrieval_ = this.tiled_ ||
-        this.width_ * this.height_ > UNTILED_RETRIEVAL_LIMIT;
+        this.width_ * this.height_ > UNTILED_RETRIEVAL_LIMIT && this._time == 1;
 
     /**
      * for untiled retrieval the tile size equals the entire image extent
