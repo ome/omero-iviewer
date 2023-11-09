@@ -161,8 +161,10 @@ export default class ChannelRange  {
 
         // channel start
         let channelStart = $(this.element).find(".channel-start");
+        // spinner widget doesn't work properly with VERY negative numbers.
+        let spinnerMin = Math.max(-1000000000000000, this.full_range_min_max.start_min)
         channelStart.spinner({
-            min: this.full_range_min_max.start_min, max: this.full_range_min_max.start_max,
+            min: spinnerMin, max: this.full_range_min_max.start_max,
             step: this.min_max_range.step_size
         });
         let channelStartArrows =
