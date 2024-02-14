@@ -1,10 +1,11 @@
 #!/bin/bash
 set -e
 set -u
-yum -y install epel-release
-curl --silent --location https://rpm.nodesource.com/setup_12.x | sudo bash -
-yum -y install nodejs
-yum -y install ant ant-contrib
+
+dnf -y install ant make
+curl --silent --location https://rpm.nodesource.com/setup_20.x | sudo bash -
+dnf -y install nodejs
+
 
 # to run the tests
-yum -y install https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
+dnf -y install https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm

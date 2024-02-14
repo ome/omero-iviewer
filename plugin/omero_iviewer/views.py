@@ -27,7 +27,7 @@ from struct import unpack
 from omeroweb.api.api_settings import API_MAX_LIMIT
 from omeroweb.decorators import login_required
 from omeroweb.webgateway.marshal import imageMarshal
-from omeroweb.webgateway.templatetags.common_filters import lengthformat,\
+from omeroweb.webgateway.templatetags.common_filters import lengthformat, \
     lengthunit
 
 import json
