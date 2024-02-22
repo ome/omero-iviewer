@@ -80,6 +80,8 @@ export const HISTOGRAM_RANGE_UPDATE = "HISTOGRAM_RANGE_UPDATE";
 export const THUMBNAILS_UPDATE = "THUMBNAILS_UPDATE";
 /** whenever the presently active image settings should be saved */
 export const SAVE_ACTIVE_IMAGE_SETTINGS = "SAVE_ACTIVE_IMAGE_SETTINGS";
+/** used to notify of a tileloaderror from openlayers viewer */
+export const TILE_LOAD_ERROR = "TILE_LOAD_ERROR";
 
 /**
  * Facilitates recurring event subscription

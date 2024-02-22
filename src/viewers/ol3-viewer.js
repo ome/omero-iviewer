@@ -42,7 +42,7 @@ import {
     REGIONS_MODIFY_SHAPES, REGIONS_PROPERTY_CHANGED, REGIONS_SET_PROPERTY,
     REGIONS_SHOW_COMMENTS, REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES,
     VIEWER_IMAGE_SETTINGS, VIEWER_PROJECTIONS_SYNC, VIEWER_SET_SYNC_GROUP,
-    ENABLE_SHAPE_POPUP,
+    ENABLE_SHAPE_POPUP, TILE_LOAD_ERROR,
     EventSubscriber
 } from '../events/events';
 import Mirror from './viewer/controls/Mirror';
@@ -153,6 +153,8 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.saveCanvasData(params)],
         [VIEWER_SET_SYNC_GROUP,
             (params={}) => this.setSyncGroup(params)],
+        [TILE_LOAD_ERROR,
+            (params={}) => Ui.showModalMessage("Failed to load tiles.<br>Please try refreshing the page.", "OK")],
         [IMAGE_SETTINGS_REFRESH,
             (params={}) => this.refreshImageSettings(params)]];
 

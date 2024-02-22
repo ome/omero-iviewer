@@ -651,6 +651,15 @@ class Viewer extends OlObject {
             }.bind(this), 100)
         }
 
+        // listen for any tile loading errors...
+        listen(
+            this.getImageLayer().getSource(), "tileloaderror",
+            function(event) {
+                if (this.eventbus_) {
+                    sendEventNotification(this, "TILE_LOAD_ERROR");
+                }
+            }, this);
+
         // listens to resolution changes
         this.onViewResolutionListener =
         listen( // register a resolution handler for zoom display
