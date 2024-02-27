@@ -651,6 +651,15 @@ class Viewer extends OlObject {
             }.bind(this), 100)
         }
 
+        // listen (once) for rendercomplete to remove the map_spinner
+        const renderCompleteListener = listen(
+            this.viewer_, "rendercomplete",
+            function(event) {
+                this.viewer_.getTargetElement().classList.remove('map_spinner');
+                // stop listening
+                unlistenByKey(renderCompleteListener);
+            }, this);
+
         // listen for any tile loading errors...
         this.tileLoadErrorListener = listen(
             this.getImageLayer().getSource(), "tileloaderror",
