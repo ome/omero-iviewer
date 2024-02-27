@@ -652,7 +652,7 @@ class Viewer extends OlObject {
         }
 
         // listen for any tile loading errors...
-        listen(
+        this.tileLoadErrorListener = listen(
             this.getImageLayer().getSource(), "tileloaderror",
             function(event) {
                 if (this.eventbus_) {
@@ -1806,6 +1806,9 @@ class Viewer extends OlObject {
             if (typeof(this.onViewRotationListener) !== 'undefined' &&
                 this.onViewRotationListener)
                     unlistenByKey(this.onViewRotationListener);
+            if (typeof(this.tileLoadErrorListener) !== 'undefined' &&
+                this.tileLoadErrorListener)
+                    unlistenByKey(this.tileLoadErrorListener);
 
             this.viewer_.dispose();
         }
