@@ -18,7 +18,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse, Http404
 from django.conf import settings
-from django.urls import reverse
+from django.urls import reverse, NoReverseMatch
 
 from os.path import splitext
 from collections import defaultdict
@@ -84,6 +84,11 @@ def index(request, iid=None, conn=None, **kwargs):
     # we add the (possibly prefixed) uris
     params['WEBGATEWAY'] = reverse('webgateway')
     params['WEBCLIENT'] = reverse('webindex')
+    try:
+        params['OMERO_FIGURE'] = reverse('figure_index')
+    except NoReverseMatch:
+        # omero-figure not installed
+        pass
     params['WEB_API_BASE'] = reverse(
         'api_base', kwargs={'api_version': WEB_API_VERSION})
     if settings.FORCE_SCRIPT_NAME is not None:

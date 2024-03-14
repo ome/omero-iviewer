@@ -2301,7 +2301,6 @@ class Viewer extends OlObject {
     getViewParameters() {
         if (this.viewer_ === null || this.getImage() === null) return null;
         var viewProps = this.viewer_.getView().getProperties()
-        console.log(viewProps)
         return {
             "z": this.getDimensionIndex('z'),
             "t": this.getDimensionIndex('t'),
