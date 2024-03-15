@@ -16,6 +16,47 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+import {featureToJsonObject} from '../viewers/viewer/utils/Conversion';
+
+function colorIntToHex(signed_integer) {
+    if (typeof signed_integer !== 'number') return null;
+    if (signed_integer < 0) signed_integer = signed_integer >>> 0;
+    var intAsHex = signed_integer.toString(16);
+    // pad with zeros to have 8 digits (rgba), slice to 6 (rgb)
+    intAsHex = ("00000000" + intAsHex).slice(-8).slice(0, 6);
+    return "#" + intAsHex;
+}
+
+function featureToFigureShape(feature) {
+    let ft = featureToJsonObject(feature);
+    const shapeType = ft['@type'].split('#')[1];
+    let shapeJson = {};
+    // {"type":"Ellipse","x":111.24363636363661,"y":178.26909090909086,"radiusX":144.0632573639581,"radiusY":72.03162868197904,"rotation":64.34564318455512,"strokeWidth":1,"strokeColor":"#FFFFFF","id":-4191737437767269}
+    if (shapeType == "Ellipse") {
+        shapeJson = {
+            x: ft.X,
+            y: ft.Y,
+            radiusX: ft.RadiusX,
+            radiusY: ft.RadiusY,
+            rotation: 0,
+            strokeWidth: ft.StrokeWidth.Value,
+            strokeColor: colorIntToHex(ft.StrokeColor),
+        }
+    } else if (shapeType == "Polygon") {
+        // "type":"Polygon","points":"188.0795898437498,182.61894531249982 188.0795898437498,182.61894531249982 186.3558
+        shapeJson = {
+            points: ft.Points,
+            strokeWidth: ft.StrokeWidth.Value,
+            strokeColor: colorIntToHex(ft.StrokeColor),
+        }
+    } else {
+        console.log("Feature not converted!", ft);
+    }
+
+    shapeJson.type = shapeType;
+    return shapeJson;
+}
+
 export function exportViewersAsPanelsJson() {
     // We need zoom/pan info from each ol3-viewer, but there is no list of these components
     // since they are created in the html template to wrap each image_config 
@@ -32,6 +73,7 @@ export function exportViewersAsPanelsJson() {
         let params = viewModel.viewer.getViewParameters();
 
         // Figure "100%" zoom means image fits in viewport
+        // viewer_ is the OlMap.
         let viewportWidth = viewModel.viewer.viewer_.getViewport().offsetWidth;
         let viewportHeight = viewModel.viewer.viewer_.getViewport().offsetHeight;
         let zoomSizeX = image_info.dimensions.max_x / view.getResolution();
@@ -39,6 +81,19 @@ export function exportViewersAsPanelsJson() {
         var xZoom = zoomSizeX / viewportWidth;
         var yZoom = zoomSizeY / viewportHeight;
         var panelZoom = 100 * Math.min(xZoom, yZoom);
+
+        // Find visible shapes in viewport
+        var shapes = [];
+        let vpExtent = viewModel.viewer.viewer_.getView().calculateExtent();
+        console.log("vpExtent", vpExtent);
+        var regions = viewModel.viewer.getRegions();
+        console.log('regions', regions);
+        if (regions) {
+            regions.forEachFeatureInExtent(vpExtent, function(feature){
+                shapes.push(featureToFigureShape(feature));
+            });
+            console.log("shapes", shapes);
+        }
 
         // dx and dy will be 0 if centre hasn't moved
         // calculate dx and dy (panning from centre)
@@ -81,6 +136,7 @@ export function exportViewersAsPanelsJson() {
             dx: dx,
             dy: dy,
             rotation: 0,
+            shapes,
         }
         panels.push(panel);
     });
@@ -100,4 +156,6 @@ export function exportViewersAsPanelsJson() {
         panel.width = panel.width * scale;
         panel.height = panel.height * scale;
     });
+
+    return panels;
 }
