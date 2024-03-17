@@ -29,8 +29,8 @@ function colorIntToHex(signed_integer) {
 
 function featureToFigureShape(feature) {
     let ft = featureToJsonObject(feature);
-    const shapeType = ft['@type'].split('#')[1];
-    let shapeJson = {};
+    let shapeType = ft['@type'].split('#')[1];
+    let shapeJson;
     // {"type":"Ellipse","x":111.24363636363661,"y":178.26909090909086,"radiusX":144.0632573639581,"radiusY":72.03162868197904,"rotation":64.34564318455512,"strokeWidth":1,"strokeColor":"#FFFFFF","id":-4191737437767269}
     if (shapeType == "Ellipse") {
         shapeJson = {
@@ -38,22 +38,42 @@ function featureToFigureShape(feature) {
             y: ft.Y,
             radiusX: ft.RadiusX,
             radiusY: ft.RadiusY,
-            rotation: 0,
-            strokeWidth: ft.StrokeWidth.Value,
-            strokeColor: colorIntToHex(ft.StrokeColor),
+            rotation: 0
         }
     } else if (shapeType == "Polygon") {
         // "type":"Polygon","points":"188.0795898437498,182.61894531249982 188.0795898437498,182.61894531249982 186.3558
         shapeJson = {
-            points: ft.Points,
-            strokeWidth: ft.StrokeWidth.Value,
-            strokeColor: colorIntToHex(ft.StrokeColor),
+            points: ft.Points
         }
+    } else if (shapeType == "Rectangle") {
+        // {"type":"Rectangle","x":119.15636363636364,"y":143.36,"width":193.62909090909093,"height":82.85090909090908,"strokeWidth":1,"strokeColor":"#FFFFFF","id":-967897903885322},
+        shapeJson = {
+            x: ft.X,
+            y: ft.Y,
+            width: ft.Width,
+            height: ft.Height
+        }
+    } else if (shapeType == "Line") {
+        // {"type":"Line","x1":226.2109090909091,"x2":256,"y1":102.4,"y2":331.40363636363634,"strokeWidth":1,"strokeColor":"#FFFFFF","id":-9286789994829994},{"type":"Arrow","x1":302.54545454545456,"x2":227.1418181818182,"y1":105.19272727272727,"y2":280.20363636363635,"strokeWidth":1,"strokeColor":"#FFFFFF","id":-3936136447472953}],
+        if (ft.MarkerEnd == "Arrow") {
+            shapeType = "Arrow"
+        }
+        shapeJson = {
+            x1: ft.X1,
+            y1: ft.Y1,
+            x2: ft.X2,
+            y2: ft.Y2
+        }
+    }
+    
+    if (shapeJson) {
+        shapeJson.strokeWidth = ft.StrokeWidth ? ft.StrokeWidth.Value: undefined;
+        shapeJson.strokeColor = colorIntToHex(ft.StrokeColor);
+        shapeJson.type = shapeType;
     } else {
         console.log("Feature not converted!", ft);
     }
 
-    shapeJson.type = shapeType;
     return shapeJson;
 }
 
@@ -90,7 +110,10 @@ export function exportViewersAsPanelsJson() {
         console.log('regions', regions);
         if (regions) {
             regions.forEachFeatureInExtent(vpExtent, function(feature){
-                shapes.push(featureToFigureShape(feature));
+                let shJson = featureToFigureShape(feature);
+                if (shJson) {
+                    shapes.push(shJson);
+                }
             });
             console.log("shapes", shapes);
         }
