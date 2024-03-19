@@ -40,7 +40,7 @@ function featureToFigureShape(feature) {
             radiusY: ft.RadiusY,
             rotation: 0
         }
-    } else if (shapeType == "Polygon") {
+    } else if (shapeType == "Polygon" || shapeType == "Polyline") {
         // "type":"Polygon","points":"188.0795898437498,182.61894531249982 188.0795898437498,182.61894531249982 186.3558
         shapeJson = {
             points: ft.Points
