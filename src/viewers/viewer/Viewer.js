@@ -651,6 +651,22 @@ class Viewer extends OlObject {
             }.bind(this), 100)
         }
 
+        // listen for rendercomplete to remove the map_spinner
+        this.renderCompleteListener = listen(
+            this.viewer_, "rendercomplete",
+            function(event) {
+                this.hideSpinner();
+            }, this);
+
+        // listen for any tile loading errors...
+        this.tileLoadErrorListener = listen(
+            this.getImageLayer().getSource(), "tileloaderror",
+            function(event) {
+                if (this.eventbus_) {
+                    sendEventNotification(this, "TILE_LOAD_ERROR");
+                }
+            }, this);
+
         // listens to resolution changes
         this.onViewResolutionListener =
         listen( // register a resolution handler for zoom display
@@ -1797,7 +1813,12 @@ class Viewer extends OlObject {
             if (typeof(this.onViewRotationListener) !== 'undefined' &&
                 this.onViewRotationListener)
                     unlistenByKey(this.onViewRotationListener);
-
+            if (typeof(this.tileLoadErrorListener) !== 'undefined' &&
+                this.tileLoadErrorListener)
+                    unlistenByKey(this.tileLoadErrorListener);
+            if (this.renderCompleteListener) {
+                unlistenByKey(this.renderCompleteListener);
+            }
             this.viewer_.dispose();
         }
 
@@ -2257,6 +2278,20 @@ class Viewer extends OlObject {
     }
 
     /**
+     * Shows a spinner indicating the map is loading data
+     */
+    showSpinner() {
+        this.viewer_.getTargetElement().classList.add('map_spinner');
+    }
+
+    /**
+     * Hides the spinner
+     */
+    hideSpinner() {
+        this.viewer_.getTargetElement().classList.remove('map_spinner');
+    }
+
+    /**
      * Triggers an explicit rerendering of the image (tile) layer
      *
      * @param {boolean} clearCache empties the tile cache if true
@@ -2280,6 +2315,7 @@ class Viewer extends OlObject {
             } else {
                 imageSource.cache_version_++;
             }
+            this.showSpinner();
             imageSource.changed();
         } catch(canHappen) {}
     }
@@ -2301,7 +2337,6 @@ class Viewer extends OlObject {
     getViewParameters() {
         if (this.viewer_ === null || this.getImage() === null) return null;
         var viewProps = this.viewer_.getView().getProperties()
-        console.log(viewProps)
         return {
             "z": this.getDimensionIndex('z'),
             "t": this.getDimensionIndex('t'),
