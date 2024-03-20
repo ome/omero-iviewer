@@ -91,6 +91,11 @@ export function exportViewersAsPanelsJson() {
         let image_config = viewModel.image_config;
         let image_info = image_config.image_info;
         let params = viewModel.viewer.getViewParameters();
+        let rotationDegrees = params.rotation * 180 / Math.PI;
+        if (rotationDegrees < 0) {
+            rotationDegrees += 360;
+        }
+        rotationDegrees = rotationDegrees % 360;
 
         // Figure "100%" zoom means image fits in viewport
         // viewer_ is the OlMap.
@@ -105,9 +110,7 @@ export function exportViewersAsPanelsJson() {
         // Find visible shapes in viewport
         var shapes = [];
         let vpExtent = viewModel.viewer.viewer_.getView().calculateExtent();
-        console.log("vpExtent", vpExtent);
         var regions = viewModel.viewer.getRegions();
-        console.log('regions', regions);
         if (regions) {
             regions.forEachFeatureInExtent(vpExtent, function(feature){
                 let shJson = featureToFigureShape(feature);
@@ -115,7 +118,6 @@ export function exportViewersAsPanelsJson() {
                     shapes.push(shJson);
                 }
             });
-            console.log("shapes", shapes);
         }
 
         // dx and dy will be 0 if centre hasn't moved
@@ -158,7 +160,7 @@ export function exportViewersAsPanelsJson() {
             zoom: panelZoom,
             dx: dx,
             dy: dy,
-            rotation: 0,
+            rotation: rotationDegrees,
             shapes,
         }
         panels.push(panel);
