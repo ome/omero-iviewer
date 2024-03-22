@@ -23,7 +23,7 @@ import JSZip from '../../node_modules/jszip/dist/jszip';
 import * as TextEncoding from "../../node_modules/text-encoding";
 import Misc from '../utils/misc';
 import Ui from '../utils/ui';
-import { exportViewersAsPanelsJson } from '../utils/figure';
+import { exportViewersAsFigureJson } from '../utils/figure';
 import {IMAGE_VIEWPORT_CAPTURE} from '../events/events';
 import {
     APP_TITLE, CSV_LINE_BREAK, INITIAL_TYPES, IVIEWER, PROJECTION,
@@ -539,21 +539,16 @@ export class Header {
             return;
         }
 
-        let panels = exportViewersAsPanelsJson();
-
         const figureName = prompt("Enter Figure name");
         if (!figureName) {
             return;
         }
 
-        let figureJSON = JSON.stringify({
-            version: 7,
-            figureName: figureName,
-            panels: panels,
-        });
+        let figureJSON = exportViewersAsFigureJson(figureName);
+        let figureJSONstr = JSON.stringify(figureJSON);
 
         // Save
-        $.post(figureUrl + "/save_web_figure/", {figureJSON,})
+        $.post(figureUrl + "/save_web_figure/", {figureJSON: figureJSONstr})
             .done(function( data ) {
                 // let fileId = +data;
                 let html = `Figure created: ID "${data}.<br>

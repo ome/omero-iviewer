@@ -18,6 +18,9 @@
 
 import {featureToJsonObject} from '../viewers/viewer/utils/Conversion';
 
+const A4_WIDTH = 595;
+const A4_HEIGHT = 842;
+
 function colorIntToHex(signed_integer) {
     if (typeof signed_integer !== 'number') return null;
     if (signed_integer < 0) signed_integer = signed_integer >>> 0;
@@ -170,7 +173,7 @@ export function exportViewersAsPanelsJson() {
     let minX = panels.reduce((prev, p) => Math.min(prev, p.x), Infinity);
     let minY = panels.reduce((prev, p) => Math.min(prev, p.y), Infinity);
     let maxX = panels.reduce((prev, p) => Math.max(prev, p.x + p.width), 0);
-    let figureA4width = 595;
+    let figureA4width = A4_WIDTH;
     let figureMargin = 20;
     let availWidth = figureA4width - (2 * figureMargin);
     let scale = availWidth / (maxX - minX);
@@ -183,4 +186,18 @@ export function exportViewersAsPanelsJson() {
     });
 
     return panels;
+}
+
+export function exportViewersAsFigureJson(figureName) {
+
+    let panels = exportViewersAsPanelsJson()
+    let figureJson = {
+        version: 7,
+        figureName: figureName,
+        panels,
+        page_size: "A4",
+        paper_width: A4_WIDTH,
+        paper_height: A4_HEIGHT,
+    }
+    return figureJson;
 }
