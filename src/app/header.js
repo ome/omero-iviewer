@@ -557,7 +557,7 @@ export class Header {
             .done(function( data ) {
                 // let fileId = +data;
                 let html = `Figure created: ID "${data}.<br>
-                    <a target="_" href="${figureUrl}/file/${data}/">Open in new tab</a>.`;
+                    <a target="_blank" href="${figureUrl}/file/${data}/">Open in new tab</a>.`;
 
                 Ui.showModalMessage(html, "OK");
             });
