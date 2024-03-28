@@ -508,18 +508,22 @@ def image_data(request, image_id, conn=None, **kwargs):
             value = format_pixel_size_with_units(size)
             rv['pixel_size']['unit_x'] = value[0]
             rv['pixel_size']['symbol_x'] = value[1]
+            # id e.g. 'MICROMETER' is used for export to OMERO.figure
+            rv['pixel_size']['unit_id_x'] = value[2]
         py = image.getPrimaryPixels().getPhysicalSizeY()
         if (py is not None):
             size = image.getPixelSizeY(True)
             value = format_pixel_size_with_units(size)
             rv['pixel_size']['unit_y'] = value[0]
             rv['pixel_size']['symbol_y'] = value[1]
+            rv['pixel_size']['unit_id_y'] = value[2]
         pz = image.getPrimaryPixels().getPhysicalSizeZ()
         if (pz is not None):
             size = image.getPixelSizeZ(True)
             value = format_pixel_size_with_units(size)
             rv['pixel_size']['unit_z'] = value[0]
             rv['pixel_size']['symbol_z'] = value[1]
+            rv['pixel_size']['unit_id_z'] = value[2]
 
         delta_t_unit_symbol = None
         rv['delta_t_unit_symbol'] = delta_t_unit_symbol
@@ -602,11 +606,11 @@ def format_pixel_size_with_units(value):
     length = value.getValue()
     unit = str(value.getUnit())
     if unit == "MICROMETER":
-        unit = lengthunit(length)
+        symbol = lengthunit(length)
         length = lengthformat(length)
     else:
-        unit = value.getSymbol()
-    return (length, unit)
+        symbol = value.getSymbol()
+    return (length, symbol, unit)
 
 
 @login_required()

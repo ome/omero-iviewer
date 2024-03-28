@@ -139,6 +139,7 @@ export function exportViewersAsPanelsJson() {
                 }
             });
         }
+        pix_size = image_info.image_pixels_size
 
         let panel = {
             x: parseInt(image_config.position.left),
@@ -154,11 +155,12 @@ export function exportViewersAsPanelsJson() {
             orig_height: image_info.dimensions.max_y,
             sizeZ: image_info.dimensions.max_z,
             sizeT: image_info.dimensions.max_t,
-            // TODO: check use of image_info.image_pixels_size.unit_x and .symbol_x etc
-            // with images of different units
-            pixel_size_x: image_info.image_pixels_size.x,
-            pixel_size_y: image_info.image_pixels_size.y,
-            pixel_size_z: image_info.image_pixels_size.z,
+            pixel_size_x: pix_size.unit_x,  // e.g. 5.0
+            pixel_size_y: pix_size.unit_y,
+            pixel_size_z: pix_size.unit_z,
+            pixel_size_x_unit: pix_size.unit_id_x, // e.g. "MILLIMETER"
+            pixel_size_y_unit: pix_size.unit_id_y,
+            pixel_size_z_unit: pix_size.unit_id_z,
             deltaT: image_info.image_delta_t,
             zoom: panelZoom,
             dx: dx,
