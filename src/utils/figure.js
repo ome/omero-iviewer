@@ -139,7 +139,8 @@ export function exportViewersAsPanelsJson() {
                 }
             });
         }
-        pix_size = image_info.image_pixels_size
+
+        const pix_size = image_info.image_pixels_size
 
         let panel = {
             x: parseInt(image_config.position.left),
@@ -167,6 +168,10 @@ export function exportViewersAsPanelsJson() {
             dy: dy,
             rotation: rotationDegrees,
             shapes,
+        }
+        if (image_info.dataset_name && image_info.dataset_name != "Multiple") {
+            panel.datasetName = image_info.dataset_name;
+            panel.datasetId = image_info.parent_id;
         }
         panels.push(panel);
     });
