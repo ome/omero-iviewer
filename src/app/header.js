@@ -546,12 +546,13 @@ export class Header {
 
         let figureJSON = exportViewersAsFigureJson(figureName);
         let figureJSONstr = JSON.stringify(figureJSON);
+        console.log('figureJSONstr', figureJSONstr);
 
         // Save
         $.post(figureUrl + "/save_web_figure/", {figureJSON: figureJSONstr})
             .done(function( data ) {
                 // let fileId = +data;
-                let html = `Figure created: ID "${data}.<br>
+                let html = `Figure created: ID ${data}.<br>
                     <a target="_blank" href="${figureUrl}/file/${data}/">Open in new tab</a>.`;
 
                 Ui.showModalMessage(html, "OK");
