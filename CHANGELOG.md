@@ -3,8 +3,9 @@
 
 - New feature: export viewport(s) to OMERO.figure ([#465](https://github.com/ome/omero-iviewer/pull/465))
 - Show tile loading spinner and handle loading errors ([#464](https://github.com/ome/omero-iviewer/pull/464))
+- Upgrade several JavaScript dependencies
 
-0.13.0 (June 2022)
+0.13.0 (June 2023)
 ------------------
 
 - Add support for "mirroring" (flipping of image in X and Y axes - Thanks to [Michael Barrett](https://github.com/barrettMCW)) ([#439](https://github.com/ome/omero-iviewer/pull/439))
