@@ -67,6 +67,16 @@ function featureToFigureShape(feature) {
             x2: ft.X2,
             y2: ft.Y2
         }
+    } else if (shapeType == "Point") {
+        // 'Point' isn't supported by Figure, but we can use an Ellipse to appear the same
+        shapeType = "Ellipse";
+        shapeJson = {
+            x: ft.X,
+            y: ft.Y,
+            radiusX: 5,
+            radiusY: 5,
+            rotation: 0
+        }
     }
     
     if (shapeJson) {
