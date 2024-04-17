@@ -109,6 +109,15 @@ const OmeroImage = function(options) {
         console.error("Image height must be a strictly positive integer");
 
     /**
+     * the image sizeT
+     * @type {number}
+     * @private
+     */
+    this.size_t_ = opts.size_t || 1;
+    if (typeof this.size_t_ !== 'number' || this.size_t_ <= 0)
+        console.error("Image sizeT must be a strictly positive integer");
+
+    /**
      * the plane (z) index
      * @type {number}
      * @private
@@ -188,8 +197,9 @@ const OmeroImage = function(options) {
      * @private
      */
     this.use_tiled_retrieval_ = this.tiled_ ||
-        this.width_ * this.height_ > UNTILED_RETRIEVAL_LIMIT && this._time == 1;
+        this.width_ * this.height_ > UNTILED_RETRIEVAL_LIMIT && this.size_t_ == 1;
 
+    console.log("this.use_tiled_retrieval_", this.use_tiled_retrieval_, this.size_t_);
     /**
      * for untiled retrieval the tile size equals the entire image extent
      * for tiled we use the default tile size

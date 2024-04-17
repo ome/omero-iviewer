@@ -505,6 +505,7 @@ class Viewer extends OlObject {
             image: this.id_,
             width: dims['width'],
             height: dims['height'],
+            size_t: dims.t,
             plane: initialPlane,
             time: initialTime,
             channels: channels,
