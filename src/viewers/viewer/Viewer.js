@@ -656,6 +656,9 @@ class Viewer extends OlObject {
             this.viewer_, "rendercomplete",
             function(event) {
                 this.hideSpinner();
+                if (this.eventbus_) {
+                    sendEventNotification(this, "RENDER_COMPLETE");
+                }
             }, this);
 
         // listen for any tile loading errors...

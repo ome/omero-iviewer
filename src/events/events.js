@@ -74,6 +74,8 @@ export const REGIONS_HISTORY_ENTRY = "REGIONS_HISTORY_ENTRY";
 export const REGIONS_HISTORY_ACTION = "REGIONS_HISTORY_ACTION";
 /** whenever we want to copy selected shape definitions */
 export const REGIONS_COPY_SHAPES = "REGIONS_COPY_SHAPES";
+/** Viewer notification that rendering is complete */
+export const RENDER_COMPLETE = "RENDER_COMPLETE";
 /** whenever the histogram range was updated */
 export const HISTOGRAM_RANGE_UPDATE = "HISTOGRAM_RANGE_UPDATE";
 /** whenever thumbnails are supposed to be updated */
