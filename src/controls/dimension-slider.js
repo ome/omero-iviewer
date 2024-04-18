@@ -527,6 +527,26 @@ export default class DimensionSlider {
         return (handle !== null && forwards || tiled || stack_size > proj_limit);
     }
 
+    getZProjectionTooltip(handle, forwards) {
+        let dims = this.image_config.image_info.dimensions;
+        let tiled = (dims.max_x * dims.max_y) > UNTILED_RETRIEVAL_LIMIT;
+        let bytes_per_pixel = Math.ceil(Math.log2(this.image_config.image_info.range[1]) / 8.0);
+        let size_c = this.image_config.image_info.channels.length;
+        let stack_size = dims.max_x * dims.max_y * dims.max_z * bytes_per_pixel * size_c;
+        let proj_limit = this.context.max_projection_bytes;
+
+        let tooltip = "Projection Disabled: ";
+        if (handle !== null && forwards) {
+            tooltip += " Movie playing";
+        } else if (tiled) {
+            tooltip += " Image is tiled"
+        } else if (stack_size > proj_limit) {
+            let numFmt = new Intl.NumberFormat();
+            tooltip += " Image stack bytes (" + numFmt.format(stack_size) + ") greater than " + numFmt.format(proj_limit);
+        }
+        return tooltip;
+    }
+
     /**
      * Any change in Z/T or projection will cause ROIs to reload if we are
      * paginating ROIs by Z/T plane.
