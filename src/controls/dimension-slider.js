@@ -535,14 +535,14 @@ export default class DimensionSlider {
         let stack_size = dims.max_x * dims.max_y * dims.max_z * bytes_per_pixel * size_c;
         let proj_limit = this.context.max_projection_bytes;
 
+        let numFmt = new Intl.NumberFormat();
         let tooltip = "Projection Disabled: ";
         if (handle !== null && forwards) {
             tooltip += " Movie playing";
         } else if (tiled) {
-            tooltip += " Image is tiled"
+            tooltip += " Image sizeX x sizeY is greater than " + numFmt.format(UNTILED_RETRIEVAL_LIMIT);
         } else if (stack_size > proj_limit) {
-            let numFmt = new Intl.NumberFormat();
-            tooltip += " Image stack bytes (" + numFmt.format(stack_size) + ") greater than " + numFmt.format(proj_limit);
+            tooltip += " Image bytes (" + bytes_per_pixel + " bytes per pixel x sizeX x sizeY x sizeC = " + numFmt.format(stack_size) + ") is greater than " + numFmt.format(proj_limit);
         }
         return tooltip;
     }
