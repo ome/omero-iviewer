@@ -290,6 +290,14 @@ span.sp-thumb-el {
     position: absolute;
 }
 
+.cursor_spinner {
+    cursor: wait;
+}
+
+.cursor_spinner .dim-arrows {
+    cursor: wait;
+}
+
 .plane-slider {
     bottom: 115px;
     top: 45px;
