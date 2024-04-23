@@ -1415,6 +1415,10 @@ export default class Ol3Viewer extends EventSubscriber {
         this.player_info.forwards = forwards;
         this.player_info.delay = delay;
         this.image_config.is_movie_playing = true;
+
+        // Don't want to show spinner while playing movie...
+        this.viewer.enableSpinner(false);
+
         // start immediately
         this.player_info.handle = setTimeout(() => {
             this.player_info.waiting_on_delay = false;
@@ -1434,6 +1438,7 @@ export default class Ol3Viewer extends EventSubscriber {
         this.player_info.forwards = null;
         this.player_info.handle = null;
         this.image_config.is_movie_playing = false;
+        this.viewer.enableSpinner(true);
     }
 
     /**

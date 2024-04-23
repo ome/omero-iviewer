@@ -216,6 +216,13 @@ class Viewer extends OlObject {
         this.enable_shape_popup = true;
 
         /**
+         * this flag determines whether a spinner is shown when loading image data
+         * Defauls to true
+         * @type {boolean}
+         */
+        this.spinner_enabled = true;
+
+        /**
          * the 'viewer state', i.e. the controls and interactions that were added
          * the items in the map have the following layout
          * <pre>
@@ -2282,10 +2289,22 @@ class Viewer extends OlObject {
     }
 
     /**
+     * Sets the spinner_enabled flag
+     */
+    enableSpinner(enabled) {
+        this.spinner_enabled = enabled;
+        if (!enabled) {
+            this.hideSpinner();
+        }
+    }
+
+    /**
      * Shows a spinner indicating the map is loading data
      */
     showSpinner() {
-        this.viewer_.getTargetElement().classList.add('map_spinner');
+        if (this.spinner_enabled) {
+            this.viewer_.getTargetElement().classList.add('map_spinner');
+        }
     }
 
     /**
