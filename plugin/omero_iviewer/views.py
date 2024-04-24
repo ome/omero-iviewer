@@ -23,6 +23,7 @@ from django.urls import reverse
 from os.path import splitext
 from collections import defaultdict
 from struct import unpack
+import traceback
 
 from omeroweb.api.api_settings import API_MAX_LIMIT
 from omeroweb.decorators import login_required
