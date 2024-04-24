@@ -290,7 +290,7 @@ span.sp-thumb-el {
     position: absolute;
 }
 
-.cursor_spinner {
+.cursor_spinner * {
     cursor: wait;
 }
 
