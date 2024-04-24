@@ -499,19 +499,19 @@ def image_data(request, image_id, conn=None, **kwargs):
         # Add extra parameters with units data
         # Note ['pixel_size']['x'] will have size in MICROMETER
         px = image.getPrimaryPixels().getPhysicalSizeX()
-        if (px is not None):
+        if (px is not None and 'pixel_size' in rv):
             size = image.getPixelSizeX(True)
             value = format_pixel_size_with_units(size)
             rv['pixel_size']['unit_x'] = value[0]
             rv['pixel_size']['symbol_x'] = value[1]
         py = image.getPrimaryPixels().getPhysicalSizeY()
-        if (py is not None):
+        if (py is not None and 'pixel_size' in rv):
             size = image.getPixelSizeY(True)
             value = format_pixel_size_with_units(size)
             rv['pixel_size']['unit_y'] = value[0]
             rv['pixel_size']['symbol_y'] = value[1]
         pz = image.getPrimaryPixels().getPhysicalSizeZ()
-        if (pz is not None):
+        if (pz is not None and 'pixel_size' in rv):
             size = image.getPixelSizeZ(True)
             value = format_pixel_size_with_units(size)
             rv['pixel_size']['unit_z'] = value[0]
@@ -531,8 +531,8 @@ def image_data(request, image_id, conn=None, **kwargs):
             rv['families'].append(fam.getValue())
 
         return JsonResponse(rv)
-    except Exception as image_data_retrieval_exception:
-        return JsonResponse({'error': repr(image_data_retrieval_exception)})
+    except Exception:
+        return JsonResponse({'error': traceback.format_exc()})
 
 
 @login_required()
