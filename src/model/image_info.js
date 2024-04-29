@@ -379,9 +379,18 @@ export default class ImageInfo {
     validateImageInfo(response) {
 
         if (response.ConcurrencyException) {
+            let nds = this.context.nodedescriptors;
+            const pyramidsDisabled = nds != undefined && nds.length > 0 && !nds.includes("PixelData");
             Ui.showModalMessage(`<p>Image is not currently viewable</p>
                 <pre>ConcurrencyException</pre>
-                <small>A pyramid of zoom levels is not available. Generation may be in progress if this is enabled on your server.</small>`, "OK");
+                <small>
+                    A pyramid of zoom levels is not available. <br>
+                    ${pyramidsDisabled ? "Pyramid generation is disabled. You will need to convert and re-import this image." :
+                     "Please contact your server Administrator if this does not resolve."} <br>
+                    See <a target="_blank" href='https://omero.readthedocs.io/en/stable/sysadmins/limitations.html#large-images'>
+                      Limitations: Large Images</a>.
+                </small>`,
+                "OK");
             return false;
         }
 

@@ -107,7 +107,14 @@ def index(request, iid=None, conn=None, **kwargs):
         if MAX_PROJECTION_BYTES > 0:
             max_bytes = MAX_PROJECTION_BYTES
 
+    try:
+        nodedescriptors = c.getConfigValue("omero.server.nodedescriptors")
+    except omero.SecurityViolation:
+        # nodedescriptors not supported in OMERO before 5.6.6 (Dec 2022)
+        nodedescriptors = None
+
     params['MAX_PROJECTION_BYTES'] = max_bytes
+    params['NODEDESCRIPTORS'] = nodedescriptors
     params['ROI_COLOR_PALETTE'] = ROI_COLOR_PALETTE
     params['SHOW_PALETTE_ONLY'] = SHOW_PALETTE_ONLY
     params['ENABLE_MIRROR'] = ENABLE_MIRROR
