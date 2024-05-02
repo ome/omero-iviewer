@@ -381,7 +381,7 @@ export default class ImageInfo {
         if (response.ConcurrencyException) {
             let nds = this.context.nodedescriptors;
             const pyramidsDisabled = nds != undefined && nds.length > 0 && !nds.includes("PixelData");
-            Ui.showModalMessage(`<p>Image is not currently viewable</p>
+            Ui.showModalMessage(`<p>Image is ${pyramidsDisabled ? "not" : "not currently"} viewable</p>
                 <pre>ConcurrencyException</pre>
                 <small>
                     A pyramid of zoom levels is not available. <br>
