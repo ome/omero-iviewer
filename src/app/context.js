@@ -464,6 +464,9 @@ export default class Context {
         }
         this.show_palette_only = (this.initParams[REQUEST_PARAMS.SHOW_PALETTE_ONLY] != 'False') || false
         this.enable_mirror = (this.initParams[REQUEST_PARAMS.ENABLE_MIRROR] != 'False') || false 
+        // nodedescriptors can be empty string or "None" (undefined)
+        let nds = this.initParams[REQUEST_PARAMS.NODEDESCRIPTORS];
+        this.nodedescriptors = nds == 'None' ? undefined : nds
     }
 
     /**

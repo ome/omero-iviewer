@@ -23,6 +23,7 @@ from django.urls import reverse
 from os.path import splitext
 from collections import defaultdict
 from struct import unpack
+import traceback
 
 from omeroweb.api.api_settings import API_MAX_LIMIT
 from omeroweb.decorators import login_required
@@ -106,7 +107,14 @@ def index(request, iid=None, conn=None, **kwargs):
         if MAX_PROJECTION_BYTES > 0:
             max_bytes = MAX_PROJECTION_BYTES
 
+    try:
+        nodedescriptors = c.getConfigValue("omero.server.nodedescriptors")
+    except omero.SecurityViolation:
+        # nodedescriptors not supported in OMERO before 5.6.6 (Dec 2022)
+        nodedescriptors = None
+
     params['MAX_PROJECTION_BYTES'] = max_bytes
+    params['NODEDESCRIPTORS'] = nodedescriptors
     params['ROI_COLOR_PALETTE'] = ROI_COLOR_PALETTE
     params['SHOW_PALETTE_ONLY'] = SHOW_PALETTE_ONLY
     params['ENABLE_MIRROR'] = ENABLE_MIRROR
@@ -498,19 +506,19 @@ def image_data(request, image_id, conn=None, **kwargs):
         # Add extra parameters with units data
         # Note ['pixel_size']['x'] will have size in MICROMETER
         px = image.getPrimaryPixels().getPhysicalSizeX()
-        if (px is not None):
+        if (px is not None and 'pixel_size' in rv):
             size = image.getPixelSizeX(True)
             value = format_pixel_size_with_units(size)
             rv['pixel_size']['unit_x'] = value[0]
             rv['pixel_size']['symbol_x'] = value[1]
         py = image.getPrimaryPixels().getPhysicalSizeY()
-        if (py is not None):
+        if (py is not None and 'pixel_size' in rv):
             size = image.getPixelSizeY(True)
             value = format_pixel_size_with_units(size)
             rv['pixel_size']['unit_y'] = value[0]
             rv['pixel_size']['symbol_y'] = value[1]
         pz = image.getPrimaryPixels().getPhysicalSizeZ()
-        if (pz is not None):
+        if (pz is not None and 'pixel_size' in rv):
             size = image.getPixelSizeZ(True)
             value = format_pixel_size_with_units(size)
             rv['pixel_size']['unit_z'] = value[0]
@@ -530,8 +538,8 @@ def image_data(request, image_id, conn=None, **kwargs):
             rv['families'].append(fam.getValue())
 
         return JsonResponse(rv)
-    except Exception as image_data_retrieval_exception:
-        return JsonResponse({'error': repr(image_data_retrieval_exception)})
+    except Exception:
+        return JsonResponse({'error': traceback.format_exc()})
 
 
 @login_required()

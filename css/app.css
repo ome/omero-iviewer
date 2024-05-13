@@ -1365,6 +1365,10 @@ thumbnail-slider img {
     overflow-y: hidden;
 }
 
+.modal-dialog pre {
+    max-height: 200px;
+}
+
 .text-weight-bold {
    font-weight: 700;
  }
