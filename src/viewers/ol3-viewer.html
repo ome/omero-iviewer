@@ -22,6 +22,7 @@
 
     <div class="${context.useMDI && context.image_configs.size > 1 ?
                     'center-row1-mdi' : 'center-row1'}
+                ${image_config.is_movie_playing ? 'cursor_spinner' : ''}
                 ${image_config.image_info.dimensions.max_t > 1 ? 'show-tSlider' : ''}
                 ${image_config.image_info.dimensions.max_z > 1 ? 'show-zSlider' : ''}"
             drop.delegate="handleDrop($event)"
@@ -39,12 +40,13 @@
         </dimension-slider>
 
         <div class="viewer">
-              <div id.bind="container" class="viewer-container"></div>
+              <div id.bind="container" class="viewer-container map_spinner"></div>
         </div>
     </div>
 
     <div class="${image_config.image_info.dimensions.max_t > 1 ?
                     'center-row2' : 'center-row2-hidden'}
+                ${image_config.is_movie_playing ? 'cursor_spinner' : ''}
                 ${image_config.image_info.dimensions.max_z > 1 ?
                     'show-zSlider' : ''}">
             <dimension-slider

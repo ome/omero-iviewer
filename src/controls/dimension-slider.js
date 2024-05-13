@@ -120,14 +120,16 @@ export default class DimensionSlider {
             this.player_info.forwards === forwards;
 
         // make history entry for stop
-        if (stop)
+        if (stop) {
             conf.addHistory({
                 prop: ['image_info', 'dimensions', this.dim],
                 old_val : this.last_player_start,
                 new_val:  conf.image_info.dimensions[this.dim],
                 type : "number"
             });
-        else this.last_player_start = conf.image_info.dimensions[this.dim];
+        } else {
+            this.last_player_start = conf.image_info.dimensions[this.dim];
+        }
 
         // send out a dimension change notification
         this.context.publish(

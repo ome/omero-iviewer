@@ -74,12 +74,16 @@ export const REGIONS_HISTORY_ENTRY = "REGIONS_HISTORY_ENTRY";
 export const REGIONS_HISTORY_ACTION = "REGIONS_HISTORY_ACTION";
 /** whenever we want to copy selected shape definitions */
 export const REGIONS_COPY_SHAPES = "REGIONS_COPY_SHAPES";
+/** Viewer notification that rendering is complete */
+export const RENDER_COMPLETE = "RENDER_COMPLETE";
 /** whenever the histogram range was updated */
 export const HISTOGRAM_RANGE_UPDATE = "HISTOGRAM_RANGE_UPDATE";
 /** whenever thumbnails are supposed to be updated */
 export const THUMBNAILS_UPDATE = "THUMBNAILS_UPDATE";
 /** whenever the presently active image settings should be saved */
 export const SAVE_ACTIVE_IMAGE_SETTINGS = "SAVE_ACTIVE_IMAGE_SETTINGS";
+/** used to notify of a tileloaderror from openlayers viewer */
+export const TILE_LOAD_ERROR = "TILE_LOAD_ERROR";
 
 /**
  * Facilitates recurring event subscription

@@ -34,7 +34,7 @@ import {
 } from '../utils/constants';
 import {
     IMAGE_CANVAS_DATA, IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY,
-    IMAGE_INTENSITY_QUERYING, IMAGE_SETTINGS_CHANGE, IMAGE_SETTINGS_REFRESH,
+    IMAGE_SETTINGS_CHANGE, IMAGE_SETTINGS_REFRESH,
     IMAGE_VIEWER_CONTROLS_VISIBILITY, IMAGE_VIEWER_INTERACTION,
     IMAGE_VIEWER_RESIZE, IMAGE_VIEWPORT_CAPTURE, IMAGE_VIEWPORT_LINK,
     REGIONS_CHANGE_MODES, REGIONS_COPY_SHAPES, REGIONS_DRAW_SHAPE,
@@ -42,11 +42,11 @@ import {
     REGIONS_MODIFY_SHAPES, REGIONS_PROPERTY_CHANGED, REGIONS_SET_PROPERTY,
     REGIONS_SHOW_COMMENTS, REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES,
     VIEWER_IMAGE_SETTINGS, VIEWER_PROJECTIONS_SYNC, VIEWER_SET_SYNC_GROUP,
-    ENABLE_SHAPE_POPUP,
+    ENABLE_SHAPE_POPUP, TILE_LOAD_ERROR, RENDER_COMPLETE,
     EventSubscriber
 } from '../events/events';
-import Mirror from './viewer/controls/Mirror';
 
+const MOVIE_DELAY = 250;
 
 /**
  * The openlayers 3 viewer wrapped for better aurelia integration
@@ -115,6 +115,8 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.changeDimension(params)],
         [IMAGE_DIMENSION_PLAY,
             (params={}) => this.playDimension(params)],
+        [RENDER_COMPLETE,
+            (params={}) => this.handleRenderComplete(params)],
         [IMAGE_SETTINGS_CHANGE,
             (params={}) => this.changeImageSettings(params)],
         [REGIONS_PROPERTY_CHANGED,
@@ -153,6 +155,8 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.saveCanvasData(params)],
         [VIEWER_SET_SYNC_GROUP,
             (params={}) => this.setSyncGroup(params)],
+        [TILE_LOAD_ERROR,
+            (params={}) => Ui.showModalMessage("Failed to load tiles.<br>Please try refreshing the page.", "OK")],
         [IMAGE_SETTINGS_REFRESH,
             (params={}) => this.refreshImageSettings(params)]];
 
@@ -1380,17 +1384,6 @@ export default class Ol3Viewer extends EventSubscriber {
             typeof params.dim !== 'string' ||
             (params.dim !== 'z' && params.dim !== 't')) return;
 
-        // the stop function
-        let stopPlay = (() => {
-            if (this.player_info.handle !== null)
-                clearInterval(this.player_info.handle);
-            this.player_info.dim = null;
-            this.player_info.forwards = null;
-            this.player_info.handle = null;
-            this.image_config.is_movie_playing = false;
-            this.viewer.getRenderStatus(true);
-        }).bind(this);
-
         // check explicit stop flag (we default to true if not there)
         if (typeof params.stop !== 'boolean') params.stop = true;
         let forwards = params.forwards;
@@ -1400,64 +1393,128 @@ export default class Ol3Viewer extends EventSubscriber {
         if ((params.stop && this.player_info.handle !== null) ||
                 (!params.stop && this.player_info.handle !== null &&
                     (params.dim !== this.player_info.dim ||
-                    forwards !== this.player_info.forwards))) stopPlay();
+                    forwards !== this.player_info.forwards))) {
+            this.stopPlay();
+        }
 
         // only if stop is false we continue to start
         if (params.stop) return;
 
         let delay =
             (typeof params.delay === 'number' && params.delay >= 100) ?
-                params.delay : 250;
+                params.delay : MOVIE_DELAY;
 
         // bounds and present dimension index
         let dims = this.image_config.image_info.dimensions;
         let dim = params.dim;
-        let min_dim = 0;
         var max_dim = dims['max_' + dim]-1;
-        var pres_dim = dims[dim];
 
         if (max_dim === 0) return
 
-        // if already at end, play from start
-        if (forwards && pres_dim >= max_dim) {
-            dims[dim] = 0;
-        }
-        if (!forwards && pres_dim <= min_dim) {
-            dims[dim] = max_dim;
-        }
-
         this.player_info.dim = dim;
         this.player_info.forwards = forwards;
+        this.player_info.delay = delay;
         this.image_config.is_movie_playing = true;
-        this.player_info.handle =
-            setInterval(
-                () => {
-                    try {
-                        // keep handle backup in window in case of error
-                        window.interval_handle = this.player_info.handle;
 
-                        // if we get an in progress status the dimension has not yet
-                        // rendered and we return to wait for the next iteration
-                        let renderStatus = this.viewer.getRenderStatus();
-                        if (renderStatus === RENDER_STATUS.IN_PROGRESS) return;
+        // Don't want to show spinner while playing movie...
+        this.viewer.enableSpinner(false);
 
-                        // get present dim index and check if we have hit a bound
-                        // if so => abort play
-                        pres_dim = dims[dim];
-                        if (renderStatus === RENDER_STATUS.ERROR ||
-                                (forwards && pres_dim >= max_dim) ||
-                                (!forwards && pres_dim <= min_dim)) {
-                                    stopPlay(); return;}
+        // start immediately
+        this.player_info.handle = setTimeout(() => {
+            this.player_info.waiting_on_delay = false;
+            this.incrementDimension(true);
+        }, 0);
+    }
 
-                        // arrange for the render status to be watched
-                        if (!this.viewer.watchRenderStatus(true))
-                            this.viewer.getRenderStatus(true);
-                        // set the new dimension index
-                        dims[dim] = pres_dim + (forwards ? 1 : -1);
-                    } catch(ignored) {
-                        clearInterval(window.interval_handle);
-                    }
+    /**
+     * Stops dimension play
+     *
+     * @memberof Ol3Viewer
+     */
+    stopPlay() {
+        if (this.player_info.handle !== null)
+            clearTimeout(this.player_info.handle);
+        this.player_info.dim = null;
+        this.player_info.forwards = null;
+        this.player_info.handle = null;
+        this.image_config.is_movie_playing = false;
+        this.viewer.enableSpinner(true);
+    }
+
+    /**
+     * Increment Z/T when playing movie
+     *
+     * @memberof Ol3Viewer
+     */
+    incrementDimension(starting) {
+        // If we're still waiting for planes to render or movie delay, abort...
+        if (this.player_info.waiting_on_render || this.player_info.waiting_on_delay) {
+            return;
+        }
+
+        let dim = this.player_info.dim;
+        let dims = this.image_config.image_info.dimensions;
+        let forwards = this.player_info.forwards;
+        var max_dim = dims['max_' + dim]-1;
+        let min_dim = 0;
+
+        try {
+            // keep handle backup in window in case of error
+            window.interval_handle = this.player_info.handle;
+
+            let renderStatus = this.viewer.getRenderStatus();
+
+            // get present dim index and check if we have hit a bound
+            // if so => abort play
+            var pres_dim = dims[dim];
+            let next_dim = pres_dim + (forwards ? 1 : -1);
+            if (starting) {
+                // if already at end, play from start
+                if (forwards && pres_dim >= max_dim) {
+                    next_dim = 0;
+                }
+                if (!forwards && pres_dim <= min_dim) {
+                    next_dim = max_dim;
+                }
+            }
+
+            if (renderStatus === RENDER_STATUS.ERROR ||
+                    (forwards && next_dim > max_dim) ||
+                    (!forwards && next_dim < min_dim)) {
+                        this.stopPlay(); return;}
+
+            // set the new dimension index
+            dims[dim] = next_dim;
+
+            // don't increment again while waiting on render or delay
+            this.player_info.waiting_on_render = true;
+            this.player_info.waiting_on_delay = true;
+
+            if (this.image_config.is_movie_playing) {
+                let delay = this.player_info.delay || MOVIE_DELAY;
+                this.player_info.handle = setTimeout(() => {
+                    this.player_info.waiting_on_delay = false;
+
+                    this.incrementDimension();
                 }, delay);
+            }
+        } catch(ignored) {
+            clearInterval(window.interval_handle);
+        }
+    }
+
+    /**
+     * When rendering image plane is complete, and we're playing a movie, increment...
+     *
+     * @memberof Ol3Viewer
+     */
+    handleRenderComplete(params={}) {
+        // set status
+        this.player_info.waiting_on_render = false;
+
+        if (this.image_config.is_movie_playing) {
+            this.incrementDimension();
+        }
     }
 
     /**
