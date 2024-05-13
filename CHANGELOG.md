@@ -1,8 +1,8 @@
-0.14.0 (April 2024)
--------------------
+0.14.0 (May 2024)
+-----------------
 
-- New feature: export viewport(s) to OMERO.figure ([#465](https://github.com/ome/omero-iviewer/pull/465))
-- Show tile loading spinner and handle loading errors ([#464](https://github.com/ome/omero-iviewer/pull/464))
+- Image loading error handling ([#474](https://github.com/ome/omero-iviewer/pull/474))
+- Tile loading improvements, spinners and error handling ([#470](https://github.com/ome/omero-iviewer/pull/470))
 - Upgrade several JavaScript dependencies
 
 0.13.0 (June 2023)
