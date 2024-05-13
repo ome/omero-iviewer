@@ -946,10 +946,11 @@ export default class ImageInfo {
                     precision <= 0) precision = 3;
         } else precision = 0;
 
+        if (precision != 0 && this.image_pixels_type === 'float') {
+            start_min = Misc.roundAtDecimal(start_min, precision)
+        }
         return {
-            start_min:
-                precision === 0 ?
-                    start_min : Misc.roundAtDecimal(start_min, precision),
+            start_min: start_min,
             start_max:
                 (precision === 0 ?
                     start_max :
