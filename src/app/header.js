@@ -546,7 +546,6 @@ export class Header {
 
         let figureJSON = exportViewersAsFigureJson(figureName);
         let figureJSONstr = JSON.stringify(figureJSON);
-        console.log('figureJSONstr', figureJSONstr);
 
         // Save
         $.post(figureUrl + "/save_web_figure/", {figureJSON: figureJSONstr})
