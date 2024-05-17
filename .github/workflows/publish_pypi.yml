@@ -13,12 +13,12 @@ jobs:
           python-version: '3.9'
       - name: Build a binary wheel and a source tarball
         run: |
-          python -mpip install wheel
-          python setup.py sdist bdist_wheel
+          python -mpip install build
+          python -m build
         working-directory: ./plugin
       - name: Publish distribution to PyPI
         if: startsWith(github.ref, 'refs/tags')
-        uses: pypa/gh-action-pypi-publish@v1.3.0
+        uses: pypa/gh-action-pypi-publish@v1.8.14
         with:
           packages_dir: plugin/dist
           password: ${{ secrets.PYPI_PASSWORD }}
