@@ -1,4 +1,11 @@
-0.13.0 (June 2022)
+0.14.0 (May 2024)
+-----------------
+
+- Image loading error handling ([#474](https://github.com/ome/omero-iviewer/pull/474))
+- Tile loading improvements, spinners and error handling ([#470](https://github.com/ome/omero-iviewer/pull/470))
+- Upgrade several JavaScript dependencies
+
+0.13.0 (June 2023)
 ------------------
 
 - Add support for "mirroring" (flipping of image in X and Y axes - Thanks to [Michael Barrett](https://github.com/barrettMCW)) ([#439](https://github.com/ome/omero-iviewer/pull/439))
