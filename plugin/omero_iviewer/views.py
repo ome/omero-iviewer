@@ -18,7 +18,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse, Http404
 from django.conf import settings
-from django.urls import reverse
+from django.urls import reverse, NoReverseMatch
 
 from os.path import splitext
 from collections import defaultdict
@@ -85,6 +85,11 @@ def index(request, iid=None, conn=None, **kwargs):
     # we add the (possibly prefixed) uris
     params['WEBGATEWAY'] = reverse('webgateway')
     params['WEBCLIENT'] = reverse('webindex')
+    try:
+        params['OMERO_FIGURE'] = reverse('figure_index')
+    except NoReverseMatch:
+        # omero-figure not installed
+        pass
     params['WEB_API_BASE'] = reverse(
         'api_base', kwargs={'api_version': WEB_API_VERSION})
     if settings.FORCE_SCRIPT_NAME is not None:
@@ -511,18 +516,22 @@ def image_data(request, image_id, conn=None, **kwargs):
             value = format_pixel_size_with_units(size)
             rv['pixel_size']['unit_x'] = value[0]
             rv['pixel_size']['symbol_x'] = value[1]
+            # id e.g. 'MICROMETER' is used for export to OMERO.figure
+            rv['pixel_size']['unit_id_x'] = value[2]
         py = image.getPrimaryPixels().getPhysicalSizeY()
         if (py is not None and 'pixel_size' in rv):
             size = image.getPixelSizeY(True)
             value = format_pixel_size_with_units(size)
             rv['pixel_size']['unit_y'] = value[0]
             rv['pixel_size']['symbol_y'] = value[1]
+            rv['pixel_size']['unit_id_y'] = value[2]
         pz = image.getPrimaryPixels().getPhysicalSizeZ()
         if (pz is not None and 'pixel_size' in rv):
             size = image.getPixelSizeZ(True)
             value = format_pixel_size_with_units(size)
             rv['pixel_size']['unit_z'] = value[0]
             rv['pixel_size']['symbol_z'] = value[1]
+            rv['pixel_size']['unit_id_z'] = value[2]
 
         delta_t_unit_symbol = None
         rv['delta_t_unit_symbol'] = delta_t_unit_symbol
@@ -605,11 +614,11 @@ def format_pixel_size_with_units(value):
     length = value.getValue()
     unit = str(value.getUnit())
     if unit == "MICROMETER":
-        unit = lengthunit(length)
+        symbol = lengthunit(length)
         length = lengthformat(length)
     else:
-        unit = value.getSymbol()
-    return (length, unit)
+        symbol = value.getSymbol()
+    return (length, symbol, unit)
 
 
 @login_required()

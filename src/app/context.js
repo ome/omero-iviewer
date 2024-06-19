@@ -33,7 +33,7 @@ import {
 import {
     APP_NAME, IMAGE_CONFIG_RELOAD, IVIEWER, INITIAL_TYPES, LUTS_NAMES,
     LUTS_PNG_URL, PLUGIN_NAME, PLUGIN_PREFIX, REQUEST_PARAMS, SYNC_LOCK,
-    TABS, URI_PREFIX, WEB_API_BASE, WEBCLIENT, WEBGATEWAY
+    TABS, URI_PREFIX, WEB_API_BASE, WEBCLIENT, WEBGATEWAY, OMERO_FIGURE
 } from '../utils/constants';
 
 /**
@@ -486,6 +486,10 @@ export default class Context {
                 this.prefixed_uris.set(
                     key, typeof this.initParams[key] === 'string' ?
                             this.initParams[key] : '/' + key.toLowerCase()));
+        // OMERO_FIGURE might not be installed
+        if (this.initParams[OMERO_FIGURE]) {
+            this.prefixed_uris.set(OMERO_FIGURE, this.initParams[OMERO_FIGURE]);
+        }
     }
 
     /**
