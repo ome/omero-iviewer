@@ -252,6 +252,7 @@ export const LUTS_NAMES = [
     'thal.lut',
     'thallium.lut',
     'thermal.lut',
+    'turbo.lut',
     'unionjack.lut',
     'viridis.lut',
     'yellow_hot.lut'
