@@ -230,10 +230,13 @@ export const LUTS_NAMES = [
     'ica2.lut',
     'ica3.lut',
     'ice.lut',
+    'inferno.lut',
     'magenta_hot.lut',
+    'magma.lut',
     'orange_hot.lut',
     'phase.lut',
     'physics.lut',
+    'plasma.lut',
     'pup_br.lut',
     'pup_nr.lut',
     'rainbow_rgb.lut',
@@ -247,6 +250,7 @@ export const LUTS_NAMES = [
     'thallium.lut',
     'thermal.lut',
     'unionjack.lut',
+    'viridis.lut',
     'yellow_hot.lut'
 ];
 
