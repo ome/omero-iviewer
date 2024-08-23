@@ -466,6 +466,18 @@ export default class Context {
         this.enable_mirror = (this.initParams[REQUEST_PARAMS.ENABLE_MIRROR] != 'False') || false 
         // nodedescriptors can be empty string or "None" (undefined)
         let nds = this.initParams[REQUEST_PARAMS.NODEDESCRIPTORS];
+        // initially hide left and right panels?
+        if (this.initParams[REQUEST_PARAMS.FULL_PAGE] == 'true') {
+            this.collapse_left = true;
+            this.collapse_right = true;
+        } else {
+            if (this.initParams[REQUEST_PARAMS.COLLAPSE_LEFT] == 'true') {
+                this.collapse_left = true;
+            }
+            if (this.initParams[REQUEST_PARAMS.COLLAPSE_RIGHT] == 'true') {
+                this.collapse_right = true;
+            }
+        }
         this.nodedescriptors = nds == 'None' ? undefined : nds
     }
 
