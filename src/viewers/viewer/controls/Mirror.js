@@ -144,11 +144,11 @@ export class Mirror extends Control {
      */
     handleClick_(event) {
         event.preventDefault();
-        let classname = event.target.className
-        const axis = classname.includes('ol-flip-vertical') ? 0 : 1;
-        classname = classname.includes('active') ? classname.replace(' active', '') : classname += ' active'
-        event.target.className = classname
+        event.target.style.backgroundColor = event.target.style.backgroundColor === 'silver' ? '' : 'silver'
+        
+        const axis = event.target.className.includes('ol-flip-vertical') ? 0 : 1;
         this.flip(axis);
+
         return true;
     }
 }
