@@ -54,7 +54,7 @@ export class Mirror extends Control {
         const title = `Flip ${flip_vertical ? 'vertical' : 'horizontal'}`;
         const element = document.createElement('button');
         element.className = this.class_name_ + (flip_vertical ? '-vertical glyphicon-resize-vertical' : '-horizontal glyphicon-resize-horizontal') +
-            ' btn btn-default glyphicon ol-flip-button';
+            ' btn btn-default btn-primary glyphicon ol-flip-button';
         element.setAttribute('type', 'button');
         element.title = title;
 
@@ -144,7 +144,10 @@ export class Mirror extends Control {
      */
     handleClick_(event) {
         event.preventDefault();
-        const axis = event.target.className.includes('ol-flip-vertical') ? 0 : 1;
+        let classname = event.target.className
+        const axis = classname.includes('ol-flip-vertical') ? 0 : 1;
+        classname = classname.includes('active') ? classname.replace(' active', '') : classname += ' active'
+        event.target.className = classname
         this.flip(axis);
         return true;
     }
