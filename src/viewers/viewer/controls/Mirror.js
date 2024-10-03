@@ -2,7 +2,7 @@ import {listen} from 'ol/events';
 import EventType from 'ol/events/EventType';
 import Control from 'ol/control/Control';
 import {CLASS_UNSELECTABLE, CLASS_CONTROL } from 'ol/css';
-import { rotate } from 'ol/coordinate';
+import DragPan from 'ol/interaction/DragPan';
 
 export class Mirror extends Control {
     /**
@@ -78,7 +78,7 @@ export class Mirror extends Control {
         });
         
         map.getInteractions().getArray().forEach((interaction) => {
-            if (interaction.constructor.name == 'DragPan'){
+            if (interaction instanceof DragPan){
                 interaction._mirror = this
                 interaction.updateTrackedPointers__ = interaction.updateTrackedPointers_
                 interaction.updateTrackedPointers_ = (mapBrowserEvent) => {
