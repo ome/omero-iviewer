@@ -79,7 +79,6 @@ export class Mirror extends Control {
         
         map.getInteractions().getArray().forEach((interaction) => {
             if (interaction instanceof DragPan){
-                interaction._mirror = this
                 interaction.updateTrackedPointers__ = interaction.updateTrackedPointers_
                 interaction.updateTrackedPointers_ = (mapBrowserEvent) => {
                     if (this.view.get('flipX')) mapBrowserEvent.pointerEvent.clientX = mapBrowserEvent.pointerEvent.view.innerWidth - mapBrowserEvent.pointerEvent.clientX
@@ -115,6 +114,7 @@ export class Mirror extends Control {
      */
     flip(axis) {
         const viewport = this.getMap().getViewport().children[0]; // Mirror only the tiles
+        const selectionBox = this.getMap().getViewport().children[1]
         const isY = (axis === 0);
         const transformType = isY ? 'scaleY(-1)' : 'scaleX(-1)';
         const viewProp = isY ? 'flipY' : 'flipX';
@@ -128,6 +128,9 @@ export class Mirror extends Control {
             viewport.style.transform.replace(transformType, '') :
             viewport.style.transform + ` ${transformType}`;
 
+        selectionBox.style.transform = currentFlipState ?
+            selectionBox.style.transform.replace(transformType, '') :
+            selectionBox.style.transform + ` ${transformType}`;
         // Handle birds-eye control if present
         if (this.birdseye && this.birdseye.controlDiv_) {
             const birdseyeDiv = this.birdseye.controlDiv_;
