@@ -60,15 +60,7 @@ export default class Ui {
                     ($(window).width() - frameWidth) : $(window).width();
 
                 if (x > minWidth && x < maxWidth && e.pageX < rightBound) {
-                    el.width(x);
-                    if (leftSplit)
-                        $('.frame').css(
-                            {"margin-left": '' + (-x-5) + 'px',
-                             "padding-left": '' + (x+5) + 'px'});
-                    else
-                        $('.frame').css(
-                            {"margin-right": '' + (-x-5) + 'px',
-                             "padding-right": '' + (x+5) + 'px'});
+                    el.css('--panelSize', x + "px");
                 }
                 eventbus.publish(IMAGE_VIEWER_RESIZE,
                     {config_id: -1, is_dragging: true});
