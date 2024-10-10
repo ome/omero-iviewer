@@ -18,7 +18,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse, Http404
 from django.conf import settings
-from django.urls import reverse
+from django.urls import reverse, NoReverseMatch
 
 from os.path import splitext
 from collections import defaultdict
@@ -892,3 +892,21 @@ def shape_stats(request, conn=None, **kwargs):
         return JsonResponse({"error": api_exception.message})
     except Exception as stats_call_exception:
         return JsonResponse({"error": repr(stats_call_exception)})
+
+
+@login_required()
+def is_dynamic_lut(request, **kwargs):
+    """
+    Return true or false for dynamic lut usage URL based on the
+    current omero-web version.
+    """
+    dynamic_lut = False
+    try:
+        # Try to reverse the URL dynamically, which might be version-dependent
+        _ = reverse("webgateway_luts_png")
+        dynamic_lut = True
+    except NoReverseMatch:
+        # Fallback URL if the dynamic route is not available
+        pass
+    # Return the lut_url as JSON
+    return JsonResponse({'is_dynamic_lut': dynamic_lut})
