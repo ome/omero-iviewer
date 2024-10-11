@@ -555,12 +555,20 @@ def delta_t_data(request, image_id, conn=None, **kwargs):
     if size_t > 1:
         params = omero.sys.ParametersI()
         params.addLong('pid', image.getPixelsId())
-        z = 0
-        c = 0
         query = "from PlaneInfo as Info where"\
-            " Info.theZ=%s and Info.theC=%s and pixels.id=:pid" % (z, c)
+            " Info.theZ=0 and Info.theC=0 and pixels.id=:pid"
         info_list = conn.getQueryService().findAllByQuery(
             query, params, conn.SERVICE_OPTS)
+
+        if len(info_list) < size_t:
+            # C & Z dimensions are not always filled
+            # Remove restriction on c0 z0 to catch all timestamps
+            params = omero.sys.ParametersI()
+            params.addLong('pid', image.getPixelsId())
+            query = "from PlaneInfo as Info where pixels.id=:pid"
+            info_list = conn.getQueryService().findAllByQuery(
+                query, params, conn.SERVICE_OPTS)
+
         timemap = {}
         for info in info_list:
             t_index = info.theT.getValue()
@@ -570,9 +578,13 @@ def delta_t_data(request, image_id, conn=None, **kwargs):
                 if delta_t_unit_symbol is None:
                     # Get unit symbol for first info only
                     delta_t_unit_symbol = info.deltaT.getSymbol()
-        for t in range(image.getSizeT()):
+        for t in range(size_t):
             if t in timemap:
                 time_list.append(timemap[t])
+            else:
+                # Hopefully never gets here, but
+                # time_list length MUST match image.sizeT
+                time_list.append(0)
 
     rv['delta_t'] = time_list
     rv['delta_t_unit_symbol'] = delta_t_unit_symbol
