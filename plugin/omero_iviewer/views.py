@@ -565,7 +565,15 @@ def delta_t_data(request, image_id, conn=None, **kwargs):
             # Remove restriction on c0 z0 to catch all timestamps
             params = omero.sys.ParametersI()
             params.addLong('pid', image.getPixelsId())
-            query = "from PlaneInfo as Info where pixels.id=:pid"
+            query = """
+                from PlaneInfo Info where Info.pixels.id=:pid
+                and Info.id in (
+                    select min(subInfo.id)
+                    from PlaneInfo subInfo
+                    where subInfo.pixels.id=:pid
+                    group by subInfo.theT
+                )
+            """
             info_list = conn.getQueryService().findAllByQuery(
                 query, params, conn.SERVICE_OPTS)
 
