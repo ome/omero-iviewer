@@ -147,7 +147,7 @@ export class Mirror extends Control {
      */
     handleClick_(event) {
         event.preventDefault();
-        event.target.style.backgroundColor = event.target.style.backgroundColor === 'silver' ? '' : 'silver'
+        event.target.style.backgroundColor = event.target.style.backgroundColor === 'dodgerblue' ? '' : 'dodgerblue'
         
         const axis = event.target.className.includes('ol-flip-vertical') ? 0 : 1;
         this.flip(axis);
