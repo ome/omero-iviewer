@@ -44,7 +44,11 @@ export default class Ui {
                 e.preventDefault();
 
                 let el = leftSplit ? $('.thumbnail-panel') : $('.right-hand-panel');
-                if (el.width() === 0) return false;
+
+                let size = parseInt(el.css('--panelSize'));
+
+                console.log("DRAG....", e, size);
+                if (size === 0) return false;
 
                 let x = leftSplit ? e.pageX - el.offset().left :
                     $(window).width() - e.pageX;
@@ -54,14 +58,16 @@ export default class Ui {
                 let tolerance =  $(window).width() -
                         (leftSplit ? $('.right-hand-panel').width() :
                             $('.thumbnail-panel').width())-200;
+                console.log("TOLERANCE", tolerance, 'maxWidth', maxWidth);
                 if (maxWidth > tolerance)
                     maxWidth = tolerance;
                 let rightBound = leftSplit ?
                     ($(window).width() - frameWidth) : $(window).width();
 
-                if (x > minWidth && x < maxWidth && e.pageX < rightBound) {
+                console.log("X", x, "minWidth", minWidth, "maxWidth", maxWidth)
+                // if (x > minWidth && x < maxWidth && e.pageX < rightBound) {
                     el.css('--panelSize', x + "px");
-                }
+                // }
                 eventbus.publish(IMAGE_VIEWER_RESIZE,
                     {config_id: -1, is_dragging: true});
             });
@@ -110,25 +116,33 @@ export default class Ui {
             let leftSplit =
                 $(e.currentTarget).hasClass("collapse-left");
             let el = leftSplit ? $('.thumbnail-panel') : $('.right-hand-panel');
+            console.log("CLICK", el, el.css('--panelSize'));
 
-            let minWidth = leftSplit ? 20 : 50;
+            // let minWidth = leftSplit ? 20 : 50;
             let oldWidth = parseInt(el.attr("old-width"));
-            let width = el.width();
 
-            let tolerance =  $(window).width() -
-                    (leftSplit ? $('.right-hand-panel').width() :
-                        $('.thumbnail-panel').width())-200;
+            // let width = el.width();
+            let width = parseInt(el.css('--panelSize'));
 
-            let newWidth = width === 0 ?
-                (isNaN(oldWidth) || oldWidth <= 0 ? minWidth : oldWidth) : 0;
+            console.log("WIDTH", width, "OLD WIDTH", oldWidth);
+
+            // let tolerance =  $(window).width() -
+            //         (leftSplit ? $('.right-hand-panel').width() :
+            //             $('.thumbnail-panel').width())-200;
+
+            // toggle the width
+            let newWidth = width === 0 ? oldWidth : 0;
+
+            // let newWidth = width === 0 ?
+            //     (isNaN(oldWidth) || oldWidth <= 0 ? minWidth : oldWidth) : 0;
 
             // we do not allow opening sidebars if there is not enough room
             // we try to reduce it to above set minWidth but if that is
             // not good enough, we don't open it
-            if (newWidth !== 0 && newWidth > tolerance) {
-                if (minWidth > tolerance) return;
-                newWidth = tolerance;
-            }
+            // if (newWidth !== 0 && newWidth > tolerance) {
+            //     if (minWidth > tolerance) return;
+            //     newWidth = tolerance;
+            // }
             el.attr("old-width", width);
 
             let url =
@@ -139,20 +153,12 @@ export default class Ui {
                 "src", url + "/collapse-" +
                 (leftSplit && newWidth === 0 ||
                     !leftSplit && newWidth !== 0 ? "right" : "left") + ".png");
-            el.width(newWidth);
-            el.css('flex', '0 0 ' + newWidth + 'px');
+            console.log("NEW WIDTH", newWidth);
+            el.css('--panelSize', newWidth + "px");
             if (newWidth === 0)
                 $(e.currentTarget).parent().css("cursor", "default");
             else
                 $(e.currentTarget).parent().css("cursor", "ew-resize");
-            if (leftSplit)
-                $('.frame').css(
-                    {"margin-left": '' + (-newWidth-5) + 'px',
-                     "padding-left": '' + (newWidth+5) + 'px'});
-            else
-                $('.frame').css(
-                    {"margin-right": '' + (-newWidth-5) + 'px',
-                     "padding-right": '' + (newWidth+5) + 'px'});
             eventbus.publish(IMAGE_VIEWER_RESIZE, {config_id: -1});
         });
     }
@@ -180,32 +186,32 @@ export default class Ui {
      */
     static adjustSideBarsOnWindowResize() {
         // if we get too small we'll collaps the thumbnail sidebar
-        let sideBar = $('.thumbnail-panel');
-        let otherSideBar = $('.right-hand-panel');
-        let width = sideBar.width();
-        let toleranceWidth = 0, origin=null;
-        if (width > 0) {
-            toleranceWidth = $(window).width() - otherSideBar.width() - 200;
-            origin = $('.collapse-left');
-            if (width > toleranceWidth)
-                origin.trigger('click', {currentTarget: origin});
-        }
-        // if we get even smaller, we'll either resize the right hand panel or
-        // collapse it as well
-        sideBar = $('.right-hand-panel');
-        width = sideBar.width();
-        toleranceWidth = $(window).width() - 200;
-        origin = $('.collapse-right');
-        if (width > toleranceWidth) {
-            if (toleranceWidth < 50)
-                origin.trigger('click', {currentTarget: origin});
-            else {
-                 $('.right-hand-panel').width(toleranceWidth);
-                $('.frame').css(
-                    {"margin-right": '' + (-toleranceWidth-5) + 'px',
-                     "padding-right": '' + (toleranceWidth+15) + 'px'});
-            }
-        }
+        // let sideBar = $('.thumbnail-panel');
+        // let otherSideBar = $('.right-hand-panel');
+        // let width = sideBar.width();
+        // let toleranceWidth = 0, origin=null;
+        // if (width > 0) {
+        //     toleranceWidth = $(window).width() - otherSideBar.width() - 200;
+        //     origin = $('.collapse-left');
+        //     if (width > toleranceWidth)
+        //         origin.trigger('click', {currentTarget: origin});
+        // }
+        // // if we get even smaller, we'll either resize the right hand panel or
+        // // collapse it as well
+        // sideBar = $('.right-hand-panel');
+        // width = sideBar.width();
+        // toleranceWidth = $(window).width() - 200;
+        // origin = $('.collapse-right');
+        // if (width > toleranceWidth) {
+        //     if (toleranceWidth < 50)
+        //         origin.trigger('click', {currentTarget: origin});
+        //     else {
+        //          $('.right-hand-panel').width(toleranceWidth);
+        //         $('.frame').css(
+        //             {"margin-right": '' + (-toleranceWidth-5) + 'px',
+        //              "padding-right": '' + (toleranceWidth+15) + 'px'});
+        //     }
+        // }
     }
 
     /**

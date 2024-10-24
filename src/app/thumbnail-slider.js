@@ -711,7 +711,6 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @memberof ThumbnailSlider
      */
     refreshThumbnails() {
-        debugger;
         // we are already requesting
         if (this.requesting_thumbnail_data ||
             this.context.selected_config === null) return;

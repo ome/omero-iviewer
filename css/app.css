@@ -512,7 +512,7 @@ span.sp-thumb-el {
     position:relative;
     flex: 5px 0 0;
     cursor: ew-resize;
-    z-index: 1;
+    z-index: 10;
     background: url('images/drag_handle.png') no-repeat scroll center center #e7e7e7;
 }
 
@@ -537,6 +537,20 @@ span.sp-thumb-el {
 
 .collapse-right {
     background: url('images/collapse-right.png') no-repeat scroll center center #fff;
+}
+
+@media (max-width: 480px) {
+    .collapse-left, .collapse-right {
+        position: absolute;
+        left: 5px;
+        bottom: -5px;
+        cursor: pointer;
+        width: 15px;
+        height: 15px;
+    }
+    .collapse-right {
+        background: url('images/expand.png') no-repeat scroll center center #fff;
+    }
 }
 
 .viewer {
@@ -591,7 +605,8 @@ span.sp-thumb-el {
 }
 
 .thumbnail-panel {
-    flex: 100px 0 0;
+    --panelSize: 100px;   /* updated by collapse/expand */
+    flex: var(--panelSize) 0 0;
     text-align: center;
     overflow-x: hidden;
     overflow-y: hidden;
@@ -692,7 +707,8 @@ thumbnail-slider img {
 /* For 'mobile' devices, fixed height */
 @media (max-width: 480px) {
     .right-hand-panel {
-        flex: 200px 0 0;
+        --panelSize: 250px;   /* updated by drag handle */
+        flex: var(--panelSize) 0 0;
     }
 }
 
