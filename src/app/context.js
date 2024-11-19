@@ -302,11 +302,11 @@ export default class Context {
      */
     setUpLuts() {
         $.ajax(
-            {url : this.server + this.getPrefixedURI(IVIEWER) + "/is_dynamic_lut/",
+            {url : this.server + this.getPrefixedURI(WEBGATEWAY) + "/luts/",
             success : (response) => {
                 // Check first whether omero-web can provides LUT dynamically
                 // and set URL accordingly
-                let is_dynamic_lut = response.is_dynamic_lut;
+                let is_dynamic_lut = Boolean(response.png_luts_new);
                 if (is_dynamic_lut) {
                     this.luts_png.url =
                         this.server + this.getPrefixedURI(WEBGATEWAY, false) + "/luts_png/";
@@ -324,33 +324,22 @@ export default class Context {
                 }
                 lutsPng.src = this.luts_png.url;
 
-                // now query the luts list
-                let server = this.server;
-                let uri_prefix =  this.getPrefixedURI(WEBGATEWAY);
-                $.ajax(
-                    {url : server + uri_prefix + "/luts/",
-                    success : (response) => {
-                        if (typeof response !== 'object' || response === null ||
-                            !Misc.isArray(response.luts)) return;
+                if (is_dynamic_lut) {
+                    // If it's dynamic, uses the new list instead
+                    response.png_luts = response.png_luts_new
+                }
 
-                        if (is_dynamic_lut) {
-                            // If it's dynamic, uses the new list instead
-                            response.png_luts = response.png_luts_new
-                        }
-
-                        response.luts.map(
-                            (l) => {
-                                let mapValue =
-                                    Object.assign({
-                                        nice_name :
-                                            l.name.replace(/.lut/g, "").replace(/_/g, " "),
-                                        index : is_dynamic_lut ? l.png_index_new : l.png_index
-                                    }, l);
-                                this.luts.set(mapValue.name, mapValue);
-                            });
-                        for (let [id, conf] of this.image_configs) conf.changed();
-                    }
-                });
+                response.luts.forEach(
+                    (l) => {
+                        let mapValue =
+                            Object.assign({
+                                nice_name :
+                                    l.name.replace(/.lut/g, "").replace(/_/g, " "),
+                                index : is_dynamic_lut ? l.png_index_new : l.png_index
+                            }, l);
+                        this.luts.set(mapValue.name, mapValue);
+                    });
+                for (let [id, conf] of this.image_configs) conf.changed();
             }
         });
     }
