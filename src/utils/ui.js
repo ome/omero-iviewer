@@ -105,18 +105,33 @@ export default class Ui {
     /**
      * Binds panel collapse handlers
      *
-     * @param {object} eventbus the eventbus for publishing
+     * @param {object} context the context for publishing
      * @param {string} uri_prefix a uri prefix for resource requests
      * @static
      */
-    static bindCollapseHandlers(eventbus, uri_prefix) {
-        if (typeof uri_prefix !== 'string') uri_prefix = '';
+    static bindCollapseHandlers(context) {
+        let self = this;
         $('.collapse-left, .collapse-right').mousedown(
             (e) => {e.preventDefault(); e.stopPropagation();});
 
         $('.collapse-left, .collapse-right').click((e) => {
             let leftSplit =
                 $(e.currentTarget).hasClass("collapse-left");
+            self.collapseSidePanel(context.eventbus, leftSplit);
+        });
+
+        // collapse depending on context (initial params)
+        if (context.collapse_left) {
+            self.collapseSidePanel(context.eventbus, true);
+        }
+        if (context.collapse_right) {
+            self.collapseSidePanel(context.eventbus);
+        }
+    }
+
+
+    static collapseSidePanel(eventbus, leftSplit) {
+            
             let el = leftSplit ? $('.thumbnail-panel') : $('.right-hand-panel');
 
             let minWidth = leftSplit ? 20 : 50;
@@ -139,20 +154,13 @@ export default class Ui {
             }
             el.attr("old-width", width);
 
-            let url =
-                uri_prefix === '' ?
-                    Misc.pruneUrlToLastDash($(e.currentTarget).attr("src")) :
-                    uri_prefix + "/css/images";
-            $(e.currentTarget).attr(
-                "src", url + "/collapse-" +
-                (leftSplit && newWidth === 0 ||
-                    !leftSplit && newWidth !== 0 ? "right" : "left") + ".png");
+            let $handle = leftSplit ? $("collapse-left") : $("collapse-right");
             el.width(newWidth);
             el.css('flex', '0 0 ' + newWidth + 'px');
             if (newWidth === 0)
-                $(e.currentTarget).parent().css("cursor", "default");
+                $handle.parent().css("cursor", "default");
             else
-                $(e.currentTarget).parent().css("cursor", "ew-resize");
+                $handle.parent().css("cursor", "ew-resize");
             if (leftSplit)
                 $('.frame').css(
                     {"margin-left": '' + (-newWidth-5) + 'px',
@@ -162,7 +170,6 @@ export default class Ui {
                     {"margin-right": '' + (-newWidth-5) + 'px',
                      "padding-right": '' + (newWidth+5) + 'px'});
             eventbus.publish(IMAGE_VIEWER_RESIZE, {config_id: -1});
-        });
     }
 
     /**
@@ -170,15 +177,14 @@ export default class Ui {
      * It's a convenience method for doing both handlers at the same time-slider
      * as well as unbinding beforehand
      *
-     * @param {object} eventbus the eventbus for publishing
-     * @param {string} uri_prefix a uri prefix for resource requests
+     * @param {object} context the context for publishing
      * @static
      */
-    static registerSidePanelHandlers(eventbus, uri_prefix) {
+    static registerSidePanelHandlers(context) {
         this.unbindResizeHandlers();
         this.unbindCollapseHandlers();
-        this.bindResizeHandlers(eventbus);
-        this.bindCollapseHandlers(eventbus, uri_prefix);
+        this.bindResizeHandlers(context.eventbus);
+        this.bindCollapseHandlers(context);
     }
 
     /**

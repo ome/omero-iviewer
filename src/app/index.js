@@ -115,10 +115,7 @@ export class Index  {
             return null;
         };
         // register resize and collapse handlers
-        Ui.registerSidePanelHandlers(
-            this.context.eventbus,
-            this.context.getPrefixedURI(PLUGIN_PREFIX, true),
-        );
+        Ui.registerSidePanelHandlers(this.context);
 
         // register the fullscreenchange handler
         this.full_screen_api_prefix = Ui.getFullScreenApiPrefix();

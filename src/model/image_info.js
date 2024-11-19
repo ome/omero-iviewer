@@ -687,7 +687,6 @@ export default class ImageInfo {
         $.ajax({
             url,
             success: (response) => {
-                console.log('response this.image_id', this.image_id, response.image_id);
                 this.setFormattedDeltaT(response)
             }
         });
