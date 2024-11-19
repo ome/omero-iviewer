@@ -123,6 +123,7 @@ export default class Ui {
     static collapseSidePanel(eventbus, leftSplit) {
             
             let el = leftSplit ? $('.thumbnail-panel') : $('.right-hand-panel');
+            let handle = leftSplit ? $('.collapse-left') : $('.collapse-right');
 
             let width = parseInt(el.css('--panelWidth'));
             let height = parseInt(el.css('--panelHeight'));
@@ -141,6 +142,14 @@ export default class Ui {
             // update css - the appropriate width/height var will be used depending on layout
             el.css('--panelHeight', newHeight + "px");
             el.css('--panelWidth', newWidth + "px");
+            // class used to set the collapse-handle icon
+            if (leftSplit) {
+                if (newHeight > 0) {handle.addClass("arrowsUp");}
+                else {handle.removeClass("arrowsUp");}
+            } else {
+                if (newHeight == 0) {handle.addClass("arrowsUp");}
+                else {handle.removeClass("arrowsUp");}
+            }
             eventbus.publish(IMAGE_VIEWER_RESIZE, {config_id: -1});
     }
 

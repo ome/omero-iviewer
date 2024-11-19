@@ -551,13 +551,21 @@ span.sp-thumb-el {
     .collapse-left, .collapse-right {
         position: absolute;
         left: 5px;
-        bottom: -5px;
+        bottom: -9px;
         cursor: pointer;
-        width: 15px;
-        height: 15px;
+        width: 17px;
+        height: 17px;
+        border-radius: 5px;
+        background: url('images/expand.png') no-repeat scroll center center #fff;
+        background-size: 100%;
     }
     .collapse-right {
+        bottom: -2px;
         background: url('images/expand.png') no-repeat scroll center center #fff;
+    }
+    /* rotate the V down arrow to point up */
+    .arrowsUp {
+        transform: rotate(180deg);
     }
 }
 
@@ -650,6 +658,7 @@ span.sp-thumb-el {
     width: 80px;
     height: 80px;
     margin: 5px;
+    flex: auto 0 0;
 }
 thumbnail-slider img {
     margin: 0;
