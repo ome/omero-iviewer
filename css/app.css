@@ -511,14 +511,22 @@ span.sp-thumb-el {
 .col-splitter {
     position:relative;
     flex: 5px 0 0;
-    cursor: ew-resize;
     z-index: 10;
+    background-color: #e7e7e7;
+}
+
+#col_splitter_right {
+    cursor: ew-resize;
     background: url('images/drag_handle.png') no-repeat scroll center center #e7e7e7;
 }
 
 @media (max-width: 480px) {
     .col-splitter {
         flex-direction: column;
+    }
+    #col_splitter_right {
+        cursor: ns-resize;
+        background: url('images/drag_handle_horizontal.png') no-repeat scroll center center #e7e7e7;
     }
 }
 
@@ -605,8 +613,10 @@ span.sp-thumb-el {
 }
 
 .thumbnail-panel {
-    --panelSize: 100px;   /* updated by collapse/expand */
-    flex: var(--panelSize) 0 0;
+    /* we have width AND height for mobile layout */
+    --panelWidth: 100px;   /* updated by collapse/expand */
+    --panelHeight: 100px;  /* updated by collapse/expand */
+    flex: var(--panelWidth) 0 0;
     text-align: center;
     overflow-x: hidden;
     overflow-y: hidden;
@@ -623,6 +633,9 @@ span.sp-thumb-el {
     flex-direction: column;
 }
 @media (max-width: 480px) {
+    .thumbnail-panel {
+        flex: var(--panelHeight) 0 0;
+    }
     .thumbnail-panel .thumbnail-scroll-panel {
         overflow-x: auto;
         overflow-y: hidden;
@@ -696,8 +709,10 @@ thumbnail-slider img {
 /* Top-level container for right-hand-panel
     Contains .nav-tabs (tabs) and .regions-tabs (content) */
 .right-hand-panel {
-    --panelSize: 350px;   /* updated by drag handle */
-    flex: var(--panelSize) 0 0;
+    /* we have width AND height for mobile layout */
+    --panelWidth: 350px;   /* updated by drag handle */
+    --panelHeight: 250px;   /* updated by drag handle */
+    flex: var(--panelWidth) 0 0;
     max-width: 1000px;
     overflow-y: hidden;
     display: flex;
@@ -707,8 +722,7 @@ thumbnail-slider img {
 /* For 'mobile' devices, fixed height */
 @media (max-width: 480px) {
     .right-hand-panel {
-        --panelSize: 250px;   /* updated by drag handle */
-        flex: var(--panelSize) 0 0;
+        flex: var(--panelHeight) 0 0;
     }
 }
 
@@ -884,11 +898,6 @@ thumbnail-slider img {
     color: black;
     z-index: 10;
     position: relative;
-}
-
-.left-hand-panel-hidden {
-    margin-left: -5px;
-    padding-left: 5px;
 }
 
 .save-settings .btn-sm, .history .btn-sm {

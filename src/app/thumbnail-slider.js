@@ -589,9 +589,6 @@ export default class ThumbnailSlider extends EventSubscriber {
     hideMe() {
         $(this.element).hide();
         $('.col-splitter.left-split').css('visibility', 'hidden');
-        $('.frame').addClass('left-hand-panel-hidden');
-        $('.frame').css('margin-left', '');
-        $('.frame').css('padding-left', '');
         this.context.eventbus.publish(IMAGE_VIEWER_RESIZE, { config_id: -1 });
     }
 

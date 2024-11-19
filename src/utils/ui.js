@@ -36,49 +36,41 @@ export default class Ui {
         if (typeof eventbus !== 'object' ||
             typeof eventbus.publish !== 'function') return;
 
-        $('.col-splitter').mousedown((e) => {
+        // Only support drag-resize on settings panel, not thumbnails
+        document.getElementById("col_splitter_right").onpointerdown = (e) => {
             e.preventDefault();
             let leftSplit = $(e.currentTarget).hasClass("left-split");
+            let verticalLayout = $(window).width() <= 480;
+            console.log("onpointerdown... leftSplit", leftSplit, "verticalLayout", verticalLayout);
 
-            $(document).mousemove((e) => {
+            // $(document).mousemove((e) => {
+            document.onpointermove = (e) => {
                 e.preventDefault();
 
                 let el = leftSplit ? $('.thumbnail-panel') : $('.right-hand-panel');
-
-                let size = parseInt(el.css('--panelSize'));
-
-                console.log("DRAG....", e, size);
-                if (size === 0) return false;
-
-                let x = leftSplit ? e.pageX - el.offset().left :
-                    $(window).width() - e.pageX;
-                let frameWidth = $(".frame").width();
-                let minWidth = leftSplit ? 25 : 50;
-                let maxWidth = parseInt(el.css("max-width"));
-                let tolerance =  $(window).width() -
-                        (leftSplit ? $('.right-hand-panel').width() :
-                            $('.thumbnail-panel').width())-200;
-                console.log("TOLERANCE", tolerance, 'maxWidth', maxWidth);
-                if (maxWidth > tolerance)
-                    maxWidth = tolerance;
-                let rightBound = leftSplit ?
-                    ($(window).width() - frameWidth) : $(window).width();
-
-                console.log("X", x, "minWidth", minWidth, "maxWidth", maxWidth)
-                // if (x > minWidth && x < maxWidth && e.pageX < rightBound) {
-                    el.css('--panelSize', x + "px");
-                // }
+                // mobile layout,. we're dragging vertically
+                if (verticalLayout) {
+                    let y = leftSplit ? e.pageY : $(window).height() - e.pageY;
+                    console.log("y", y);
+                    el.css('--panelHeight', y + "px");
+                } else {
+                    let x = leftSplit ? e.pageX - el.offset().left : $(window).width() - e.pageX;
+                    console.log("x", x);
+                    el.css('--panelWidth', x + "px");
+                }
                 eventbus.publish(IMAGE_VIEWER_RESIZE,
                     {config_id: -1, is_dragging: true});
-            });
+            };
 
-            $(document).mouseup((e) => {
-                $(document).unbind('mousemove');
-                $(document).unbind('mouseup');
+            document.onpointerup = (e) => {
+                // $(document).unbind('mousemove');
+                // $(document).unbind('mouseup');
+                document.onpointermove = null;
+                document.getElementById("col_splitter_right").onpointerup = null;
                 eventbus.publish(IMAGE_VIEWER_RESIZE,
                     {config_id: -1, is_dragging: false});
-            });
-        });
+            };
+        };
     }
 
     /**
@@ -116,49 +108,25 @@ export default class Ui {
             let leftSplit =
                 $(e.currentTarget).hasClass("collapse-left");
             let el = leftSplit ? $('.thumbnail-panel') : $('.right-hand-panel');
-            console.log("CLICK", el, el.css('--panelSize'));
+            console.log("CLICK", el.css('--panelWidth'), el.css('--panelHeight'));
 
-            // let minWidth = leftSplit ? 20 : 50;
-            let oldWidth = parseInt(el.attr("old-width"));
-
-            // let width = el.width();
-            let width = parseInt(el.css('--panelSize'));
-
-            console.log("WIDTH", width, "OLD WIDTH", oldWidth);
-
-            // let tolerance =  $(window).width() -
-            //         (leftSplit ? $('.right-hand-panel').width() :
-            //             $('.thumbnail-panel').width())-200;
-
-            // toggle the width
+            let width = parseInt(el.css('--panelWidth'));
+            let height = parseInt(el.css('--panelHeight'));
+            let oldWidth = parseInt(el.attr("old-width") || 0);
+            let oldHeight = parseInt(el.attr("old-height") || 0);
+            
+            // toggle the width/height
+            // (regardless of whether the layout is vertical or horizontal)
             let newWidth = width === 0 ? oldWidth : 0;
+            let newHeight = height === 0 ? oldHeight : 0;
 
-            // let newWidth = width === 0 ?
-            //     (isNaN(oldWidth) || oldWidth <= 0 ? minWidth : oldWidth) : 0;
-
-            // we do not allow opening sidebars if there is not enough room
-            // we try to reduce it to above set minWidth but if that is
-            // not good enough, we don't open it
-            // if (newWidth !== 0 && newWidth > tolerance) {
-            //     if (minWidth > tolerance) return;
-            //     newWidth = tolerance;
-            // }
+            // store old sizes to use it when we toggle back
             el.attr("old-width", width);
+            el.attr("old-height", height);
 
-            let url =
-                uri_prefix === '' ?
-                    Misc.pruneUrlToLastDash($(e.currentTarget).attr("src")) :
-                    uri_prefix + "/css/images";
-            $(e.currentTarget).attr(
-                "src", url + "/collapse-" +
-                (leftSplit && newWidth === 0 ||
-                    !leftSplit && newWidth !== 0 ? "right" : "left") + ".png");
-            console.log("NEW WIDTH", newWidth);
-            el.css('--panelSize', newWidth + "px");
-            if (newWidth === 0)
-                $(e.currentTarget).parent().css("cursor", "default");
-            else
-                $(e.currentTarget).parent().css("cursor", "ew-resize");
+            // update css
+            el.css('--panelHeight', newHeight + "px");
+            el.css('--panelWidth', newWidth + "px");
             eventbus.publish(IMAGE_VIEWER_RESIZE, {config_id: -1});
         });
     }
