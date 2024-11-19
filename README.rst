@@ -113,6 +113,12 @@ The Z and/or T plane, X/Y center position and zoom can be defined by::
     ?x=500&y=400        # need to specify center with x AND y
     ?zm=100             # percent
 
+You can set the left and right panels to be initially collapsed::
+
+    ?collapse_left=true     # Left panel will be collapsed
+    ?collapse_right=true    # Right panel will be collapsed
+    ?full_page=true         # Both panels will be collapsed
+
 
 Development
 ===========
