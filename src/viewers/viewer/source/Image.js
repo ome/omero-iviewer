@@ -199,7 +199,6 @@ const OmeroImage = function(options) {
     this.use_tiled_retrieval_ = this.tiled_ ||
         this.width_ * this.height_ > UNTILED_RETRIEVAL_LIMIT && this.size_t_ == 1;
 
-    console.log("this.use_tiled_retrieval_", this.use_tiled_retrieval_, this.size_t_);
     /**
      * for untiled retrieval the tile size equals the entire image extent
      * for tiled we use the default tile size

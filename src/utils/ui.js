@@ -95,20 +95,34 @@ export default class Ui {
     /**
      * Binds panel collapse handlers
      *
-     * @param {object} eventbus the eventbus for publishing
+     * @param {object} context the context for publishing
      * @param {string} uri_prefix a uri prefix for resource requests
      * @static
      */
-    static bindCollapseHandlers(eventbus, uri_prefix) {
-        if (typeof uri_prefix !== 'string') uri_prefix = '';
+    static bindCollapseHandlers(context) {
+        let self = this;
         $('.collapse-left, .collapse-right').mousedown(
             (e) => {e.preventDefault(); e.stopPropagation();});
 
         $('.collapse-left, .collapse-right').click((e) => {
             let leftSplit =
                 $(e.currentTarget).hasClass("collapse-left");
+            self.collapseSidePanel(context.eventbus, leftSplit);
+        });
+
+        // collapse depending on context (initial params)
+        if (context.collapse_left) {
+            self.collapseSidePanel(context.eventbus, true);
+        }
+        if (context.collapse_right) {
+            self.collapseSidePanel(context.eventbus);
+        }
+    }
+
+
+    static collapseSidePanel(eventbus, leftSplit) {
+            
             let el = leftSplit ? $('.thumbnail-panel') : $('.right-hand-panel');
-            console.log("CLICK", el.css('--panelWidth'), el.css('--panelHeight'));
 
             let width = parseInt(el.css('--panelWidth'));
             let height = parseInt(el.css('--panelHeight'));
@@ -124,11 +138,10 @@ export default class Ui {
             el.attr("old-width", width);
             el.attr("old-height", height);
 
-            // update css
+            // update css - the appropriate width/height var will be used depending on layout
             el.css('--panelHeight', newHeight + "px");
             el.css('--panelWidth', newWidth + "px");
             eventbus.publish(IMAGE_VIEWER_RESIZE, {config_id: -1});
-        });
     }
 
     /**
@@ -136,15 +149,14 @@ export default class Ui {
      * It's a convenience method for doing both handlers at the same time-slider
      * as well as unbinding beforehand
      *
-     * @param {object} eventbus the eventbus for publishing
-     * @param {string} uri_prefix a uri prefix for resource requests
+     * @param {object} context the context for publishing
      * @static
      */
-    static registerSidePanelHandlers(eventbus, uri_prefix) {
+    static registerSidePanelHandlers(context) {
         this.unbindResizeHandlers();
         this.unbindCollapseHandlers();
-        this.bindResizeHandlers(eventbus);
-        this.bindCollapseHandlers(eventbus, uri_prefix);
+        this.bindResizeHandlers(context.eventbus);
+        this.bindCollapseHandlers(context);
     }
 
     /**
