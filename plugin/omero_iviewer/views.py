@@ -566,8 +566,7 @@ def delta_t_data(request, image_id, conn=None, **kwargs):
             params = omero.sys.ParametersI()
             params.addLong('pid', image.getPixelsId())
             query = """
-                from PlaneInfo Info where Info.pixels.id=:pid
-                and Info.id in (
+                from PlaneInfo Info where Info.id in (
                     select min(subInfo.id)
                     from PlaneInfo subInfo
                     where subInfo.pixels.id=:pid
