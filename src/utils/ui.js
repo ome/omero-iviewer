@@ -169,41 +169,6 @@ export default class Ui {
     }
 
     /**
-     * Adjusts the sidebars in case of window resize
-     *
-     * @static
-     */
-    static adjustSideBarsOnWindowResize() {
-        // if we get too small we'll collaps the thumbnail sidebar
-        // let sideBar = $('.thumbnail-panel');
-        // let otherSideBar = $('.right-hand-panel');
-        // let width = sideBar.width();
-        // let toleranceWidth = 0, origin=null;
-        // if (width > 0) {
-        //     toleranceWidth = $(window).width() - otherSideBar.width() - 200;
-        //     origin = $('.collapse-left');
-        //     if (width > toleranceWidth)
-        //         origin.trigger('click', {currentTarget: origin});
-        // }
-        // // if we get even smaller, we'll either resize the right hand panel or
-        // // collapse it as well
-        // sideBar = $('.right-hand-panel');
-        // width = sideBar.width();
-        // toleranceWidth = $(window).width() - 200;
-        // origin = $('.collapse-right');
-        // if (width > toleranceWidth) {
-        //     if (toleranceWidth < 50)
-        //         origin.trigger('click', {currentTarget: origin});
-        //     else {
-        //          $('.right-hand-panel').width(toleranceWidth);
-        //         $('.frame').css(
-        //             {"margin-right": '' + (-toleranceWidth-5) + 'px',
-        //              "padding-right": '' + (toleranceWidth+15) + 'px'});
-        //     }
-        // }
-    }
-
-    /**
      * Shows a bootstrap modal message box
      *
      * @param {string} message the title of the dialog

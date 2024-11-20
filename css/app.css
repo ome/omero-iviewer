@@ -555,13 +555,13 @@ span.sp-thumb-el {
         cursor: pointer;
         width: 17px;
         height: 17px;
+        border: solid 1px #ccc;
         border-radius: 5px;
         background: url('images/expand.png') no-repeat scroll center center #fff;
-        background-size: 100%;
+        background-size: 80%;
     }
     .collapse-right {
         bottom: -2px;
-        background: url('images/expand.png') no-repeat scroll center center #fff;
     }
     /* rotate the V down arrow to point up */
     .arrowsUp {
