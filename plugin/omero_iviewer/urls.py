@@ -39,6 +39,8 @@ urlpatterns = [
             name='omero_iviewer_get_intensity'),
     re_path(r'^shape_stats/?$', views.shape_stats,
             name='omero_iviewer_shape_stats'),
+    re_path(r'^link_annotations/?$', views.link_annotations,
+            name='omero_iviewer_link_annotations'),
     # optional z or t range e.g. iid/0-10/2-5/
     re_path(r'^rois_by_plane/(?P<image_id>[0-9]+)/'
             r'(?P<the_z>[0-9]+)(?:-(?P<z_end>[0-9]+))?/'
