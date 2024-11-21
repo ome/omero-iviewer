@@ -911,3 +911,55 @@ def shape_stats(request, conn=None, **kwargs):
         return JsonResponse({"error": api_exception.message})
     except Exception as stats_call_exception:
         return JsonResponse({"error": repr(stats_call_exception)})
+
+@login_required()
+def link_annotations(request, conn=None, **kwargs):
+    print("link_annotations", request)
+    if not request.method == 'POST':
+        # GET /link_annotations/?roi=1&roi=2
+        # load Tags... -> {'1':{'tags':[{'id':56, 'textValue':'myTag'}], '2':{'tags':[]}}}
+        anns_by_roi_id = {}
+        roi_ids = request.GET.getlist('roi')
+        for roi_id in roi_ids:
+            roi = conn.getObject("Roi", roi_id)
+            tags = []
+            for ann in roi.listAnnotations():
+                if isinstance(ann._obj, omero.model.TagAnnotation):
+                    tags.append({'id': ann.id, 'textValue': ann.getTextValue()})
+            anns_by_roi_id[roi_id] = {"tags": tags}
+        return JsonResponse(anns_by_roi_id)
+
+    ann_ids = request.POST.getlist('annotation')
+    roi_ids = request.POST.getlist('roi')
+    print("ann_ids", ann_ids, "roi_ids", roi_ids)
+
+    json_data = json.loads(request.body)
+    ann_ids = json_data["annotations"]
+    roi_ids = json_data["rois"]
+    print("json_data", json_data)
+    print("ann_ids", ann_ids, "roi_ids", roi_ids)
+
+    links = 0
+    added = []
+    errors = []
+    for roi_id in roi_ids:
+        roi = conn.getObject("Roi", roi_id)
+        print("roi", roi)
+        if roi is None:
+            return JsonResponse({"errors": ["Could not find roi!"]})
+
+        for ann_id in ann_ids:
+            ann = conn.getObject("Annotation", ann_id)
+            print("ann", ann)
+            if ann is None:
+                return JsonResponse({"errors": ["Could not find associated annotation!"]})
+            
+            try:
+                r = roi.linkAnnotation(ann)
+                print("r", r)
+                links += 1
+                added.append({"id": ann.id, "textValue": ann.textValue})
+            except Exception as ex:
+                errors.append(str(ex))
+
+    return JsonResponse({"added": added, "ann_ids": ann_ids, "roi_ids": roi_ids, "message": f'{links} Annotations linked to rois!', "errors": errors})
