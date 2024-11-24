@@ -410,14 +410,19 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @memberof ThumbnailSlider
      */
     loadVisibleThumbnails(scrollTop, init = false, refresh = false) {
+        const panel = document.querySelector('.thumbnail-scroll-panel');
         if (scrollTop === undefined) {
-            const panel = document.querySelector('.thumbnail-scroll-panel');
-            if (panel)
-            scrollTop = panel.scrollTop;
+            if (panel) {
+                scrollTop = panel.scrollTop;
+            }
         }
+        // handle horizontal scrolling (mobile layout) or vertical scrolling (desktop layout)
+        let slider_width = document.querySelector('.thumbnail-scroll-panel').clientWidth;
+        let sliderSize = Math.max(slider_width, this.slider_height);
+        let scrollStart = Math.max(scrollTop, panel.scrollLeft);
 
-        let thumb_start_index = parseInt(scrollTop / this.thumbnail_size);
-        let thumb_end_index = parseInt((scrollTop + this.slider_height) / this.thumbnail_size);
+        let thumb_start_index = parseInt(scrollStart / this.thumbnail_size);
+        let thumb_end_index = parseInt((scrollStart + sliderSize) / this.thumbnail_size);
 
         let unloaded = [];
         for (var idx=thumb_start_index; idx<=thumb_end_index; idx++){
@@ -589,9 +594,6 @@ export default class ThumbnailSlider extends EventSubscriber {
     hideMe() {
         $(this.element).hide();
         $('.col-splitter.left-split').css('visibility', 'hidden');
-        $('.frame').addClass('left-hand-panel-hidden');
-        $('.frame').css('margin-left', '');
-        $('.frame').css('padding-left', '');
         this.context.eventbus.publish(IMAGE_VIEWER_RESIZE, { config_id: -1 });
     }
 

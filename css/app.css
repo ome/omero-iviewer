@@ -242,17 +242,23 @@ span.sp-thumb-el {
 }
 
 .frame {
-    margin-left: -105px;
-    padding-left: 105px;
-    margin-right: -355px;
-    padding-right: 355px;
     z-index: 0;
+    flex: auto 1 1;
+    padding: 0;
 }
 
 .center {
     margin: 0px;
     padding-top: 40px;
     background-color: #f8f8f8;
+    display: flex;
+    flex-direction: row;
+}
+
+@media (max-width: 480px) {
+    .center {
+        flex-direction: column;
+    }
 }
 
 .center-row1 {
@@ -496,7 +502,6 @@ span.sp-thumb-el {
 }
 
 .sidebar {
-    float:left;
     height:100%;
     position: relative;
     z-index: 1;
@@ -505,12 +510,24 @@ span.sp-thumb-el {
 
 .col-splitter {
     position:relative;
-    height:100%;
-    float: left;
-    width: 5px;
+    flex: 5px 0 0;
+    z-index: 10;
+    background-color: #e7e7e7;
+}
+
+#col_splitter_right {
     cursor: ew-resize;
-    z-index: 1;
     background: url('images/drag_handle.png') no-repeat scroll center center #e7e7e7;
+}
+
+@media (max-width: 480px) {
+    .col-splitter {
+        flex-direction: column;
+    }
+    #col_splitter_right {
+        cursor: ns-resize;
+        background: url('images/drag_handle_horizontal.png') no-repeat scroll center center #e7e7e7;
+    }
 }
 
 .collapse-left, .collapse-right {
@@ -528,6 +545,28 @@ span.sp-thumb-el {
 
 .collapse-right {
     background: url('images/collapse-right.png') no-repeat scroll center center #fff;
+}
+
+@media (max-width: 480px) {
+    .col-splitter {
+        flex: 10px 0 0;
+    }
+    .collapse-left, .collapse-right {
+        position: absolute;
+        left: 5px;
+        bottom: -3px;
+        cursor: pointer;
+        width: 17px;
+        height: 17px;
+        border: solid 1px #ccc;
+        border-radius: 5px;
+        background: url('images/expand.png') no-repeat scroll center center #fff;
+        background-size: 80%;
+    }
+    /* rotate the V down arrow to point up */
+    .arrowsUp {
+        transform: rotate(180deg);
+    }
 }
 
 .viewer {
@@ -582,9 +621,10 @@ span.sp-thumb-el {
 }
 
 .thumbnail-panel {
-    padding-top: 30px;
-    width: 100px;
-    max-width: 100px;
+    /* we have width AND height for mobile layout */
+    --panelWidth: 100px;   /* updated by collapse/expand */
+    --panelHeight: 100px;  /* updated by collapse/expand */
+    flex: var(--panelWidth) 0 0;
     text-align: center;
     overflow-x: hidden;
     overflow-y: hidden;
@@ -596,12 +636,29 @@ span.sp-thumb-el {
     height: 100%;
     width: 100%;
 }
+.thumbnails {
+    display: flex;
+    flex-direction: column;
+}
+@media (max-width: 480px) {
+    .thumbnail-panel {
+        flex: var(--panelHeight) 0 0;
+    }
+    .thumbnail-panel .thumbnail-scroll-panel {
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+    .thumbnails {
+        flex-direction: row;
+    }
+}
 .thumbnail-wrapper {
     display: inline-block;
     background: #f0f0f0;
     width: 80px;
     height: 80px;
     margin: 5px;
+    flex: auto 0 0;
 }
 thumbnail-slider img {
     margin: 0;
@@ -661,11 +718,21 @@ thumbnail-slider img {
 /* Top-level container for right-hand-panel
     Contains .nav-tabs (tabs) and .regions-tabs (content) */
 .right-hand-panel {
-    width: 350px;
+    /* we have width AND height for mobile layout */
+    --panelWidth: 350px;   /* updated by drag handle */
+    --panelHeight: 250px;   /* updated by drag handle */
+    flex: var(--panelWidth) 0 0;
     max-width: 1000px;
     overflow-y: hidden;
     display: flex;
     flex-direction: column;
+}
+
+/* For 'mobile' devices, fixed height */
+@media (max-width: 480px) {
+    .right-hand-panel {
+        flex: var(--panelHeight) 0 0;
+    }
 }
 
 #panel-tabs {
@@ -771,7 +838,7 @@ thumbnail-slider img {
 #settings {
     overflow-y: auto;
     overflow-x: hidden;
-    height:calc(100% - 42px);
+    /* height:calc(100% - 42px); */
 }
 .right-hand-panel .row {
     margin-bottom: 2px;
@@ -840,11 +907,6 @@ thumbnail-slider img {
     color: black;
     z-index: 10;
     position: relative;
-}
-
-.left-hand-panel-hidden {
-    margin-left: -5px;
-    padding-left: 5px;
 }
 
 .save-settings .btn-sm, .history .btn-sm {
@@ -1420,12 +1482,15 @@ thumbnail-slider img {
 
 .refresh_thumbnails {
     position: absolute;
-    width: 20px;
-    height: 20px;
-    top: 10px;
+    background: white;
+    width: 30px;
+    height: 30px;
+    top: 5px;
     right: 5px;
     cursor: pointer;
     z-index: 1;
+    padding: 5px;
+    border: none;
 }
 
 .columns-dropdown {
