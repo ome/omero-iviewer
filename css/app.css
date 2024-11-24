@@ -548,10 +548,13 @@ span.sp-thumb-el {
 }
 
 @media (max-width: 480px) {
+    .col-splitter {
+        flex: 10px 0 0;
+    }
     .collapse-left, .collapse-right {
         position: absolute;
         left: 5px;
-        bottom: -9px;
+        bottom: -3px;
         cursor: pointer;
         width: 17px;
         height: 17px;
@@ -559,9 +562,6 @@ span.sp-thumb-el {
         border-radius: 5px;
         background: url('images/expand.png') no-repeat scroll center center #fff;
         background-size: 80%;
-    }
-    .collapse-right {
-        bottom: -2px;
     }
     /* rotate the V down arrow to point up */
     .arrowsUp {
