@@ -17,20 +17,20 @@
 -->
 
 <template>
-    <div class="refresh_thumbnails glyphicon glyphicon-refresh
+    <button class="refresh_thumbnails glyphicon glyphicon-refresh
                 ${requesting_thumbnail_data ?
                     'background-color: disabled-color' : ''}"
          show.bind="!(image_config.image_info.error && !initialized)"
          click.delegate="refreshThumbnails()"
          title="Refresh thumbnails">
-    </div>
+    </button>
 
     <div class="thumbnail-scroll-panel"
         show.bind="!requesting_thumbnail_data"
         resize.trigger="panelResized($event)"
         scroll.trigger="handleScrollEvent($event) & debounce:100">
 
-        <div>
+        <div class="thumbnails">
             <!-- Both the div and the img have data-id for drag-n-drop -->
             <div repeat.for="thumb of thumbnails" class="thumbnail-wrapper"
                 data-id="${thumb.id}"
