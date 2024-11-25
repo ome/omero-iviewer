@@ -1,3 +1,12 @@
+0.15.0 (November 2024)
+----------------------
+
+- Options to open viewer with left and right panels collapsed ([#482](https://github.com/ome/omero-iviewer/pull/482))
+- Improved support for flipped viewing (Thanks to [Michael Barrett](https://github.com/barrettMCW)) ([#484](https://github.com/ome/omero-iviewer/pull/484))
+- Dynamic loading of Lookup Tables from the server (Thanks to [Tom Boissonnet](https://github.com/Tom-TBT)) ([#485](https://github.com/ome/omero-iviewer/pull/485))
+- Fix Timestamp loading when some Z/C planes are missing (Thanks to [Tom Boissonnet](https://github.com/Tom-TBT)) ([#486](https://github.com/ome/omero-iviewer/pull/486))
+- Mobile layout for small screens ([#488](https://github.com/ome/omero-iviewer/pull/488))
+
 0.14.0 (May 2024)
 -----------------
 
