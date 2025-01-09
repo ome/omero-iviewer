@@ -192,14 +192,12 @@ export default class Context {
      luts = new Map();
 
      /**
-      * max active channels
-      * 
-      * //  TODO: make the default configurable.
+      * max active channels - default is loaded from iviewer_settings
       *
       * @memberof Context
       * @type {number}
       */
-     max_active_channels = 20;
+     max_active_channels = 10;
 
      /**
       * the lookup png
@@ -360,11 +358,9 @@ export default class Context {
     loadMaxActiveChannels() {
         // query microservice endpoint...
         let url = this.server + "/omero_ms_image_region/";
-        console.log(url);
         fetch(url, {method: "OPTIONS"})
         .then(r => r.json())
         .then(data => {
-            console.log('data', data);
             if (Number.isInteger(data.options?.maxActiveChannels)) {
                 this.max_active_channels = data.options.maxActiveChannels;
                 // in case the images loaded already (this query took longer than
@@ -492,6 +488,7 @@ export default class Context {
         this.max_projection_bytes = parseInt(this.initParams[REQUEST_PARAMS.MAX_PROJECTION_BYTES], 10)
                                     || (1024 * 1024 * 256);
         this.max_projection_bytes = parseInt(this.initParams[REQUEST_PARAMS.MAX_PROJECTION_BYTES], 10) || (1024 * 1024 * 256);
+        this.max_active_channels = parseInt(this.initParams[REQUEST_PARAMS.MAX_ACTIVE_CHANNELS], 10) || 10;
         let userPalette = `${this.initParams[REQUEST_PARAMS.ROI_COLOR_PALETTE]}`
         if (userPalette) {
             let arr = userPalette.match(/\[[^\[\]]*\]/g)

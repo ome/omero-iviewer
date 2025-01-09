@@ -475,7 +475,6 @@ export default class ImageInfo {
 
     applyMaxActiveChannels(max_active_channels) {
         // let conf = this.context.getImageConfig(this.config_id);
-        console.log("applyMaxActiveChannels", max_active_channels, this.channels);
         if (this.channels == null) {
             return;
         }
