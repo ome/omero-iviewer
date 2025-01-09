@@ -39,8 +39,9 @@ IVIEWER_SETTINGS_MAPPING = {
         ["MAX_ACTIVE_CHANNELS",
          10,
          int,
-         ("Default maximum number of active channels. If the /omero_ms_image_region/ "
-          "microservice endpoint is provided, the options.maxActiveChannels "
+         ("Default maximum number of active channels. "
+          "If the /omero_ms_image_region/ microservice endpoint "
+          "is provided, the options.maxActiveChannels "
           "from that response will be used instead.")],
 
     "omero.web.iviewer.roi_page_size":
