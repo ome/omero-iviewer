@@ -458,6 +458,9 @@ export default class ImageInfo {
         // If we've viewed this image before, apply cached settings
         this.applyCachedSettings(response);
 
+        // enforce max_active_channels
+        this.applyMaxActiveChannels(this.context.max_active_channels);
+
         // signal that we are ready
         this.ready = true;
         this.tmp_data = response;
@@ -468,6 +471,26 @@ export default class ImageInfo {
         }
         // Finally, load delta_t data
         this.requestDeltaT();
+    }
+
+    applyMaxActiveChannels(max_active_channels) {
+        // let conf = this.context.getImageConfig(this.config_id);
+        console.log("applyMaxActiveChannels", max_active_channels, this.channels);
+        if (this.channels == null) {
+            return;
+        }
+        let channels = this.channels;
+        let activeCount = 0;
+
+        for (let i=0;i<channels.length;i++) {
+            let c = channels[i];
+            if (c.active) {
+                activeCount += 1;
+            }
+            if (activeCount > max_active_channels && c.active) {
+                c.active = false;
+            };
+        };
     }
 
     /**

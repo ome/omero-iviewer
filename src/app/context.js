@@ -192,6 +192,16 @@ export default class Context {
      luts = new Map();
 
      /**
+      * max active channels
+      * 
+      * //  TODO: make the default configurable.
+      *
+      * @memberof Context
+      * @type {number}
+      */
+     max_active_channels = 20;
+
+     /**
       * the lookup png
       *
       * @memberof Context
@@ -242,6 +252,9 @@ export default class Context {
 
         // set up luts
         this.setUpLuts();
+
+        // load max active channels
+        this.loadMaxActiveChannels();
 
         // initialize Open_with
         OpenWith.initOpenWith();
@@ -341,6 +354,27 @@ export default class Context {
                     });
                 for (let [id, conf] of this.image_configs) conf.changed();
             }
+        });
+    }
+
+    loadMaxActiveChannels() {
+        // query microservice endpoint...
+        let url = this.server + "/omero_ms_image_region/";
+        console.log(url);
+        fetch(url, {method: "OPTIONS"})
+        .then(r => r.json())
+        .then(data => {
+            console.log('data', data);
+            if (Number.isInteger(data.options?.maxActiveChannels)) {
+                this.max_active_channels = data.options.maxActiveChannels;
+                // in case the images loaded already (this query took longer than
+                // expected), let's update them...
+                for (let [id, conf] of this.image_configs) {
+                    conf.image_info.applyMaxActiveChannels(this.max_active_channels);
+                }
+            }
+        }).catch(() => {
+            console.log("failed to load omero_ms_image_region info");
         });
     }
 
