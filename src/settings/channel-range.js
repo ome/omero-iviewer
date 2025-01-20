@@ -548,7 +548,7 @@ export default class ChannelRange  {
         let maxActive = this.context.max_active_channels;
         let activeCount = imgConf.image_info.channels.reduce((count, ch) => count + (ch.active ? 1 : 0), 0);
         if (!this.channel.active && activeCount >= maxActive) {
-            Ui.showModalMessage(`The maximum number of active channels is ${maxActive}.`, "OK");
+            Ui.showModalMessage(`Cannot activate channel. The maximum number of channels is already active.`, "OK");
             return;
         }
 
