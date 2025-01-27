@@ -18,7 +18,6 @@
 
 // js
 import Context from '../app/context';
-import Misc from '../utils/misc';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {CHANNEL_SETTINGS_MODE, WEBGATEWAY} from '../utils/constants';
 import {

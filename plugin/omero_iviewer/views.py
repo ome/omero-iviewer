@@ -50,6 +50,7 @@ MAX_LIMIT = max(1, API_MAX_LIMIT)
 ROI_PAGE_SIZE = getattr(iviewer_settings, 'ROI_PAGE_SIZE')
 ROI_PAGE_SIZE = min(MAX_LIMIT, ROI_PAGE_SIZE)
 MAX_PROJECTION_BYTES = getattr(iviewer_settings, 'MAX_PROJECTION_BYTES')
+MAX_ACTIVE_CHANNELS = getattr(iviewer_settings, 'MAX_ACTIVE_CHANNELS')
 ROI_COLOR_PALETTE = getattr(iviewer_settings, 'ROI_COLOR_PALETTE')
 SHOW_PALETTE_ONLY = getattr(iviewer_settings, 'SHOW_PALETTE_ONLY')
 ENABLE_MIRROR = getattr(iviewer_settings, 'ENABLE_MIRROR')
@@ -114,6 +115,7 @@ def index(request, iid=None, conn=None, **kwargs):
         nodedescriptors = None
 
     params['MAX_PROJECTION_BYTES'] = max_bytes
+    params['MAX_ACTIVE_CHANNELS'] = MAX_ACTIVE_CHANNELS
     params['NODEDESCRIPTORS'] = nodedescriptors
     params['ROI_COLOR_PALETTE'] = ROI_COLOR_PALETTE
     params['SHOW_PALETTE_ONLY'] = SHOW_PALETTE_ONLY
