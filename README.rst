@@ -31,40 +31,8 @@ https://omero-guides.readthedocs.io/en/latest/iviewer/docs/index.html
 Settings
 ========
 
-OMERO limits the size of Z-projections to reduce load on the server.
-The limit is defined as the number of bytes of raw pixel data in a Z-stack and
-the OMERO.server default is equivalent to 1024 * 1024 * 256 bytes.
-For example, a single-channel 8-bit image (1 byte per pixel) of XYZ size
-1024 * 1024 * 256 is equal to the default threshold.
-
-To double the limit, use::
-
-    $ omero config set omero.pixeldata.max_projection_bytes 536870912
-
-If you wish to set a threshold for iviewer that is *lower* than for the server:
-
-    $ omero config set omero.web.iviewer.max_projection_bytes 268435456
-
-NB: Z-projection is not supported for tiled images in OMERO
-(Images larger than 2048 * 2048 pixels per plane are tiled in iviewer).
-
-OMERO uses Spectrum Color Picker for selecting ROI colors. 
-The roi_color_palette option allows you to specify a grid of colors for users to choose for ROIs.
-Define rows with brackets, and use commas to separate values. By default, only the first color of each row is shown. 
-A full grid is shown when the default color picker is hidden (see below)
-To define a color palette use::
-    
-    $ omero config set omero.web.iviewer.roi_color_palette "[rgb(0,255,0)],[darkred,red,pink],[#0000FF]"
-  
-To hide the default color picker (and show a grid for the color palette), set show_palette_only to true
-You must define a palette and each row can display 4 colors::
-    
-    $ omero config set omero.web.iviewer.show_palette_only true
-
-When working with other images (coregistering MRIs for example), it is necessary to be able to mirror an image.
-There is now experimental support for runtime image mirroring. To enable mirroring set enable_mirror to true.
-
-    $ omero config set omero.web.iviewer.enable_mirror true
+See the `OMERO.iviewer settings <https://github.com/ome/omero-iviewer/blob/settings_docs/docs/settings.md>`_
+for details on how to configure various settings.
 
 Known issues
 ============
