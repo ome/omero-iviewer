@@ -34,7 +34,7 @@ To define a color palette use::
     
     $ omero config set omero.web.iviewer.roi_color_palette "[rgb(0,255,0)],[darkred,red,pink],[#0000FF]"
   
-To hide the default color picker (and show a grid for the color palette), set show_palette_only to true
+To hide the default color picker (and show a grid for the color palette), set `show_palette_only` to true
 You must define a palette and each row can display 4 colors::
     
     $ omero config set omero.web.iviewer.show_palette_only true
