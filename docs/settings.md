@@ -44,7 +44,7 @@ Enable mirror
 -------------
 
 When working with other images (coregistering MRIs for example), it is necessary to be able to mirror an image.
-There is now experimental support for runtime image mirroring. To enable mirroring set enable_mirror to true.
+There is now experimental support for runtime image mirroring. To enable mirroring set `enable_mirror` to true.
 
     $ omero config set omero.web.iviewer.enable_mirror true
 
