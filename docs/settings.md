@@ -23,7 +23,7 @@ NB: Z-projection is not supported for tiled images in OMERO
 (Images larger than 2048 * 2048 pixels per plane are tiled in iviewer).
 
 
-Roi color palette
+ROI color palette
 -----------------
 
 OMERO uses Spectrum Color Picker for selecting ROI colors. 
