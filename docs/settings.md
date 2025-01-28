@@ -3,7 +3,7 @@ OMERO.iviewer settings
 ======================
 
 Max projection bytes
--------------------
+--------------------
 
 OMERO limits the size of Z-projections to reduce load on the server.
 The limit is defined as the number of bytes of raw pixel data in a Z-stack and
