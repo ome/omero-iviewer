@@ -2,7 +2,7 @@
 OMERO.iviewer settings
 ======================
 
-Max projection byes
+Max projection bytes
 -------------------
 
 OMERO limits the size of Z-projections to reduce load on the server.
