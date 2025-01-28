@@ -29,7 +29,7 @@ ROI color palette
 OMERO uses Spectrum Color Picker for selecting ROI colors. 
 The `roi_color_palette` option allows you to specify a grid of colors for users to choose for ROIs.
 Define rows with brackets, and use commas to separate values. By default, only the first color of each row is shown. 
-A full grid is shown when the default color picker is hidden (see below)
+A full grid is shown when the default color picker is hidden (see below).
 To define a color palette use::
     
     $ omero config set omero.web.iviewer.roi_color_palette "[rgb(0,255,0)],[darkred,red,pink],[#0000FF]"
