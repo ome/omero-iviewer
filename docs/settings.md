@@ -58,7 +58,7 @@ at once puts increased load on the server and it is rarely necessary to visualis
     $ omero config set omero.web.iviewer.max_active_channels 20
 
 NB: If the iviewer is using the [image region microservice](https://github.com/glencoesoftware/omero-ms-image-region)
-then it will query the `max-active-channels` supported by the microservice, which is also 10 by default. This will override any value in the iviewer settings.
+then it will query the `max-active-channels` supported by the microservice, which is also set to 10 by default. This will override any value in the iviewer settings.
 
 
 ROI page size
