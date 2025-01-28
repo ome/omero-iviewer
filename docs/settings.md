@@ -49,15 +49,16 @@ There is now experimental support for runtime image mirroring. To enable mirrori
     $ omero config set omero.web.iviewer.enable_mirror true
 
 
-Max active channel
-------------------
+Max active channels
+-------------------
 
 By default, iviewer limits the maximum number of active channels to 10. Rendering high numbers of channels
 at once puts increased load on the server and it is rarely necessary to visualise more channels at once.
-If the iviewer is using the [image region microservice](https://github.com/glencoesoftware/omero-ms-image-region)
-then it will use the `max-active-channels` configured there, which is also 10 by default.
 
     $ omero config set omero.web.iviewer.max_active_channels 20
+
+NB: If the iviewer is using the [image region microservice](https://github.com/glencoesoftware/omero-ms-image-region)
+then it will query the `max-active-channels` supported by the microservice, which is also 10 by default. This will override any value in the iviewer settings.
 
 
 ROI page size
