@@ -1,3 +1,10 @@
+
+0.16.0 (February 2025)
+----------------------
+
+- Limit number of active channels ([#500](https://github.com/ome/omero-iviewer/pull/500))
+- Improve settings documentation ([#501](https://github.com/ome/omero-iviewer/pull/501))
+
 0.15.0 (November 2024)
 ----------------------
 
