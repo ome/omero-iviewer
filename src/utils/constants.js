@@ -82,6 +82,12 @@ export const WEBCLIENT = "WEBCLIENT";
 export const PLUGIN_PREFIX = "PLUGIN_PREFIX";
 
 /**
+ * a convenience string lookup for OMERO_FIGURE
+ * @type {string}
+ */
+export const OMERO_FIGURE = "OMERO_FIGURE";
+
+/**
  * the viewer's dom element prefix (complemented by config id)
  * @type {string}
  */

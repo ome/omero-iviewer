@@ -55,6 +55,11 @@
                         <a click.delegate="saveProjectedImage()"
                            href="#">Save Projection as new Image</a>
                     </li>
+                    <li show.bind="omeroFigureIsInstalled()" class="${image_config.image_info.ready ? '' : 'disabled-color'}">
+                        <a click.delegate="saveAsFigure()"
+                            href="#">Save Viewport${context.image_configs.size > 1 ? 's' : ''} as Figure
+                        </a>
+                    </li>
                 </ul>
             </div>
 
