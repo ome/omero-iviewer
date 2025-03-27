@@ -16,16 +16,19 @@
 #
 
 from django.shortcuts import render
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 from django.conf import settings
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from os.path import splitext
+from collections import defaultdict
 from struct import unpack
+import traceback
 
+from omeroweb.api.api_settings import API_MAX_LIMIT
 from omeroweb.decorators import login_required
 from omeroweb.webgateway.marshal import imageMarshal
-from omeroweb.webgateway.templatetags.common_filters import lengthformat,\
+from omeroweb.webgateway.templatetags.common_filters import lengthformat, \
     lengthunit
 
 import json
@@ -34,11 +37,23 @@ import omero
 from omero.rtypes import rint, rlong, unwrap
 from omero_sys_ParametersI import ParametersI
 import omero.util.pixelstypetopython as pixelstypetopython
+from omeroweb.webclient.show import get_image_roi_id_for_shape
 
-from version import __version__
+from .version import __version__
 from omero_version import omero_version
 
+from . import iviewer_settings
+
 WEB_API_VERSION = 0
+MAX_LIMIT = max(1, API_MAX_LIMIT)
+
+ROI_PAGE_SIZE = getattr(iviewer_settings, 'ROI_PAGE_SIZE')
+ROI_PAGE_SIZE = min(MAX_LIMIT, ROI_PAGE_SIZE)
+MAX_PROJECTION_BYTES = getattr(iviewer_settings, 'MAX_PROJECTION_BYTES')
+MAX_ACTIVE_CHANNELS = getattr(iviewer_settings, 'MAX_ACTIVE_CHANNELS')
+ROI_COLOR_PALETTE = getattr(iviewer_settings, 'ROI_COLOR_PALETTE')
+SHOW_PALETTE_ONLY = getattr(iviewer_settings, 'SHOW_PALETTE_ONLY')
+ENABLE_MIRROR = getattr(iviewer_settings, 'ENABLE_MIRROR')
 
 PROJECTIONS = {
     'normal': -1,
@@ -75,6 +90,36 @@ def index(request, iid=None, conn=None, **kwargs):
         'api_base', kwargs={'api_version': WEB_API_VERSION})
     if settings.FORCE_SCRIPT_NAME is not None:
         params['URI_PREFIX'] = settings.FORCE_SCRIPT_NAME
+    params['ROI_PAGE_SIZE'] = ROI_PAGE_SIZE
+
+    c = conn.getConfigService()
+    max_bytes = None
+    try:
+        max_bytes = c.getConfigValue('omero.pixeldata.max_projection_bytes')
+        # check if MAX_PROJECTION_BYTES should override server setting
+        if max_bytes is None or len(max_bytes) == 0 or (
+                MAX_PROJECTION_BYTES > 0 and
+                MAX_PROJECTION_BYTES < int(max_bytes)):
+            max_bytes = MAX_PROJECTION_BYTES
+        else:
+            max_bytes = int(max_bytes)
+    except omero.SecurityViolation:
+        # config setting not supported in OMERO before 5.6.1
+        if MAX_PROJECTION_BYTES > 0:
+            max_bytes = MAX_PROJECTION_BYTES
+
+    try:
+        nodedescriptors = c.getConfigValue("omero.server.nodedescriptors")
+    except omero.SecurityViolation:
+        # nodedescriptors not supported in OMERO before 5.6.6 (Dec 2022)
+        nodedescriptors = None
+
+    params['MAX_PROJECTION_BYTES'] = max_bytes
+    params['MAX_ACTIVE_CHANNELS'] = MAX_ACTIVE_CHANNELS
+    params['NODEDESCRIPTORS'] = nodedescriptors
+    params['ROI_COLOR_PALETTE'] = ROI_COLOR_PALETTE
+    params['SHOW_PALETTE_ONLY'] = SHOW_PALETTE_ONLY
+    params['ENABLE_MIRROR'] = ENABLE_MIRROR
 
     return render(
         request, 'omero_iviewer/index.html',
@@ -165,7 +210,7 @@ def persist_rois(request, conn=None, **kwargs):
     # delete entire (empty) rois
     try:
         empty_rois = rois.get('empty_rois', {})
-        empty_rois_ids = [long(k) for k in list(empty_rois.keys())]
+        empty_rois_ids = [int(k) for k in list(empty_rois.keys())]
         if (len(empty_rois_ids) > 0):
             conn.deleteObjects("Roi", empty_rois_ids, wait=True)
         # set ids after successful deletion,
@@ -185,7 +230,7 @@ def persist_rois(request, conn=None, **kwargs):
             rois_to_be_updated = []
             for d in deleted_rois_ids:
                 r = rois_service.findByRoi(
-                    long(d), None, conn.SERVICE_OPTS).rois[0]
+                    int(d), None, conn.SERVICE_OPTS).rois[0]
                 for s in r.copyShapes():
                     roi_shape_id = str(d) + ':' + str(s.getId().getValue())
                     if roi_shape_id in deleted[d]:
@@ -207,6 +252,245 @@ def persist_rois(request, conn=None, **kwargs):
     return JsonResponse(ret)
 
 
+def get_query_for_rois_by_plane(the_z=None, the_t=None, z_end=None,
+                                t_end=None, load_shapes=False):
+
+    clauses = ['roi.image.id = :id']
+    if the_z is not None:
+        where_z = "(shapes.theZ = %s or shapes.theZ is null)" % the_z
+        if z_end is not None:
+            where_z = """((shapes.theZ >= %s and shapes.theZ <= %s)
+                or shapes.theZ is null)""" % (the_z, z_end)
+        clauses.append(where_z)
+    if the_t is not None:
+        where_t = "(shapes.theT = %s or shapes.theT is null)" % the_t
+        if t_end is not None:
+            where_t = """((shapes.theT >= %s and shapes.theT <= %s)
+                or shapes.theT is null)""" % (the_t, t_end)
+        clauses.append(where_t)
+
+    query = """
+        select distinct(roi.id) from Roi roi
+        join roi.shapes as shapes
+        where %s
+    """ % ' and '.join(clauses)
+
+    if load_shapes:
+        # If we want to load ALL shapes for the ROIs (omero-marshal fails if
+        # any shapes are None) we use the query above to get ROI IDs, then
+        # load all ROIs with Shapes
+        query = """
+            select roi from Roi roi
+            join fetch roi.details.owner join fetch roi.details.creationEvent
+            left outer join fetch roi.shapes
+            where roi.id in (%s) order by roi.id
+        """ % (query)
+
+    return query
+
+
+@login_required()
+def rois_by_plane(request, image_id, the_z, the_t, z_end=None, t_end=None,
+                  conn=None, **kwargs):
+    """
+    Get ROIs with all Shapes where any Shapes are on the given Z and T plane.
+
+    Includes Shapes where Z or T are null.
+    If z_end or t_end are not None, we filter by any shape within the
+    range (inclusive of z/t_end)
+    """
+    query_service = conn.getQueryService()
+
+    params = omero.sys.ParametersI()
+    params.addId(image_id)
+    filter = omero.sys.Filter()
+    filter.offset = rint(request.GET.get("offset", 0))
+    limit = min(MAX_LIMIT, int(request.GET.get("limit", MAX_LIMIT)))
+    filter.limit = rint(limit)
+    params.theFilter = filter
+
+    query = get_query_for_rois_by_plane(the_z, the_t, z_end, t_end,
+                                        load_shapes=True)
+    rois = query_service.findAllByQuery(query, params, conn.SERVICE_OPTS)
+    marshalled = []
+    for r in rois:
+        encoder = omero_marshal.get_encoder(r.__class__)
+        if encoder is not None:
+            marshalled.append(encoder.encode(r))
+
+    # Modify query to only select count() and NOT paginate
+    query = get_query_for_rois_by_plane(the_z, the_t, z_end, t_end)
+    query = query.replace("distinct(roi.id)", "count(distinct roi.id)")
+    params = omero.sys.ParametersI()
+    params.addId(image_id)
+    result = query_service.projection(query, params, conn.SERVICE_OPTS)
+    meta = {"totalCount": result[0][0].val}
+
+    return JsonResponse({'data': marshalled, 'meta': meta})
+
+
+@login_required()
+def plane_shape_counts(request, image_id, conn=None, **kwargs):
+    """
+    Get the number of shapes that will be visible on each plane.
+
+    Shapes that have theZ or theT unset will show up on all planes.
+    """
+
+    image = conn.getObject("Image", image_id)
+    if image is None:
+        return JsonResponse({"error": "Image not found"}, status=404)
+
+    query_service = conn.getQueryService()
+    params = omero.sys.ParametersI()
+    params.addId(image_id)
+    counts = []
+
+    # Attempt to load counts for each Z/T index.
+    # Unfortunately this is too slow. Use alternative approach (see below)
+    # query = """
+    #     select count(distinct shape) from Shape shape
+    #     join shape.roi as roi
+    #     where (shape.theZ = %s or shape.theZ is null)
+    #     and (shape.theT = %s or shape.theT is null)
+    #     and roi.image.id = :id
+    # """
+    # for z in range(image.getSizeZ()):
+    #     t_counts = []
+    #     for t in range(image.getSizeT()):
+    #         result = query_service.projection(query % (z, t), params,
+    #                                           conn.SERVICE_OPTS)
+    #         t_counts.append(result[0][0].val)
+    #     counts.append(t_counts)
+
+    size_t = image.getSizeT()
+    size_z = image.getSizeZ()
+    counts = [[0] * size_t for z in range(size_z)]
+
+    query = """
+        select shape.theZ, shape.theT from Shape shape
+        join shape.roi as roi where roi.image.id = :id
+    """
+    # key is 'z:t' for unattached shapes, e.g. {'none:5':3}
+    unattached_counts = defaultdict(int)
+    result = query_service.projection(query, params, conn.SERVICE_OPTS)
+    for shape in result:
+        z = unwrap(shape[0])
+        t = unwrap(shape[1])
+        if z is not None and t is not None:
+            counts[z][t] += 1
+        else:
+            key = "%s:%s" % (z, t)
+            unattached_counts[key] += 1
+
+    for key, count in unattached_counts.items():
+        z = key.split(':')[0]
+        t = key.split(':')[1]
+        z_range = range(size_z) if z == 'None' else [int(z)]
+        t_range = range(size_t) if t == 'None' else [int(t)]
+        for the_z in z_range:
+            for the_t in t_range:
+                counts[the_z][the_t] += count
+
+    return JsonResponse({'data': counts})
+
+
+def get_shape_info(conn, shape_id):
+    """Returns dict of roi_id, image_id, theZ, theT from a shape ID."""
+    params = omero.sys.ParametersI()
+    params.addId(shape_id)
+
+    query = """
+        select roi.id,
+               image.id,
+               shape.theZ,
+               shape.theT
+        from Shape shape
+        join shape.roi roi
+        join roi.image image
+        where shape.id=:id"""
+
+    shapes = conn.getQueryService().projection(query, params,
+                                               conn.SERVICE_OPTS)
+    rsp = None
+    if len(shapes) > 0:
+        s = unwrap(shapes[0])
+        rsp = {
+            'roi_id': s[0],
+            'image_id': s[1],
+            'theZ': s[2],
+            'theT': s[3],
+        }
+    return rsp
+
+
+@login_required()
+def roi_page_data(request, obj_type, obj_id, conn=None, **kwargs):
+    """
+    Get info for loading the correct 'page' of ROIs
+
+    Returns {image: {'id': 1}, roi_index: 123, roi_count: 3456}
+    """
+    qs = conn.getQueryService()
+    image_id = None
+    roi_id = None
+    shape_info = None
+    ids = []
+    if obj_type == 'roi':
+        roi_id = int(obj_id)
+        roi = qs.get('Roi', roi_id)
+        image_id = roi.image.id.val
+        params = omero.sys.ParametersI()
+
+        params.addId(image_id)
+        query = "select roi.id from Roi roi where roi.image.id = :id"
+        ids = [i[0].val for i in qs.projection(query, params,
+                                               conn.SERVICE_OPTS)]
+    elif obj_type == 'shape':
+        shape_info = get_shape_info(conn, obj_id)
+        if shape_info is not None:
+            image_id = shape_info.get('image_id')
+            roi_id = shape_info.get('roi_id')
+            the_z = shape_info.get('theZ')
+            the_t = shape_info.get('theT')
+            query = get_query_for_rois_by_plane(the_z, the_t)
+            params = omero.sys.ParametersI()
+            params.addId(image_id)
+            result = qs.projection(query, params, conn.SERVICE_OPTS)
+            for roi in result:
+                ids.append(unwrap(roi[0]))
+    if image_id is None:
+        raise Http404(f'Could not find {obj_type}: {obj_id}')
+
+    ids.sort()
+    index = ids.index(roi_id)
+    rsp = {
+        'image': {'id': image_id},
+        'roi': {'id': roi_id},
+        'roi_index': index,
+        'roi_count': len(ids)
+    }
+    if shape_info is not None:
+        rsp['theT'] = shape_info.get('theT')
+        rsp['theZ'] = shape_info.get('theZ')
+    return JsonResponse(rsp)
+
+
+@login_required()
+def roi_image_data(request, obj_type, obj_id, conn=None, **kwargs):
+    """ Get image_data for image linked to ROI """
+    image_id = None
+    if obj_type == 'roi':
+        roi = conn.getQueryService().get('Roi', int(obj_id))
+        if roi:
+            image_id = roi.image.id.val
+    elif obj_type == 'shape':
+        image_id, roi_id = get_image_roi_id_for_shape(conn, obj_id)
+    if image_id is None:
+        raise Http404(f'Could not find {obj_type}: {obj_id}')
+    return image_data(request, image_id, conn=None, **kwargs)
+
+
 @login_required()
 def image_data(request, image_id, conn=None, **kwargs):
 
@@ -224,49 +508,25 @@ def image_data(request, image_id, conn=None, **kwargs):
         # Add extra parameters with units data
         # Note ['pixel_size']['x'] will have size in MICROMETER
         px = image.getPrimaryPixels().getPhysicalSizeX()
-        if (px is not None):
+        if (px is not None and 'pixel_size' in rv):
             size = image.getPixelSizeX(True)
-            value = format_value_with_units(size)
+            value = format_pixel_size_with_units(size)
             rv['pixel_size']['unit_x'] = value[0]
             rv['pixel_size']['symbol_x'] = value[1]
         py = image.getPrimaryPixels().getPhysicalSizeY()
-        if (py is not None):
+        if (py is not None and 'pixel_size' in rv):
             size = image.getPixelSizeY(True)
-            value = format_value_with_units(size)
+            value = format_pixel_size_with_units(size)
             rv['pixel_size']['unit_y'] = value[0]
             rv['pixel_size']['symbol_y'] = value[1]
         pz = image.getPrimaryPixels().getPhysicalSizeZ()
-        if (pz is not None):
+        if (pz is not None and 'pixel_size' in rv):
             size = image.getPixelSizeZ(True)
-            value = format_value_with_units(size)
+            value = format_pixel_size_with_units(size)
             rv['pixel_size']['unit_z'] = value[0]
             rv['pixel_size']['symbol_z'] = value[1]
 
-        size_t = image.getSizeT()
-        time_list = []
         delta_t_unit_symbol = None
-        if size_t > 1:
-            params = omero.sys.ParametersI()
-            params.addLong('pid', image.getPixelsId())
-            z = 0
-            c = 0
-            query = "from PlaneInfo as Info where"\
-                " Info.theZ=%s and Info.theC=%s and pixels.id=:pid" % (z, c)
-            info_list = conn.getQueryService().findAllByQuery(
-                query, params, conn.SERVICE_OPTS)
-            timemap = {}
-            for info in info_list:
-                t_index = info.theT.getValue()
-                if info.deltaT is not None:
-                    value = format_value_with_units(info.deltaT)
-                    timemap[t_index] = value[0]
-                    if delta_t_unit_symbol is None:
-                        delta_t_unit_symbol = value[1]
-            for t in range(image.getSizeT()):
-                if t in timemap:
-                    time_list.append(timemap[t])
-
-        rv['delta_t'] = time_list
         rv['delta_t_unit_symbol'] = delta_t_unit_symbol
         df = "%Y-%m-%d %H:%M:%S"
         rv['import_date'] = image.creationEventDate().strftime(df)
@@ -280,36 +540,97 @@ def image_data(request, image_id, conn=None, **kwargs):
             rv['families'].append(fam.getValue())
 
         return JsonResponse(rv)
-    except Exception as image_data_retrieval_exception:
-        return JsonResponse({'error': repr(image_data_retrieval_exception)})
+    except Exception:
+        return JsonResponse({'error': traceback.format_exc()})
 
 
-def format_value_with_units(value):
-        """
-        Formats the response for methods above.
-        Returns [value, unitSymbol]
-        If the unit is MICROMETER or s in database (default), we
-        convert to more appropriate units & value
-        """
-        if value is None:
-            return (None, "")
-        length = value.getValue()
-        unit = value.getUnit()
-        if unit == "MICROMETER":
-            unit = lengthunit(length)
-            length = lengthformat(length)
-        elif unit == "MILLISECOND":
-            length = length/1000.0
-            unit = value.getSymbol()
-        elif unit == "MINUTE":
-            length = 60*length
-            unit = value.getSymbol()
-        elif unit == "HOUR":
-            length = 3600*length
-            unit = value.getSymbol()
-        else:
-            unit = value.getSymbol()
-        return (length, unit)
+@login_required()
+def delta_t_data(request, image_id, conn=None, **kwargs):
+
+    image = conn.getObject("Image", image_id)
+
+    rv = {}
+
+    size_t = image.getSizeT()
+    time_list = []
+    delta_t_unit_symbol = None
+    if size_t > 1:
+        params = omero.sys.ParametersI()
+        params.addLong('pid', image.getPixelsId())
+        query = "from PlaneInfo as Info where"\
+            " Info.theZ=0 and Info.theC=0 and pixels.id=:pid"
+        info_list = conn.getQueryService().findAllByQuery(
+            query, params, conn.SERVICE_OPTS)
+
+        if len(info_list) < size_t:
+            # C & Z dimensions are not always filled
+            # Remove restriction on c0 z0 to catch all timestamps
+            params = omero.sys.ParametersI()
+            params.addLong('pid', image.getPixelsId())
+            query = """
+                from PlaneInfo Info where Info.id in (
+                    select min(subInfo.id)
+                    from PlaneInfo subInfo
+                    where subInfo.pixels.id=:pid
+                    group by subInfo.theT
+                )
+            """
+            info_list = conn.getQueryService().findAllByQuery(
+                query, params, conn.SERVICE_OPTS)
+
+        timemap = {}
+        for info in info_list:
+            t_index = info.theT.getValue()
+            if info.deltaT is not None:
+                secs = get_converted_value(info.deltaT, "SECOND")
+                timemap[t_index] = secs
+                if delta_t_unit_symbol is None:
+                    # Get unit symbol for first info only
+                    delta_t_unit_symbol = info.deltaT.getSymbol()
+        for t in range(size_t):
+            if t in timemap:
+                time_list.append(timemap[t])
+            else:
+                # Hopefully never gets here, but
+                # time_list length MUST match image.sizeT
+                time_list.append(0)
+
+    rv['delta_t'] = time_list
+    rv['delta_t_unit_symbol'] = delta_t_unit_symbol
+    rv['image_id'] = image_id
+    return JsonResponse(rv)
+
+
+def get_converted_value(obj, units):
+    """
+    Convert the length or time object to units and return value
+
+    @param obj      value object
+    @param units    string, e.g. "SECOND"
+    """
+    unitClass = obj.getUnit().__class__
+    unitEnum = getattr(unitClass, str(units))
+    obj = obj.__class__(obj, unitEnum)
+    return obj.getValue()
+
+
+def format_pixel_size_with_units(value):
+    """
+    Formats the response for methods above.
+    Returns [value, unitSymbol]
+    If the unit is MICROMETER or s in database (default), we
+    convert to more appropriate units & value
+    """
+    if value is None:
+        return (None, "")
+    length = value.getValue()
+    unit = str(value.getUnit())
+    if unit == "MICROMETER":
+        unit = lengthunit(length)
+        length = lengthformat(length)
+    else:
+        unit = value.getSymbol()
+    return (length, unit)
 
 
 @login_required()
@@ -362,8 +683,8 @@ def save_projection(request, conn=None, **kwargs):
 
         # set image decription
         details = []
-        details.append("Original Image: " + img.getName())
-        details.append("Original Image ID: " + image_id)
+        details.append("Image's name:" + img.getName())
+        details.append("Image:" + image_id)
         details.append("Projection Type: " + proj_type)
         details.append(
             "z-sections: " + str(int(start)+1) + "-" + str(int(end)+1))
@@ -385,7 +706,7 @@ def save_projection(request, conn=None, **kwargs):
             conn.SERVICE_OPTS.setOmeroGroup(
                 conn.getGroupFromContext().getId())
             link = omero.model.DatasetImageLinkI()
-            link.parent = omero.model.DatasetI(long(dataset_id), False)
+            link.parent = omero.model.DatasetI(int(dataset_id), False)
             link.child = omero.model.ImageI(new_image_id, False)
             upd_svc.saveObject(link, conn.SERVICE_OPTS)
     except Exception as save_projection_exception:
@@ -406,12 +727,13 @@ def well_images(request, conn=None, **kwargs):
 
         # set well id
         params = ParametersI()
-        params.add("well_id", rlong(long(well_id)))
+        params.add("well_id", rlong(int(well_id)))
 
         # get total count first
         count = query_service.projection(
             "select count(distinct ws.id) from WellSample ws " +
-            "where ws.well.id = :well_id", params, )
+            "where ws.well.id = :well_id", params,
+            conn.SERVICE_OPTS)
         results = {"data": [], "meta": {"totalCount": count[0][0].val}}
 
         # set offset and limit
@@ -423,7 +745,8 @@ def well_images(request, conn=None, **kwargs):
         # fire off query
         images = query_service.findAllByQuery(
             "select ws.image from WellSample ws " +
-            "where ws.well.id = :well_id order by well_index", params)
+            "where ws.well.id = :well_id order by well_index", params,
+            conn.SERVICE_OPTS)
 
         # we need only image id and name for our purposes
         for img in images:
@@ -545,8 +868,8 @@ def get_intensity(request, conn=None, **kwargs):
     # checks
     if image_id is None or x is None or y is None or cs is None \
             or z is None or t is None:
-                return JsonResponse(
-                    {"error": "Mandatory params are: image, x, y, c, z and t"})
+        return JsonResponse(
+            {"error": "Mandatory params are: image, x, y, c, z and t"})
 
     # retrieve image object
     img = conn.getObject("Image", image_id, opts=conn.SERVICE_OPTS)
@@ -583,7 +906,7 @@ def get_intensity(request, conn=None, **kwargs):
     raw_pixel_store = None
     try:
         raw_pixel_store = conn.createRawPixelsStore()
-        raw_pixel_store.setPixelsId(img.getPixelsId(), True)
+        raw_pixel_store.setPixelsId(img.getPixelsId(), True, conn.SERVICE_OPTS)
         pixels_type = img.getPrimaryPixels().getPixelsType().getValue()
 
         # determine query extent
@@ -612,7 +935,8 @@ def get_intensity(request, conn=None, **kwargs):
         # contained in extent with getTile (extent width x height)
         for chan in channels:
             point_data = raw_pixel_store.getTile(
-                z, chan, t, x_offset, y_offset, width, height)
+                z, chan, t, x_offset, y_offset, width, height,
+                conn.SERVICE_OPTS)
             unpacked_point_data = unpack(conversion, point_data)
             i = 0
             for row in range(extent[1], extent[3]):
@@ -647,7 +971,7 @@ def shape_stats(request, conn=None, **kwargs):
     channels = []
     try:
         ids = [
-            long(id.split(':')[1]) if ':' in id else long(id)
+            int(id.split(':')[1]) if ':' in id else int(id)
             for id in ids.split(',') if id != ''
         ]
         z, t = int(z), int(t)

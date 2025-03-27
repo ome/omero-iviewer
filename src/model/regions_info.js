@@ -58,6 +58,20 @@ export default class RegionsInfo  {
     data = new Map();
 
     /**
+     * 2D array of [t][z] shapes counts
+     */
+    plane_shape_counts = null;
+
+    /**
+     * Page size for ROIs to support pagination.
+     * Configured with omero config set omero.web.iviewer.roi_page_size 500
+     *
+     * @memberof RegionsInfo
+     * @type {number}
+     */
+    roi_page_size = 500;
+
+    /**
      * Current page number of ROIs to support pagination
      * @memberof RegionsInfo
      * @type {number}
@@ -73,6 +87,11 @@ export default class RegionsInfo  {
      * @type {number}
      */
     number_of_shapes = 0;
+
+    /**
+     * When we load ROIs by Z/T plane, we also get the total count
+     */
+    roi_count_on_current_plane = 0;
 
     /**
      * @memberof RegionsInfo
@@ -97,6 +116,14 @@ export default class RegionsInfo  {
      * @type {boolean}
      */
     visibility_toggles = 0;
+
+    /**
+     * the balance of individual shape show vs hide toggles
+     * for all ROIs. {roi_id: count}
+     * @memberof RegionsInfo
+     * @type {Object}
+     */
+    roi_visibility_toggles = {};
 
     /**
      * the copied shapes
@@ -178,6 +205,7 @@ export default class RegionsInfo  {
         this.syncCopiedShapesWithLocalStorage();
         // init default shape colors
         this.resetShapeDefaults();
+        this.roi_page_size = this.image_info.context.roi_page_size;
     }
 
     /**
@@ -236,11 +264,14 @@ export default class RegionsInfo  {
 
         // if the shape shape has a property of that given name
         // set its new value
-        if (typeof shape[property] !== 'undefined') shape[property] = value;
+        if (typeof shape[property] !== 'undefined') {
+            shape[property] = value;
+        }
         // modify the selected set for actions that influence it
         if ((property === 'selected' || property === 'visible') && value) {
-            if (property === 'visible') this.visibility_toggles++;
-            else {
+            if (property === 'visible') {
+                this.updateRoiVisibilityToggles(id, 1);
+            } else {
                 this.data.get(ids.roi_id).show = true;
                 let i = this.selected_shapes.indexOf(id);
                 if (i === -1) this.selected_shapes.push(id);
@@ -249,21 +280,50 @@ export default class RegionsInfo  {
                     (property === 'visible' && !value) ||
                     (property === 'deleted' && value)) {
             let i = this.selected_shapes.indexOf(id);
-            if (i !== -1) this.selected_shapes.splice(i, 1);
+            if (i !== -1) {
+                this.selected_shapes.splice(i, 1);
+            }
             shape.selected = false;
             if (property === 'deleted' &&
                 typeof shape.is_new === 'boolean' && shape.is_new) {
                     roi.deleted++;
                     this.number_of_shapes--;
-                    if (!shape.visible) this.visibility_toggles++;
-            } else if (property === 'visible') this.visibility_toggles--;
+                    if (!shape.visible) {
+                        this.updateRoiVisibilityToggles(id, 1);
+                    }
+            } else if (property === 'visible') {
+                this.updateRoiVisibilityToggles(id, -1);
+            }
         } else if (property === 'deleted' &&
                     typeof shape.is_new === 'boolean' && shape.is_new &&
                     !value) {
                         roi.deleted--;
                         this.number_of_shapes++;
-                        if (!shape.visible) this.visibility_toggles--;
+                        if (!shape.visible) {
+                            this.updateRoiVisibilityToggles(id, -1);
+                        }
         }
+    }
+
+    /**
+     * We track how many shapes aren't visible to check the
+     * 'Show All' checkbox when they are all shown (toggle count ==0);
+     * We also do this for each ROI since each ROI also has a
+     * 'Show All' checkbox 
+     *
+     * @memberof RegionsInfo
+     * @param {string} id a shape id in format roi:shape-id
+     * @param {number} increment update counts by this number 
+     */
+    updateRoiVisibilityToggles(shape_id, increment) {
+        // Update total count
+        this.visibility_toggles += increment;
+        // Update count for each ROI
+        let roi_id = shape_id.split(':')[0];
+        if (this.roi_visibility_toggles[roi_id] === undefined) {
+            this.roi_visibility_toggles[roi_id] = 0;
+        }
+        this.roi_visibility_toggles[roi_id] += increment;
     }
 
     /**
@@ -275,7 +335,8 @@ export default class RegionsInfo  {
     setPageAndReload(zeroBasedPageNumber) {
         if (typeof(zeroBasedPageNumber) !== "number" ||
             zeroBasedPageNumber < 0 ||
-            zeroBasedPageNumber >= this.getPageCount()) return;
+            zeroBasedPageNumber >= this.getPageCount() ||
+            this.is_pending) return false;
 
         this.roi_page_number = zeroBasedPageNumber;
         this.requestData(true);
@@ -295,10 +356,94 @@ export default class RegionsInfo  {
     }
 
     /**
+     * Load ROIs, setting page based on ROI ID OR Shape ID
+     *
+     * @memberof RegionsInfo
+     * @param {number} roiId   ROI id
+     * @param {number} shapeId   OR use Shape id
+     */
+    setPageByRoiAndReload(roiId, shapeId) {
+        // If ROI count is less than page size, simply load...
+        if (!this.isRoiLoadingPaginatedByPlane()) {
+            this.requestData();
+        } else {
+            // Otherwise, need to find page number...
+            let url = this.image_info.context.getPrefixedURI(IVIEWER);
+            if (shapeId) {
+                url += `/shape/${ shapeId }/page_data/`;
+            } else {
+                url += `/roi/${ roiId }/page_data/`;
+            }
+            $.ajax({url,
+                success : (response) => {
+                    const page = parseInt(response.roi_index / this.roi_page_size);
+                    this.roi_page_number = page;
+                    // This will update the viewer (change listeners)
+                    if (response.theZ != undefined) {
+                        this.image_info.dimensions.z = response.theZ;
+                    }
+                    if (response.theT != undefined) {
+                        this.image_info.dimensions.t = response.theT;
+                    }
+                    this.requestData(true);
+                }, error : (error) => {
+                    this.is_pending = false;
+                    console.error("Failed to load Rois: " + error)
+                }
+            });
+        }
+    }
+
+    /**
      * Get the number of pages needed to show all paginated ROIs
+     * on current plane.
      */
     getPageCount() {
-        return Math.ceil(this.image_info.roi_count/REGIONS_PAGE_SIZE);
+        return Math.ceil(this.roi_count_on_current_plane/this.roi_page_size);
+    }
+
+    /**
+     * If the total number of ROIs is more than this.roi_page_size,
+     * we load ROIs by Z/T plane.
+     * If there are still more on a plane than this.roi_page_size then we
+     * paginate within a plane.
+     */
+    isRoiLoadingPaginatedByPlane() {
+        return this.image_info.roi_count > this.roi_page_size;
+    }
+
+    /**
+     * Get the URL for loading ROIs.
+     * If isRoiLoadingPaginatedByPlane() then we filter by Z/T plane
+     */
+    getRegionsUrl() {
+        let z_start = this.image_info.dimensions.z;
+        let z_end;
+        if (this.image_info.projection && this.image_info.projection != "normal") {
+            if (this.image_info.projection_opts.start) {
+                z_start = this.image_info.projection_opts.start;
+            }
+            if (this.image_info.projection_opts.end) {
+                z_end = this.image_info.projection_opts.end;
+            }
+        }
+
+        let url = this.image_info.context.server;
+
+        if (this.isRoiLoadingPaginatedByPlane()) {
+            url += this.image_info.context.getPrefixedURI(IVIEWER) +
+                  '/rois_by_plane/' + this.image_info.image_id + '/' +
+                  z_start + (z_end ? '-' + z_end : '') + '/' +
+                  this.image_info.dimensions.t + '/?';
+        } else {
+            url += this.image_info.context.getPrefixedURI(WEB_API_BASE) +
+                REGIONS_REQUEST_URL + '/?image=' + this.image_info.image_id +
+                '&';
+        }
+
+        url += 'limit=' + this.roi_page_size +
+                '&offset=' + (this.roi_page_number * this.roi_page_size);
+        return url;
     }
 
     /**
@@ -308,7 +453,15 @@ export default class RegionsInfo  {
      * @param {boolean} forceUpdate if true we always request up-to-date data
      */
     requestData(forceUpdate = false) {
-        if (this.is_pending || (this.ready && !forceUpdate)) return;
+        if (this.ready && !forceUpdate) return;
+        // if we're busy, but still want to update, remember to try again...
+        // otherwise data can end up out-of-sync with Z/T if loading by plane
+        if (this.is_pending) {
+            if (forceUpdate) {
+                this.try_request_again = true;
+            }
+            return;
+        }
         // reset regions info data and history
         this.ready = false;
         this.resetRegionsInfo();
@@ -319,13 +472,16 @@ export default class RegionsInfo  {
 
         // send request
         $.ajax({
-            url : this.image_info.context.server +
-                  this.image_info.context.getPrefixedURI(WEB_API_BASE) +
-                  REGIONS_REQUEST_URL + '/?image=' + this.image_info.image_id +
-                  '&limit=' + REGIONS_PAGE_SIZE +
-                  '&offset=' + (this.roi_page_number * REGIONS_PAGE_SIZE),
+            url : this.getRegionsUrl(),
             success : (response) => {
-                if (this.is_pending) this.setData(response.data)
+                if (this.try_request_again) {
+                    this.is_pending = false;
+                    this.try_request_again = false;
+                    this.requestData();
+                } else if (this.is_pending) {
+                    this.setData(response.data);
+                    this.roi_count_on_current_plane = response.meta.totalCount;
+                }
             }, error : (error) => {
                 this.is_pending = false;
                 console.error("Failed to load Rois: " + error)
@@ -370,6 +526,7 @@ export default class RegionsInfo  {
             for (let r in data) {
                 let shapes = new Map();
                 let roi = data[r];
+                let name = data[r]['Name'] || '';
                 // add shapes
                 if (Misc.isArray(roi.shapes) && roi.shapes.length > 0) {
                     let roiId = roi['@id'];
@@ -399,6 +556,7 @@ export default class RegionsInfo  {
                         count++;
                     }
                     this.data.set(roiId, {
+                        name: name,
                         shapes: shapes,
                         show: false,
                         deleted: 0
@@ -426,6 +584,7 @@ export default class RegionsInfo  {
             this.data.clear();
         }
         this.number_of_shapes = 0;
+        this.selected_shapes = [];
     }
 
     /**
@@ -538,6 +697,29 @@ export default class RegionsInfo  {
         return (typeof shape !== 'undefined') ? shape : null;
     }
 
+
+    /**
+     * Looks up shape by ID e.g. 1
+     *
+     * @memberof RegionsInfo
+     * @param {number} id the shape.id
+     * @return {Object|null} the shape object or null if none was found
+     */
+    getRoiFromShapeId(id) {
+        if (this.data === null) return null;
+
+        let roi_id;
+        this.data.forEach((roi, roiId) => {
+            roi.shapes.forEach((s, sh_id) => {
+                if (s['@id'] == id) {
+                    roi_id = roiId;
+                };
+            });
+        });
+        return roi_id;
+    }
+
+
     /**
      * Any shape modification, addition or deletion results in a history entry.
      * Therefore if our history is empty or the present pointer at the beginning
@@ -580,7 +762,12 @@ export default class RegionsInfo  {
      * @memberof RegionsInfo
      */
     resetShapeDefaults() {
-        this.shape_defaults['StrokeColor'] = -65281;
+        //if they set a color palette, set the first one as default stroke color
+        if(Array.isArray(this.image_info.context.roi_color_palette)){
+            this.shape_defaults['StrokeColor'] = Converters.rgbaToSignedInteger(this.image_info.context.roi_color_palette[0][0])
+        } else { 
+            this.shape_defaults['StrokeColor'] = -65281;
+        }
         this.shape_defaults['FillColor'] = -256;
         this.shape_defaults['StrokeWidth'] = {
             '@type': 'TBD#LengthI',

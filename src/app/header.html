@@ -90,15 +90,10 @@
                     </li>
                     <li class="${image_config.regions_info.ready &&
                                  image_config.regions_info.selected_shapes.length > 0 ?
-                                    '' : 'disabled-color'}">
-                        <a click.delegate="saveRoiMeasurements(false)"
-                           href="#">Export (Excel)</a>
-                    </li>
-                    <li class="${image_config.regions_info.ready &&
-                                 image_config.regions_info.selected_shapes.length > 0 ?
-                                    '' : 'disabled-color'}">
+                                    '' : 'disabled-color'}"
+                        title="Export selected ROIs to a spreadsheet (CSV file), suitable for opening in Excel">
                         <a click.delegate="saveRoiMeasurements(true)"
-                           href="#">Export (CSV)</a>
+                           href="#">Export as Table (CSV)</a>
                     </li>
                 </ul>
             </div>
@@ -111,6 +106,12 @@
                         <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu">
+                    <li>
+                        <a target="_blank"
+                            href="https://omero-guides.readthedocs.io/en/latest/iviewer/docs/">
+                            How to use OMERO.iviewer
+                        </a>
+                    </li>
                     <li click.delegate="showAbout()">
                         <a href="#">About OMERO.iviewer</a>
                     </li>
@@ -152,7 +153,7 @@
                             OMERO.iviewer page</a>.
                     </p>
                     <p>
-                        &copy; 2017-2018 University of Dundee &amp; Open Microscopy Environment<br>
+                        &copy; 2017-2024 University of Dundee &amp; Open Microscopy Environment<br>
                         OMERO is distributed under the terms of the GNU GPL and<br>
                         OMERO.iviewer under AGPL.<br>
                         See: <a target="new" href="https://www.openmicroscopy.org">openmicroscopy.org</a>

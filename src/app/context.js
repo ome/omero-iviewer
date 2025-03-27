@@ -18,16 +18,20 @@
 import {noView} from 'aurelia-framework';
 import {EventAggregator} from 'aurelia-event-aggregator';
 import Misc from '../utils/misc';
+import UI from '../utils/ui';
 import OpenWith from '../utils/openwith';
 import ImageConfig from '../model/image_config';
 import ImageInfo from '../model/image_info';
 import RegionsInfo from '../model/regions_info';
 import {
-    IMAGE_SETTINGS_REFRESH, IMAGE_VIEWER_CONTROLS_VISIBILITY,
-    SAVE_ACTIVE_IMAGE_SETTINGS, THUMBNAILS_UPDATE
+    IMAGE_SETTINGS_REFRESH,
+    IMAGE_VIEWER_CONTROLS_VISIBILITY,
+    THUMBNAILS_UPDATE,
+    REGIONS_STORE_SHAPES,
+    REGIONS_STORED_SHAPES
 } from '../events/events';
 import {
-    APP_NAME, IMAGE_CONFIG_RELOAD, IVIEWER, INITIAL_TYPES, LUTS_NAMES,
+    APP_NAME, IMAGE_CONFIG_RELOAD, IVIEWER, INITIAL_TYPES,
     LUTS_PNG_URL, PLUGIN_NAME, PLUGIN_PREFIX, REQUEST_PARAMS, SYNC_LOCK,
     TABS, URI_PREFIX, WEB_API_BASE, WEBCLIENT, WEBGATEWAY
 } from '../utils/constants';
@@ -188,6 +192,14 @@ export default class Context {
      luts = new Map();
 
      /**
+      * max active channels - default is loaded from iviewer_settings
+      *
+      * @memberof Context
+      * @type {number}
+      */
+     max_active_channels = 10;
+
+     /**
       * the lookup png
       *
       * @memberof Context
@@ -239,6 +251,9 @@ export default class Context {
         // set up luts
         this.setUpLuts();
 
+        // load max active channels
+        this.loadMaxActiveChannels();
+
         // initialize Open_with
         OpenWith.initOpenWith();
 
@@ -275,7 +290,7 @@ export default class Context {
                     }
                 }
                 if (openImageConfig)
-                    this.addImageConfig(e.state.image_id, e.state.parent_id);
+                    this.addImageConfig(e.state.image_id, INITIAL_TYPES.IMAGES, e.state.parent_id);
             };
         }
     }
@@ -297,42 +312,65 @@ export default class Context {
      * @memberof Context
      */
     setUpLuts() {
-        this.luts_png.url =
-            this.server + this.getPrefixedURI(WEBGATEWAY, true) + LUTS_PNG_URL;
-
-        // determine the luts png height
-        let lutsPng = new Image();
-        lutsPng.onload = (e) => {
-            this.luts_png.height = e.target.naturalHeight;
-            this.luts_png.image = lutsPng;
-            for (let [id, conf] of this.image_configs) conf.changed();
-        }
-        lutsPng.src = this.luts_png.url;
-
-        // now query the luts list
-        let server = this.server;
-        let uri_prefix =  this.getPrefixedURI(WEBGATEWAY);
         $.ajax(
-            {url : server + uri_prefix + "/luts/",
+            {url : this.server + this.getPrefixedURI(WEBGATEWAY) + "/luts/",
             success : (response) => {
-                if (typeof response !== 'object' || response === null ||
-                    !Misc.isArray(response.luts)) return;
+                // Check first whether omero-web can provides LUT dynamically
+                // and set URL accordingly
+                let is_dynamic_lut = Boolean(response.png_luts_new);
+                if (is_dynamic_lut) {
+                    this.luts_png.url =
+                        this.server + this.getPrefixedURI(WEBGATEWAY, false) + "/luts_png/";
+                } else {
+                    this.luts_png.url =
+                        this.server + this.getPrefixedURI(WEBGATEWAY, true) + LUTS_PNG_URL;
+                }
 
-                let i=0;
-                response.luts.map(
+                // determine the luts png height
+                let lutsPng = new Image();
+                lutsPng.onload = (e) => {
+                    this.luts_png.height = e.target.naturalHeight;
+                    this.luts_png.image = lutsPng;
+                    for (let [id, conf] of this.image_configs) conf.changed();
+                }
+                lutsPng.src = this.luts_png.url;
+
+                if (is_dynamic_lut) {
+                    // If it's dynamic, uses the new list instead
+                    response.png_luts = response.png_luts_new
+                }
+
+                response.luts.forEach(
                     (l) => {
-                        let isInList = LUTS_NAMES.indexOf(l.name) !== -1;
                         let mapValue =
                             Object.assign({
                                 nice_name :
                                     l.name.replace(/.lut/g, "").replace(/_/g, " "),
-                                index : isInList ? i : -1
+                                index : is_dynamic_lut ? l.png_index_new : l.png_index
                             }, l);
                         this.luts.set(mapValue.name, mapValue);
-                        if (isInList) i++;
                     });
                 for (let [id, conf] of this.image_configs) conf.changed();
             }
+        });
+    }
+
+    loadMaxActiveChannels() {
+        // query microservice endpoint...
+        let url = this.server + "/omero_ms_image_region/";
+        fetch(url, {method: "OPTIONS"})
+        .then(r => r.json())
+        .then(data => {
+            if (Number.isInteger(data.options?.maxActiveChannels)) {
+                this.max_active_channels = data.options.maxActiveChannels;
+                // in case the images loaded already (this query took longer than
+                // expected), let's update them...
+                for (let [id, conf] of this.image_configs) {
+                    conf.image_info.applyMaxActiveChannels(this.max_active_channels);
+                }
+            }
+        }).catch(() => {
+            console.log("failed to load omero_ms_image_region info");
         });
     }
 
@@ -345,40 +383,52 @@ export default class Context {
      * @memberof Context
      */
     openWithInitialParams() {
-        // do we have any image ids?
-        let initial_image_ids =
-            typeof this.initParams[REQUEST_PARAMS.IMAGES] !== 'undefined' ?
-                this.initParams[REQUEST_PARAMS.IMAGES] : null;
-        if (initial_image_ids) {
-            let tokens = initial_image_ids.split(',');
-            for (let t in tokens) {
-                let parsedToken = parseInt(tokens[t]);
-                if (typeof parsedToken === 'number' &&
-                    !isNaN(parsedToken)) this.initial_ids.push(parsedToken);
-            }
+        // do we have any image ids or roi ids?
+        let initial_ids;
+        let initial_type;   // INITIAL_TYPES int
+        if (this.initParams[REQUEST_PARAMS.IMAGES]) {
+            initial_ids = this.initParams[REQUEST_PARAMS.IMAGES];
+            initial_type = INITIAL_TYPES.IMAGES;
+        } else if (this.initParams[REQUEST_PARAMS.ROI]) {
+            // also support ?roi=1
+            initial_ids = this.initParams[REQUEST_PARAMS.ROI];
+            initial_type = INITIAL_TYPES.ROIS;
+        } else if (this.initParams[REQUEST_PARAMS.SHAPE]) {
+            initial_ids = this.initParams[REQUEST_PARAMS.SHAPE];
+            initial_type = INITIAL_TYPES.SHAPES;
+        }
+        if (initial_ids) {
+            this.initial_ids = initial_ids.split(',')
+                .map(id => parseInt(id))
+                .filter(id => !isNaN(id))
+
             if (this.initial_ids.length > 0)
-                this.initial_type = INITIAL_TYPES.IMAGES;
+                this.initial_type = initial_type;
         }
 
-        // do we have a dataset id
+        // do we have a dataset id?
         let initial_dataset_id =
             parseInt(this.getInitialRequestParam(REQUEST_PARAMS.DATASET_ID));
         if (typeof initial_dataset_id !== 'number' || isNaN(initial_dataset_id))
             initial_dataset_id = null;
-        // do we have a well id
+        // do we have a well id?
         let initial_well_id =
             parseInt(this.getInitialRequestParam(REQUEST_PARAMS.WELL_ID));
         if (typeof initial_well_id !== 'number' || isNaN(initial_well_id))
             initial_well_id = null;
 
-        // add image config if we have image ids
-        if (this.initial_type === INITIAL_TYPES.IMAGES) {
+        // add image config if we have image ids OR roi id OR shape id
+        if ([INITIAL_TYPES.IMAGES, INITIAL_TYPES.ROIS, INITIAL_TYPES.SHAPES].indexOf(this.initial_type) > -1) {
             let parent_id = initial_dataset_id || initial_well_id;
-            let parent_type =
-                parent_id !== null ?
-                    initial_dataset_id !== null ?
-                        INITIAL_TYPES.DATASET : INITIAL_TYPES.WELL : null;
-            this.addImageConfig(this.initial_ids[0], parent_id, parent_type);
+            let parent_type;
+            if (parent_id) {
+                if (initial_dataset_id !== null) {
+                    parent_type = INITIAL_TYPES.DATASET;
+                } else {
+                    parent_type = INITIAL_TYPES.WELL
+                }
+            }
+            this.addImageConfig(this.initial_ids[0], this.initial_type, parent_id, parent_type);
         } else {
             // we could either have a well or just a dataset
             if (initial_well_id) { // well takes precedence
@@ -412,7 +462,7 @@ export default class Context {
      * @memberof Context
      */
     processInitialParameters() {
-        let server = this.initParams[REQUEST_PARAMS.SERVER];
+        let server = this.initParams[REQUEST_PARAMS.HOST];
         if (typeof server !== 'string' || server.length === 0) server = "";
         else {
             // check for localhost and if we need to prefix for requests
@@ -427,13 +477,43 @@ export default class Context {
                 server = "http://" + server;
         }
         this.server = server;
-        delete this.initParams[REQUEST_PARAMS.SERVER];
+        delete this.initParams[REQUEST_PARAMS.HOST];
 
         let interpolate =
             typeof this.initParams[REQUEST_PARAMS.INTERPOLATE] === 'string' ?
                 this.initParams[REQUEST_PARAMS.INTERPOLATE].toLowerCase() : 'true';
         this.interpolate = (interpolate === 'true');
         this.version = this.getInitialRequestParam(REQUEST_PARAMS.VERSION);
+        this.roi_page_size = this.initParams[REQUEST_PARAMS.ROI_PAGE_SIZE] || 500;
+        this.max_projection_bytes = parseInt(this.initParams[REQUEST_PARAMS.MAX_PROJECTION_BYTES], 10)
+                                    || (1024 * 1024 * 256);
+        this.max_projection_bytes = parseInt(this.initParams[REQUEST_PARAMS.MAX_PROJECTION_BYTES], 10) || (1024 * 1024 * 256);
+        this.max_active_channels = parseInt(this.initParams[REQUEST_PARAMS.MAX_ACTIVE_CHANNELS], 10) || 10;
+        let userPalette = `${this.initParams[REQUEST_PARAMS.ROI_COLOR_PALETTE]}`
+        if (userPalette) {
+            let arr = userPalette.match(/\[[^\[\]]*\]/g)
+            if (arr) {
+                this.roi_color_palette = []; let i = 0
+                arr.forEach(arr => {this.roi_color_palette[i] = arr.match(/[A-Za-z#][A-Za-z0-9]*(\([^A-Za-z]*\))?/g); i++})
+            }
+        }
+        this.show_palette_only = (this.initParams[REQUEST_PARAMS.SHOW_PALETTE_ONLY] != 'False') || false
+        this.enable_mirror = (this.initParams[REQUEST_PARAMS.ENABLE_MIRROR] != 'False') || false
+        // nodedescriptors can be empty string or "None" (undefined)
+        let nds = this.initParams[REQUEST_PARAMS.NODEDESCRIPTORS];
+        // initially hide left and right panels?
+        if (this.initParams[REQUEST_PARAMS.FULL_PAGE] == 'true') {
+            this.collapse_left = true;
+            this.collapse_right = true;
+        } else {
+            if (this.initParams[REQUEST_PARAMS.COLLAPSE_LEFT] == 'true') {
+                this.collapse_left = true;
+            }
+            if (this.initParams[REQUEST_PARAMS.COLLAPSE_RIGHT] == 'true') {
+                this.collapse_right = true;
+            }
+        }
+        this.nodedescriptors = nds == 'None' ? undefined : nds
     }
 
     /**
@@ -607,15 +687,19 @@ export default class Context {
             }
         } else {
             // 'standard' url
-            if (this.initial_type === INITIAL_TYPES.IMAGES) {
+            if (this.initial_type === INITIAL_TYPES.IMAGES || this.initial_type === INITIAL_TYPES.ROIS
+                    || this.initial_type === INITIAL_TYPES.SHAPES) {
                 if (this.initial_ids.length > 1)
+                    // e.g. ?images=1,2 - Don't update URL
                     newPath += window.location.search;
                 else {
+                    // e.g. ?images=1 - update to ?images=2&dataset=1
                     parent_id = selConf.image_info.parent_id;
                     newPath +=
                         '?images=' + image_id + '&' + parentTypeString + "=" + parent_id;
                 }
             } else {
+                // e.g. ?dataset=1 - Don't update URL
                 parent_id = this.initial_ids[0];
                 newPath += "?" + parentTypeString + "=" + parent_id;
             }
@@ -638,12 +722,13 @@ export default class Context {
      * Creates and adds an ImageConfig instance by handing it an id of an image
      * stored on the server, as well as making it the selected/active image config.
      *
-     * @param {number} image_id the image id
+     * @param {number} obj_id the image or roi id
+     * @param {number} obj_type e.g. INITIAL_TYPES.IMAGES or ROIS
      * @param {number} parent_id an optional parent id
      * @param {number} parent_type an optional parent type  (e.g. dataset or well)
      */
-    addImageConfig(image_id, parent_id, parent_type) {
-        if (typeof image_id !== 'number' || image_id < 0) return;
+    addImageConfig(obj_id, obj_type, parent_id, parent_type) {
+        if (typeof obj_id !== 'number' || obj_id < 0) return;
 
         // we do not keep the other configs around unless we are in MDI mode.
         if (!this.useMDI) {
@@ -659,12 +744,132 @@ export default class Context {
         }
 
         let image_config =
-            new ImageConfig(this, image_id, parent_id, parent_type);
+            new ImageConfig(this, obj_id, obj_type, parent_id, parent_type);
         // store the image config in the map and make it the selected one
         this.image_configs.set(image_config.id, image_config);
         this.selectConfig(image_config.id);
         // Call bind() to initialize image data loading
         image_config.bind();
+    }
+
+    /**
+     * Get the parent e.g. {type:'dataset', id:123} for example used to
+     * load additional thumbnails.
+     */
+    getParentTypeAndId() {
+        let image_config = this.getSelectedImageConfig();
+        // Dataset ID or Well ID or Image ID
+        let parent_id = null;
+        if (this.initial_type === INITIAL_TYPES.DATASET ||
+            this.initial_type === INITIAL_TYPES.WELL) {
+                parent_id = this.initial_ids[0];
+        } else if (this.initial_type === INITIAL_TYPES.IMAGES &&
+            this.initial_ids.length === 1 &&
+            image_config !== null &&
+            typeof image_config.image_info.parent_id === 'number'){
+                parent_id = image_config.image_info.parent_id;
+        }
+        let parent_type = INITIAL_TYPES.NONE;
+        if (parent_id) {
+            parent_type = this.initial_type === INITIAL_TYPES.IMAGES ?
+                    image_config.image_info.parent_type : this.initial_type;
+        }
+        return {type: parent_type, id: parent_id};
+    }
+
+    /**
+     * Click Handler for single/double clicks to converge on:
+     * Opens images in single and multi viewer mode
+     *
+     * @memberof ThumbnailSlider
+     * @param {number} obj_id the image or roi id for the clicked thumbnail
+     * @param {boolean} is_double_click true if triggered by a double click
+     */
+    onClicks(obj_id, is_double_click = false, replace_image_config) {
+        let image_config = this.getSelectedImageConfig();
+        let navigateToNewImage = () => {
+            this.rememberImageConfigChange(obj_id);
+            // Dataset ID or Well ID or Image ID
+            let parent = this.getParentTypeAndId();
+            let parent_id = parent.id;
+            let parent_type = parent.type;
+            // single click in mdi will need to 'replace' image config
+            if (this.useMDI && !is_double_click && !replace_image_config) {
+                replace_image_config = image_config;
+            }
+            let initial_type = INITIAL_TYPES.IMAGES;
+            if (replace_image_config) {
+                let oldPosition = Object.assign({}, replace_image_config.position);
+                let oldSize = Object.assign({}, replace_image_config.size);
+                this.removeImageConfig(replace_image_config, true);
+                this.addImageConfig(obj_id, initial_type, parent_id, parent_type);
+                // Get the newly created image config
+                let selImgConf = this.getSelectedImageConfig();
+                if (selImgConf !== null) {
+                    selImgConf.position = oldPosition;
+                    selImgConf.size = oldSize;
+                }
+            } else {
+                this.addImageConfig(obj_id, initial_type, parent_id, parent_type);
+            }
+        };
+
+        let modifiedConfs = this.useMDI ?
+            this.findConfigsWithModifiedRegionsForGivenImage(
+                obj_id) : [];
+        let selImgConf = this.getSelectedImageConfig();
+        let hasSameImageSelected =
+            selImgConf && selImgConf.image_info.image_id === obj_id;
+        // show dialogs for modified rois
+        if (image_config &&
+            image_config.regions_info &&
+            (image_config.regions_info.hasBeenModified() ||
+             modifiedConfs.length > 0) &&
+             (!is_double_click || (is_double_click && !hasSameImageSelected)) &&
+            !Misc.useJsonp(this.server) &&
+            image_config.regions_info.image_info.can_annotate) {
+                let modalText =
+                    !this.useMDI ||
+                    image_config.regions_info.hasBeenModified() ?
+                        'You have new/deleted/modified ROI(s).<br>' +
+                        'Do you want to save your changes?' :
+                        'You have changed ROI(s) on an image ' +
+                        'that\'s been opened multiple times.<br>' +
+                        'Do you want to save now to avoid ' +
+                        'inconsistence (and a potential loss ' +
+                        'of some of your changes)?';
+                let saveHandler =
+                    !this.useMDI ||
+                    (!is_double_click &&
+                     image_config.regions_info.hasBeenModified()) ?
+                        () => {
+                            let tmpSub =
+                                this.eventbus.subscribe(
+                                    REGIONS_STORED_SHAPES,
+                                    (params={}) => {
+                                        tmpSub.dispose();
+                                        if (params.omit_client_update)
+                                            navigateToNewImage();
+                                });
+                            setTimeout(()=>
+                                this.publish(
+                                    REGIONS_STORE_SHAPES,
+                                    {config_id : image_config.id,
+                                     omit_client_update: true}), 20);
+                        } :
+                        () => {
+                            this.publish(
+                                REGIONS_STORE_SHAPES,
+                                {config_id :
+                                    image_config.regions_info.hasBeenModified() ?
+                                    image_config.id : modifiedConfs[0],
+                                 omit_client_update: false});
+                            navigateToNewImage();
+                        };
+                UI.showConfirmationDialog(
+                    'Save ROIs?', modalText,
+                    saveHandler, () => navigateToNewImage());
+        } else navigateToNewImage();
     }
 
     /**
@@ -721,11 +926,14 @@ export default class Context {
      * @param {number} id the ImageConfig id
      */
     selectConfig(id=null) {
-        if (typeof id !== 'number' || id < 0 ||
-            !(this.image_configs.get(id) instanceof ImageConfig) ||
-            this.selected_config === id) return;
-
-        this.selected_config = id;
+        if (typeof id === 'number' && id > 0 &&
+            (this.image_configs.get(id) instanceof ImageConfig) &&
+            this.selected_config !== id) {
+          this.selected_config = id;
+        }
+        // NB: return true so that the event bubbles.
+        // see https://github.com/ome/omero-iviewer/issues/274
+        return true;
     }
 
     /**
@@ -817,6 +1025,25 @@ export default class Context {
     getCachedImageSettings(image_id) {
         if (this.cached_image_settings[image_id]) {
             return this.cached_image_settings[image_id];
+        }
+    }
+
+    /**
+     * Clears cache of image settings, specified by ID.
+     * If imageIds is not defined, this clears ALL cached images settings.
+     *
+     * @param {Array.<number>} imageIds the IDs of Images to clear from cache
+     * @memberof Context
+     */
+    clearCachedImageSettings(imageIds) {
+        if (Misc.isArray(imageIds)) {
+            imageIds.forEach(image_id => {
+                if (this.cached_image_settings[image_id]) {
+                    delete this.cached_image_settings[image_id];
+                }
+            });
+        } else {
+            this.cached_image_settings = {};
         }
     }
 

@@ -19,9 +19,10 @@
 import {noView} from 'aurelia-framework';
 import Misc from '../utils/misc';
 import Ui from '../utils/ui';
+var escapeHtml = require('escape-html')
 import {
     APP_TITLE, CHANNEL_SETTINGS_MODE, INITIAL_TYPES, IVIEWER,
-    PROJECTION, REQUEST_PARAMS, WEBGATEWAY
+    PROJECTION, REQUEST_PARAMS, WEBCLIENT, WEBGATEWAY
 } from '../utils/constants';
 import { IMAGE_SETTINGS_REFRESH } from '../events/events';
 
@@ -237,17 +238,27 @@ export default class ImageInfo {
     model = "color";
 
     /**
+     * URL to open the image in the main client
+     * @memberof ImageInfo
+     * @type {string}
+     */
+    web_url = null;
+
+    /**
      * @constructor
      * @param {Context} context the application context
      * @param {number} config_id the config id we belong to
-     * @param {number} image_id the image id to be queried
+     * @param {number} obj_id the object id to be queried
+     * @param {number} obj_type the type of obj. e.g. INITIAL_TYPES.IMAGES or ROIS
      * @param {number} parent_id an optional parent id
-     * @param {number} parent_type an optional parent type (e.g. dataset or well)
+     * @param {number} parent_type an optional parent type (e.g. INITIAL_TYPES.DATASET or WELL)
      */
-    constructor(context, config_id, image_id, parent_id, parent_type) {
+    constructor(context, config_id, obj_id, obj_type, parent_id, parent_type) {
         this.context = context;
         this.config_id = config_id;
-        this.image_id = image_id;
+        this.image_id = obj_type == INITIAL_TYPES.IMAGES ? obj_id : undefined;
+        this.initial_roi_id = obj_type == INITIAL_TYPES.ROIS ? obj_id : undefined;
+        this.initial_shape_id = obj_type == INITIAL_TYPES.SHAPES ? obj_id : undefined;
         if (typeof parent_id === 'number') {
             this.parent_id = parent_id;
             if (typeof parent_type === 'number' &&
@@ -255,6 +266,9 @@ export default class ImageInfo {
                 parent_type <= INITIAL_TYPES.WELL)
                     this.parent_type = parent_type;
         }
+        this.web_url = this.context.server +
+        this.context.getPrefixedURI(WEBCLIENT) +
+        '/?show=image-' + this.image_id;
     }
 
     /**
@@ -289,14 +303,31 @@ export default class ImageInfo {
         if (typeof refresh !== 'boolean') refresh = false;
         this.ready = false;
 
+        // if we have ROI id instead of Image id, use that to load image_data
+        let url = this.context.server + this.context.getPrefixedURI(IVIEWER);
+        if (!this.image_id && this.initial_roi_id) {
+            url += "/roi/" + this.initial_roi_id + '/image_data/';
+        } else if (!this.image_id && this.initial_shape_id) {
+            url += "/shape/" + this.initial_shape_id + '/image_data/';
+        } else {
+            url += "/image_data/" + this.image_id + '/';
+        }
         $.ajax({
-            url :
-                this.context.server + this.context.getPrefixedURI(IVIEWER) +
-                "/image_data/" + this.image_id + '/',
+            url,
             success : (response) => {
+                if (!this.image_id) {
+                    this.image_id = response.id;
+                }
+
+                // validate response
+                // check for Exceptions and show error dialog.
+                const valid = this.validateImageInfo(response);
+                if (!valid) {
+                    return;
+                }
+
                 // read initial request params
                 this.initializeImageInfo(response, refresh);
-
                 // check for a parent id (if not well)
                 if (this.context.initial_type !== INITIAL_TYPES.WELL &&
                     typeof this.parent_id !== 'number') {
@@ -309,8 +340,15 @@ export default class ImageInfo {
                 this.requestImgRDef();
                 // request regions data if rois tab showing
                 let conf = this.context.getImageConfig(this.config_id);
-                if (this.context.isRoisTabActive())
-                    conf.regions_info.requestData();
+                if (this.context.isRoisTabActive()) {
+                    if (this.initial_roi_id) {
+                        conf.regions_info.setPageByRoiAndReload(this.initial_roi_id);
+                    } else if (this.initial_shape_id) {
+                        conf.regions_info.setPageByRoiAndReload(null, this.initial_shape_id);
+                    } else {
+                        conf.regions_info.requestData();
+                    }
+                }
             },
             error : (error, textStatus) => {
                 this.ready = false;
@@ -328,6 +366,48 @@ export default class ImageInfo {
                 Ui.showModalMessage(errMsg, 'OK');
             }
         });
+    }
+
+    /**
+     * Checks that the imgData JSON response is valid, no exceptions etc.
+     *
+     * @private
+     * @param {Object} response the response object
+     * @memberof ImageInfo
+     * @return {Boolean} True if data is valid. Also shows dialogs with errors
+     */
+    validateImageInfo(response) {
+
+        if (response.ConcurrencyException) {
+            let nds = this.context.nodedescriptors;
+            const pyramidsDisabled = nds != undefined && nds.length > 0 && !nds.includes("PixelData");
+            Ui.showModalMessage(`<p>Image is ${pyramidsDisabled ? "not" : "not currently"} viewable</p>
+                <pre>ConcurrencyException</pre>
+                <small>
+                    A pyramid of zoom levels is not available. <br>
+                    ${pyramidsDisabled ? "Pyramid generation is disabled. You will need to convert and re-import this image." :
+                     "Please contact your server Administrator if this does not resolve."} <br>
+                    See <a target="_blank" href='https://omero.readthedocs.io/en/stable/sysadmins/limitations.html#large-images'>
+                      Limitations: Large Images</a>.
+                </small>`,
+                "OK");
+            return false;
+        }
+
+        if (response.error || response.Exception) {
+            const msg = response.error || response.Exception;
+            Ui.showModalMessage(`<p>Error loading Image data</p>
+                <pre>${escapeHtml(msg)}</pre>`, "OK");
+            return false;
+        }
+
+        if (response.channels == undefined || response.channels.length === 0) {
+            Ui.showModalMessage(`<p>No channel data loaded</p>
+                <pre>${escapeHtml(JSON.stringify(response, null, 4))}</pre>`, "OK");
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -365,7 +445,6 @@ export default class ImageInfo {
         this.import_date = response.import_date;
         if (typeof response.acquisition_date === 'string')
             this.acquisition_date = response.acquisition_date;
-        this.setFormattedDeltaT(response);
         this.roi_count = response.roi_count;
         if (typeof response.meta.datasetName === 'string')
             this.dataset_name = response.meta.datasetName;
@@ -379,6 +458,9 @@ export default class ImageInfo {
         // If we've viewed this image before, apply cached settings
         this.applyCachedSettings(response);
 
+        // enforce max_active_channels
+        this.applyMaxActiveChannels(this.context.max_active_channels);
+
         // signal that we are ready
         this.ready = true;
         this.tmp_data = response;
@@ -387,6 +469,27 @@ export default class ImageInfo {
             this.context.publish(
                 IMAGE_SETTINGS_REFRESH, { config_id : this.config_id});
         }
+        // Finally, load delta_t data
+        this.requestDeltaT();
+    }
+
+    applyMaxActiveChannels(max_active_channels) {
+        // let conf = this.context.getImageConfig(this.config_id);
+        if (this.channels == null) {
+            return;
+        }
+        let channels = this.channels;
+        let activeCount = 0;
+
+        for (let i=0;i<channels.length;i++) {
+            let c = channels[i];
+            if (c.active) {
+                activeCount += 1;
+            }
+            if (activeCount > max_active_channels && c.active) {
+                c.active = false;
+            };
+        };
     }
 
     /**
@@ -401,6 +504,9 @@ export default class ImageInfo {
         if (cached !== undefined) {
 
             let history = [];
+
+            if (cached.flipX !== undefined) response.flipX = cached.flipX
+            if (cached.flipY !== undefined) response.flipY = cached.flipY
 
             // JSON response object is passed to the ol3-viewer via tmp_data, so we need to update
             if (cached.center) {
@@ -444,7 +550,7 @@ export default class ImageInfo {
             response.rdefs.model = this.model;
 
             conf.addHistory(history);
-
+            
             // Update the channels by 'pasting'
             // This adds to history separately from addHistory() above for all other settings.
             if (cached.channels) {
@@ -594,52 +700,87 @@ export default class ImageInfo {
     }
 
     /**
+     * Loads and the Image delta_t timestamp data
+     */
+    requestDeltaT() {
+        if (this.dimensions.max_t <= 1) return;
+        let url = this.context.server + this.context.getPrefixedURI(IVIEWER);
+        url += "/image_data/" + this.image_id + '/delta_t/';
+        $.ajax({
+            url,
+            success: (response) => {
+                this.setFormattedDeltaT(response)
+            }
+        });
+    }
+
+    /**
      * Sets image_delta_t member from response
-     * after formatting it to hours:minutes:seconds:milliseconds
      *
      * @private
      * @param {Object} response the response object
      * @memberof ImageInfo
      */
     setFormattedDeltaT(response) {
+
+        this.image_delta_t = response.delta_t
+
+        // original units
+        this.image_delta_t_unit = response.delta_t_unit_symbol;
+    }
+
+    /**
+     * Formats delta-T to 'dd hh:mm:ss:milliseconds'
+     *
+     * @param {Number} t            time in seconds
+     * @param {Boolean} verbose     if true, use e.g. '10 days 01 hours minutes seconds'
+     * @memberof ImageInfo
+     */
+    formatDeltaT(t, verbose=false) {
         // avoid further IEEE inaccuracies for remainders
         // by using multiplier and rounding to integer (at ms effectively)
         const precision = 1000;
 
-        let deltaTisAllZeros = true;
-        response.delta_t.map((t) => {
-            t = Math.round(t * precision);
-            let deltaTformatted = "";
+        t = Math.round(t * precision);
+        let deltaTformatted = "";
 
-            // put minus in front
-            let isNegative = t < 0;
-            if (isNegative) {
-                deltaTformatted += "-";
-                t = -t;
-            }
-            if (t !== 0) deltaTisAllZeros = false;
-            // hrs
-            let hours = parseInt(t / (3600 * precision));
-            deltaTformatted += ("00" + hours).slice(-2) + ":";
-            t -= (hours * 3600 * precision);
-            // minutes
-            let mins =  parseInt(t / (60 * precision));
-            deltaTformatted += ("00" + mins).slice(-2) + ":";
-            t -= (mins * (60 * precision));
-            // seconds
-            let secs = parseInt(t / precision);
-            deltaTformatted += ("00" + secs).slice(-2) + ".";
-            // milliseconds
-            let millis = t - (secs * precision);
-            deltaTformatted += ("000" + millis).slice(-3);
-            this.image_delta_t.push(deltaTformatted);
-        });
+        // put minus in front
+        let isNegative = t < 0;
+        if (isNegative) {
+            deltaTformatted += "-";
+            t = -t;
+        }
+        // days
+        let days = parseInt(t / (24 * 3600 * precision));
+        t -= (days * 24 * 3600 * precision);
+        // hrs
+        let hours = parseInt(t / (3600 * precision));
+        t -= (hours * 3600 * precision);
+        // minutes
+        let mins =  parseInt(t / (60 * precision));
+        t -= (mins * (60 * precision));
+        // seconds
+        let secs = parseInt(t / precision);
+        // milliseconds
+        let millis = t - (secs * precision);
 
-        // we reset to deltaT to [] if all zeros
-        if (deltaTisAllZeros) this.image_delta_t = [];
-        // original units
-        this.image_delta_t_unit = response.delta_t_unit_symbol;
-    }
+        function pad(value, length=2) {
+            return ("000" + value).slice(-length);
+        }
+
+        function s(value) {
+            return value == 1 ? "" : "s";
+        }
+        if (days != 0) {
+            deltaTformatted += (verbose ? (days + ` day${s(days)} `) : (pad(days) + " "));
+        }
+        if (verbose) {
+            deltaTformatted += `${hours} hour${s(hours)} ${mins} minute${s(mins)} ${secs}.${pad(millis, 3)} seconds`
+        } else {
+            deltaTformatted += `${pad(hours)}:${pad(mins)}:${pad(secs)}.${pad(millis, 3)}`
+        }
+        return deltaTformatted;
+    };
 
     /**
      * Retrieves the copied rendering settings

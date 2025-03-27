@@ -14,7 +14,7 @@ Then register the plugin as a web.app:
 ::
 
     $ export PYTHONPATH=$PYTHONPATH:/path/to/omero_iviewer/plugin/
-    $ bin/omero config append omero.web.apps '"ol3-viewer"'
+    $ omero config append omero.web.apps '"ol3-viewer"'
 
 You need to build the OpenLayers Viewer JavaScript files:
 
@@ -26,7 +26,7 @@ To keep the files up-to-date during development, don't forget to call:
 
 ::
 
-    $ bin/omero websync
+    $ omero websync
 
 After restarting your web server, you should be able to open images with a
 URL like:
@@ -48,4 +48,4 @@ If you wish to set this viewer as your default image viewer:
 
 ::
 
-    $ bin/omero config set omero.web.viewer.view ol3-viewer.views.plugin
+    $ omero config set omero.web.viewer.view ol3-viewer.views.plugin

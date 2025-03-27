@@ -20,9 +20,8 @@
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import Ui from '../utils/ui';
-import {TABS} from '../utils/constants';
+import {TABS, ROI_TABS, IVIEWER} from '../utils/constants';
 import {REGIONS_STORE_SHAPES, REGIONS_SHOW_COMMENTS} from '../events/events';
-import {PROJECTION} from '../utils/constants';
 import {inject, customElement, bindable} from 'aurelia-framework';
 
 /**
@@ -51,6 +50,19 @@ export default class Regions {
     ];
 
     /**
+     * Make this available to the template
+     */
+    ROI_TABS = ROI_TABS;
+
+    /**
+     * Currently selected tab within the ROI panel. One of the ROI_TABS options.
+     * @type {String}
+     */
+    selected_roi_tab = ROI_TABS.ROI_TABLE;
+
+    show_roi_link = false;
+
+    /**
      * @constructor
      * @param {Context} context the application context (injected)
      */
@@ -66,6 +78,11 @@ export default class Regions {
      */
     attached() {
         Ui.registerKeyHandlers(this.context, this.key_actions, TABS.ROIS, this);
+
+        $("#regions-tabs").find("a").click((e) => {
+            e.preventDefault();
+            this.selected_roi_tab = e.currentTarget.hash.substring(1);
+        });
     }
 
     /**
@@ -137,5 +154,36 @@ export default class Regions {
         if (!this.regions_info.ready) return;
 
         this.regions_info.history.redoHistory();
+    }
+
+    /**
+     * Handles Click on ROI link button
+     *
+     * @memberof Regions
+     */
+    toggleShowRoiLink() {
+        this.show_roi_link = !this.show_roi_link;
+        if (this.show_roi_link) {
+            setTimeout(() => {document.getElementById('roi_link_input').select()}, 0);
+        }
+    }
+
+    /**
+     * Used by template to provide link to currently selected ROIs
+     *
+     * @param {Array} shapes from regions_info.selected_shapes 'roi:shape' IDs
+     * @memberof Regions
+     */
+    getRoisLink(shapes) {
+        if (!shapes || shapes.length === 0) {
+            return "No shapes selected";
+        }
+        // Only take first ROI:shape
+        let shapeId = shapes[0].split(':')[1];
+        // If unsaved, will have negative IDs. Return message instead
+        if (shapeId < 0) {
+            return "Can't link to unsaved ROIs";
+        }
+        return window.location.origin + this.context.getPrefixedURI(IVIEWER) + '?shape=' + shapeId;
     }
 }

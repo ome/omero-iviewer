@@ -23,7 +23,7 @@ import Misc from '../utils/misc';
 import History from './history';
 import {WEBGATEWAY} from '../utils/constants';
 import {VIEWER_SET_SYNC_GROUP} from '../events/events';
-import {CHANNEL_SETTINGS_MODE} from '../utils/constants';
+import {CHANNEL_SETTINGS_MODE, INITIAL_TYPES} from '../utils/constants';
 
 /**
  * Holds the combined data/model that is relevant to working with an image:
@@ -106,11 +106,12 @@ export default class ImageConfig extends History {
     /**
      * @constructor
      * @param {Context} context the application context
-     * @param {number} image_id the image id to be queried
+     * @param {number} obj_id the id of the obj (image, roi)
+     * @param {number} obj_type the type of obj. e.g. INITIAL_TYPES.IMAGES or ROIS
      * @param {number} parent_id an optional parent id
-     * @param {number} parent_type an optional parent type  (e.g. dataset or well)
+     * @param {number} parent_type an optional parent type  (e.g. INITIAL_TYPES.DATASET or WELL)
      */
-    constructor(context, image_id, parent_id, parent_type) {
+    constructor(context, obj_id, obj_type, parent_id, parent_type) {
         super(); // for history
         this.context = context;
         // for now this should suffice, especially given js 1 threaded nature
@@ -118,8 +119,8 @@ export default class ImageConfig extends History {
         // go create the data objects for an image and its associated region
         this.image_info =
             new ImageInfo(
-                this.context, this.id, image_id, parent_id, parent_type);
-        this.regions_info = new RegionsInfo(this.image_info)
+                this.context, this.id, obj_id, obj_type, parent_id, parent_type);
+        this.regions_info = new RegionsInfo(this.image_info);
     }
 
     /**

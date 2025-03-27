@@ -21,6 +21,7 @@ import MapEventType from 'ol/MapEventType';
 import Geometry from 'ol/geom/Geometry';
 import GeometryType from 'ol/geom/GeometryType';
 import Polygon from 'ol/geom/Polygon';
+import {fromExtent as polygonFromExtent} from 'ol/geom/Polygon.js';
 import {listen, unlistenByKey} from 'ol/events';
 import Collection from 'ol/Collection';
 import Feature from 'ol/Feature';
@@ -34,12 +35,10 @@ import {intersects, getCenter} from 'ol/extent';
 import {noModifierKeys, primaryAction} from 'ol/events/condition';
 
 import Draw from './interaction/Draw';
+import ShapeEditPopup from './controls/ShapeEditPopup';
 import {checkAndSanitizeServerAddress,
-    isSameOrigin,
-    sendRequest,
-    makeCrossDomainLoginRedirect} from './utils/Net';
-import {generateRegions,
-    featureFactory} from './utils/Regions';
+    sendRequest} from './utils/Net';
+import {generateRegions, featureFactory} from './utils/Regions';
 import {modifyStyles,
     updateStyleFunction} from './utils/Style';
 import Label from './geom/Label';
@@ -47,7 +46,6 @@ import {AVAILABLE_VIEWER_INTERACTIONS,
     AVAILABLE_VIEWER_CONTROLS,
     WEBGATEWAY,
     PLUGIN_PREFIX,
-    REQUEST_PARAMS,
     DEFAULT_TILE_DIMS,
     REGIONS_MODE,
     REGIONS_STATE,
@@ -70,6 +68,8 @@ import OmeroImage from './source/Image';
 import Regions from './source/Regions';
 import TiledRegions from './source/TiledRegions';
 import Mask from './geom/Mask';
+import Mirror from './controls/Mirror';
+import { REQUEST_PARAMS } from '../../utils/constants';
 
 /**
  * @classdesc
@@ -188,20 +188,6 @@ class Viewer extends OlObject {
         this.sync_group_ = null;
 
         /**
-         * a flag that's only relevant if the server is not same orgin.
-         * then we have to go different ways to redirect the user to the server login.
-         * this flag reminds us if we've done so or still need to do so, i.e. if we
-         * have a supposed session or not.
-         *
-         * @type {boolean}
-         * @private
-         */
-        this.haveMadeCrossOriginLogin_ = isSameOrigin(this.server_) ? true : false;
-        if (!this.haveMadeCrossOriginLogin_ &&
-            window['location']['href'].indexOf("haveMadeCrossOriginLogin_") !== -1)
-            this.haveMadeCrossOriginLogin_ = true;
-
-        /**
          * the id of the element serving as the container for the viewer
          * @type {string}
          * @private
@@ -223,6 +209,20 @@ class Viewer extends OlObject {
          * @private
          */
         this.regions_ = null;
+
+        /**
+         * this flag determines whether ShapeEditPopup is shown on selected shape
+         * Defauls to true
+         * @type {boolean}
+         */
+        this.enable_shape_popup = true;
+
+        /**
+         * this flag determines whether a spinner is shown when loading image data
+         * Defauls to true
+         * @type {boolean}
+         */
+        this.spinner_enabled = true;
 
         /**
          * the 'viewer state', i.e. the controls and interactions that were added
@@ -365,11 +365,7 @@ class Viewer extends OlObject {
         };
 
         // execute initialization function
-        // for cross domain we check whether we need to have a login made, otherwise
-        // we redirect to there ...
-        if (isSameOrigin(this.server_) || this.haveMadeCrossOriginLogin_) {
-            this.initialize_();
-        } else makeCrossDomainLoginRedirect(this.server_);
+        this.initialize_();
     }
 
     /**
@@ -401,8 +397,16 @@ class Viewer extends OlObject {
         var dims = this.image_info_['size'];
         if (this.image_info_['zoomLevelScaling']) {
             var tmp = [];
-            for (var r in this.image_info_['zoomLevelScaling'])
-                tmp.push(1 / this.image_info_['zoomLevelScaling'][r]);
+            for (var r in this.image_info_['zoomLevelScaling']) {
+                // Data from server. Don't need to check for zero division
+                var scale = 1 / this.image_info_['zoomLevelScaling'][r];
+                if (scale <= tmp[tmp.length - 1]) {
+                    // "Resolutions must be in descending order"
+                    // https://github.com/ome/omero-iviewer/issues/358
+                    break;
+                }
+                tmp.push(scale);
+            }
             zoomLevelScaling = tmp.reverse();
         }
         var zoom = zoomLevelScaling ? zoomLevelScaling.length : -1;
@@ -432,7 +436,7 @@ class Viewer extends OlObject {
         };
 
         // determine the center
-        var imgCenter = [dims['width'] / 2, -dims['height'] / 2];
+        var defaultImgCenter = [dims['width'] / 2, -dims['height'] / 2];
         // pixel size
         var pixelSize =
         typeof this.image_info_['pixel_size'] === "object" &&
@@ -448,38 +452,32 @@ class Viewer extends OlObject {
         });
 
         // we might have some requested defaults
-        var initialTime =
-        this.getInitialRequestParam(REQUEST_PARAMS.TIME);
-        initialTime =
-        initialTime !== null ? (parseInt(initialTime)-1) :
+        var initialTime = this.getInitialRequestParam(REQUEST_PARAMS.TIME);
+        initialTime = initialTime !== null ? (parseInt(initialTime)-1) :
         this.image_info_['rdefs']['defaultT'];
         if (initialTime < 0) initialTime = 0;
         if (initialTime >= dims.t) initialTime =  dims.t-1;
-        var initialPlane =
-        this.getInitialRequestParam(REQUEST_PARAMS.PLANE);
-        initialPlane =
-        initialPlane !== null ? (parseInt(initialPlane)-1) :
+        var initialPlane = this.getInitialRequestParam(REQUEST_PARAMS.PLANE);
+        initialPlane = initialPlane !== null ? (parseInt(initialPlane)-1) :
             this.image_info_['rdefs']['defaultZ'];
         if (initialPlane < 0) initialPlane = 0;
         if (initialPlane >= dims.z) initialPlane =  dims.z-1;
-        var initialCenterX =
-        this.getInitialRequestParam(REQUEST_PARAMS.CENTER_X);
-        var initialCenterY =
-        this.getInitialRequestParam(REQUEST_PARAMS.CENTER_Y);
+        var initialCenterX = this.getInitialRequestParam(REQUEST_PARAMS.CENTER_X);
+        var initialCenterY = this.getInitialRequestParam(REQUEST_PARAMS.CENTER_Y);
+        let imgCenter;
         if (initialCenterX && !isNaN(parseFloat(initialCenterX)) &&
-        initialCenterY && !isNaN(parseFloat(initialCenterY))) {
-        initialCenterX = parseFloat(initialCenterX);
-        initialCenterY = parseFloat(initialCenterY);
-        if (initialCenterY > 0) initialCenterY = -initialCenterY;
-        if (initialCenterX >=0 && initialCenterX <= dims['width'] &&
-            -initialCenterY >=0 && -initialCenterX <= dims['height'])
-        imgCenter = [initialCenterX, initialCenterY];
+                    initialCenterY && !isNaN(parseFloat(initialCenterY))) {
+            initialCenterX = parseFloat(initialCenterX);
+            initialCenterY = parseFloat(initialCenterY);
+            // Restrict centre to within image bounds
+            initialCenterX = Math.min(Math.max(0, initialCenterX), dims['width']);
+            initialCenterY = Math.min(Math.max(0, initialCenterY), dims['height']);
+            imgCenter = [initialCenterX, -initialCenterY];
         }
-        var initialChannels =
-        this.getInitialRequestParam(REQUEST_PARAMS.CHANNELS);
-        var initialMaps =
-        this.getInitialRequestParam(REQUEST_PARAMS.MAPS);
+        var initialChannels = this.getInitialRequestParam(REQUEST_PARAMS.CHANNELS);
+        var initialMaps = this.getInitialRequestParam(REQUEST_PARAMS.MAPS);
         initialChannels = parseChannelParameters(initialChannels, initialMaps);
+        var enableMirror = this.getInitialRequestParam(REQUEST_PARAMS.ENABLE_MIRROR) === 'True';
 
         // copy needed channels info
         var channels = [];
@@ -516,6 +514,7 @@ class Viewer extends OlObject {
             image: this.id_,
             width: dims['width'],
             height: dims['height'],
+            size_t: dims.t,
             plane: initialPlane,
             time: initialTime,
             channels: channels,
@@ -530,43 +529,51 @@ class Viewer extends OlObject {
         });
         source.changeChannelRange(initialChannels, false);
 
-        var actualZoom = zoom > 1 ? zoomLevelScaling[0] : 1;
-        var initialZoom =
-        this.getInitialRequestParam(REQUEST_PARAMS.ZOOM);
+        var defaultZoom = zoom > 1 ? zoomLevelScaling[0] : 1;
+        var actualZoom;
+        var initialZoom = this.getInitialRequestParam(REQUEST_PARAMS.ZOOM);
         var possibleResolutions = prepareResolutions(zoomLevelScaling);
         if (initialZoom && !isNaN(parseFloat(initialZoom))) {
-        initialZoom = (1 / (parseFloat(initialZoom) / 100));
-        var posLen = possibleResolutions.length;
-        if (posLen > 1) {
-            if (initialZoom >= possibleResolutions[0])
-                actualZoom = possibleResolutions[0];
-            else if (initialZoom <= possibleResolutions[posLen-1])
-                actualZoom = possibleResolutions[posLen-1];
-            else {
-                // find nearest resolution
-                for (var r=0;r<posLen-1;r++) {
-                    if (initialZoom < possibleResolutions[r+1])
-                        continue;
-                    var d1 =
-                        Math.abs(possibleResolutions[r] - initialZoom);
-                    var d2 =
-                        Math.abs(possibleResolutions[r+1] - initialZoom);
-                    if (d1 < d2)
-                        actualZoom = possibleResolutions[r];
-                    else actualZoom = possibleResolutions[r+1];
-                    break;
+            initialZoom = (1 / (parseFloat(initialZoom) / 100));
+            var posLen = possibleResolutions.length;
+            if (posLen > 1) {
+                if (initialZoom >= possibleResolutions[0])
+                    actualZoom = possibleResolutions[0];
+                else if (initialZoom <= possibleResolutions[posLen-1])
+                    actualZoom = possibleResolutions[posLen-1];
+                else {
+                    // find nearest resolution
+                    for (var r=0;r<posLen-1;r++) {
+                        if (initialZoom < possibleResolutions[r+1])
+                            continue;
+                        var d1 =
+                            Math.abs(possibleResolutions[r] - initialZoom);
+                        var d2 =
+                            Math.abs(possibleResolutions[r+1] - initialZoom);
+                        if (d1 < d2)
+                            actualZoom = possibleResolutions[r];
+                        else actualZoom = possibleResolutions[r+1];
+                        break;
+                    }
                 }
+            } else {
+                actualZoom = 1;
             }
-        } else actualZoom = 1;
         }
 
+        let highestRes = possibleResolutions[possibleResolutions.length-1];
+        // For Big images, allow zooming in further (from 161% to > 600%)
+        if (highestRes > 0.5) {
+            possibleResolutions.push(highestRes/2);
+            possibleResolutions.push(highestRes/4);
+        }
         // we need a View object for the map
         var view = new View({
             projection: this.proj_,
-            center: imgCenter,
+            center: defaultImgCenter,
             extent: [0, -dims['height'], dims['width'], 0],
             resolutions : possibleResolutions,
-            resolution : actualZoom,
+            resolution : defaultZoom,
             maxZoom: possibleResolutions.length-1
         });
 
@@ -585,6 +592,7 @@ class Viewer extends OlObject {
         controls.push(defaultConts[contr]['ref']);
         this.viewerState_[contr] = defaultConts[contr];
         }
+    
 
         // finally construct the open layers map object
         this.viewer_ = new OlMap({
@@ -604,6 +612,21 @@ class Viewer extends OlObject {
             'collapsed': !source.use_tiled_retrieval_
         };
         this.addControl('birdseye', birdsEyeOptions);
+
+        // add mirror if requested
+        if(enableMirror){
+            var initialFlipX = this.getInitialRequestParam(REQUEST_PARAMS.FLIP_X) === 'true';
+            var initialFlipY = this.getInitialRequestParam(REQUEST_PARAMS.FLIP_Y) === 'true'
+            view.setProperties({flipX: false, flipY: false})
+            // use cached mirror settings if available
+            if (this.image_info_['flipX']) initialFlipX = this.image_info_['flipX']
+            if (this.image_info_['flipY']) initialFlipY = this.image_info_['flipY']
+            this.addControl('mirror', {
+                flipX: initialFlipX,
+                flipY: initialFlipY
+            })
+        }
+        
         // tweak source element for fullscreen to include dim sliders (iviewer only)
         var targetId = this.getTargetId();
         var viewerFrame = targetId ? document.getElementById(targetId) : null;
@@ -620,22 +643,42 @@ class Viewer extends OlObject {
         // enable intensity control
         this.toggleIntensityControl(true);
 
-        // helper to broadcast a viewer interaction (zoom and drag)
+        // helper to broadcast a viewer interaction (zoom, drag, and flip)
         var notifyAboutViewerInteraction = function(viewer) {
             sendEventNotification(
                 viewer, "IMAGE_VIEWER_INTERACTION", viewer.getViewParameters());
         };
 
         // get cached initial viewer center etc.
-        if (this.image_info_['center'] || this.image_info_['resolution'] || this.image_info_['rotation']) {
-            let center = this.image_info_['center'];
-            let resolution = this.image_info_['resolution'];
+        if (this.image_info_['center'] || imgCenter || this.image_info_['resolution']
+                || this.image_info_['rotation'] || actualZoom) {
+            let center = this.image_info_['center'] || imgCenter;
+            let resolution = this.image_info_['resolution'] || actualZoom;
             let rotation = this.image_info_['rotation'];
             // Need to wait for viewer to be built before this works:
             setTimeout(function() {
                 this.setViewParameters(center, resolution, rotation);
             }.bind(this), 100)
         }
+
+        // listen for rendercomplete to remove the map_spinner
+        this.renderCompleteListener = listen(
+            this.viewer_, "rendercomplete",
+            function(event) {
+                this.hideSpinner();
+                if (this.eventbus_) {
+                    sendEventNotification(this, "RENDER_COMPLETE");
+                }
+            }, this);
+
+        // listen for any tile loading errors...
+        this.tileLoadErrorListener = listen(
+            this.getImageLayer().getSource(), "tileloaderror",
+            function(event) {
+                if (this.eventbus_) {
+                    sendEventNotification(this, "TILE_LOAD_ERROR");
+                }
+            }, this);
 
         // listens to resolution changes
         this.onViewResolutionListener =
@@ -653,6 +696,19 @@ class Viewer extends OlObject {
                 function(event) {
                     var regions = this.getRegions();
                     if (regions) regions.changed();
+                    if (this.eventbus_) notifyAboutViewerInteraction(this);
+                }, this);
+                
+        this.onViewFlipXListener =
+            listen( // register a resolution handler for zoom display
+                this.viewer_.getView(), "change:flipX",
+                function(event) {
+                    if (this.eventbus_) notifyAboutViewerInteraction(this);
+                }, this);
+        this.onViewFlipYListener =
+            listen( // register a resolution handler for zoom display
+                this.viewer_.getView(), "change:flipY",
+                function(event) {
                     if (this.eventbus_) notifyAboutViewerInteraction(this);
                 }, this);
 
@@ -674,6 +730,7 @@ class Viewer extends OlObject {
                     notifyAboutViewerInteraction(this);
                 }, this);
         }
+
     }
 
     /**
@@ -746,6 +803,9 @@ class Viewer extends OlObject {
                 REGIONS_MODE['MODIFY'],
                 REGIONS_MODE['TRANSLATE']]);
         }
+
+        //Overlay to show a popup for editing shapes (adds itself to map)
+        new ShapeEditPopup(this.regions_);
     }
 
     /**
@@ -804,6 +864,24 @@ class Viewer extends OlObject {
     }
 
     /**
+     * Enable or disable the showing of a Popup to edit selected shapes.
+     *
+     * @param {boolean} flag
+     */
+    enableShapePopup(flag) {
+        this.enable_shape_popup = flag;
+
+        // If enabling, try to show popup
+        if (flag) {
+            this.viewer_.getOverlays().forEach(o => {
+                if (o.updatePopupVisibility) {
+                    o.updatePopupVisibility();
+                }
+            });
+        }
+    }
+
+    /**
      * Marks given shapes as selected, clearing any previously selected if clear flag
      * is set. Optionally the view centers on a given shape.
      * NB: If we're using TiledRegions, we need to specify the centre_on_shape as
@@ -814,8 +892,9 @@ class Viewer extends OlObject {
      * @param {boolean} selected flag whether we should (de)select the rois
      * @param {boolean} clear flag whether we should clear existing selection beforehand
      * @param {any} centre_on_shape the shape object OR id of the shape to center on or null
+     * @param {boolean} zoomToShape if true (and panToShape is specified) zoom it into view
      */
-    selectShapes(roi_shape_ids, selected, clear, centre_on_shape) {
+    selectShapes(roi_shape_ids, selected, clear, centre_on_shape, zoomToShape) {
         // without a regions layer there will be no select of regions ...
         var regions = this.getRegions();
         if (regions === null || regions.select_ === null) return;
@@ -825,13 +904,6 @@ class Viewer extends OlObject {
         regions.selectShapes(roi_shape_ids, selected, clear);
 
         let regionsLayer = this.getRegionsLayer();
-        let resolution;
-        if (regionsLayer instanceof VectorTile) {
-            // force redraw of layer style
-            regionsLayer.setStyle(regionsLayer.getStyle());
-            // Zoom in to 100% so that VectorTiles load
-            resolution = 1;
-        }
 
         // Find shape Geometry and centre image
         let geometry;
@@ -842,7 +914,31 @@ class Viewer extends OlObject {
             geometry = regions.getGeometry(centre_on_shape);
         }
         if (geometry) {
-            this.centerOnGeometry(geometry, resolution);
+            let target_res;
+            let forceCentre = false;
+            if (zoomToShape) {
+                let extent = geom.getExtent();
+                // extent is [x, -y, x2, -y2]
+                let width = extent[2] - extent[0];
+                let height = extent[3] - extent[1];
+                let length = Math.max(width, height);
+                // Zoom till shape is 300px on screen (or until we reach 100%)
+                target_res = Math.max(length / 300, 1);
+                // Don't zoom out from current resolution
+                var res = this.viewer_.getView().getResolution();
+                // If we zoom in, make sure we centre on shape
+                if (target_res < res) {
+                    forceCentre = true;
+                }
+                target_res = Math.min(target_res, res);
+            }
+            if (regionsLayer instanceof VectorTile) {
+                // force redraw of layer style
+                regionsLayer.setStyle(regionsLayer.getStyle());
+                // Zoom in to 100% so that VectorTiles load
+                target_res = 1;
+            }
+            this.centerOnGeometry(geometry, target_res, forceCentre);
         }
     }
 
@@ -868,12 +964,14 @@ class Viewer extends OlObject {
 
     /**
      * Centers view on the middle of a geometry
+     * unless geometry is already in viewport,
      * optionally zooming in on a given resolution
      *
      * @param {ol.geom.Geometry} geometry the geometry
      * @param {number=} resolution the resolution to zoom in on
+     * @param {bool} forceCentre if true, ALWAYS centre
      */
-    centerOnGeometry(geometry, resolution) {
+    centerOnGeometry(geometry, resolution, forceCentre) {
         if (!(geometry instanceof Geometry)) return;
 
         // use given resolution for zoom
@@ -883,17 +981,16 @@ class Viewer extends OlObject {
             if (typeof constrainedResolution === 'number')
                 this.viewer_.getView().setResolution(constrainedResolution);
         }
-
-        // only center if we don't intersect the viewport
+        // only center if we don't intersect the viewport after zooming
         if (intersects(
             geometry.getExtent(),
-            this.viewer_.getView().calculateExtent())) return;
+            this.viewer_.getView().calculateExtent()) && (!forceCentre)) return;
 
         // center (taking into account potential rotation)
         var rot = this.viewer_.getView().getRotation();
         if (geometry.getType() === GeometryType.CIRCLE) {
             var ext = geometry.getExtent();
-            geometry = Polygon.fromExtent(ext);
+            geometry = polygonFromExtent(ext);
             geometry.rotate(rot, getCenter(ext));
         }
         var coords = geometry.getFlatCoordinates();
@@ -1190,6 +1287,13 @@ class Viewer extends OlObject {
             // of each feature for new theT and theZ
             regionsSource.refresh();
         }
+
+        // update popup (hide it if shape no longer visible)
+        this.viewer_.getOverlays().forEach(o => {
+            if (o.updatePopupVisibility) {
+                o.updatePopupVisibility();
+            }
+        });
     }
 
     /**
@@ -1580,6 +1684,16 @@ class Viewer extends OlObject {
         modifyStyles(
             shape_info, this.regions_,
             this.getFeatureCollection(ids), callback);
+
+        // Update any popup that might be showing shape Text
+        if (shape_info.hasOwnProperty('Text')) {
+            // Update the ShapeEditPopup
+            this.viewer_.getOverlays().forEach(o => {
+                if (o.updatePopupText) {
+                    o.updatePopupText(ids, shape_info.Text);
+                }
+            });
+        }
     }
 
     /**
@@ -1756,7 +1870,12 @@ class Viewer extends OlObject {
             if (typeof(this.onViewRotationListener) !== 'undefined' &&
                 this.onViewRotationListener)
                     unlistenByKey(this.onViewRotationListener);
-
+            if (typeof(this.tileLoadErrorListener) !== 'undefined' &&
+                this.tileLoadErrorListener)
+                    unlistenByKey(this.tileLoadErrorListener);
+            if (this.renderCompleteListener) {
+                unlistenByKey(this.renderCompleteListener);
+            }
             this.viewer_.dispose();
         }
 
@@ -2113,8 +2232,20 @@ class Viewer extends OlObject {
                     omeroImage.un('tileloadstart', tileLoadStart);
                     omeroImage.un('tileloadend', tileLoadEnd, event.context);
                     omeroImage.un('tileloaderror', tileLoadEnd, event.context);
-
-                    sendNotification(event.context.canvas);
+                    let canvas = document.createElement('canvas')
+                    let ctx = canvas.getContext('2d')
+                    canvas.width = event.context.canvas.width
+                    canvas.height = event.context.canvas.height
+                    if (params.flipX){
+                        ctx.translate(canvas.width, 0);
+                        ctx.scale(-1, 1);
+                    }
+                    if(params.flipY){
+                        ctx.translate(0, canvas.height)
+                        ctx.scale(1, -1)
+                    }
+                    ctx.drawImage(event.context.canvas, 0, 0);
+                    sendNotification(canvas);
                 }
             }, 50);
         });
@@ -2183,6 +2314,9 @@ class Viewer extends OlObject {
                     this.viewer_.getView().setRotation(rotation);
             }
 
+            if (typeof flipX === 'boolean' ) this.viewer_.getView().flipX = flipX
+            if (typeof flipY === 'boolean') this.viewer_.getView().flipY = flipY
+
             this.viewer_.renderSync();
         } catch(just_in_case) {}
         this.prevent_event_notification_ = false;
@@ -2198,6 +2332,32 @@ class Viewer extends OlObject {
         } catch(ignored) {
             return false;
         }
+    }
+
+    /**
+     * Sets the spinner_enabled flag
+     */
+    enableSpinner(enabled) {
+        this.spinner_enabled = enabled;
+        if (!enabled) {
+            this.hideSpinner();
+        }
+    }
+
+    /**
+     * Shows a spinner indicating the map is loading data
+     */
+    showSpinner() {
+        if (this.spinner_enabled) {
+            this.viewer_.getTargetElement().classList.add('map_spinner');
+        }
+    }
+
+    /**
+     * Hides the spinner
+     */
+    hideSpinner() {
+        this.viewer_.getTargetElement().classList.remove('map_spinner');
     }
 
     /**
@@ -2224,6 +2384,7 @@ class Viewer extends OlObject {
             } else {
                 imageSource.cache_version_++;
             }
+            this.showSpinner();
             imageSource.changed();
         } catch(canHappen) {}
     }
@@ -2244,15 +2405,18 @@ class Viewer extends OlObject {
      */
     getViewParameters() {
         if (this.viewer_ === null || this.getImage() === null) return null;
+        var viewProps = this.viewer_.getView().getProperties()
         return {
             "z": this.getDimensionIndex('z'),
             "t": this.getDimensionIndex('t'),
             "c": this.getDimensionIndex('c'),
             "w": this.getImage().getWidth(),
             "h": this.getImage().getHeight(),
-            "center": this.viewer_.getView().getCenter().slice(),
-            "resolution": this.viewer_.getView().getResolution(),
-            "rotation": this.viewer_.getView().getRotation()
+            "center": viewProps["center"].slice(),
+            "resolution": viewProps["resolution"],
+            "rotation": viewProps["rotation"],
+            "flipX": viewProps["flipX"],
+            "flipY": viewProps["flipY"]
         };
     }
 
@@ -2312,7 +2476,7 @@ class Viewer extends OlObject {
             }
         };
 
-        ret = [];
+        var ret = [];
         for (var r in rois)
             if (rois[r]['shapes'].length > 0) ret.push(rois[r]);
         return ret;

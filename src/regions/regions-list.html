@@ -16,78 +16,97 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 <template>
-    <div class="regions-list">
-        <div if.bind="regions_info.image_info.roi_count > REGIONS_PAGE_SIZE">
-            Showing page: ${regions_info.roi_page_number + 1}
-            of ${regions_info.getPageCount()}
+    <require from="./sort"></require>
+        <div if.bind="regions_info.image_info.roi_count > regions_info.roi_page_size"
+            class="pagination-controls">
+            Current Z/T plane has ${ regions_info.roi_count_on_current_plane } ROIs
+        </div>
+        <div if.bind="regions_info.roi_count_on_current_plane > regions_info.roi_page_size"
+            class="pagination-controls">
+            <div style="display: inline-block; width: 165px; white-space: nowrap;">
+                Showing page:
+                <input class="roi_page_number"
+                    change.delegate="handlePageInput($event)"
+                    value="${temp_sliding_page_number !== undefined ? temp_sliding_page_number + 1 :
+                    regions_info.roi_page_number + 1}" />
+                of ${pageCount}
+            </div>
             <div class="glyphicon glyphicon-chevron-left"
                 click.delegate="setPage(regions_info.roi_page_number - 1)">
             </div>
-           <input type="range" change.delegate="handlePageRange($event)"
-            min="0" value="${regions_info.roi_page_number}" max="${regions_info.getPageCount() - 1}"
-            style="width: 100px; display: inline-block"/>
+           <input disabled.bind="regions_info.is_pending" type="range"
+             input.delegate="handlePageRangeSlide($event)"
+             change.delegate="handlePageRange($event)"
+            min="0" value="${regions_info.roi_page_number}" max="${pageCount - 1}"
+            style="position: relative; top: 2px; width: 100px; display: inline-block"/>
             <div class="glyphicon glyphicon-chevron-right"
                 click.delegate="setPage(regions_info.roi_page_number + 1)">
            </div>
         </div>
-        <div class="regions-table">
-            <div class="regions-header">
-                <div class="columns-dropdown dropdown">
-                    <button type="button"
-                        class="btn btn-default btn-sm dropdown-toggle
-                               glyphicon glyphicon-option-vertical"
-                        style="padding: 0px; top: -2px; right: 2px;"
-                        data-toggle="dropdown">
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li click.delegate="showColumn('comments')">
-                            <span class="show_comments">
-                                ${active_column === 'comments' ? '&#10003;' : '&nbsp;'}
-                            </span>
-                            <a href="#">Show Comments</a>
-                        </li>
-                        <li click.delegate="showColumn('measurements')">
-                            <span class="show_measurements">
-                                ${active_column === 'measurements' ? '&#10003;' : '&nbsp;'}
-                            </span>
-                            <a href="#">Show Area/Length</a>
-                        </li>
-                    </ul>
-                </div>
-                <div class="regions-table-col roi-toggle">
-                    <input id="shapes_visibility_toggler"
-                           title="Show/Hide all rois"
-                           checked.one-way="regions_info.visibility_toggles === 0"
-                           show.bind="regions_info.number_of_shapes > 0"
-                           change.delegate="toggleAllShapesVisibility($event)"
-                           type="checkbox" />
-                </div>
-                <div class="regions-table-col shape-show">
-                    <label for="shapes_visibility_toggler"
-                           show.bind="regions_info.number_of_shapes > 0">Show</label>
-                </div>
-                <div class="regions-table-col shape-type">&nbsp;</div>
-                <div class="regions-table-col shape-z">Z</div>
-                <div class="regions-table-col shape-t">T</div>
-                <div class="regions-table-col shape-c">C</div>
-                <div class="regions-table-col shape-comment"
-                     show.bind="active_column === 'comments'">Comment
-                 </div>
-                <div class="regions-table-col shape-area"
-                     show.bind="active_column === 'measurements'">
-                     Area (${regions_info.image_info.image_pixels_size.symbol_x ||
-                             'px'}&#178;)
-                 </div>
-                <div class="regions-table-col shape-length"
-                     show.bind="active_column === 'measurements'">
-                     Length (${regions_info.image_info.image_pixels_size.symbol_x ||
-                               'px'})
-                 </div>
+        <div class="regions-header">
+            <div class="columns-dropdown dropdown">
+                <button type="button"
+                    class="btn btn-default btn-sm dropdown-toggle
+                            glyphicon glyphicon-option-vertical"
+                    style="padding: 0px; top: -2px; right: 0;"
+                    data-toggle="dropdown">
+                </button>
+                <ul class="dropdown-menu">
+                    <li click.delegate="showColumn('comments')">
+                        <span class="show_comments">
+                            ${active_column === 'comments' ? '&#10003;' : '&nbsp;'}
+                        </span>
+                        <a href="#">Show Comments</a>
+                    </li>
+                    <li click.delegate="showColumn('measurements')">
+                        <span class="show_measurements">
+                            ${active_column === 'measurements' ? '&#10003;' : '&nbsp;'}
+                        </span>
+                        <a href="#">Show Area/Length</a>
+                    </li>
+                </ul>
             </div>
+            <div class="regions-table-col roi-toggle">
+                <input id="shapes_visibility_toggler"
+                        title="Show/Hide all rois"
+                        checked.one-way="regions_info.visibility_toggles === 0"
+                        show.bind="regions_info.number_of_shapes > 0"
+                        change.delegate="toggleAllShapesVisibility($event)"
+                        type="checkbox" />
+            </div>
+            <div class="regions-table-col shape-show">
+                <label for="shapes_visibility_toggler"
+                        show.bind="regions_info.number_of_shapes > 0">Show</label>
+            </div>
+            <div class="regions-table-col shape-type">&nbsp;</div>
+            <div class="regions-table-col shape-z ${sortCss(sortBy, sortAscending, 'theZ')}"
+                click.delegate="sort('theZ')">Z</div>
+            <div class="regions-table-col shape-t ${sortCss(sortBy, sortAscending, 'theT')}"
+                click.delegate="sort('theT')">T</div>
+            <div class="regions-table-col shape-c">C</div>
+            <div class="regions-table-col shape-comment ${sortCss(sortBy, sortAscending, 'shapeText')}"
+                    click.delegate="sort('shapeText')"
+                    show.bind="active_column === 'comments'">Comment
+                </div>
+            <div class="regions-table-col shape-area ${sortCss(sortBy, sortAscending, 'area')}"
+                    click.delegate="sort('area')"
+                    show.bind="active_column === 'measurements'">
+                    Area (${regions_info.image_info.image_pixels_size.symbol_x ||
+                            'px'}&#178;)
+                </div>
+            <div class="regions-table-col shape-length ${sortCss(sortBy, sortAscending, 'length')}"
+                    click.delegate="sort('length')"
+                    show.bind="active_column === 'measurements'">
+                    Length (${regions_info.image_info.image_pixels_size.symbol_x ||
+                            'px'})
+                </div>
+        </div>
 
-            <div class="regions-table-row regions-table-first-row"></div>
+        <div class="disabled-color loading-text"
+            show.bind="!regions_info.ready">Loading Regions...</div>
 
-            <template repeat.for="[roi_id, roi] of regions_info.data">
+        <div class="regions-table" show.bind="regions_info.ready">
+            <template repeat.for="[roi_id, roi] of regions_info.data | sort:sortBy:sortAscending">
                 <template repeat.for="[shape_id, shape] of roi.shapes">
                     <div if.bind="(roi.shapes.size - roi.deleted) > 1 &&
                                    roi.shapes.size > 1 && $first"
@@ -103,15 +122,19 @@
                                  ${roi.show ? '&#9660;' : '&#9658;'}
                              </div>
                          </div>
-                         <div class="regions-table-col shape-show"></div>
+                         <div class="regions-table-col shape-show">
+                             <input type="checkbox"
+                                 title="Show/Hide shapes" checked.one-way="regions_info.roi_visibility_toggles[roi_id] === undefined || regions_info.roi_visibility_toggles[roi_id] === 0"
+                                 change.delegate="toggleRoiVisibility(roi_id, $event)"/>
+                         </div>
                          <div class="regions-table-col shape-type">
                              (${(roi.shapes.size - roi.deleted)})
                          </div>
                         <div class="regions-table-col shape-z"></div>
                         <div class="regions-table-col shape-t"></div>
                         <div class="regions-table-col shape-c"></div>
-                        <div class="regions-table-col shape-comment"
-                             style="display: none">
+                        <div class="regions-table-col shape-comment">
+                            ${roi.name}
                         </div>
                         <div class="regions-table-col shape-area"></div>
                         <div class="regions-table-col shape-length"></div>
@@ -165,5 +188,4 @@
                 </template>
             </template>
         </div>
-    </div>
 </template>

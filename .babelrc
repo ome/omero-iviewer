@@ -1,0 +1,16 @@
+{
+  "presets": [
+    [
+        "@babel/preset-env",
+        {
+        "targets": "> 0.25%, not dead",
+        "modules": false // Needed for tree shaking to work.
+        }
+    ],
+  ],
+
+  "plugins": [
+    ["@babel/plugin-proposal-decorators", { "legacy": true }],
+    ["@babel/plugin-proposal-class-properties", { "loose": true }]
+  ]
+}

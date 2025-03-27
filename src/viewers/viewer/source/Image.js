@@ -109,6 +109,15 @@ const OmeroImage = function(options) {
         console.error("Image height must be a strictly positive integer");
 
     /**
+     * the image sizeT
+     * @type {number}
+     * @private
+     */
+    this.size_t_ = opts.size_t || 1;
+    if (typeof this.size_t_ !== 'number' || this.size_t_ <= 0)
+        console.error("Image sizeT must be a strictly positive integer");
+
+    /**
      * the plane (z) index
      * @type {number}
      * @private
@@ -182,12 +191,13 @@ const OmeroImage = function(options) {
     /**
      * should we use tiled retrieval methods?
      * for now use them only for truly tiled/pyramidal sources
-     * and images that exceed {@link UNTILED_RETRIEVAL_LIMIT}
+     * and single-T images that exceed {@link UNTILED_RETRIEVAL_LIMIT}
+     * (Want to avoid async tile loading while movie is playing)
      * @type {boolean}
      * @private
      */
     this.use_tiled_retrieval_ = this.tiled_ ||
-        this.width_ * this.height_ > UNTILED_RETRIEVAL_LIMIT;
+        this.width_ * this.height_ > UNTILED_RETRIEVAL_LIMIT && this.size_t_ == 1;
 
     /**
      * for untiled retrieval the tile size equals the entire image extent

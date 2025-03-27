@@ -493,8 +493,8 @@ const handleDragEvent_ = function(mapBrowserEvent) {
                 if (dragVertexIndex > 2) dragVertexIndex++;
                 var oppVertexIndex = (dragVertexIndex + 2)  % 5;
                 this.oppVertBeingDragged = [
-                    geometry.initial_coords_[oppVertexIndex*2],
-                    geometry.initial_coords_[oppVertexIndex*2+1]
+                    coordinates[0][oppVertexIndex][0],
+                    coordinates[0][oppVertexIndex][1]
                 ];
             }
 
@@ -538,7 +538,15 @@ const handleDragEvent_ = function(mapBrowserEvent) {
                 vertex;
             segment[index] = vertex;
         }
+
         this.setGeometryCoordinates_(geometry, coordinates);
+
+        // Update the ShapeEditPopup
+        this.regions_.viewer_.viewer_.getOverlays().forEach(o => {
+            if (o.updatePopupCoordinates) {
+                o.updatePopupCoordinates(geometry);
+            }
+        });
     }
     this.createOrUpdateVertexFeature_(vertex);
 };

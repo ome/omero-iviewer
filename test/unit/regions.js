@@ -16,6 +16,20 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+import Feature from 'ol/Feature';
+import {containsExtent,
+    getTopLeft} from 'ol/extent';
+import {featureFactory,
+    generateRegions,
+    calculateLengthAndArea} from '../../src/viewers/viewer/utils/Regions';
+import {measureTextDimensions} from '../../src/viewers/viewer/utils/Style';
+import Ellipse from '../../src/viewers/viewer/geom/Ellipse';
+import Label from '../../src/viewers/viewer/geom/Label';
+import Line from '../../src/viewers/viewer/geom/Line';
+import Point from '../../src/viewers/viewer/geom/Point';
+import Polygon from '../../src/viewers/viewer/geom/Polygon';
+import Rectangle from '../../src/viewers/viewer/geom/Rectangle';
+
 /*
  * Tests utility routines in ome.ol3.utils.Regions
  */
@@ -71,126 +85,118 @@ describe("Regions", function() {
     };
 
     it('featureFactory', function() {
-        var feature = ome.ol3.utils.Regions.featureFactory(polyline_info);
-        assert.instanceOf(feature, ol.Feature);
-        assert.instanceOf(feature.getGeometry(), ome.ol3.geom.Line);
+        var feature = featureFactory(polyline_info);
+        assert.instanceOf(feature, Feature);
+        assert.instanceOf(feature.getGeometry(), Line);
         expect(feature.getGeometry().getFlatCoordinates()).to.eql(
             [4897,-2756,4885,-2786,4826,-2904]);
 
-        feature = ome.ol3.utils.Regions.featureFactory(polygon_info);
-        assert.instanceOf(feature, ol.Feature);
-        assert.instanceOf(feature.getGeometry(),  ol.geom.Polygon);
+        feature = featureFactory(polygon_info);
+        assert.instanceOf(feature, Feature);
+        assert.instanceOf(feature.getGeometry(), Polygon);
         expect(feature.getGeometry().getFlatCoordinates()).to.eql(
             [5521,-2928,5304,-2795,5173,-3033,5521,-2928]);
 
-        feature = ome.ol3.utils.Regions.featureFactory(line_info);
-        assert.instanceOf(feature, ol.Feature);
-        assert.instanceOf(feature.getGeometry(),  ome.ol3.geom.Line);
+        feature = featureFactory(line_info);
+        assert.instanceOf(feature, Feature);
+        assert.instanceOf(feature.getGeometry(), Line);
         expect(feature.getGeometry().getFlatCoordinates()).to.eql([10,-100,25,-20]);
 
-        feature = ome.ol3.utils.Regions.featureFactory(point_info);
-        assert.instanceOf(feature, ol.Feature);
-        assert.instanceOf(feature.getGeometry(),  ome.ol3.geom.Point);
+        feature = featureFactory(point_info);
+        assert.instanceOf(feature, Feature);
+        assert.instanceOf(feature.getGeometry(), Point);
         expect(feature.getGeometry().getCenter()).to.eql([10,-25]);
         expect(feature.getGeometry().getRadius()).to.eql(5);
 
-        feature = ome.ol3.utils.Regions.featureFactory(label_info);
-        assert.instanceOf(feature, ol.Feature);
-        assert.instanceOf(feature.getGeometry(),  ome.ol3.geom.Label);
+        feature = featureFactory(label_info);
+        assert.instanceOf(feature, Feature);
+        assert.instanceOf(feature.getGeometry(), Label);
         expect(feature.getGeometry().getUpperLeftCorner()).to.eql([0,-0]);
-        var dims = ome.ol3.utils.Style.measureTextDimensions(
+        var dims = measureTextDimensions(
             label_info['Text'],
             label_info['FontStyle'] + " " + label_info['FontSize']['Value'] +
             "px " + label_info['FontFamily'], null);
         expect(feature.getGeometry().getWidth()).to.eql(dims.width);
         expect(feature.getGeometry().getHeight()).to.eql(dims.height);
 
-        feature = ome.ol3.utils.Regions.featureFactory(rectangle_info);
-        assert.instanceOf(feature, ol.Feature);
-        assert.instanceOf(feature.getGeometry(),  ome.ol3.geom.Rectangle);
+        feature = featureFactory(rectangle_info);
+        assert.instanceOf(feature, Feature);
+        assert.instanceOf(feature.getGeometry(), Rectangle);
         expect(feature.getGeometry().getUpperLeftCorner()).to.eql([1000,-2000]);
         expect(feature.getGeometry().getWidth()).to.eql(12);
         expect(feature.getGeometry().getHeight()).to.eql(15);
 
-        feature = ome.ol3.utils.Regions.featureFactory(ellipse_info);
-        assert.instanceOf(feature, ol.Feature);
-        assert.instanceOf(feature.getGeometry(),  ome.ol3.geom.Ellipse);
+        feature = featureFactory(ellipse_info);
+        assert.instanceOf(feature, Feature);
+        assert.instanceOf(feature.getGeometry(), Ellipse);
         expect(feature.getGeometry().getCenter()).to.eql([300,-250]);
         expect(feature.getGeometry().getRadius()).to.eql([25, 55]);
     });
 
     it('generateRegionsRandom', function() {
-        var features =
-            ome.ol3.utils.Regions.generateRegions(
-                polygon_info, 10, [0,-1000,1000,0]);
+        var features = generateRegions(polygon_info, 10, [0,-1000,1000,0]);
 
         assert.instanceOf(features, Array);
         for (var f in features) {
-            assert.instanceOf(features[f], ol.Feature);
+            assert.instanceOf(features[f], Feature);
             var geom = features[f].getGeometry();
-            assert.instanceOf(geom, ome.ol3.geom.Polygon);
-            assert(ol.extent.containsExtent([0,-1000,1000,0], geom.getExtent()));
+            assert.instanceOf(geom, Polygon);
+            assert(containsExtent([0,-1000,1000,0], geom.getExtent()));
         }
     });
 
     it('generateRegionsPosition', function() {
-        var features =
-            ome.ol3.utils.Regions.generateRegions(
+        var features = generateRegions(
                 polygon_info, 1, [0,-1000,1000,0], [0,0]);
 
         assert.instanceOf(features, Array);
         for (var f in features) {
-            assert.instanceOf(features[f], ol.Feature);
+            assert.instanceOf(features[f], Feature);
             var geom = features[f].getGeometry();
-            assert.instanceOf(geom, ome.ol3.geom.Polygon);
-            expect(ol.extent.getTopLeft(geom.getExtent())).to.deep.equal([0,0]);
+            assert.instanceOf(geom, Polygon);
+            expect(getTopLeft(geom.getExtent())).to.deep.equal([0,0]);
         }
     });
 
     it('generateRegionsSamePlace', function() {
-        var features =
-            ome.ol3.utils.Regions.generateRegions(
+        var features = generateRegions(
                 polygon_info, 1, [0,-1000,1000,0], null, true);
         var expGeom =
-            ome.ol3.utils.Regions.featureFactory(polygon_info).getGeometry();
+            featureFactory(polygon_info).getGeometry();
 
         assert.instanceOf(features, Array);
         for (var f in features) {
-            assert.instanceOf(features[f], ol.Feature);
+            assert.instanceOf(features[f], Feature);
             var geom = features[f].getGeometry();
-            assert.instanceOf(geom, ome.ol3.geom.Polygon);
+            assert.instanceOf(geom, Polygon);
             expect(geom.getPolygonCoordinates()).to.deep.equal(
                 expGeom.getPolygonCoordinates());
         }
     });
 
     it('measureRegions', function() {
-        var feature = ome.ol3.utils.Regions.featureFactory(rectangle_info);
-        var measurement =
-            ome.ol3.utils.Regions.calculateLengthAndArea(feature);
+        var feature = featureFactory(rectangle_info);
+        var measurement = calculateLengthAndArea(feature);
 
         assert.instanceOf(measurement, Object);
         expect(measurement.Area).to.eql(180);
         expect(measurement.Length).to.eql(-1);
 
-        feature = ome.ol3.utils.Regions.featureFactory(line_info);
-        measurement =
-            ome.ol3.utils.Regions.calculateLengthAndArea(feature);
+        feature = featureFactory(line_info);
+        measurement = calculateLengthAndArea(feature);
 
         assert.instanceOf(measurement, Object);
         expect(measurement.Area).to.eql(-1);
         expect(measurement.Length).to.eql(81.394);
 
-        feature = ome.ol3.utils.Regions.featureFactory(polyline_info);
-        measurement =
-            ome.ol3.utils.Regions.calculateLengthAndArea(feature);
+        feature = featureFactory(polyline_info);
+        measurement = calculateLengthAndArea(feature);
         assert.instanceOf(measurement, Object);
         expect(measurement.Area).to.eql(-1);
         expect(measurement.Length).to.eql(164.239);
 
-        feature = ome.ol3.utils.Regions.featureFactory(point_info);
-        measurement =
-            ome.ol3.utils.Regions.calculateLengthAndArea(feature);
+        feature = featureFactory(point_info);
+        measurement = calculateLengthAndArea(feature);
 
         assert.instanceOf(measurement, Object);
         expect(measurement.Area).to.eql(-1);

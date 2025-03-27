@@ -18,6 +18,7 @@
 
 import Context from '../app/context';
 import Misc from '../utils/misc';
+import Ui from '../utils/ui';
 import {
     CHANNEL_SETTINGS_MODE, FLOATING_POINT_PRECISION, URI_PREFIX
 } from '../utils/constants';
@@ -542,6 +543,14 @@ export default class ChannelRange  {
         // we don't allow to deactivate the only active channel for grayscale
         if (imgConf.image_info.model === 'greyscale' &&
             this.channel.active) return;
+
+        // don't allow to exceed max_active_channels
+        let maxActive = this.context.max_active_channels;
+        let activeCount = imgConf.image_info.channels.reduce((count, ch) => count + (ch.active ? 1 : 0), 0);
+        if (!this.channel.active && activeCount >= maxActive) {
+            Ui.showModalMessage(`Cannot activate channel. The maximum number of channels is already active.`, "OK");
+            return;
+        }
 
         let history = [];
 

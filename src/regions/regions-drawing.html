@@ -19,6 +19,7 @@
 <template>
     <div class="row regions-drawing">
         <div class="draw-icons draw-select-icon
+                    ${regions_info.is_pending ? 'disabled-color' : ''}
                     ${regions_info.shape_to_be_drawn === null ?
                         'draw-active' : 'draw-inactive'}"
              title="Select shape(s)"
@@ -27,6 +28,7 @@
         </div>
         <div repeat.for="shape of supported_shapes"
             class="draw-icons draw-${shape}-icon
+                ${regions_info.is_pending ? 'disabled-color' : ''}
                 ${regions_info.shape_to_be_drawn === shape ?
                     'draw-active' : 'draw-inactive'}"
             click.delegate="onDrawShape($index)"

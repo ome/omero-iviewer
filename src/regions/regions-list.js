@@ -20,9 +20,16 @@
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import Ui from '../utils/ui';
-import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
+import {inject,
+    customElement,
+    computedFrom,
+    bindable,
+    BindingEngine} from 'aurelia-framework';
 import {
-    REGIONS_SET_PROPERTY, IMAGE_VIEWER_RESIZE, EventSubscriber
+    REGIONS_SET_PROPERTY, EventSubscriber,
+    IMAGE_DIMENSION_CHANGE,
+    IMAGE_SETTINGS_CHANGE,
+    IMAGE_DIMENSION_PLAY
 } from '../events/events';
 import {REGIONS_PAGE_SIZE} from '../utils/constants';
 
@@ -43,6 +50,9 @@ export default class RegionsList extends EventSubscriber {
     regions_infoChanged(newVal, oldVal) {
         this.waitForRegionsInfoReady();
     }
+
+    sortBy = "id";
+    sortAscending = true;
 
     /**
      * Expose this constant to the UI
@@ -79,12 +89,25 @@ export default class RegionsList extends EventSubscriber {
     regions_ready_observer = null;
 
     /**
+     * Set this while range slider is sliding to show in UI
+     * @memberof RegionsList
+     * @type {number}
+     */
+    temp_sliding_page_number = undefined;
+
+    /**
      * events we subscribe to
      * @memberof RegionsList
      * @type {Array.<string,function>}
      */
-    sub_list = [[IMAGE_VIEWER_RESIZE,
-                    (params={}) => setTimeout(() => this.setHeaderWidth(), 50)]];
+    sub_list = [
+        [IMAGE_DIMENSION_CHANGE,
+            (params={}) => this.changeDimension(params)],
+        [IMAGE_SETTINGS_CHANGE,
+            (params={}) => this.changeImageSettings(params)],
+        [IMAGE_DIMENSION_PLAY,
+            (params={}) => this.playImageDimension(params)],
+    ];
 
     /**
      * @constructor
@@ -108,6 +131,26 @@ export default class RegionsList extends EventSubscriber {
         this.waitForRegionsInfoReady();
     }
 
+    sort(value) {
+        this.sortAscending = this.sortBy === value ? !this.sortAscending : true;
+        this.sortBy = value;
+    }
+
+    sortCss(sortBy, sortAscending, attrName) {
+        if (attrName !== sortBy) return 'sortable';
+        return sortAscending ? 'sortable asc' : 'sortable desc';
+    }
+
+    /**
+     * Gets page count for current plane.
+     * Allows view to show page count and automatically binds change in
+     * roi_count_on_current_plane
+     */
+    get pageCount() {
+        return Math.ceil(this.regions_info.roi_count_on_current_plane/
+                            this.regions_info.roi_page_size)
+    }
+
     /**
      * Makes sure that all regions info data is there
      *
@@ -122,7 +165,6 @@ export default class RegionsList extends EventSubscriber {
             this.registerObservers();
             // event subscriptions
             this.subscribe();
-            setTimeout(() => this.setTableHeight(), 50);
         };
 
         // tear down old observers
@@ -150,16 +192,6 @@ export default class RegionsList extends EventSubscriber {
             this.bindingEngine.collectionObserver(
                 this.regions_info.selected_shapes).subscribe(
                     (newValue, oldValue) => this.actUponSelectionChange()));
-        this.observers.push(
-            this.bindingEngine.propertyObserver(
-                this.regions_info, 'number_of_shapes').subscribe(
-                    (newValue, oldValue) =>
-                        setTimeout(() => this.setHeaderWidth(), 50)));
-        this.observers.push(
-            this.bindingEngine.propertyObserver(
-                this.context, 'selected_tab').subscribe(
-                    (newValue, oldValue) =>
-                        setTimeout(() => this.setTableHeight(), 50)));
         this.observers.push(
             this.bindingEngine.propertyObserver(
                 this.regions_info, 'visibility_toggles').subscribe(
@@ -203,8 +235,7 @@ export default class RegionsList extends EventSubscriber {
          if (idOflastEntry !== lastSelShape.shape_id && !lastCanEdit) return;
 
          Ui.scrollContainer(
-             'roi-' + lastSelShape.shape_id, '.regions-table',
-            $('.regions-header').outerHeight());
+             'roi-' + lastSelShape.shape_id, '.regions-table');
      }
 
     /**
@@ -225,25 +256,120 @@ export default class RegionsList extends EventSubscriber {
     }
 
     /**
-     * Gives the header the row width to avoid scalebar adjustment nonsense
-     * @memberof RegionsList
+     * Set the pagination number of the ROI table and reload
+     *
+     * @param {number} zeroBasedPageNumber New page number
      */
-    setHeaderWidth() {
-        $('.regions-header').width($('.regions-table-first-row').width());
+    setPage(zeroBasedPageNumber=0) {
+        this.temp_sliding_page_number = undefined;
+        if (this.regions_info.is_pending) return;
+
+        if (this.regions_info.hasBeenModified()) {
+            Ui.showModalMessage(
+                "You have unsaved ROI changes. Please Save or Undo " +
+                "before going to next page.",
+                "OK");
+            return false;
+        } else {
+            return this.regions_info.setPageAndReload(zeroBasedPageNumber);
+        }
     }
 
     /**
-     * Sets the table height
-     * @memberof RegionsList
+     * Listen for Z/T changes and re-load ROIs for the new plane if needed
+     *
+     * @param {Object} params Event params
      */
-    setTableHeight() {
-        if (!this.context.isRoisTabActive()) return;
+    changeDimension(params) {
+        if (params.dim === "t" || params.dim == "z") {
+            let image_info = this.regions_info.image_info;
+            let image_config = this.context.getImageConfig(image_info.config_id);
+            let last_plane = image_info.dimensions['max_' + params.dim] - 1;
+            let dim_value = image_info.dimensions[params.dim];
+            // If movie is playing and we're not on the last plane - ignore
+            if (image_config.is_movie_playing && dim_value < last_plane &&
+                    this.regions_info.isRoiLoadingPaginatedByPlane()) {
+                this.regions_info.resetRegionsInfo();
+                return;
+            }
+            this.requestRoisForNewPlane();
+        }
+    }
 
-        this.setHeaderWidth();
-        $(".regions-table").css(
-            'max-height', 'calc(100% - ' +
-                ($(".regions-tools").outerHeight() +
-                $("#panel-tabs").outerHeight()) + 'px)');
+    /**
+     * Listen for Z projection changes and re-load ROIs if needed
+     * @param {Object} params Event params
+     */
+    changeImageSettings(params) {
+        if (params.projection) {
+            this.requestRoisForNewPlane();
+        }
+    }
+
+    /**
+     * Listen for movie 'stop' re-load ROIs if needed
+     * @param {Object} params Event params
+     */
+    playImageDimension(params) {
+        if (params.stop) {
+            this.requestRoisForNewPlane();
+        }
+    }
+
+    /**
+     * IF we're filtering ROIs by current plane, reload ROIs after
+     * resetting page to zero
+     */
+    requestRoisForNewPlane() {
+        if (!this.regions_info.isRoiLoadingPaginatedByPlane()) {
+            return;
+        }
+        // reset page and reload
+        this.regions_info.roi_page_number = 0;
+        this.regions_info.requestData(true);
+    }
+
+    /**
+     * Handle change event for input range slider to choose page
+     *
+     * @param {object} event change event from pagination range input
+     */
+    handlePageRange(event) {
+        let page = parseInt(event.target.value, 10);
+        let changed = this.setPage(page);
+        if (!changed) {
+            // reset slider handle
+            event.target.value = this.regions_info.roi_page_number;
+        }
+    }
+
+    /**
+     * Handle change event for input range slider to choose page
+     *
+     * @param {object} event change event from pagination range input
+     */
+    handlePageInput(event) {
+        let page = parseInt(event.target.value, 10);
+        if (isNaN(page)) {
+            event.target.value = this.regions_info.roi_page_number + 1;
+            return;
+        }
+        // UI input is 1-based, but we set 0-based
+        let changed = this.setPage(page - 1);
+        if (!changed) {
+            // reset slider handle
+            event.target.value = this.regions_info.roi_page_number + 1;
+        }
+    }
+
+    /**
+     * Handle slide event for input range slider to choose page
+     *
+     * @param {object} event change event from pagination range input
+     */
+    handlePageRangeSlide(event) {
+        let page = parseInt(event.target.value, 10);
+        this.temp_sliding_page_number = page;
     }
 
     /**
@@ -391,6 +517,35 @@ export default class RegionsList extends EventSubscriber {
     }
 
     /**
+     * ROI visibility toggler
+     * Toggles the visibility of ALL shapes in the ROI
+     *
+     * @param {number} roi_id the roi id
+     * @param {Object} event the mouse event object
+     * @memberof RegionsList
+     */
+    toggleRoiVisibility(roi_id, event) {
+        event.stopPropagation();
+        event.preventDefault();
+        let visible = event.target.checked;
+        let roi = this.regions_info.data.get(roi_id);
+        let shape_ids = [];
+        roi.shapes.forEach((s) => {
+            if (s.visible !== visible) {
+                shape_ids.push(s.shape_id);
+            }
+        });
+        if (shape_ids.length == 0) return;
+        this.context.publish(
+            REGIONS_SET_PROPERTY, {
+                config_id: this.regions_info.image_info.config_id,
+                property : "visible",
+                shapes : shape_ids,
+                value : visible});
+        return false;
+    }
+
+    /**
      * shape visibility toggler
      *
      * @param {number} id the shape id
@@ -421,8 +576,6 @@ export default class RegionsList extends EventSubscriber {
         let roi = this.regions_info.data.get(roi_id);
         if (typeof roi === 'undefined') return;
         roi.show = !roi.show;
-
-        setTimeout(() => this.setHeaderWidth(), 25);
     }
 
     /**

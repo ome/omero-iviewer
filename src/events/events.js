@@ -34,10 +34,14 @@ export const IMAGE_SETTINGS_CHANGE = "IMAGE_SETTINGS_CHANGE";
 export const VIEWER_PROJECTIONS_SYNC = "VIEWER_PROJECTIONS_SYNC";
 /** whenever an image dimension (c,t,z) changes */
 export const IMAGE_DIMENSION_CHANGE = "IMAGE_DIMENSION_CHANGE";
+/** whenever shape Comment change comes from the Image viewer */
+export const IMAGE_COMMENT_CHANGE = "IMAGE_COMMENT_CHANGE";
 /** whenever the dimension play should be started/stopped */
 export const IMAGE_DIMENSION_PLAY = "IMAGE_DIMENSION_PLAY";
 /** whenever the viewport canvas data should be captured */
 export const IMAGE_VIEWPORT_CAPTURE = "IMAGE_VIEWPORT_CAPTURE";
+/** whenever we want a link to current viewport */
+export const IMAGE_VIEWPORT_LINK = "IMAGE_VIEWPORT_LINK";
 /** to set rois/shape properties such as visibility and selection */
 export const REGIONS_SET_PROPERTY = "REGIONS_SET_PROPERTY";
 /** whenever a region property change is received, e.g. selection, modification */
@@ -52,6 +56,8 @@ export const REGIONS_SHAPE_GENERATED = "REGIONS_SHAPE_GENERATED";
 export const REGIONS_CHANGE_MODES = "REGIONS_CHANGE_MODES";
 /** whenever comments ought to be shown/hidden */
 export const REGIONS_SHOW_COMMENTS = "REGIONS_SHOW_COMMENTS";
+/** whenever shape popup should be enabled/disabled */
+export const ENABLE_SHAPE_POPUP = "ENABLE_SHAPE_POPUP";
 /** whenever shapes ought to be generated */
 export const REGIONS_GENERATE_SHAPES = "REGIONS_GENERATE_SHAPES";
 /** whenever shapes are stored */
@@ -70,12 +76,16 @@ export const REGIONS_HISTORY_ENTRY = "REGIONS_HISTORY_ENTRY";
 export const REGIONS_HISTORY_ACTION = "REGIONS_HISTORY_ACTION";
 /** whenever we want to copy selected shape definitions */
 export const REGIONS_COPY_SHAPES = "REGIONS_COPY_SHAPES";
+/** Viewer notification that rendering is complete */
+export const RENDER_COMPLETE = "RENDER_COMPLETE";
 /** whenever the histogram range was updated */
 export const HISTOGRAM_RANGE_UPDATE = "HISTOGRAM_RANGE_UPDATE";
 /** whenever thumbnails are supposed to be updated */
 export const THUMBNAILS_UPDATE = "THUMBNAILS_UPDATE";
 /** whenever the presently active image settings should be saved */
 export const SAVE_ACTIVE_IMAGE_SETTINGS = "SAVE_ACTIVE_IMAGE_SETTINGS";
+/** used to notify of a tileloaderror from openlayers viewer */
+export const TILE_LOAD_ERROR = "TILE_LOAD_ERROR";
 
 /**
  * Facilitates recurring event subscription

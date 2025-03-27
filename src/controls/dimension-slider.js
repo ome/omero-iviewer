@@ -19,6 +19,7 @@
 import Context from '../app/context';
 import {inject,customElement, bindable, BindingEngine} from 'aurelia-framework';
 import Misc from '../utils/misc';
+import Ui from '../utils/ui';
 import {UNTILED_RETRIEVAL_LIMIT} from '../viewers/viewer/globals';
 import {slider} from 'jquery-ui/ui/widgets/slider';
 import {PROJECTION} from '../utils/constants';
@@ -119,14 +120,16 @@ export default class DimensionSlider {
             this.player_info.forwards === forwards;
 
         // make history entry for stop
-        if (stop)
+        if (stop) {
             conf.addHistory({
                 prop: ['image_info', 'dimensions', this.dim],
                 old_val : this.last_player_start,
                 new_val:  conf.image_info.dimensions[this.dim],
                 type : "number"
             });
-        else this.last_player_start = conf.image_info.dimensions[this.dim];
+        } else {
+            this.last_player_start = conf.image_info.dimensions[this.dim];
+        }
 
         // send out a dimension change notification
         this.context.publish(
@@ -222,18 +225,28 @@ export default class DimensionSlider {
                                      dim: this.dim,
                                      value: [newValue]});
                         }));
-        this.observers.push(
-            this.bindingEngine.propertyObserver(
-                this.image_config.image_info, 'projection')
-                    .subscribe(
-                        (newValue, oldValue) => this.initSlider(true)));
-        this.observers.push(
-            this.bindingEngine.propertyObserver(
-                this.image_config.image_info, 'projection_opts')
-                    .subscribe(
-                        (newValue, oldValue) =>
-                            this.changeProjection(
-                                [newValue.start, newValue.end], false)));
+        // Only need to listen for projection changes if we are Z-slider
+        if (this.dim === 'z') {
+            this.observers.push(
+                this.bindingEngine.propertyObserver(
+                    this.image_config.image_info, 'projection')
+                        .subscribe(
+                            (newValue, oldValue) => this.initSlider(true)));
+            this.observers.push(
+                this.bindingEngine.propertyObserver(
+                    this.image_config.image_info.projection_opts, 'start')
+                        .subscribe(
+                            (newValue, oldValue) => {
+                                this.changeProjection(
+                                    [newValue, this.image_config.image_info.projection_opts.end], false)}));
+            this.observers.push(
+                this.bindingEngine.propertyObserver(
+                    this.image_config.image_info.projection_opts, 'end')
+                        .subscribe(
+                            (newValue, oldValue) => {
+                                this.changeProjection(
+                                    [this.image_config.image_info.projection_opts.start, newValue], false)}));
+        }
     }
 
     /**
@@ -311,7 +324,7 @@ export default class DimensionSlider {
                     this.dim.toUpperCase() + ":" + (newDimVal+1);
                 if (this.dim === 't' && imgInf.image_delta_t.length > 0 &&
                     newDimVal < imgInf.image_delta_t.length)
-                        sliderTip += " [" + imgInf.image_delta_t[newDimVal] + "]";
+                    sliderTip += " [" + imgInf.formatDeltaT(imgInf.image_delta_t[newDimVal]) + "]";
                 sliderValueSpan.text(sliderTip);
                 let percent = (ui.value / (imgInf.dimensions['max_' + this.dim] - 1)) * 100;
                 if (this.dim === 'z') {
@@ -329,9 +342,17 @@ export default class DimensionSlider {
         };
 
         if (this.dim === 'z' && imgInf.projection === PROJECTION.INTMAX) {
+            options.range = true;
             options.change =
                 (event, ui) => {
                     if (event.originalEvent) {
+                        if (!this.checkForUnsavedRoiLoss()) {
+                            // reset the slider position
+                            $(this.elSelector).slider(
+                                {values: [imgInf.projection_opts.start,
+                                          imgInf.projection_opts.end]});
+                            return;
+                        }
                         this.add_projection_history = true;
                         imgInf.projection_opts.synced = false;
                         this.changeProjection(ui.values);
@@ -344,8 +365,15 @@ export default class DimensionSlider {
         } else {
             options.value = imgInf.dimensions[this.dim];
             options.change =
-                (event, ui) => this.onChange(ui.value,
-                                    event.originalEvent ? true : false);
+                (event, ui) => {
+                    // If slider event from user, check for unsaved ROIs
+                    if (event.originalEvent && !this.checkForUnsavedRoiLoss()) {
+                        // reset the slider position
+                        $(this.elSelector).slider({value: imgInf.dimensions[this.dim]});
+                        return;
+                    }
+                    this.onChange(ui.value, event.originalEvent ? true : false);
+                }
         }
 
         $(this.elSelector).slider(options);
@@ -427,7 +455,9 @@ export default class DimensionSlider {
      * @memberof DimensionSlider
      */
     onArrowClick(step) {
-        if (this.player_info.handle !== null) return;
+        if (this.player_info.handle !== null || !this.checkForUnsavedRoiLoss()) {
+            return;
+        }
         let oldVal = $(this.elSelector).slider('value');
         $(this.elSelector).slider('value',  oldVal + step);
     }
@@ -452,6 +482,9 @@ export default class DimensionSlider {
     toggleProjection() {
         if (this.getZProjectionDisabled(this.player_info.handle,
                                         this.player_info.forwards)) {
+            return;
+        }
+        if (!this.checkForUnsavedRoiLoss()) {
             return;
         }
 
@@ -487,6 +520,31 @@ export default class DimensionSlider {
      */
     getZProjectionDisabled(handle, forwards) {
         let dims = this.image_config.image_info.dimensions;
-        return (handle !== null && forwards || (dims.max_x * dims.max_y) > UNTILED_RETRIEVAL_LIMIT);
+        let tiled = (dims.max_x * dims.max_y) > UNTILED_RETRIEVAL_LIMIT;
+        let bytes_per_pixel = Math.ceil(Math.log2(this.image_config.image_info.range[1]) / 8.0);
+        let size_c = this.image_config.image_info.channels.length;
+        let stack_size = dims.max_x * dims.max_y * dims.max_z * bytes_per_pixel * size_c;
+        let proj_limit = this.context.max_projection_bytes;
+
+        return (handle !== null && forwards || tiled || stack_size > proj_limit);
+    }
+
+    /**
+     * Any change in Z/T or projection will cause ROIs to reload if we are
+     * paginating ROIs by Z/T plane.
+     * Returns true if we are paginating ROIs by plane AND we have unsaved
+     * changes to ROIs.
+     */
+    checkForUnsavedRoiLoss() {
+        if (this.image_config.regions_info.isRoiLoadingPaginatedByPlane() &&
+                this.image_config.regions_info.hasBeenModified()) {
+            Ui.showModalMessage(
+                "You have unsaved ROI changes. Please Save or Undo " +
+                "before moving to a new plane.",
+                "OK");
+            return false;
+        } else {
+            return true;
+        }
     }
 }

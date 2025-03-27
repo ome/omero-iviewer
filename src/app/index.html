@@ -63,10 +63,12 @@
         </thumbnail-slider>
 
         <div class="col-splitter left-split">
-            <img src="../../css/images/collapse-left.png"/>
+            <div class="collapse-left arrowsUp"></div>
         </div>
 
-        <div class="frame col-xs-12">
+        <div class="frame col-xs-12"
+            drop.delegate="handleDrop($event)"
+            dragover.delegate="handleDragover($event)">
             <div class="${context.useMDI && context.image_configs.size > 1 ?
                             'viewer-mdi' : 'viewer'}
                         ${context.useMDI && context.selected_config === id &&
@@ -77,7 +79,7 @@
                         ';left:' + conf.position.left +
                         ';width:' + conf.size.width +
                         ';height:' + conf.size.height : ''}"
-                 mousedown.delegate="context.selectConfig(id)">
+                 click.delegate="context.selectConfig(id)">
                  <div class="config-linking"
                       show.bind="context.useMDI && context.image_configs.size > 1">
                      <div class="dropdown dropdown-image-config"
@@ -149,8 +151,8 @@
             </div>
         </div>
 
-        <div class="col-splitter right-split">
-            <img src="../../css/images/collapse-right.png"/>
+        <div id="col_splitter_right" class="col-splitter">
+            <div class="collapse-right"></div>
         </div>
 
         <right-hand-panel class="right-hand-panel sidebar"></right-hand-panel>

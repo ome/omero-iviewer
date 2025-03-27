@@ -36,51 +36,41 @@ export default class Ui {
         if (typeof eventbus !== 'object' ||
             typeof eventbus.publish !== 'function') return;
 
-        $('.col-splitter').mousedown((e) => {
+        // Only support drag-resize on settings panel, not thumbnails
+        document.getElementById("col_splitter_right").onpointerdown = (e) => {
             e.preventDefault();
             let leftSplit = $(e.currentTarget).hasClass("left-split");
+            let verticalLayout = $(window).width() <= 480;
+            console.log("onpointerdown... leftSplit", leftSplit, "verticalLayout", verticalLayout);
 
-            $(document).mousemove((e) => {
+            // $(document).mousemove((e) => {
+            document.onpointermove = (e) => {
                 e.preventDefault();
 
                 let el = leftSplit ? $('.thumbnail-panel') : $('.right-hand-panel');
-                if (el.width() === 0) return false;
-
-                let x = leftSplit ? e.pageX - el.offset().left :
-                    $(window).width() - e.pageX;
-                let frameWidth = $(".frame").width();
-                let minWidth = leftSplit ? 25 : 50;
-                let maxWidth = parseInt(el.css("max-width"));
-                let tolerance =  $(window).width() -
-                        (leftSplit ? $('.right-hand-panel').width() :
-                            $('.thumbnail-panel').width())-200;
-                if (maxWidth > tolerance)
-                    maxWidth = tolerance;
-                let rightBound = leftSplit ?
-                    ($(window).width() - frameWidth) : $(window).width();
-
-                if (x > minWidth && x < maxWidth && e.pageX < rightBound) {
-                    el.width(x);
-                    if (leftSplit)
-                        $('.frame').css(
-                            {"margin-left": '' + (-x-5) + 'px',
-                             "padding-left": '' + (x+5) + 'px'});
-                    else
-                        $('.frame').css(
-                            {"margin-right": '' + (-x-5) + 'px',
-                             "padding-right": '' + (x+5) + 'px'});
+                // mobile layout,. we're dragging vertically
+                if (verticalLayout) {
+                    let y = leftSplit ? e.pageY : $(window).height() - e.pageY;
+                    console.log("y", y);
+                    el.css('--panelHeight', y + "px");
+                } else {
+                    let x = leftSplit ? e.pageX - el.offset().left : $(window).width() - e.pageX;
+                    console.log("x", x);
+                    el.css('--panelWidth', x + "px");
                 }
                 eventbus.publish(IMAGE_VIEWER_RESIZE,
                     {config_id: -1, is_dragging: true});
-            });
+            };
 
-            $(document).mouseup((e) => {
-                $(document).unbind('mousemove');
-                $(document).unbind('mouseup');
+            document.onpointerup = (e) => {
+                // $(document).unbind('mousemove');
+                // $(document).unbind('mouseup');
+                document.onpointermove = null;
+                document.getElementById("col_splitter_right").onpointerup = null;
                 eventbus.publish(IMAGE_VIEWER_RESIZE,
                     {config_id: -1, is_dragging: false});
-            });
-        });
+            };
+        };
     }
 
     /**
@@ -98,71 +88,69 @@ export default class Ui {
      * @static
      */
     static unbindCollapseHandlers() {
-        $('.left-split img').unbind("mousedown click");
-        $('.right-split img').unbind("mousedown click");
+        $('.collapse-left').unbind("mousedown click");
+        $('.collapse-right').unbind("mousedown click");
     }
 
     /**
      * Binds panel collapse handlers
      *
-     * @param {object} eventbus the eventbus for publishing
+     * @param {object} context the context for publishing
      * @param {string} uri_prefix a uri prefix for resource requests
      * @static
      */
-    static bindCollapseHandlers(eventbus, uri_prefix) {
-        if (typeof uri_prefix !== 'string') uri_prefix = '';
-        $('.left-split img, .right-split img').mousedown(
+    static bindCollapseHandlers(context) {
+        let self = this;
+        $('.collapse-left, .collapse-right').mousedown(
             (e) => {e.preventDefault(); e.stopPropagation();});
 
-        $('.left-split img, .right-split img').click((e) => {
+        $('.collapse-left, .collapse-right').click((e) => {
             let leftSplit =
-                $(e.currentTarget).parent().hasClass("left-split");
-            let el = leftSplit ? $('.thumbnail-panel') : $('.right-hand-panel');
-
-            let minWidth = leftSplit ? 20 : 50;
-            let oldWidth = parseInt(el.attr("old-width"));
-            let width = el.width();
-
-            let tolerance =  $(window).width() -
-                    (leftSplit ? $('.right-hand-panel').width() :
-                        $('.thumbnail-panel').width())-200;
-
-            let newWidth = width === 0 ?
-                (isNaN(oldWidth) || oldWidth <= 0 ? minWidth : oldWidth) : 0;
-
-            // we do not allow opening sidebars if there is not enough room
-            // we try to reduce it to above set minWidth but if that is
-            // not good enough, we don't open it
-            if (newWidth !== 0 && newWidth > tolerance) {
-                if (minWidth > tolerance) return;
-                newWidth = tolerance;
-            }
-            el.attr("old-width", width);
-
-            let url =
-                uri_prefix === '' ?
-                    Misc.pruneUrlToLastDash($(e.currentTarget).attr("src")) :
-                    uri_prefix + "/css/images";
-            $(e.currentTarget).attr(
-                "src", url + "/collapse-" +
-                (leftSplit && newWidth === 0 ||
-                    !leftSplit && newWidth !== 0 ? "right" : "left") + ".png");
-            el.width(newWidth);
-            el.css('flex', '0 0 ' + newWidth + 'px');
-            if (newWidth === 0)
-                $(e.currentTarget).parent().css("cursor", "default");
-            else
-                $(e.currentTarget).parent().css("cursor", "ew-resize");
-            if (leftSplit)
-                $('.frame').css(
-                    {"margin-left": '' + (-newWidth-5) + 'px',
-                     "padding-left": '' + (newWidth+5) + 'px'});
-            else
-                $('.frame').css(
-                    {"margin-right": '' + (-newWidth-5) + 'px',
-                     "padding-right": '' + (newWidth+5) + 'px'});
-            eventbus.publish(IMAGE_VIEWER_RESIZE, {config_id: -1});
+                $(e.currentTarget).hasClass("collapse-left");
+            self.collapseSidePanel(context.eventbus, leftSplit);
         });
+
+        // collapse depending on context (initial params)
+        if (context.collapse_left) {
+            self.collapseSidePanel(context.eventbus, true);
+        }
+        if (context.collapse_right) {
+            self.collapseSidePanel(context.eventbus);
+        }
+    }
+
+
+    static collapseSidePanel(eventbus, leftSplit) {
+            
+            let el = leftSplit ? $('.thumbnail-panel') : $('.right-hand-panel');
+            let handle = leftSplit ? $('.collapse-left') : $('.collapse-right');
+
+            let width = parseInt(el.css('--panelWidth'));
+            let height = parseInt(el.css('--panelHeight'));
+            let oldWidth = parseInt(el.attr("old-width") || 0);
+            let oldHeight = parseInt(el.attr("old-height") || 0);
+            
+            // toggle the width/height
+            // (regardless of whether the layout is vertical or horizontal)
+            let newWidth = width === 0 ? oldWidth : 0;
+            let newHeight = height === 0 ? oldHeight : 0;
+
+            // store old sizes to use it when we toggle back
+            el.attr("old-width", width);
+            el.attr("old-height", height);
+
+            // update css - the appropriate width/height var will be used depending on layout
+            el.css('--panelHeight', newHeight + "px");
+            el.css('--panelWidth', newWidth + "px");
+            // class used to set the collapse-handle icon
+            if (leftSplit) {
+                if (newHeight > 0) {handle.addClass("arrowsUp");}
+                else {handle.removeClass("arrowsUp");}
+            } else {
+                if (newHeight == 0) {handle.addClass("arrowsUp");}
+                else {handle.removeClass("arrowsUp");}
+            }
+            eventbus.publish(IMAGE_VIEWER_RESIZE, {config_id: -1});
     }
 
     /**
@@ -170,50 +158,14 @@ export default class Ui {
      * It's a convenience method for doing both handlers at the same time-slider
      * as well as unbinding beforehand
      *
-     * @param {object} eventbus the eventbus for publishing
-     * @param {string} uri_prefix a uri prefix for resource requests
+     * @param {object} context the context for publishing
      * @static
      */
-    static registerSidePanelHandlers(eventbus, uri_prefix) {
+    static registerSidePanelHandlers(context) {
         this.unbindResizeHandlers();
         this.unbindCollapseHandlers();
-        this.bindResizeHandlers(eventbus);
-        this.bindCollapseHandlers(eventbus, uri_prefix);
-    }
-
-    /**
-     * Adjusts the sidebars in case of window resize
-     *
-     * @static
-     */
-    static adjustSideBarsOnWindowResize() {
-        // if we get too small we'll collaps the thumbnail sidebar
-        let sideBar = $('.thumbnail-panel');
-        let otherSideBar = $('.right-hand-panel');
-        let width = sideBar.width();
-        let toleranceWidth = 0, origin=null;
-        if (width > 0) {
-            toleranceWidth = $(window).width() - otherSideBar.width() - 200;
-            origin = $('.left-split img');
-            if (width > toleranceWidth)
-                origin.trigger('click', {currentTarget: origin});
-        }
-        // if we get even smaller, we'll either resize the right hand panel or
-        // collapse it as well
-        sideBar = $('.right-hand-panel');
-        width = sideBar.width();
-        toleranceWidth = $(window).width() - 200;
-        origin = $('.right-split img');
-        if (width > toleranceWidth) {
-            if (toleranceWidth < 50)
-                origin.trigger('click', {currentTarget: origin});
-            else {
-                 $('.right-hand-panel').width(toleranceWidth);
-                $('.frame').css(
-                    {"margin-right": '' + (-toleranceWidth-5) + 'px',
-                     "padding-right": '' + (toleranceWidth+15) + 'px'});
-            }
-        }
+        this.bindResizeHandlers(context.eventbus);
+        this.bindCollapseHandlers(context);
     }
 
     /**

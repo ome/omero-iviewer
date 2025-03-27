@@ -19,6 +19,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
       <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" />
       <link rel="stylesheet" type="text/css" href="css/theme.css" />
       <link rel="stylesheet" type="text/css" href="css/spinner.css" />
@@ -33,7 +34,13 @@
         window.INITIAL_REQUEST_PARAMS = {
                 'VERSION': "DEV_SERVER",
                 'WEB_API_BASE': 'api/v0/',
-                'IMAGES': "4420",   // "4420" // "73537",
+                'ROI_PAGE_SIZE': '500',
+                'MAX_PROJECTION_BYTES': "268435456", // 1024 * 1024 * 256
+                'IMAGES': "1929",      // "4420" // "73537",
+                //'ROI_COLOR_PALETTE': '["rgb(0,255,0)","blue","blue","pink","blue"],["rgb(255,255,255)"]',
+                'ENABLE_MIRROR': 'True',
+                // 'FY': 'true',
+                //'SHOW_PALETTE_ONLY': true,
                 // 'DATASET': "1",
                 //'WELL': "1"
         };

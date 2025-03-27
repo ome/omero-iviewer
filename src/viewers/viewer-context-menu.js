@@ -19,7 +19,8 @@
 // dependencies
 import Context from '../app/context';
 import {inject, customElement, BindingEngine, bindable} from 'aurelia-framework';
-import {IMAGE_VIEWPORT_CAPTURE} from '../events/events';
+import {IMAGE_VIEWPORT_CAPTURE,
+    IMAGE_VIEWPORT_LINK} from '../events/events';
 import { VIEWER_ELEMENT_PREFIX } from '../utils/constants';
 
 /**
@@ -64,6 +65,12 @@ export default class ViewerContextMenu {
      * @type {ImageConfig}
      */
     image_config = null;
+
+    /**
+     * Flag to allow toggling of shape popup.
+     * NB: We don't have access to the Viewer Regions to know the acual value.
+     */
+    shape_popup_enabled = true;
 
     /**
      * @constructor
@@ -172,6 +179,24 @@ export default class ViewerContextMenu {
     }
 
     /**
+     * Enable the showing of the Shape Edit Popup over selected shapes
+     *
+     * @memberof ViewerContextMenu
+     */
+    enableShapePopup() {
+        this.hideContextMenu();
+        if (!this.image_config.regions_info.ready) {
+            return false;
+        }
+        this.shape_popup_enabled = !this.shape_popup_enabled;
+        this.context.eventbus.publish("ENABLE_SHAPE_POPUP",{
+            config_id: this.image_config.id,
+            enable: true,
+        });
+        return false;
+    }
+
+    /**
      * Paste Shapes
      *
      * @memberof ViewerContextMenu
@@ -192,6 +217,15 @@ export default class ViewerContextMenu {
     captureViewport() {
         this.context.eventbus.publish(
             IMAGE_VIEWPORT_CAPTURE, {"config_id": this.image_config.id});
+    }
+
+    /**
+     * Sends event to show link to current viewport
+     */
+    linkToViewport() {
+        this.hideContextMenu();
+        this.context.eventbus.publish(
+            IMAGE_VIEWPORT_LINK, {"config_id": this.image_config.id});
     }
 
 }

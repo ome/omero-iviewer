@@ -27,6 +27,7 @@ import {
 } from '../utils/constants';
 import {
     IMAGE_DIMENSION_CHANGE, REGIONS_MODIFY_SHAPES, REGIONS_SET_PROPERTY,
+    IMAGE_COMMENT_CHANGE,
     EventSubscriber
 } from '../events/events';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
@@ -69,7 +70,9 @@ export default class RegionsEdit extends EventSubscriber {
      * @memberof RegionsEdit
      * @type {Array.<string,function>}
      */
-    sub_list = [[IMAGE_DIMENSION_CHANGE, () => this.adjustEditWidgets()]];
+    sub_list = [[IMAGE_DIMENSION_CHANGE, () => this.adjustEditWidgets()],
+                [IMAGE_COMMENT_CHANGE,
+                    (params={}) => this.handleImageCommentChange(params)]];
 
     /**
      * @memberof RegionsEdit
@@ -295,6 +298,18 @@ export default class RegionsEdit extends EventSubscriber {
     }
 
     /**
+     * Handles shape Comment changes from the ol-viewer ShapeEditPopup.
+     * Here, we can add to history with callbacks to update right panel UI.
+     */
+    handleImageCommentChange(params) {
+        if (!params.shapeId) return;
+        let shape = this.regions_info.getShape(params.shapeId);
+        if (shape) {
+            this.onCommentChange(params.Text, shape);
+        }
+    }
+
+    /**
      * Handles comment changes
      *
      * @param {string} comment the new  text  value
@@ -310,7 +325,9 @@ export default class RegionsEdit extends EventSubscriber {
 
         this.modifyShapes(
             deltaProps,
-            this.createUpdateHandler(['Text'], [comment]));
+            this.createUpdateHandler(['Text'], [comment]),
+            false,
+            shape.oldId);
     }
 
     /**
@@ -389,23 +406,29 @@ export default class RegionsEdit extends EventSubscriber {
     }
 
     /**
-     * Notifies the viewer to change the shaape according to the new shape
-     * definition
+     * Notifies the viewer to change the currently selected shapes (by default)
+     * according to the new shape definition
      *
      * @param {Object} shape_definition the object definition incl. attributes
      *                                  to be changed
      * @param {function} callback a callback function on success
      * @param {boolean} modifies_attachment does definition alter z/t attachment
+     * @param {Object} current_shape Option to specify a particular shape to edit
      * @memberof RegionsEdit
      */
-    modifyShapes(shape_definition, callback = null, modifies_attachment = false) {
+    modifyShapes(shape_definition, callback = null, modifies_attachment = false,
+            current_shape) {
         if (typeof shape_definition !== 'object' ||
                 shape_definition === null) return;
 
+        let shapes = this.regions_info.selected_shapes;
+        if (current_shape) {
+            shapes = [current_shape];
+        }
         this.context.publish(
            REGIONS_MODIFY_SHAPES, {
                config_id: this.regions_info.image_info.config_id,
-               shapes: this.regions_info.selected_shapes,
+               shapes: shapes,
                modifies_attachment: modifies_attachment,
                definition: shape_definition,
                 callback: callback});
@@ -604,8 +627,10 @@ export default class RegionsEdit extends EventSubscriber {
                                 respectiveDimensionInput.prop("disabled", false);
                     }
                     if (showDisabled) {
+                        respectiveDimensionInput.prop('disabled', true);
                         respectiveDimensionInput.attr(
                             "title", PERMISSION_TOOLTIPS.CANNOT_EDIT);
+                        respectiveAttachementLock.addClass("disabled-color");
                         respectiveAttachementLock.attr(
                             "title", PERMISSION_TOOLTIPS.CANNOT_EDIT);
                     }
@@ -826,6 +851,11 @@ export default class RegionsEdit extends EventSubscriber {
         let showDeleteDisabled =
                 (this.regions_info.selected_shapes.length >= 1 && !canDelete);
 
+        if (this.regions_info.is_pending) {
+            showEditDisabled = true;
+            showDeleteDisabled = true;
+        }
+
         // break up adjustment into individual sections
         this.adjustCommentEdit(canEdit, showEditDisabled);
         this.adjustAttachmentEdit(canEdit, showEditDisabled);
@@ -859,6 +889,11 @@ export default class RegionsEdit extends EventSubscriber {
                 $(this.element).find('.shape-fill-color') :
                 $(this.element).find('.shape-stroke-color')
         };
+        if (Array.isArray(this.context.roi_color_palette)) {
+            options.palette = this.context.roi_color_palette;
+            options.showPalette = true;
+            options.showPaletteOnly = this.context.show_palette_only;
+        }
         if (shape)
             options.change =
                 (color) => this.onColorChange(color.toRgbString(), fill, shape);

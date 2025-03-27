@@ -175,6 +175,18 @@ class Mask extends Point {
         var point = this.getPointCoordinates();
         return new Rectangle(point[0], point[1], this.size_[0], this.size_[1]);
     }
+
+    /**
+     * For displaying coords, this returns a list of [name, value] pairs
+     * @return {List} 2D list of 'name', vaule pairs.
+     */
+    getDisplayCoords() {
+        var point = this.getPointCoordinates();
+        return [['X', point[0].toFixed(1)],
+                ['Y', point[1].toFixed(1)],
+                ['Width', this.size_[0].toFixed(1)],
+                ['Height', this.size_[1].toFixed(1)]];
+    }
 }
 
 export default Mask;

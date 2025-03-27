@@ -156,6 +156,7 @@ export default class ThumbnailSlider extends EventSubscriber {
         // get webgateway prefix and web api base
         this.web_api_base = this.context.getPrefixedURI(WEB_API_BASE);
         this.webclient_prefix = this.context.getPrefixedURI(WEBCLIENT);
+        this.webgateway_prefix = this.context.getPrefixedURI(WEBGATEWAY);
     }
 
     /**
@@ -214,7 +215,7 @@ export default class ThumbnailSlider extends EventSubscriber {
             // scroll to image thumb
             UI.scrollContainer(
                 'img-thumb-' + this.image_config.image_info.image_id,
-                '.thumbnail-panel');
+                '.thumbnail-scroll-panel');
             // no need to initialize twice
             return;
         }
@@ -223,7 +224,7 @@ export default class ThumbnailSlider extends EventSubscriber {
             this.hideMe();
             setTimeout(() =>
                 UI.showModalMessage(
-                    'Viewer opened without image, dataset or well id!','OK'),
+                    'Viewer opened without images, rois, dataset or well id!','OK'),
             100);
             return;
         }
@@ -235,7 +236,9 @@ export default class ThumbnailSlider extends EventSubscriber {
         };
 
         // we don't have a dataset id
-        if (this.context.initial_type === INITIAL_TYPES.IMAGES &&
+        if ((this.context.initial_type === INITIAL_TYPES.IMAGES ||
+                this.context.initial_type === INITIAL_TYPES.ROIS ||
+                this.context.initial_type === INITIAL_TYPES.SHAPES) &&
             this.context.initial_ids.length === 1 &&
             this.image_config.image_info.parent_id !== 'number') {
             // have we had all the data already
@@ -292,13 +295,14 @@ export default class ThumbnailSlider extends EventSubscriber {
      */
     initializeThumbnails(refresh = false) {
         // standard case: we are an image
-        if (this.context.initial_type === INITIAL_TYPES.IMAGES) {
+        if (this.context.initial_type === INITIAL_TYPES.IMAGES ||
+            this.context.initial_type === INITIAL_TYPES.ROIS ||
+            this.context.initial_type === INITIAL_TYPES.SHAPES) {
             if (this.context.initial_ids.length > 1) {
                 // we are a list of images
-                this.setThumbnailsFromImageIds(this.context.initial_ids);
+                this.setThumbnailsFromIds(this.context.initial_ids);
             } else {
-                this.gatherThumbnailMetaInfo(
-                        this.image_config.image_info.image_id);
+                this.gatherThumbnailMetaInfo();
             }
         } else if (this.context.initial_type === INITIAL_TYPES.DATASET ||
                     this.context.initial_type === INITIAL_TYPES.WELL) {
@@ -313,13 +317,20 @@ export default class ThumbnailSlider extends EventSubscriber {
      * (e.g. open with) or for images whose parent is a well this method finds
      * the parent id
      *
-     * @param {number} image_id the id of the image in the dataset
      * @memberof ThumbnailSlider
      */
-    gatherThumbnailMetaInfo(image_id) {
-        let url =
-            this.context.server + this.webclient_prefix + "/api/paths_to_object/?" +
-            "image=" + image_id + "&page_size=" + this.thumbnails_request_size;
+    gatherThumbnailMetaInfo() {
+
+        let url = this.context.server + this.webclient_prefix + "/api/paths_to_object/";
+
+        if (this.context.initial_type === INITIAL_TYPES.IMAGES) {
+            url += "?image=" + this.context.initial_ids[0];
+        } else if (this.context.initial_type === INITIAL_TYPES.ROIS) {
+            url += "?roi=" + this.context.initial_ids[0];
+        } else if (this.context.initial_type === INITIAL_TYPES.SHAPES) {
+            url += "?shape=" + this.context.initial_ids[0];
+        }
+        url += "&page_size=" + this.thumbnails_request_size;
 
         $.ajax(
             {url : url,
@@ -345,13 +356,13 @@ export default class ThumbnailSlider extends EventSubscriber {
                     let parents = containers.filter(c => c.type === 'well' || (c.type === 'dataset' && c.id === pid));
                     return parents.length > 0 ? parents[0] : null;
                 }).filter(parent => parent);
-
                 let parent = matching_parents.length ? matching_parents[0] : null
                 let imgInf = this.image_config.image_info;
 
                 if (parent) {
                     if (parent.type === 'dataset') {
                         imgInf.parent_type = INITIAL_TYPES.DATASET
+                        imgInf.parent_id = parent.id;
                     } else if (parent.type === 'well') {
                         imgInf.parent_type = INITIAL_TYPES.WELL;
                         imgInf.parent_id = parent.id;
@@ -381,11 +392,11 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @param {list} imageIds List of IDs
      * @memberof ThumbnailSlider
      */
-    setThumbnailsFromImageIds(imageIds) {
-        this.setThumbnailsCount(imageIds.length);
-        let to_add = imageIds.map(id => ({
+    setThumbnailsFromIds(obj_ids) {
+        this.setThumbnailsCount(obj_ids.length);
+        let to_add = obj_ids.map(id => ({
             '@id': id,
-            Name: 'image: ' + id
+            Name: 'Image: ' + id
         }));
         this.addThumbnails(to_add, 0);
     }
@@ -399,14 +410,19 @@ export default class ThumbnailSlider extends EventSubscriber {
      * @memberof ThumbnailSlider
      */
     loadVisibleThumbnails(scrollTop, init = false, refresh = false) {
+        const panel = document.querySelector('.thumbnail-scroll-panel');
         if (scrollTop === undefined) {
-            const panel = document.querySelector('.thumbnail-scroll-panel');
-            if (panel)
-            scrollTop = panel.scrollTop;
+            if (panel) {
+                scrollTop = panel.scrollTop;
+            }
         }
+        // handle horizontal scrolling (mobile layout) or vertical scrolling (desktop layout)
+        let slider_width = document.querySelector('.thumbnail-scroll-panel').clientWidth;
+        let sliderSize = Math.max(slider_width, this.slider_height);
+        let scrollStart = Math.max(scrollTop, panel.scrollLeft);
 
-        let thumb_start_index = parseInt(scrollTop / this.thumbnail_size);
-        let thumb_end_index = parseInt((scrollTop + this.slider_height) / this.thumbnail_size);
+        let thumb_start_index = parseInt(scrollStart / this.thumbnail_size);
+        let thumb_end_index = parseInt((scrollStart + sliderSize) / this.thumbnail_size);
 
         let unloaded = [];
         for (var idx=thumb_start_index; idx<=thumb_end_index; idx++){
@@ -416,7 +432,7 @@ export default class ThumbnailSlider extends EventSubscriber {
         }
         if (unloaded.length > 0) {
             thumb_start_index = unloaded[0];
-            thumb_end_index = unloaded[unloaded.length-1];
+            thumb_end_index = unloaded[unloaded.length-1] + 1;
             this.requestMoreThumbnails(init, refresh, thumb_start_index, thumb_end_index);
         }
     }
@@ -432,15 +448,15 @@ export default class ThumbnailSlider extends EventSubscriber {
      */
     requestMoreThumbnails(init = false, refresh = false,
                           thumb_start_index = 0, thumb_end_index) {
+        let init_type = this.context.initial_type;
         let parent_id =
-            this.context.initial_type === INITIAL_TYPES.DATASET ||
-            this.context.initial_type === INITIAL_TYPES.WELL ?
+            init_type === INITIAL_TYPES.DATASET ||
+            init_type === INITIAL_TYPES.WELL ?
                 this.context.initial_ids[0] :
                 this.image_config.image_info.parent_id;
         let parent_type =
-            this.context.initial_type === INITIAL_TYPES.IMAGES ?
-                this.image_config.image_info.parent_type :
-                this.context.initial_type;
+            (init_type === INITIAL_TYPES.IMAGES || init_type === INITIAL_TYPES.ROIS || init_type === INITIAL_TYPES.SHAPES) ?
+                this.image_config.image_info.parent_type : init_type;
 
         let offset = parseInt(thumb_start_index / this.thumbnails_request_size) * this.thumbnails_request_size;
         let limit = this.thumbnails_request_size;
@@ -452,16 +468,16 @@ export default class ThumbnailSlider extends EventSubscriber {
 
 
         let url = this.context.server;
-        if (this.context.initial_type === INITIAL_TYPES.DATASET ||
-            (this.context.initial_type === INITIAL_TYPES.IMAGES &&
-            parent_type === INITIAL_TYPES.DATASET)) {
+        let child_is_image = (init_type === INITIAL_TYPES.IMAGES || init_type === INITIAL_TYPES.ROIS ||
+                init_type === INITIAL_TYPES.SHAPES);
+        if (init_type === INITIAL_TYPES.DATASET ||
+            (child_is_image && parent_type === INITIAL_TYPES.DATASET)) {
                 url += this.web_api_base + DATASETS_REQUEST_URL +
                     '/' + parent_id + '/images/?';
         } else if (this.context.initial_type === INITIAL_TYPES.WELL ||
-                    (this.context.initial_type === INITIAL_TYPES.IMAGES &&
-                    parent_type === INITIAL_TYPES.WELL)) {
-                        url += this.context.getPrefixedURI(IVIEWER) +
-                            "/well_images/?id=" + parent_id + "&";
+            (child_is_image && parent_type === INITIAL_TYPES.WELL)) {
+                url += (this.context.getPrefixedURI(IVIEWER) +
+                        "/well_images/?id=" + parent_id + "&");
         }
         url += 'offset=' + offset + '&limit=' + limit;
 
@@ -578,120 +594,21 @@ export default class ThumbnailSlider extends EventSubscriber {
     hideMe() {
         $(this.element).hide();
         $('.col-splitter.left-split').css('visibility', 'hidden');
-        $('.frame').addClass('left-hand-panel-hidden');
-        $('.frame').css('margin-left', '');
-        $('.frame').css('padding-left', '');
-    }
-
-    /**
-     * Click Handler for single/double clicks to converge on:
-     * Opens images in single and multi viewer mode
-     *
-     * @memberof ThumbnailSlider
-     * @param {number} image_id the image id for the clicked thumbnail
-     * @param {boolean} is_double_click true if triggered by a double click
-     */
-    onClicks(image_id, is_double_click = false) {
-        let navigateToNewImage = () => {
-            this.context.rememberImageConfigChange(image_id);
-            let parent_id =
-                this.context.initial_type === INITIAL_TYPES.DATASET ||
-                this.context.initial_type === INITIAL_TYPES.WELL ?
-                    this.context.initial_ids[0] :
-                        this.context.initial_type === INITIAL_TYPES.IMAGES &&
-                        this.context.initial_ids.length === 1 &&
-                        this.image_config !== null &&
-                        typeof this.image_config.image_info.parent_id === 'number' ?
-                            this.image_config.image_info.parent_id : null;
-            let parent_type =
-                parent_id === null ? INITIAL_TYPES.NONE :
-                    this.context.initial_type === INITIAL_TYPES.IMAGES ?
-                        this.image_config.image_info.parent_type :
-                        this.context.initial_type;
-            // single click in mdi will need to 'replace' image config
-            if (this.context.useMDI && !is_double_click) {
-                    let oldPosition = Object.assign({}, this.image_config.position);
-                    let oldSize = Object.assign({}, this.image_config.size);
-                    this.context.removeImageConfig(this.image_config, true);
-                    this.context.addImageConfig(image_id, parent_id, parent_type);
-                    let selImgConf = this.context.getSelectedImageConfig();
-                    if (selImgConf !== null) {
-                        selImgConf.position = oldPosition;
-                        selImgConf.size = oldSize;
-                    }
-            } else this.context.addImageConfig(image_id, parent_id, parent_type);
-        };
-
-        let modifiedConfs = this.context.useMDI ?
-            this.context.findConfigsWithModifiedRegionsForGivenImage(
-                image_id) : [];
-        let selImgConf = this.context.getSelectedImageConfig();
-        let hasSameImageSelected =
-            selImgConf && selImgConf.image_info.image_id === image_id;
-        // show dialogues for modified rois
-        if (this.image_config &&
-            this.image_config.regions_info &&
-            (this.image_config.regions_info.hasBeenModified() ||
-             modifiedConfs.length > 0) &&
-             (!is_double_click || (is_double_click && !hasSameImageSelected)) &&
-            !Misc.useJsonp(this.context.server) &&
-            this.image_config.regions_info.image_info.can_annotate) {
-                let modalText =
-                    !this.context.useMDI ||
-                    this.image_config.regions_info.hasBeenModified() ?
-                        'You have new/deleted/modified ROI(s).<br>' +
-                        'Do you want to save your changes?' :
-                        'You have changed ROI(s) on an image ' +
-                        'that\'s been opened multiple times.<br>' +
-                        'Do you want to save now to avoid ' +
-                        'inconsistence (and a potential loss ' +
-                        'of some of your changes)?';
-                let saveHandler =
-                    !this.context.useMDI ||
-                    (!is_double_click &&
-                     this.image_config.regions_info.hasBeenModified()) ?
-                        () => {
-                            let tmpSub =
-                                this.context.eventbus.subscribe(
-                                    REGIONS_STORED_SHAPES,
-                                    (params={}) => {
-                                        tmpSub.dispose();
-                                        if (params.omit_client_update)
-                                            navigateToNewImage();
-                                });
-                            setTimeout(()=>
-                                this.context.publish(
-                                    REGIONS_STORE_SHAPES,
-                                    {config_id : this.image_config.id,
-                                     omit_client_update: true}), 20);
-                        } :
-                        () => {
-                            this.context.publish(
-                                REGIONS_STORE_SHAPES,
-                                {config_id :
-                                    this.image_config.regions_info.hasBeenModified() ?
-                                    this.image_config.id : modifiedConfs[0],
-                                 omit_client_update: false});
-                            navigateToNewImage();
-                        };
-                UI.showConfirmationDialog(
-                    'Save ROIs?', modalText,
-                    saveHandler, () => navigateToNewImage());
-        } else navigateToNewImage();
+        this.context.eventbus.publish(IMAGE_VIEWER_RESIZE, { config_id: -1 });
     }
 
     /**
      * hacky solution to allow double - single click distinction
      *
      * @memberof ThumbnailSlider
-     * @param {number} image_id the image id for the clicked thumbnail
+     * @param {number} image_id the id for the clicked image thumbnail
      */
     onClick(image_id) {
         if (this.click_handle) {
             clearTimeout(this.click_handle);
             this.click_handle = null;
         }
-        this.click_handle = setTimeout(() => this.onClicks(image_id), 250);
+        this.click_handle = setTimeout(() => this.context.onClicks(image_id), 250);
     }
 
     /**
@@ -709,7 +626,7 @@ export default class ThumbnailSlider extends EventSubscriber {
             this.click_handle = null;
         }
         this.context.useMDI = true;
-        this.onClicks(image_id, true);
+        this.context.onClicks(image_id, true);
 
         return false;
     }
@@ -777,6 +694,17 @@ export default class ThumbnailSlider extends EventSubscriber {
         for (let i=0; i<count; i++) {
             this.thumbnails[i] = {'version': 0, 'title': 'unloaded'};
         }
+    }
+
+    /**
+     * Handle Drag Start, coming from the thumbnail img itself or the parent div
+     * Both should have the data-id attribute for the image ID.
+     *
+     * @param {Object} event Drag start event
+     */
+    handleDragStart(event) {
+        event.dataTransfer.setData("id", event.target.dataset.id);
+        return true;
     }
 
     /**

@@ -94,7 +94,7 @@ class Select extends Interaction {
     /**
      * Clears/unselects all selected features
      */
-    clearSelection = function() {
+    clearSelection() {
         // delegate
         var ids = []
         this.getFeatures().forEach(
@@ -102,6 +102,13 @@ class Select extends Interaction {
                 ids.push(feature.getId());
         }, this);
         if (ids.length > 0) this.regions_.setProperty(ids, "selected", false);
+
+        // Hide the ShapeEditPopup
+        this.regions_.viewer_.viewer_.getOverlays().forEach(o => {
+            if (o.hideShapeEditPopup) {
+                o.hideShapeEditPopup();
+            }
+        });
     }
 
     /**
@@ -170,7 +177,7 @@ class Select extends Interaction {
      *
      * @return {ol.Collection} the selected features
      */
-    getFeatures = function() {
+    getFeatures() {
         return this.features_;
     }
 
@@ -194,6 +201,27 @@ class Select extends Interaction {
         } else {
             feature['selected'] = false;
             this.getFeatures().remove(feature);
+        }
+
+        // Hide the ShapeEditPopup and Hover tooltip
+        this.regions_.viewer_.viewer_.getOverlays().forEach(o => {
+            // Also clear shapeId if not selected
+            if (o.hideShapeEditPopup) {
+                if (!feature['selected']) {
+                    o.hideShapeEditPopup(feature.getId());
+                }
+            } else {
+                // Hide Hover tooltip
+                o.setPosition(undefined);
+            }
+        });
+        if (feature['selected']){
+            // Show the ShapeEditPopup
+            this.regions_.viewer_.viewer_.getOverlays().forEach(o => {
+                if (o.showPopupForShape) {
+                    o.showPopupForShape(feature);
+                }
+            });
         }
     }
 

@@ -115,10 +115,7 @@ export class Index  {
             return null;
         };
         // register resize and collapse handlers
-        Ui.registerSidePanelHandlers(
-            this.context.eventbus,
-            this.context.getPrefixedURI(PLUGIN_PREFIX, true),
-        );
+        Ui.registerSidePanelHandlers(this.context);
 
         // register the fullscreenchange handler
         this.full_screen_api_prefix = Ui.getFullScreenApiPrefix();
@@ -248,6 +245,28 @@ export class Index  {
             if (this.restoreMDI) this.context.useMDI = true;
         }
         $(".viewer-context-menu").hide();
+    }
+
+    /**
+     * Handle dropping of a thumbnail on to the centre panel.
+     * Opens the image in Multi-Display mode
+     *
+     * @param {Object} event Drop event
+     */
+    handleDrop(event) {
+        var image_id = parseInt(event.dataTransfer.getData("id"), 10);
+        this.context.useMDI = true;
+        // similar behaviour to double-clicking
+        this.context.onClicks(image_id, true);
+    }
+
+    /**
+     * Simply preventDefault() to allow drop here
+     *
+     * @param {Object} event Dragover event
+     */
+    handleDragover(event) {
+        event.preventDefault();
     }
 
     /**

@@ -1,7 +1,43 @@
 module.exports = function(config) {
   config.set({
     frameworks: ['mocha', 'chai'],
-    files: ['test/unit/**/*.js'],
+    plugins: [
+      require('karma-mocha'),
+      require('karma-chai'),
+      require('karma-chrome-launcher'),
+      require('karma-spec-reporter'),
+      require('karma-webpack'),
+    ],
+    files: [
+      'test/unit/conversion.js',
+      'test/unit/geometries.js',
+      'test/unit/misc.js',
+      'test/unit/net.js',
+      'test/unit/regions.js',
+      'test/unit/viewer.js',
+    ],
+    preprocessors: {
+      'test/**/*.js': ['webpack']
+    },
+    webpack: {
+      // minimal webpack config
+      resolve: {
+          extensions: [".js"],
+             modules: ["src", "node_modules"]
+      },
+      module: {
+        rules: [
+          { test: /\.js$/, loader: 'babel-loader', exclude: /node_modules/}
+        ]
+      },
+    },
+    webpackMiddleware: {
+      noInfo: true,
+      // and use stats to turn off verbose output
+      stats: {
+        chunks: false
+      }
+    },
     exclude: ['test/unit/debug_mocha.js'],
     reporters: ['spec'],
     port: 9876,
@@ -16,5 +52,8 @@ module.exports = function(config) {
     },
     autoWatch: false,
     concurrency: Infinity,
+  })
+  process.on('infrastructure_error', (error) => {
+      console.error('infrastructure_error', error);
   })
 }

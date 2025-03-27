@@ -30,22 +30,24 @@ import {resizable} from 'jquery-ui/ui/widgets/resizable';
 import {
     IMAGE_CONFIG_RELOAD, IVIEWER, PLUGIN_PREFIX, PROJECTION,
     REGIONS_DRAWING_MODE, RENDER_STATUS, VIEWER_ELEMENT_PREFIX,
-    REGIONS_PAGE_SIZE
+    REGIONS_PAGE_SIZE, REQUEST_PARAMS
 } from '../utils/constants';
 import {
     IMAGE_CANVAS_DATA, IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY,
-    IMAGE_INTENSITY_QUERYING, IMAGE_SETTINGS_CHANGE, IMAGE_SETTINGS_REFRESH,
+    IMAGE_SETTINGS_CHANGE, IMAGE_SETTINGS_REFRESH,
     IMAGE_VIEWER_CONTROLS_VISIBILITY, IMAGE_VIEWER_INTERACTION,
-    IMAGE_VIEWER_RESIZE, IMAGE_VIEWPORT_CAPTURE,
+    IMAGE_VIEWER_RESIZE, IMAGE_VIEWPORT_CAPTURE, IMAGE_VIEWPORT_LINK,
     REGIONS_CHANGE_MODES, REGIONS_COPY_SHAPES, REGIONS_DRAW_SHAPE,
     REGIONS_GENERATE_SHAPES, REGIONS_HISTORY_ACTION, REGIONS_HISTORY_ENTRY,
     REGIONS_MODIFY_SHAPES, REGIONS_PROPERTY_CHANGED,
     TILED_REGIONS_PROPERTY_CHANGED, REGIONS_SET_PROPERTY,
     REGIONS_SHOW_COMMENTS, REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES,
     VIEWER_IMAGE_SETTINGS, VIEWER_PROJECTIONS_SYNC, VIEWER_SET_SYNC_GROUP,
+    ENABLE_SHAPE_POPUP, TILE_LOAD_ERROR, RENDER_COMPLETE,
     EventSubscriber
 } from '../events/events';
 
+const MOVIE_DELAY = 250;
 
 /**
  * The openlayers 3 viewer wrapped for better aurelia integration
@@ -102,6 +104,8 @@ export default class Ol3Viewer extends EventSubscriber {
      * @type {Array.<string,function>}
      */
     sub_list = [
+        [ENABLE_SHAPE_POPUP,
+            (params={}) => this.enableShapePopup(params)],
         [IMAGE_VIEWER_INTERACTION,
             (params={}) => this.handleViewerInteraction(params)],
         [IMAGE_VIEWER_CONTROLS_VISIBILITY,
@@ -112,6 +116,8 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.changeDimension(params)],
         [IMAGE_DIMENSION_PLAY,
             (params={}) => this.playDimension(params)],
+        [RENDER_COMPLETE,
+            (params={}) => this.handleRenderComplete(params)],
         [IMAGE_SETTINGS_CHANGE,
             (params={}) => this.changeImageSettings(params)],
         [REGIONS_PROPERTY_CHANGED,
@@ -146,10 +152,14 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.showComments(params)],
         [IMAGE_VIEWPORT_CAPTURE,
             (params={}) => this.captureViewport(params)],
+        [IMAGE_VIEWPORT_LINK,
+            (params={}) => this.linkViewport(params)],
         [IMAGE_CANVAS_DATA,
             (params={}) => this.saveCanvasData(params)],
         [VIEWER_SET_SYNC_GROUP,
             (params={}) => this.setSyncGroup(params)],
+        [TILE_LOAD_ERROR,
+            (params={}) => Ui.showModalMessage("Failed to load tiles.<br>Please try refreshing the page.", "OK")],
         [IMAGE_SETTINGS_REFRESH,
             (params={}) => this.refreshImageSettings(params)]];
 
@@ -478,14 +488,16 @@ export default class Ol3Viewer extends EventSubscriber {
                      container: this.container
                  });
         delete this.image_config.image_info.tmp_data;
-
+        
         // hide controls for mdi when more than 1 image configs
         if (this.context.useMDI && this.context.image_configs.size > 1)
             this.toggleControlsVisibility({
                 config_id: this.image_config.id, flag: false
             });
-        // only the first request should be affected
+        // only the first request should be affected, besides mirror controls
+        let mirrorEnabled = this.context.getInitialRequestParam(REQUEST_PARAMS.ENABLE_MIRROR)
         this.context.resetInitParams();
+        this.context.initParams[REQUEST_PARAMS.ENABLE_MIRROR] = mirrorEnabled
         // use existing interpolation setting
         this.viewer.enableSmoothing(this.context.interpolate);
         // zoom to fit
@@ -634,10 +646,6 @@ export default class Ol3Viewer extends EventSubscriber {
         // while dragging does not concern us
         if (typeof params.is_dragging !== 'boolean') params.is_dragging = false;
         if (params.is_dragging) return;
-
-        // check if we are way to small, then we collapse...
-        if (typeof params.window_resize === 'boolean' && params.window_resize)
-            Ui.adjustSideBarsOnWindowResize();
 
         this.viewer.redraw(params.delay);
     }
@@ -847,8 +855,8 @@ export default class Ol3Viewer extends EventSubscriber {
 
 
         // switch to plane/time/channel that shape to be selected is on
-        // for deselect the last selected shape is chosen (if exists)
         let shapeSelection = params.shapes[params.shapes.length-1];
+        // for de-selecting (value is false) the last selected shape is chosen (if exists)
         if (!params.value) {
             let numberOfSelectedShapes =
                 this.image_config.regions_info.selected_shapes.length;
@@ -856,13 +864,18 @@ export default class Ol3Viewer extends EventSubscriber {
                 let lastSelected =
                     this.image_config.regions_info.selected_shapes[
                         numberOfSelectedShapes-1];
+                // if last-selected is not being de-selected, select it 
                 if (lastSelected !== shapeSelection) {
                     shapeSelection = lastSelected;
                 } else if (numberOfSelectedShapes > 1) {
+                    // or previous shape...
                     shapeSelection =
                         this.image_config.regions_info.selected_shapes[
                             numberOfSelectedShapes-2];
-                } else shapeSelection = null;
+                } else {
+                    // or nothing
+                    shapeSelection = null;
+                }
             } else shapeSelection = null;
         }
         let delay = 0;
@@ -871,16 +884,28 @@ export default class Ol3Viewer extends EventSubscriber {
             let viewerT = this.viewer.getDimensionIndex('t');
             let viewerZ = this.viewer.getDimensionIndex('z');
             let viewerC = this.viewer.getDimensionIndex('c');
+            // Update this.image_config.image_info to load a new Z/T plane...
             shape = this.image_config.regions_info.getShape(shapeSelection);
+            let correctPlane = true;
             let shapeT = typeof shape.TheT === 'number' ? shape.TheT : -1;
             if (shapeT !== -1 && shapeT !== viewerT) {
                 this.image_config.image_info.dimensions.t = shapeT;
+                correctPlane = false;
                 delay += 25;
             }
             let shapeZ = typeof shape.TheZ === 'number' ? shape.TheZ : -1;
             if (shapeZ !== -1 && shapeZ !== viewerZ) {
                 this.image_config.image_info.dimensions.z = shapeZ;
+                correctPlane = false;
                 delay += 25;
+            }
+            if (correctPlane) {
+                // remove initial_shape_id, so we don't get directed to shape again when browsing
+                // a new plane, (when ROIs are loaded and initRegions() is called again)
+                this.image_config.image_info.initial_shape_id = undefined;
+            } else {
+                // browsing to new plane - this will select Shape when ROIs load
+                this.image_config.image_info.initial_shape_id = shape['@id'];
             }
             let shapeC = typeof shape.TheC === 'number' ? shape.TheC : -1;
             if (shapeC !== -1 && viewerC.indexOf(shapeC) === -1) {
@@ -893,7 +918,15 @@ export default class Ol3Viewer extends EventSubscriber {
             this.abortDrawing();
             this.viewer.selectShapes(
                 params.shapes, params.value, params.clear,
-                params.center ? shape : null);
+                params.center ? shape : null, params.zoomToShape);
+            // If we've just selected a bunch of shapes, hide the ShapeEditPopup
+            if (params.shapes.length > 1) {
+                this.viewer.viewer_.getOverlays().forEach(o => {
+                    if (o.hideShapeEditPopup) {
+                        o.hideShapeEditPopup();
+                    }
+                });
+            }
         }, delay);
       }
 
@@ -975,6 +1008,36 @@ export default class Ol3Viewer extends EventSubscriber {
                 }
             }
         };
+        // If we have initial_roi_id for this viewer, select it...
+        let roi_id;
+        let shape_id;
+        if (this.image_config.image_info.initial_shape_id) {
+            shape_id = this.image_config.image_info.initial_shape_id;
+            roi_id = this.image_config.regions_info.getRoiFromShapeId(shape_id);
+        } else if (this.image_config.image_info.initial_roi_id) {
+            roi_id = this.image_config.image_info.initial_roi_id;
+        }
+        if (roi_id) {
+            let roi = this.image_config.regions_info.data.get(roi_id);
+            let shape_ids;
+            if (shape_id) {
+                shape_ids = [`${roi_id}:${shape_id}`];
+            } else {
+                // select first shape in ROI
+                shape_ids = [`${roi.id}:${roi.shapes.keys().next().value}`];
+            }
+            // select shapes...
+            this.changeShapeSelection({
+                config_id: this.image_config.id,
+                property: "selected",
+                shapes: shape_ids,
+                clear: true,
+                value: true,
+                center: true,
+                zoomToShape: true,
+            });
+        }
+
         setTimeout(updateMeasurements, 50);
     }
 
@@ -1136,6 +1199,7 @@ export default class Ol3Viewer extends EventSubscriber {
                 params.omit_client_update) return;
 
         let ids = [];
+        let roi_count_change = 0;
         // we iterate over the ids given and reset states accordingly
         for (let id in params.shapes) {
             let shape = this.image_config.regions_info.getShape(id);
@@ -1150,6 +1214,7 @@ export default class Ol3Viewer extends EventSubscriber {
                 // new ones are stored under their newly created ids
                 let wasNew = typeof shape.is_new === 'boolean' && shape.is_new;
                 if (wasNew) {
+                    roi_count_change++;
                     let newRoi =
                         this.image_config.regions_info.data.get(
                             newRoiAndShapeId.roi_id);
@@ -1190,6 +1255,7 @@ export default class Ol3Viewer extends EventSubscriber {
                             oldRoiAndShapeId.roi_id);
                     // take out of count if not new
                     if (!wasNew) {
+                        roi_count_change--;
                         if (!shape.visible) // if not visible we correct
                             this.image_config.regions_info.visibility_toggles++;
                         this.image_config.regions_info.number_of_shapes--;
@@ -1197,6 +1263,12 @@ export default class Ol3Viewer extends EventSubscriber {
                 }
             }
         }
+
+        // update roi count
+        this.image_config.regions_info.roi_count =
+            this.image_config.regions_info.roi_count + roi_count_change;
+        this.image_config.regions_info.roi_count_on_current_plane =
+            this.image_config.regions_info.roi_count_on_current_plane + roi_count_change;
 
         // clear history
         this.image_config.regions_info.history.resetHistory();
@@ -1223,6 +1295,18 @@ export default class Ol3Viewer extends EventSubscriber {
             this.viewer === null) return;
 
         this.viewer.showShapeComments(params.value);
+    }
+
+    /**
+     * Enables/diables the showing of a popup to edit selected shape
+     *
+     * @memberof Ol3Viewer
+     * @param {Object} params the event notification parameters
+     */
+    enableShapePopup(params = {}) {
+        if (params.config_id !== this.image_config.id ||
+            this.viewer === null) return;
+        this.viewer.enableShapePopup(params.enable);
     }
 
     /**
@@ -1332,17 +1416,6 @@ export default class Ol3Viewer extends EventSubscriber {
             typeof params.dim !== 'string' ||
             (params.dim !== 'z' && params.dim !== 't')) return;
 
-        // the stop function
-        let stopPlay = (() => {
-            if (this.player_info.handle !== null)
-                clearInterval(this.player_info.handle);
-            this.player_info.dim = null;
-            this.player_info.forwards = null;
-            this.player_info.handle = null;
-            this.image_config.undo_redo_enabled = true;
-            this.viewer.getRenderStatus(true);
-        }).bind(this);
-
         // check explicit stop flag (we default to true if not there)
         if (typeof params.stop !== 'boolean') params.stop = true;
         let forwards = params.forwards;
@@ -1352,59 +1425,128 @@ export default class Ol3Viewer extends EventSubscriber {
         if ((params.stop && this.player_info.handle !== null) ||
                 (!params.stop && this.player_info.handle !== null &&
                     (params.dim !== this.player_info.dim ||
-                    forwards !== this.player_info.forwards))) stopPlay();
+                    forwards !== this.player_info.forwards))) {
+            this.stopPlay();
+        }
 
         // only if stop is false we continue to start
         if (params.stop) return;
 
         let delay =
             (typeof params.delay === 'number' && params.delay >= 100) ?
-                params.delay : 250;
+                params.delay : MOVIE_DELAY;
 
         // bounds and present dimension index
         let dims = this.image_config.image_info.dimensions;
         let dim = params.dim;
-        let min_dim = 0;
         var max_dim = dims['max_' + dim]-1;
-        var pres_dim = dims[dim];
 
-        // we can go no further
-        if (max_dim === 0 ||
-             (forwards && pres_dim >= max_dim) ||
-             (!forwards && pres_dim <= min_dim)) return;
+        if (max_dim === 0) return
 
         this.player_info.dim = dim;
         this.player_info.forwards = forwards;
-        this.image_config.undo_redo_enabled = false;
-        this.player_info.handle =
-            setInterval(
-                () => {
-                    try {
-                        // keep handle backup in window in case of error
-                        window.interval_handle = this.player_info.handle;
+        this.player_info.delay = delay;
+        this.image_config.is_movie_playing = true;
 
-                        // if we get an in progress status the dimension has not yet
-                        // rendered and we return to wait for the next iteration
-                        let renderStatus = this.viewer.getRenderStatus();
-                        if (renderStatus === RENDER_STATUS.IN_PROGRESS) return;
+        // Don't want to show spinner while playing movie...
+        this.viewer.enableSpinner(false);
 
-                        // get present dim index and check if we have hit a bound
-                        // if so => abort play
-                        pres_dim = dims[dim];
-                        if (renderStatus === RENDER_STATUS.ERROR ||
-                                (forwards && pres_dim >= max_dim) ||
-                                (!forwards && pres_dim <= min_dim)) {
-                                    stopPlay(); return;}
+        // start immediately
+        this.player_info.handle = setTimeout(() => {
+            this.player_info.waiting_on_delay = false;
+            this.incrementDimension(true);
+        }, 0);
+    }
 
-                        // arrange for the render status to be watched
-                        if (!this.viewer.watchRenderStatus(true))
-                            this.viewer.getRenderStatus(true);
-                        // set the new dimension index
-                        dims[dim] = pres_dim + (forwards ? 1 : -1);
-                    } catch(ignored) {
-                        clearInterval(window.interval_handle);
-                    }
+    /**
+     * Stops dimension play
+     *
+     * @memberof Ol3Viewer
+     */
+    stopPlay() {
+        if (this.player_info.handle !== null)
+            clearTimeout(this.player_info.handle);
+        this.player_info.dim = null;
+        this.player_info.forwards = null;
+        this.player_info.handle = null;
+        this.image_config.is_movie_playing = false;
+        this.viewer.enableSpinner(true);
+    }
+
+    /**
+     * Increment Z/T when playing movie
+     *
+     * @memberof Ol3Viewer
+     */
+    incrementDimension(starting) {
+        // If we're still waiting for planes to render or movie delay, abort...
+        if (this.player_info.waiting_on_render || this.player_info.waiting_on_delay) {
+            return;
+        }
+
+        let dim = this.player_info.dim;
+        let dims = this.image_config.image_info.dimensions;
+        let forwards = this.player_info.forwards;
+        var max_dim = dims['max_' + dim]-1;
+        let min_dim = 0;
+
+        try {
+            // keep handle backup in window in case of error
+            window.interval_handle = this.player_info.handle;
+
+            let renderStatus = this.viewer.getRenderStatus();
+
+            // get present dim index and check if we have hit a bound
+            // if so => abort play
+            var pres_dim = dims[dim];
+            let next_dim = pres_dim + (forwards ? 1 : -1);
+            if (starting) {
+                // if already at end, play from start
+                if (forwards && pres_dim >= max_dim) {
+                    next_dim = 0;
+                }
+                if (!forwards && pres_dim <= min_dim) {
+                    next_dim = max_dim;
+                }
+            }
+
+            if (renderStatus === RENDER_STATUS.ERROR ||
+                    (forwards && next_dim > max_dim) ||
+                    (!forwards && next_dim < min_dim)) {
+                        this.stopPlay(); return;}
+
+            // set the new dimension index
+            dims[dim] = next_dim;
+
+            // don't increment again while waiting on render or delay
+            this.player_info.waiting_on_render = true;
+            this.player_info.waiting_on_delay = true;
+
+            if (this.image_config.is_movie_playing) {
+                let delay = this.player_info.delay || MOVIE_DELAY;
+                this.player_info.handle = setTimeout(() => {
+                    this.player_info.waiting_on_delay = false;
+
+                    this.incrementDimension();
                 }, delay);
+            }
+        } catch(ignored) {
+            clearInterval(window.interval_handle);
+        }
+    }
+
+    /**
+     * When rendering image plane is complete, and we're playing a movie, increment...
+     *
+     * @memberof Ol3Viewer
+     */
+    handleRenderComplete(params={}) {
+        // set status
+        this.player_info.waiting_on_render = false;
+
+        if (this.image_config.is_movie_playing) {
+            this.incrementDimension();
+        }
     }
 
     /**
@@ -1424,7 +1566,76 @@ export default class Ol3Viewer extends EventSubscriber {
         if (!allConfigs && params.config_id !== this.image_config.id) return;
         if (allConfigs)
             params.zip_entry = this.image_config.image_info.image_name;
+        let view =this.viewer.viewer_.getView()
+        params.flipX = view.values_.flipX
+        params.flipY = view.values_.flipY
         this.viewer.sendCanvasContent(params);
+    }
+
+    /**
+     * Shows a dialog with a URL to link to current viewport and rendering settings
+     *
+     * @param {Object} params the event notification parameters. Need config_id
+     */
+    linkViewport(params={}) {
+        if (params.config_id !== this.image_config.id  ||
+            this.viewer === null) return;
+
+        // Get current search params and add/override with others
+        let search = new Map();
+        if (window.location.search.length > 0) {
+            let values = window.location.search.substr(1)
+                .split('&')
+                .map(kv => kv.split('='))
+                .map(kv => [kv[0].toLowerCase(), kv[1]]);
+            search = new Map(values);
+        }
+
+        let view = this.viewer.viewer_.getView();
+        let viewProps = view.getProperties()
+        let image_info = this.image_config.image_info;
+        let args = [];
+        let center = view.getCenter();
+        args.push([REQUEST_PARAMS.CENTER_X, parseInt(center[0])]);
+        args.push([REQUEST_PARAMS.CENTER_Y, (-parseInt(center[1]))]);
+        args.push([REQUEST_PARAMS.ZOOM, parseInt(100 / view.getResolution())]);
+
+        let channels = image_info.channels;
+        let chs = channels.map(
+            (ch, i) => {
+                let w = ch.window;
+                return `${ ch.active ? '' : '-'}${i+1}|${w.start}:${w.end}$${ ch.color }`
+            }
+        )
+        args.push([REQUEST_PARAMS.CHANNELS, chs.join(",")]);
+        args.push([REQUEST_PARAMS.MODEL, image_info.model.toLowerCase()[0]]);
+
+        let maps = channels.map(ch => ({
+            inverted: {enabled:ch.inverted},
+            quantization: {family: ch.family, coefficient: ch.coefficient}
+        }));
+        args.push([REQUEST_PARAMS.MAPS, JSON.stringify(maps)]);
+
+        args.push([REQUEST_PARAMS.FLIP_X, viewProps['flipX']])
+        args.push([REQUEST_PARAMS.FLIP_Y, viewProps['flipY']])
+
+        // Build the URL
+        let url = window.location.origin + window.location.pathname;
+        args.forEach(kv => {
+            search.set(kv[0].toLowerCase(), kv[1]);
+        });
+        let values = [];
+        for (var [key, value] of search) {
+            values.push(`${ key }=${ value }`);
+        }
+        url += '?' + values.join('&');
+
+        let html = `<p>Copy Viewport URL</p>
+            <input id='viewport_url' style='font-size: 12px; width: 100%;' value='${ url }' />`;
+        Ui.showModalMessage(html, 'Close');
+        let viewport_url = document.getElementById('viewport_url');
+        viewport_url.focus();
+        viewport_url.select();
     }
 
     /**
@@ -1480,6 +1691,8 @@ export default class Ol3Viewer extends EventSubscriber {
                 center: [...params.center],
                 resolution: params.resolution,
                 rotation: params.rotation,
+                flipX: params.flipX,
+                flipY: params.flipY
             }
             this.context.setCachedImageSettings(imageId, toCache);
         } else {
@@ -1534,5 +1747,54 @@ export default class Ol3Viewer extends EventSubscriber {
             $("#" + this.image_config.id + " .ol-control").hide();
             this.image_config.show_controls = false;
         }
+    }
+
+    /**
+     * Handle dropping of a thumbnail on to the centre panel.
+     * Opens the image in Multi-Display mode
+     *
+     * @param {Object} event Drop event
+     */
+    handleDrop(event) {
+        document.getElementById(this.image_config.id).classList.remove("drag_enter");
+        // prevent event bubbling up to parent .frame
+        event.stopPropagation();
+
+        var image_id = parseInt(event.dataTransfer.getData("id"), 10);
+
+        // If we are not in multi-viewer mode, enter multi-viewer mode
+        if (!this.context.useMDI) {
+            // similar behaviour to double-clicking
+            this.context.useMDI = true;
+            this.context.onClicks(image_id, true);
+        } else {
+            // similar behaviour to single-click:
+            // replace this image_config with new one
+            this.context.onClicks(image_id, false, this.image_config);
+        }
+    }
+
+    /**
+     * Simply preventDefault() to allow drop here
+     *
+     * @param {Object} event Dragover event
+     */
+    handleDragover(event) {
+        // Need preventDefault() to allow drop action
+        event.preventDefault();
+        // Make sure ONLY this viewer has the 'drag_enter' class
+        // We don't use dragenter/leave events as they are too fickle
+        $(".viewer-mdi").removeClass("drag_enter");
+        document.getElementById(this.image_config.id).classList.add("drag_enter");
+    }
+
+    /**
+     * Simply preventDefault() to allow drop here
+     *
+     * @param {Object} event Dragover event
+     */
+    handleDragleave(event) {
+        // We don't use dragenter/leave events as they are too fickle
+        $(".viewer-mdi").removeClass("drag_enter");
     }
 }

@@ -314,9 +314,7 @@ class BirdsEye extends Control {
         var map = this.getMap();
         var rev = new Date().getTime();
         if (map) rev += "-" + getTargetId(map.getTargetElement());
-
-        return this.thumbnail_url_ + "/" + this.thumbnail_size_[0] +
-            "/" + this.thumbnail_size_[1] + "/?rev=" + rev;
+        return this.thumbnail_url_ + "/?rev=" + rev;
     }
 
     /**
@@ -356,24 +354,23 @@ class BirdsEye extends Control {
      * @return {ol.Coordinate|undefined} Coordinate for rotation and center anchor.
      * @private
      */
-    calculateCoordinateRotate_ =
-        function(rotation, coordinate) {
-            var coordinateRotate;
+    calculateCoordinateRotate_(rotation, coordinate) {
+        var coordinateRotate;
 
-            var map = this.getMap();
-            var view = map.getView();
+        var map = this.getMap();
+        var view = map.getView();
 
-            var currentCenter = view.getCenter();
+        var currentCenter = view.getCenter();
 
-            if (currentCenter) {
-                coordinateRotate = [
-                    coordinate[0] - currentCenter[0],
-                    coordinate[1] - currentCenter[1]
-                ];
-                rotateCoord(coordinateRotate, rotation);
-                addCoord(coordinateRotate, currentCenter);
-            }
-            return coordinateRotate;
+        if (currentCenter) {
+            coordinateRotate = [
+                coordinate[0] - currentCenter[0],
+                coordinate[1] - currentCenter[1]
+            ];
+            rotateCoord(coordinateRotate, rotation);
+            addCoord(coordinateRotate, currentCenter);
+        }
+        return coordinateRotate;
     }
 
 

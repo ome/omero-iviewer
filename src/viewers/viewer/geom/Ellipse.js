@@ -217,12 +217,33 @@ class Ellipse extends Polygon {
     }
 
     /**
+     * Returns the Area as Pi * rx * ry instead of relying on Polygon superclass
+     * method which is less accurate.
+     *
+     * @return {number} the area of the ellipse
+     */
+    getArea() {
+        return Math.PI * this.rx_ * this.ry_;
+    }
+
+    /**
      * Make a complete copy of the geometry.
      * @return {Ellipse} Clone.
      */
     clone() {
         return new Ellipse(
             this.cx_, this.cy_, this.rx_, this.ry_, this.getTransform());
+    }
+
+    /**
+     * For displaying coords, this returns a list of [name, value] pairs
+     * @return {List} 2D list of 'name', vaule pairs.
+     */
+    getDisplayCoords() {
+        return [['X', this.cx_.toFixed(1)],
+                ['Y', -this.cy_.toFixed(1)],
+                ['RadiusX', this.rx_.toFixed(1)],
+                ['RadiusY', this.ry_.toFixed(1)]];
     }
 }
 

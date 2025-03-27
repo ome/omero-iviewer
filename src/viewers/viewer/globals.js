@@ -35,6 +35,7 @@ import ScaleBar from './controls/ScaleBar';
 import IntensityDisplay from './controls/IntensityDisplay';
 import RotateInteraction from './interaction/Rotate';
 import BoxSelect from './interaction/BoxSelect';
+import Mirror from './controls/Mirror';
 
 /**
  * Default lineCap setting for default stroke
@@ -108,7 +109,7 @@ export const PREFIXED_URIS = [
  * @const
  * @type {number}
  */
-export const UNTILED_RETRIEVAL_LIMIT = 4000000;
+export const UNTILED_RETRIEVAL_LIMIT = 2048 * 2048;
 
 /**
  * the default tile dimensions
@@ -132,9 +133,11 @@ export const REQUEST_PARAMS = {
     OMERO_VERSION: 'OMERO_VERSION',
     PLANE: 'Z',
     PROJECTION: 'P',
-    SERVER: 'SERVER',
+    HOST: 'HOST',
     TIME: 'T',
-    ZOOM: 'ZM'
+    ZOOM: 'ZM',
+    FLIP_X: 'FX',
+    FLIP_Y: 'FY'
 };
 
 /**
@@ -222,7 +225,7 @@ export const PROJECTION = {
  */
 export const UNITS_LENGTH = [
     { unit: 'angstrom',
-      threshold: 0.1, multiplier: 10000, symbol: '\u212B'},
+      threshold: 0.01, multiplier: 10000, symbol: '\u212B'},
     { unit: 'nanometer',
       threshold: 1, multiplier: 1000, symbol: 'nm'},
     { unit: 'micron',
@@ -232,7 +235,9 @@ export const UNITS_LENGTH = [
     { unit: 'centimeter',
       threshold: 1000000, multiplier: 0.0001, symbol: 'cm'},
     { unit: 'meter',
-      threshold: 100000000, multiplier: 0.000001, symbol: 'm'}
+      threshold: 1000000000, multiplier: 0.000001, symbol: 'm'},
+    { unit: 'kilometer',
+      threshold: Infinity, multiplier: 0.000000001, symbol: 'km'},
  ];
 
 /**
@@ -313,6 +318,12 @@ export const AVAILABLE_VIEWER_CONTROLS = {
         "options": {},
         "defaults": true,
         "enabled": false,
+        "links" : []},
+    "mirror" :
+        {"clazz" : Mirror,
+        "options": {},
+        "defaults": true,
+        "enabled" : false,
         "links" : []}
 };
 
