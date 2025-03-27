@@ -38,6 +38,7 @@ from omero.rtypes import rint, rlong, unwrap
 from omero_sys_ParametersI import ParametersI
 import omero.util.pixelstypetopython as pixelstypetopython
 from omeroweb.webclient.show import get_image_roi_id_for_shape
+from omeroweb.webgateway.views import perform_table_query
 
 from .version import __version__
 from omero_version import omero_version
@@ -783,45 +784,35 @@ def shapes_by_region(request, image_id, the_z, the_t, conn=None, **kwargs):
     zoom_col_row_w_h = tile.split(",")
     if len(zoom_col_row_w_h) < 5:
         return JsonResponse({"error": "Specify tile as ?tile=zm,col,row,w,h"})
-    col = long(zoom_col_row_w_h[1])
-    row = long(zoom_col_row_w_h[2])
-    tile_w = long(zoom_col_row_w_h[3])
-    tile_h = long(zoom_col_row_w_h[4])
+    if zoom_col_row_w_h[0] != "0":
+        return JsonResponse({"error": "Only support '0' zoom level"})
+
+    col = int(zoom_col_row_w_h[1])
+    row = int(zoom_col_row_w_h[2])
+    tile_w = int(zoom_col_row_w_h[3])
+    tile_h = int(zoom_col_row_w_h[4])
 
     x_min = col * tile_w
     y_min = row * tile_h
     x_max = x_min + tile_w
     y_max = y_min + tile_h
 
-    # Query for Points on the Image, within this bounding box...
-    params = ParametersI()
-    params.addId(image_id)
-    filter = omero.sys.Filter()
-    filter.offset = rint(0)
-    filter.limit = rint(500)
-    params.theFilter = filter
-    # NB: we use min/max in string query since there is no param.addDouble(d)
-    query_service = conn.getQueryService()
-    points = query_service.findAllByQuery(
-        """select shape from Shape shape join shape.roi roi
-            where roi.image.id = :id and
-            shape.x >= %s and shape.x < %s and
-            shape.y >= %s and shape.y < %s
-            and shape.theZ = %s and (shape.theT = %s or shape.theT is null)
-        """ % (x_min, x_max, y_min, y_max, the_z, the_t), params)
+    # Find OMERO.table with namespace "omero.shape.boundingbox.coords"
+    image = conn.getObject("Image", image_id)
+    fileid = None
+    for ann in image.listAnnotations():
+        if ann.getNs() == "omero.shape.boundingbox.coords":
+            fileid = ann.getFile().getId()
+            break
+    if fileid is None:
+        return JsonResponse({"error": "Found no OMERO.table with ns: omero.shape.boundingbox.coords"})
 
-    # Points simply used to store ID of e.g. Polygons as text value
-    # Try to get the shape IDs:
-    shape_ids = []
-    for point in points:
-        try:
-            label = unwrap(point.getTextValue())
-            if label is None:
-                shape_ids.append(point.getId().val)
-            else:
-                shape_ids.append(long(label))
-        except (TypeError, ValueError):
-            pass
+    # Look for intersecting bounding boxes
+    query = f"(X2>{x_min})&(X1<{x_max})&(Y2>{y_min})&(Y1<{y_max})"
+    col_names = ["shape_id"]
+    rsp_json = perform_table_query(conn, fileid, query, col_names, check_max_rows=False)
+
+    shape_ids = [r[0] for r in rsp_json['data']["rows"]]
 
     marshalled = []
     if len(shape_ids) > 0:
@@ -829,8 +820,8 @@ def shapes_by_region(request, image_id, the_z, the_t, conn=None, **kwargs):
         # Now get the shapes by ID
         params = ParametersI()
         params.addIds(shape_ids)
-        shapes = query_service.findAllByQuery(
-            "select shape from Shape shape where shape.id in (:ids)", params)
+        shapes = conn.getQueryService().findAllByQuery(
+            "select shape from Shape shape where shape.id in (:ids)", params, conn.SERVICE_OPTS)
 
         for shape in shapes:
             encoder = omero_marshal.get_encoder(shape.__class__)
