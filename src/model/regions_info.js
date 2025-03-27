@@ -25,7 +25,7 @@ import {
 } from '../events/events';
 import {
     IVIEWER, REGIONS_DRAWING_MODE, REGIONS_MODE, REGIONS_REQUEST_URL,
-    WEB_API_BASE,
+    WEB_API_BASE, REGIONS_PAGE_SIZE, PLUGIN_PREFIX, PLUGIN_NAME,
 } from '../utils/constants';
 
 /**
@@ -343,6 +343,19 @@ export default class RegionsInfo  {
     }
 
     /**
+     * Find the page that the specified ROI is on and load this page
+     *
+     * @memberof RegionsInfo
+     * @param {number} roi_id
+     */
+    loadRoisPageContainingRoi(roi_id) {
+        if (!this.all_roi_ids || typeof(roi_id) !== "number") return;
+
+        let page = parseInt(this.all_roi_ids.indexOf(roi_id)/REGIONS_PAGE_SIZE);
+        this.setPageAndReload(page);
+    }
+
+    /**
      * Load ROIs, setting page based on ROI ID OR Shape ID
      *
      * @memberof RegionsInfo
@@ -454,6 +467,9 @@ export default class RegionsInfo  {
         this.resetRegionsInfo();
         this.is_pending = true;
 
+        // If we don't have all ROI IDs in hand yet, load them for page indexing
+        this.requestAllRoiIdsForPageIndex();
+
         // send request
         $.ajax({
             url : this.getRegionsUrl(),
@@ -469,6 +485,25 @@ export default class RegionsInfo  {
             }, error : (error) => {
                 this.is_pending = false;
                 console.error("Failed to load Rois: " + error)
+            }
+        });
+    }
+
+    /**
+     * Load all the ROI IDs for the image so that we can look up which page
+     * a particular ROI is on.
+     */
+    requestAllRoiIdsForPageIndex() {
+        // check if already loaded
+        if (this.all_roi_ids) return;
+        $.ajax({
+            url : this.image_info.context.server +
+                  this.image_info.context.getPrefixedURI(IVIEWER) +
+                  '/all_roi_ids/' + this.image_info.image_id + '/',
+            success : (response) => {
+                this.all_roi_ids = response.data;
+            }, error : (error) => {
+                console.error("Failed to load AllRoiIdsForPageIndex: " + error)
             }
         });
     }

@@ -46,6 +46,8 @@ export const IMAGE_VIEWPORT_LINK = "IMAGE_VIEWPORT_LINK";
 export const REGIONS_SET_PROPERTY = "REGIONS_SET_PROPERTY";
 /** whenever a region property change is received, e.g. selection, modification */
 export const REGIONS_PROPERTY_CHANGED = "REGIONS_PROPERTY_CHANGED";
+/** sometimes handle property change differently from Tiled Regions e.g. selection */
+export const TILED_REGIONS_PROPERTY_CHANGED = "TILED_REGIONS_PROPERTY_CHANGED";
 /** whenever a new shape has been drawn */
 export const REGIONS_DRAW_SHAPE = "REGIONS_DRAW_SHAPE";
 /** whenever a new shape has been generated/drawn */
