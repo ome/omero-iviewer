@@ -19,6 +19,7 @@
 import TileGrid from 'ol/tilegrid/TileGrid.js';
 import VectorTileSource from 'ol/source/VectorTile.js';
 import {getTopLeft} from 'ol/extent';
+import Hover from '../interaction/Hover';
 
 import {isArray,
     featuresAtCoords,
@@ -117,6 +118,11 @@ class OmeVectorTileSource extends VectorTileSource {
          */
         this.viewer_ = viewerReference;
 
+        /**
+         * ID of shape we are hovering over, or null if none.
+         */
+        this.hoverId = null;
+
         // Add Select behaviour (single click)
         let map = this.viewer_.viewer_;
         map.on('click', (event) => {
@@ -131,6 +137,9 @@ class OmeVectorTileSource extends VectorTileSource {
             var fid = feature.getId();
             this.viewer_.selectShapes([fid], true, true);
           });
+
+        this.hover_ = new Hover(this);
+        map.addInteraction(this.hover_);
     }
 
     /**
@@ -245,6 +254,23 @@ class OmeVectorTileSource extends VectorTileSource {
     isFeatureVisible(feature) {
         let roi_shape_id = feature.getId();
         return !this.hiddenFeatures_[roi_shape_id];
+    }
+
+    /**
+     * Sets the ID of a shape that we are hovering over, to update its style
+     *
+     * @param {string} shapeId shapeId 'roi:shape'
+     */
+    setHoverId(shapeId) {
+        this.hoverId = shapeId;
+        this.changed();
+    }
+
+    /**
+     * Gets the current ID of a shape we are hovering over or null.
+     */
+    getHoverId() {
+        return this.hoverId;
     }
 }
 

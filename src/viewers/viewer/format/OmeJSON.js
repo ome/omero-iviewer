@@ -59,7 +59,7 @@ class OmeJSON extends JSONFeature {
             let feature = createFeatureFromShape(shape, this.regions);
             // Feature ID is 'roiId:shapeId'
             feature.setId(shape['roi']['@id'] + ":" + shape['@id']);
-            feature['selected'] = true;
+            feature['selected'] = false;
             return feature;
         });
 
