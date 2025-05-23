@@ -64,6 +64,12 @@
                         </span>
                         <a href="#">Show Area/Length</a>
                     </li>
+                    <li click.delegate="showColumn('roi_tags')">
+                        <span class="show_roi_tags">
+                            ${active_column === 'roi_tags' ? '&#10003;' : '&nbsp;'}
+                        </span>
+                        <a href="#">Show ROI Tags</a>
+                    </li>
                 </ul>
             </div>
             <div class="regions-table-col roi-toggle">
@@ -100,6 +106,10 @@
                     Length (${regions_info.image_info.image_pixels_size.symbol_x ||
                             'px'})
                 </div>
+            <div class="regions-table-col"
+                show.bind="active_column === 'roi_tags'">
+                ROI Tags
+            </div>
         </div>
 
         <div class="disabled-color loading-text"
@@ -183,6 +193,17 @@
                              show.bind="active_column === 'measurements'"
                              title="${shape.Length && shape.Length > 0 ? shape.Length : ''}">
                                 ${shape.Length && shape.Length > 0 ? shape.Length : ''}
+                        </div>
+                        <div class="regions-table-col roi-tags"
+                             show.bind="active_column === 'roi_tags'">
+                            <input style="width: 40px" focus.trigger="loadRois(roi_id)" keyup.trigger="handleAddTag($event, roi_id)" placeholder="Add Tag ID" type="text"/>
+                            <span show.bind="roi_tags_loaded">
+                                <span if.bind="roi_tags[roi_id]">
+                                    <template repeat.for="t of roi_tags[roi_id]">
+                                        <div title="Tag: ${t.id}" style="border: solid #ddd 1px; background: #eee; border-radius: 5px; font-size:10px; padding: 2px; display:inline-block">${t.textValue}</div>
+                                    </template>
+                                </span>
+                            </span>
                         </div>
                     </div>
                 </template>

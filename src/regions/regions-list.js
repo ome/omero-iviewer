@@ -20,6 +20,7 @@
 import Context from '../app/context';
 import Misc from '../utils/misc';
 import Ui from '../utils/ui';
+import {sendRequest} from '../viewers/viewer/utils/Net';
 import {inject,
     customElement,
     computedFrom,
@@ -59,6 +60,15 @@ export default class RegionsList extends EventSubscriber {
      * @type {number}
      */
      active_column = 'comments';
+
+     /**
+      * Dict of {roiid:{'tags':['id':1, 'textValue':'myTag']}}
+      * Loaded when the active_column is set to "roi_tags"
+      * @memberof RegionsList
+      * @type {Object}
+      */
+     roi_tags = {};
+     roi_tags_loaded = false;
 
      /**
       * selected row (id) for multi-selection with shift
@@ -590,9 +600,14 @@ export default class RegionsList extends EventSubscriber {
      * @memberof RegionsList
      */
     showColumn(which) {
+        console.log("showColumn", which)
         if (typeof which !== 'string' || which.length === 0 ||
             which === this.active_column) return;
         this.active_column = which;
+        // console.log('this.active_column == "roi_ids"',this.active_column, this.active_column == "roi_ids")
+        if (this.active_column == "roi_tags") {
+            this.loadRoiTags();
+        }
     }
 
     /**
@@ -622,5 +637,69 @@ export default class RegionsList extends EventSubscriber {
     unbind() {
         this.unsubscribe();
         this.unregisterObservers();
+    }
+
+    // load Tags for an ROI, or ALL ROIs if roi_id is not provided
+    loadRoiTags(roi_id) {
+        let roi_ids = [roi_id];
+        if (!roi_id) {
+            roi_ids = [];
+            this.regions_info.data.forEach(roi => roi_ids.push(roi.id));
+        }
+        // TODO: We don't want to load Tags for too many ROIs - could do batches?!
+        if (roi_ids.length > 500) {
+            console.log(`Too many ROIs (${roi_ids.length}) to load Tags!`)
+            return;
+        }
+
+        // on focus, we load existing Tags
+        var properties = {
+            "server" : this.context.server,
+            "uri" : "/iviewer/link_annotations/?roi=" + roi_ids.join("&roi="),
+            "method" : 'GET',
+            "headers" : {"X-CSRFToken" : Misc.getCookie("csrftoken")},
+            "success": (rsp)=>{
+                console.log("success", rsp);
+                let rsp_json = JSON.parse(rsp);
+                console.log('rsp_json', rsp_json);
+                Object.entries(rsp_json).forEach((id_tags) => {
+                    let roi_id = id_tags[0];
+                    let data = id_tags[1];
+                    this.roi_tags[roi_id] = data.tags;
+                });   
+                this.roi_tags_loaded = true;
+            },
+        };
+        sendRequest(properties);
+    }
+
+    // KeyUp handling on <input> If Enter is pressed, add Tag to ROI (by Tag ID)
+    handleAddTag(event, roi_id) {
+        if (event.key == "Enter") {
+            let ann_ids = event.target.value.split(",").map(id => id.trim());
+            let server = this.context.server;
+            // let url = this.context.getPrefixedURI("PLUGIN_PREFIX") +
+            let url = "/iviewer/link_annotations/";
+            let cookie = Misc.getCookie("csrftoken");
+            let postContent = {
+                "annotations" : ann_ids,
+                "rois" : [roi_id]
+            }
+
+            var properties = {
+                "content" : JSON.stringify(postContent),
+                "server" : server,
+                "uri" : url,
+                "method" : 'POST',
+                "headers" : {"X-CSRFToken" : cookie},
+                "jsonp" : false,
+                "success": (rsp)=>{
+                    console.log("success", rsp);
+                    // Re-load Tags for this ROI
+                    this.loadRoiTags(roi_id);
+                },
+            };
+            sendRequest(properties);
+        }
     }
 }
