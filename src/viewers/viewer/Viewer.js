@@ -30,6 +30,8 @@ import Tile from 'ol/layer/Tile';
 import Vector from 'ol/layer/Vector';
 import View from 'ol/View';
 import OlMap from 'ol/Map';
+import TileState from 'ol/TileState';
+import EventType from 'ol/events/EventType';
 import {intersects, getCenter} from 'ol/extent';
 import {noModifierKeys, primaryAction} from 'ol/events/condition';
 
@@ -590,14 +592,117 @@ class Viewer extends OlObject {
         controls.push(defaultConts[contr]['ref']);
         this.viewerState_[contr] = defaultConts[contr];
         }
-    
+
+        class Debug extends OmeroImage {
+            constructor(opts) {
+                super(opts);
+                this.tileLoadCounts = {};
+            }
+
+
+
+            createTile_(z, x, y, pixelRatio, projection, key) {
+                console.log("createTile: z, x, y, pixelRatio, projection, key", z, x, y, pixelRatio, projection, key);
+                let self = this;
+
+                this.tileLoadFunction = function(tile, src) {
+
+                    console.log('tileLoadFunction', self.tileLoadCounts);
+
+                    var coords = src.split("tile=")[1];
+                    coords = coords.split("&c=")[0];
+                    let key = coords;
+
+                    console.log(key, self.tileLoadCounts[key]);
+
+                    // Currently, we never see the same tile being loaded twice! tileLoadFunction() only called once per tile?
+                    // Existing tile key is NEVER found in self.tileLoadCounts...
+                    // so it's not working for showing which tile we have viewed before
+                    if (self.tileLoadCounts[key]) {
+                        self.tileLoadCounts[key] = self.tileLoadCounts[key] + 1;
+                    } else {
+                        self.tileLoadCounts[key] = 1
+                    }
+
+                    // coords: level, x, y, w, h
+                    let levelXYWH = coords.split(",")
+                    coords = `Level: ${levelXYWH[0]}, x: ${levelXYWH[1]}, y: ${levelXYWH[2]} count: ${self.tileLoadCounts[key]}`;
+                    console.log(coords)
+                    var canvas = document.createElement("canvas");
+                    canvas.width = 256;
+                    canvas.height = 256;
+                    var context = canvas.getContext("2d");
+                    context.strokeStyle = "yellow";
+                    context.clearRect(0.5, 0.5, canvas.width + 0.5, canvas.height + 0.5);
+                    context.strokeRect(0.5, 0.5, canvas.width + 0.5, canvas.height + 0.5);
+                    context.fillStyle = "yellow";
+                    context.textAlign = "center";
+                    context.textBaseline = "middle";
+                    context.font = "24px sans-serif";
+                    context.lineWidth = 2;
+                    context.fillText(coords, canvas.width / 2, canvas.height / 2, canvas.width);
+                    tile.getImage().src = canvas.toDataURL();
+                }
+        
+                var tileCoord = [z, x, y];
+                var urlTileCoord =
+                    this.getTileCoordForTileUrlFunction(tileCoord, projection);
+        
+                var tileUrl =
+                    urlTileCoord ?
+                        this.tileUrlFunction(urlTileCoord, pixelRatio, projection) :
+                        undefined;
+        
+                var tile =
+                    new this.tileClass(
+                        tileCoord,
+                        tileUrl !== undefined ?
+                            TileState.IDLE : TileState.EMPTY,
+                        tileUrl !== undefined ? tileUrl : '',
+                        this.crossOrigin, this.tileLoadFunction, this.tileOptions);
+        
+                tile.key = key;
+                tile.source = this;
+        
+                listen(tile, EventType.CHANGE, this.handleTileChange, this);
+        
+                return tile;
+            }
+        }
+
+        // We have sub-classed OmeroImage to add a tileLoadFunction to the tileLoadFunction
+        // So we create it with all the same arguments for now...
+        var debugSource = new Debug({
+            server : this.getServer(),
+            uri : this.getPrefixedURI(WEBGATEWAY),
+            image: this.id_,
+            width: dims['width'],
+            height: dims['height'],
+            size_t: dims.t,
+            plane: initialPlane,
+            time: initialTime,
+            channels: channels,
+            resolutions: zoom > 1 ? zoomLevelScaling : [1],
+            img_proj:  parsedInitialProjection,
+            img_model:  initialModel,
+            tiled: isTiled,
+            tile_size: isTiled && this.supportsOmeroServerVersion("5.4.4") ?
+                    DEFAULT_TILE_DIMS :
+                        this.image_info_['tile_size'] ?
+                            this.image_info_['tile_size'] : null
+        }
+        );
 
         // finally construct the open layers map object
         this.viewer_ = new OlMap({
             logo: false,
             controls: controls,
             interactions: interactions,
-            layers: [new Tile({source: source})],
+            layers: [new Tile({
+                source: source,
+              }), new Tile({
+                source: debugSource,
+              })],
             target: this.container_,
             view: view
         });
