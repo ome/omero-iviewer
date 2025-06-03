@@ -30,7 +30,7 @@ import {resizable} from 'jquery-ui/ui/widgets/resizable';
 import {
     IMAGE_CONFIG_RELOAD, IVIEWER, PLUGIN_PREFIX, PROJECTION,
     REGIONS_DRAWING_MODE, RENDER_STATUS, VIEWER_ELEMENT_PREFIX,
-    REQUEST_PARAMS
+    REGIONS_PAGE_SIZE, REQUEST_PARAMS
 } from '../utils/constants';
 import {
     IMAGE_CANVAS_DATA, IMAGE_DIMENSION_CHANGE, IMAGE_DIMENSION_PLAY,
@@ -39,7 +39,8 @@ import {
     IMAGE_VIEWER_RESIZE, IMAGE_VIEWPORT_CAPTURE, IMAGE_VIEWPORT_LINK,
     REGIONS_CHANGE_MODES, REGIONS_COPY_SHAPES, REGIONS_DRAW_SHAPE,
     REGIONS_GENERATE_SHAPES, REGIONS_HISTORY_ACTION, REGIONS_HISTORY_ENTRY,
-    REGIONS_MODIFY_SHAPES, REGIONS_PROPERTY_CHANGED, REGIONS_SET_PROPERTY,
+    REGIONS_MODIFY_SHAPES, REGIONS_PROPERTY_CHANGED,
+    TILED_REGIONS_PROPERTY_CHANGED, REGIONS_SET_PROPERTY,
     REGIONS_SHOW_COMMENTS, REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES,
     VIEWER_IMAGE_SETTINGS, VIEWER_PROJECTIONS_SYNC, VIEWER_SET_SYNC_GROUP,
     ENABLE_SHAPE_POPUP, TILE_LOAD_ERROR, RENDER_COMPLETE,
@@ -121,6 +122,8 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.changeImageSettings(params)],
         [REGIONS_PROPERTY_CHANGED,
             (params={}) => this.getRegionsPropertyChange(params)],
+        [TILED_REGIONS_PROPERTY_CHANGED, 
+            (params={}) => this.getTiledRegionsPropertyChange(params)],
         [REGIONS_SET_PROPERTY,
             (params={}) => this.setRegionsProperty(params)],
         [VIEWER_IMAGE_SETTINGS,
@@ -648,6 +651,32 @@ export default class Ol3Viewer extends EventSubscriber {
     }
 
     /**
+     * Handles regions property changes (e.g. selection) received from the
+     * TiledRegions layer/source of the viewer, where we may not have the ROI
+     * in hand on the current page. If we don't then this will load the
+     * correct page for the first ROI.
+     * 
+     * @param {Object} params the event notification parameters
+     */
+    getTiledRegionsPropertyChange(params = {}) {
+        let shape = params.shapes ? params.shapes[0] : undefined;
+        if (!shape) return;
+
+        // check if we have actually loaded the shape...
+        let shape_info = this.image_config.regions_info.getShape(shape);
+        // If we have shape on the current page of ROIs, carry on as normal
+        if (shape_info) {
+            this.getRegionsPropertyChange(params);
+        } else {
+            // Otherwise, load the page the ROI is on:
+            // TODO: we need a callback or to remember property change to apply
+            // it once the ROIs have loaded.
+            let roi_id = parseInt(shape.split(':')[0]);
+            this.image_config.regions_info.loadRoisPageContainingRoi(roi_id);
+        }
+    }
+
+    /**
      * Handles regions property changes received from the ol3 viewer,e.g.
      * selection, modification, deletetion
      *
@@ -850,13 +879,13 @@ export default class Ol3Viewer extends EventSubscriber {
             } else shapeSelection = null;
         }
         let delay = 0;
+        let shape;
         if (shapeSelection) {
             let viewerT = this.viewer.getDimensionIndex('t');
             let viewerZ = this.viewer.getDimensionIndex('z');
             let viewerC = this.viewer.getDimensionIndex('c');
             // Update this.image_config.image_info to load a new Z/T plane...
-            let shape =
-                this.image_config.regions_info.getShape(shapeSelection);
+            shape = this.image_config.regions_info.getShape(shapeSelection);
             let correctPlane = true;
             let shapeT = typeof shape.TheT === 'number' ? shape.TheT : -1;
             if (shapeT !== -1 && shapeT !== viewerT) {
@@ -889,7 +918,7 @@ export default class Ol3Viewer extends EventSubscriber {
             this.abortDrawing();
             this.viewer.selectShapes(
                 params.shapes, params.value, params.clear,
-                params.center ? shapeSelection : null, params.zoomToShape);
+                params.center ? shape : null, params.zoomToShape);
             // If we've just selected a bunch of shapes, hide the ShapeEditPopup
             if (params.shapes.length > 1) {
                 this.viewer.viewer_.getOverlays().forEach(o => {
@@ -948,7 +977,14 @@ export default class Ol3Viewer extends EventSubscriber {
             !this.image_config.regions_info.ready ||
             !Misc.isArray(this.image_config.regions_info.tmp_data)) return;
 
-        this.viewer.addRegions(this.image_config.regions_info.tmp_data);
+        // If ROI count is greater than 1 page (we don't have all ROIs in hand)
+        // then we use Tiled Regions
+        if (this.image_config.image_info.roi_count > REGIONS_PAGE_SIZE) {
+            this.viewer.addTiledRegions();
+        } else {
+            this.viewer.addRegions(this.image_config.regions_info.tmp_data);
+        }
+
         this.changeRegionsModes(
             { modes: this.image_config.regions_info.regions_modes});
         this.viewer.showShapeComments(

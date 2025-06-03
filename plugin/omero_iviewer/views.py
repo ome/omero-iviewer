@@ -38,6 +38,7 @@ from omero.rtypes import rint, rlong, unwrap
 from omero_sys_ParametersI import ParametersI
 import omero.util.pixelstypetopython as pixelstypetopython
 from omeroweb.webclient.show import get_image_roi_id_for_shape
+from omeroweb.webgateway.views import perform_table_query
 
 from .version import __version__
 from omero_version import omero_version
@@ -759,6 +760,93 @@ def well_images(request, conn=None, **kwargs):
     except Exception as get_well_images_exception:
         return JsonResponse({"error": repr(get_well_images_exception)})
 
+
+@login_required()
+def shapes_by_region(request, image_id, the_z, the_t, conn=None, **kwargs):
+    """
+    Get Shapes by region ?tile=zoom,col,row
+
+    NB: This is a hack that returns shapes (e.g. Polygons) within an image
+    region defined by ?tile=zoom,col,row.
+    This hack relies on a previous script that has created a Point shape at the
+    centre of each Polygon, with the Point label set to the ID of the Polygon.
+    This allows us to find all the points within a region, get the text value
+    (Polygon ID) from each one and use this to retrieve the Polygons
+    or other shapes.
+    Currently we only support zoom of 100% and use the default tile size
+    and row + col to find the region.
+    """
+
+    # find region from tile
+    tile = request.GET.get('tile', None)
+
+    # Assume fully zoomed in to 100%. TODO: support other zoom levels?
+    zoom_col_row_w_h = tile.split(",")
+    if len(zoom_col_row_w_h) < 5:
+        return JsonResponse({"error": "Specify tile as ?tile=zm,col,row,w,h"})
+    if zoom_col_row_w_h[0] != "0":
+        return JsonResponse({"error": "Only support '0' zoom level"})
+
+    col = int(zoom_col_row_w_h[1])
+    row = int(zoom_col_row_w_h[2])
+    tile_w = int(zoom_col_row_w_h[3])
+    tile_h = int(zoom_col_row_w_h[4])
+
+    x_min = col * tile_w
+    y_min = row * tile_h
+    x_max = x_min + tile_w
+    y_max = y_min + tile_h
+
+    # Find OMERO.table with namespace "omero.shape.boundingbox.coords"
+    image = conn.getObject("Image", image_id)
+    fileid = None
+    for ann in image.listAnnotations():
+        if ann.getNs() == "omero.shape.boundingbox.coords":
+            fileid = ann.getFile().getId()
+            break
+    if fileid is None:
+        return JsonResponse({"error": "Found no OMERO.table with ns: omero.shape.boundingbox.coords"})
+
+    # Look for intersecting bounding boxes
+    query = f"(X2>{x_min})&(X1<{x_max})&(Y2>{y_min})&(Y1<{y_max})"
+    col_names = ["shape_id"]
+    rsp_json = perform_table_query(conn, fileid, query, col_names, check_max_rows=False)
+
+    shape_ids = [r[0] for r in rsp_json['data']["rows"]]
+
+    marshalled = []
+    if len(shape_ids) > 0:
+
+        # Now get the shapes by ID
+        params = ParametersI()
+        params.addIds(shape_ids)
+        shapes = conn.getQueryService().findAllByQuery(
+            "select shape from Shape shape where shape.id in (:ids)", params, conn.SERVICE_OPTS)
+
+        for shape in shapes:
+            encoder = omero_marshal.get_encoder(shape.__class__)
+            if encoder is not None:
+                m = encoder.encode(shape)
+                # Need to know ROI ID - not supported by omero-marshal
+                m["roi"] = {'@id': shape.roi.id.val}
+                marshalled.append(m)
+
+    return JsonResponse({"data": marshalled})
+
+@login_required()
+def all_roi_ids(request, image_id, conn=None, **kwargs):
+    """
+    Return all the ROI IDs for an Image, sorted by ID.
+
+    This allows iviewer to know which page of ROIs a particular ROI is on.
+    """
+    qs = conn.getQueryService()
+    params = omero.sys.ParametersI()
+    params.addId(image_id)
+    query = """select roi.id from Roi roi where roi.image.id = :id
+        order by roi.id"""
+    iids = [i[0].val for i in qs.projection(query, params)]
+    return JsonResponse({"data": iids})
 
 @login_required()
 def get_intensity(request, conn=None, **kwargs):

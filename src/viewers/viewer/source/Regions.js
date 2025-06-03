@@ -297,6 +297,7 @@ class Regions extends Vector {
         var translateMode = false;
         var modifyMode = false;
         var drawMode = false;
+        console.log('setModes....');
 
         // empty present modes, remembering old ones for draw reset
         var oldModes = this.present_modes_.slice();
@@ -678,6 +679,61 @@ class Regions extends Vector {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Get the geometry of the feature specified by ID
+     *
+     * @param {string} shape_id The shapeId (takes form of shapeId:roiId)
+     */
+    getGeometry(shape_id) {
+        if (this.idIndex_[shape_id]) {
+            return this.idIndex_[shape_id].getGeometry();
+        }
+    }
+
+    /**
+     * Return True if this feature is selected
+     *
+     * @param {ol.Feature} feature The feature
+     */
+    isFeatureSelected(feature) {
+        return feature['selected']
+    }
+
+    /**
+     * Return True if this feature is visible
+     *
+     * @param {ol.Feature} feature The feature
+     */
+    isFeatureVisible(feature) {
+        return typeof(feature['visible']) !== 'boolean' || feature['visible'];
+    }
+
+    /**
+     * Marks given shapes as selected, clearing any previously selected if clear flag
+     * is set. Optionally the view centers on a given shape.
+     *
+     * @param {Array<string>} roi_shape_ids list in roi_id:shape_id notation
+     * @param {boolean} selected flag whether we should (de)select the rois
+     * @param {boolean} clear flag whether we should clear existing selection beforehand
+     * @param {string|null} center the id of the shape to center on or null
+     */
+    selectShapes(roi_shape_ids, selected, clear) {
+        if (this.select_ === null) return;
+
+        if (typeof clear === 'boolean' && clear) this.select_.clearSelection();
+        this.setProperty(roi_shape_ids, "selected", selected);
+    }
+
+    /**
+     * Toggles the visibility of the regions.
+     *
+     * @param {boolean} visible visibitily flag (true for visible)
+     * @param {Array<string>} roi_shape_ids a list of string ids of the form: roi_id:shape_id
+     */
+    setRegionsVisibility(visible, roi_shape_ids) {
+        this.setProperty(roi_shape_ids, "visible", visible);
     }
 
     /**
