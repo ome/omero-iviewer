@@ -77,9 +77,9 @@ Z-Projection (maximum intensity or normal)::
 
 The Z and/or T plane, X/Y center position and zoom can be defined by::
 
-    ?z=10&t=20          # can use z or t on their own
-    ?x=500&y=400        # need to specify center with x AND y
-    ?zm=100             # percent
+    ?z=10&t=20          # Can use z or t on their own. First plane is 0
+    ?x=500&y=400        # Need to specify center with x AND y
+    ?zm=100             # Percent
 
 You can set the left and right panels to be initially collapsed::
 
