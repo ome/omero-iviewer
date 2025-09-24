@@ -784,7 +784,7 @@ class Viewer extends OlObject {
         }
         this.tried_regions_ = false;
         this.tried_regions_data_ = null;
-        if (this.regions_ instanceof Regions) return;
+        // if (this.regions_ instanceof Regions) return;
 
         var options = {};
         if (data) options['data'] = data;
