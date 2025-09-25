@@ -118,6 +118,9 @@ export default class RegionsList extends EventSubscriber {
             console.log(event, event.data.id);
             this.selectShape(event.data.id, true, undefined, false);
         };
+
+        // broadcast shape selection changes
+        this.iviewer_bc = new BroadcastChannel("iviewer_shape_selection");
     }
 
     /**
@@ -463,6 +466,13 @@ export default class RegionsList extends EventSubscriber {
                         this.selected_row =
                             this.regions_info.selected_shapes[selLen-2];
             }
+        }
+
+        // If event (came from a click, not BroadcastChannel), then
+        // we broadcast the shape selection to other windows
+        if (typeof event === 'object' && event !== undefined) {
+            console.log("Broadcasting 'iviewer_shape_selection':", ids);
+            this.iviewer_bc.postMessage(ids);
         }
 
         this.context.publish(
