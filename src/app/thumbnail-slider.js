@@ -158,6 +158,17 @@ export default class ThumbnailSlider extends EventSubscriber {
         this.webclient_prefix = this.context.getPrefixedURI(WEBCLIENT);
         this.webgateway_prefix = this.context.getPrefixedURI(WEBGATEWAY);
 
+        // listen for broadcast of image selection
+        console.log("Listening for 'image_selected' broadcasts");
+        const bc = new BroadcastChannel("image_selected");
+        bc.onmessage = (event) => {
+            if (typeof event.data === 'number' && event.data > 0) {
+                this.context.onClicks(event.data);
+            }
+        };
+
+
+        // broadcast channel for image selection changes
         this.image_bc = new BroadcastChannel("iviewer_image_selected");
     }
 
