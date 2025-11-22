@@ -602,6 +602,38 @@ class Viewer extends OlObject {
             view: view
         });
 
+        // listen for Map pan events... and broadcast them
+        const bc = new BroadcastChannel('viewer.pan');
+        this.viewer_.on('moveend', function(evt) {
+            console.log("Map moved END", evt);
+            // top-left is 0,0 - y is negative downwards
+            // console.log("center x,y", evt.frameState.viewState.center)
+            // console.log("size", evt.frameState.size)
+            let extent = evt.frameState.extent;
+            let [minX, minY, maxX, maxY] = extent;
+            console.log("extent", {minX, minY, maxX, maxY})
+            bc.postMessage({
+                imageId: this.id_,
+                extent: {minX, minY: -minY, maxX, maxY: -maxY},
+                size: evt.frameState.size,
+            });
+        }.bind(this));
+
+        // listen for BroadcastChannel pan messages
+        const bc_in = new BroadcastChannel('request.viewer.pan');
+        bc_in.onmessage = function(ev) {
+          console.log("Received pan request", ev.data);
+          if (ev.data.imageId === this.id_) {
+            let center = ev.data.center;
+            // this.viewer_.getView().setCenter([center.x, -center.y]);
+            this.viewer_.getView().animate({
+              center: [center.x, -center.y],
+              duration: 2000,
+            });
+          }
+        }.bind(this);
+
+
         // enable bird's eye view
         var birdsEyeOptions = {
             'url': this.getPrefixedURI(WEBGATEWAY) +
