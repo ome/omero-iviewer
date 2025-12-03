@@ -1,4 +1,5 @@
 #!/bin/bash
+source /infra/utils
 
 set -e
 set -u
