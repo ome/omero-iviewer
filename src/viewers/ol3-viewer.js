@@ -355,7 +355,8 @@ export default class Ol3Viewer extends EventSubscriber {
                     this.image_config.regions_info, 'ready').subscribe(
                         (newValue, oldValue) => {
                             if (this.viewer === null) return;
-                            this.viewer.removeRegions();
+                            // Don't remove existing layers
+                            // this.viewer.removeRegions();
                             if (newValue) {
                                 this.initRegions();
                                 delete this.image_config.regions_info.tmp_data;
