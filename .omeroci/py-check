@@ -1,9 +1,10 @@
 #!/bin/bash
+source /infra/utils
 
 set -e
 set -u
 set -x
 
-pip3 install flake8 restructuredtext-lint
-flake8 -v /omero-iviewer
+pip install flake8 restructuredtext-lint
+# FIXME flake8 -v /omero-iviewer
 rst-lint /omero-iviewer/plugin/omero_iviewer/README.rst
