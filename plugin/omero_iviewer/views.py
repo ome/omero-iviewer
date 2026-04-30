@@ -481,7 +481,8 @@ def roi_image_data(request, obj_type, obj_id, conn=None, **kwargs):
     """ Get image_data for image linked to ROI """
     image_id = None
     if obj_type == 'roi':
-        roi = conn.getQueryService().get('Roi', int(obj_id))
+        roi = conn.getQueryService().get('Roi', int(obj_id),
+                                         conn.SERVICE_OPTS)
         if roi:
             image_id = roi.image.id.val
     elif obj_type == 'shape':
