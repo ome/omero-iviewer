@@ -23,9 +23,11 @@ import JSZip from '../../node_modules/jszip/dist/jszip';
 import * as TextEncoding from "../../node_modules/text-encoding";
 import Misc from '../utils/misc';
 import Ui from '../utils/ui';
+import { exportViewersAsFigureJson } from '../utils/figure';
 import {IMAGE_VIEWPORT_CAPTURE} from '../events/events';
 import {
-    APP_TITLE, CSV_LINE_BREAK, INITIAL_TYPES, IVIEWER, PROJECTION, WEBCLIENT
+    APP_TITLE, CSV_LINE_BREAK, INITIAL_TYPES, IVIEWER, PROJECTION,
+    WEBCLIENT, OMERO_FIGURE
 } from '../utils/constants';
 import { IMAGE_VIEWER_RESIZE } from '../events/events';
 
@@ -513,5 +515,46 @@ export class Header {
 
             Ui.showModalMessage(msg, 'Close');
         }
+    }
+
+    /**
+     * Check if OMERO.figure is installed
+     *
+     * @return {Boolean}
+     * @memberof Header
+     */
+    omeroFigureIsInstalled() {
+        return Boolean(this.context.getPrefixedURI(OMERO_FIGURE));
+    }
+
+    /**
+     * Save the current layout of viewers as an OMERO.figure file
+     *
+     * @memberof Header
+     */
+    saveAsFigure() {
+        let figureUrl = this.context.server + this.context.getPrefixedURI(OMERO_FIGURE);
+        if (!figureUrl) {
+            console.log("OMERO_FIGURE url not found. OMERO.figure not installed.");
+            return;
+        }
+
+        const figureName = prompt("Enter Figure name");
+        if (!figureName) {
+            return;
+        }
+
+        let figureJSON = exportViewersAsFigureJson(figureName);
+        let figureJSONstr = JSON.stringify(figureJSON);
+
+        // Save
+        $.post(figureUrl + "/save_web_figure/", {figureJSON: figureJSONstr})
+            .done(function( data ) {
+                // let fileId = +data;
+                let html = `Figure created: ID ${data}.<br>
+                    <a target="_blank" href="${figureUrl}/file/${data}/">Open in new tab</a>.`;
+
+                Ui.showModalMessage(html, "OK");
+            });
     }
 }
