@@ -489,6 +489,10 @@ export default class Ol3Viewer extends EventSubscriber {
         // Add Key Handlers for panning the view with arrow keys
         const vv = this.viewer.viewer_;
         function panView(dx, dy) {
+            // Ignore Arrows if slider handle has focus
+            if (document.activeElement.classList.contains("ui-slider-handle")) {
+                return;
+            }
             let [cx, cy] = vv.getView().getCenter();
             let [minX, minY, maxX, maxY] = vv.getView().calculateExtent();
             vv.getView().animate({
