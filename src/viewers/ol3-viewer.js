@@ -485,6 +485,27 @@ export default class Ol3Viewer extends EventSubscriber {
                      container: this.container
                  });
         delete this.image_config.image_info.tmp_data;
+
+        // Add Key Handlers for panning the view with arrow keys
+        const vv = this.viewer.viewer_;
+        function panView(dx, dy) {
+            // Ignore Arrows if slider handle has focus
+            if (document.activeElement.classList.contains("ui-slider-handle")) {
+                return;
+            }
+            let [cx, cy] = vv.getView().getCenter();
+            let [minX, minY, maxX, maxY] = vv.getView().calculateExtent();
+            vv.getView().animate({
+              center: [cx + (maxX - minX) * dx, cy + (maxY - minY) * dy],
+              duration: 1000,
+            });
+        }
+        Ui.registerKeyHandlers(this.context,
+            [{key: 'ArrowLeft', func: () => panView(-0.9, 0), ctrl: false},
+             {key: 'ArrowRight', func: () => panView(0.9, 0), ctrl: false},
+             {key: 'ArrowUp', func: () => panView(0, 0.9), ctrl: false},
+             {key: 'ArrowDown', func: () => panView(0, -0.9), ctrl: false}],
+            "global", this);
         
         // hide controls for mdi when more than 1 image configs
         if (this.context.useMDI && this.context.image_configs.size > 1)
