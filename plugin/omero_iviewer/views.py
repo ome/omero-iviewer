@@ -15,8 +15,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from io import BytesIO
+from PIL import Image
 from django.shortcuts import render
-from django.http import JsonResponse, Http404
+from django.http import JsonResponse, Http404, HttpResponse
 from django.conf import settings
 from django.urls import reverse, NoReverseMatch
 
@@ -38,6 +40,8 @@ from omero.rtypes import rint, rlong, unwrap
 from omero_sys_ParametersI import ParametersI
 import omero.util.pixelstypetopython as pixelstypetopython
 from omeroweb.webclient.show import get_image_roi_id_for_shape
+from datetime import datetime
+import numpy as np
 
 from .version import __version__
 from omero_version import omero_version
@@ -924,3 +928,46 @@ def shape_stats(request, conn=None, **kwargs):
         return JsonResponse({"error": api_exception.message})
     except Exception as stats_call_exception:
         return JsonResponse({"error": repr(stats_call_exception)})
+
+@login_required()
+def render_labels(request, iid, z=None, t=None, conn=None, **kwargs):
+
+    img = conn.getObject("Image", iid)
+    # get the first channel as np array
+    arr = img.getPrimaryPixels().getPlane(theZ=int(z), theC=0, theT=int(t))
+    # find smallest non-zero value in the array
+    a = np.array(arr)
+    min_nonzero = np.min(a[np.nonzero(a)])
+    max_value = np.max(a)
+    print("min_nonzero:", min_nonzero, "max_value:", max_value)
+
+    rgba_array = np.zeros((img.getSizeY(), img.getSizeX(), 4), dtype=np.uint8)
+    # create a simple LUT mapping each label to a color
+    try:
+        import distinctipy2
+        label_colors = distinctipy2.get_colors(max_value - min_nonzero + 1)
+    except ImportError:
+        # fallback to random colors
+        import random
+        random.seed(0)
+        label_colors = []
+        for _ in range(min_nonzero, max_value + 1):
+            label_colors.append([random.random(), random.random(),
+                                 random.random()])
+    lut = {}
+
+    starttime = datetime.now()
+    for val in range(min_nonzero, max_value + 1):
+        rgb = [int(c * 255) for c in label_colors[val - min_nonzero]]
+        lut[val] = (rgb[0], rgb[1], rgb[2])
+        mask = a == val
+        rgba_array[mask] = [rgb[0], rgb[1], rgb[2], 255]
+    # convert rgba_array to PNG
+    print("Label rendering took:", datetime.now() - starttime)
+    rgba_image = Image.fromarray(rgba_array, mode="RGBA")
+
+    output = BytesIO()
+    rgba_image.save(output, "png")
+    png_data = output.getvalue()
+    output.close()
+    return HttpResponse(png_data, content_type="image/png")

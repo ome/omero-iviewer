@@ -527,6 +527,35 @@ class Viewer extends OlObject {
         });
         source.changeChannelRange(initialChannels, false);
 
+        // check for ?labelimage=123 query parameter...
+        var seg_source;
+        const params1 = new URLSearchParams(window.location.search);
+        const labelImageId = params1.get('labelimage');
+        if (labelImageId && !isNaN(parseInt(labelImageId))) {
+          // NB: assume the same dims etc as the main image for now...
+          seg_source = new OmeroImage({
+            // opaque: true,
+            label_image: true,
+            server : this.getServer(),
+            uri : this.getPrefixedURI(WEBGATEWAY),
+            image: parseInt(labelImageId),
+            width: dims['width'],
+            height: dims['height'],
+            size_t: dims.t,
+            plane: initialPlane,
+            time: initialTime,
+            channels: channels,
+            resolutions: zoom > 1 ? zoomLevelScaling : [1],
+            img_proj:  parsedInitialProjection,
+            img_model:  initialModel,
+            tiled: isTiled,
+            tile_size: isTiled && this.supportsOmeroServerVersion("5.4.4") ?
+                    DEFAULT_TILE_DIMS :
+                        this.image_info_['tile_size'] ?
+                            this.image_info_['tile_size'] : null
+          });
+        };
+
         var defaultZoom = zoom > 1 ? zoomLevelScaling[0] : 1;
         var actualZoom;
         var initialZoom = this.getInitialRequestParam(REQUEST_PARAMS.ZOOM);
@@ -592,14 +621,19 @@ class Viewer extends OlObject {
         }
     
 
+        const layers = [new Tile({source: source})];
+        if (seg_source) {
+          layers.push(new Tile({source: seg_source, opaque: false}));
+        }
         // finally construct the open layers map object
         this.viewer_ = new OlMap({
             logo: false,
             controls: controls,
             interactions: interactions,
-            layers: [new Tile({source: source})],
+            layers: layers,
             target: this.container_,
-            view: view
+            view: view,
+            renderer: 'canvas'
         });
 
         // enable bird's eye view
@@ -1240,7 +1274,25 @@ class Viewer extends OlObject {
         this.affectImageRender(omeroImage.use_tiled_retrieval_ && key === 'c');
 
         // update regions (if necessary)
-        if (this.getRegionsLayer()) this.getRegions().changed();
+        console.log("Z/T changed, updating regions layer", this.getRegionsLayer());
+        // this just gets the last layer... which could be our labels layer
+        const regionsLayer = this.getRegionsLayer();
+        if (regionsLayer) {
+          console.log("Regions layer present, updating", this.getRegions());
+          let seg_source = regionsLayer.getSource();
+          console.log("Regions source", seg_source, seg_source[setter]);
+
+          var renderer = this.viewer_.getRenderer(regionsLayer);
+          var imageCanvas = renderer.getLayerRenderer(regionsLayer).getImage();
+          imageCanvas.getContext('2d').clearRect(0, 0, imageCanvas.width, imageCanvas.height);
+          regionsLayer.getSource().tileCache.clear();
+
+          seg_source[setter](key !== 'c' ? values[0] : values);
+
+          seg_source.cache_version_++;
+          this.getRegions().changed();
+        }
+
 
         // update popup (hide it if shape no longer visible)
         this.viewer_.getOverlays().forEach(o => {

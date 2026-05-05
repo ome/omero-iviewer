@@ -83,6 +83,11 @@ const OmeroImage = function(options) {
         console.error("Image id must be a strictly positive integer");
 
     /**
+     * If label_image, we add ?label=true to the tile url requests
+     */
+    this.label_image_ = opts.label_image || false;
+
+    /**
      * an internal cache version which helps us invalidate
      * without clearing so that newer images are rendered 'on top' of olders
      * @type {number}
@@ -256,8 +261,15 @@ const OmeroImage = function(options) {
         function tileUrlFunction(tileCoord, pixelRatio, projection) {
             if (!tileCoord) return undefined;
 
+            let webgatewayPath = this.uri_['full'];
+            if (this.label_image_) {
+                // e.g. webgateway/render_image_region/ -> iviewer/render_labels_region/
+                // or webgateway/render_image/ -> iviewer/render_labels/
+                webgatewayPath = webgatewayPath.replace("webgateway/render_image", "iviewer/render_labels");
+            }
+
             var url =
-                this.server_['full'] + "/" + this.uri_['full'] + '/' +
+                this.server_['full'] + "/" + webgatewayPath + '/' +
                 this.id_ + '/' + this.plane_ + '/' + this.time_ + '/?';
 
             if (this.tiled_ || this.use_tiled_retrieval_) {
@@ -276,6 +288,11 @@ const OmeroImage = function(options) {
                 }
                 url += ',' + this.tileGrid.tileSize_[0] + ',' +
                     this.tileGrid.tileSize_[1] + '&';
+            }
+            if (this.label_image_) {
+                url += 'label=true';
+                // no further params needed for label images
+                return url;
             }
 
             // maps parameter (incl. inverted)
@@ -351,7 +368,9 @@ const OmeroImage = function(options) {
         crossOrigin: opts.crossOrigin,
         tileClass:  ImageTile,
         tileGrid: tileGrid,
-        tileUrlFunction: this.tileUrlFunction_
+        tileUrlFunction: this.tileUrlFunction_,
+        opacity: opts.opacity !== undefined ? opts.opacity : 1.0,
+        opaque: opts.opaque !== undefined ? opts.opaque : true,
     });
 };
 inherits(OmeroImage, TileImage);
