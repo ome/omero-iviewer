@@ -1643,3 +1643,330 @@ thumbnail-slider img {
     padding: 0px;
     font-weight: bold;
 }
+/* ========================================
+   Grid Control Panel
+   ======================================== */
+.grid-control-panel {
+    position: absolute;
+    top: 8px;
+    left: 240px;  /* Position to the right of zoom control */
+    z-index: 1000;
+    background-color: white;
+    border-radius: 2px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    padding: 2px;
+    min-width: 30px;
+}
+
+/* Grid Header - Button Row */
+.grid-header {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.grid-toggle-btn {
+    flex: 1;
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 4px 8px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: normal;
+    color: #333;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.grid-toggle-btn:hover {
+    background-color: #f0f0f0;
+    border-color: #007bff;
+    color: #007bff;
+}
+
+/* Collapse Button */
+.grid-collapse-btn {
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 4px 6px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 10px;
+    color: #666;
+    transition: all 0.2s ease;
+    min-width: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.grid-collapse-btn:hover {
+    background-color: #f0f0f0;
+    border-color: #007bff;
+    color: #007bff;
+}
+
+.grid-collapse-btn:active {
+    transform: scale(0.95);
+}
+
+.grid-controls {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #ddd;
+    animation: slideDown 0.2s ease;
+    min-width: 220px;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        max-height: 500px;
+        transform: translateY(0);
+    }
+}
+
+.grid-control-item {
+    margin-bottom: 12px;
+}
+
+.grid-control-item:last-child {
+    margin-bottom: 0;
+}
+
+.grid-control-item label {
+    display: block;
+    font-size: 11px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+/* Grid Input Group */
+.grid-input-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.grid-number-input {
+    width: 70px;
+    padding: 4px 6px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-size: 11px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.grid-number-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.1);
+}
+
+.grid-number-input::-webkit-inner-spin-button,
+.grid-number-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.grid-number-input {
+    -moz-appearance: textfield;
+}
+
+.grid-slider {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: #ddd;
+    outline: none;
+    cursor: pointer;
+    -webkit-appearance: none;
+}
+
+.grid-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #007bff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.grid-slider::-webkit-slider-thumb:hover {
+    background: #0056b3;
+    transform: scale(1.1);
+}
+
+.grid-slider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #007bff;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.grid-slider::-moz-range-thumb:hover {
+    background: #0056b3;
+    transform: scale(1.1);
+}
+
+.grid-size-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    color: #666;
+    margin-top: 2px;
+    padding: 0 5px;
+}
+
+.grid-size-labels span {
+    font-weight: bold;
+}
+
+.grid-control-item input[type="checkbox"] {
+    margin-right: 6px;
+    cursor: pointer;
+    width: 14px;
+    height: 14px;
+    vertical-align: middle;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .grid-control-panel {
+        min-width: 180px;
+        top: 5px;
+        left: 200px;
+    }
+    
+    .grid-toggle-btn {
+        font-size: 10px;
+        padding: 3px 6px;
+    }
+    
+    .grid-control-item label {
+        font-size: 10px;
+    }
+}
+/* ========================================
+   Disable Grid Interaction (Allow clicks through)
+   ======================================== */
+.grid-overlay-layer,
+.grid-label-layer {
+    pointer-events: none !important;
+}
+
+.grid-overlay-layer canvas,
+.grid-label-layer canvas {
+    pointer-events: none !important;
+}
+
+/* Ensure viewer remains interactive */
+.viewer {
+    pointer-events: auto;
+}
+
+.viewer-container {
+    pointer-events: auto;
+}
+
+/* Ensure control panel IS clickable */
+.grid-control-panel {
+    pointer-events: auto !important;
+}
+
+.grid-control-panel * {
+    pointer-events: auto !important;
+}
+
+.grid-preset-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+.grid-preset-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+
+.grid-preset-btn:hover {
+    background: #f0f0f0;
+}
+
+.grid-preset-btn.active {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+/* Grid Input Group */
+.grid-input-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.grid-number-input {
+    width: 80px;
+    padding: 5px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 13px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.grid-number-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.1);
+}
+
+/* Remove spinner arrows in number input */
+.grid-number-input::-webkit-inner-spin-button,
+.grid-number-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.grid-number-input {
+    -moz-appearance: textfield;
+}
+
+.grid-slider {
+    flex: 1;
+}
+
+/* Size labels below slider */
+.grid-size-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #666;
+    margin-top: 2px;
+    padding: 0 5px;
+}
+
+.grid-size-labels span {
+    font-weight: bold;
+}

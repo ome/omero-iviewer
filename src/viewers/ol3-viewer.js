@@ -23,6 +23,7 @@ import {Converters} from '../utils/converters';
 import Ui from '../utils/ui';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import Viewer from './viewer/Viewer';
+import {GridOverlay} from './viewer/grid-overlay';
 import Ol3ViewerLinkedEvents from './ol3-viewer-linked-events';
 import * as FileSaver from '../../node_modules/file-saver';
 import {draggable} from 'jquery-ui/ui/widgets/draggable';
@@ -76,6 +77,33 @@ export default class Ol3Viewer extends EventSubscriber {
      */
     image_info_ready_observer = null;
 
+    /**
+     * Set cell size to preset value
+     * @memberof Ol3Viewer
+     */
+    setCellSize(size) {
+        this.gridCellSize = size;
+        this.updateGridCellSize();
+    }
+    
+    /**
+     * grid overlay instance
+     * @memberof Ol3Viewer
+     * @type {GridOverlay}
+     */
+    gridOverlay = null;
+    gridEnabled = false;
+    gridLineWidth = 5;
+    gridCellSize = 5000;
+    gridShowLabels = true;
+    /**
+     * Toggle grid settings panel visibility
+     * @memberof Ol3Viewer
+     */
+    toggleGridPanel() {
+        this.gridPanelExpanded = !this.gridPanelExpanded;
+        console.log('Grid panel expanded:', this.gridPanelExpanded);
+    }    
     /**
      * watches for selection changes
      * @memberof Ol3Viewer
@@ -404,6 +432,14 @@ export default class Ol3Viewer extends EventSubscriber {
                             () => this.storeShapes(
                                 {"config_id": this.image_config.id}));
                 });
+
+        // Inicializar grid overlay
+        setTimeout(() => {
+            if (this.viewer && this.viewer.viewer_) {
+                this.gridOverlay = new GridOverlay(this.viewer);
+                console.log('GridOverlay inicializado');
+            }
+        }, 1500);
     }
 
     /**
@@ -1761,4 +1797,59 @@ export default class Ol3Viewer extends EventSubscriber {
         // We don't use dragenter/leave events as they are too fickle
         $(".viewer-mdi").removeClass("drag_enter");
     }
+    /**
+     * Toggle grid overlay
+     * @memberof Ol3Viewer
+     */
+    toggleGrid() {
+        if (!this.gridOverlay && this.viewer && this.viewer.viewer_) {
+            this.gridOverlay = new GridOverlay(this.viewer);
+            console.log('GridOverlay initialized on demand');
+        }
+        
+        if (this.gridOverlay) {
+            if (!this.gridOverlay.isEnabled()) {
+                // Show grid with configured cell size
+                this.gridOverlay.showGrid(5, this.gridCellSize, this.gridShowLabels);
+            } else {
+                // Hide grid
+                this.gridOverlay.hideGrid();
+            }
+            this.gridEnabled = this.gridOverlay.isEnabled();
+        }
+    }
+        /**
+         * Update grid line width
+         * @memberof Ol3Viewer
+         */
+        updateGridLineWidth() {
+            if (this.gridOverlay && this.gridEnabled) {
+                this.gridOverlay.updateLineWidth(parseInt(this.gridLineWidth));
+            }
+        }
+
+        /**
+         * Update grid cell size
+         * @memberof Ol3Viewer
+         */
+        updateGridCellSize() {
+        if (this.gridOverlay && this.gridEnabled) {
+            // Ensure value is within range
+            if (this.gridCellSize < 5000) this.gridCellSize = 5000;
+            if (this.gridCellSize > 10000) this.gridCellSize = 10000;
+            
+            // Update grid with new size
+            this.gridOverlay.updateCellSize(parseInt(this.gridCellSize));
+            }
+        }
+
+        /**
+         * Toggle grid labels
+         * @memberof Ol3Viewer
+         */
+        toggleGridLabels() {
+            if (this.gridOverlay && this.gridEnabled) {
+                this.gridOverlay.toggleLabels();
+            }
+        }
 }
