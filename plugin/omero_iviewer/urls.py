@@ -49,4 +49,9 @@ urlpatterns = [
     # Find the index of an ROI within all ROIs for the Image (for pagination)
     re_path(r'^(?P<obj_type>(roi|shape))/(?P<obj_id>[0-9]+)/page_data/$',
             views.roi_page_data, name='omero_iviewer_roi_page_data'),
+    re_path(r'^shapes_by_region/(?P<image_id>[0-9]+)/'
+            r'(?P<the_z>[0-9]+)/(?P<the_t>[0-9]+)/$', views.shapes_by_region,
+            name='omero_iviewer_shapes_by_region'),
+    re_path(r'^all_roi_ids/(?P<image_id>[0-9]+)/$', views.all_roi_ids,
+            name='omero_iviewer_all_roi_ids'),
 ]

@@ -52,6 +52,12 @@ export const DATASETS_REQUEST_URL = "/m/datasets";
 export const REGIONS_REQUEST_URL = "/m/rois";
 
 /**
+ * Page size for regions pagination
+ * @type {number}
+ */
+export const REGIONS_PAGE_SIZE = 500;
+
+/**
  * a convenience string lookup for URI_PREFIX
  * @type {string}
  */

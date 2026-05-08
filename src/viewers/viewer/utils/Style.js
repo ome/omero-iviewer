@@ -30,6 +30,7 @@ import {WEBGATEWAY,
     DEFAULT_MITER_LIMIT} from '../globals';
 import {TRANSPARENT_PLACEHOLDER} from './Conversion';
 import Regions from '../source/Regions';
+import TiledRegions from '../source/TiledRegions';
 import Label from '../geom/Label';
 import Line from '../geom/Line';
 import Mask from '../geom/Mask';
@@ -173,7 +174,8 @@ export const updateStyleFunction =
         if (!(feature instanceof Feature))
             console.error("A style function requires an instance of a feature!");
 
-        if (!(regions_reference instanceof Regions))
+        if (!(regions_reference instanceof Regions ||
+              regions_reference instanceof TiledRegions))
             console.error("A style function requires an instance of Regions!");
 
         // all this makes only sense with a style really
@@ -234,7 +236,8 @@ export const updateStyleFunction =
         // replace style function
         feature.setStyle(function(featureToStyle, actual_resolution) {
             // fetch view via regions reference
-            if (!(feature['regions'] instanceof Regions))
+            var regions = feature['regions'];
+            if (!(regions instanceof Regions || regions instanceof TiledRegions))
                 return oldStyle; // we are screwed, return old setStyle
 
             // OpenLayers5 doesn't allow you to drag (Translate) if no fill
@@ -243,7 +246,13 @@ export const updateStyleFunction =
                 oldStyle.setFill(new Fill({color: TRANSPARENT_PLACEHOLDER}));
             }
 
-            var regions = feature['regions'];
+            // We should ONLY need this for TiledRegions, since for Vector Regions
+            // the Regions.renderFeature(f) will return false if feature isn't
+            // visible so we won't ever get to this point for hidden features
+            if (!regions.isFeatureVisible(feature)) {
+                return new Style({renderer: () => {}});
+            }
+
             var geom = feature.getGeometry();
             // find present flags for scaling/rotating text
             var scale_text = regions.scale_text_;
@@ -306,9 +315,7 @@ export const updateStyleFunction =
                 }
             }
 
-            var selected =
-                typeof(feature['selected'] === 'boolean') ?
-                    feature['selected'] : false;
+            var selected = regions.isFeatureSelected(feature);
             var selectionStyle = new Stroke();
             selectionStyle.setColor('rgba(0,153,255,1)');
             selectionStyle.setWidth(3);
