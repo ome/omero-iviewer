@@ -393,6 +393,9 @@ export default class Ol3Viewer extends EventSubscriber {
             this.getContainer().find('.ol-control').on(
                 'mousedown',
                 () => this.context.selectConfig(this.image_config.id))
+            // Started grid overlay
+            this.gridOverlay = new GridOverlay(this.viewer);
+            console.log('GridOverlay Started');
         };
         // listen via the observer for image ready changes
         this.image_info_ready_observer =
@@ -432,14 +435,6 @@ export default class Ol3Viewer extends EventSubscriber {
                             () => this.storeShapes(
                                 {"config_id": this.image_config.id}));
                 });
-
-        // Inicializar grid overlay
-        setTimeout(() => {
-            if (this.viewer && this.viewer.viewer_) {
-                this.gridOverlay = new GridOverlay(this.viewer);
-                console.log('GridOverlay inicializado');
-            }
-        }, 1500);
     }
 
     /**
@@ -1810,7 +1805,7 @@ export default class Ol3Viewer extends EventSubscriber {
         if (this.gridOverlay) {
             if (!this.gridOverlay.isEnabled()) {
                 // Show grid with configured cell size
-                this.gridOverlay.showGrid(5, this.gridCellSize, this.gridShowLabels);
+                this.gridOverlay.showGrid(this.gridCellSize, this.gridShowLabels);
             } else {
                 // Hide grid
                 this.gridOverlay.hideGrid();
@@ -1818,38 +1813,33 @@ export default class Ol3Viewer extends EventSubscriber {
             this.gridEnabled = this.gridOverlay.isEnabled();
         }
     }
-        /**
-         * Update grid line width
-         * @memberof Ol3Viewer
-         */
-        updateGridLineWidth() {
-            if (this.gridOverlay && this.gridEnabled) {
-                this.gridOverlay.updateLineWidth(parseInt(this.gridLineWidth));
-            }
-        }
-
-        /**
-         * Update grid cell size
-         * @memberof Ol3Viewer
-         */
-        updateGridCellSize() {
+    /**
+     * Update grid line width
+     * @memberof Ol3Viewer
+     */
+    updateGridLineWidth() {
         if (this.gridOverlay && this.gridEnabled) {
-            // Ensure value is within range
+            this.gridOverlay.updateLineWidth(parseInt(this.gridLineWidth));
+        }
+    }
+    /**
+     * Update grid cell size
+     * @memberof Ol3Viewer
+     */
+    updateGridCellSize() {
+        if (this.gridOverlay && this.gridEnabled) {
             if (this.gridCellSize < 5000) this.gridCellSize = 5000;
             if (this.gridCellSize > 10000) this.gridCellSize = 10000;
-            
-            // Update grid with new size
             this.gridOverlay.updateCellSize(parseInt(this.gridCellSize));
-            }
         }
-
-        /**
-         * Toggle grid labels
-         * @memberof Ol3Viewer
-         */
-        toggleGridLabels() {
-            if (this.gridOverlay && this.gridEnabled) {
-                this.gridOverlay.toggleLabels();
-            }
+    }
+    /**
+     * Toggle grid labels
+     * @memberof Ol3Viewer
+     */
+    toggleGridLabels() {
+        if (this.gridOverlay && this.gridEnabled) {
+            this.gridOverlay.toggleLabels();
         }
+    }
 }
