@@ -65,6 +65,13 @@ IVIEWER_SETTINGS_MAPPING = {
          ("Disables spectrum color picker. Forces users to use preset options."
           "Must define a color palette for this setting to work.")],
 
+    "omero.web.iviewer.redirect_iviewer":
+        ["REDIRECT_IVIEWER",
+         False,
+         bool,
+         ("If True, we redirect /iviewer/?... to /webclient/img_detail/123/ so"
+         " that the viewer configured at omero.web.viewer.view is used.")],
+
     "omero.web.iviewer.enable_mirror":
         ["ENABLE_MIRROR",
          False,

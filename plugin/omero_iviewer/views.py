@@ -54,6 +54,7 @@ MAX_ACTIVE_CHANNELS = getattr(iviewer_settings, 'MAX_ACTIVE_CHANNELS')
 ROI_COLOR_PALETTE = getattr(iviewer_settings, 'ROI_COLOR_PALETTE')
 SHOW_PALETTE_ONLY = getattr(iviewer_settings, 'SHOW_PALETTE_ONLY')
 ENABLE_MIRROR = getattr(iviewer_settings, 'ENABLE_MIRROR')
+REDIRECT_IVIEWER = getattr(iviewer_settings, 'REDIRECT_IVIEWER')
 
 PROJECTIONS = {
     'normal': -1,
@@ -81,7 +82,7 @@ def index(request, iid=None, conn=None, **kwargs):
 
     # If URL is /iviewer/?... rather than /webclient/img_detail/123/
     # we want to redirect to the latter, to support omero.web.viewer.view config
-    if iid is None:
+    if iid is None and REDIRECT_IVIEWER:
         # we want to redirect to /webclient/img_detail/123/
         if params.get("ROI") is not None:
             roi = conn.getQueryService().get('Roi', int(params.get("ROI")), conn.SERVICE_OPTS)
@@ -94,6 +95,8 @@ def index(request, iid=None, conn=None, **kwargs):
         if image_id is not None:
             redirect_url = reverse('web_image_viewer', kwargs={'iid': image_id})
             # add all query params to redirect url
+            # e.g. /webclient/img_detail/123/?images=123,456 will open both images
+            # and /webclient/img_detail/123/?roi=456 will open the image with the roi highlighted
             query_string = '&'.join([f"{key}={value}" for key, value in request.GET.items()])
             if query_string:
                 redirect_url = f"{redirect_url}?{query_string}"
