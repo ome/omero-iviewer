@@ -56,30 +56,12 @@ export class GridOverlay {
             let cellSize, lineWidth, labelSize;
             
             // Cell size: use custom value or fallback to auto-calculation
-        if (customCellSize) {
-            cellSize = customCellSize;  // ← USE THE VALUE PROVIDED
-        } else {
-            // Fallback: auto-calculate only if not provided
-            if (Math.max(width, height) > 50000) {
-                cellSize = Math.floor(Math.min(width, height) / 6);
-            } else if (Math.max(width, height) > 10000) {
-                cellSize = Math.floor(Math.min(width, height) / 10);
-            } else {
-                cellSize = Math.floor(Math.min(width, height) / 12);
-            }
-        }
-        
-        // Line width: always 5px
+        cellSize = customCellSize;
+            // Line width: always 5px
         lineWidth = customLineWidth || 5;
         
-        // Label size: based on image size
-        if (Math.max(width, height) > 50000) {
-            labelSize = customLabelSize || 20;
-        } else if (Math.max(width, height) > 10000) {
-            labelSize = customLabelSize || 20;
-        } else {
-            labelSize = customLabelSize || 20;
-        }
+            // Label size: based on image size
+        labelSize = customLabelSize || 20;
 
             this.config.cellSize = cellSize;
             this.config.lineWidth = lineWidth;
