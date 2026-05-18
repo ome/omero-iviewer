@@ -67,7 +67,7 @@ This may first remove other ``image_configs`` before creating a new one and load
 
     // src/app/context.js
 
-    let image_config = new ImageConfig(this, image_id, parent_id, parent_type);
+    let image_config = new ImageConfig(this, image_id, roi_id, shape_id, parent_id, parent_type);
     // store the image config in the map and make it the selected one
     this.image_configs.set(image_config.id, image_config);
     this.selectConfig(image_config.id);
