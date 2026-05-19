@@ -315,9 +315,9 @@ export default class ImageInfo {
             success : (response) => {
                 if (!this.image_id) {
                     this.image_id = response.id;
-                    this.web_url = this.context.server + this.context.getPrefixedURI(WEBCLIENT) +
-                        '/?show=image-' + this.image_id;
                 }
+                this.web_url = this.context.server + this.context.getPrefixedURI(WEBCLIENT) +
+                    '/?show=image-' + this.image_id;
 
                 // validate response
                 // check for Exceptions and show error dialog.
