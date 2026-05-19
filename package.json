@@ -65,6 +65,6 @@
     "webpack": "^5.96.1",
     "webpack-cli": "^5.0.1",
     "webpack-conditional-loader": "1.0.12",
-    "webpack-dev-server": "^4.13.2"
+    "webpack-dev-server": "^5.2.4"
   }
 }
