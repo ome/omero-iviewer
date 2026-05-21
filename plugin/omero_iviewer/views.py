@@ -83,6 +83,8 @@ def index(request, iid=None, conn=None, **kwargs):
     # If URL is /iviewer/?... rather than /webclient/img_detail/123/
     # we want to redirect to the latter, to support omero.web.viewer.view config
     if iid is None and REDIRECT_IVIEWER:
+        image_id = None
+        query_string = '&'.join([f"{key}={value}" for key, value in request.GET.items()])
         # we want to redirect to /webclient/img_detail/123/
         if params.get("ROI") is not None:
             roi = conn.getQueryService().get('Roi', int(params.get("ROI")), conn.SERVICE_OPTS)
@@ -91,18 +93,24 @@ def index(request, iid=None, conn=None, **kwargs):
             image_id, roi_id = get_image_roi_id_for_shape(conn, params.get("SHAPE"))
         elif params.get("IMAGES") is not None:
             image_id = int(params.get("IMAGES").split(',')[0])
+        elif params.get("WELL") is not None:
+            well = conn.getObject("Well", int(params.get("WELL")))
+            if well is not None:
+                image_ids = [well_sample.getImage().id for well_sample in well.listChildren()]
+                if len(image_ids) > 0:
+                    image_id = image_ids[0]
+                    query_string = f"images={','.join(map(str, image_ids))}"
 
         if image_id is not None:
             redirect_url = reverse('web_image_viewer', kwargs={'iid': image_id})
             # add all query params to redirect url
             # e.g. /webclient/img_detail/123/?images=123,456 will open both images
             # and /webclient/img_detail/123/?roi=456 will open the image with the roi highlighted
-            query_string = '&'.join([f"{key}={value}" for key, value in request.GET.items()])
             if query_string:
                 redirect_url = f"{redirect_url}?{query_string}"
             return redirect(redirect_url)
         else:
-            raise Http404(f'Could not find Image, ROI, or Shape for given id(s)')
+            raise Http404(f'Could not find Image, Well, ROI, or Shape for given id(s)')
 
     # set interpolation default
     server_settings = request.session.get('server_settings', {})
