@@ -64,6 +64,7 @@ import {integrateStyleIntoJsonObject,
     featureToJsonObject,
     LOOKUP} from './utils/Conversion';
 import OmeroImage from './source/Image';
+import ZarrSource from './source/ZarrSource';
 import Regions from './source/Regions';
 import Mask from './geom/Mask';
 import Mirror from './controls/Mirror';
@@ -527,6 +528,26 @@ class Viewer extends OlObject {
         });
         source.changeChannelRange(initialChannels, false);
 
+        var zarrSource = new ZarrSource({
+            server : this.getServer(),
+            uri : this.getPrefixedURI(WEBGATEWAY),
+            image: this.id_,
+            width: dims['width'],
+            height: dims['height'],
+            size_t: dims.t,
+            plane: initialPlane,
+            time: initialTime,
+            channels: channels,
+            resolutions: zoom > 1 ? zoomLevelScaling : [1],
+            img_proj:  parsedInitialProjection,
+            img_model:  initialModel,
+            tiled: isTiled,
+            tile_size: isTiled && this.supportsOmeroServerVersion("5.4.4") ?
+                    DEFAULT_TILE_DIMS :
+                        this.image_info_['tile_size'] ?
+                            this.image_info_['tile_size'] : null
+        });
+
         var defaultZoom = zoom > 1 ? zoomLevelScaling[0] : 1;
         var actualZoom;
         var initialZoom = this.getInitialRequestParam(REQUEST_PARAMS.ZOOM);
@@ -591,13 +612,12 @@ class Viewer extends OlObject {
         this.viewerState_[contr] = defaultConts[contr];
         }
     
-
         // finally construct the open layers map object
         this.viewer_ = new OlMap({
             logo: false,
             controls: controls,
             interactions: interactions,
-            layers: [new Tile({source: source})],
+            layers: [new Tile({source: source}), new Tile({source: zarrSource})],
             target: this.container_,
             view: view
         });
