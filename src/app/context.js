@@ -1091,6 +1091,16 @@ export default class Context {
     }
 
     /**
+     * Returns whether the labels tab is active/selected
+     *
+     * @return {boolean} true if labels tab is active/selected, false otherwise
+     * @memberof Context
+     */
+    isLabelsTabActive() {
+        return this.selected_tab === TABS.LABELS;
+    }
+
+    /**
      * Resets initial parameters
      *
      * @memberof Context

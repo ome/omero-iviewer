@@ -19,6 +19,7 @@
 import {noView} from 'aurelia-framework';
 import ImageInfo from './image_info';
 import RegionsInfo from './regions_info';
+import LabelsInfo from './labels_info';
 import Misc from '../utils/misc';
 import History from './history';
 import {WEBGATEWAY} from '../utils/constants';
@@ -121,6 +122,7 @@ export default class ImageConfig extends History {
             new ImageInfo(
                 this.context, this.id, obj_id, obj_type, parent_id, parent_type);
         this.regions_info = new RegionsInfo(this.image_info);
+        this.labels_info = new LabelsInfo(this.image_info);
     }
 
     /**
