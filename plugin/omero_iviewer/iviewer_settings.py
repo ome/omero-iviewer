@@ -70,7 +70,7 @@ IVIEWER_SETTINGS_MAPPING = {
          False,
          bool,
          ("If True, we redirect /iviewer/?... to /webclient/img_detail/123/ so"
-         " that the viewer configured at omero.web.viewer.view is used.")],
+         " that a different viewer configured at omero.web.viewer.view is used.")],
 
     "omero.web.iviewer.enable_mirror":
         ["ENABLE_MIRROR",

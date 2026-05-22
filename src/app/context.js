@@ -383,10 +383,7 @@ export default class Context {
      * @memberof Context
      */
     openWithInitialParams() {
-        console.log("openWithInitialParams", this.initParams);
         // do we have any image ids or roi ids?
-        // let initial_ids;
-        // let initial_type;   // INITIAL_TYPES int
 
         const parseIds = (dtype) => {
             let value = this.initParams[dtype];
@@ -401,7 +398,7 @@ export default class Context {
 
         let image_ids = [], roi_ids = [], shape_ids = [];
 
-        // this.initial_type will be set to the type of the last param that is successfully parsed,
+        // this.initial_type and this.initial_ids will be set to the type of the last param that is successfully parsed,
         // but that's ok because we only use it to determine the parent type for the image config, 
         if (this.initParams[REQUEST_PARAMS.SHAPE]) {
             shape_ids = parseIds(REQUEST_PARAMS.SHAPE);
@@ -421,11 +418,6 @@ export default class Context {
                 this.initial_type = INITIAL_TYPES.IMAGES;
             }
         }
-
-        console.log("image ids: " + image_ids);
-        console.log("roi ids: " + roi_ids);
-        console.log("shape ids: " + shape_ids);
-
 
         // do we have a dataset id?
         let initial_dataset_id =
