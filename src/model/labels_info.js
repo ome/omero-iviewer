@@ -65,6 +65,38 @@ export default class LabelsInfo  {
         // this.history = null;
     }
 
+    loadZarr(data) {
+        this.ready = true;
+        this.is_pending = false;
+
+        // Get the externalInfo Lsid from Shape(s)
+        let lsids = [];
+        if (data && data.length > 0) {
+            data.forEach((roi) => {
+                roi.shapes.forEach((shape) => {
+                    console.log("Shape: ", shape);
+                    if (shape["omero:details"]?.externalInfo?.Lsid) {
+                        lsids.push(shape["omero:details"].externalInfo.Lsid);
+                    }
+                });
+            });
+        }
+        console.log("LabelsInfo: Got LSIDs from shapes: ", lsids);
+    }
+
+    /**
+     * Same as the ROIs loading URL - without pagination / projection / Z/T params
+     *
+     * @memberof LabelsInfo
+     * @returns url
+     */
+    getLabelsUrl() {
+        let url = this.image_info.context.server;
+        url += this.image_info.context.getPrefixedURI(WEB_API_BASE) +
+            REGIONS_REQUEST_URL + '/?image=' + this.image_info.image_id;
+        return url;
+    }
+
     /**
      * Retrieves the labels information needed via ajax and stores it internally
      *
@@ -74,36 +106,35 @@ export default class LabelsInfo  {
     requestData(forceUpdate = false) {
 
         console.log("REQUESTING LABELS INFO FOR IMAGE CONFIG: " + this.image_info.config_id);
-        // if (this.ready && !forceUpdate) return;
-        // // if we're busy, but still want to update, remember to try again...
-        // // otherwise data can end up out-of-sync with Z/T if loading by plane
-        // if (this.is_pending) {
-        //     if (forceUpdate) {
-        //         this.try_request_again = true;
-        //     }
-        //     return;
-        // }
-        // // reset labels info data and history
-        // this.ready = false;
-        // // this.resetLabelsInfo();
-        // this.is_pending = true;
+        if (this.ready && !forceUpdate) return;
+        // if we're busy, but still want to update, remember to try again...
+        // otherwise data can end up out-of-sync with Z/T if loading by plane
+        if (this.is_pending) {
+            if (forceUpdate) {
+                this.try_request_again = true;
+            }
+            return;
+        }
+        // reset labels info data and history
+        this.ready = false;
+        // this.resetLabelsInfo();
+        this.is_pending = true;
 
-        // // send request
-        // $.ajax({
-        //     url : this.getLabelsUrl(),
-        //     success : (response) => {
-        //         if (this.try_request_again) {
-        //             this.is_pending = false;
-        //             this.try_request_again = false;
-        //             this.requestData();
-        //         } else if (this.is_pending) {
-        //             this.setData(response.data);
-        //             this.roi_count_on_current_plane = response.meta.totalCount;
-        //         }
-        //     }, error : (error) => {
-        //         this.is_pending = false;
-        //         console.error("Failed to load Labels: " + error)
-        //     }
-        // });
+        // send request
+        $.ajax({
+            url : this.getLabelsUrl(),
+            success : (response) => {
+                if (this.try_request_again) {
+                    this.is_pending = false;
+                    this.try_request_again = false;
+                    this.requestData();
+                } else if (this.is_pending) {
+                    this.loadZarr(response.data);
+                }
+            }, error : (error) => {
+                this.is_pending = false;
+                console.error("Failed to load Labels: " + error)
+            }
+        });
     }
 }
