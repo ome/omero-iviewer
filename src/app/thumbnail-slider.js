@@ -240,7 +240,7 @@ export default class ThumbnailSlider extends EventSubscriber {
                 this.context.initial_type === INITIAL_TYPES.ROIS ||
                 this.context.initial_type === INITIAL_TYPES.SHAPES) &&
             this.context.initial_ids.length === 1 &&
-            this.image_config.image_info.parent_id !== 'number') {
+            typeof this.image_config.image_info.parent_id !== 'number') {
             // have we had all the data already
             if (this.image_config.image_info.ready) {
                 // too bad, no dataset id

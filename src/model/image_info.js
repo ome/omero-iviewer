@@ -248,17 +248,18 @@ export default class ImageInfo {
      * @constructor
      * @param {Context} context the application context
      * @param {number} config_id the config id we belong to
-     * @param {number} obj_id the object id to be queried
-     * @param {number} obj_type the type of obj. e.g. INITIAL_TYPES.IMAGES or ROIS
+     * @param {number} image_id the image id to be queried. If undefined then use shape or roi id to query for image data
+     * @param {number} roi_id the roi id to be queried
+     * @param {number} shape_id the shape id to be queried
      * @param {number} parent_id an optional parent id
      * @param {number} parent_type an optional parent type (e.g. INITIAL_TYPES.DATASET or WELL)
      */
-    constructor(context, config_id, obj_id, obj_type, parent_id, parent_type) {
+    constructor(context, config_id, image_id, roi_id, shape_id, parent_id, parent_type) {
         this.context = context;
         this.config_id = config_id;
-        this.image_id = obj_type == INITIAL_TYPES.IMAGES ? obj_id : undefined;
-        this.initial_roi_id = obj_type == INITIAL_TYPES.ROIS ? obj_id : undefined;
-        this.initial_shape_id = obj_type == INITIAL_TYPES.SHAPES ? obj_id : undefined;
+        this.image_id = image_id;
+        this.initial_roi_id = roi_id;
+        this.initial_shape_id = shape_id;
         if (typeof parent_id === 'number') {
             this.parent_id = parent_id;
             if (typeof parent_type === 'number' &&
@@ -266,9 +267,6 @@ export default class ImageInfo {
                 parent_type <= INITIAL_TYPES.WELL)
                     this.parent_type = parent_type;
         }
-        this.web_url = this.context.server +
-        this.context.getPrefixedURI(WEBCLIENT) +
-        '/?show=image-' + this.image_id;
     }
 
     /**
@@ -318,6 +316,8 @@ export default class ImageInfo {
                 if (!this.image_id) {
                     this.image_id = response.id;
                 }
+                this.web_url = this.context.server + this.context.getPrefixedURI(WEBCLIENT) +
+                    '/?show=image-' + this.image_id;
 
                 // validate response
                 // check for Exceptions and show error dialog.

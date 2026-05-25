@@ -51,6 +51,18 @@ To enable the "open with" feature:
       {"supported_objects":["images", "dataset", "well"],
        "script_url": "omero_iviewer/openwith.js", "label": "OMERO.iviewer"}]'
 
+If you want to redirect ``/iviewer/`` URLs to instead use ``/webclient/img_detail/ID`` so
+that a different viewer configured at ``omero.web.viewer.view`` is used then use the 
+config below.
+This will redirect ``/iviewer/?images=12,34`` to ``/webclient/img_detail/12/?images=12,34``,
+``/iviewer/?roi=56`` to ``/webclient/img_detail/IMAGE_ID/?roi=56`` (same for shape)
+and ``/iviewer/?well=78`` to ``/webclient/img_detail/IMAGE_ID/?images=ID1,ID2,...``
+where ID1, ID2, etc are the images in the well.
+
+::
+
+    $ omero config set omero.web.iviewer.redirect_iviewer True
+
 Now restart OMERO.web as normal.
 
 
