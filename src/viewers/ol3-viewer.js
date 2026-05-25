@@ -361,6 +361,15 @@ export default class Ol3Viewer extends EventSubscriber {
                                 delete this.image_config.regions_info.tmp_data;
                             }
                     });
+            // listen to when the labels info data is ready
+            this.labels_info_ready_observer =
+                this.bindingEngine.propertyObserver(
+                    this.image_config.labels_info, 'ready').subscribe(
+                        (newValue, oldValue) => {
+                            let zarrSources = this.image_config.labels_info.zarrSources;
+                            console.log("labels_info_ready_observer: Got zarr Sources: ", zarrSources);
+                            this.initZarrSources();
+                    });
             // mdi needs to switch image config when using controls
             this.getContainer().find('.ol-control').on(
                 'mousedown',
@@ -955,6 +964,22 @@ export default class Ol3Viewer extends EventSubscriber {
         this.image_config.regions_info.regions_modes =
             this.viewer.setRegionsModes(params.modes);
 
+    }
+
+    /**
+     * Initializes the ol3 zarr sources layers
+     *
+     * @memberof Ol3Viewer
+     */
+    initZarrSources() {
+        console.log("initZarrSources: ");
+        if (this.viewer === null ||
+            this.image_config === null ||
+            this.image_config.labels_info === null ||
+            !this.image_config.labels_info.ready ||
+            !Misc.isArray(this.image_config.labels_info.zarrSources)) return;
+
+        this.viewer.addZarrSources(this.image_config.labels_info.zarrSources);
     }
 
     /**

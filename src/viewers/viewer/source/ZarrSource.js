@@ -8,6 +8,13 @@ const DEFAULT_TILE_SIZE = {width: 256, height: 256};
 
 export default class ZarrSource extends TileImage {
   constructor(options = {}) {
+
+    // zarr url
+    const source = options.source;
+
+    // scales is list of scale-shape for each resolution
+    // e.g. [[1, 0.5, 0.36, 0.36], [1, 0.5, 0.72, 0.72], ...]
+    const scales = options.scales;
     const width = options.width;
     const height = options.height;
 
@@ -21,9 +28,12 @@ export default class ZarrSource extends TileImage {
       tileSizeOption.height || DEFAULT_TILE_SIZE.height
     ];
 
-    const resolutions =
-      Array.isArray(options.resolutions) && options.resolutions.length > 0 ?
-        options.resolutions : [1];
+    // e.g. [16, 8, 4, 2, 1]
+    let resolutions = scales.map(shape => shape[shape.length - 1] / scales[0][scales[0].length - 1]);
+    resolutions = resolutions.reverse();
+    console.log("RESOLUTIONS:", resolutions);
+    console.log("EXTENT:", [0, -height, width, 0]);
+
 
     const extent = [0, -height, width, 0];
     const tileGrid = new TileGrid({
@@ -39,12 +49,11 @@ export default class ZarrSource extends TileImage {
         options.tileUrlFunction :
         (tileCoord) => {
           console.log('Generating tile URL for tileCoord:', tileCoord);
-          if (!tileCoord || !options.uri || !options.image) return undefined;
 
           const z = tileCoord[0];
           const x = tileCoord[1];
           const y = -tileCoord[2] - 1;
-          return `${options.uri}/zarr_tile/${options.image}/${z}/${x}/${y}/`;
+          return `/zarr_tile/${z}/${x}/${y}/`;
         };
 
     super({
@@ -60,7 +69,7 @@ export default class ZarrSource extends TileImage {
 
   static tileLoadFunction(tile, src) {
     console.log('Loading tile from URL:', src);
-    
+
     const image = tile.getImage();
     image.src = src;
   }

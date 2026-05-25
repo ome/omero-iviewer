@@ -16,6 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+import * as omezarr from 'ome-zarr.js';
 import {noView} from 'aurelia-framework';
 import Misc from '../utils/misc';
 import {
@@ -44,6 +45,14 @@ export default class LabelsInfo  {
      */
     ready = false;
 
+    /**
+     * Each zarr URL (e.g. from Shape externalInfo) corresponds to a separate zarr source.
+     * Typically we expect just one, but can have more.
+     * We may show multiple layers (with different rendering settings) for each zarr source.
+     * @memberof LabelsInfo
+     * @type {Array}
+     */
+    zarrSources = [];
 
     /**
      * @constructor
@@ -66,7 +75,6 @@ export default class LabelsInfo  {
     }
 
     loadZarr(data) {
-        this.ready = true;
         this.is_pending = false;
 
         // Get the externalInfo Lsid from Shape(s)
@@ -82,6 +90,43 @@ export default class LabelsInfo  {
             });
         }
         console.log("LabelsInfo: Got LSIDs from shapes: ", lsids);
+        if (lsids.length == 0) {
+            alert("No externalInfo Lsids found for shapes in ROIs response - cannot load labels data");
+            return;
+        }
+
+        let newZarrs = [];
+
+        // Seems we can't have loadZarr() being async, so we need callbacks...
+        lsids.forEach((lsid) => {
+            omezarr.NgffImage.load(lsid).then((ngffImage) => {
+                console.log("LabelsInfo: Got NGFF image for Lsid " + lsid + ": ", ngffImage);
+                ngffImage.getShape().then((shape) => {
+                    console.log("LabelsInfo: Got shape for NGFF image: ", shape);
+                    newZarrs.push({
+                        id: Misc.getRandomInteger(0, 100000),
+                        name: "Labels Layer",
+                        source: lsid,
+                        // e.g. [{name: 't', type: 'time'}, {name: 'y', type: 'space'}, {name: 'x', type: 'space'}]
+                        axes: ngffImage.axes,
+                        shape: shape,
+                        // scales is list of scale-shape for each resolution
+                        // e.g. [[1, 0.5, 0.36, 0.36], [1, 0.5, 0.72, 0.72], ...]
+                        scales: ngffImage.getScales(),
+                        layers: [
+                            {
+                                name: "default",
+                                channels: ngffImage.omero.channels,
+                            }
+                        ],
+                    });
+
+                    // TODO: only set these after ALL lsids have been loaded
+                    this.zarrSources = newZarrs;
+                    this.ready = true;
+                });
+            });
+        });
     }
 
     /**

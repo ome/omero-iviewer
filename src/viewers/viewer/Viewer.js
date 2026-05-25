@@ -528,26 +528,6 @@ class Viewer extends OlObject {
         });
         source.changeChannelRange(initialChannels, false);
 
-        var zarrSource = new ZarrSource({
-            server : this.getServer(),
-            uri : this.getPrefixedURI(WEBGATEWAY),
-            image: this.id_,
-            width: dims['width'],
-            height: dims['height'],
-            size_t: dims.t,
-            plane: initialPlane,
-            time: initialTime,
-            channels: channels,
-            resolutions: zoom > 1 ? zoomLevelScaling : [1],
-            img_proj:  parsedInitialProjection,
-            img_model:  initialModel,
-            tiled: isTiled,
-            tile_size: isTiled && this.supportsOmeroServerVersion("5.4.4") ?
-                    DEFAULT_TILE_DIMS :
-                        this.image_info_['tile_size'] ?
-                            this.image_info_['tile_size'] : null
-        });
-
         var defaultZoom = zoom > 1 ? zoomLevelScaling[0] : 1;
         var actualZoom;
         var initialZoom = this.getInitialRequestParam(REQUEST_PARAMS.ZOOM);
@@ -617,7 +597,7 @@ class Viewer extends OlObject {
             logo: false,
             controls: controls,
             interactions: interactions,
-            layers: [new Tile({source: source}), new Tile({source: zarrSource})],
+            layers: [new Tile({source: source})],
             target: this.container_,
             view: view
         });
@@ -824,6 +804,31 @@ class Viewer extends OlObject {
 
         //Overlay to show a popup for editing shapes (adds itself to map)
         new ShapeEditPopup(this.regions_);
+    }
+
+
+    addZarrSources(data) {
+        console.log("addZarrSources()", data);
+        // data is zarrSources list... id, name, source, layers,
+
+        if (!(this.viewer_ instanceof OlMap)) {
+            console.error("Viewer not initialized, cannot add Zarr sources");
+            return;
+        }
+        // this.viewer_.addLayer(new Vector({source : this.regions_}));
+
+        data.forEach(dataSrc => {
+            let axesNames = dataSrc.axes.map(a => a.name);
+            let xAxis = axesNames.indexOf('x');
+            let yAxis = axesNames.indexOf('y');
+            var zarrSource = new ZarrSource({
+                source: dataSrc.source,
+                width: dataSrc.shape[xAxis],
+                height: dataSrc.shape[yAxis],
+                scales: dataSrc.scales,
+            });
+            this.viewer_.addLayer(new Tile({source: zarrSource}));
+        });
     }
 
     /**
