@@ -31,7 +31,7 @@ https://omero-guides.readthedocs.io/en/latest/iviewer/docs/index.html
 Settings
 ========
 
-See the `OMERO.iviewer settings <https://github.com/ome/omero-iviewer/blob/settings_docs/docs/settings.md>`_
+See the `OMERO.iviewer settings <https://github.com/ome/omero-iviewer/blob/master/docs/settings.md>`_
 for details on how to configure various settings.
 
 Known issues
