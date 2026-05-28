@@ -43,6 +43,7 @@ import {
     REGIONS_SHOW_COMMENTS, REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES,
     VIEWER_IMAGE_SETTINGS, VIEWER_PROJECTIONS_SYNC, VIEWER_SET_SYNC_GROUP,
     ENABLE_SHAPE_POPUP, TILE_LOAD_ERROR, RENDER_COMPLETE,
+    LABELS_OPACITY_CHANGED,
     EventSubscriber
 } from '../events/events';
 
@@ -158,7 +159,9 @@ export default class Ol3Viewer extends EventSubscriber {
         [TILE_LOAD_ERROR,
             (params={}) => Ui.showModalMessage("Failed to load tiles.<br>Please try refreshing the page.", "OK")],
         [IMAGE_SETTINGS_REFRESH,
-            (params={}) => this.refreshImageSettings(params)]];
+            (params={}) => this.refreshImageSettings(params)],
+        [LABELS_OPACITY_CHANGED,
+            (params={}) => this.handleLabelsOpacityChange(params)]];
 
     /**
      * @constructor
@@ -360,6 +363,15 @@ export default class Ol3Viewer extends EventSubscriber {
                                 this.initRegions();
                                 delete this.image_config.regions_info.tmp_data;
                             }
+                    });
+            // listen to when the labels info data is ready
+            this.labels_info_ready_observer =
+                this.bindingEngine.propertyObserver(
+                    this.image_config.labels_info, 'ready').subscribe(
+                        (newValue, oldValue) => {
+                            let zarrSources = this.image_config.labels_info.zarrSources;
+                            console.log("labels_info_ready_observer: Got zarr Sources: ", zarrSources);
+                            this.initZarrSources();
                     });
             // mdi needs to switch image config when using controls
             this.getContainer().find('.ol-control').on(
@@ -622,6 +634,14 @@ export default class Ol3Viewer extends EventSubscriber {
 
         this.viewer.refreshBirdsEye(500);
         this.saveImageSettings(params);
+    }
+
+    handleLabelsOpacityChange(params = {}) {
+        // if (this.viewer === null || this.image_config === null ||
+        //     this.image_config.id !== params.config_id) return;
+
+        console.log("handleLabelsOpacityChange: ", params);
+        this.viewer.setLabelsOpacity(params.id, params.opacity);
     }
 
     /**
@@ -955,6 +975,22 @@ export default class Ol3Viewer extends EventSubscriber {
         this.image_config.regions_info.regions_modes =
             this.viewer.setRegionsModes(params.modes);
 
+    }
+
+    /**
+     * Initializes the ol3 zarr sources layers
+     *
+     * @memberof Ol3Viewer
+     */
+    initZarrSources() {
+        console.log("initZarrSources: ");
+        if (this.viewer === null ||
+            this.image_config === null ||
+            this.image_config.labels_info === null ||
+            !this.image_config.labels_info.ready ||
+            !Misc.isArray(this.image_config.labels_info.zarrSources)) return;
+
+        this.viewer.addZarrSources(this.image_config.labels_info.zarrSources);
     }
 
     /**

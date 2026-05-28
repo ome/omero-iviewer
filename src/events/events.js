@@ -85,6 +85,8 @@ export const SAVE_ACTIVE_IMAGE_SETTINGS = "SAVE_ACTIVE_IMAGE_SETTINGS";
 /** used to notify of a tileloaderror from openlayers viewer */
 export const TILE_LOAD_ERROR = "TILE_LOAD_ERROR";
 
+export const LABELS_OPACITY_CHANGED = "LABELS_OPACITY_CHANGED";
+
 /**
  * Facilitates recurring event subscription
  * by providing subscribe and unsubscribe methods so that any class

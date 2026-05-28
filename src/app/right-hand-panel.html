@@ -20,6 +20,7 @@
     <require from="../settings/settings"></require>
     <require from="../regions/regions"></require>
     <require from="../info/info"></require>
+    <require from="../labels/labels"></require>
 
     <ul id="panel-tabs" class="nav nav-tabs" role="tablist">
         <li class="${context.selected_tab === TABS.INFO ? 'active' : ''}">
@@ -32,6 +33,11 @@
             <a href="${'#' + TABS.ROIS}" role="tab">
                 ROIs ${image_config && image_config.image_info ?
                         '[' + image_config.image_info.roi_count + ']' : ''}
+            </a>
+        </li>
+        <li class="${context.selected_tab === TABS.LABELS ? 'active' : ''}">
+            <a href="${'#' + TABS.LABELS}" role="tab">
+                Labels
             </a>
         </li>
     </ul>
@@ -56,6 +62,10 @@
         <div id="${TABS.ROIS}" role="tabpanel"
              class="tab-pane ${context.selected_tab === TABS.ROIS ? 'active' : ''}">
             <regions regions_info.bind="image_config.regions_info"></regions>
+        </div>
+        <div id="${TABS.LABELS}" role="tabpanel"
+             class="tab-pane ${context.selected_tab === TABS.LABELS ? 'active' : ''}">
+            <labels labels_info.bind="image_config.labels_info"></labels>
         </div>
     </div>
 

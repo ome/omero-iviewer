@@ -64,6 +64,7 @@ import {integrateStyleIntoJsonObject,
     featureToJsonObject,
     LOOKUP} from './utils/Conversion';
 import OmeroImage from './source/Image';
+import ZarrSource from './source/ZarrSource';
 import Regions from './source/Regions';
 import Mask from './geom/Mask';
 import Mirror from './controls/Mirror';
@@ -591,7 +592,6 @@ class Viewer extends OlObject {
         this.viewerState_[contr] = defaultConts[contr];
         }
     
-
         // finally construct the open layers map object
         this.viewer_ = new OlMap({
             logo: false,
@@ -804,6 +804,47 @@ class Viewer extends OlObject {
 
         //Overlay to show a popup for editing shapes (adds itself to map)
         new ShapeEditPopup(this.regions_);
+    }
+
+
+    addZarrSources(data) {
+        console.log("addZarrSources()", data);
+        // data is zarrSources list... id, name, source, layers,
+
+        if (!(this.viewer_ instanceof OlMap)) {
+            console.error("Viewer not initialized, cannot add Zarr sources");
+            return;
+        }
+        // this.viewer_.addLayer(new Vector({source : this.regions_}));
+
+        data.forEach(dataSrc => {
+            let axesNames = dataSrc.axes.map(a => a.name);
+            let xAxis = axesNames.indexOf('x');
+            let yAxis = axesNames.indexOf('y');
+            var zarrSource = new ZarrSource({
+                source: dataSrc.source,
+                width: dataSrc.shape[xAxis],
+                height: dataSrc.shape[yAxis],
+                tile_size: {
+                    width: dataSrc.chunks[xAxis],
+                    height: dataSrc.chunks[yAxis]
+                },
+                scales: dataSrc.scales,
+                chunks: dataSrc.chunks,
+            });
+            let tileLayer = new Tile({source: zarrSource});
+            tileLayer.set('id', dataSrc.id);
+            this.viewer_.addLayer(tileLayer);
+        });
+    }
+
+    setLabelsOpacity(id, opacity) {
+        this.viewer_.getLayers().forEach(layer => {
+            console.log("Checking layer for id: ", layer.get('id'), " against ", id);
+            if (layer instanceof Tile && layer.get('id') === id) {
+                layer.setOpacity(opacity);
+            }
+        });
     }
 
     /**

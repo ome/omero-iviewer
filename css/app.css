@@ -1643,3 +1643,17 @@ thumbnail-slider img {
     padding: 0px;
     font-weight: bold;
 }
+
+.zarrSourceHeader {
+    margin-bottom: 10px;
+    gap: 10px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    width: 100%;
+    overflow: hidden;
+}
+.zarrSourceHeader input {
+    margin: 0;
+}

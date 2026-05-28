@@ -1,0 +1,23 @@
+
+<template>
+
+    <!-- list item for each labels_info.zarrSources -->
+    <div show.bind="labels_info.ready">
+        <div repeat.for="zarrSource of labels_info.zarrSources">
+            <div class="zarrSourceHeader" title="${zarrSource.source}">
+                <input type="checkbox" checked.bind="zarrSource.visible">
+                 ${zarrSource.source}
+            </div>
+            <!-- edit panel - show if visible -->
+            <div show.bind="zarrSource.visible">
+                <div class="zarrSourceHeader">
+                    <div>Opacity:</div>
+                    <input type="range" min="0" max="1" step="0.01"
+                        value.bind="zarrSource.opacity">
+                    <div>${zarrSource.opacity}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</template>

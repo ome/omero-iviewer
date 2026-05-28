@@ -7,6 +7,7 @@ module.exports = {
   mode: "development",
   entry: {
     main: [
+      'babel-polyfill',
       './src/main'
     ]
   },

@@ -136,7 +136,17 @@ export class RightHandPanel {
                 this.image_config.regions_info === null) return;
 
             this.image_config.regions_info.requestData();
-        };
+        } else if (this.context.isLabelsTabActive()) {
+            // If image_info is not yet ready (still loading) then labels will be
+            // requested when image_info is loaded. We don't want to load labels
+            // before image_info since we won't know image_info.label_count
+            // (don't know if we need to paginate labels)
+            if (this.image_config === null ||
+                !this.image_config.image_info.ready ||
+                this.image_config.labels_info === null) return;
+
+            this.image_config.labels_info.requestData();
+        }
     }
 
     /**
