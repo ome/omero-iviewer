@@ -43,6 +43,7 @@ import {
     REGIONS_SHOW_COMMENTS, REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES,
     VIEWER_IMAGE_SETTINGS, VIEWER_PROJECTIONS_SYNC, VIEWER_SET_SYNC_GROUP,
     ENABLE_SHAPE_POPUP, TILE_LOAD_ERROR, RENDER_COMPLETE,
+    LABELS_OPACITY_CHANGED,
     EventSubscriber
 } from '../events/events';
 
@@ -158,7 +159,9 @@ export default class Ol3Viewer extends EventSubscriber {
         [TILE_LOAD_ERROR,
             (params={}) => Ui.showModalMessage("Failed to load tiles.<br>Please try refreshing the page.", "OK")],
         [IMAGE_SETTINGS_REFRESH,
-            (params={}) => this.refreshImageSettings(params)]];
+            (params={}) => this.refreshImageSettings(params)],
+        [LABELS_OPACITY_CHANGED,
+            (params={}) => this.handleLabelsOpacityChange(params)]];
 
     /**
      * @constructor
@@ -631,6 +634,14 @@ export default class Ol3Viewer extends EventSubscriber {
 
         this.viewer.refreshBirdsEye(500);
         this.saveImageSettings(params);
+    }
+
+    handleLabelsOpacityChange(params = {}) {
+        // if (this.viewer === null || this.image_config === null ||
+        //     this.image_config.id !== params.config_id) return;
+
+        console.log("handleLabelsOpacityChange: ", params);
+        this.viewer.setLabelsOpacity(params.id, params.opacity);
     }
 
     /**

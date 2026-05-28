@@ -91,7 +91,6 @@ export default class ZarrSource extends TileImage {
           let height = result.height;
           let src = createRgbDataUrl(rgba, width, height, tileSize[0], tileSize[1]);
           const image = tile.getImage();
-          console.log("Tile image element:", image);
           image.src = src;
         });
       });

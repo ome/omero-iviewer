@@ -21,6 +21,7 @@ import Context from '../app/context';
 
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {INITIAL_TYPES, WEBCLIENT, IVIEWER, WEBGATEWAY} from '../utils/constants';
+import {LABELS_OPACITY_CHANGED} from '../events/events';
 
 @customElement('labels')
 @inject(Context, BindingEngine)
@@ -32,6 +33,13 @@ export class Labels {
      * @type {LabelsInfo}
      */
     @bindable labels_info = null;
+
+    /**
+     * the list of observers
+     * @memberof Info
+     * @type {Array.<Object>}
+     */
+    observers = [];
 
     /**
      * @constructor
@@ -72,11 +80,26 @@ export class Labels {
         //                         (newValue, oldValue) => this.onImageConfigChange()));
         //         });
         // };
-        // // listen for image info changes
-        // this.observers.push(
-        //     this.bindingEngine.propertyObserver(
-        //         this, 'labels_info').subscribe(
-        //             (newValue, oldValue) => changeImageConfig()));
+        
+        // listen for changes to labels_info 'zarrSources'
+        this.observers.push(
+            this.bindingEngine.propertyObserver(
+                this.labels_info, 'zarrSources').subscribe(
+                    (newValue, oldValue) => {
+                        console.log('zarrSources CHANGED!:', newValue);
+                        // listen to the opacity of each zarr source
+                        newValue.map((zarrSource) => {
+                            this.observers.push(
+                                this.bindingEngine.propertyObserver(
+                                    zarrSource, 'opacity').subscribe(
+                                        (newOpacity, oldOpacity) => {
+                                            console.log(`Opacity for zarr source ${zarrSource.id} changed to:`, newOpacity);
+                                            // trigger re-rendering of viewer with new opacity
+                                            console.log("Publishing", LABELS_OPACITY_CHANGED, "event for sourceId:", zarrSource.id, " new opacity:", newOpacity, "context:", this.context);
+                                            this.context.publish(LABELS_OPACITY_CHANGED, {id: zarrSource.id, opacity: newOpacity});
+                                        }));
+                        });
+                    }));
         // // initial image config
         // changeImageConfig();
     }

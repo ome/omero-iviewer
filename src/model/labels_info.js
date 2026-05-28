@@ -49,11 +49,11 @@ async function loadZarrLayers(lsids) {
             // scales is list of scale-shape for each resolution
             // e.g. [[1, 0.5, 0.36, 0.36], [1, 0.5, 0.72, 0.72], ...]
             scales: ngffImage.getScales(),
-            layers: [
-                {
-                    name: "default",
-                    channels: ngffImage.omero.channels,
-                }
+            dataLayers: [
+                // {
+                //     name: "default",
+                //     channels: ngffImage.omero.channels,
+                // }
             ],
         });
     };
