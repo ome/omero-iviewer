@@ -4,6 +4,8 @@ import TileImage from 'ol/source/TileImage';
 import TileGrid from 'ol/tilegrid/TileGrid';
 import {getTopLeft} from 'ol/extent';
 
+import * as omezarr from 'ome-zarr.js';
+
 const DEFAULT_TILE_SIZE = {width: 256, height: 256};
 
 export default class ZarrSource extends TileImage {
@@ -17,6 +19,7 @@ export default class ZarrSource extends TileImage {
     const scales = options.scales;
     const width = options.width;
     const height = options.height;
+    const chunks = options.chunks;
 
     if (typeof width !== 'number' || typeof height !== 'number') {
       throw new Error('ZarrSource requires numeric width and height options.');
@@ -38,6 +41,7 @@ export default class ZarrSource extends TileImage {
     const extent = [0, -height, width, 0];
     const tileGrid = new TileGrid({
       tileSize,
+      // or tileSizes: [[256, 256], [128, 128], ...] if tile size varies by zoom level
       extent,
       origin: getTopLeft(extent),
       resolutions
@@ -53,25 +57,39 @@ export default class ZarrSource extends TileImage {
           const z = tileCoord[0];
           const x = tileCoord[1];
           const y = -tileCoord[2] - 1;
-          return `/zarr_tile/${z}/${x}/${y}/`;
+          return `${z}/${x}/${y}`;
         };
+
+    const tileLoadFunction = (tile, src) => {
+      console.log('Loading tile from URL:', src, "tile width", tileSizeOption.width, "tile height", tileSizeOption.height);
+
+      let [zm, x, y] = src.split('/').map(Number);
+      console.log("Parsed tile coordinates:", {zm, x, y});
+      let slices = {"x": [x * tileSize[0], (x + 1) * tileSize[0]], "y": [y * tileSize[1], (y + 1) * tileSize[1]]};
+
+      // Map OL z level to the nearest Zarr dataset index.
+      let datasetIndex = scales.length - 1 - zm;
+      console.log("DatasetIndex:", datasetIndex, "Slices:", slices);
+
+      omezarr.NgffImage.load(source, {datasetIndex}).then(ngffImg => {
+        
+        ngffImg.render({arrayPathOrIndex: datasetIndex, slices}).then(src => {
+          const image = tile.getImage();
+          console.log("Tile image element:", image);
+          image.src = src;
+        });
+      });
+    }
 
     super({
       transition: 0,
       crossOrigin: options.crossOrigin || 'anonymous',
       tileGrid,
       tileUrlFunction,
-      tileLoadFunction: options.tileLoadFunction || ZarrSource.tileLoadFunction
+      tileLoadFunction: options.tileLoadFunction || tileLoadFunction
     });
 
     this.options_ = options;
-  }
-
-  static tileLoadFunction(tile, src) {
-    console.log('Loading tile from URL:', src);
-
-    const image = tile.getImage();
-    image.src = src;
   }
 }
 

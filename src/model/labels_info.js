@@ -101,8 +101,10 @@ export default class LabelsInfo  {
         lsids.forEach((lsid) => {
             omezarr.NgffImage.load(lsid).then((ngffImage) => {
                 console.log("LabelsInfo: Got NGFF image for Lsid " + lsid + ": ", ngffImage);
-                ngffImage.getShape().then((shape) => {
-                    console.log("LabelsInfo: Got shape for NGFF image: ", shape);
+                ngffImage.openArray(0).then((arr0) => {
+                    console.log("LabelsInfo: Got shape for NGFF image: ", arr0.shape);
+                    let shape = arr0.shape;
+                    let chunks = arr0.chunks;
                     newZarrs.push({
                         id: Misc.getRandomInteger(0, 100000),
                         name: "Labels Layer",
@@ -110,6 +112,7 @@ export default class LabelsInfo  {
                         // e.g. [{name: 't', type: 'time'}, {name: 'y', type: 'space'}, {name: 'x', type: 'space'}]
                         axes: ngffImage.axes,
                         shape: shape,
+                        chunks: chunks,
                         // scales is list of scale-shape for each resolution
                         // e.g. [[1, 0.5, 0.36, 0.36], [1, 0.5, 0.72, 0.72], ...]
                         scales: ngffImage.getScales(),

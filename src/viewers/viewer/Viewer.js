@@ -825,7 +825,12 @@ class Viewer extends OlObject {
                 source: dataSrc.source,
                 width: dataSrc.shape[xAxis],
                 height: dataSrc.shape[yAxis],
+                tile_size: {
+                    width: dataSrc.chunks[xAxis],
+                    height: dataSrc.chunks[yAxis]
+                },
                 scales: dataSrc.scales,
+                chunks: dataSrc.chunks,
             });
             this.viewer_.addLayer(new Tile({source: zarrSource}));
         });
