@@ -171,6 +171,15 @@ export default class Ol3Viewer extends EventSubscriber {
         this.context = context;
         this.element = element;
         this.bindingEngine = bindingEngine;
+
+        console.log("Ol3Viewer constructor... listening for add_rois");
+
+        const bc = new BroadcastChannel("add_rois");
+        bc.onmessage = (event) => {
+            console.log("Received viewer, event", this.viewer, event);
+            if (!this.viewer) return;
+            this.viewer.addRegions(event.data);
+        }
     }
 
     /**

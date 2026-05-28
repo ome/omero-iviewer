@@ -157,6 +157,19 @@ export default class ThumbnailSlider extends EventSubscriber {
         this.web_api_base = this.context.getPrefixedURI(WEB_API_BASE);
         this.webclient_prefix = this.context.getPrefixedURI(WEBCLIENT);
         this.webgateway_prefix = this.context.getPrefixedURI(WEBGATEWAY);
+
+        // listen for broadcast of image selection
+        console.log("Listening for 'image_selected' broadcasts");
+        const bc = new BroadcastChannel("image_selected");
+        bc.onmessage = (event) => {
+            if (typeof event.data === 'number' && event.data > 0) {
+                this.context.onClicks(event.data);
+            }
+        };
+
+
+        // broadcast channel for image selection changes
+        this.image_bc = new BroadcastChannel("iviewer_image_selected");
     }
 
     /**
@@ -608,7 +621,13 @@ export default class ThumbnailSlider extends EventSubscriber {
             clearTimeout(this.click_handle);
             this.click_handle = null;
         }
-        this.click_handle = setTimeout(() => this.context.onClicks(image_id), 250);
+        this.click_handle = setTimeout(() => {
+            this.context.onClicks(image_id);
+
+            // broadcast selection of image (single click)
+            console.log("Broadcasting 'iviewer_image_selected':", image_id);
+            this.image_bc.postMessage(image_id);
+        }, 250);
     }
 
     /**

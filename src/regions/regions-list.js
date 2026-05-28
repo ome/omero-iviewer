@@ -111,6 +111,16 @@ export default class RegionsList extends EventSubscriber {
         super(context.eventbus);
         this.context = context;
         this.bindingEngine = bindingEngine;
+
+        // listen for Broadcast events, e.g. bc.postMessage({id: "123:456"});
+        const bc = new BroadcastChannel("shape_selection");
+        bc.onmessage = (event) => {
+            console.log(event, event.data.id);
+            this.selectShape(event.data.id, true, undefined, false);
+        };
+
+        // broadcast shape selection changes
+        this.iviewer_bc = new BroadcastChannel("iviewer_shape_selection");
     }
 
     /**
@@ -375,7 +385,8 @@ export default class RegionsList extends EventSubscriber {
      * @memberof RegionsList
      */
     selectShape(id, selected, event, is_rois_row=false) {
-        if (event.target.tagName.toUpperCase() === 'INPUT' ||
+        console.log("selectShape", id, selected, event, is_rois_row);
+        if (event?.target.tagName.toUpperCase() === 'INPUT' ||
             (is_rois_row &&
                 (event.target.className.indexOf("roi_id") !== -1 ||
                 event.target.parentNode.className.indexOf("roi_id") !== -1)))
@@ -383,8 +394,8 @@ export default class RegionsList extends EventSubscriber {
 
         // see if cmd/ctrl or shift was used (for multiselection)
         let cmdKey = Misc.isApple() ? 'metaKey' : 'ctrlKey';
-        let ctrl = typeof event[cmdKey] === 'boolean' && event[cmdKey];
-        let shift = event.shiftKey;
+        let ctrl = typeof event?.[cmdKey] === 'boolean' && event[cmdKey];
+        let shift = event?.shiftKey;
 
         // initialize selection params
         id += '';
@@ -455,6 +466,13 @@ export default class RegionsList extends EventSubscriber {
                         this.selected_row =
                             this.regions_info.selected_shapes[selLen-2];
             }
+        }
+
+        // If event (came from a click, not BroadcastChannel), then
+        // we broadcast the shape selection to other windows
+        if (typeof event === 'object' && event !== undefined) {
+            console.log("Broadcasting 'iviewer_shape_selection':", ids);
+            this.iviewer_bc.postMessage(ids);
         }
 
         this.context.publish(
