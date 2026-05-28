@@ -29,9 +29,9 @@ export class Labels {
     /**
      * a reference to the image info  (bound in template)
      * @memberof Labels
-     * @type {ImageInfo}
+     * @type {LabelsInfo}
      */
-    @bindable image_info = null;
+    @bindable labels_info = null;
 
     /**
      * @constructor
@@ -51,12 +51,12 @@ export class Labels {
      * @memberof Labels
      */
     bind() {
-        console.log('Binding Labels component with image_info:', this.image_info);
+        console.log('Binding Labels component with labels_info:', this.labels_info);
         // let changeImageConfig = () => {
-        //     if (this.image_info === null) return;
+        //     if (this.labels_info === null) return;
 
-        //     if (this.image_info.ready) {
-        //         console.log('Image info is READY for LABELS:', this.image_info);
+        //     if (this.labels_info.ready) {
+        //         console.log('Image info is READY for LABELS:', this.labels_info);
         //         this.onImageConfigChange();
         //         return;
         //     }
@@ -68,14 +68,14 @@ export class Labels {
         //         (p) => {
         //             this.observers.push(
         //                 this.bindingEngine.propertyObserver(
-        //                     this.image_info, p).subscribe(
+        //                     this.labels_info, p).subscribe(
         //                         (newValue, oldValue) => this.onImageConfigChange()));
         //         });
         // };
         // // listen for image info changes
         // this.observers.push(
         //     this.bindingEngine.propertyObserver(
-        //         this, 'image_info').subscribe(
+        //         this, 'labels_info').subscribe(
         //             (newValue, oldValue) => changeImageConfig()));
         // // initial image config
         // changeImageConfig();
@@ -103,8 +103,8 @@ export class Labels {
      * @memberof Labels
      */
     onImageConfigChange() {
-        if (this.image_info === null) return;
-        console.log('Image config changed for LABELS:', this.image_info);
+        if (this.labels_info === null) return;
+        console.log('Image config changed for LABELS:', this.labels_info);
 
        
     }

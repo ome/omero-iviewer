@@ -39,12 +39,13 @@ async function loadZarrLayers(lsids) {
         newZarrs.push({
             id: Misc.getRandomInteger(0, 100000),
             name: "Labels Layer",
-            visible: false,
+            visible: true,
             source: lsid,
             // e.g. [{name: 't', type: 'time'}, {name: 'y', type: 'space'}, {name: 'x', type: 'space'}]
             axes: ngffImage.axes,
             shape: shape,
             chunks: chunks,
+            opacity: 1.0,
             // scales is list of scale-shape for each resolution
             // e.g. [[1, 0.5, 0.36, 0.36], [1, 0.5, 0.72, 0.72], ...]
             scales: ngffImage.getScales(),
