@@ -8,6 +8,18 @@ import * as omezarr from 'ome-zarr.js';
 
 const DEFAULT_TILE_SIZE = {width: 256, height: 256};
 
+function createRgbDataUrl(rbgData, dataWidth, dataHeight, tileWidth, tileHeight) {
+  // paste rgbData onto a canvas to match the tile size
+  let h = rbgData.length / (dataWidth * 4);
+  const canvas = document.createElement("canvas");
+  canvas.width = tileWidth;
+  canvas.height = tileHeight;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return "";
+  ctx.putImageData(new ImageData(rbgData, dataWidth, dataHeight), 0, 0);
+  return canvas.toDataURL("image/png");
+};
+
 export default class ZarrSource extends TileImage {
   constructor(options = {}) {
 
@@ -73,7 +85,11 @@ export default class ZarrSource extends TileImage {
 
       omezarr.NgffImage.load(source, {datasetIndex}).then(ngffImg => {
         
-        ngffImg.render({arrayPathOrIndex: datasetIndex, slices}).then(src => {
+        ngffImg.renderRgba({arrayPathOrIndex: datasetIndex, slices}).then(result => {
+          let rgba = result.data;
+          let width = result.width;
+          let height = result.height;
+          let src = createRgbDataUrl(rgba, width, height, tileSize[0], tileSize[1]);
           const image = tile.getImage();
           console.log("Tile image element:", image);
           image.src = src;
