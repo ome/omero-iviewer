@@ -24,6 +24,41 @@ import {
     WEB_API_BASE,
 } from '../utils/constants';
 
+
+async function loadZarrLayers(lsids) {
+
+    let newZarrs = [];
+
+    for (const lsid of lsids) {
+        const ngffImage = await omezarr.NgffImage.load(lsid);
+        const arr0 = await ngffImage.openArray(0);
+
+        console.log("LabelsInfo: Got shape for NGFF image: ", arr0.shape);
+        let shape = arr0.shape;
+        let chunks = arr0.chunks;
+        newZarrs.push({
+            id: Misc.getRandomInteger(0, 100000),
+            name: "Labels Layer",
+            visible: false,
+            source: lsid,
+            // e.g. [{name: 't', type: 'time'}, {name: 'y', type: 'space'}, {name: 'x', type: 'space'}]
+            axes: ngffImage.axes,
+            shape: shape,
+            chunks: chunks,
+            // scales is list of scale-shape for each resolution
+            // e.g. [[1, 0.5, 0.36, 0.36], [1, 0.5, 0.72, 0.72], ...]
+            scales: ngffImage.getScales(),
+            layers: [
+                {
+                    name: "default",
+                    channels: ngffImage.omero.channels,
+                }
+            ],
+        });
+    };
+    return newZarrs;
+}
+
 /**
  * Holds region information
  */
@@ -95,40 +130,9 @@ export default class LabelsInfo  {
             return;
         }
 
-        let newZarrs = [];
-
-        // Seems we can't have loadZarr() being async, so we need callbacks...
-        lsids.forEach((lsid) => {
-            omezarr.NgffImage.load(lsid).then((ngffImage) => {
-                console.log("LabelsInfo: Got NGFF image for Lsid " + lsid + ": ", ngffImage);
-                ngffImage.openArray(0).then((arr0) => {
-                    console.log("LabelsInfo: Got shape for NGFF image: ", arr0.shape);
-                    let shape = arr0.shape;
-                    let chunks = arr0.chunks;
-                    newZarrs.push({
-                        id: Misc.getRandomInteger(0, 100000),
-                        name: "Labels Layer",
-                        source: lsid,
-                        // e.g. [{name: 't', type: 'time'}, {name: 'y', type: 'space'}, {name: 'x', type: 'space'}]
-                        axes: ngffImage.axes,
-                        shape: shape,
-                        chunks: chunks,
-                        // scales is list of scale-shape for each resolution
-                        // e.g. [[1, 0.5, 0.36, 0.36], [1, 0.5, 0.72, 0.72], ...]
-                        scales: ngffImage.getScales(),
-                        layers: [
-                            {
-                                name: "default",
-                                channels: ngffImage.omero.channels,
-                            }
-                        ],
-                    });
-
-                    // TODO: only set these after ALL lsids have been loaded
-                    this.zarrSources = newZarrs;
-                    this.ready = true;
-                });
-            });
+        loadZarrLayers(lsids).then((newZarrs) => {
+            this.zarrSources = newZarrs;
+            this.ready = true;
         });
     }
 
