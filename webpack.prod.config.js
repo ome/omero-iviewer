@@ -4,7 +4,7 @@ const ProvidePlugin = require('webpack/lib/ProvidePlugin');
 
 module.exports = {
   entry: {
-    main: './src/main',
+    main: ['babel-polyfill', './src/main'],
     deps: ['d3', 'file-saver', 'text-encoding']
   },
   output: {
