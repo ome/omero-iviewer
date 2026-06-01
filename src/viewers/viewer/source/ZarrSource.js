@@ -22,7 +22,6 @@ function createRgbDataUrl(rbgData, dataWidth, dataHeight, tileWidth, tileHeight)
 
 export default class ZarrSource extends TileImage {
   constructor(options = {}) {
-
     // zarr url
     const source = options.source;
 
@@ -32,6 +31,7 @@ export default class ZarrSource extends TileImage {
     const width = options.width;
     const height = options.height;
     const chunks = options.chunks;
+    const initialColor = options.color || "#00ffff";
 
     if (typeof width !== 'number' || typeof height !== 'number') {
       throw new Error('ZarrSource requires numeric width and height options.');
@@ -72,8 +72,8 @@ export default class ZarrSource extends TileImage {
           return `${z}/${x}/${y}`;
         };
 
-    const tileLoadFunction = (tile, src) => {
-      console.log('Loading tile from URL:', src, "tile width", tileSizeOption.width, "tile height", tileSizeOption.height);
+    const tileLoadFunction = ((tile, src) => {
+      console.log('tileLoadFunction ----->', this, this.color);
 
       let [zm, x, y] = src.split('/').map(Number);
       console.log("Parsed tile coordinates:", {zm, x, y});
@@ -85,6 +85,13 @@ export default class ZarrSource extends TileImage {
 
       omezarr.NgffImage.load(source, {datasetIndex}).then(ngffImg => {
         
+        // TODO handle multiple channels - turn on only 1
+        ngffImg.setChannelColor(0, this.color || initialColor);
+        if (this.autoColor) {
+          ngffImg.setChannelLut(0, "glasbey");
+        } else {
+          ngffImg.setChannelLut(0, undefined);
+        }
         ngffImg.renderRgba({arrayPathOrIndex: datasetIndex, slices}).then(result => {
           let rgba = result.data;
           let width = result.width;
@@ -94,7 +101,7 @@ export default class ZarrSource extends TileImage {
           image.src = src;
         });
       });
-    }
+    });
 
     super({
       transition: 0,
@@ -105,6 +112,15 @@ export default class ZarrSource extends TileImage {
     });
 
     this.options_ = options;
+  }
+
+  setRdef(zarrSource) {
+    console.log("----> Setting RDEF for zarrSource: ", zarrSource.color, this);
+
+    this.color = zarrSource.color;
+    this.autoColor = zarrSource.autoColor;
+    // trigger reload of tiles to apply new RDEF
+    this.refresh();
   }
 }
 

@@ -21,7 +21,7 @@ import Context from '../app/context';
 
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {INITIAL_TYPES, WEBCLIENT, IVIEWER, WEBGATEWAY} from '../utils/constants';
-import {LABELS_OPACITY_CHANGED} from '../events/events';
+import {LABELS_OPACITY_CHANGED, LABELS_RDEF_CHANGED} from '../events/events';
 
 @customElement('labels')
 @inject(Context, BindingEngine)
@@ -100,8 +100,18 @@ export class Labels {
                                         }));
                         });
                     }));
-        // // initial image config
-        // changeImageConfig();
+    }
+
+    /**
+     * Label Color picker and 'Auto' checkbox both call this...
+     * @param {*} zarrSourceId 
+     */
+    requestLabelRerender(zarrSourceId) {
+        // The UI component binds the color and autoColor, so the data should have changed...
+        // We can trigger event with the whole zarrSource
+        let zarrSource = this.labels_info.zarrSources.find(src => src.id === zarrSourceId);
+        console.log("CHANGED", zarrSource);
+        this.context.publish(LABELS_RDEF_CHANGED, zarrSource);
     }
 
     /**

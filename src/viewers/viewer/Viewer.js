@@ -831,6 +831,7 @@ class Viewer extends OlObject {
                 },
                 scales: dataSrc.scales,
                 chunks: dataSrc.chunks,
+                color: dataSrc.color,
             });
             let tileLayer = new Tile({source: zarrSource});
             tileLayer.set('id', dataSrc.id);
@@ -843,6 +844,17 @@ class Viewer extends OlObject {
             console.log("Checking layer for id: ", layer.get('id'), " against ", id);
             if (layer instanceof Tile && layer.get('id') === id) {
                 layer.setOpacity(opacity);
+            }
+        });
+    }
+
+    setLabelsRdef(zarrSource) {
+        console.log("setLabelsRdef()", zarrSource);
+        // the zarrSource.id will be the layer id...
+        this.viewer_.getLayers().forEach(layer => {
+            console.log("Checking layer for id: ", layer.get('id'), " against ", zarrSource.id);
+            if (layer instanceof Tile && layer.get('id') === zarrSource.id) {
+                layer.getSource().setRdef(zarrSource);
             }
         });
     }

@@ -43,7 +43,7 @@ import {
     REGIONS_SHOW_COMMENTS, REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES,
     VIEWER_IMAGE_SETTINGS, VIEWER_PROJECTIONS_SYNC, VIEWER_SET_SYNC_GROUP,
     ENABLE_SHAPE_POPUP, TILE_LOAD_ERROR, RENDER_COMPLETE,
-    LABELS_OPACITY_CHANGED,
+    LABELS_OPACITY_CHANGED, LABELS_RDEF_CHANGED,
     EventSubscriber
 } from '../events/events';
 
@@ -161,7 +161,10 @@ export default class Ol3Viewer extends EventSubscriber {
         [IMAGE_SETTINGS_REFRESH,
             (params={}) => this.refreshImageSettings(params)],
         [LABELS_OPACITY_CHANGED,
-            (params={}) => this.handleLabelsOpacityChange(params)]];
+            (params={}) => this.handleLabelsOpacityChange(params)],
+        [LABELS_RDEF_CHANGED,
+            (params={}) => this.handleLabelsRdefChange(params)],
+        ];
 
     /**
      * @constructor
@@ -637,11 +640,13 @@ export default class Ol3Viewer extends EventSubscriber {
     }
 
     handleLabelsOpacityChange(params = {}) {
-        // if (this.viewer === null || this.image_config === null ||
-        //     this.image_config.id !== params.config_id) return;
-
         console.log("handleLabelsOpacityChange: ", params);
         this.viewer.setLabelsOpacity(params.id, params.opacity);
+    }
+
+    handleLabelsRdefChange(params = {}) {
+        console.log("handleLabelsRdefChange: ", params);
+        this.viewer.setLabelsRdef(params);
     }
 
     /**

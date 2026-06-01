@@ -34,28 +34,37 @@ async function loadZarrLayers(lsids) {
         const arr0 = await ngffImage.openArray(0);
 
         console.log("LabelsInfo: Got shape for NGFF image: ", arr0.shape);
+        let dimNames = ngffImage.axes.map(a => a.name);
+        let chSize = arr0.shape[dimNames.indexOf("c")] || 1;
         let shape = arr0.shape;
         let chunks = arr0.chunks;
-        newZarrs.push({
-            id: Misc.getRandomInteger(0, 100000),
-            name: "Labels Layer",
-            visible: true,
-            source: lsid,
-            // e.g. [{name: 't', type: 'time'}, {name: 'y', type: 'space'}, {name: 'x', type: 'space'}]
-            axes: ngffImage.axes,
-            shape: shape,
-            chunks: chunks,
-            opacity: 1.0,
-            // scales is list of scale-shape for each resolution
-            // e.g. [[1, 0.5, 0.36, 0.36], [1, 0.5, 0.72, 0.72], ...]
-            scales: ngffImage.getScales(),
-            dataLayers: [
-                // {
-                //     name: "default",
-                //     channels: ngffImage.omero.channels,
-                // }
-            ],
-        });
+        for (let c = 0; c < chSize; c++) {
+            newZarrs.push({
+                id: Misc.getRandomInteger(0, 100000),
+                name: "Labels Layer",
+                visible: true,
+                source: lsid,
+                // e.g. [{name: 't', type: 'time'}, {name: 'y', type: 'space'}, {name: 'x', type: 'space'}]
+                axes: ngffImage.axes,
+                channelIndex: c,
+                color: "#00ffff",
+                autoColor: false,
+                lut: "glasbey",
+                colorMap: {},
+                shape: shape,
+                chunks: chunks,
+                opacity: 1.0,
+                // scales is list of scale-shape for each resolution
+                // e.g. [[1, 0.5, 0.36, 0.36], [1, 0.5, 0.72, 0.72], ...]
+                scales: ngffImage.getScales(),
+                dataLayers: [
+                    // {
+                    //     name: "default",
+                    //     channels: ngffImage.omero.channels,
+                    // }
+                ],
+            });
+        }
     };
     return newZarrs;
 }
