@@ -846,6 +846,14 @@ class Viewer extends OlObject {
         });
     }
 
+    setLabelsVisibility(id, visible) {
+        this.viewer_.getLayers().forEach(layer => {
+            if (layer instanceof Tile && layer.get('id') === id) {
+                layer.setVisible(visible);
+            }
+        });
+    }
+
     setLabelsRdef(zarrSource) {
         console.log("setLabelsRdef()", zarrSource);
         // the zarrSource.id will be the layer id...

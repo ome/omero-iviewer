@@ -86,6 +86,8 @@ export const SAVE_ACTIVE_IMAGE_SETTINGS = "SAVE_ACTIVE_IMAGE_SETTINGS";
 export const TILE_LOAD_ERROR = "TILE_LOAD_ERROR";
 /** change opacity of a zarr labels layer */
 export const LABELS_OPACITY_CHANGED = "LABELS_OPACITY_CHANGED";
+/** change visibility of a zarr labels layer */
+export const LABELS_VISIBILITY_CHANGED = "LABELS_VISIBILITY_CHANGED";
 /** change rendering settings of a zarr labels layer */
 export const LABELS_RDEF_CHANGED = "LABELS_RDEF_CHANGED";
 

@@ -43,7 +43,7 @@ import {
     REGIONS_SHOW_COMMENTS, REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES,
     VIEWER_IMAGE_SETTINGS, VIEWER_PROJECTIONS_SYNC, VIEWER_SET_SYNC_GROUP,
     ENABLE_SHAPE_POPUP, TILE_LOAD_ERROR, RENDER_COMPLETE,
-    LABELS_OPACITY_CHANGED, LABELS_RDEF_CHANGED,
+    LABELS_OPACITY_CHANGED, LABELS_VISIBILITY_CHANGED, LABELS_RDEF_CHANGED,
     EventSubscriber
 } from '../events/events';
 
@@ -162,6 +162,8 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.refreshImageSettings(params)],
         [LABELS_OPACITY_CHANGED,
             (params={}) => this.handleLabelsOpacityChange(params)],
+        [LABELS_VISIBILITY_CHANGED,
+            (params={}) => this.handleLabelsVisibilityChange(params)],
         [LABELS_RDEF_CHANGED,
             (params={}) => this.handleLabelsRdefChange(params)],
         ];
@@ -642,6 +644,11 @@ export default class Ol3Viewer extends EventSubscriber {
     handleLabelsOpacityChange(params = {}) {
         console.log("handleLabelsOpacityChange: ", params);
         this.viewer.setLabelsOpacity(params.id, params.opacity);
+    }
+
+    handleLabelsVisibilityChange(params = {}) {
+        console.log("handleLabelsVisibilityChange: ", params);
+        this.viewer.setLabelsVisibility(params.id, params.visibility);
     }
 
     handleLabelsRdefChange(params = {}) {
