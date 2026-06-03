@@ -9,6 +9,12 @@ import * as omezarr from 'ome-zarr.js';
 const DEFAULT_TILE_SIZE = {width: 256, height: 256};
 
 function createRgbDataUrl(rbgData, dataWidth, dataHeight, tileWidth, tileHeight) {
+  // TEMP make any black pixel into 0 transparency
+  for (let i = 0; i < rbgData.length; i += 4) {
+    if (rbgData[i] === 0 && rbgData[i + 1] === 0 && rbgData[i + 2] === 0) {
+      rbgData[i + 3] = 0; // Set alpha to 0 for black pixels
+    }
+  }
   // paste rgbData onto a canvas to match the tile size
   let h = rbgData.length / (dataWidth * 4);
   const canvas = document.createElement("canvas");
@@ -32,6 +38,7 @@ export default class ZarrSource extends TileImage {
     const height = options.height;
     const chunks = options.chunks;
     const initialColor = options.color || "#00ffff";
+    const channelIndex = options.channelIndex || 0;
 
     if (typeof width !== 'number' || typeof height !== 'number') {
       throw new Error('ZarrSource requires numeric width and height options.');
@@ -86,11 +93,14 @@ export default class ZarrSource extends TileImage {
       omezarr.NgffImage.load(source, {datasetIndex}).then(ngffImg => {
         
         // TODO handle multiple channels - turn on only 1
-        ngffImg.setChannelColor(0, this.color || initialColor);
+        for (let c = 0; c < ngffImg.omero.channels.length; c++) {
+          ngffImg.setChannelActive(c, c === channelIndex);
+        }
+        ngffImg.setChannelColor(channelIndex, this.color || initialColor);
         if (this.autoColor) {
-          ngffImg.setChannelLut(0, "glasbey");
+          ngffImg.setChannelLut(channelIndex, "glasbey");
         } else {
-          ngffImg.setChannelLut(0, undefined);
+          ngffImg.setChannelLut(channelIndex, undefined);
         }
         ngffImg.renderRgba({arrayPathOrIndex: datasetIndex, slices}).then(result => {
           let rgba = result.data;

@@ -24,6 +24,9 @@ import {
     WEB_API_BASE,
 } from '../utils/constants';
 
+let colors = [
+    "#00ffff", "#ff00ff", "#ffff00", "#00ff00", "#ff0000",
+]
 
 async function loadZarrLayers(lsids) {
 
@@ -38,7 +41,7 @@ async function loadZarrLayers(lsids) {
         let chSize = arr0.shape[dimNames.indexOf("c")] || 1;
         let shape = arr0.shape;
         let chunks = arr0.chunks;
-        for (let c = 0; c < chSize; c++) {
+        for (let channelIndex = 0; channelIndex < chSize; channelIndex++) {
             newZarrs.push({
                 id: Misc.getRandomInteger(0, 100000),
                 name: "Labels Layer",
@@ -46,8 +49,8 @@ async function loadZarrLayers(lsids) {
                 source: lsid,
                 // e.g. [{name: 't', type: 'time'}, {name: 'y', type: 'space'}, {name: 'x', type: 'space'}]
                 axes: ngffImage.axes,
-                channelIndex: c,
-                color: "#00ffff",
+                channelIndex: channelIndex,
+                color: colors[channelIndex % colors.length],
                 autoColor: false,
                 lut: "glasbey",
                 colorMap: {},

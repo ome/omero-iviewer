@@ -810,12 +810,10 @@ class Viewer extends OlObject {
     addZarrSources(data) {
         console.log("addZarrSources()", data);
         // data is zarrSources list... id, name, source, layers,
-
         if (!(this.viewer_ instanceof OlMap)) {
             console.error("Viewer not initialized, cannot add Zarr sources");
             return;
         }
-        // this.viewer_.addLayer(new Vector({source : this.regions_}));
 
         data.forEach(dataSrc => {
             let axesNames = dataSrc.axes.map(a => a.name);
@@ -832,6 +830,7 @@ class Viewer extends OlObject {
                 scales: dataSrc.scales,
                 chunks: dataSrc.chunks,
                 color: dataSrc.color,
+                channelIndex: dataSrc.channelIndex,
             });
             let tileLayer = new Tile({source: zarrSource});
             tileLayer.set('id', dataSrc.id);
@@ -841,7 +840,6 @@ class Viewer extends OlObject {
 
     setLabelsOpacity(id, opacity) {
         this.viewer_.getLayers().forEach(layer => {
-            console.log("Checking layer for id: ", layer.get('id'), " against ", id);
             if (layer instanceof Tile && layer.get('id') === id) {
                 layer.setOpacity(opacity);
             }
@@ -852,7 +850,6 @@ class Viewer extends OlObject {
         console.log("setLabelsRdef()", zarrSource);
         // the zarrSource.id will be the layer id...
         this.viewer_.getLayers().forEach(layer => {
-            console.log("Checking layer for id: ", layer.get('id'), " against ", zarrSource.id);
             if (layer instanceof Tile && layer.get('id') === zarrSource.id) {
                 layer.getSource().setRdef(zarrSource);
             }
