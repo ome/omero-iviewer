@@ -819,6 +819,7 @@ class Viewer extends OlObject {
             let axesNames = dataSrc.axes.map(a => a.name);
             let xAxis = axesNames.indexOf('x');
             let yAxis = axesNames.indexOf('y');
+            // expect single tableDataLayers
             var zarrSource = new ZarrSource({
                 source: dataSrc.source,
                 width: dataSrc.shape[xAxis],
@@ -829,11 +830,11 @@ class Viewer extends OlObject {
                 },
                 scales: dataSrc.scales,
                 chunks: dataSrc.chunks,
-                color: dataSrc.color,
+                color: dataSrc.tableDataLayers[0].color,
                 channelIndex: dataSrc.channelIndex,
             });
             let tileLayer = new Tile({source: zarrSource});
-            tileLayer.set('id', dataSrc.id);
+            tileLayer.set('id', dataSrc.tableDataLayers[0].id);
             this.viewer_.addLayer(tileLayer);
         });
     }

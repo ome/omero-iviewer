@@ -41,29 +41,41 @@ async function loadZarrLayers(lsids) {
         let shape = arr0.shape;
         let chunks = arr0.chunks;
         for (let channelIndex = 0; channelIndex < chSize; channelIndex++) {
+            let allObjectsLayerId = Misc.getRandomInteger(0, 100000);
             newZarrs.push({
+                // this id just used for UI purposes
                 id: Misc.getRandomInteger(0, 100000),
-                name: "Labels Layer",
                 visible: true,
                 source: lsid,
                 // e.g. [{name: 't', type: 'time'}, {name: 'y', type: 'space'}, {name: 'x', type: 'space'}]
                 axes: ngffImage.axes,
                 channelIndex: channelIndex,
-                color: colors[channelIndex % colors.length],
-                autoColor: false,
-                lut: "glasbey",
-                colorMap: {},
+
+                // We just expand/select 1 layer at at time
+                selectedLayerId: allObjectsLayerId,
+
+                // color: colors[channelIndex % colors.length],
+                // autoColor: false,
+                // lut: "glasbey",
+                // colorMap: {},
                 shape: shape,
                 chunks: chunks,
-                opacity: 1.0,
+                // opacity: 1.0,
                 // scales is list of scale-shape for each resolution
                 // e.g. [[1, 0.5, 0.36, 0.36], [1, 0.5, 0.72, 0.72], ...]
                 scales: ngffImage.getScales(),
                 tableDataLayers: [
-                    // {
-                    //     name: "default",
-                    //     id: 123
-                    // }
+                    {
+                        name: "All objects",
+                        // this ID used for openlayers layer ID
+                        id: allObjectsLayerId,
+                        tableFileId: null, // to be filled when user selects a table
+                        tableFilename: null,
+                        visible: true,
+                        opacity: 1.0,
+                        color: colors[channelIndex % colors.length],
+                        autoColor: false,
+                    }
                 ],
             });
         }
@@ -142,9 +154,11 @@ export default class LabelsInfo  {
             return;
         }
 
+        // Load Zarr image info for each Lsid, and check for OMERO.tables on the Image...
         this.zarrSources = await loadZarrLayers(lsids);
-
         this.omeroTables = await this.loadAvailableTables();
+
+        // ready triggers display of <labels> component in the UI 
         this.ready = true;
     }
 
@@ -153,13 +167,9 @@ export default class LabelsInfo  {
         let url = this.image_info.context.server;
             url += this.image_info.context.getPrefixedURI(WEBCLIENT) +
                 '/api/annotations/?type=file&image=' + this.image_info.image_id;
-        console.log("Requesting available tables with url: ", url);
-
         let jsonData = await fetch(url).then(response => response.json());
-        console.log("TABLES RESPONSE: ", jsonData);
         // each ann is {'id': 123, 'file': {'mimetype': 'OMERO.tables', id: 456, name:"my_table", size: 789}, date: "2026-06-03T15:22:25+01:00", ...}
         let tables = jsonData.annotations.filter(ann => ann.file?.mimetype === "OMERO.tables");
-        console.log("TABLES: ", tables);
         return tables;
     }
 
@@ -184,7 +194,7 @@ export default class LabelsInfo  {
      */
     requestData(forceUpdate = false) {
 
-        console.log("REQUESTING LABELS INFO FOR IMAGE CONFIG: " + this.image_info.config_id);
+        console.trace("REQUESTING LABELS INFO FOR IMAGE CONFIG: " + this.image_info.config_id);
         if (this.ready && !forceUpdate) return;
         // if we're busy, but still want to update, remember to try again...
         // otherwise data can end up out-of-sync with Z/T if loading by plane

@@ -1660,3 +1660,22 @@ thumbnail-slider img {
     border: solid #ccc 1px;
     border-radius: 3px;
 }
+
+.layer-select {
+    border: solid 1px #ccc;
+    padding: 5px;
+    border-radius: 3px;
+}
+.layer-select label {
+    margin-bottom: 0;
+}
+.layer-select-label {
+    flex: 1 1 auto;
+    padding: 2px 5px;
+    cursor: pointer;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    font-weight: 400;
+}

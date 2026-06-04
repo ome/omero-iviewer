@@ -18,11 +18,15 @@
 
 // js
 import Context from '../app/context';
+import Misc from '../utils/misc';
 
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {INITIAL_TYPES, WEBCLIENT, IVIEWER, WEBGATEWAY} from '../utils/constants';
 import {LABELS_OPACITY_CHANGED, LABELS_VISIBILITY_CHANGED, LABELS_RDEF_CHANGED} from '../events/events';
 
+let colors = [
+    "#ffff00", "#00ff00", "#ff0000", "#ff00ff", "#ffffff",
+]
 @customElement('labels')
 @inject(Context, BindingEngine)
 export class Labels {
@@ -59,44 +63,32 @@ export class Labels {
      * @memberof Labels
      */
     bind() {
-        console.log('Binding Labels component with labels_info:', this.labels_info);
+        // console.log('Binding Labels component with labels_info:', this.labels_info);
         
         // listen for changes to labels_info 'zarrSources'
-        this.observers.push(
-            this.bindingEngine.propertyObserver(
-                this.labels_info, 'zarrSources').subscribe(
-                    (newValue, oldValue) => {
-                        console.log('zarrSources CHANGED!:', newValue);
-                        // listen to the opacity of each zarr source
-                        newValue.map((zarrSource) => {
+        // this.observers.push(
+        //     this.bindingEngine.propertyObserver(
+        //         this.labels_info, 'zarrSources').subscribe(
+        //             (newValue, oldValue) => {
+        //                 console.log('zarrSources CHANGED!:', newValue);
+        //                 // listen to the opacity of each zarr source
+        //                 newValue.map((zarrSource) => {
                             /** change opacity of a zarr labels layer */
-                            this.observers.push(
-                                this.bindingEngine.propertyObserver(
-                                    zarrSource, 'opacity').subscribe(
-                                        (newOpacity, oldOpacity) => {
-                                            this.context.publish(LABELS_OPACITY_CHANGED, {id: zarrSource.id, opacity: newOpacity});
-                                        }));
-                            /** change visibility of a zarr labels layer */
-                            this.observers.push(
-                                this.bindingEngine.propertyObserver(
-                                    zarrSource, 'visible').subscribe(
-                                        (newVisibility, oldVisibility) => {
-                                            this.context.publish(LABELS_VISIBILITY_CHANGED, {id: zarrSource.id, visibility: newVisibility});
-                                        }));
-                        });
-                    }));
-    }
-
-    /**
-     * Label Color picker and 'Auto' checkbox both call this...
-     * @param {*} zarrSourceId 
-     */
-    requestLabelRerender(zarrSourceId) {
-        // The UI component binds the color and autoColor, so the data should have changed...
-        // We can trigger event with the whole zarrSource
-        let zarrSource = this.labels_info.zarrSources.find(src => src.id === zarrSourceId);
-        console.log("CHANGED", zarrSource);
-        this.context.publish(LABELS_RDEF_CHANGED, zarrSource);
+                            // this.observers.push(
+                            //     this.bindingEngine.propertyObserver(
+                            //         zarrSource, 'opacity').subscribe(
+                            //             (newOpacity, oldOpacity) => {
+                            //                 this.context.publish(LABELS_OPACITY_CHANGED, {id: zarrSource.id, opacity: newOpacity});
+                            //             }));
+                            // /** change visibility of a zarr labels layer */
+                            // this.observers.push(
+                            //     this.bindingEngine.propertyObserver(
+                            //         zarrSource, 'visible').subscribe(
+                            //             (newVisibility, oldVisibility) => {
+                            //                 this.context.publish(LABELS_VISIBILITY_CHANGED, {id: zarrSource.id, visibility: newVisibility});
+                            //             }));
+    //                     });
+    //                 }));
     }
 
 
@@ -105,10 +97,22 @@ export class Labels {
         let tData = this.labels_info.omeroTables.find(t => t.file.id == tableFileId);
         console.log("Found table data: ", tData);
         let zarrSource = this.labels_info.zarrSources.find(src => src.id === zarrSourceId);
+        let newId = Misc.getRandomInteger(0, 100000);
+        zarrSource.selectedLayerId = newId; // select the newly added layer
         zarrSource.tableDataLayers.push({
             name: tData.file.name,
-            id: tableFileId
+            id: newId,
+            tableFileId: tableFileId,
+            tableFilename: tData.file.name,
+            visible: true,
+            opacity: 1.0,
+            color: colors[zarrSource.tableDataLayers.length % colors.length],
+            autoColor: false,
         });
+    }
+
+    handleLayerVisibilityChange(layerId, visibility) {
+        this.context.publish(LABELS_VISIBILITY_CHANGED, {id: layerId, visibility: visibility});
     }
 
     /**

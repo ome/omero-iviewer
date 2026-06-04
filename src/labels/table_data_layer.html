@@ -1,0 +1,72 @@
+<template>
+  <div>
+    Name: ${table_data_layer.name}
+    <div show.bind="row_count">
+      (Rows: ${row_count})
+    </div>
+
+    <div class="flex-row">
+        <div>Opacity:</div>
+        <input type="range" min="0" max="1" step="0.01" style="width: 150px;"
+            change.delegate="requestLabelRerender(table_data_layer.id)"
+            value.bind="table_data_layer.opacity">
+        <!-- <div>${table_data_layer.opacity}</div> -->
+    </div>
+    <!-- channel color -->
+    <div class="flex-row">
+        <div>Fill Color:</div>
+        <!-- on change, call requestLabelRerender -->
+        <input type="color" value.bind="table_data_layer.color" change.delegate="requestLabelRerender(table_data_layer.id)">
+        <div style="margin-left: 30px">Auto:</div>
+        <input type="checkbox" checked.bind="table_data_layer.autoColor" change.delegate="requestLabelRerender(table_data_layer.id)">
+    </div>
+
+
+    <!-- only show if table_data_layer has tableFileId -->
+    <form show.bind="table_data_layer.tableFileId" submit.trigger="onSubmit($event)">
+      <div class="flex-row" repeat.for="clause of clauses" class="clause">
+        <select
+          name="column"
+          model.bind="clause.column"
+          style="flex: 1 1 120px; width: 120px"
+        >
+          <!-- value is for loop index -->
+          <option
+            repeat.for="column of table_columns"
+            model.bind="column"
+            value="${column.name}"
+          >
+            ${index} ${column.name}
+          </option>
+        </select>
+
+        <select
+          name="operator"
+          model.bind="clause.operator"
+          style="flex: 0 0 auto"
+        >
+          <option value="less_than">&lt;</option>
+          <option value="less_equals">&lt;=</option>
+          <option value="equals">==</option>
+          <option value="greater_equals">&gt;=</option>
+          <option value="greater_than">&gt;</option>
+          <option value="not_equals">!=</option>
+        </select>
+
+        <input
+          type="text"
+          name="value"
+          model.bind="clause.value"
+          style="flex: 1 1 120px; width: 100%"
+        />
+      </div>
+
+      <div class="flex-row">
+        <!-- button to add another clause -->
+        <button type="button" click.delegate="addClause()" style="flex: 0 0 auto" title="Add a filter clause">+</button>
+        <div style="flex: 1 1 auto"></div>
+        <button type="submit" style="flex: 0 0 auto" title="Apply object filter">Apply</button>
+      </div>
+    </form>
+  </div>
+</template>
