@@ -21,7 +21,7 @@ import {noView} from 'aurelia-framework';
 import Misc from '../utils/misc';
 import {
     IVIEWER, REGIONS_DRAWING_MODE, REGIONS_MODE, REGIONS_REQUEST_URL,
-    WEB_API_BASE,
+    WEB_API_BASE, WEBCLIENT
 } from '../utils/constants';
 
 let colors = [
@@ -36,7 +36,6 @@ async function loadZarrLayers(lsids) {
         const ngffImage = await omezarr.NgffImage.load(lsid);
         const arr0 = await ngffImage.openArray(0);
 
-        console.log("LabelsInfo: Got shape for NGFF image: ", arr0.shape);
         let dimNames = ngffImage.axes.map(a => a.name);
         let chSize = arr0.shape[dimNames.indexOf("c")] || 1;
         let shape = arr0.shape;
@@ -60,10 +59,10 @@ async function loadZarrLayers(lsids) {
                 // scales is list of scale-shape for each resolution
                 // e.g. [[1, 0.5, 0.36, 0.36], [1, 0.5, 0.72, 0.72], ...]
                 scales: ngffImage.getScales(),
-                dataLayers: [
+                tableDataLayers: [
                     // {
                     //     name: "default",
-                    //     channels: ngffImage.omero.channels,
+                    //     id: 123
                     // }
                 ],
             });
@@ -122,7 +121,7 @@ export default class LabelsInfo  {
         // this.history = null;
     }
 
-    loadZarr(data) {
+    async loadZarr(data) {
         this.is_pending = false;
 
         // Get the externalInfo Lsid from Shape(s)
@@ -143,10 +142,25 @@ export default class LabelsInfo  {
             return;
         }
 
-        loadZarrLayers(lsids).then((newZarrs) => {
-            this.zarrSources = newZarrs;
-            this.ready = true;
-        });
+        this.zarrSources = await loadZarrLayers(lsids);
+
+        this.omeroTables = await this.loadAvailableTables();
+        this.ready = true;
+    }
+
+    async loadAvailableTables() {
+        // /api/annotations/?type=file&image=7215&_=1780499269041
+        let url = this.image_info.context.server;
+            url += this.image_info.context.getPrefixedURI(WEBCLIENT) +
+                '/api/annotations/?type=file&image=' + this.image_info.image_id;
+        console.log("Requesting available tables with url: ", url);
+
+        let jsonData = await fetch(url).then(response => response.json());
+        console.log("TABLES RESPONSE: ", jsonData);
+        // each ann is {'id': 123, 'file': {'mimetype': 'OMERO.tables', id: 456, name:"my_table", size: 789}, date: "2026-06-03T15:22:25+01:00", ...}
+        let tables = jsonData.annotations.filter(ann => ann.file?.mimetype === "OMERO.tables");
+        console.log("TABLES: ", tables);
+        return tables;
     }
 
     /**

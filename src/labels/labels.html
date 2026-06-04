@@ -1,28 +1,40 @@
 
 <template>
+    <require from="./table_data_layer"></require>
 
     <!-- list item for each labels_info.zarrSources -->
     <div show.bind="labels_info.ready">
-        <div repeat.for="zarrSource of labels_info.zarrSources">
-            <div class="zarrSourceHeader" title="${zarrSource.source}">
+        <div repeat.for="zarrSource of labels_info.zarrSources" style="border-bottom: solid 1px #bbb; margin-bottom: 10px; padding-bottom: 5px;">
+            <div class="flex-row" title="${zarrSource.source}">
                 <input type="checkbox" checked.bind="zarrSource.visible">
                  ${zarrSource.source}
             </div>
             <!-- edit panel - show if visible -->
             <div show.bind="zarrSource.visible">
-                <div class="zarrSourceHeader">
+                <div class="flex-row">
                     <div>Opacity:</div>
                     <input type="range" min="0" max="1" step="0.01" style="width: 150px;"
                         value.bind="zarrSource.opacity">
                     <!-- <div>${zarrSource.opacity}</div> -->
                 </div>
                 <!-- channel color -->
-                <div class="zarrSourceHeader">
+                <div class="flex-row">
                     <div>Fill Color:</div>
                     <!-- on change, call requestLabelRerender -->
                     <input type="color" value.bind="zarrSource.color" change.delegate="requestLabelRerender(zarrSource.id)">
                     <div style="margin-left: 30px">Auto:</div>
                     <input type="checkbox" checked.bind="zarrSource.autoColor" change.delegate="requestLabelRerender(zarrSource.id)">
+                </div>
+                <div class="flex-row">
+                    <div>Add data:</div>
+                    <select change.delegate="addTableToLabels(zarrSource.id, $event.target.value)">
+                        <option value="">-- Select a table --</option>
+                        <option repeat.for="table of labels_info.omeroTables" value="${table.file.id}">${table.file.name}</option>
+                    </select>
+                </div>
+
+                <div repeat.for="tableDataLayer of zarrSource.tableDataLayers">
+                    <table_data_layer table_data_layer.bind="tableDataLayer"></table_data_layer>
                 </div>
             </div>
         </div>

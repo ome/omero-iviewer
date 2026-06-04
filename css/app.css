@@ -1644,8 +1644,8 @@ thumbnail-slider img {
     font-weight: bold;
 }
 
-.zarrSourceHeader {
-    margin-bottom: 10px;
+.flex-row {
+    margin-bottom: 5px;
     gap: 10px;
     font-size: 14px;
     display: flex;
@@ -1654,6 +1654,9 @@ thumbnail-slider img {
     width: 100%;
     overflow: hidden;
 }
-.zarrSourceHeader input {
+.flex-row input, .flex-row select, .flex-row button {
     margin: 0;
+    height: 25px;
+    border: solid #ccc 1px;
+    border-radius: 3px;
 }

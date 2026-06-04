@@ -99,6 +99,18 @@ export class Labels {
         this.context.publish(LABELS_RDEF_CHANGED, zarrSource);
     }
 
+
+    addTableToLabels(zarrSourceId, tableFileId) {
+        console.log("Adding table with file id ", tableFileId, " to labels with zarr source id ", zarrSourceId);
+        let tData = this.labels_info.omeroTables.find(t => t.file.id == tableFileId);
+        console.log("Found table data: ", tData);
+        let zarrSource = this.labels_info.zarrSources.find(src => src.id === zarrSourceId);
+        zarrSource.tableDataLayers.push({
+            name: tData.file.name,
+            id: tableFileId
+        });
+    }
+
     /**
      * Overridden aurelia lifecycle method:
      * called whenever the view is unbound within aurelia
