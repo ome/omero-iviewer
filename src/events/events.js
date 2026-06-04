@@ -90,6 +90,8 @@ export const LABELS_OPACITY_CHANGED = "LABELS_OPACITY_CHANGED";
 export const LABELS_VISIBILITY_CHANGED = "LABELS_VISIBILITY_CHANGED";
 /** change rendering settings of a zarr labels layer */
 export const LABELS_RDEF_CHANGED = "LABELS_RDEF_CHANGED";
+/** new zarr labels layers */
+export const LABELS_NEW_LAYERS = "LABELS_NEW_LAYERS";
 
 /**
  * Facilitates recurring event subscription

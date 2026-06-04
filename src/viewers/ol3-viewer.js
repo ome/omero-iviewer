@@ -44,7 +44,7 @@ import {
     VIEWER_IMAGE_SETTINGS, VIEWER_PROJECTIONS_SYNC, VIEWER_SET_SYNC_GROUP,
     ENABLE_SHAPE_POPUP, TILE_LOAD_ERROR, RENDER_COMPLETE,
     LABELS_OPACITY_CHANGED, LABELS_VISIBILITY_CHANGED, LABELS_RDEF_CHANGED,
-    EventSubscriber
+    LABELS_NEW_LAYERS, EventSubscriber
 } from '../events/events';
 
 const MOVIE_DELAY = 250;
@@ -166,6 +166,8 @@ export default class Ol3Viewer extends EventSubscriber {
             (params={}) => this.handleLabelsVisibilityChange(params)],
         [LABELS_RDEF_CHANGED,
             (params={}) => this.handleLabelsRdefChange(params)],
+        [LABELS_NEW_LAYERS,
+            (params={}) => this.handleLabelsNewLayers(params)]
         ];
 
     /**
@@ -656,6 +658,10 @@ export default class Ol3Viewer extends EventSubscriber {
         this.viewer.setLabelsRdef(params);
     }
 
+    handleLabelsNewLayers(params = {}) {
+        this.viewer.addZarrSource(params);
+    }
+
     /**
      * Viewer needs to know when saved settings have changed since it uses the
      * difference between current and saved settings to build render query string
@@ -995,14 +1001,36 @@ export default class Ol3Viewer extends EventSubscriber {
      * @memberof Ol3Viewer
      */
     initZarrSources() {
-        console.log("initZarrSources: ");
         if (this.viewer === null ||
             this.image_config === null ||
             this.image_config.labels_info === null ||
             !this.image_config.labels_info.ready ||
             !Misc.isArray(this.image_config.labels_info.zarrSources)) return;
 
-        this.viewer.addZarrSources(this.image_config.labels_info.zarrSources);
+        this.image_config.labels_info.zarrSources.forEach(dataSrc => {
+            let axesNames = dataSrc.axes.map(a => a.name);
+            let xAxis = axesNames.indexOf('x');
+            let yAxis = axesNames.indexOf('y');
+            // expect single tableDataLayers, but handle all..
+            for (let i=0; i<dataSrc.tableDataLayers.length; i++) {
+                let layer = dataSrc.tableDataLayers[i];
+                var attr = {
+                    id: layer.id,
+                    source: dataSrc.source,
+                    width: dataSrc.shape[xAxis],
+                    height: dataSrc.shape[yAxis],
+                    tile_size: {
+                        width: dataSrc.chunks[xAxis],
+                        height: dataSrc.chunks[yAxis]
+                    },
+                    scales: dataSrc.scales,
+                    chunks: dataSrc.chunks,
+                    color: layer.color,
+                    channelIndex: dataSrc.channelIndex,
+                };
+                this.viewer.addZarrSource(attr);
+            }
+        });
     }
 
     /**

@@ -807,36 +807,16 @@ class Viewer extends OlObject {
     }
 
 
-    addZarrSources(data) {
-        console.log("addZarrSources()", data);
+    addZarrSource(attr) {
         // data is zarrSources list... id, name, source, layers,
         if (!(this.viewer_ instanceof OlMap)) {
             console.error("Viewer not initialized, cannot add Zarr sources");
             return;
         }
-
-        data.forEach(dataSrc => {
-            let axesNames = dataSrc.axes.map(a => a.name);
-            let xAxis = axesNames.indexOf('x');
-            let yAxis = axesNames.indexOf('y');
-            // expect single tableDataLayers
-            var zarrSource = new ZarrSource({
-                source: dataSrc.source,
-                width: dataSrc.shape[xAxis],
-                height: dataSrc.shape[yAxis],
-                tile_size: {
-                    width: dataSrc.chunks[xAxis],
-                    height: dataSrc.chunks[yAxis]
-                },
-                scales: dataSrc.scales,
-                chunks: dataSrc.chunks,
-                color: dataSrc.tableDataLayers[0].color,
-                channelIndex: dataSrc.channelIndex,
-            });
-            let tileLayer = new Tile({source: zarrSource});
-            tileLayer.set('id', dataSrc.tableDataLayers[0].id);
-            this.viewer_.addLayer(tileLayer);
-        });
+        var zarrSource = new ZarrSource(attr);
+        let tileLayer = new Tile({source: zarrSource});
+        tileLayer.set('id', attr.id);
+        this.viewer_.addLayer(tileLayer);
     }
 
     setLabelsOpacity(id, opacity) {

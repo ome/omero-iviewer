@@ -22,7 +22,7 @@ import Misc from '../utils/misc';
 
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
 import {INITIAL_TYPES, WEBCLIENT, IVIEWER, WEBGATEWAY} from '../utils/constants';
-import {LABELS_OPACITY_CHANGED, LABELS_VISIBILITY_CHANGED, LABELS_RDEF_CHANGED} from '../events/events';
+import {LABELS_VISIBILITY_CHANGED, LABELS_NEW_LAYERS} from '../events/events';
 
 let colors = [
     "#ffff00", "#00ff00", "#ff0000", "#ff00ff", "#ffffff",
@@ -63,32 +63,7 @@ export class Labels {
      * @memberof Labels
      */
     bind() {
-        // console.log('Binding Labels component with labels_info:', this.labels_info);
-        
-        // listen for changes to labels_info 'zarrSources'
-        // this.observers.push(
-        //     this.bindingEngine.propertyObserver(
-        //         this.labels_info, 'zarrSources').subscribe(
-        //             (newValue, oldValue) => {
-        //                 console.log('zarrSources CHANGED!:', newValue);
-        //                 // listen to the opacity of each zarr source
-        //                 newValue.map((zarrSource) => {
-                            /** change opacity of a zarr labels layer */
-                            // this.observers.push(
-                            //     this.bindingEngine.propertyObserver(
-                            //         zarrSource, 'opacity').subscribe(
-                            //             (newOpacity, oldOpacity) => {
-                            //                 this.context.publish(LABELS_OPACITY_CHANGED, {id: zarrSource.id, opacity: newOpacity});
-                            //             }));
-                            // /** change visibility of a zarr labels layer */
-                            // this.observers.push(
-                            //     this.bindingEngine.propertyObserver(
-                            //         zarrSource, 'visible').subscribe(
-                            //             (newVisibility, oldVisibility) => {
-                            //                 this.context.publish(LABELS_VISIBILITY_CHANGED, {id: zarrSource.id, visibility: newVisibility});
-                            //             }));
-    //                     });
-    //                 }));
+        // init code goes here
     }
 
 
@@ -98,6 +73,7 @@ export class Labels {
         console.log("Found table data: ", tData);
         let zarrSource = this.labels_info.zarrSources.find(src => src.id === zarrSourceId);
         let newId = Misc.getRandomInteger(0, 100000);
+        let color = colors[zarrSource.tableDataLayers.length % colors.length];
         zarrSource.selectedLayerId = newId; // select the newly added layer
         zarrSource.tableDataLayers.push({
             name: tData.file.name,
@@ -106,9 +82,31 @@ export class Labels {
             tableFilename: tData.file.name,
             visible: true,
             opacity: 1.0,
-            color: colors[zarrSource.tableDataLayers.length % colors.length],
+            color: color,
             autoColor: false,
         });
+        // Trigger event with all the info we need for new ZarrSource layer...
+        let axesNames = zarrSource.axes.map(a => a.name);
+        let xAxis = axesNames.indexOf('x');
+        let yAxis = axesNames.indexOf('y');
+        // expect single tableDataLayers
+        let newLayerInfo = {
+            id: newId,
+            source: zarrSource.source,
+            width: zarrSource.shape[xAxis],
+            height: zarrSource.shape[yAxis],
+            tile_size: {
+                width: zarrSource.chunks[xAxis],
+                height: zarrSource.chunks[yAxis]
+            },
+            scales: zarrSource.scales,
+            chunks: zarrSource.chunks,
+            color: color,
+            channelIndex: zarrSource.channelIndex,
+        };
+        console.log("New layer info to add: ", newLayerInfo);
+
+        this.context.publish(LABELS_NEW_LAYERS, newLayerInfo);
     }
 
     handleLayerVisibilityChange(layerId, visibility) {
