@@ -575,7 +575,7 @@ export default class Context {
             window.onkeydown = (event) => {
                 let command = Misc.isApple() ? 'metaKey' : 'ctrlKey';
                 let keyHandlers =
-                    this.key_listeners.get(event.key.toUpperCase());
+                    this.key_listeners.get(event.key?.toUpperCase());
                 if (typeof keyHandlers === 'undefined' ||
                     event.target.nodeName.toUpperCase() === 'INPUT') return;
 
