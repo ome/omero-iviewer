@@ -45,6 +45,7 @@ export class TableDataLayer {
     row_count = 0
     label_values = [];
     match_count;
+    matchingLabelValues = [];
 
     clauses = [
         {
@@ -144,11 +145,10 @@ export class TableDataLayer {
         let url = this.context.server + this.context.getPrefixedURI(WEBGATEWAY) +
             `/table/${this.table_data_layer.tableFileId}/rows/?query=${query}`;
         fetch(url).then(response => response.json()).then(jsonData => {
-            let matchingLabelValues = jsonData.rows.map(rowIndex => this.label_values[rowIndex]);
-            console.log("Matching label values: ", matchingLabelValues);
-            this.match_count = matchingLabelValues.length;
-            // Trigger event with the whole tableDataLayer, including the new matching label values
-            // this.context.publish(LABELS_RDEF_CHANGED, {...this.table_data_layer, matchingLabelValues});
+            this.matchingLabelValues = jsonData.rows.map(rowIndex => this.label_values[rowIndex]);
+            console.log("Matching label values: ", this.matchingLabelValues);
+            this.match_count = this.matchingLabelValues.length;
+            this.requestLabelRerender();
         });
     }   
 
@@ -193,11 +193,31 @@ export class TableDataLayer {
      * Label Color picker and 'Auto' checkbox both call this...
      * @param {*} zarrSourceId 
      */
-    requestLabelRerender(layerId) {
+    requestLabelRerender() {
         // The UI component binds the color and autoColor, so the data should have changed...
         // We can trigger event with the whole zarrSource
         // let zarrSource = this.labels_info.zarrSources.find(src => src.id === zarrSourceId);
-        console.log("TODO...requestLabelRerender", layerId, this.table_data_layer);
+        console.log("requestLabelRerender", this.table_data_layer);
+
+        if (this.matchingLabelValues.length > 0) {
+            // We need to build a colour Map where every visible label is a key, and the value is the current color...
+            let colorMap = new Map();
+            let hexColor = this.table_data_layer.color || "#ffffff";
+            let red = parseInt(hexColor.slice(1, 3), 16);
+            let green = parseInt(hexColor.slice(3, 5), 16);
+            let blue = parseInt(hexColor.slice(5, 7), 16);
+            for (let i=0; i<this.matchingLabelValues.length; i++) {
+                // TODO: - shouldn't expect to have 0 label value in OMERO.table, but just in case...
+                if (this.matchingLabelValues[i] === 0) {
+                    continue; // skip background
+                }
+                colorMap.set(this.matchingLabelValues[i], [red, green, blue]);
+            }
+            this.table_data_layer.colorMap = colorMap;
+        } else {
+            this.table_data_layer.colorMap = undefined;
+        }
+
         this.context.publish(LABELS_RDEF_CHANGED, this.table_data_layer);
     }
 

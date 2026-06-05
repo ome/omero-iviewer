@@ -97,11 +97,16 @@ export default class ZarrSource extends TileImage {
           ngffImg.setChannelActive(c, c === channelIndex);
         }
         ngffImg.setChannelColor(channelIndex, this.color || initialColor);
+        if (this.colorMap) {
+          ngffImg.setChannelColorMap(channelIndex, this.colorMap);
+        }
         if (this.autoColor) {
           ngffImg.setChannelLut(channelIndex, "glasbey");
-        } else {
-          ngffImg.setChannelLut(channelIndex, undefined);
-        }
+        } 
+        // NB: don't need to reset this YET since we have a new ngffImg every time...
+        // else {
+        //   ngffImg.setChannelLut(channelIndex, undefined);
+        // }
         ngffImg.renderRgba({arrayPathOrIndex: datasetIndex, slices}).then(result => {
           let rgba = result.data;
           let width = result.width;
@@ -129,6 +134,7 @@ export default class ZarrSource extends TileImage {
 
     this.color = zarrSource.color;
     this.autoColor = zarrSource.autoColor;
+    this.colorMap = zarrSource.colorMap;
     // trigger reload of tiles to apply new RDEF
     this.refresh();
   }
