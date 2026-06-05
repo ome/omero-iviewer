@@ -67,7 +67,8 @@ export class Labels {
     }
 
 
-    addTableToLabels(zarrSourceId, tableFileId) {
+    addTableToLabels(zarrSourceId, event) {
+        let tableFileId = event.target.value;
         console.log("Adding table with file id ", tableFileId, " to labels with zarr source id ", zarrSourceId);
         let tData = this.labels_info.omeroTables.find(t => t.file.id == tableFileId);
         console.log("Found table data: ", tData);
@@ -107,6 +108,9 @@ export class Labels {
         console.log("New layer info to add: ", newLayerInfo);
 
         this.context.publish(LABELS_NEW_LAYERS, newLayerInfo);
+
+        // set the <select> back to default (placeholder) option
+        event.target.value = "";
     }
 
     handleLayerVisibilityChange(layerId, visibility) {

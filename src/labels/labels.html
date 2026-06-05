@@ -12,9 +12,9 @@
             <!-- edit panel - show if visible -->
             <div show.bind="zarrSource.visible">
                 <div class="flex-row">
-                    <div>Add data:</div>
-                    <select change.delegate="addTableToLabels(zarrSource.id, $event.target.value)">
-                        <option value="">-- Select a table --</option>
+                    <!-- <div>Add data:</div> -->
+                    <select change.delegate="addTableToLabels(zarrSource.id, $event)">
+                        <option value="">Add a Data layer from OMERO.table</option>
                         <option repeat.for="table of labels_info.omeroTables" value="${table.file.id}">${table.file.name}</option>
                     </select>
                 </div>

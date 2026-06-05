@@ -1,8 +1,13 @@
 <template>
   <div>
     Name: ${table_data_layer.name}
-    <div show.bind="row_count">
-      (Rows: ${row_count})
+    <span show.bind="row_count">
+      (${row_count} rows)
+    </span>
+    </div>
+
+    <div show.bind="table_data_layer.tableFileId" class="flex-row">
+      Matching Objects: ${match_count !== undefined ? match_count : ''}
     </div>
 
     <div class="flex-row">
@@ -30,13 +35,12 @@
           model.bind="clause.column"
           style="flex: 1 1 120px; width: 120px"
         >
-          <!-- value is for loop index -->
           <option
-            repeat.for="column of table_columns"
+            repeat.for="column of numeric_columns"
             model.bind="column"
             value="${column.name}"
           >
-            ${index} ${column.name}
+            ${column.name}
           </option>
         </select>
 
@@ -45,12 +49,12 @@
           model.bind="clause.operator"
           style="flex: 0 0 auto"
         >
-          <option value="less_than">&lt;</option>
-          <option value="less_equals">&lt;=</option>
-          <option value="equals">==</option>
-          <option value="greater_equals">&gt;=</option>
-          <option value="greater_than">&gt;</option>
-          <option value="not_equals">!=</option>
+          <option value="<">&lt;</option>
+          <option value="<=">&lt;=</option>
+          <option value="==">==</option>
+          <option value=">=">&gt;=</option>
+          <option value=">">&gt;</option>
+          <option value="!=">!=</option>
         </select>
 
         <input
