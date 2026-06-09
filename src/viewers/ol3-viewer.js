@@ -93,9 +93,10 @@ export default class Ol3Viewer extends EventSubscriber {
      */
     gridOverlay = null;
     gridEnabled = false;
-    gridLineWidth = 5;
+    gridLineWidth = 2;
     gridCellSize = 5000;
     gridShowLabels = true;
+    gridPanelExpanded = false;
     /**
      * Toggle grid settings panel visibility
      * @memberof Ol3Viewer
@@ -387,6 +388,13 @@ export default class Ol3Viewer extends EventSubscriber {
                             if (newValue) {
                                 this.initRegions();
                                 delete this.image_config.regions_info.tmp_data;
+                                // Re-align the grid with the layers of recreated regions
+                                if (this.gridOverlay && this.gridOverlay.isEnabled()) {
+                                    this.gridOverlay.showGrid(
+                                        parseInt(this.gridLineWidth, 10),
+                                        parseInt(this.gridCellSize, 10),
+                                        this.gridShowLabels);
+                                }
                             }
                     });
             // mdi needs to switch image config when using controls
@@ -1805,7 +1813,7 @@ export default class Ol3Viewer extends EventSubscriber {
         if (this.gridOverlay) {
             if (!this.gridOverlay.isEnabled()) {
                 // Show grid with configured cell size
-                this.gridOverlay.showGrid(this.gridCellSize, this.gridShowLabels);
+                this.gridOverlay.showGrid(this.gridLineWidth, this.gridCellSize, this.gridShowLabels);
             } else {
                 // Hide grid
                 this.gridOverlay.hideGrid();
@@ -1841,5 +1849,9 @@ export default class Ol3Viewer extends EventSubscriber {
         if (this.gridOverlay && this.gridEnabled) {
             this.gridOverlay.toggleLabels();
         }
+    }
+    setGridLineWidth(width) {
+        this.gridLineWidth = width;
+        this.updateGridLineWidth();
     }
 }
