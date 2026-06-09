@@ -42,9 +42,7 @@ export class TableDataLayer {
 
     table_columns = [];
     numeric_columns = [];
-    row_count = 0
     label_values = [];
-    match_count;
     matchingLabelValues = [];
 
     clauses = [
@@ -76,15 +74,15 @@ export class TableDataLayer {
         let fileId = this.table_data_layer.tableFileId;
         // if totalCount is > 1000000 we need to page this...
         let startRow = 0;
-        let endRow = Math.min(startRow + PAGE_SIZE, this.row_count - 1);
+        let endRow = Math.min(startRow + PAGE_SIZE, this.table_data_layer.row_count - 1);
         let colValues = [];
-        while (startRow < this.row_count) {
+        while (startRow < this.table_data_layer.row_count) {
             let url = this.context.server + this.context.getPrefixedURI(WEBGATEWAY) +
                 `/table/${fileId}/slice/?columns=${this.label_values_column_index}&rows=${startRow}-${endRow}`;
             let pageData = await fetch(url).then(response => response.json());
             colValues = colValues.concat(pageData["columns"][0]);
             startRow = endRow + 1;
-            endRow = Math.min(startRow + PAGE_SIZE - 1, this.row_count - 1);
+            endRow = Math.min(startRow + PAGE_SIZE - 1, this.table_data_layer.row_count - 1);
         }
         return colValues;
     }
@@ -114,7 +112,7 @@ export class TableDataLayer {
         console.log("Submitting table data layer form with table data layer: ", event);
         event.preventDefault();
         // clear previous match count
-        this.match_count = undefined;
+        this.table_data_layer.match_count = undefined;
         // form data
         let formData = new FormData(event.target);
         console.log("Form data: ", formData);
@@ -147,7 +145,7 @@ export class TableDataLayer {
         fetch(url).then(response => response.json()).then(jsonData => {
             this.matchingLabelValues = jsonData.rows.map(rowIndex => this.label_values[rowIndex]);
             console.log("Matching label values: ", this.matchingLabelValues);
-            this.match_count = this.matchingLabelValues.length;
+            this.table_data_layer.match_count = this.matchingLabelValues.length;
             this.requestLabelRerender();
         });
     }   
@@ -169,7 +167,7 @@ export class TableDataLayer {
                 // Filter for numeric columns for now, as these are the only ones we can use for table queries...
                 this.numeric_columns = this.table_columns.filter(col => ["LongColumn", "DoubleColumn"].includes(col.type));
                 console.log("Numeric columns: ", this.numeric_columns);
-                this.row_count = tableData.totalCount;
+                this.table_data_layer.row_count = tableData.totalCount;
 
                 // We also want to get the Label pixel values for each row. 
                 // If we know the NAME of the Label pixel column, we could use that to pick label_values_column_index

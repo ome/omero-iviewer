@@ -29,7 +29,9 @@
                     <label class="layer-select-label" title="${tableDataLayer.tableFilename}">
                         <div style="width: 25px; height: 20px; display: inline-block; margin-right: 5px; background-color: ${tableDataLayer.color}"></div>
                         <input style="display:none" type="checkbox" name="selectedLayer-${zarrSource.id}" checked.one-way="tableDataLayer.id === zarrSource.selectedLayerId" change.delegate="zarrSource.selectedLayerId = tableDataLayer.id"/>
-                        <div>${tableDataLayer.name}</div>
+                        <div>${tableDataLayer.name}
+                            <span show.bind="tableDataLayer.match_count">(${tableDataLayer.match_count !== undefined ? tableDataLayer.match_count : ''} / ${tableDataLayer.row_count})</span>
+                        </div>
                     </label>
                 </div>
 

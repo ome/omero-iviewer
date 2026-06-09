@@ -69,12 +69,15 @@ async function loadZarrLayers(lsids) {
                         name: "All objects",
                         // this ID used for openlayers layer ID
                         id: allObjectsLayerId,
-                        tableFileId: null, // to be filled when user selects a table
-                        tableFilename: null,
                         visible: true,
                         opacity: 1.0,
                         color: colors[channelIndex % colors.length],
                         autoColor: false,
+                        // attributes used for OMERO.table "data"
+                        tableFileId: null, // to be filled when user selects a table
+                        tableFilename: null,
+                        row_count: null,
+                        match_count: null,
                     }
                 ],
             });

@@ -1,13 +1,13 @@
 <template>
   <div>
     Name: ${table_data_layer.name}
-    <span show.bind="row_count">
-      (${row_count} rows)
+    <span show.bind="table_data_layer.row_count !== undefined">
+      (${table_data_layer.row_count} rows)
     </span>
     </div>
 
     <div show.bind="table_data_layer.tableFileId" class="flex-row">
-      Matching Objects: ${match_count !== undefined ? match_count : ''}
+      Matching Objects: ${table_data_layer.match_count !== undefined ? table_data_layer.match_count : ''}
     </div>
 
     <div class="flex-row">
