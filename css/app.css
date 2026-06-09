@@ -1970,3 +1970,21 @@ thumbnail-slider img {
 .grid-size-labels span {
     font-weight: bold;
 }
+.grid-linewidth-group {
+    display: flex;
+    gap: 4px;
+}
+.grid-lw-btn {
+    flex: 1;
+    padding: 4px 0;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    background: white;
+    font-size: 11px;
+    cursor: pointer;
+}
+.grid-lw-btn.active {
+    border-color: #007bff;
+    color: #007bff;
+    background: #eaf3ff;
+}
