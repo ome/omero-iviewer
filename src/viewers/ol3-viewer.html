@@ -27,8 +27,8 @@
                 ${image_config.image_info.dimensions.max_z > 1 ? 'show-zSlider' : ''}"
             drop.delegate="handleDrop($event)"
             dragover.delegate="handleDragover($event)"
-            dragleave.delegate="handleDragleave($event)"
-            >
+            dragleave.delegate="handleDragleave($event)">
+
         <dimension-slider
             if.bind="image_config.image_info.dimensions.max_z > 1"
             image_config.bind="image_config"
@@ -40,62 +40,81 @@
         </dimension-slider>
 
         <div class="viewer">
-              <!-- Grid Control Panel -->
-              <div class="grid-control-panel" if.bind="gridOverlay">
-                  <div class="grid-header">
-                      <button class="grid-toggle-btn" 
-                              click.delegate="toggleGrid()"
-                              title="Show/Hide Grid">
-                          ${gridEnabled ? '✓ ' : ''}📐 Grid
-                      </button>
-                      
-                      <button class="grid-collapse-btn" 
-                              if.bind="gridEnabled"
-                              click.delegate="toggleGridPanel()"
-                              title="${gridPanelExpanded ? 'Hide Settings' : 'Show Settings'}">
-                          ${gridPanelExpanded ? '▼' : '▲'}
-                      </button>
-                  </div>
-                  
-                  <div class="grid-controls" 
-                       if.bind="gridEnabled && gridPanelExpanded">
-                      <div class="grid-control-item">
-                          <label>Cell Size (px)</label>
-                          <div class="grid-input-group">
-                              <input type="number" 
-                                     value.bind="gridCellSize" 
-                                     min="5000" 
-                                     max="10000" 
-                                     step="500"
-                                     change.delegate="updateGridCellSize()"
-                                     class="grid-number-input">
-                              <input type="range" 
-                                     value.bind="gridCellSize" 
-                                     min="5000" 
-                                     max="10000" 
-                                     step="500"
-                                     change.delegate="updateGridCellSize()"
-                                     class="grid-slider">
-                          </div>
-                          <div class="grid-size-labels">
-                              <span>Medium</span>
-                              <span>Large</span>
-                              <span>Very Large</span>
-                          </div>
-                      </div>
-                      
-                      <div class="grid-control-item">
-                          <label>
-                              <input type="checkbox" 
-                                     checked.bind="gridShowLabels"
-                                     change.delegate="toggleGridLabels()">
-                              Show Labels (A1, B2...)
-                          </label>
-                      </div>
-                  </div>
-              </div>
-              
-              <div id.bind="container" class="viewer-container map_spinner"></div>
+
+            <!-- Grid Control Panel -->
+            <div class="grid-control-panel" if.bind="gridOverlay">
+
+                <div class="grid-header">
+                    <button class="grid-toggle-btn ${gridEnabled ? 'active' : ''}"
+                            click.delegate="toggleGrid()"
+                            title="${gridEnabled ? 'Hide Grid' : 'Show Grid'}"
+                            style="width: 24px; height: 24px; padding: 1px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid #ccc; cursor: pointer;">
+                        <svg class="grid-icon" viewBox="0 0 16 16" fill="none"
+                                stroke="currentColor" stroke-width="1.5" aria-hidden="true"
+                                style="width: 100%; height: 100%; display: block;">
+                            <line x1="5.33"  y1="0"   x2="5.33"  y2="16"/>
+                            <line x1="10.66" y1="0"   x2="10.66" y2="16"/>
+                            <line x1="0"     y1="5.33"  x2="16"  y2="5.33"/>
+                            <line x1="0"     y1="10.66" x2="16"  y2="10.66"/>
+                        </svg>
+                    </button>
+
+                    <button class="grid-collapse-btn"
+                            if.bind="gridEnabled"
+                            click.delegate="toggleGridPanel()"
+                            title="${gridPanelExpanded ? 'Hide Settings' : 'Show Settings'}">
+                        ${gridPanelExpanded ? '▼' : '▲'}
+                    </button>
+                </div>
+
+                <div class="grid-controls"
+                     if.bind="gridEnabled && gridPanelExpanded">
+
+                    <div class="grid-control-item">
+                        <label>Cell Size (px)</label>
+                        <div class="grid-input-group">
+                            <input type="number"
+                                   value.bind="gridCellSize"
+                                   min="5000" max="10000" step="500"
+                                   change.delegate="updateGridCellSize()"
+                                   class="grid-number-input">
+                            <input type="range"
+                                   value.bind="gridCellSize"
+                                   min="5000" max="10000" step="500"
+                                   change.delegate="updateGridCellSize()"
+                                   class="grid-slider">
+                        </div>
+                    </div>
+
+                    <div class="grid-control-item">
+                        <label>Line Width</label>
+                        <div class="grid-linewidth-group">
+                            <button class="grid-lw-btn ${gridLineWidth == 1 ? 'active' : ''}"
+                                    click.delegate="setGridLineWidth(1)">1 px</button>
+                            <button class="grid-lw-btn ${gridLineWidth == 2 ? 'active' : ''}"
+                                    click.delegate="setGridLineWidth(2)">2 px</button>
+                            <button class="grid-lw-btn ${gridLineWidth == 5 ? 'active' : ''}"
+                                    click.delegate="setGridLineWidth(5)">5 px</button>
+                        </div>
+                    </div>
+
+                    <div class="grid-control-item">
+                        <label>
+                            <input type="checkbox"
+                                   checked.bind="gridShowLabels"
+                                   change.delegate="toggleGridLabels()">
+                            Show Labels (A1, B2...)
+                        </label>
+                    </div>
+
+                </div>
+            </div>
+
+            <div id.bind="container" class="viewer-container map_spinner"></div>
+
         </div>
-    <viewer-context-menu image_config.bind="image_config"></viewer-context-menu>
+
+        <viewer-context-menu image_config.bind="image_config"></viewer-context-menu>
+
+    </div>
 </template>
