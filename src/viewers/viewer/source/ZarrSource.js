@@ -7,6 +7,18 @@ import {getTopLeft} from 'ol/extent';
 import * as omezarr from 'ome-zarr.js';
 
 const DEFAULT_TILE_SIZE = {width: 256, height: 256};
+const TRANSPARENT = [0, 0, 0, 0]; // RGBA for transparent
+
+function colorHexToRgba(hexColor, alpha = 255) {
+  // Remove the leading '#' if present
+  hexColor = hexColor.replace(/^#/, '');
+  // Parse the hex color into RGB components
+  const bigint = parseInt(hexColor, 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  return [r, g, b, alpha];
+}
 
 function createRgbDataUrl(rbgData, dataWidth, dataHeight, tileWidth, tileHeight) {
   // TEMP make any black pixel into 0 transparency
@@ -90,19 +102,23 @@ export default class ZarrSource extends TileImage {
       let datasetIndex = scales.length - 1 - zm;
       console.log("DatasetIndex:", datasetIndex, "Slices:", slices);
 
-      omezarr.NgffImage.load(source, {datasetIndex}).then(ngffImg => {
-        
-        // TODO handle multiple channels - turn on only 1
+      // We assume we are rendering Labels here!
+      omezarr.LabelsImage.load(source, {datasetIndex}).then(ngffImg => {
+
+        // handle label image with multiple channels - turn on only 1
         for (let c = 0; c < ngffImg.omero.channels.length; c++) {
           ngffImg.setChannelActive(c, c === channelIndex);
         }
-        ngffImg.setChannelColor(channelIndex, this.color || initialColor);
         if (this.colorMap) {
           ngffImg.setChannelColorMap(channelIndex, this.colorMap);
         }
-        if (this.autoColor) {
-          ngffImg.setChannelLut(channelIndex, "glasbey");
-        } 
+        else if (this.autoColor) {
+          ngffImg.setChannelLut(channelIndex, [TRANSPARENT, ...omezarr.luts.GLASBEY]);
+        } else {
+          // All labels are same color, background '0' is transparent
+          let color =  colorHexToRgba(this.color || initialColor);
+          ngffImg.setChannelLut(channelIndex, [TRANSPARENT, color]);
+        }
         // NB: don't need to reset this YET since we have a new ngffImg every time...
         // else {
         //   ngffImg.setChannelLut(channelIndex, undefined);
