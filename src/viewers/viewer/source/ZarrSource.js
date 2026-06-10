@@ -65,9 +65,6 @@ export default class ZarrSource extends TileImage {
     // e.g. [16, 8, 4, 2, 1]
     let resolutions = scales.map(shape => shape[shape.length - 1] / scales[0][scales[0].length - 1]);
     resolutions = resolutions.reverse();
-    console.log("RESOLUTIONS:", resolutions);
-    console.log("EXTENT:", [0, -height, width, 0]);
-
 
     const extent = [0, -height, width, 0];
     const tileGrid = new TileGrid({
@@ -83,56 +80,60 @@ export default class ZarrSource extends TileImage {
       typeof options.tileUrlFunction === 'function' ?
         options.tileUrlFunction :
         (tileCoord) => {
-          console.log('Generating tile URL for tileCoord:', tileCoord);
-
           const z = tileCoord[0];
           const x = tileCoord[1];
           const y = -tileCoord[2] - 1;
           return `${z}/${x}/${y}`;
         };
 
-    const tileLoadFunction = ((tile, src) => {
-      console.log('tileLoadFunction ----->', this, this.color);
+    const tileLoadFunction = async (tile, src) => {
+
+      this.renderCount = this.renderCount || 0;
+
+      console.log(`Loading tile ${src} (render count: ${this.renderCount})`);
+
+      this.renderCount++;
 
       let [zm, x, y] = src.split('/').map(Number);
-      console.log("Parsed tile coordinates:", {zm, x, y});
       let slices = {"x": [x * tileSize[0], (x + 1) * tileSize[0]], "y": [y * tileSize[1], (y + 1) * tileSize[1]]};
-
       // Map OL z level to the nearest Zarr dataset index.
       let datasetIndex = scales.length - 1 - zm;
-      console.log("DatasetIndex:", datasetIndex, "Slices:", slices);
 
       // We assume we are rendering Labels here!
-      omezarr.LabelsImage.load(source, {datasetIndex}).then(ngffImg => {
-
+      if (!this.ngffImg) {
+        this.ngffImg = await omezarr.LabelsImage.load(source, {datasetIndex});
         // handle label image with multiple channels - turn on only 1
-        for (let c = 0; c < ngffImg.omero.channels.length; c++) {
-          ngffImg.setChannelActive(c, c === channelIndex);
+        for (let c = 0; c < this.ngffImg.omero.channels.length; c++) {
+          this.ngffImg.setChannelActive(c, c === channelIndex);
         }
-        if (this.colorMap) {
-          ngffImg.setChannelColorMap(channelIndex, this.colorMap);
-        }
-        else if (this.autoColor) {
-          ngffImg.setChannelLut(channelIndex, [TRANSPARENT, ...omezarr.luts.GLASBEY]);
+      }
+
+      // We either render with a colorMap or LUT
+      // Just set ONE of them, and clear the other...
+      if (this.colorMap) {
+        this.ngffImg.setChannelColorMap(channelIndex, this.colorMap);
+        this.ngffImg.setChannelLut(channelIndex, undefined);
+      } else {
+        this.ngffImg.setChannelColorMap(channelIndex, undefined);
+        // we use LUT for both following options...
+        if (this.autoColor) {
+          // Only '0' is transparent, GLASBEY used for others, wrapping around if more labels than colors in the LUT
+          this.ngffImg.setChannelLut(channelIndex, [TRANSPARENT, ...omezarr.luts.GLASBEY]);
         } else {
           // All labels are same color, background '0' is transparent
           let color =  colorHexToRgba(this.color || initialColor);
-          ngffImg.setChannelLut(channelIndex, [TRANSPARENT, color]);
+          this.ngffImg.setChannelLut(channelIndex, [TRANSPARENT, color]);
         }
-        // NB: don't need to reset this YET since we have a new ngffImg every time...
-        // else {
-        //   ngffImg.setChannelLut(channelIndex, undefined);
-        // }
-        ngffImg.renderRgba({arrayPathOrIndex: datasetIndex, slices}).then(result => {
-          let rgba = result.data;
-          let width = result.width;
-          let height = result.height;
-          let src = createRgbDataUrl(rgba, width, height, tileSize[0], tileSize[1]);
-          const image = tile.getImage();
-          image.src = src;
-        });
-      });
-    });
+      }
+
+      let result = await this.ngffImg.renderRgba({arrayPathOrIndex: datasetIndex, slices});
+      let rgba = result.data;
+      let width = result.width;
+      let height = result.height;
+      let datasrc = createRgbDataUrl(rgba, width, height, tileSize[0], tileSize[1]);
+      const image = tile.getImage();
+      image.src = datasrc;
+    };
 
     super({
       transition: 0,
