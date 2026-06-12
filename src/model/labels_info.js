@@ -65,6 +65,7 @@ async function loadZarrLayers(lsids) {
                 // e.g. [[1, 0.5, 0.36, 0.36], [1, 0.5, 0.72, 0.72], ...]
                 scales: ngffImage.getScales(),
                 tableDataLayers: [
+                    // We start with a single "All objects" layer that won't be linked to any table:
                     {
                         name: "All objects",
                         // this ID used for openlayers layer ID

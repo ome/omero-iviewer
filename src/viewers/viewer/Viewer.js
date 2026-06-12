@@ -813,6 +813,14 @@ class Viewer extends OlObject {
             console.error("Viewer not initialized, cannot add Zarr sources");
             return;
         }
+        // Use omeroImage to get current Z and T
+        var omeroImage = this.getImage();
+        let zIndex = omeroImage.getPlane();
+        let tIndex = omeroImage.getTime();
+        attr.zIndex = zIndex;
+        attr.tIndex = tIndex;
+
+        // Create new Layer...
         var zarrSource = new ZarrSource(attr);
         let tileLayer = new Tile({source: zarrSource});
         tileLayer.set('id', attr.id);
@@ -1280,6 +1288,12 @@ class Viewer extends OlObject {
 
         // update regions (if necessary)
         if (this.getRegionsLayer()) this.getRegions().changed();
+        // update zarr source layers (if necessary)
+        this.viewer_.getLayers().forEach(layer => {
+            if (layer instanceof Tile && layer.getSource() instanceof ZarrSource) {
+                layer.getSource().setDimensionIndex(key, values);
+            }
+        });
 
         // update popup (hide it if shape no longer visible)
         this.viewer_.getOverlays().forEach(o => {

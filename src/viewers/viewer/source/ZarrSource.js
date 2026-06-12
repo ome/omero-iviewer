@@ -50,6 +50,8 @@ export default class ZarrSource extends TileImage {
     const height = options.height;
     const chunks = options.chunks;
     const initialColor = options.color || "#00ffff";
+    const initialZIndex = options.zIndex;
+    const initialTIndex = options.tIndex;
     const channelIndex = options.channelIndex || 0;
 
     if (typeof width !== 'number' || typeof height !== 'number') {
@@ -80,24 +82,18 @@ export default class ZarrSource extends TileImage {
       typeof options.tileUrlFunction === 'function' ?
         options.tileUrlFunction :
         (tileCoord) => {
-          const z = tileCoord[0];
+          const resolution = tileCoord[0];
           const x = tileCoord[1];
           const y = -tileCoord[2] - 1;
-          return `${z}/${x}/${y}`;
+          return `${resolution}/${x}/${y}`;
         };
 
     const tileLoadFunction = async (tile, src) => {
 
-      this.renderCount = this.renderCount || 0;
-
-      console.log(`Loading tile ${src} (render count: ${this.renderCount})`);
-
-      this.renderCount++;
-
-      let [zm, x, y] = src.split('/').map(Number);
+      let [resolution, x, y] = src.split('/').map(Number);
       let slices = {"x": [x * tileSize[0], (x + 1) * tileSize[0]], "y": [y * tileSize[1], (y + 1) * tileSize[1]]};
       // Map OL z level to the nearest Zarr dataset index.
-      let datasetIndex = scales.length - 1 - zm;
+      let datasetIndex = scales.length - 1 - resolution;
 
       // We assume we are rendering Labels here!
       if (!this.ngffImg) {
@@ -106,6 +102,14 @@ export default class ZarrSource extends TileImage {
         for (let c = 0; c < this.ngffImg.omero.channels.length; c++) {
           this.ngffImg.setChannelActive(c, c === channelIndex);
         }
+      }
+
+      // set Z and T index
+      if (this.zIndex !== undefined || initialZIndex !== undefined) {
+        this.ngffImg.setZIndex(this.zIndex !== undefined ? this.zIndex : initialZIndex);
+      }
+      if (this.tIndex !== undefined || initialTIndex !== undefined) {
+        this.ngffImg.setTIndex(this.tIndex !== undefined ? this.tIndex : initialTIndex);
       }
 
       // We either render with a colorMap or LUT
@@ -144,6 +148,17 @@ export default class ZarrSource extends TileImage {
     });
 
     this.options_ = options;
+  }
+
+  setDimensionIndex(key, values) {
+    // NB: we don't support Z-projection here, just take the first value of the array...
+    if (key === 'z') {
+      this.zIndex = values[0];
+    } else if (key === 't') {
+      this.tIndex = values[0];
+    }
+    // trigger reload of tiles to apply new dimension index
+    this.refresh();
   }
 
   setRdef(zarrSource) {
