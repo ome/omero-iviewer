@@ -26,6 +26,9 @@ import {LABELS_OPACITY_CHANGED, LABELS_VISIBILITY_CHANGED, LABELS_RDEF_CHANGED} 
 
 // limit of webgateway/table slice, and other endpoints?
 const PAGE_SIZE = 1000000;
+// We look for a column with this name to get the label values...
+// TODO: what is the convention here?
+const LABEL_COLUMN_NAME = "label";
 @customElement('table_data_layer')
 @inject(Context, BindingEngine)
 export class TableDataLayer {
@@ -168,6 +171,12 @@ export class TableDataLayer {
                 this.numeric_columns = this.table_columns.filter(col => ["LongColumn", "DoubleColumn"].includes(col.type));
                 console.log("Numeric columns: ", this.numeric_columns);
                 this.table_data_layer.row_count = tableData.totalCount;
+
+                let labelCol = this.table_columns.find(col => col.name.toLowerCase() === LABEL_COLUMN_NAME);
+                if (labelCol) {
+                    // update index - deault is 0 if no matching column name found
+                    this.label_values_column_index = labelCol.index;
+                }
 
                 // We also want to get the Label pixel values for each row. 
                 // If we know the NAME of the Label pixel column, we could use that to pick label_values_column_index
