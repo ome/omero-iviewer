@@ -162,8 +162,6 @@ export default class ZarrSource extends TileImage {
   }
 
   setRdef(zarrSource) {
-    console.log("----> Setting RDEF for zarrSource: ", zarrSource.color, this);
-
     this.color = zarrSource.color;
     this.autoColor = zarrSource.autoColor;
     this.colorMap = zarrSource.colorMap;

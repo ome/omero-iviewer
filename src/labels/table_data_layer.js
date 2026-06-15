@@ -18,6 +18,8 @@
 //
 
 // js
+import * as omezarr from 'ome-zarr.js';
+
 import Context from '../app/context';
 
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
@@ -198,6 +200,7 @@ export class TableDataLayer {
 
     /**
      * Label Color picker and 'Auto' checkbox both call this...
+     * Also called when we update matchingLabelValues
      * @param {*} zarrSourceId 
      */
     requestLabelRerender() {
@@ -213,12 +216,19 @@ export class TableDataLayer {
             let red = parseInt(hexColor.slice(1, 3), 16);
             let green = parseInt(hexColor.slice(3, 5), 16);
             let blue = parseInt(hexColor.slice(5, 7), 16);
+            let labelColor = [red, green, blue];
+            let lut = omezarr.luts.GLASBEY;
+            let bins = lut.length;
             for (let i=0; i<this.matchingLabelValues.length; i++) {
-                // TODO: - shouldn't expect to have 0 label value in OMERO.table, but just in case...
+                // shouldn't expect to have 0 label value in OMERO.table, but just in case...
                 if (this.matchingLabelValues[i] === 0) {
                     continue; // skip background
                 }
-                colorMap.set(this.matchingLabelValues[i], [red, green, blue]);
+                if (this.table_data_layer.autoColor) {
+                    // pick color from GLASBEY LUT - label value "1" gets first LUT color, etc...
+                    labelColor = lut[(this.matchingLabelValues[i] % bins) - 1];
+                }
+                colorMap.set(this.matchingLabelValues[i], labelColor);
             }
             this.table_data_layer.colorMap = colorMap;
         } else {
