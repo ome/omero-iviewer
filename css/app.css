@@ -1646,16 +1646,16 @@ thumbnail-slider img {
 /* ========================================
    Grid Control Panel
    ======================================== */
-.grid-control-panel {
-    position: absolute;
-    top: 8px;
-    left: 240px;  /* Position to the right of zoom control */
-    z-index: 1000;
-    background-color: white;
-    border-radius: 2px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    padding: 2px;
-    min-width: 30px;
+.ol-grid {
+    top: .5em;
+    left: 14.5em;
+}
+/* Hide the grid collapse button by default, show it when the grid control is enabled */
+.ol-control .grid-collapse-btn {
+    display: none;
+}
+.ol-control.enabled .grid-collapse-btn {
+    display: block;
 }
 
 /* Grid Header - Button Row */
@@ -1686,20 +1686,6 @@ thumbnail-slider img {
 }
 
 /* Collapse Button */
-.grid-collapse-btn {
-    background-color: white;
-    border: 1px solid #ccc;
-    padding: 4px 6px;
-    cursor: pointer;
-    border-radius: 4px;
-    font-size: 10px;
-    color: #666;
-    transition: all 0.2s ease;
-    min-width: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
 
 .grid-collapse-btn:hover {
     background-color: #f0f0f0;
@@ -1707,16 +1693,33 @@ thumbnail-slider img {
     color: #007bff;
 }
 
-.grid-collapse-btn:active {
-    transform: scale(0.95);
+.ol-control .grid-collapse-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+    left: -1px;  /* collapse left border */
+    position: relative;
+}
+/* rotate to toggle up/down arrow */
+.panel-open .grid-collapse-btn {
+    transform: rotate(180deg);
 }
 
 .grid-controls {
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid #ddd;
+    position: absolute;
+    top: 35px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     animation: slideDown 0.2s ease;
     min-width: 220px;
+    background-color: white;
+    display: none;
+}
+
+.panel-open.enabled .grid-controls {
+    display: block;
 }
 
 @keyframes slideDown {
@@ -1974,6 +1977,27 @@ thumbnail-slider img {
     display: flex;
     gap: 4px;
 }
+.grid-linewidth-group {
+    input[type="radio"] {
+        display: none;
+    }
+}
+.grid-linewidth-group label {
+    flex: 1;
+    padding: 4px 0;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    background: white;
+    font-size: 11px;
+    text-align: center;
+    cursor: pointer;
+}
+.grid-linewidth-group label:has(input:checked) {
+    border-color: #007bff;
+    color: #007bff;
+    background: #eaf3ff;
+}
+
 .grid-lw-btn {
     flex: 1;
     padding: 4px 0;
