@@ -1,5 +1,4 @@
-import {listen} from 'ol/events';
-import EventType from 'ol/events/EventType';
+
 import Control from 'ol/control/Control';
 import Feature from 'ol/Feature';
 import LineString from 'ol/geom/LineString';
@@ -10,8 +9,7 @@ import Style from 'ol/style/Style';
 import Stroke from 'ol/style/Stroke';
 import Fill from 'ol/style/Fill';
 import Text from 'ol/style/Text';
-import {CLASS_UNSELECTABLE, CLASS_CONTROL } from 'ol/css';
-import DragPan from 'ol/interaction/DragPan';
+import { CLASS_CONTROL } from 'ol/css';
 
 export class Grid extends Control {
     /**
@@ -49,8 +47,6 @@ export class Grid extends Control {
         });
         element.appendChild(buttonGroup);
 
-
-
         // listen for input events on children of the element (e.g., sliders, checkboxes)
         element.addEventListener('input', (event) => {
             const target = event.target;
@@ -86,6 +82,11 @@ export class Grid extends Control {
         this.element = element;
     }
 
+    /**
+     * Converts a number to a letter (0 -> A, 1 -> B, ..., 25 -> Z, 26 -> AA, etc.)
+     * @param {number} num The number to convert
+     * @returns {string} The corresponding letter(s)
+     */
     numberToLetter(num) {
         let letter = '';
         while (num >= 0) {
@@ -100,11 +101,9 @@ export class Grid extends Control {
      * @private
      */
     getControlsHtml() {
-        let gridEnabled = false;
-        let gridPanelExpanded = false;
-        let gridLineWidth = 2;
-        return `<button class="btn btn-default glyphicon grid-toggle-btn ${gridEnabled ? 'active' : ''}"
-                        title="${gridEnabled ? 'Hide Grid' : 'Show Grid'}"
+        // random number to ensure unique radio button names for when multiple image viewers are open
+        let randomNumber = Math.floor(Math.random() * 1000);
+        return `<button class="btn btn-default glyphicon grid-toggle-btn" title="Show Grid"
                         style="width:30px; height:30px; top:0; padding: 1px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid #ccc; cursor: pointer;">
                     <svg class="grid-icon" viewBox="0 0 16 16" fill="none"
                             stroke="currentColor" stroke-width="1.5" aria-hidden="true"
@@ -115,8 +114,7 @@ export class Grid extends Control {
                         <line x1="0"     y1="10.66" x2="16"  y2="10.66"/>
                     </svg>
                 </button>
-                <button class="grid-collapse-btn"
-                        title="${gridPanelExpanded ? 'Hide Settings' : 'Show Settings'}">
+                <button class="grid-collapse-btn" title="Show Settings">
                     ▲
                 </button>
 
@@ -138,9 +136,9 @@ export class Grid extends Control {
                     <div class="grid-control-item">
                         <label>Line Width</label>
                         <div class="grid-linewidth-group">
-                            <label><input type="radio" name="gridLineWidth" value="1">1 px</label>
-                            <label><input type="radio" name="gridLineWidth" value="2" checked>2 px</label>
-                            <label><input type="radio" name="gridLineWidth" value="3">3 px</label>
+                            <label><input type="radio" name="gridLineWidth${randomNumber}" value="1">1 px</label>
+                            <label><input type="radio" name="gridLineWidth${randomNumber}" value="2" checked>2 px</label>
+                            <label><input type="radio" name="gridLineWidth${randomNumber}" value="5">5 px</label>
                         </div>
                     </div>
 
@@ -150,7 +148,6 @@ export class Grid extends Control {
                             Show Labels (A1, B2...)
                         </label>
                     </div>
-
                 </div>`;
     }
 
@@ -161,11 +158,17 @@ export class Grid extends Control {
         this.map = this.getMap()
     }
 
+    /**
+     * Toggles the visibility of the grid settings panel
+     */
     toggleGridPanel() {
         this.element.classList.toggle('panel-open');
     }
 
-    toggleGrid(axis) {
+    /**
+     * Toggles the grid overlay on the map
+     */
+    toggleGrid() {
         if (this.gridLayer) {
             this.map.removeLayer(this.gridLayer);
             this.gridLayer = null;
@@ -177,6 +180,9 @@ export class Grid extends Control {
         }
     }
 
+    /**
+     * Recreates the grid overlay based on current configuration
+     */
     refreshGrid() {
         if (this.gridLayer) {
             this.map.removeLayer(this.gridLayer);
