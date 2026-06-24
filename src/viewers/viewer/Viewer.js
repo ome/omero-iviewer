@@ -67,6 +67,7 @@ import OmeroImage from './source/Image';
 import Regions from './source/Regions';
 import Mask from './geom/Mask';
 import Mirror from './controls/Mirror';
+import Grid from './controls/Grid';
 import { REQUEST_PARAMS } from '../../utils/constants';
 
 /**
@@ -624,6 +625,9 @@ class Viewer extends OlObject {
                 flipY: initialFlipY
             })
         }
+
+        // link the grid control to the viewer if requested
+        this.addControl('grid');
         
         // tweak source element for fullscreen to include dim sliders (iviewer only)
         var targetId = this.getTargetId();

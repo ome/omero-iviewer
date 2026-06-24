@@ -36,6 +36,8 @@ import IntensityDisplay from './controls/IntensityDisplay';
 import RotateInteraction from './interaction/Rotate';
 import BoxSelect from './interaction/BoxSelect';
 import Mirror from './controls/Mirror';
+import Grid from './controls/Grid';
+
 
 /**
  * Default lineCap setting for default stroke
@@ -324,6 +326,12 @@ export const AVAILABLE_VIEWER_CONTROLS = {
         "options": {},
         "defaults": true,
         "enabled" : false,
+        "links" : []},
+    "grid" :
+        {"clazz" : Grid,
+        "options": {},
+        "defaults": true,
+        "enabled" : true,
         "links" : []}
 };
 
