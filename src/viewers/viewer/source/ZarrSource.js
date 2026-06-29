@@ -102,15 +102,23 @@ export default class ZarrSource extends TileImage {
         for (let c = 0; c < this.ngffImg.omero.channels.length; c++) {
           this.ngffImg.setChannelActive(c, c === channelIndex);
         }
+        let axesNames = this.ngffImg.getAxesNames();
+        let shape = this.ngffImg.getShape();
+        this.sizeZ = axesNames.includes('z') ? shape[axesNames.indexOf('z')] : 1;
+        this.sizeT = axesNames.includes('t') ? shape[axesNames.indexOf('t')] : 1;
       }
 
       // set Z and T index
       if (this.zIndex !== undefined || initialZIndex !== undefined) {
-        this.ngffImg.setZIndex(this.zIndex !== undefined ? this.zIndex : initialZIndex);
+        let z = this.zIndex !== undefined ? this.zIndex : initialZIndex;
+        this.ngffImg.setZIndex(Math.min(z, this.sizeZ - 1));
       }
       if (this.tIndex !== undefined || initialTIndex !== undefined) {
-        this.ngffImg.setTIndex(this.tIndex !== undefined ? this.tIndex : initialTIndex);
+        let t = this.tIndex !== undefined ? this.tIndex : initialTIndex;
+        this.ngffImg.setTIndex(Math.min(t, this.sizeT - 1));
       }
+      this.ngffImg.setZIndex(0);
+      this.ngffImg.setTIndex(0);
 
       // We either render with a colorMap or LUT
       // Just set ONE of them, and clear the other...
@@ -130,7 +138,7 @@ export default class ZarrSource extends TileImage {
         }
       }
 
-      let result = await this.ngffImg.renderRgba({arrayPathOrIndex: datasetIndex, slices});
+      let result = await this.ngffImg.renderArray({arrayPathOrIndex: datasetIndex, slices});
       let rgba = result.data;
       let width = result.width;
       let height = result.height;
