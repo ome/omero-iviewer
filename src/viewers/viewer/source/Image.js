@@ -285,7 +285,12 @@ const OmeroImage = function(options) {
             var channelsLength = this.channels_info_.length;
             for (var c=0; c<channelsLength;c++) {
                 var channelInfo = this.channels_info_[c];
-                if (c != 0) url += ',';
+                if (!channelInfo['active']) continue;
+
+                if (url[url.length - 1] !== '=') {
+                    // add a comma to separate channels
+                    url += ',';
+                }
 
                 // amend url with channel info
                 url += (!channelInfo['active'] ? "-" : "") + (c + 1);
@@ -293,29 +298,27 @@ const OmeroImage = function(options) {
                 url += "$" + channelInfo['color']; // color info
 
                 var m = {};
-                if (channelInfo['active']) {
-                    m["inverted"] = { "enabled" :
-                        typeof channelInfo['inverted'] === 'boolean' &&
-                            channelInfo['inverted']
-                    }
+                m["inverted"] = { "enabled" :
+                    typeof channelInfo['inverted'] === 'boolean' &&
+                        channelInfo['inverted']
+                }
 
-                    // Only need to include family if different from default
-                    var family = channelInfo['family'];
-                    var family_not_default = (family !== "linear" ||
-                                              (family === "linear" && this.saved_channels_info_[c]["family"] !== "linear"));
-                    if (typeof family === 'string' &&
-                        family !== "" &&
-                        family_not_default &&
-                        typeof channelInfo['coefficient'] === 'number' &&
-                        !isNaN(channelInfo['coefficient'])) {
-                            m["quantization"] = {
-                                "family": family,
-                            };
-                            // Only need coefficient if family is not 'linear' or 'logarithmic'
-                            if (family !== 'linear' && family !== 'logarithmic') {
-                                m["quantization"]["coefficient"] = channelInfo['coefficient'];
-                            }
-                    }
+                // Only need to include family if different from default
+                var family = channelInfo['family'];
+                var family_not_default = (family !== "linear" ||
+                                            (family === "linear" && this.saved_channels_info_[c]["family"] !== "linear"));
+                if (typeof family === 'string' &&
+                    family !== "" &&
+                    family_not_default &&
+                    typeof channelInfo['coefficient'] === 'number' &&
+                    !isNaN(channelInfo['coefficient'])) {
+                        m["quantization"] = {
+                            "family": family,
+                        };
+                        // Only need coefficient if family is not 'linear' or 'logarithmic'
+                        if (family !== 'linear' && family !== 'logarithmic') {
+                            m["quantization"]["coefficient"] = channelInfo['coefficient'];
+                        }
                 }
                 maps.push(m);
             }
