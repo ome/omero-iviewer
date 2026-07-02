@@ -69,18 +69,18 @@ export class Labels {
 
     addTableToLabels(zarrSourceId, event) {
         let tableFileId = event.target.value;
-        console.log("Adding table with file id ", tableFileId, " to labels with zarr source id ", zarrSourceId);
-        let tData = this.labels_info.omeroTables.find(t => t.file.id == tableFileId);
-        console.log("Found table data: ", tData);
         let zarrSource = this.labels_info.zarrSources.find(src => src.id === zarrSourceId);
+        console.log("Adding table with file id ", tableFileId, " to labels with zarr source id ", zarrSourceId);
+        let tData = zarrSource.tableFiles.find(t => t.id == tableFileId);
+        console.log("Found table data: ", tData);
         let newId = Misc.getRandomInteger(0, 100000);
         let color = colors[zarrSource.tableDataLayers.length % colors.length];
         zarrSource.selectedLayerId = newId; // select the newly added layer
         zarrSource.tableDataLayers.push({
-            name: tData.file.name,
+            name: tData.name,
             id: newId,
             tableFileId: tableFileId,
-            tableFilename: tData.file.name,
+            tableFilename: tData.name,
             visible: true,
             opacity: 1.0,
             color: color,

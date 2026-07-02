@@ -30,7 +30,7 @@ import {LABELS_OPACITY_CHANGED, LABELS_VISIBILITY_CHANGED, LABELS_RDEF_CHANGED} 
 const PAGE_SIZE = 1000000;
 // We look for a column with this name to get the label values...
 // TODO: what is the convention here?
-const LABEL_COLUMN_NAME = "label";
+const LABEL_COLUMN_NAME = "object";
 @customElement('table_data_layer')
 @inject(Context, BindingEngine)
 export class TableDataLayer {
@@ -175,6 +175,7 @@ export class TableDataLayer {
                 this.table_data_layer.row_count = tableData.totalCount;
 
                 let labelCol = this.table_columns.find(col => col.name.toLowerCase() === LABEL_COLUMN_NAME);
+                console.log("Found label column: ", labelCol);
                 if (labelCol) {
                     // update index - deault is 0 if no matching column name found
                     this.label_values_column_index = labelCol.index;

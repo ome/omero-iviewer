@@ -12,11 +12,13 @@
             <!-- edit panel - show if visible -->
             <div show.bind="zarrSource.visible">
                 <div class="flex-row">
-                    <!-- <div>Add data:</div> -->
-                    <select change.delegate="addTableToLabels(zarrSource.id, $event)">
+                    <!-- Only show 'select' if zarrSource.tableFiles.length > 0 -->
+                    <select change.delegate="addTableToLabels(zarrSource.id, $event)" if.bind="zarrSource.tableFiles.length > 0">
                         <option value="">Add a Data layer from OMERO.table</option>
-                        <option repeat.for="table of labels_info.omeroTables" value="${table.file.id}">${table.file.name}</option>
+                        <option repeat.for="table of zarrSource.tableFiles" value="${table.id}">${table.name}</option>
                     </select>
+                    <!-- otherwise show "no tables" -->
+                    <div if.bind="zarrSource.tableFiles.length === 0" title="ROI ID: ${zarrSource.roiId}" style="color: #888">No OMERO.tables found for this ROI</div>
                 </div>
 
                 <!-- Summary of the layers - first one has no OMERO.table, others are added from Table select above -->

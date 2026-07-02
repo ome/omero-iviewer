@@ -28,12 +28,12 @@ let colors = [
     "#00ffff", "#ff00ff", "#ffff00", "#00ff00", "#ff0000",
 ]
 
-async function loadZarrLayers(lsids) {
+async function loadZarrLayers(labelImgs) {
 
     let newZarrs = [];
 
-    for (const lsid of lsids) {
-        const ngffImage = await omezarr.NgffImage.load(lsid);
+    for (const labelImg of labelImgs) {
+        const ngffImage = await omezarr.NgffImage.load(labelImg.zarrUrl);
         const arr0 = await ngffImage.openArray(0);
 
         let dimNames = ngffImage.axes.map(a => a.name);
@@ -46,7 +46,8 @@ async function loadZarrLayers(lsids) {
                 // this id just used for UI purposes
                 id: Misc.getRandomInteger(0, 100000),
                 visible: true,
-                source: lsid,
+                source: labelImg.zarrUrl,
+                roiId: labelImg.roiId,
                 // e.g. [{name: 't', type: 'time'}, {name: 'y', type: 'space'}, {name: 'x', type: 'space'}]
                 axes: ngffImage.axes,
                 channelIndex: channelIndex,
@@ -141,40 +142,51 @@ export default class LabelsInfo  {
         this.is_pending = false;
 
         // Get the externalInfo Lsid from Shape(s)
-        let lsids = [];
+        let labelImages = [];
         if (data && data.length > 0) {
             data.forEach((roi) => {
                 roi.shapes.forEach((shape) => {
                     console.log("Shape: ", shape);
                     if (shape["omero:details"]?.externalInfo?.Lsid) {
-                        lsids.push(shape["omero:details"].externalInfo.Lsid);
+                        labelImages.push({
+                            zarrUrl: shape["omero:details"].externalInfo.Lsid,
+                            roiId: roi['@id'],
+                        });
                     }
                 });
             });
         }
-        console.log("LabelsInfo: Got LSIDs from shapes: ", lsids);
-        if (lsids.length == 0) {
+        console.log("LabelsInfo: Got zarrs from shapes: ", labelImages);
+        if (labelImages.length == 0) {
             alert("No externalInfo Lsids found for shapes in ROIs response - cannot load labels data");
             return;
         }
 
-        // Load Zarr image info for each Lsid, and check for OMERO.tables on the Image...
-        this.zarrSources = await loadZarrLayers(lsids);
-        this.omeroTables = await this.loadAvailableTables();
+        // Load Zarr image info for each Lsid, and check for OMERO.tables on each ROI...
+        this.zarrSources = await loadZarrLayers(labelImages);
+        // Load OMERO.tables and add to zarrSources
+        for (const zarrSource of this.zarrSources) {
+            let tableFiles = await this.loadAvailableTables(zarrSource.roiId);
+            zarrSource.tableFiles = tableFiles;
+        }
 
         // ready triggers display of <labels> component in the UI 
         this.ready = true;
     }
 
-    async loadAvailableTables() {
-        // /api/annotations/?type=file&image=7215&_=1780499269041
+    async loadAvailableTables(roiId) {
+        // /api/v0/m/annotations/?roi=276525
         let url = this.image_info.context.server;
-            url += this.image_info.context.getPrefixedURI(WEBCLIENT) +
-                '/api/annotations/?type=file&image=' + this.image_info.image_id;
+            url += this.image_info.context.getPrefixedURI(WEB_API_BASE) +
+                '/m/annotations/?type=file&roi=' + roiId;
         let jsonData = await fetch(url).then(response => response.json());
-        // each ann is {'id': 123, 'file': {'mimetype': 'OMERO.tables', id: 456, name:"my_table", size: 789}, date: "2026-06-03T15:22:25+01:00", ...}
-        let tables = jsonData.annotations.filter(ann => ann.file?.mimetype === "OMERO.tables");
-        return tables;
+        // omero-marshal annotations...
+        let tables = jsonData.data.filter(ann => ann.File?.mimetype === "OMERO.tables");
+        let files = tables.map(obj => {
+            return {id: obj.File['@id'],
+                    name: obj.File.name};
+        })
+        return files;
     }
 
     /**
