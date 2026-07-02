@@ -1,4 +1,5 @@
 <template>
+<div class="table_data_layer">
   <div>
     Name: ${table_data_layer.name}
     <span show.bind="table_data_layer.row_count !== undefined">
@@ -65,7 +66,7 @@
         />
       </div>
 
-      <div class="flex-row">
+      <div class="flex-row" style="margin-bottom: 0">
         <!-- button to add another clause -->
         <button type="button" click.delegate="addClause()" style="flex: 0 0 auto" title="Add a filter clause">+</button>
         <div style="flex: 1 1 auto"></div>
@@ -73,4 +74,5 @@
       </div>
     </form>
   </div>
+</div>
 </template>

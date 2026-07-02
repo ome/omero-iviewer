@@ -1664,7 +1664,18 @@ thumbnail-slider img {
 .layer-select {
     border: solid 1px #ccc;
     padding: 5px;
-    border-radius: 3px;
+    margin: 0;
+    border-bottom: 0;
+    gap: 5px;
+}
+.layer-select:first-child {
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+.layer-select:last-child {
+    border-bottom: 1px solid #ccc;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
 }
 .layer-select label {
     margin-bottom: 0;
@@ -1678,4 +1689,11 @@ thumbnail-slider img {
     flex-direction: row;
     align-items: center;
     font-weight: 400;
+}
+
+.table_data_layer {
+    padding: 5px;
+    border: solid #ccc 1px;
+    border-radius: 5px;
+    margin-top: 10px;
 }
