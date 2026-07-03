@@ -103,7 +103,7 @@ export default class ZarrSource extends TileImage {
           this.ngffImg.setChannelActive(c, c === channelIndex);
         }
         let axesNames = this.ngffImg.getAxesNames();
-        let shape = this.ngffImg.getShape();
+        let shape = await this.ngffImg.getShape();
         this.sizeZ = axesNames.includes('z') ? shape[axesNames.indexOf('z')] : 1;
         this.sizeT = axesNames.includes('t') ? shape[axesNames.indexOf('t')] : 1;
       }
@@ -117,8 +117,6 @@ export default class ZarrSource extends TileImage {
         let t = this.tIndex !== undefined ? this.tIndex : initialTIndex;
         this.ngffImg.setTIndex(Math.min(t, this.sizeT - 1));
       }
-      this.ngffImg.setZIndex(0);
-      this.ngffImg.setTIndex(0);
 
       // We either render with a colorMap or LUT
       // Just set ONE of them, and clear the other...
