@@ -1658,13 +1658,6 @@ thumbnail-slider img {
     display: block;
 }
 
-/* Grid Header - Button Row */
-.grid-header {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-}
-
 .grid-toggle-btn {
     flex: 1;
     background-color: white;
@@ -1826,19 +1819,6 @@ thumbnail-slider img {
     transform: scale(1.1);
 }
 
-.grid-size-labels {
-    display: flex;
-    justify-content: space-between;
-    font-size: 9px;
-    color: #666;
-    margin-top: 2px;
-    padding: 0 5px;
-}
-
-.grid-size-labels span {
-    font-weight: bold;
-}
-
 .grid-control-item input[type="checkbox"] {
     margin-right: 6px;
     cursor: pointer;
@@ -1960,19 +1940,6 @@ thumbnail-slider img {
     flex: 1;
 }
 
-/* Size labels below slider */
-.grid-size-labels {
-    display: flex;
-    justify-content: space-between;
-    font-size: 10px;
-    color: #666;
-    margin-top: 2px;
-    padding: 0 5px;
-}
-
-.grid-size-labels span {
-    font-weight: bold;
-}
 .grid-linewidth-group {
     display: flex;
     gap: 4px;
@@ -1993,21 +1960,6 @@ thumbnail-slider img {
     cursor: pointer;
 }
 .grid-linewidth-group label:has(input:checked) {
-    border-color: #007bff;
-    color: #007bff;
-    background: #eaf3ff;
-}
-
-.grid-lw-btn {
-    flex: 1;
-    padding: 4px 0;
-    border: 1px solid #ddd;
-    border-radius: 3px;
-    background: white;
-    font-size: 11px;
-    cursor: pointer;
-}
-.grid-lw-btn.active {
     border-color: #007bff;
     color: #007bff;
     background: #eaf3ff;
