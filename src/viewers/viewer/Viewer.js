@@ -64,6 +64,7 @@ import {integrateStyleIntoJsonObject,
     featureToJsonObject,
     LOOKUP} from './utils/Conversion';
 import OmeroImage from './source/Image';
+import ZarrSource from './source/ZarrSource';
 import Regions from './source/Regions';
 import Mask from './geom/Mask';
 import Mirror from './controls/Mirror';
@@ -591,7 +592,6 @@ class Viewer extends OlObject {
         this.viewerState_[contr] = defaultConts[contr];
         }
     
-
         // finally construct the open layers map object
         this.viewer_ = new OlMap({
             logo: false,
@@ -804,6 +804,53 @@ class Viewer extends OlObject {
 
         //Overlay to show a popup for editing shapes (adds itself to map)
         new ShapeEditPopup(this.regions_);
+    }
+
+
+    addZarrSource(attr) {
+        // data is zarrSources list... id, name, source, layers,
+        if (!(this.viewer_ instanceof OlMap)) {
+            console.error("Viewer not initialized, cannot add Zarr sources");
+            return;
+        }
+        // Use omeroImage to get current Z and T
+        var omeroImage = this.getImage();
+        let zIndex = omeroImage.getPlane();
+        let tIndex = omeroImage.getTime();
+        attr.zIndex = zIndex;
+        attr.tIndex = tIndex;
+
+        // Create new Layer...
+        var zarrSource = new ZarrSource(attr);
+        let tileLayer = new Tile({source: zarrSource});
+        tileLayer.set('id', attr.id);
+        this.viewer_.addLayer(tileLayer);
+    }
+
+    setLabelsOpacity(id, opacity) {
+        this.viewer_.getLayers().forEach(layer => {
+            if (layer instanceof Tile && layer.get('id') === id) {
+                layer.setOpacity(opacity);
+            }
+        });
+    }
+
+    setLabelsVisibility(id, visible) {
+        this.viewer_.getLayers().forEach(layer => {
+            if (layer instanceof Tile && layer.get('id') === id) {
+                layer.setVisible(visible);
+            }
+        });
+    }
+
+    setLabelsRdef(zarrSource) {
+        console.log("setLabelsRdef()", zarrSource);
+        // the zarrSource.id will be the layer id...
+        this.viewer_.getLayers().forEach(layer => {
+            if (layer instanceof Tile && layer.get('id') === zarrSource.id) {
+                layer.getSource().setRdef(zarrSource);
+            }
+        });
     }
 
     /**
@@ -1241,6 +1288,12 @@ class Viewer extends OlObject {
 
         // update regions (if necessary)
         if (this.getRegionsLayer()) this.getRegions().changed();
+        // update zarr source layers (if necessary)
+        this.viewer_.getLayers().forEach(layer => {
+            if (layer instanceof Tile && layer.getSource() instanceof ZarrSource) {
+                layer.getSource().setDimensionIndex(key, values);
+            }
+        });
 
         // update popup (hide it if shape no longer visible)
         this.viewer_.getOverlays().forEach(o => {

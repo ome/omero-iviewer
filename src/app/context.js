@@ -589,7 +589,7 @@ export default class Context {
             window.onkeydown = (event) => {
                 let command = Misc.isApple() ? 'metaKey' : 'ctrlKey';
                 let keyHandlers =
-                    this.key_listeners.get(event.key.toUpperCase());
+                    this.key_listeners.get(event.key?.toUpperCase());
                 if (typeof keyHandlers === 'undefined' ||
                     event.target.nodeName.toUpperCase() === 'INPUT') return;
 
@@ -1102,6 +1102,16 @@ export default class Context {
      */
     isRoisTabActive() {
         return this.selected_tab === TABS.ROIS;
+    }
+
+    /**
+     * Returns whether the labels tab is active/selected
+     *
+     * @return {boolean} true if labels tab is active/selected, false otherwise
+     * @memberof Context
+     */
+    isLabelsTabActive() {
+        return this.selected_tab === TABS.LABELS;
     }
 
     /**

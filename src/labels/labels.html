@@ -1,0 +1,50 @@
+
+<template>
+    <require from="./table_data_layer"></require>
+
+    <!-- list item for each labels_info.zarrSources -->
+    <div show.bind="labels_info.ready">
+        <div repeat.for="zarrSource of labels_info.zarrSources" style="padding-bottom: 5px;">
+            <div class="flex-row" title="${zarrSource.source}">
+                <input type="checkbox" checked.bind="zarrSource.visible">
+                 ${zarrSource.source}
+            </div>
+            <!-- edit panel - show if visible -->
+            <div show.bind="zarrSource.visible">
+                <div class="flex-row">
+                    <!-- Only show 'select' if zarrSource.tableFiles.length > 0 -->
+                    <select change.delegate="addTableToLabels(zarrSource.id, $event)" if.bind="zarrSource.tableFiles.length > 0">
+                        <option value="">Add a Data layer from OMERO.table</option>
+                        <option repeat.for="table of zarrSource.tableFiles" value="${table.id}">${table.name}</option>
+                    </select>
+                    <!-- otherwise show "no tables" -->
+                    <div if.bind="zarrSource.tableFiles.length === 0" title="ROI ID: ${zarrSource.roiId}" style="color: #888">No OMERO.tables found for this ROI</div>
+                </div>
+
+                <!-- Summary of the layers - first one has no OMERO.table, others are added from Table select above -->
+                <!-- This list allows user to choose SELECTED layer -->
+                <div class="layer-select-container">
+                    <div class="flex-row layer-select" repeat.for="tableDataLayer of zarrSource.tableDataLayers" style="background-color: ${ tableDataLayer.id === zarrSource.selectedLayerId ? '#eee' : 'transparent'};">
+                        <label style="flex: 0 0 auto; margin-top: 1px;" title="Toggle visibility of this layer">
+                            <input type="checkbox" style="display:none" checked.bind="tableDataLayer.visible" change.delegate="handleLayerVisibilityChange(tableDataLayer.id, $event.target.checked)"/>
+                            <div style="color: #333" class="glyphicon ${tableDataLayer.visible ? 'glyphicon-eye-open' : 'glyphicon-eye-close'}"></div>
+                        </label>
+                        <label class="layer-select-label" title="${tableDataLayer.tableFilename}">
+                            <div style="width: 25px; height: 20px; display: inline-block; margin-right: 5px; background-color: ${tableDataLayer.color}"></div>
+                            <input style="display:none" type="checkbox" name="selectedLayer-${zarrSource.id}" checked.one-way="tableDataLayer.id === zarrSource.selectedLayerId" change.delegate="zarrSource.selectedLayerId = tableDataLayer.id"/>
+                            <div>${tableDataLayer.name}
+                                <span show.bind="tableDataLayer.match_count">(${tableDataLayer.match_count !== undefined ? tableDataLayer.match_count : ''} / ${tableDataLayer.row_count})</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- SELECTED layer shown here -->
+                <div repeat.for="tableDataLayer of zarrSource.tableDataLayers">
+                    <table_data_layer show.one-way="tableDataLayer.id === zarrSource.selectedLayerId" table_data_layer.bind="tableDataLayer"></table_data_layer>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</template>

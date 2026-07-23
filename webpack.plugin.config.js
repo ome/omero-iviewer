@@ -4,6 +4,7 @@ const ProvidePlugin = require('webpack/lib/ProvidePlugin');
 module.exports = {
   entry: {
     main: [
+      'babel-polyfill',
       './src/viewers/viewer/Viewer.js'
     ]
   },

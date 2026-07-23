@@ -335,6 +335,7 @@ const OmeroImage = function(options) {
 
     // get rest of parameters and instantiate a tile grid
     var extent = [0, -this.height_, this.width_, 0];
+    console.log("Creating tile grid with extent:", extent, "and resolutions:", this.resolutions_);
     var tileGrid = new TileGrid({
         tileSize: this.tile_size_ ?
             [this.tile_size_.width, this.tile_size_.height] :

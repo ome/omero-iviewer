@@ -43,7 +43,8 @@ import {
     REGIONS_SHOW_COMMENTS, REGIONS_STORED_SHAPES, REGIONS_STORE_SHAPES,
     VIEWER_IMAGE_SETTINGS, VIEWER_PROJECTIONS_SYNC, VIEWER_SET_SYNC_GROUP,
     ENABLE_SHAPE_POPUP, TILE_LOAD_ERROR, RENDER_COMPLETE,
-    EventSubscriber
+    LABELS_OPACITY_CHANGED, LABELS_VISIBILITY_CHANGED, LABELS_RDEF_CHANGED,
+    LABELS_NEW_LAYERS, EventSubscriber
 } from '../events/events';
 
 const MOVIE_DELAY = 250;
@@ -158,7 +159,16 @@ export default class Ol3Viewer extends EventSubscriber {
         [TILE_LOAD_ERROR,
             (params={}) => Ui.showModalMessage("Failed to load tiles.<br>Please try refreshing the page.", "OK")],
         [IMAGE_SETTINGS_REFRESH,
-            (params={}) => this.refreshImageSettings(params)]];
+            (params={}) => this.refreshImageSettings(params)],
+        [LABELS_OPACITY_CHANGED,
+            (params={}) => this.handleLabelsOpacityChange(params)],
+        [LABELS_VISIBILITY_CHANGED,
+            (params={}) => this.handleLabelsVisibilityChange(params)],
+        [LABELS_RDEF_CHANGED,
+            (params={}) => this.handleLabelsRdefChange(params)],
+        [LABELS_NEW_LAYERS,
+            (params={}) => this.handleLabelsNewLayers(params)]
+        ];
 
     /**
      * @constructor
@@ -360,6 +370,15 @@ export default class Ol3Viewer extends EventSubscriber {
                                 this.initRegions();
                                 delete this.image_config.regions_info.tmp_data;
                             }
+                    });
+            // listen to when the labels info data is ready
+            this.labels_info_ready_observer =
+                this.bindingEngine.propertyObserver(
+                    this.image_config.labels_info, 'ready').subscribe(
+                        (newValue, oldValue) => {
+                            let zarrSources = this.image_config.labels_info.zarrSources;
+                            console.log("labels_info_ready_observer: Got zarr Sources: ", zarrSources);
+                            this.initZarrSources();
                     });
             // mdi needs to switch image config when using controls
             this.getContainer().find('.ol-control').on(
@@ -622,6 +641,25 @@ export default class Ol3Viewer extends EventSubscriber {
 
         this.viewer.refreshBirdsEye(500);
         this.saveImageSettings(params);
+    }
+
+    handleLabelsOpacityChange(params = {}) {
+        console.log("handleLabelsOpacityChange: ", params);
+        this.viewer.setLabelsOpacity(params.id, params.opacity);
+    }
+
+    handleLabelsVisibilityChange(params = {}) {
+        console.log("handleLabelsVisibilityChange: ", params);
+        this.viewer.setLabelsVisibility(params.id, params.visibility);
+    }
+
+    handleLabelsRdefChange(params = {}) {
+        console.log("handleLabelsRdefChange: ", params);
+        this.viewer.setLabelsRdef(params);
+    }
+
+    handleLabelsNewLayers(params = {}) {
+        this.viewer.addZarrSource(params);
     }
 
     /**
@@ -955,6 +993,44 @@ export default class Ol3Viewer extends EventSubscriber {
         this.image_config.regions_info.regions_modes =
             this.viewer.setRegionsModes(params.modes);
 
+    }
+
+    /**
+     * Initializes the ol3 zarr sources layers
+     *
+     * @memberof Ol3Viewer
+     */
+    initZarrSources() {
+        if (this.viewer === null ||
+            this.image_config === null ||
+            this.image_config.labels_info === null ||
+            !this.image_config.labels_info.ready ||
+            !Misc.isArray(this.image_config.labels_info.zarrSources)) return;
+
+        this.image_config.labels_info.zarrSources.forEach(dataSrc => {
+            let axesNames = dataSrc.axes.map(a => a.name);
+            let xAxis = axesNames.indexOf('x');
+            let yAxis = axesNames.indexOf('y');
+            // expect single tableDataLayers, but handle all..
+            for (let i=0; i<dataSrc.tableDataLayers.length; i++) {
+                let layer = dataSrc.tableDataLayers[i];
+                var attr = {
+                    id: layer.id,
+                    source: dataSrc.source,
+                    width: dataSrc.shape[xAxis],
+                    height: dataSrc.shape[yAxis],
+                    tile_size: {
+                        width: dataSrc.chunks[xAxis],
+                        height: dataSrc.chunks[yAxis]
+                    },
+                    scales: dataSrc.scales,
+                    chunks: dataSrc.chunks,
+                    color: layer.color,
+                    channelIndex: dataSrc.channelIndex,
+                };
+                this.viewer.addZarrSource(attr);
+            }
+        });
     }
 
     /**

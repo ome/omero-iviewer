@@ -1643,3 +1643,57 @@ thumbnail-slider img {
     padding: 0px;
     font-weight: bold;
 }
+
+.flex-row {
+    margin-bottom: 5px;
+    gap: 10px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    width: 100%;
+    overflow: hidden;
+}
+.flex-row input, .flex-row select, .flex-row button {
+    margin: 0;
+    height: 25px;
+    border: solid #ccc 1px;
+    border-radius: 3px;
+}
+
+.layer-select {
+    border: solid 1px #ccc;
+    padding: 5px;
+    margin: 0;
+    border-bottom: 0;
+    gap: 5px;
+}
+.layer-select:first-child {
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+.layer-select:last-child {
+    border-bottom: 1px solid #ccc;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+.layer-select label {
+    margin-bottom: 0;
+}
+.layer-select-label {
+    flex: 1 1 auto;
+    padding: 2px 5px;
+    cursor: pointer;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    font-weight: 400;
+}
+
+.table_data_layer {
+    padding: 5px;
+    border: solid #ccc 1px;
+    border-radius: 5px;
+    margin-top: 10px;
+}

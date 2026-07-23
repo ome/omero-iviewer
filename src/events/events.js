@@ -84,6 +84,14 @@ export const THUMBNAILS_UPDATE = "THUMBNAILS_UPDATE";
 export const SAVE_ACTIVE_IMAGE_SETTINGS = "SAVE_ACTIVE_IMAGE_SETTINGS";
 /** used to notify of a tileloaderror from openlayers viewer */
 export const TILE_LOAD_ERROR = "TILE_LOAD_ERROR";
+/** change opacity of a zarr labels layer */
+export const LABELS_OPACITY_CHANGED = "LABELS_OPACITY_CHANGED";
+/** change visibility of a zarr labels layer */
+export const LABELS_VISIBILITY_CHANGED = "LABELS_VISIBILITY_CHANGED";
+/** change rendering settings of a zarr labels layer */
+export const LABELS_RDEF_CHANGED = "LABELS_RDEF_CHANGED";
+/** new zarr labels layers */
+export const LABELS_NEW_LAYERS = "LABELS_NEW_LAYERS";
 
 /**
  * Facilitates recurring event subscription

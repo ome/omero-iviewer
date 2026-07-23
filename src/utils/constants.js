@@ -221,7 +221,8 @@ export const LUTS_PNG_URL = '/img/luts_10.png';
 export const TABS = {
     INFO: 'info',
     SETTINGS: 'settings',
-    ROIS: 'rois'
+    ROIS: 'rois',
+    LABELS: 'labels',
 }
 
 /**
