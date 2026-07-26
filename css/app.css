@@ -1945,7 +1945,7 @@ thumbnail-slider img {
     gap: 4px;
 }
 .grid-linewidth-group input[type="radio"] {
-        display: none;
+    display: none;
 }
 .grid-linewidth-group label {
     flex: 1;
