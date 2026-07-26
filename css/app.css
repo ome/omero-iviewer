@@ -1944,7 +1944,7 @@ thumbnail-slider img {
     display: flex;
     gap: 4px;
 }
-.grid-linewidth-group {
+.grid-linewidth-group input[type="radio"] {
     input[type="radio"] {
         display: none;
     }
