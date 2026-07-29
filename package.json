@@ -54,7 +54,7 @@
     "babel-eslint": "7.2.3",
     "babel-loader": "^8.3.0",
     "css-loader": "6.8.1",
-    "eslint": "6.0.1",
+    "eslint": "10.4.0",
     "expose-loader": "4.1.0",
     "file-loader": "6.2.0",
     "html-loader": "0.5.5",
