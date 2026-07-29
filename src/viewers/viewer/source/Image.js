@@ -280,22 +280,20 @@ const OmeroImage = function(options) {
 
             // maps parameter (incl. inverted)
             var maps = [];
-            // add channel param
-            url += 'c=';
+            var channels = [];
+
             var channelsLength = this.channels_info_.length;
             for (var c=0; c<channelsLength;c++) {
+                let ch = "";
                 var channelInfo = this.channels_info_[c];
+
+                // We ONLY include active channels in URL parameters to reduce query length
                 if (!channelInfo['active']) continue;
 
-                if (url[url.length - 1] !== '=') {
-                    // add a comma to separate channels
-                    url += ',';
-                }
-
                 // amend url with channel info
-                url += (!channelInfo['active'] ? "-" : "") + (c + 1);
-                url += "|" + channelInfo['start'] + ":" + channelInfo['end'];
-                url += "$" + channelInfo['color']; // color info
+                ch += (!channelInfo['active'] ? "-" : "") + (c + 1);
+                ch += "|" + channelInfo['start'] + ":" + channelInfo['end'];
+                ch += "$" + channelInfo['color']; // color info
 
                 var m = {};
                 m["inverted"] = { "enabled" :
@@ -320,8 +318,10 @@ const OmeroImage = function(options) {
                             m["quantization"]["coefficient"] = channelInfo['coefficient'];
                         }
                 }
+                channels.push(ch);
                 maps.push(m);
             }
+            url += "c=" + channels.join(",");
             url += "&maps=" + JSON.stringify(maps);
             url += '&m=' + this.image_model_;
             url += '&p=' + this.image_projection_;
