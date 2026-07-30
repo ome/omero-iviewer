@@ -280,45 +280,48 @@ const OmeroImage = function(options) {
 
             // maps parameter (incl. inverted)
             var maps = [];
-            // add channel param
-            url += 'c=';
+            var channels = [];
+
             var channelsLength = this.channels_info_.length;
             for (var c=0; c<channelsLength;c++) {
+                let ch = "";
                 var channelInfo = this.channels_info_[c];
-                if (c != 0) url += ',';
+
+                // We ONLY include active channels in URL parameters to reduce query length
+                if (!channelInfo['active']) continue;
 
                 // amend url with channel info
-                url += (!channelInfo['active'] ? "-" : "") + (c + 1);
-                url += "|" + channelInfo['start'] + ":" + channelInfo['end'];
-                url += "$" + channelInfo['color']; // color info
+                ch += (!channelInfo['active'] ? "-" : "") + (c + 1);
+                ch += "|" + channelInfo['start'] + ":" + channelInfo['end'];
+                ch += "$" + channelInfo['color']; // color info
 
                 var m = {};
-                if (channelInfo['active']) {
-                    m["inverted"] = { "enabled" :
-                        typeof channelInfo['inverted'] === 'boolean' &&
-                            channelInfo['inverted']
-                    }
-
-                    // Only need to include family if different from default
-                    var family = channelInfo['family'];
-                    var family_not_default = (family !== "linear" ||
-                                              (family === "linear" && this.saved_channels_info_[c]["family"] !== "linear"));
-                    if (typeof family === 'string' &&
-                        family !== "" &&
-                        family_not_default &&
-                        typeof channelInfo['coefficient'] === 'number' &&
-                        !isNaN(channelInfo['coefficient'])) {
-                            m["quantization"] = {
-                                "family": family,
-                            };
-                            // Only need coefficient if family is not 'linear' or 'logarithmic'
-                            if (family !== 'linear' && family !== 'logarithmic') {
-                                m["quantization"]["coefficient"] = channelInfo['coefficient'];
-                            }
-                    }
+                m["inverted"] = { "enabled" :
+                    typeof channelInfo['inverted'] === 'boolean' &&
+                        channelInfo['inverted']
                 }
+
+                // Only need to include family if different from default
+                var family = channelInfo['family'];
+                var family_not_default = (family !== "linear" ||
+                                            (family === "linear" && this.saved_channels_info_[c]["family"] !== "linear"));
+                if (typeof family === 'string' &&
+                    family !== "" &&
+                    family_not_default &&
+                    typeof channelInfo['coefficient'] === 'number' &&
+                    !isNaN(channelInfo['coefficient'])) {
+                        m["quantization"] = {
+                            "family": family,
+                        };
+                        // Only need coefficient if family is not 'linear' or 'logarithmic'
+                        if (family !== 'linear' && family !== 'logarithmic') {
+                            m["quantization"]["coefficient"] = channelInfo['coefficient'];
+                        }
+                }
+                channels.push(ch);
                 maps.push(m);
             }
+            url += "c=" + channels.join(",");
             url += "&maps=" + JSON.stringify(maps);
             url += '&m=' + this.image_model_;
             url += '&p=' + this.image_projection_;
