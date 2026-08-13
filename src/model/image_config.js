@@ -329,18 +329,19 @@ export default class ImageConfig extends History {
         let image_info = this.image_info;
         let url =
             this.context.server + this.context.getPrefixedURI(WEBGATEWAY) +
-            "/saveImgRDef/" +
-            image_info.image_id + '/?m=' + image_info.model[0] +
+            `/saveImgRDef/${image_info.image_id}/`;
+        let query = 'm=' + image_info.model[0] +
             "&p=" + image_info.projection +
             "&t=" + (image_info.dimensions.t+1) +
             "&z=" + (image_info.dimensions.z+1) +
             "&q=0.9&ia=0";
-        url = Misc.appendChannelsAndMapsToQueryString(image_info.channels, url);
+        query = Misc.appendChannelsAndMapsToQueryString(image_info.channels, query);
 
         if (typeof error !== 'function')
             error = (error) => console.error(error);
         $.ajax({
             'url': url, 'method': 'POST',
+            'data': query, 'dataType': 'json',
             'success': success, 'error': error
         });
     }
