@@ -316,18 +316,25 @@ export default class Ui {
                     (event) => {
                         let command =
                             Misc.isApple() ? 'metaKey' : 'ctrlKey';
+                            // if the "group" (tab) is set and we're NOT on that tab,
+                            // return true to allow other handlers to handle the event...
                             if (context.selected_config === null ||
                                 (group !== 'global' &&
                                 context.selected_tab !== group) ||
                                 ((typeof action.ctrl !== 'boolean' ||
                                   action.ctrl) && !event[command])) return true;
                             try {
-                                action.func.apply(scope, action.args);
+                                // pass the event as first argument, followed by any additional args provided in the action object
+                                // return the result, allows stopPropagation if false
+                                return action.func.apply(scope, [event].concat(action.args));
                             } catch(err) {
                                 console.error("Key Handler failed: " + err);
                             }
-                            return false;
-                }, group, action.ctrl));
+                    },
+                    group,
+                    action.ctrl
+                )
+        );
     }
 
     /**
