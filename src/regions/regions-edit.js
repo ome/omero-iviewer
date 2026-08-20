@@ -982,8 +982,8 @@ export default class RegionsEdit extends EventSubscriber {
      *
      * @memberof RegionsEdit
      */
-    prevShape() {
-        return this.incrementShape(-1);
+    prevShape(event) {
+        return this.incrementShape(event, -1);
     }
 
     /**
@@ -991,8 +991,8 @@ export default class RegionsEdit extends EventSubscriber {
      *
      * @memberof RegionsEdit
      */
-    nextShape() {
-        return this.incrementShape(1);
+    nextShape(event) {
+        return this.incrementShape(event, 1);
     }
 
     /**
@@ -1000,7 +1000,11 @@ export default class RegionsEdit extends EventSubscriber {
      *
      * @memberof RegionsEdit
      */
-    incrementShape(increment) {
+    incrementShape(event, increment) {
+        // Z/T slider handle has focus and will handle the event; we ignore it
+        if (event?.target?.className.includes("ui-slider-handle")) {
+            return;
+        }
         if (!this.regions_info.ready) return;
         if (this.regions_info.selected_shapes.length == 0) {
             // No ROIs selected. No action taken. Allow event to bubble up...
