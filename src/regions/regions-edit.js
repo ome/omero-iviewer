@@ -62,7 +62,9 @@ export default class RegionsEdit extends EventSubscriber {
         { key: 'V', func: this.pasteShapes },                     // ctrl - v
         { key: 'Delete', func: this.deleteShapes, ctrl: false},   // DELETE
         { key: 'Del', func: this.deleteShapes, ctrl: false},      // DEL IE
-        { key: 'Backspace', func: this.deleteShapes, ctrl: false} // DEL MAC
+        { key: 'Backspace', func: this.deleteShapes, ctrl: false}, // DEL MAC
+        { key: 'ArrowDown', func: this.nextShape, ctrl: false},
+        { key: 'ArrowUp', func: this.prevShape, ctrl: false},
     ];
 
     /**
@@ -973,5 +975,53 @@ export default class RegionsEdit extends EventSubscriber {
      */
     deleteShapes() {
         this.regions_info.deleteShapes();
+    }
+
+    /**
+     * Selects the previous shape
+     *
+     * @memberof RegionsEdit
+     */
+    prevShape(event) {
+        return this.incrementShape(event, -1);
+    }
+
+    /**
+     * Selects the next shape
+     *
+     * @memberof RegionsEdit
+     */
+    nextShape(event) {
+        return this.incrementShape(event, 1);
+    }
+
+    /**
+     * Selects the next or previous shape depending on the increment
+     *
+     * @memberof RegionsEdit
+     */
+    incrementShape(event, increment) {
+        // Z/T slider handle has focus and will handle the event; we ignore it
+        if (event?.target?.className.includes("ui-slider-handle")) {
+            return;
+        }
+        if (!this.regions_info.ready) return;
+        if (this.regions_info.selected_shapes.length == 0) {
+            // No ROIs selected. No action taken. Allow event to bubble up...
+            return true;
+        }
+        let currentIds = this.regions_info.selected_shapes;
+        let lastSelected = currentIds[currentIds.length - 1];
+        let currentIndex = this.regions_info.getAllShapeIds().indexOf(lastSelected);
+        let count = this.regions_info.getAllShapeIds().length;
+        let nextIndex = (currentIndex + increment + count) % count;
+        let nextId = this.regions_info.getAllShapeIds()[nextIndex];
+        this.context.publish(
+           REGIONS_SET_PROPERTY, {
+               config_id: this.regions_info.image_info.config_id,
+               property: 'selected',
+               shapes : [nextId], clear: true,
+               value : true, center : true});
+        return false;
     }
 }

@@ -593,22 +593,22 @@ export default class Context {
                 if (typeof keyHandlers === 'undefined' ||
                     event.target.nodeName.toUpperCase() === 'INPUT') return;
 
-                // we allow the browser's default action and event
-                // bubbling unless one handler returns false
-                let allowDefaultAndPropagation = true;
+                // sort to put "global" last - give other groups (tabs) a chance to handle first
+                let keys = Object.keys(keyHandlers).sort((x, y) => x === 'global' ? 1 : -1);
                 try {
-                    for (let a in keyHandlers) {
+                    for (let a of keys) {
                         let action = keyHandlers[a];
                         if (action['ctrl'] && !event[command]) continue;
-                        if (!((action['action'])(event)))
-                            allowDefaultAndPropagation = false;
+                        let result = (action['action'])(event);
+                        // we allow the browser's default action and event
+                        // bubbling unless one handler returns false
+                        if (result === false) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            return false;
+                        }
                     }
                 } catch(ignored) {}
-                if (!allowDefaultAndPropagation) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    return false;
-                }
             };
     }
 
