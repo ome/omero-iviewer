@@ -107,6 +107,21 @@ export default class RegionsInfo  {
     selected_shapes = [];
 
     /**
+     * the property to sort by. Default is 'id'. User can't actually
+     * choose to sort by 'id' but that's the default sort order
+     * @memberof RegionsInfo
+     * @type {string}
+     */
+    sort_by = 'id';
+
+    /**
+     * the sort order
+     * @memberof RegionsInfo
+     * @type {boolean}
+     */
+    sort_ascending = true;
+
+    /**
      * the balance of individual shape show vs hide toggles
      * a diffing method in a sense with zero equaling showing all,
      * the initial state while a hide will subtract 1 and a show will add 1.

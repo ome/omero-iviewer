@@ -18,7 +18,6 @@
 
 // js
 import Context from '../app/context';
-import Misc from '../utils/misc';
 import {Utils} from '../utils/regions';
 import Ui from '../utils/ui';
 import {Converters} from '../utils/converters';
@@ -31,7 +30,6 @@ import {
     EventSubscriber
 } from '../events/events';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
-import {spectrum} from 'spectrum-colorpicker';
 
 /**
  * Represents the regions section in the right hand panel
@@ -1012,10 +1010,30 @@ export default class RegionsEdit extends EventSubscriber {
         }
         let currentIds = this.regions_info.selected_shapes;
         let lastSelected = currentIds[currentIds.length - 1];
-        let currentIndex = this.regions_info.getAllShapeIds().indexOf(lastSelected);
-        let count = this.regions_info.getAllShapeIds().length;
+        if (increment === -1) {
+            lastSelected = currentIds[0];
+        }
+
+        // Need to take into account the order of the shapes in view
+        // which is dictated by SortValueConverter class in the view layer.
+        // So we use the same sorting logic here.
+        let sortedRois = Utils.sortRois(
+            this.regions_info.data,
+            this.regions_info.sort_by,
+            this.regions_info.sort_ascending
+        );
+        // iterate over sortedRois to get the ids
+        let sortedRoiIds = [];
+        for (let [id, roi] of sortedRois) {
+            // roi.shapes is a Map - get first item
+            let firstShape = roi.shapes.entries().next().value;
+            sortedRoiIds.push(firstShape[1].shape_id);
+        }
+
+        let count = sortedRoiIds.length;
+        let currentIndex = sortedRoiIds.indexOf(lastSelected);
         let nextIndex = (currentIndex + increment + count) % count;
-        let nextId = this.regions_info.getAllShapeIds()[nextIndex];
+        let nextId = sortedRoiIds[nextIndex];
         this.context.publish(
            REGIONS_SET_PROPERTY, {
                config_id: this.regions_info.image_info.config_id,

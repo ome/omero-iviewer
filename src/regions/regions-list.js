@@ -127,6 +127,8 @@ export default class RegionsList extends EventSubscriber {
     sort(value) {
         this.sortAscending = this.sortBy === value ? !this.sortAscending : true;
         this.sortBy = value;
+        this.regions_info.sort_by = value;
+        this.regions_info.sort_ascending = this.sortAscending;
     }
 
     sortCss(sortBy, sortAscending, attrName) {
