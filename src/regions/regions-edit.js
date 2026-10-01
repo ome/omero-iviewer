@@ -30,7 +30,6 @@ import {
     EventSubscriber
 } from '../events/events';
 import {inject, customElement, bindable, BindingEngine} from 'aurelia-framework';
-// import {sortRois} from './sort';
 
 /**
  * Represents the regions section in the right hand panel
@@ -994,71 +993,6 @@ export default class RegionsEdit extends EventSubscriber {
         return this.incrementShape(event, 1);
     }
 
-    sortRois(rois, sortBy, sortAscending) {
-        // Convert Map to an Array of objects...
-        let ids = Array.from(rois.keys());
-        // Add id to each object so we know it after sorting
-        let roiList = ids.map(id => {
-            return Object.assign(rois.get(id), {id: id})
-        });
-
-        // default - sort by ROI ID
-        let getAttr = (roi) => roi.id
-
-        let getShapeText = (roi) => {
-            if (!roi.shapes) return "";
-            let label = "";
-            for (let shape of roi.shapes.values()) {
-                if (shape.Text && shape.Text.length > 0) {
-                    label = shape.Text;
-                    break;
-                }
-            }
-            return label.toLowerCase();
-        }
-
-        let getNumberAttr = (attrName) => (roi) => {
-            if (!roi.shapes) return -1;
-            let val;
-            // Return val of first shape
-            for (let shape of roi.shapes.values()) {
-                val = shape[attrName];
-                break;
-            }
-            // Often -1 is used as a placeholder
-            if (val === -1) return undefined;
-            return val;
-        }
-
-        if (sortBy === 'shapeText') {
-            getAttr = getShapeText;
-        } else if (sortBy === 'theZ') {
-            getAttr = getNumberAttr('TheZ');
-        } else if (sortBy === 'theT') {
-            getAttr = getNumberAttr('TheT');
-        } else if (sortBy === 'area') {
-            getAttr = getNumberAttr('Area')
-        } else if (sortBy === 'length') {
-            getAttr = getNumberAttr('Length')
-        }
-
-        let sorted = roiList.sort((a, b) => {
-            let aValue = getAttr(a);
-            let bValue = getAttr(b);
-            // items with no value should go last
-            if (!aValue && aValue !== 0) return sortAscending ? 1 : -1;
-            if (!bValue && bValue !== 0) return sortAscending ? -1 : 1;
-            if (aValue > bValue) return sortAscending ? 1 : -1;
-            if (aValue < bValue) return sortAscending ? -1 : 1;
-            return 0;
-        });
-
-        // Convert back to dictionary, inserting in the sorted order
-        let orderedMap = new Map( sorted.map(r => [r.id, r]));
-
-        return orderedMap;
-    }
-
     /**
      * Selects the next or previous shape depending on the increment
      *
@@ -1076,39 +1010,30 @@ export default class RegionsEdit extends EventSubscriber {
         }
         let currentIds = this.regions_info.selected_shapes;
         let lastSelected = currentIds[currentIds.length - 1];
-
-        console.log("lastSelected", lastSelected);
+        if (increment === -1) {
+            lastSelected = currentIds[0];
+        }
 
         // Need to take into account the order of the shapes in view
         // which is dictated by SortValueConverter class in the view layer.
-        console.log('Sorting ROIs with sortBy:', this.regions_info.sort_by, 'sortAscending:', this.regions_info.sort_ascending);
-        let sortedRois = this.sortRois(
+        // So we use the same sorting logic here.
+        let sortedRois = Utils.sortRois(
             this.regions_info.data,
-            // need sortBy and sortAscending from the regions-list component
             this.regions_info.sort_by,
             this.regions_info.sort_ascending
         );
-        console.log('sortedRois', sortedRois);
-        // let sortedRoiIds = sortedRois.map((id, roi) => id);
         // iterate over sortedRois to get the ids
         let sortedRoiIds = [];
         for (let [id, roi] of sortedRois) {
-            console.log("id", id, "roi", roi);
             // roi.shapes is a Map - get first item
-            console.log("roi.shapes", roi.shapes);
             let firstShape = roi.shapes.entries().next().value;
-            console.log("firstShape", firstShape);
             sortedRoiIds.push(firstShape[1].shape_id);
         }
-        console.log("sortedRoiIds", sortedRoiIds);
 
         let count = sortedRoiIds.length;
         let currentIndex = sortedRoiIds.indexOf(lastSelected);
-        console.log("currentIndex", currentIndex);
         let nextIndex = (currentIndex + increment + count) % count;
-        console.log("nextIndex", nextIndex);
         let nextId = sortedRoiIds[nextIndex];
-        console.log("nextId", nextId);
         this.context.publish(
            REGIONS_SET_PROPERTY, {
                config_id: this.regions_info.image_info.config_id,
