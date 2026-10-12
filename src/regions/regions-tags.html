@@ -55,6 +55,7 @@
                 <ul class="list-unstyled" style="margin: 0;">
                     <li repeat.for="tag of filtered_tags" class="regions-tag-item"
                         style="cursor: pointer; padding: 1px 3px; display: flex; flex-direction: column;"
+                              style.bind="highlighted_tagId === tag.id ? 'background-color: #ffff99;' : ''"
                               dblclick.delegate="linkTag(tag)"
                               title="Double-click to link/unlink this Tag to selected ROI(s)">
                         <div style="display: flex; flex-direction: row; width: 100%; align-items: center; justify-content: space-between;">
@@ -66,6 +67,12 @@
                                 <span class="${tag.tagset ? 'regions-tagset-icon' : 'regions-tag-icon'}"></span>
                                 <span>${tag.value}</span>
                             </span>
+                            <span style="flex: 1 1 auto;"></span>
+                            <button class="btn btn-default btn-xs"
+                                    title="Link/unlink Tag to selected ROI(s)"
+                                    click.delegate="linkTag(tag)">
+                                <span class="glyphicon glyphicon-link"></span>
+                            </button>
                             <button class="btn btn-default btn-xs"
                                     title="Add ${tag.tagset ? 'All Tags' : 'this Tag'} to the Favorite Tags (HotKeys) list"
                                     click.delegate="selectTag(tag)">
@@ -79,10 +86,17 @@
                                 dblclick.delegate="linkTag(child)"
                                 style="cursor: pointer; padding: 1px 3px; display: flex;
                                        align-items: center; justify-content: space-between;"
-                                title="Tag ID: ${child.id}">
+                                       style.bind="highlighted_tagId === child.id ? 'background-color: #ffff99;' : ''"
+                                title="TDouble-click to link/unlink this Tag to selected ROI(s)">
                                 <span style="display: flex; align-items: center; overflow: hidden;">
                                     <span class="regions-tag-icon"></span>${child.value}
                                 </span>
+                                <span style="flex: 1 1 auto;"></span>
+                                <button class="btn btn-default btn-xs"
+                                        title="Link/unlink Tag to selected ROI(s)"
+                                        click.delegate="linkTag(child)">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </button>
                                 <button class="btn btn-default btn-xs"
                                         title="Add to the Favorite Tags (HotKeys) list"
                                         click.delegate="selectTag(child)">
@@ -99,6 +113,7 @@
             <template if.bind="active_tab === 'selected'">
             <div style="padding: 0 5px 5px 5px; overflow-y: auto;">
                 <div show.bind="selected_tags.length === 0">No tags selected</div>
+                Hot Keys
                 <ul class="list-unstyled" style="margin-top: 5px;">
                     <li repeat.for="tag of selected_tags" class="regions-tag-item"
                         draggable="true"
@@ -107,6 +122,7 @@
                         drop.trigger="onTagDrop($event, $index)"
                         dragend.trigger="onTagDragEnd()"
                         style="cursor: grab; padding: 1px 3px; display: flex;
+                               ${highlighted_tagId === tag.id ? 'background-color: #ffff99;' : ''}
                                align-items: center; justify-content: space-between;
                                ${dragOverIndex === $index && dragTagIndex !== $index ? 'border-top: solid 2px #337ab7;' : 'border-top: solid 2px transparent;'}
                                ${dragTagIndex === $index ? 'opacity: 0.5;' : ''}"
@@ -116,14 +132,20 @@
                             <!-- Number 1-9, 10th tag gets 0 -->
                             <span style="width: 20px; display: inline-block; text-align: center;
                                 border: solid ${$index < 10 ? 'grey' : 'transparent'} 1px;
-                                border-radius: 5px; margin-right: 6px;"
+                                border-radius: 5px; margin-right: 6px; margin-left: 12px;"
                                 title="Shortcut key to link/unlink this Tag to selected ROI(s)">
                                 ${$index < 10 ? ($index + 1) % 10 : ''}
                             </span>
                             <span class="regions-tag-icon"></span>
                             <span>${tag.value}</span>
                         </span>
-                        <span style="cursor: pointer; padding: 0 3px;"
+                        <span style="flex: 1 1 auto;"></span>
+                        <button class="btn btn-default btn-xs"
+                                title="Link/unlink Tag to selected ROI(s)"
+                                click.delegate="linkTag(tag)">
+                            <span class="glyphicon glyphicon-link"></span>
+                        </button>
+                        <span style="cursor: pointer; padding: 0 3px; margin-left: 6px;"
                               title="Remove this Tag from the Selected Tags list"
                               click.delegate="deselectTag(tag)">&times;</span>
                     </li>

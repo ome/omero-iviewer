@@ -49,6 +49,9 @@ export default class RegionsTags extends EventSubscriber {
     /** option to briefly highlight a tab */
     highlighted_tab = null;
 
+    /** the ID of the tag currently highlighted (e.g., on hotkey) */
+    highlighted_tagId = null;
+
     /** popup position in px (viewport coordinates) */
     right = 10;
     top = 100;
@@ -221,6 +224,10 @@ export default class RegionsTags extends EventSubscriber {
         // We don't link tagsets, only individual tags
         if (tag.tagset) return;
         this.context.publish(LINK_TAG, {tag_id: tag.id});
+        this.highlighted_tagId = tag.id;
+        setTimeout(() => {
+            this.highlighted_tagId = null;
+        }, 1000);
     }
 
     /**
