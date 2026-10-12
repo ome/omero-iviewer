@@ -7,7 +7,7 @@
         <div mousedown.trigger="onDragStart($event)"
              style="cursor: move; padding: 3px 5px; background: #1F6AAA; color: #fff; border-radius: 3px 3px 0 0;
                     user-select: none; display: flex; justify-content: space-between;">
-            <span>Tags</span>
+            <span>Link Tags to ROIs</span>
             <span style="cursor: pointer;" title="Close"
                   mousedown.trigger="$event.stopPropagation()"
                   click.delegate="hide()">&times;</span>
@@ -15,17 +15,15 @@
 
         <!-- We have two tabs: All Tags and Selected Tags -->
         <div style="display: flex; user-select: none; background: #1F6AAA;">
-            <div click.delegate="selectTab('all')"
-                 style="flex: 1; text-align: center; cursor: pointer; padding: 6px 2px 4px 2px; border-radius: 5px 5px 0 0; 
-                        font-size: 12px; border-width: 1px 1px 0 0; border-style: solid; border-color: #1F6AAA;
-                        ${active_tab === 'all' ? 'background: #f8f8f8; font-weight: 300;' : 'background: #ccc;'}">
+            <div click.delegate="selectTab('all')" class="roisTab"
+                 style="border-radius: 5px 5px 0 0; border-width: 1px 1px 0 0;
+                        ${active_tab === 'all' ? 'background: #f8f8f8;' : 'background: #ccc;'}">
                 All Tags [${tags.length}]
             </div>
-            <div click.delegate="selectTab('selected')"
-                 style="flex: 1; text-align: center; cursor: pointer; padding: 6px 2px 4px 2px; border-radius: 5px 5px 0 0; 
-                        font-size: 12px; border-width: 1px 0 0 1px; border-style: solid; border-color: #1F6AAA;
-                        ${active_tab === 'selected' ? 'background: #f8f8f8; font-weight: 300;' : 'background: #ccc;'}">
-                Selected Tags [${selected_tags.length}]
+            <div click.delegate="selectTab('selected')" class="roisTab"
+                 style="border-radius: 5px 5px 0 0; border-width: 1px 0 0 1px; border-style: solid; border-color: #1F6AAA;
+                        ${active_tab === 'selected' ? 'background: #f8f8f8;' : highlighted_tab === 'selected' ? 'background: red;' : 'background: #ccc;'}">
+                <span class="glyphicon glyphicon-heart"></span> Favorite Tags [${selected_tags.length}]
             </div>
         </div>
 
@@ -69,8 +67,10 @@
                                 <span>${tag.value}</span>
                             </span>
                             <button class="btn btn-default btn-xs"
-                                    title="Add ${tag.tagset ? 'All Tags' : 'this Tag'} to the Selected Tags list"
-                                    click.delegate="selectTag(tag)">Select ${tag.tagset ? 'All Tags' : 'Tag'}</button>
+                                    title="Add ${tag.tagset ? 'All Tags' : 'this Tag'} to the Favorite Tags (HotKeys) list"
+                                    click.delegate="selectTag(tag)">
+                                <span class="glyphicon glyphicon-heart"></span>
+                            </button>
                         </div>
                         <ul if.bind="tag.tagset && tag.expanded" class="list-unstyled"
                             style="margin: 0 0 0 30px;">
@@ -84,8 +84,10 @@
                                     <span class="regions-tag-icon"></span>${child.value}
                                 </span>
                                 <button class="btn btn-default btn-xs"
-                                        title="Add this Tag to the Selected Tags list"
-                                        click.delegate="selectTag(child)">Select Tag</button>
+                                        title="Add to the Favorite Tags (HotKeys) list"
+                                        click.delegate="selectTag(child)">
+                                    <span class="glyphicon glyphicon-heart"></span>
+                                </button>
                             </li>
                         </ul>
                     </li>
@@ -93,7 +95,7 @@
             </div>
             </template>
 
-            <!-- The "Selected Tags" tab content -->
+            <!-- The "Favorite Tags" tab content -->
             <template if.bind="active_tab === 'selected'">
             <div style="padding: 0 5px 5px 5px; overflow-y: auto;">
                 <div show.bind="selected_tags.length === 0">No tags selected</div>

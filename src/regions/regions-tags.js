@@ -46,6 +46,9 @@ export default class RegionsTags extends EventSubscriber {
     /** which tab is currently showing: 'all' or 'selected' */
     active_tab = 'all';
 
+    /** option to briefly highlight a tab */
+    highlighted_tab = null;
+
     /** popup position in px (viewport coordinates) */
     right = 10;
     top = 100;
@@ -275,6 +278,10 @@ export default class RegionsTags extends EventSubscriber {
             this.selected_tags.push(tag);
             this.saveSelectedTags();
         }
+        this.highlighted_tab = 'selected';
+        setTimeout(() => {
+            this.highlighted_tab = null;
+        }, 1000);
     }
 
     /**

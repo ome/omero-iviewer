@@ -1081,6 +1081,16 @@ thumbnail-slider img {
 .regions-tag-item:hover {
     background-color: #e8eef2;
 }
+
+.roisTab {
+    flex: 1;
+    text-align: center;
+    cursor: pointer;
+    padding: 6px 2px 4px 2px;
+    border-style: solid;
+    border-color: #1F6AAA;
+    font-size: 12px;
+}
 .regions-tag-icon,
 .regions-tagset-icon {
     display: inline-block;
@@ -1103,6 +1113,9 @@ thumbnail-slider img {
     -ms-user-select: none;
     -moz-user-select: none;
     -webkit-user-select: none;
+}
+.regions-tag-item button:hover .glyphicon-heart {
+    color: red;
 }
 
 .regions-table-row input[type='checkbox'] {
