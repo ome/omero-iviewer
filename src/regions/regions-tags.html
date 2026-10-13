@@ -153,6 +153,13 @@
                               title="Remove this Tag from the Selected Tags list"
                               click.delegate="deselectTag(tag)">&times;</span>
                     </li>
+
+                    <!-- placeholder drag target so we can drag items to the end of the list -->
+                    <li draggable="true"
+                        dragstart.trigger="onTagDragStart($event, -1)"
+                        dragover.trigger="onTagDragOver($event, -1)"
+                        drop.trigger="onTagDrop($event, -1)"
+                        dragend.trigger="onTagDragEnd()">&nbsp;</li>
                 </ul>
             </div>
             </template>

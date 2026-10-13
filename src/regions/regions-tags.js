@@ -355,6 +355,10 @@ export default class RegionsTags extends EventSubscriber {
     onTagDrop(event, index) {
         console.log("onTagDrop", { from: this.dragTagIndex, to: index });
         event.preventDefault();
+        if (index === -1) {
+            // dragged over the last placeholder, hard-coded as "-1" in the HTML
+            index = this.selected_tags.length;
+        }
         const from = this.dragTagIndex;
         if (from === null || from === index) {
             this.onTagDragEnd();
