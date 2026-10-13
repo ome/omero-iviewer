@@ -57,9 +57,7 @@
                 <ul class="list-unstyled" style="margin: 0;">
                     <li repeat.for="tag of filtered_tags" class="regions-tag-item"
                         style="cursor: pointer; padding: 1px 3px; display: flex; flex-direction: column;"
-                              style.bind="highlighted_tagId === tag.id ? 'background-color: #ffff99;' : ''"
-                              dblclick.delegate="linkTag(tag)"
-                              title="Double-click to link/unlink this Tag to selected ROI(s)">
+                              style.bind="highlighted_tagId === tag.id ? 'background-color: #ffff99;' : ''">
                         <div style="display: flex; flex-direction: row; width: 100%; align-items: center; justify-content: space-between;">
                             <span style="display: flex; align-items: center; overflow: hidden;">
                                 <span style="display: inline-block; width: 14px; cursor: pointer; position: relative; left: -2px;"
@@ -85,11 +83,9 @@
                             style="margin: 0 0 0 30px;">
                             <li repeat.for="child of tag.children"
                                 class="regions-tag-item"
-                                dblclick.delegate="linkTag(child)"
                                 style="cursor: pointer; padding: 1px 3px; display: flex;
                                        align-items: center; justify-content: space-between;"
-                                       style.bind="highlighted_tagId === child.id ? 'background-color: #ffff99;' : ''"
-                                title="TDouble-click to link/unlink this Tag to selected ROI(s)">
+                                       style.bind="highlighted_tagId === child.id ? 'background-color: #ffff99;' : ''">
                                 <span style="display: flex; align-items: center; overflow: hidden;">
                                     <span class="regions-tag-icon"></span>${child.value}
                                 </span>
@@ -130,8 +126,7 @@
                                align-items: center; justify-content: space-between;
                                ${dragOverIndex === $index && dragTagIndex !== $index ? 'border-top: solid 2px #337ab7;' : 'border-top: solid 2px transparent;'}
                                ${dragTagIndex === $index ? 'opacity: 0.5;' : ''}"
-                        dblclick.delegate="linkTag(tag)"
-                        title="Double-click to link/unlink this Tag to selected ROI(s). Drag to reorder.">
+                        title="Drag Tag to reorder.">
                         <span style="display: flex; align-items: center; overflow: hidden;">
                             <!-- Number 1-9, 10th tag gets 0 -->
                             <span style="width: 20px; display: inline-block; text-align: center;

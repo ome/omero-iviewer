@@ -223,6 +223,8 @@ export default class RegionsTags extends EventSubscriber {
     linkTag(tag) {
         // We don't link tagsets, only individual tags
         if (tag.tagset) return;
+        // ignore accidental double-clicks - if the tag is already highlighted
+        if (this.highlighted_tagId === tag.id) return;
         this.context.publish(LINK_TAG, {tag_id: tag.id});
         this.highlighted_tagId = tag.id;
         setTimeout(() => {
@@ -296,6 +298,7 @@ export default class RegionsTags extends EventSubscriber {
      * @param {{id: number, value: string}} tag the tag to deselect
      */
     deselectTag(tag) {
+        if (!tag) return;
         this.selected_tags = this.selected_tags.filter((t) => t.id !== tag.id);
         this.saveSelectedTags();
     }
