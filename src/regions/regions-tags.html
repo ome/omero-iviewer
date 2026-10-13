@@ -48,7 +48,9 @@
             <template if.bind="active_tab === 'all'">
             <div style="padding: 0 5px 5px 5px; max-height: ${height - 100}px; overflow-y: auto;">
                 <div show.bind="!tags_loaded">Loading...</div>
-                <div show.bind="tags_loaded && tags.length === 0">No tags found</div>
+                <div show.bind="tags_loaded && tags.length === 0">
+                    No tags found. Please create Tags in the webclient first.
+                </div>
                 <div show.bind="tags_loaded && tags.length > 0 && filtered_tags.length === 0">
                     No matching tags
                 </div>
@@ -112,8 +114,10 @@
             <!-- The "Favorite Tags" tab content -->
             <template if.bind="active_tab === 'selected'">
             <div style="padding: 0 5px 5px 5px; overflow-y: auto;">
-                <div show.bind="selected_tags.length === 0">No tags selected</div>
-                Hot Keys
+                <div show.bind="selected_tags.length === 0">No favorite tags</div>
+                <div show.bind="selected_tags.length > 0" title="Press number keys to add Tags to currently selected ROI(s)">
+                    Hot Keys
+                </div>
                 <ul class="list-unstyled" style="margin-top: 5px;">
                     <li repeat.for="tag of selected_tags" class="regions-tag-item"
                         draggable="true"
