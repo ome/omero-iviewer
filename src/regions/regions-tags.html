@@ -121,7 +121,7 @@
                         dragover.trigger="onTagDragOver($event, $index)"
                         drop.trigger="onTagDrop($event, $index)"
                         dragend.trigger="onTagDragEnd()"
-                        style="cursor: grab; padding: 1px 3px; display: flex;
+                        style="cursor: row-resize; padding: 1px 3px; display: flex;
                                ${highlighted_tagId === tag.id ? 'background-color: #ffff99;' : ''}
                                align-items: center; justify-content: space-between;
                                ${dragOverIndex === $index && dragTagIndex !== $index ? 'border-top: solid 2px #337ab7;' : 'border-top: solid 2px transparent;'}
@@ -131,7 +131,7 @@
                             <!-- Number 1-9, 10th tag gets 0 -->
                             <span style="width: 20px; display: inline-block; text-align: center;
                                 border: solid ${$index < 10 ? 'grey' : 'transparent'} 1px;
-                                border-radius: 5px; margin-right: 6px; margin-left: 12px;"
+                                border-radius: 5px; margin: 0 12px;"
                                 title="Shortcut key to link/unlink this Tag to selected ROI(s)">
                                 ${$index < 10 ? ($index + 1) % 10 : ''}
                             </span>
