@@ -663,9 +663,8 @@ export default class RegionsList extends EventSubscriber {
     }
 
     // load Tags for an ROI, or ALL ROIs if roi_id is not provided
-    loadRoiTags(roi_id) {
-        let roi_ids = [roi_id];
-        if (!roi_id) {
+    loadRoiTags(roi_ids) {
+        if (!roi_ids) {
             roi_ids = [];
             this.regions_info.data.forEach(roi => roi_ids.push(roi.id));
         }
@@ -755,26 +754,28 @@ export default class RegionsList extends EventSubscriber {
                     if (rsp_json.errors && rsp_json.errors.length > 0) {
                         alert('Errors linking tag: ' + rsp_json.errors.join('\n'));
                     }
-                    this.loadRoiTags();
+                    this.loadRoiTags(untaggedRois);
                 }
             });
         } else {
             // All selected ROIs already have this tag, so we REMOVE the tag from those ROIs
             let link_ids_to_remove = [];
+            let roi_ids_to_reload = [];
             roi_ids.forEach((roi_id) => {
                 let tag = this.roi_tags[roi_id].find(tag => tag.id === params.tag_id && tag.link.permissions.canDelete);
                 if (tag) {
                     link_ids_to_remove.push(tag.link.id);
+                    roi_ids_to_reload.push(roi_id);
                 }
             });
             if (link_ids_to_remove.length > 0) {
-                this.handleRemoveTag(link_ids_to_remove);
+                this.handleRemoveTag(link_ids_to_remove, roi_ids_to_reload);
             }
         }
     }
 
     // Handle click on the removeTag button: unlink the Tag from the ROI
-    handleRemoveTag(link_ids) {
+    handleRemoveTag(link_ids, roi_ids_to_reload) {
         sendRequest({
             "server" : this.context.server,
             "uri" : this.context.getPrefixedURI(IVIEWER) + `/link_annotations/?link=${link_ids.join('&link=')}`,
@@ -786,7 +787,7 @@ export default class RegionsList extends EventSubscriber {
                 if (rsp_json.errors && rsp_json.errors.length > 0) {
                     alert('Errors removing link: ' + rsp_json.errors.join('\n'));
                 }
-                this.loadRoiTags();
+                this.loadRoiTags(roi_ids_to_reload);
             }
         });
     }

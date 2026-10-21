@@ -202,7 +202,7 @@
                                         <div title="Added By ${t.link.owner.firstName} ${t.link.owner.lastName}, Tag: ${t.id}" class="tag">
                                             ${t.textValue}
                                             <button if.bind="t.link.permissions.canDelete" class="removeTag"
-                                                    click.delegate="handleRemoveTag([t.link.id])">-</button>
+                                                    click.delegate="handleRemoveTag([t.link.id], [roi_id])">-</button>
                                         </div>
                                     </template>
                                 </span>
