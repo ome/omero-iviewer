@@ -106,7 +106,8 @@
                     Length (${regions_info.image_info.image_pixels_size.symbol_x ||
                             'px'})
                 </div>
-            <div class="regions-table-col"
+            <div class="regions-table-col shape-comment ${sortCss(sortBy, sortAscending, 'roitag')}"
+                click.delegate="sort('roitag')"
                 show.bind="active_column === 'roi_tags'">
                 ROI Tags
             </div>
@@ -116,7 +117,7 @@
             show.bind="!regions_info.ready">Loading Regions...</div>
 
         <div class="regions-table" show.bind="regions_info.ready">
-            <template repeat.for="[roi_id, roi] of regions_info.data | sort:sortBy:sortAscending">
+            <template repeat.for="[roi_id, roi] of regions_info.data | sort:sortBy:sortAscending:roi_tags">
                 <template repeat.for="[shape_id, shape] of roi.shapes">
                     <div if.bind="(roi.shapes.size - roi.deleted) > 1 &&
                                    roi.shapes.size > 1 && $first"
@@ -196,7 +197,8 @@
                              show.bind="active_column === 'roi_tags'">
                             <span show.bind="roi_tags_loaded">
                                 <span if.bind="roi_tags[roi_id]">
-                                    <template repeat.for="t of roi_tags[roi_id]">
+                                    <!-- Uses SortTagsValueConverter to sort tags -->
+                                    <template repeat.for="t of roi_tags[roi_id] | sortTags:sortAscending">
                                         <div title="Added By ${t.link.owner.firstName} ${t.link.owner.lastName}, Tag: ${t.id}" class="tag">
                                             ${t.textValue}
                                             <button if.bind="t.link.permissions.canDelete" class="removeTag"

@@ -18,10 +18,11 @@
 
 // js
 import Context from '../app/context';
+import {Utils} from '../utils/regions';
 import Misc from '../utils/misc';
 import Ui from '../utils/ui';
 import {sendRequest} from '../viewers/viewer/utils/Net';
-import {IVIEWER} from '../utils/constants';
+import {IVIEWER, TABS} from '../utils/constants';
 import {inject,
     customElement,
     bindable,
@@ -114,6 +115,11 @@ export default class RegionsList extends EventSubscriber {
             (params={}) => this.handleAddTag(params)],
     ];
 
+    key_actions = [
+        { key: 'ArrowDown', func: this.nextShape, ctrl: false},
+        { key: 'ArrowUp', func: this.prevShape, ctrl: false},
+    ];
+
     /**
      * @constructor
      * @param {Context} context the application context (injected)
@@ -172,6 +178,9 @@ export default class RegionsList extends EventSubscriber {
             this.registerObservers();
             // event subscriptions
             this.subscribe();
+            // register key listeners
+            Ui.registerKeyHandlers(
+                this.context, this.key_actions, TABS.ROIS, this);
 
             // If the active column is roi_tags, load the ROI tags
             if (this.active_column == "roi_tags") {
@@ -226,6 +235,8 @@ export default class RegionsList extends EventSubscriber {
             this.regions_ready_observer.dispose();
             this.regions_ready_observer = null;
         }
+        this.key_actions.map(
+            (action) => this.context.removeKeyListener(action.key, TABS.ROIS));
     }
 
     /**
@@ -778,5 +789,74 @@ export default class RegionsList extends EventSubscriber {
                 this.loadRoiTags();
             }
         });
+    }
+
+    /**
+     * Selects the previous shape
+     *
+     * @memberof RegionsEdit
+     */
+    prevShape(event) {
+        return this.incrementShape(event, -1);
+    }
+
+    /**
+     * Selects the next shape
+     *
+     * @memberof RegionsEdit
+     */
+    nextShape(event) {
+        return this.incrementShape(event, 1);
+    }
+
+    /**
+     * Selects the next or previous shape depending on the increment
+     *
+     * @memberof RegionsEdit
+     */
+    incrementShape(event, increment) {
+        // Z/T slider handle has focus and will handle the event; we ignore it
+        if (event?.target?.className.includes("ui-slider-handle")) {
+            return;
+        }
+        if (!this.regions_info.ready) return;
+        if (this.regions_info.selected_shapes.length == 0) {
+            // No ROIs selected. No action taken. Allow event to bubble up...
+            return true;
+        }
+        let currentIds = this.regions_info.selected_shapes;
+        let lastSelected = currentIds[currentIds.length - 1];
+        if (increment === -1) {
+            lastSelected = currentIds[0];
+        }
+
+        // Need to take into account the order of the shapes in view
+        // which is dictated by SortValueConverter class in the view layer.
+        // So we use the same sorting logic here.
+        let sortedRois = Utils.sortRois(
+            this.regions_info.data,
+            this.regions_info.sort_by,
+            this.regions_info.sort_ascending,
+            this.roi_tags
+        );
+        // iterate over sortedRois to get the ids
+        let sortedRoiIds = [];
+        for (let [id, roi] of sortedRois) {
+            // roi.shapes is a Map - get first item
+            let firstShape = roi.shapes.entries().next().value;
+            sortedRoiIds.push(firstShape[1].shape_id);
+        }
+
+        let count = sortedRoiIds.length;
+        let currentIndex = sortedRoiIds.indexOf(lastSelected);
+        let nextIndex = (currentIndex + increment + count) % count;
+        let nextId = sortedRoiIds[nextIndex];
+        this.context.publish(
+           REGIONS_SET_PROPERTY, {
+               config_id: this.regions_info.image_info.config_id,
+               property: 'selected',
+               shapes : [nextId], clear: true,
+               value : true, center : true});
+        return false;
     }
 }
