@@ -140,7 +140,7 @@ export default class RegionsTags extends EventSubscriber {
         sendRequest({
             server: this.context.server,
             uri: this.context.getPrefixedURI(WEBCLIENT) +
-                '/api/tags/?orphaned=true&experimenter_id=-1&limit=1000&group=' + this.group_id,
+                '/api/tags/?experimenter_id=-1&limit=1000&group=' + this.group_id,
             method: 'GET',
             success: (rsp) => {
                 let json = typeof rsp === 'string' ? JSON.parse(rsp) : rsp;
