@@ -64,6 +64,12 @@
                         </span>
                         <a href="#">Show Area/Length</a>
                     </li>
+                    <li click.delegate="showColumn('roi_tags')">
+                        <span class="show_roi_tags">
+                            ${active_column === 'roi_tags' ? '&#10003;' : '&nbsp;'}
+                        </span>
+                        <a href="#">Show ROI Tags</a>
+                    </li>
                 </ul>
             </div>
             <div class="regions-table-col roi-toggle">
@@ -100,13 +106,18 @@
                     Length (${regions_info.image_info.image_pixels_size.symbol_x ||
                             'px'})
                 </div>
+            <div class="regions-table-col shape-comment ${sortCss(sortBy, sortAscending, 'roitag')}"
+                click.delegate="sort('roitag')"
+                show.bind="active_column === 'roi_tags'">
+                ROI Tags
+            </div>
         </div>
 
         <div class="disabled-color loading-text"
             show.bind="!regions_info.ready">Loading Regions...</div>
 
         <div class="regions-table" show.bind="regions_info.ready">
-            <template repeat.for="[roi_id, roi] of regions_info.data | sort:sortBy:sortAscending">
+            <template repeat.for="[roi_id, roi] of regions_info.data | sort:sortBy:sortAscending:roi_tags">
                 <template repeat.for="[shape_id, shape] of roi.shapes">
                     <div if.bind="(roi.shapes.size - roi.deleted) > 1 &&
                                    roi.shapes.size > 1 && $first"
@@ -148,9 +159,7 @@
                         class="regions-table-row"
                         css="${shape.selected ? 'background-color: #d0d0ff;' : ''}
                              ${shape.deleted ? 'color: red;' :
-                                (shape.modified ? 'color: blue;' : '')}
-                             ${hasPermissions(shape) && shape.type !== 'mask' ?
-                                '' : 'opacity: 0.5'}"
+                                (shape.modified ? 'color: blue;' : '')}"
                         click.delegate="selectShape(shape.shape_id, shape.selected, $event)">
                         <div class="regions-table-col roi-toggle"></div>
                         <div class="regions-table-col shape-show">
@@ -183,6 +192,21 @@
                              show.bind="active_column === 'measurements'"
                              title="${shape.Length && shape.Length > 0 ? shape.Length : ''}">
                                 ${shape.Length && shape.Length > 0 ? shape.Length : ''}
+                        </div>
+                        <div class="regions-table-col roi-tags"
+                             show.bind="active_column === 'roi_tags'">
+                            <span show.bind="roi_tags_loaded">
+                                <span if.bind="roi_tags[roi_id]">
+                                    <!-- Uses SortTagsValueConverter to sort tags -->
+                                    <template repeat.for="t of roi_tags[roi_id] | sortTags:sortAscending">
+                                        <div title="Added By ${t.link.owner.firstName} ${t.link.owner.lastName}, Tag: ${t.id}" class="tag">
+                                            ${t.textValue}
+                                            <button if.bind="t.link.permissions.canDelete" class="removeTag"
+                                                    click.delegate="handleRemoveTag([t.link.id], [roi_id])">-</button>
+                                        </div>
+                                    </template>
+                                </span>
+                            </span>
                         </div>
                     </div>
                 </template>

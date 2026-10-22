@@ -207,7 +207,7 @@ export class Utils {
      }
 
 
-    static sortRois(rois, sortBy, sortAscending) {
+    static sortRois(rois, sortBy, sortAscending, roiTags) {
         // Convert Map to an Array of objects...
         let ids = Array.from(rois.keys());
         // Add id to each object so we know it after sorting
@@ -227,6 +227,18 @@ export class Utils {
                     break;
                 }
             }
+            return label.toLowerCase();
+        }
+
+        let getRoiTagsText = (roi) => {
+            if (roiTags?.[roi.id] === undefined) return "";
+            let labels = roiTags[roi.id].map(tag => tag.textValue).sort();
+            if (!sortAscending) {
+                // if sorting A-Z then we concatenate tags in the same order
+                // regions-list template uses SortTagsValueConverter to display tags in the same order
+                labels.reverse();
+            }
+            let label = labels.join("");
             return label.toLowerCase();
         }
 
@@ -253,6 +265,8 @@ export class Utils {
             getAttr = getNumberAttr('Area')
         } else if (sortBy === 'length') {
             getAttr = getNumberAttr('Length')
+        } else if (sortBy === 'roitag' && roiTags) {
+            getAttr = getRoiTagsText;
         }
 
         let sorted = roiList.sort((a, b) => {

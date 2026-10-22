@@ -542,6 +542,8 @@ def image_data(request, image_id, conn=None, **kwargs):
     try:
         rv = imageMarshal(image)
 
+        rv['meta']['groupId'] = image.getDetails().getGroup().id
+
         # set roi count
         rv['roi_count'] = image.getROICount()
 
@@ -957,3 +959,108 @@ def shape_stats(request, conn=None, **kwargs):
         return JsonResponse({"error": api_exception.message})
     except Exception as stats_call_exception:
         return JsonResponse({"error": repr(stats_call_exception)})
+
+
+def marshal_tag(annotation, link):
+    ann = {}
+    ann["textValue"] = unwrap(annotation.textValue)
+    ann["id"] = annotation.id.val
+    ann["ns"] = unwrap(annotation.ns)
+    ann["name"] = unwrap(annotation.name)
+    ann["description"] = unwrap(annotation.description)
+    ann["owner"] = {"id": annotation.details.owner.id.val}
+    ann["link"] = {}
+    ann["link"]["id"] = link.id.val
+    ann["link"]["owner"] = {"id": link.details.owner.id.val}
+    if link.parent.isLoaded():
+        ann["link"]["parent"] = {
+            "id": link.parent.id.val,
+            "class": link.parent.__class__.__name__,
+        }
+        p = link.details.permissions
+        ann["link"]["permissions"] = {
+            "canDelete": p.canDelete(),
+            "canAnnotate": p.canAnnotate(),
+            "canLink": p.canLink(),
+            "canEdit": p.canEdit(),
+        }
+    return ann
+
+
+def _marshal_exp(experimenter):
+    exp = {}
+    exp["id"] = experimenter.id.val
+    exp["omeName"] = experimenter.omeName.val
+    exp["firstName"] = unwrap(experimenter.firstName)
+    exp["lastName"] = unwrap(experimenter.lastName)
+    return exp
+
+
+@login_required()
+def link_annotations(request, conn=None, **kwargs):
+    errors = []
+    if request.method == 'DELETE':
+        # DELETE /link_annotations/?link=1&link=2
+        # remove the link between the Tag and the ROI
+        link_ids = request.GET.getlist('link')
+        if not link_ids:
+            return JsonResponse(
+                {"errors": ["Need to specify link(s)"]})
+        try:
+            conn.deleteObjects("RoiAnnotationLink", link_ids, wait=True)
+        except Exception as ex:
+            errors.append(str(ex))
+        return JsonResponse({
+            "link_ids": link_ids,
+            "errors": errors
+        })
+
+    if not request.method == 'POST':
+        # GET /link_annotations/?roi=1&roi=2
+        # load Tags... -> {'1':{'tags':[{'id':56, 'textValue':'myTag'}], '2':{'tags':[]}}}
+        roi_ids = request.GET.getlist('roi')
+        exps = {}
+        tags = []
+        # for ann in roi.listAnnotations():
+        for link in conn.getAnnotationLinks("roi", parent_ids=roi_ids):
+            ann = link.getChild()._obj
+            link = link._obj
+            if not isinstance(ann, omero.model.TagAnnotation):
+                continue
+            d = marshal_tag(ann, link)
+            tags.append(d)
+            exps[link.details.owner.id.val] = link.details.owner
+            exps[ann.details.owner.id.val] = ann.details.owner
+
+        exps = [_marshal_exp(exp) for exp in exps.values()]
+        return JsonResponse({"data": tags, "experimenters": exps})
+
+    ann_ids = request.POST.getlist('annotation')
+    roi_ids = request.POST.getlist('roi')
+
+    json_data = json.loads(request.body)
+    ann_ids = json_data["annotations"]
+    roi_ids = json_data["rois"]
+
+    links = 0
+    added = []
+    for roi_id in roi_ids:
+        roi = conn.getObject("Roi", roi_id)
+        if roi is None:
+            errors.append(f"ROI: {roi_id} not found.")
+            continue
+
+        for ann_id in ann_ids:
+            ann = conn.getObject("Annotation", ann_id)
+            if ann is None:
+                errors.append(f"Tag: {ann_id} not found.")
+                continue
+            
+            try:
+                roi.linkAnnotation(ann)
+                links += 1
+                added.append({"id": ann.id, "textValue": ann.textValue})
+            except Exception as ex:
+                errors.append(str(ex))
+
+    return JsonResponse({"added": added, "ann_ids": ann_ids, "roi_ids": roi_ids, "message": f'{links} Annotations linked to rois!', "errors": errors})

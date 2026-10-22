@@ -511,7 +511,6 @@ span.sp-thumb-el {
 .col-splitter {
     position:relative;
     flex: 5px 0 0;
-    z-index: 10;
     background-color: #e7e7e7;
 }
 
@@ -1079,12 +1078,44 @@ thumbnail-slider img {
     display: flex;
     flex-direction: row;
 }
+.regions-tag-item:hover {
+    background-color: #e8eef2;
+}
+
+.roisTab {
+    flex: 1;
+    text-align: center;
+    cursor: pointer;
+    padding: 6px 2px 4px 2px;
+    border-style: solid;
+    border-color: #1F6AAA;
+    font-size: 12px;
+}
+.regions-tag-icon,
+.regions-tagset-icon {
+    display: inline-block;
+    width: 17px;
+    height: 17px;
+    vertical-align: middle;
+    background-repeat: no-repeat;
+    background-size: 17px 17px;
+    margin-right: 3px;
+}
+.regions-tag-icon {
+    background-image: url('images/tag_icon.png');
+}
+.regions-tagset-icon {
+    background-image: url('images/tagset_icon.png');
+}
 .regions-table-row * {
     height: 100%;
     user-select: none;
     -ms-user-select: none;
     -moz-user-select: none;
     -webkit-user-select: none;
+}
+.regions-tag-item button:hover .glyphicon-heart {
+    color: red;
 }
 
 .regions-table-row input[type='checkbox'] {
@@ -1114,6 +1145,28 @@ thumbnail-slider img {
 .regions-table-col.sortable.desc {
     background-image: url('images/sorted-desc.png')
 }
+
+.regions-table .tag{
+    font-size: 0.9em;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, .8);
+    display: inline-block;
+    padding: 0.4em 0.5em;
+    line-height: 0.9em;
+    border-radius: 30px;
+    border: solid 1px hsl(205, 40%, 60%);
+    background-image: linear-gradient(to bottom, hsl(205, 60%, 90%) 0%, hsl(205, 35%, 85%) 100%);
+    color: hsl(205, 30%, 35%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5);
+    height: fit-content;
+}
+.regions-table .removeTag {
+    color: #000;
+    font-weight: bold;
+    border: none;
+    background: none;
+    padding: 0 3px;
+}
+
 .loading-text {
     float: left;
     position: relative;

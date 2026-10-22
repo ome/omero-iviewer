@@ -18,15 +18,17 @@
 
 // js
 import Context from '../app/context';
+import {Utils} from '../utils/regions';
 import Misc from '../utils/misc';
 import Ui from '../utils/ui';
+import {sendRequest} from '../viewers/viewer/utils/Net';
+import {IVIEWER, TABS} from '../utils/constants';
 import {inject,
     customElement,
-    computedFrom,
     bindable,
     BindingEngine} from 'aurelia-framework';
 import {
-    REGIONS_SET_PROPERTY, EventSubscriber,
+    REGIONS_SET_PROPERTY, REGIONS_SHOW_TAGS, LINK_TAG, EventSubscriber,
     IMAGE_DIMENSION_CHANGE,
     IMAGE_SETTINGS_CHANGE,
     IMAGE_DIMENSION_PLAY
@@ -59,6 +61,15 @@ export default class RegionsList extends EventSubscriber {
      * @type {number}
      */
      active_column = 'comments';
+
+     /**
+      * Dict of {roiid:{'tags':['id':1, 'textValue':'myTag']}}
+      * Loaded when the active_column is set to "roi_tags"
+      * @memberof RegionsList
+      * @type {Object}
+      */
+     roi_tags = {};
+     roi_tags_loaded = false;
 
      /**
       * selected row (id) for multi-selection with shift
@@ -100,6 +111,13 @@ export default class RegionsList extends EventSubscriber {
             (params={}) => this.changeImageSettings(params)],
         [IMAGE_DIMENSION_PLAY,
             (params={}) => this.playImageDimension(params)],
+        [LINK_TAG,
+            (params={}) => this.handleAddTag(params)],
+    ];
+
+    key_actions = [
+        { key: 'ArrowDown', func: this.nextShape, ctrl: false},
+        { key: 'ArrowUp', func: this.prevShape, ctrl: false},
     ];
 
     /**
@@ -160,6 +178,14 @@ export default class RegionsList extends EventSubscriber {
             this.registerObservers();
             // event subscriptions
             this.subscribe();
+            // register key listeners
+            Ui.registerKeyHandlers(
+                this.context, this.key_actions, TABS.ROIS, this);
+
+            // If the active column is roi_tags, load the ROI tags
+            if (this.active_column == "roi_tags") {
+                this.loadRoiTags();
+            }
         };
 
         // tear down old observers
@@ -209,6 +235,8 @@ export default class RegionsList extends EventSubscriber {
             this.regions_ready_observer.dispose();
             this.regions_ready_observer = null;
         }
+        this.key_actions.map(
+            (action) => this.context.removeKeyListener(action.key, TABS.ROIS));
     }
 
     /**
@@ -592,9 +620,17 @@ export default class RegionsList extends EventSubscriber {
      * @memberof RegionsList
      */
     showColumn(which) {
-        if (typeof which !== 'string' || which.length === 0 ||
-            which === this.active_column) return;
+        if (typeof which !== 'string' || which.length === 0) return;
+        // the tags popup can be closed independently, so always re-show it
+        if (which === this.active_column && which !== "roi_tags") return;
         this.active_column = which;
+        if (this.active_column == "roi_tags") {
+            this.loadRoiTags();
+            // Only show ROI Tags dialog if user canAnnotate
+            if (this.regions_info.image_info.can_annotate) {
+                this.context.publish(REGIONS_SHOW_TAGS, {group_id: this.regions_info.image_info.group_id});
+            }
+        }
     }
 
     /**
@@ -624,5 +660,204 @@ export default class RegionsList extends EventSubscriber {
     unbind() {
         this.unsubscribe();
         this.unregisterObservers();
+    }
+
+    // load Tags for an ROI, or ALL ROIs if roi_id is not provided
+    loadRoiTags(roi_ids) {
+        if (!roi_ids) {
+            roi_ids = [];
+            this.regions_info.data.forEach(roi => roi_ids.push(roi.id));
+        }
+        // TODO: We don't want to load Tags for too many ROIs - could do batches?!
+        if (roi_ids.length > 500) {
+            console.log(`Too many ROIs (${roi_ids.length}) to load Tags!`)
+            return;
+        }
+
+        // on focus, we load existing Tags
+        var properties = {
+            "server" : this.context.server,
+            "uri" : this.context.getPrefixedURI(IVIEWER) +"/link_annotations/?roi=" + roi_ids.join("&roi="),
+            "method" : 'GET',
+            "headers" : {"X-CSRFToken" : Misc.getCookie("csrftoken")},
+            "success": (rsp)=>{
+                let rsp_json = JSON.parse(rsp);
+
+                // clear existing tags, create lists...
+                roi_ids.forEach(roi_id => {
+                    this.roi_tags[roi_id] = [];
+                });
+
+                // make an object of eid: experimenter
+                var experimenters = rsp_json.experimenters.reduce(function(prev, exp){
+                    prev[exp.id + ""] = exp;
+                    return prev;
+                }, {});
+
+                // Populate experimenters within tags
+                // And do other tag marshalling
+                rsp_json.data.forEach((tag) => {
+                    let roi_id = tag.link.parent.id;
+                    tag.owner = experimenters[tag.owner.id];
+                    if (tag.link && tag.link.owner) {
+                        tag.link.owner = experimenters[tag.link.owner.id];
+                    }
+                    this.roi_tags[roi_id].push(tag);
+                });
+                this.roi_tags_loaded = true;
+            },
+        };
+        sendRequest(properties);
+    }
+
+    // Handle LINK_TAG: link the Tag to the ROIs of the selected shapes
+    handleAddTag(params) {
+        let roi_ids = new Set();
+        let unsaved_rois = false;
+        this.regions_info.selected_shapes.forEach((shape_id) => {
+            let roi_id = parseInt(String(shape_id).split(':')[0], 10);
+            // unsaved ROIs have negative ids and can't be linked yet
+            if (roi_id > 0) {
+                roi_ids.add(roi_id);
+            } else {
+                unsaved_rois = true;
+            }
+        });
+        if (unsaved_rois) {
+            alert('Unsaved ROIs cannot be Tagged. Please save ROIs before adding Tags.');
+        }
+        if (roi_ids.size === 0) return;
+        roi_ids = Array.from(roi_ids);
+
+        let untaggedRois = roi_ids.filter(roi_id => {
+            if (!this.roi_tags[roi_id]) {
+                return true;
+            }
+            return !this.roi_tags[roi_id].some(tag => tag.id === params.tag_id && tag.link.permissions.canDelete);
+        });
+
+        // If any of the selected ROIs do not already have this tag, link the tag to those ROIs
+        if (untaggedRois.length > 0) {
+            let postContent = {
+                "annotations" : [params.tag_id],
+                "rois" : untaggedRois
+            };
+            sendRequest({
+                "content" : JSON.stringify(postContent),
+                "server" : this.context.server,
+                "uri" : this.context.getPrefixedURI(IVIEWER) + "/link_annotations/",
+                "method" : 'POST',
+                "headers" : {"X-CSRFToken" : Misc.getCookie("csrftoken")},
+                "jsonp" : false,
+                "success": (rsp) => {
+                    let rsp_json = JSON.parse(rsp);
+                    if (rsp_json.errors && rsp_json.errors.length > 0) {
+                        alert('Errors linking tag: ' + rsp_json.errors.join('\n'));
+                    }
+                    this.loadRoiTags(untaggedRois);
+                }
+            });
+        } else {
+            // All selected ROIs already have this tag, so we REMOVE the tag from those ROIs
+            let link_ids_to_remove = [];
+            let roi_ids_to_reload = [];
+            roi_ids.forEach((roi_id) => {
+                let tag = this.roi_tags[roi_id].find(tag => tag.id === params.tag_id && tag.link.permissions.canDelete);
+                if (tag) {
+                    link_ids_to_remove.push(tag.link.id);
+                    roi_ids_to_reload.push(roi_id);
+                }
+            });
+            if (link_ids_to_remove.length > 0) {
+                this.handleRemoveTag(link_ids_to_remove, roi_ids_to_reload);
+            }
+        }
+    }
+
+    // Handle click on the removeTag button: unlink the Tag from the ROI
+    handleRemoveTag(link_ids, roi_ids_to_reload) {
+        sendRequest({
+            "server" : this.context.server,
+            "uri" : this.context.getPrefixedURI(IVIEWER) + `/link_annotations/?link=${link_ids.join('&link=')}`,
+            "method" : 'DELETE',
+            "headers" : {"X-CSRFToken" : Misc.getCookie("csrftoken")},
+            "jsonp" : false,
+            "success": (rsp) => {
+                let rsp_json = JSON.parse(rsp);
+                if (rsp_json.errors && rsp_json.errors.length > 0) {
+                    alert('Errors removing link: ' + rsp_json.errors.join('\n'));
+                }
+                this.loadRoiTags(roi_ids_to_reload);
+            }
+        });
+    }
+
+    /**
+     * Selects the previous shape
+     *
+     * @memberof RegionsEdit
+     */
+    prevShape(event) {
+        return this.incrementShape(event, -1);
+    }
+
+    /**
+     * Selects the next shape
+     *
+     * @memberof RegionsEdit
+     */
+    nextShape(event) {
+        return this.incrementShape(event, 1);
+    }
+
+    /**
+     * Selects the next or previous shape depending on the increment
+     *
+     * @memberof RegionsEdit
+     */
+    incrementShape(event, increment) {
+        // Z/T slider handle has focus and will handle the event; we ignore it
+        if (event?.target?.className.includes("ui-slider-handle")) {
+            return;
+        }
+        if (!this.regions_info.ready) return;
+        if (this.regions_info.selected_shapes.length == 0) {
+            // No ROIs selected. No action taken. Allow event to bubble up...
+            return true;
+        }
+        let currentIds = this.regions_info.selected_shapes;
+        let lastSelected = currentIds[currentIds.length - 1];
+        if (increment === -1) {
+            lastSelected = currentIds[0];
+        }
+
+        // Need to take into account the order of the shapes in view
+        // which is dictated by SortValueConverter class in the view layer.
+        // So we use the same sorting logic here.
+        let sortedRois = Utils.sortRois(
+            this.regions_info.data,
+            this.regions_info.sort_by,
+            this.regions_info.sort_ascending,
+            this.roi_tags
+        );
+        // iterate over sortedRois to get the ids
+        let sortedRoiIds = [];
+        for (let [id, roi] of sortedRois) {
+            // roi.shapes is a Map - get first item
+            let firstShape = roi.shapes.entries().next().value;
+            sortedRoiIds.push(firstShape[1].shape_id);
+        }
+
+        let count = sortedRoiIds.length;
+        let currentIndex = sortedRoiIds.indexOf(lastSelected);
+        let nextIndex = (currentIndex + increment + count) % count;
+        let nextId = sortedRoiIds[nextIndex];
+        this.context.publish(
+           REGIONS_SET_PROPERTY, {
+               config_id: this.regions_info.image_info.config_id,
+               property: 'selected',
+               shapes : [nextId], clear: true,
+               value : true, center : true});
+        return false;
     }
 }
