@@ -417,28 +417,10 @@ export default class RegionsTags extends EventSubscriber {
             return;
         }
         // Use the loaded tags to reconstruct the selected_tags list from IDs
-        let selected_tags = ids.map((id) => this.tags.find((t) => t.id === id));
+        let selected_tags = ids.map((id) => this.tags.find((t) => t.id === id))
+            .filter((t) => typeof t !== 'undefined');
 
-        // If any of the selected tags are undefined (e.g. from in a Tagset that hasn't been loaded), we need to fetch ALL tags from the server
-        if (selected_tags.some((t) => typeof t === 'undefined')) {
-            sendRequest({
-                server: this.context.server,
-                uri: this.context.getPrefixedURI(WEBCLIENT) + '/api/tags/?experimenter_id=-1&limit=1000&group=' + this.group_id,
-                method: 'GET',
-                success: (rsp) => {
-                    let json = typeof rsp === 'string' ? JSON.parse(rsp) : rsp;
-                    let allTags = this.parseTags(json);
-                    selected_tags = ids.map((id) => allTags.find((t) => t.id === id)).filter((t) => typeof t !== 'undefined');
-                    this.selected_tags = selected_tags;
-                },
-                error: () => {
-                    console.error('Failed to fetch all tags from the server');
-                }
-            });
-        } else {
-            // All tags were found
-            this.selected_tags = selected_tags;
-        }
+        this.selected_tags = selected_tags;
     }
 
     hide() {
