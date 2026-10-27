@@ -40,6 +40,13 @@ export default class ImageInfo {
     image_id = null;
 
     /**
+     * the group id associated with the image
+     * @memberof ImageInfo
+     * @type {number}
+     */
+    group_id = null;
+
+    /**
      * the associated parent id (dataset or well)
      * @memberof ImageInfo
      * @type {number}
@@ -427,6 +434,7 @@ export default class ImageInfo {
         this.range = response.pixel_range;
         this.image_pixels_size = response.pixel_size;
         this.can_annotate = response.perms.canAnnotate;
+        this.group_id = response.meta.groupId;
         if (typeof response.meta.wellId === 'number') {
             this.parent_id = response.meta.wellId;
             this.parent_type = INITIAL_TYPES.WELL;

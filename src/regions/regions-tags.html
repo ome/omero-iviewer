@@ -1,0 +1,172 @@
+<template>
+    <div show.bind="visible"
+         style="position: fixed; z-index: 1000; width: ${width}px; height: ${height}px; min-height: 100px;
+                background: #f8f8f8; border: solid #1F6AAA 2px; border-radius: 5px;
+                display: flex; flex-direction: column;
+                box-shadow: 2px 2px 5px #ccc; right: ${right}px; top: ${top}px;">
+        <div mousedown.trigger="onDragStart($event)"
+             style="cursor: move; padding: 3px 5px; background: #1F6AAA; color: #fff; border-radius: 3px 3px 0 0;
+                    user-select: none; display: flex; justify-content: space-between;">
+            <span>Link Tags to ROIs</span>
+            <span style="cursor: pointer;" title="Close"
+                  mousedown.trigger="$event.stopPropagation()"
+                  click.delegate="hide()">&times;</span>
+        </div>
+
+        <!-- We have two tabs: All Tags and Selected Tags -->
+        <div style="display: flex; user-select: none; background: #1F6AAA;">
+            <div click.delegate="selectTab('all')" class="roisTab"
+                 style="border-radius: 5px 5px 0 0; border-width: 1px 1px 0 0;
+                        ${active_tab === 'all' ? 'background: #f8f8f8;' : 'background: #ccc;'}">
+                All Tags [${tags.length}]
+            </div>
+            <div click.delegate="selectTab('selected')" class="roisTab"
+                 style="border-radius: 5px 5px 0 0; border-width: 1px 0 0 1px; border-style: solid; border-color: #1F6AAA;
+                        ${active_tab === 'selected' ? 'background: #f8f8f8;' : highlighted_tab === 'selected' ? 'background: red;' : 'background: #ccc;'}">
+                <span class="glyphicon glyphicon-heart"></span> Favorite Tags [${selected_tags.length}]
+            </div>
+        </div>
+
+        <!-- Filter controls for the "All Tags" tab -->
+        <div if.bind="active_tab === 'all'"
+             style="padding: 7px 7px 5px 7px; display: flex; gap: 4px;">
+            <input type="text" class="form-control input-sm"
+                   placeholder="Filter Tags..."
+                   style="flex: 1; box-sizing: border-box;"
+                   value.bind="tags_filter & debounce:200" />
+            <select class="form-control input-sm"
+                    style="flex: 0 0 auto; width: auto; box-sizing: border-box;"
+                    value.bind="tags_owner">
+                <option model.bind="null">Filter by owner: All</option>
+                <option repeat.for="exp of experimenters" model.bind="exp.id">
+                    ${exp.FirstName} ${exp.LastName}
+                </option>
+            </select>
+        </div>
+        <!-- The "All Tags" scrollable list -->
+        
+            <template if.bind="active_tab === 'all'">
+            <div style="padding: 0 5px 5px 5px; max-height: ${height - 100}px; overflow-y: auto;">
+                <div show.bind="!tags_loaded">Loading...</div>
+                <div show.bind="tags_loaded && tags.length === 0">
+                    No tags found. Please create Tags in the webclient first.
+                </div>
+                <div show.bind="tags_loaded && tags.length > 0 && filtered_tags.length === 0">
+                    No matching tags
+                </div>
+                <ul class="list-unstyled" style="margin: 0;">
+                    <li repeat.for="tag of filtered_tags" class="regions-tag-item"
+                        style="cursor: pointer; padding: 1px 3px; display: flex; flex-direction: column;"
+                              style.bind="highlighted_tagId === tag.id ? 'background-color: #ffff99;' : ''">
+                        <div style="display: flex; flex-direction: row; width: 100%; align-items: center; justify-content: space-between;">
+                            <span style="display: flex; align-items: center; overflow: hidden;">
+                                <span style="display: inline-block; width: 14px; cursor: pointer; position: relative; left: -2px;"
+                                    click.delegate="toggleTagset(tag)">
+                                    <template if.bind="tag.tagset">${tag.expanded ? '&#9660;' : '&#9658;'}</template>
+                                </span>
+                                <span class="${tag.tagset ? 'regions-tagset-icon' : 'regions-tag-icon'}"></span>
+                                <span>${tag.value}</span>
+                            </span>
+                            <span style="flex: 1 1 auto;"></span>
+                            <button class="btn btn-default btn-xs"
+                                    title="Link/unlink Tag to selected ROI(s)"
+                                    click.delegate="linkTag(tag)">
+                                <span class="glyphicon glyphicon-link"></span>
+                            </button>
+                            <button class="btn btn-default btn-xs"
+                                    title="Add ${tag.tagset ? 'All Tags' : 'this Tag'} to the Favorite Tags (HotKeys) list"
+                                    click.delegate="selectTag(tag)">
+                                <span class="glyphicon glyphicon-heart"></span>
+                            </button>
+                        </div>
+                        <ul if.bind="tag.tagset && tag.expanded" class="list-unstyled"
+                            style="margin: 0 0 0 30px;">
+                            <li repeat.for="child of tag.children"
+                                class="regions-tag-item"
+                                style="cursor: pointer; padding: 1px 3px; display: flex;
+                                       align-items: center; justify-content: space-between;"
+                                       style.bind="highlighted_tagId === child.id ? 'background-color: #ffff99;' : ''">
+                                <span style="display: flex; align-items: center; overflow: hidden;">
+                                    <span class="regions-tag-icon"></span>${child.value}
+                                </span>
+                                <span style="flex: 1 1 auto;"></span>
+                                <button class="btn btn-default btn-xs"
+                                        title="Link/unlink Tag to selected ROI(s)"
+                                        click.delegate="linkTag(child)">
+                                    <span class="glyphicon glyphicon-link"></span>
+                                </button>
+                                <button class="btn btn-default btn-xs"
+                                        title="Add to the Favorite Tags (HotKeys) list"
+                                        click.delegate="selectTag(child)">
+                                    <span class="glyphicon glyphicon-heart"></span>
+                                </button>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            </template>
+
+            <!-- The "Favorite Tags" tab content -->
+            <template if.bind="active_tab === 'selected'">
+            <div style="padding: 0 5px 5px 5px; overflow-y: auto;">
+                <div show.bind="selected_tags.length === 0">No favorite tags</div>
+                <div show.bind="selected_tags.length > 0" title="Press number keys to add Tags to currently selected ROI(s)">
+                    Hot Keys
+                </div>
+                <ul class="list-unstyled" style="margin-top: 5px;">
+                    <li repeat.for="tag of selected_tags" class="regions-tag-item"
+                        draggable="true"
+                        dragstart.trigger="onTagDragStart($event, $index)"
+                        dragover.trigger="onTagDragOver($event, $index)"
+                        drop.trigger="onTagDrop($event, $index)"
+                        dragend.trigger="onTagDragEnd()"
+                        style="cursor: row-resize; padding: 1px 3px; display: flex;
+                               ${highlighted_tagId === tag.id ? 'background-color: #ffff99;' : ''}
+                               align-items: center; justify-content: space-between;
+                               ${dragOverIndex === $index && dragTagIndex !== $index ? 'border-top: solid 2px #337ab7;' : 'border-top: solid 2px transparent;'}
+                               ${dragTagIndex === $index ? 'opacity: 0.5;' : ''}"
+                        title="Drag Tag to reorder.">
+                        <span style="display: flex; align-items: center; overflow: hidden;">
+                            <!-- Number 1-9, 10th tag gets 0 -->
+                            <span style="width: 20px; display: inline-block; text-align: center;
+                                border: solid ${$index < 10 ? 'grey' : 'transparent'} 1px;
+                                border-radius: 5px; margin: 0 12px;"
+                                title="Shortcut key to link/unlink this Tag to selected ROI(s)">
+                                ${$index < 10 ? ($index + 1) % 10 : ''}
+                            </span>
+                            <span class="regions-tag-icon"></span>
+                            <span>${tag.value}</span>
+                        </span>
+                        <span style="flex: 1 1 auto;"></span>
+                        <button class="btn btn-default btn-xs"
+                                title="Link/unlink Tag to selected ROI(s)"
+                                click.delegate="linkTag(tag)">
+                            <span class="glyphicon glyphicon-link"></span>
+                        </button>
+                        <span style="cursor: pointer; padding: 0 3px; margin-left: 6px;"
+                              title="Remove this Tag from the Selected Tags list"
+                              click.delegate="deselectTag(tag)">&times;</span>
+                    </li>
+
+                    <!-- placeholder drag target so we can drag items to the end of the list -->
+                    <li draggable="true"
+                        dragstart.trigger="onTagDragStart($event, -1)"
+                        dragover.trigger="onTagDragOver($event, -1)"
+                        drop.trigger="onTagDrop($event, -1)"
+                        dragend.trigger="onTagDragEnd()">&nbsp;</li>
+                </ul>
+            </div>
+            </template>
+
+        <!-- Resize handle: drag to resize the popup (grows left/down) -->
+        <div mousedown.trigger="onResizeStart($event)"
+             title="Drag to resize"
+             style="position: absolute; left: -1px; bottom: -1px; width: 12px; height: 12px;
+                    cursor: sw-resize; user-select: none;
+                    background:
+                        linear-gradient(225deg, transparent 0 40%, #999 40% 55%, transparent 55% 100%),
+                        linear-gradient(225deg, transparent 0 70%, #999 70% 85%, transparent 85% 100%);">
+        </div>
+    </div>
+</template>
