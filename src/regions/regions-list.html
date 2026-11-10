@@ -47,48 +47,50 @@
         <div class="disabled-color loading-text" show.bind="!regions_info.ready">Loading Regions...</div>
 
             <div class="columns-dropdown dropdown">
-                <button type="button"
+                <button type="button" title="Add or Remove Columns" 
                     class="btn btn-default btn-sm dropdown-toggle
                             glyphicon glyphicon-option-vertical"
-                    style="padding: 0px; top: -2px; right: 0; position: absolute;"
+                    style="padding: 0px; top: -8px; right: 0; position: absolute;"
                     data-toggle="dropdown">
                 </button>
                 <ul class="dropdown-menu">
-                    <li click.delegate="showColumn('comments')">
+                    <li style="text-align: center;">Table Columns</li>
+                    <li style="margin-top: 5px" class="divider"></li>
+                    <li click.delegate="showColumn('comments')" title="Toggle Comments Column">
                         <span show.bind="visible_columns.indexOf('comments') > -1">&#10003;</span>
                         <span show.bind="visible_columns.indexOf('comments') === -1">&nbsp;</span>
-                        <a href="#">Show Comments</a>
+                        <a href="#">Comments</a>
                     </li>
-                    <li click.delegate="showColumn('area')">
+                    <li click.delegate="showColumn('area')" title="Toggle Area Column">
                         <span show.bind="visible_columns.indexOf('area') > -1">&#10003;</span>
                         <span show.bind="visible_columns.indexOf('area') === -1">&nbsp;</span>
-                        <a href="#">Show Area</a>
+                        <a href="#">Area</a>
                     </li>
-                    <li click.delegate="showColumn('length')">
+                    <li click.delegate="showColumn('length')" title="Toggle Length Column">
                         <span show.bind="visible_columns.indexOf('length') > -1">&#10003;</span>
                         <span show.bind="visible_columns.indexOf('length') === -1">&nbsp;</span>
-                        <a href="#">Show Length</a>
+                        <a href="#">Length</a>
                     </li>
-                    <li click.delegate="showColumn('roi_tags')">
+                    <li click.delegate="showColumn('roi_tags')" title="Toggle ROI Tags Column">
                         <span show.bind="visible_columns.indexOf('roi_tags') > -1">&#10003;</span>
                         <span show.bind="visible_columns.indexOf('roi_tags') === -1">&nbsp;</span>
-                        <a href="#">Show ROI Tags</a>
+                        <a href="#">ROI Tags</a>
                     </li>
                     <li class="divider"></li>
-                    <li click.delegate="showColumn('theZ')">
+                    <li click.delegate="showColumn('theZ')" title="Toggle Z-index Column">
                         <span show.bind="visible_columns.indexOf('theZ') > -1">&#10003;</span>
                         <span show.bind="visible_columns.indexOf('theZ') === -1">&nbsp;</span>
-                        <a href="#">Show Z</a>
+                        <a href="#">Z index</a>
                     </li>
-                    <li click.delegate="showColumn('theT')">
+                    <li click.delegate="showColumn('theT')" title="Toggle T-index Column">
                         <span show.bind="visible_columns.indexOf('theT') > -1">&#10003;</span>
                         <span show.bind="visible_columns.indexOf('theT') === -1">&nbsp;</span>
-                        <a href="#">Show T</a>
+                        <a href="#">T index</a>
                     </li>
-                    <li click.delegate="showColumn('theC')">
+                    <li click.delegate="showColumn('theC')" title="Toggle C-index Column">
                         <span show.bind="visible_columns.indexOf('theC') > -1">&#10003;</span>
                         <span show.bind="visible_columns.indexOf('theC') === -1">&nbsp;</span>
-                        <a href="#">Show C</a>
+                        <a href="#">C index</a>
                     </li>
                 </ul>
             </div>
@@ -106,7 +108,7 @@
                         type="checkbox" />
             </th>
             <th class="regions-table-col shape-show">
-                <label for="shapes_visibility_toggler"
+                <label for="shapes_visibility_toggler" style="margin-bottom: 0;"
                         show.bind="regions_info.number_of_shapes > 0">Show</label>
             </th>
             <th class="regions-table-col shape-type">&nbsp;</th>

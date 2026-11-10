@@ -1175,6 +1175,7 @@ thumbnail-slider img {
 }
 .shape-type {
     width: 23px;
+    min-width: 23px;
     background-repeat: no-repeat;
     background-position: center;
 }
