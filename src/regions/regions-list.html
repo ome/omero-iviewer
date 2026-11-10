@@ -55,46 +55,39 @@
                 </button>
                 <ul class="dropdown-menu">
                     <li click.delegate="showColumn('comments')">
-                        <span class="show_comments">
-                            <span show.bind="visible_columns.indexOf('comments') > -1">&#10003;</span>
-                            <span show.bind="visible_columns.indexOf('comments') === -1">&nbsp;</span>
-                        </span>
+                        <span show.bind="visible_columns.indexOf('comments') > -1">&#10003;</span>
+                        <span show.bind="visible_columns.indexOf('comments') === -1">&nbsp;</span>
                         <a href="#">Show Comments</a>
                     </li>
-                    <li click.delegate="showColumn('measurements')">
-                        <span class="show_measurements">
-                            <span show.bind="visible_columns.indexOf('measurements') > -1">&#10003;</span>
-                            <span show.bind="visible_columns.indexOf('measurements') === -1">&nbsp;</span>
-                        </span>
-                        <a href="#">Show Area/Length</a>
+                    <li click.delegate="showColumn('area')">
+                        <span show.bind="visible_columns.indexOf('area') > -1">&#10003;</span>
+                        <span show.bind="visible_columns.indexOf('area') === -1">&nbsp;</span>
+                        <a href="#">Show Area</a>
+                    </li>
+                    <li click.delegate="showColumn('length')">
+                        <span show.bind="visible_columns.indexOf('length') > -1">&#10003;</span>
+                        <span show.bind="visible_columns.indexOf('length') === -1">&nbsp;</span>
+                        <a href="#">Show Length</a>
                     </li>
                     <li click.delegate="showColumn('roi_tags')">
-                        <span class="show_roi_tags">
-                            <span show.bind="visible_columns.indexOf('roi_tags') > -1">&#10003;</span>
-                            <span show.bind="visible_columns.indexOf('roi_tags') === -1">&nbsp;</span>
-                        </span>
+                        <span show.bind="visible_columns.indexOf('roi_tags') > -1">&#10003;</span>
+                        <span show.bind="visible_columns.indexOf('roi_tags') === -1">&nbsp;</span>
                         <a href="#">Show ROI Tags</a>
                     </li>
                     <li class="divider"></li>
                     <li click.delegate="showColumn('theZ')">
-                        <span class="show_z">
-                            <span show.bind="visible_columns.indexOf('theZ') > -1">&#10003;</span>
-                            <span show.bind="visible_columns.indexOf('theZ') === -1">&nbsp;</span>
-                        </span>
+                        <span show.bind="visible_columns.indexOf('theZ') > -1">&#10003;</span>
+                        <span show.bind="visible_columns.indexOf('theZ') === -1">&nbsp;</span>
                         <a href="#">Show Z</a>
                     </li>
                     <li click.delegate="showColumn('theT')">
-                        <span class="show_t">
-                            <span show.bind="visible_columns.indexOf('theT') > -1">&#10003;</span>
-                            <span show.bind="visible_columns.indexOf('theT') === -1">&nbsp;</span>
-                        </span>
+                        <span show.bind="visible_columns.indexOf('theT') > -1">&#10003;</span>
+                        <span show.bind="visible_columns.indexOf('theT') === -1">&nbsp;</span>
                         <a href="#">Show T</a>
                     </li>
                     <li click.delegate="showColumn('theC')">
-                        <span class="show_c">
-                            <span show.bind="visible_columns.indexOf('theC') > -1">&#10003;</span>
-                            <span show.bind="visible_columns.indexOf('theC') === -1">&nbsp;</span>
-                        </span>
+                        <span show.bind="visible_columns.indexOf('theC') > -1">&#10003;</span>
+                        <span show.bind="visible_columns.indexOf('theC') === -1">&nbsp;</span>
                         <a href="#">Show C</a>
                     </li>
                 </ul>
@@ -131,13 +124,13 @@
                 </th>
             <th class="regions-table-col shape-area ${sortCss(sortBy, sortAscending, 'area')}"
                     click.delegate="sort('area')"
-                    show.bind="visible_columns.indexOf('measurements') > -1">
+                    show.bind="visible_columns.indexOf('area') > -1">
                     Area (${regions_info.image_info.image_pixels_size.symbol_x ||
                             'px'}&#178;)
                 </th>
             <th class="regions-table-col shape-length ${sortCss(sortBy, sortAscending, 'length')}"
                     click.delegate="sort('length')"
-                    show.bind="visible_columns.indexOf('measurements') > -1">
+                    show.bind="visible_columns.indexOf('length') > -1">
                     Length (${regions_info.image_info.image_pixels_size.symbol_x ||
                             'px'})
                 </th>
@@ -179,8 +172,8 @@
                         <td class="regions-table-col shape-comment" show.bind="visible_columns.indexOf('comments') > -1">
                             ${roi.name}
                         </td>
-                        <td class="regions-table-col shape-area" show.bind="visible_columns.indexOf('measurements') > -1"></td>
-                        <td class="regions-table-col shape-length" show.bind="visible_columns.indexOf('measurements') > -1"></td>
+                        <td class="regions-table-col shape-area" show.bind="visible_columns.indexOf('area') > -1"></td>
+                        <td class="regions-table-col shape-length" show.bind="visible_columns.indexOf('length') > -1"></td>
                         <td class="regions-table-col shape-length" show.bind="visible_columns.indexOf('roi_tags') > -1"></td>
                     </tr>
                     <tr if.bind="!(shape.deleted && shape.is_new) &&
@@ -220,12 +213,12 @@
                                 ${shape.Text ? shape.Text : ''}
                         </td>
                         <td class="regions-table-col shape-area"
-                             show.bind="visible_columns.indexOf('measurements') > -1"
+                             show.bind="visible_columns.indexOf('area') > -1"
                              title="${shape.Area && shape.Area > 0 ? shape.Area : ''}">
                                 ${shape.Area && shape.Area > 0 ? shape.Area : ''}
                         </td>
                         <td class="regions-table-col shape-length"
-                             show.bind="visible_columns.indexOf('measurements') > -1"
+                             show.bind="visible_columns.indexOf('length') > -1"
                              title="${shape.Length && shape.Length > 0 ? shape.Length : ''}">
                                 ${shape.Length && shape.Length > 0 ? shape.Length : ''}
                         </td>
