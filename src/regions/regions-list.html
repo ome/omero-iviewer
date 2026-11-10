@@ -54,21 +54,46 @@
                 <ul class="dropdown-menu">
                     <li click.delegate="showColumn('comments')">
                         <span class="show_comments">
-                            ${active_column === 'comments' ? '&#10003;' : '&nbsp;'}
+                            <span show.bind="visible_columns.indexOf('comments') > -1">&#10003;</span>
+                            <span show.bind="visible_columns.indexOf('comments') === -1">&nbsp;</span>
                         </span>
                         <a href="#">Show Comments</a>
                     </li>
                     <li click.delegate="showColumn('measurements')">
                         <span class="show_measurements">
-                            ${active_column === 'measurements' ? '&#10003;' : '&nbsp;'}
+                            <span show.bind="visible_columns.indexOf('measurements') > -1">&#10003;</span>
+                            <span show.bind="visible_columns.indexOf('measurements') === -1">&nbsp;</span>
                         </span>
                         <a href="#">Show Area/Length</a>
                     </li>
                     <li click.delegate="showColumn('roi_tags')">
                         <span class="show_roi_tags">
-                            ${active_column === 'roi_tags' ? '&#10003;' : '&nbsp;'}
+                            <span show.bind="visible_columns.indexOf('roi_tags') > -1">&#10003;</span>
+                            <span show.bind="visible_columns.indexOf('roi_tags') === -1">&nbsp;</span>
                         </span>
                         <a href="#">Show ROI Tags</a>
+                    </li>
+                    <li class="divider"></li>
+                    <li click.delegate="showColumn('theZ')">
+                        <span class="show_z">
+                            <span show.bind="visible_columns.indexOf('theZ') > -1">&#10003;</span>
+                            <span show.bind="visible_columns.indexOf('theZ') === -1">&nbsp;</span>
+                        </span>
+                        <a href="#">Show Z</a>
+                    </li>
+                    <li click.delegate="showColumn('theT')">
+                        <span class="show_t">
+                            <span show.bind="visible_columns.indexOf('theT') > -1">&#10003;</span>
+                            <span show.bind="visible_columns.indexOf('theT') === -1">&nbsp;</span>
+                        </span>
+                        <a href="#">Show T</a>
+                    </li>
+                    <li click.delegate="showColumn('theC')">
+                        <span class="show_c">
+                            <span show.bind="visible_columns.indexOf('theC') > -1">&#10003;</span>
+                            <span show.bind="visible_columns.indexOf('theC') === -1">&nbsp;</span>
+                        </span>
+                        <a href="#">Show C</a>
                     </li>
                 </ul>
             </div>
@@ -86,29 +111,32 @@
             </div>
             <div class="regions-table-col shape-type">&nbsp;</div>
             <div class="regions-table-col shape-z ${sortCss(sortBy, sortAscending, 'theZ')}"
-                click.delegate="sort('theZ')">Z</div>
+                click.delegate="sort('theZ')"
+                show.bind="visible_columns.indexOf('theZ') > -1">Z</div>
             <div class="regions-table-col shape-t ${sortCss(sortBy, sortAscending, 'theT')}"
-                click.delegate="sort('theT')">T</div>
-            <div class="regions-table-col shape-c">C</div>
+                click.delegate="sort('theT')"
+                show.bind="visible_columns.indexOf('theT') > -1">T</div>
+            <div class="regions-table-col shape-c"
+                show.bind="visible_columns.indexOf('theC') > -1">C</div>
             <div class="regions-table-col shape-comment ${sortCss(sortBy, sortAscending, 'shapeText')}"
                     click.delegate="sort('shapeText')"
-                    show.bind="active_column === 'comments'">Comment
+                    show.bind="visible_columns.indexOf('comments') > -1">Comment
                 </div>
             <div class="regions-table-col shape-area ${sortCss(sortBy, sortAscending, 'area')}"
                     click.delegate="sort('area')"
-                    show.bind="active_column === 'measurements'">
+                    show.bind="visible_columns.indexOf('measurements') > -1">
                     Area (${regions_info.image_info.image_pixels_size.symbol_x ||
                             'px'}&#178;)
                 </div>
             <div class="regions-table-col shape-length ${sortCss(sortBy, sortAscending, 'length')}"
                     click.delegate="sort('length')"
-                    show.bind="active_column === 'measurements'">
+                    show.bind="visible_columns.indexOf('measurements') > -1">
                     Length (${regions_info.image_info.image_pixels_size.symbol_x ||
                             'px'})
                 </div>
             <div class="regions-table-col shape-comment ${sortCss(sortBy, sortAscending, 'roitag')}"
                 click.delegate="sort('roitag')"
-                show.bind="active_column === 'roi_tags'">
+                show.bind="visible_columns.indexOf('roi_tags') > -1">
                 ROI Tags
             </div>
         </div>
@@ -141,14 +169,15 @@
                          <div class="regions-table-col shape-type">
                              (${(roi.shapes.size - roi.deleted)})
                          </div>
-                        <div class="regions-table-col shape-z"></div>
-                        <div class="regions-table-col shape-t"></div>
-                        <div class="regions-table-col shape-c"></div>
-                        <div class="regions-table-col shape-comment">
+                        <div class="regions-table-col shape-z" show.bind="visible_columns.indexOf('theZ') > -1"></div>
+                        <div class="regions-table-col shape-t" show.bind="visible_columns.indexOf('theT') > -1"></div>
+                        <div class="regions-table-col shape-c" show.bind="visible_columns.indexOf('theC') > -1"></div>
+                        <div class="regions-table-col shape-comment" show.bind="visible_columns.indexOf('comments') > -1">
                             ${roi.name}
                         </div>
-                        <div class="regions-table-col shape-area"></div>
-                        <div class="regions-table-col shape-length"></div>
+                        <div class="regions-table-col shape-area" show.bind="visible_columns.indexOf('measurements') > -1"></div>
+                        <div class="regions-table-col shape-length" show.bind="visible_columns.indexOf('measurements') > -1"></div>
+                        <div class="regions-table-col shape-length" show.bind="visible_columns.indexOf('roi_tags') > -1"></div>
                     </div>
                     <div if.bind="!(shape.deleted && shape.is_new) &&
                                    !(roi.shapes.size > 1 && !roi.show)"
@@ -170,31 +199,34 @@
                         <div class="regions-table-col shape-type ${shape.type.toLowerCase()}-icon
                             marker-${shape.MarkerStart.toLowerCase()}${shape.MarkerEnd.toLowerCase()}">
                         </div>
-                        <div class="regions-table-col shape-z">
+                        <div class="regions-table-col shape-z"
+                            show.bind="visible_columns.indexOf('theZ') > -1">
                             ${shape.TheZ !== -1 ? (shape.TheZ + 1) : ""}
                         </div>
-                        <div class="regions-table-col shape-t">
+                        <div class="regions-table-col shape-t"
+                            show.bind="visible_columns.indexOf('theT') > -1">
                             ${shape.TheT !== -1 ? (shape.TheT + 1) : ""}
                         </div>
-                        <div class="regions-table-col shape-c">
+                        <div class="regions-table-col shape-c"
+                            show.bind="visible_columns.indexOf('theC') > -1">
                             ${shape.TheC !== -1 ? (shape.TheC + 1) : ""}
                         </div>
                         <div class="regions-table-col shape-comment"
-                             show.bind="active_column === 'comments'">
+                             show.bind="visible_columns.indexOf('comments') > -1">
                                 ${shape.Text ? shape.Text : ''}
                         </div>
                         <div class="regions-table-col shape-area"
-                             show.bind="active_column === 'measurements'"
+                             show.bind="visible_columns.indexOf('measurements') > -1"
                              title="${shape.Area && shape.Area > 0 ? shape.Area : ''}">
                                 ${shape.Area && shape.Area > 0 ? shape.Area : ''}
                         </div>
                         <div class="regions-table-col shape-length"
-                             show.bind="active_column === 'measurements'"
+                             show.bind="visible_columns.indexOf('measurements') > -1"
                              title="${shape.Length && shape.Length > 0 ? shape.Length : ''}">
                                 ${shape.Length && shape.Length > 0 ? shape.Length : ''}
                         </div>
                         <div class="regions-table-col roi-tags"
-                             show.bind="active_column === 'roi_tags'">
+                             show.bind="visible_columns.indexOf('roi_tags') > -1">
                             <span show.bind="roi_tags_loaded">
                                 <span if.bind="roi_tags[roi_id]">
                                     <!-- Uses SortTagsValueConverter to sort tags -->
