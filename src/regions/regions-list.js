@@ -182,14 +182,16 @@ export default class RegionsList extends EventSubscriber {
             Ui.registerKeyHandlers(
                 this.context, this.key_actions, TABS.ROIS, this);
 
-            // If visible_columns is still default setting, determine which Z/T/C columns to show
-            if (this.visible_columns.length === 1 && this.visible_columns[0] === 'comments') {
-                let autoColumns = ['comments']; // always include comments column
-                if (this.autoShowColumn('Z')) autoColumns.push('theZ');
-                if (this.autoShowColumn('T')) autoColumns.push('theT');
-                if (this.autoShowColumn('C')) autoColumns.push('theC');
-                this.visible_columns = autoColumns;
+            // Update visible_columns Z/T/C based on image dims etc.
+            let autoColumns = [...this.visible_columns];
+            for (let dim of ['Z', 'T', 'C']) {
+                if (this.autoShowColumn(dim)) {
+                    autoColumns.push('the' + dim);
+                } else {
+                    autoColumns = autoColumns.filter(col => col !== 'the' + dim);
+                }
             }
+            this.visible_columns = autoColumns;
 
             // If roi_tags column is visible, load the ROI tags
             if (this.isColumnVisible("roi_tags")) {
@@ -213,14 +215,13 @@ export default class RegionsList extends EventSubscriber {
     }
 
     autoShowColumn(shapeAttribute) {
-        // shapeAttribute is one of 'Z', 'T', 'C'
-        // We show e.g. the Z column if there are different TheZ values among shapes
-        if (this.regions_info === null) return false;
-        // if NO ROIs created, use size of image...§
-        if (this.regions_info.data.size === 0) {
-            // This will always be false for C since it's not in image_info.dimensions
-            return this.regions_info.image_info.dimensions['max_' + shapeAttribute.toLowerCase()] > 1;
+        // shapeAttribute is one of 'Z', 'T', 'C' - We show column if image dimension is greater than 1
+        let dimSize = this.regions_info.image_info.dimensions['max_' + shapeAttribute.toLowerCase()];
+        if (dimSize != undefined) {
+            return dimSize > 1;
         }
+        // For C since it's not in image_info.dimensions, we check the shapes
+        if (this.regions_info === null) return false;
         let values = [];
         let attr = 'The' + shapeAttribute;
         this.regions_info.data.forEach((roi, roiId) => {
