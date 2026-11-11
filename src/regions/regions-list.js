@@ -56,15 +56,15 @@ export default class RegionsList extends EventSubscriber {
     sortAscending = true;
 
     /**
-     * the column showing (only one - mutually exclusive for now)
+     * List of visible columns (can include: comments, measurements, roi_tags, theZ, theT, theC)
      * @memberof RegionsList
-     * @type {number}
+     * @type {Array<string>}
      */
-     active_column = 'comments';
+     visible_columns = ['comments'];
 
      /**
       * Dict of {roiid:{'tags':['id':1, 'textValue':'myTag']}}
-      * Loaded when the active_column is set to "roi_tags"
+      * Loaded when visible_columns includes "roi_tags"
       * @memberof RegionsList
       * @type {Object}
       */
@@ -182,8 +182,19 @@ export default class RegionsList extends EventSubscriber {
             Ui.registerKeyHandlers(
                 this.context, this.key_actions, TABS.ROIS, this);
 
-            // If the active column is roi_tags, load the ROI tags
-            if (this.active_column == "roi_tags") {
+            // Update visible_columns Z/T/C based on image dims etc.
+            let autoColumns = [...this.visible_columns];
+            for (let dim of ['Z', 'T', 'C']) {
+                if (this.autoShowColumn(dim)) {
+                    autoColumns.push('the' + dim);
+                } else {
+                    autoColumns = autoColumns.filter(col => col !== 'the' + dim);
+                }
+            }
+            this.visible_columns = autoColumns;
+
+            // If roi_tags column is visible, load the ROI tags
+            if (this.isColumnVisible("roi_tags")) {
                 this.loadRoiTags();
             }
         };
@@ -201,6 +212,32 @@ export default class RegionsList extends EventSubscriber {
                 this.bindingEngine.propertyObserver(
                     this.regions_info, 'ready').subscribe(
                         (newValue, oldValue) => onceReady());
+    }
+
+    autoShowColumn(shapeAttribute) {
+        // shapeAttribute is one of 'Z', 'T', 'C' - We show column if image dimension is greater than 1
+        let dimSize = this.regions_info.image_info.dimensions['max_' + shapeAttribute.toLowerCase()];
+        if (dimSize != undefined) {
+            return dimSize > 1;
+        }
+        // For C since it's not in image_info.dimensions, we check the shapes
+        if (this.regions_info === null) return false;
+        let values = [];
+        let attr = 'The' + shapeAttribute;
+        this.regions_info.data.forEach((roi, roiId) => {
+            roi.shapes.forEach((shape) => {
+                if (values.length > 1) {
+                    return true;
+                }
+                if (shape[attr] != undefined) {
+                    if (values.length == 0 || shape[attr] != values[0]) {
+                        values.push(shape[attr]);
+                    }
+                }
+            });
+
+        });
+        return values.length > 1 || values[0] > 0;
     }
 
     /**
@@ -614,23 +651,43 @@ export default class RegionsList extends EventSubscriber {
     }
 
     /**
-     * Selects column (mutally exclusive for now)
+     * Toggles visibility of a column
+     * Adds column to visible_columns if not present, removes if already present
      *
-     * @param {string} which the column name
+     * @param {string} which the column name (comments, measurements, roi_tags, theZ, theT, theC)
      * @memberof RegionsList
      */
     showColumn(which) {
         if (typeof which !== 'string' || which.length === 0) return;
-        // the tags popup can be closed independently, so always re-show it
-        if (which === this.active_column && which !== "roi_tags") return;
-        this.active_column = which;
-        if (this.active_column == "roi_tags") {
+
+        const index = this.visible_columns.indexOf(which);
+        if (index > -1) {
+            // Remove column - create new array to trigger Aurelia binding update
+            this.visible_columns = this.visible_columns.filter(col => col !== which);
+        } else {
+            // Add column - create new array to trigger Aurelia binding update
+            this.visible_columns = [...this.visible_columns, which];
+        }
+
+        // Special handling for roi_tags
+        if (which === "roi_tags" && index === -1) {
             this.loadRoiTags();
             // Only show ROI Tags dialog if user canAnnotate
             if (this.regions_info.image_info.can_annotate) {
                 this.context.publish(REGIONS_SHOW_TAGS, {group_id: this.regions_info.image_info.group_id});
             }
         }
+    }
+
+    /**
+     * Check if a column is currently visible
+     *
+     * @param {string} column the column name
+     * @return {boolean} true if column is visible
+     * @memberof RegionsList
+     */
+    isColumnVisible(column) {
+        return this.visible_columns.indexOf(column) > -1;
     }
 
     /**
