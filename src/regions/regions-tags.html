@@ -68,7 +68,8 @@
                                 <span>${tag.value}</span>
                             </span>
                             <span style="flex: 1 1 auto;"></span>
-                            <button class="btn btn-default btn-xs"
+                            <!-- only show Link button if not a tagset -->
+                            <button if.bind="!tag.tagset" class="btn btn-default btn-xs"
                                     title="Link/unlink Tag to selected ROI(s)"
                                     click.delegate="linkTag(tag)">
                                 <span class="glyphicon glyphicon-link"></span>
