@@ -303,7 +303,8 @@ export default class RegionsEdit extends EventSubscriber {
         if (!params.shapeId) return;
         let shape = this.regions_info.getShape(params.shapeId);
         if (shape) {
-            this.onCommentChange(params.Text, shape);
+            // include pass shape_id to unselected_shape parameter
+            this.onCommentChange(params.Text, shape, shape.shape_id);
         }
     }
 
@@ -312,9 +313,10 @@ export default class RegionsEdit extends EventSubscriber {
      *
      * @param {string} comment the new  text  value
      * @param {Object} shape the primary shape that the change was invoked on
+     * @param {Object} unselected_shape the unselected shape being edited (if any)
      * @memberof RegionsEdit
      */
-    onCommentChange(comment = '',shape=null) {
+    onCommentChange(comment = '',shape=null, unselected_shape=null) {
         if (typeof shape !== 'object' || shape === null ||
             typeof comment !== 'string') return;
 
@@ -325,7 +327,8 @@ export default class RegionsEdit extends EventSubscriber {
             deltaProps,
             this.createUpdateHandler(['Text'], [comment]),
             false,
-            shape.oldId);
+            unselected_shape
+        );
     }
 
     /**
@@ -411,17 +414,21 @@ export default class RegionsEdit extends EventSubscriber {
      *                                  to be changed
      * @param {function} callback a callback function on success
      * @param {boolean} modifies_attachment does definition alter z/t attachment
-     * @param {Object} current_shape Option to specify a particular shape to edit
+     * @param {Object} unselected_shape - Used when viewer popup is editing new (unselected) shape
      * @memberof RegionsEdit
      */
     modifyShapes(shape_definition, callback = null, modifies_attachment = false,
-            current_shape) {
+            unselected_shape) {
         if (typeof shape_definition !== 'object' ||
                 shape_definition === null) return;
 
         let shapes = this.regions_info.selected_shapes;
-        if (current_shape) {
-            shapes = [current_shape];
+        if (!shapes || shapes.length === 0) {
+            if (unselected_shape) {
+                shapes = [unselected_shape];
+            } else {
+                return;
+            }
         }
         this.context.publish(
            REGIONS_MODIFY_SHAPES, {
